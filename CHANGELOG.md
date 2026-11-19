@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: README e metadados de release alinhados ao código (auditoria fase 1, nov/2026)
+- `README.md`: selo de armazenamento deixa de dizer "Arweave Permaweb" (gravação pausada, REV-07); badge de testes **2276 passing · 9 skipped · 16 todo**; tabela e nota `develop` vs `main` e Release `v7.40`; Android 7.0+; ADRs apontam para o índice (39); PM-83 em laboratório; PR para `develop`; link para [análise do repositório](./docs/strategy/analise-repositorio-vox-2026-11.md).
+- `docs/release-metadata.json`: regerado por `npm run release-line` (`667fcda`, 1981 JS + 320 Python = 2301).
+- Sem bump de SW. `main` segue no release #262; o README só chega à `main` no próximo release.
+
 ### Docs: prompt Claude auditoria + MVP técnico (nov/2026)
 - `docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
 

@@ -2,9 +2,9 @@
 
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/identity/local-account.js)
-[![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
+[![Preservação](https://img.shields.io/badge/Preserva%C3%A7%C3%A3o-rede%20de%20seguidores-black.svg)](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2206%20passing-success.svg)](./docs/TESTES.md)
+[![Tests](https://img.shields.io/badge/tests-2276%20passing%20%C2%B7%209%20skipped%20%C2%B7%2016%20todo-success.svg)](./docs/TESTES.md)
 [![Service Worker](https://img.shields.io/badge/SW-v7.143--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
@@ -18,7 +18,8 @@ O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; *
 > 🧪 **Guia para Testadores:** [#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)  
 > 📚 **Índice Mestre de Documentação:** [docs/README.md](./docs/README.md)  
 > 🗺️ **Roadmap & Checklist Vivo:** [docs/ROADMAP.md](./docs/ROADMAP.md) ([ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md))  
-> 🧭 **Catálogo de funcionalidades:** [docs/FEATURES.md](./docs/FEATURES.md) · **Infra e custos:** [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md) · **Mudanças:** [CHANGELOG.md](./CHANGELOG.md)
+> 🧭 **Catálogo de funcionalidades:** [docs/FEATURES.md](./docs/FEATURES.md) · **Infra e custos:** [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md) · **Mudanças:** [CHANGELOG.md](./CHANGELOG.md)  
+> 🔎 **Retrato do repositório (nov/2026):** [docs/strategy/analise-repositorio-vox-2026-11.md](./docs/strategy/analise-repositorio-vox-2026-11.md) · *o plano de produto único continua sendo o [ROADMAP](./docs/ROADMAP.md) ([ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md)); o README não o substitui.*
 
 ---
 
@@ -29,19 +30,19 @@ Acesse a página visual interativa em **[https://yurikayel.github.io/vox/downloa
 O ecossistema é estritamente dividido em papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
 - **`vox` (Cliente):** Para quem quer **só usar a rede e fim**. Interface cívica, composição de mensagens (texto, áudio e vídeo), enquetes, votações populares, diretório unificado de pessoas e mensagens ponto a ponto criptografadas sem precisar entender de técnica ou servidores.
 - **`vox populi` (Nó de Apoio):** Para quem quiser **colaborar ativamente com a infraestrutura**. Opera em segundo plano mantendo cache seguro (SHA-256) e provendo relay cego local (`blind_relay.py`), sem interface gráfica pesada e sem telemetria.
-- **`VoxPopuli-ZeroMemory.exe` (Nó de Memória Central Dev Alpha/Beta — Modo 3):** Executável nativo ultraleve (*170 KB*, C#/.NET 4.x zero-deps) em *System Tray* para sustentar a memória da rede durante Alpha/Beta com **WAL em disco `< 0,2 ms`**, **Batch Snapshot a cada 2s**, **Delta Sync**, **Túnel HTTPS Cloudflare automático** e **Signaling Beacon** via `wss://vox-sentinel.onrender.com`.
+- **`VoxPopuli-ZeroMemory.exe`** *(compilado localmente com `packaging/zero-central-memory-windows/build.ps1`; não vai na Release do GitHub)* **(Nó de Memória Central Dev Alpha/Beta — Modo 3):** Executável nativo ultraleve (*~170 KB*, C#/.NET 4.x zero-deps) em *System Tray* para sustentar a memória da rede durante Alpha/Beta com **WAL em disco `< 0,2 ms`**, **Batch Snapshot a cada 2s**, **Delta Sync**, **Túnel HTTPS Cloudflare automático** e **Signaling Beacon** via `wss://vox-sentinel.onrender.com`.
 - **⚡ Efeito Boost Local:** Abrir cliente e nó no mesmo computador conecta automaticamente o cliente em loopback HTTP (`127.0.0.1:3920` / `127.0.0.1:3921`), acelerando a renderização e sincronizando o estado local sem consumir franquia de internet.
 
 ### Matriz de Distribuição e Suporte aos 4 Sistemas Operacionais
 
-> **Proveniência dos binários:** `.exe` e `.apk` não ficam mais no git. São compilados no GitHub Actions ([`release-binarios.yml`](./.github/workflows/release-binarios.yml)) ao publicar uma tag `v*`, com `SHA256SUMS` e atestação de origem (`actions/attest-build-provenance`) anexados à Release. Confira o hash antes de instalar. Tamanhos variam por release e estão na página da Release.
+> **Proveniência dos binários:** `.exe` e `.apk` não ficam mais no git. São compilados no GitHub Actions ([`release-binarios.yml`](./.github/workflows/release-binarios.yml)) ao publicar uma tag `v*`, com `SHA256SUMS` e atestação de origem (`actions/attest-build-provenance`) anexados à Release. Confira o hash antes de instalar. Tamanhos variam por release e estão na página da Release. *A Release mais recente é a `v7.40` (09/11/2026); os binários não acompanham cada versão do PWA.*
 
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](https://github.com/yurikayel/vox/releases/latest/download/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](https://github.com/yurikayel/vox/releases/latest/download/VoxPopuli.exe) *(11.7 MB)*<br>`packaging/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
-| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](https://github.com/yurikayel/vox/releases/latest/download/Vox.exe) | [**`VoxPopuli.exe`**](https://github.com/yurikayel/vox/releases/latest/download/VoxPopuli.exe)<br>`packaging/zero-central-memory-windows/` *(~170 KB, compilar localmente)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
+| **2. Google Android**<br>(7.0+) | [**`vox.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox.apk) | [**`vox-populi.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox-populi.apk) | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
 | **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](packaging/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
-| **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](packaging/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
+| **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA; espelho opcional — depende de secrets de deploy, ver [INFRA-CUSTOS](./docs/INFRA-CUSTOS.md); PWA oficial: [GitHub Pages](https://yurikayel.github.io/vox/))* | [**Guia macOS launchd**](packaging/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
 
 ---
 
@@ -77,11 +78,13 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `315e334` |
-| **Suíte de Testes** | **2206** (`1962` JS + `244` Python) |
+| **Commit SHA** | `667fcda` |
+| **Suíte de Testes** | **2301** (`1981` JS + `320` Python) |
 | **Service Worker** | `vox-pwa-v7.143-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
+
+*Medido em `develop`. A `main` pública está no release #262 (`bda1dd4`) e não inclui os PRs posteriores (#281–#283 e docs posteriores); o README na `main` atualiza no próximo release. O total **2301** inclui **9** testes pulados (8 JS + 1 Python) e **16** `todo` (JS). Testes que de fato passam: **2276** (1957 JS + 319 Python). Última Release de binários no GitHub: `v7.40` (09/11/2026), anterior ao Service Worker atual.*
 
 O histórico Git, a configuração de CI, o [CHANGELOG.md](./CHANGELOG.md) e [docs/release-metadata.json](./docs/release-metadata.json) são as referências para releases. Os metadados descrevem uma release registrada; não representam automaticamente o branch de trabalho, alterações locais ou o estado do deploy neste instante. Consulte os resultados da CI associados ao commit antes de tratar um build como validado.
 
@@ -157,7 +160,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Assistentes:** rede (`#/settings/network/guia`), Senha Soberana (`#/backup`) e carteira (`#/wallet/guia`).
 * **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/specs/login-social.md](./docs/specs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
 * **Mensagens:** contador de não lidas no menu e no topo.
-* **Rumo à rede pública (portão G1, PR #17):** kill-switch por configuração (`client/config/flags.json`), denúncia no app com canais oficiais, aviso antes de gravar no Arweave ("permanente" ou "só na malha"), perfis fictícios só no modo demonstração, aviso de que o nome civil aparece no Pix e CSP sem script inline.
+* **Rumo à rede pública (portão G1, PR #17):** kill-switch por configuração (`client/config/flags.json`), denúncia no app com canais oficiais, aviso antes de gravar no Arweave ("permanente" ou "só na malha"; gravação hoje pausada, `arweaveUpload: false`), perfis fictícios só no modo demonstração, aviso de que o nome civil aparece no Pix e CSP sem script inline.
 * **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (100 MB em disco, fixo, e até 200 MB/dia); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 512 MB a 1 GB de disco e até o dobro por dia, só no Wi-Fi.
 * **Privacidade e período eleitoral:** aviso de que outros aparelhos veem seu IP e opção **Esconder meu IP** (só via TURN; sem efeito enquanto não houver TURN configurado). De 16/08 a 31/10 de ano par, ou com `electoralMode` ligado, a linha "Sugestões cívicas" some (Res. TSE 23.755/2026).
 * **Resiliência:** leitura em 4 gateways com tempo limite de 8 s (3 deles indexam o Vox e servem de testemunha GraphQL; o `ar-io.dev` fica só para leitura do conteúdo); mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
@@ -165,7 +168,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Caixa de saída das DMs (PM-78):** mensagem que não saiu fica guardada e é reenviada enquanto o app está aberto ("⏳ Aguardando"), por até 7 dias ("⚠ Não entregue"). Spec da próxima etapa, a mochila de DMs: [mochila-dm-v0](./docs/specs/mochila-dm-v0.md).
 * **Sincronização por inventário ao conectar (PM-80):** cada aparelho manda hashes do que tem e só pede o que falta (≈ 157 KB → ≈ 7 KB por sentido quando já sincronizados) ([spec](./docs/specs/sync-inventario-v0.md)).
 * **Canal (PM-81):** dono ou moderação transforma a comunidade em canal; só a moderação publica posts e todos comentam ([spec](./docs/specs/canal-comunidade-v0.md)).
-* **Convite com vínculo assinado (PM-82):** o link "Convide amigos" leva um token; quem entra aceita, e o app de quem convidou confirma sozinho. O vínculo tem as duas assinaturas e marca o padrinho, base do **moderador natural** (PM-83, a fazer; [spec](./docs/specs/moderador-natural-v0.md)).
+* **Convite com vínculo assinado (PM-82):** o link "Convide amigos" leva um token; quem entra aceita, e o app de quem convidou confirma sozinho. O vínculo tem as duas assinaturas e marca o padrinho, base do **moderador natural** (PM-83, em laboratório atrás da flag `vox.lab.moderador`, SW v7.74; [spec](./docs/specs/moderador-natural-v0.md)).
 * **Correção: post guardado voltou a bater com a assinatura (#49):** desde o primeiro commit P2P, o post gravado no aparelho levava campos extras e quem o recebia de volta descartava. Só o que circulava ao vivo chegava a outros aparelhos; agora a sincronização e a memória central repassam a forma assinada.
 * **Correção: memória central confere o que recebe (PM-86):** post e remoção vindos do servidor só entram com assinatura válida do autor, pela regra do PM-09 e sem trocar post de outra pessoa; a mídia anexada fica fora da forma assinada.
 * **Correção: foto enviada ao vivo chega a quem recebe (PM-87):** o post com foto era assinado com a imagem e enviado sem ela, e quem recebia descartava. Agora a imagem sai antes da assinatura e viaja ao lado do post, conferida pelo hash assinado.
@@ -176,7 +179,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
   * **Pipeline (PM-95):** CodeQL em todo PR, Dependabot, actions fixadas por SHA, token do CI só com leitura e auditoria de segredos que pega JWK privada.
   * **Relay com dono (PM-94, SW v7.65):** o cofre só é regravado com a prova derivada da Senha Soberana, e a mensagem da caixa de DMs só é apagada por quem a recebeu. Relay e nó Windows conferem `Host` e `Origin` e só aceitam escrita em JSON ([ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md)).
   * **Assinatura v2 (PM-85, SW v7.66):** a assinatura passa a cobrir os campos aninhados (`photoTags`, `mediaRef`). O aparelho já confere a nova forma e assina com ela a partir de 24/11/2026; marca de foto em post antigo aparece como não verificada.
-* **Defeito aberto:** quem convidou quem fica visível na malha ([THREAT-MODEL T19](./docs/THREAT-MODEL.md), PM-83).
+* **Defeito aberto:** quem convidou quem continua visível na malha ([THREAT-MODEL T19](./docs/THREAT-MODEL.md)); o moderador natural (PM-83) existe só em laboratório.
 * **Peso do app guardado no aparelho:** o precache é medido a cada teste, sem teto de bytes; a regra é mantê-lo enxuto dentro do razoável ([docs/HARDENING.md](./docs/HARDENING.md), "Peso do precache").
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
@@ -265,7 +268,7 @@ Detalhes: [Brainstorm Tramitado × Vox](docs/brainstorms/brainstorm-sinergia-tra
 Em conformidade com a auditoria de honestidade cívica ([docs/audits/honest-copy-audit-2026-10-23.md](./docs/audits/honest-copy-audit-2026-10-23.md)):
 
 * **O Vox ainda não oferece P2P universal entre dispositivos:** gateways públicos Arweave, servidores de sinalização WebRTC e nós voluntários de memória/relay são usados para localizar e sincronizar dados; o comportamento depende da disponibilidade da rede e da implementação ativa.
-* **O Vox NÃO promete imunidade judicial:** Toda postagem pública no permaweb é permanente e auditável. As normas da legislação brasileira ([COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
+* **O Vox NÃO promete imunidade judicial:** o que já foi gravado no Arweave é permanente e auditável, e o que circula pela rede de seguidores pode ser replicado por outros aparelhos sem que o Vox consiga apagar todas as cópias. Hoje o cliente não grava no Arweave (`arweaveUpload: false`). As normas da legislação brasileira ([COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
 * **O Vox NÃO publica sozinho nas redes sociais:** O protocolo POSSE gera rascunhos, links e compartilhamentos assistidos via intents oficiais; o envio final é sempre um ato consciente e deliberado do usuário.
 * **O repositório e as comunidades são coisas distintas:** o código não opera nem governa automaticamente as comunidades. Relays e espelhos são opcionais e substituíveis; o Node Zero para Windows/Linux escuta localmente em loopback (com suporte opcional a túnel HTTPS Cloudflare no modo Dev Alpha/Beta).
 
@@ -312,33 +315,15 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 
 ### Decisões Arquiteturais Registradas (ADRs)
 
-* **[ADR-001](./docs/adr/001-contribution-attestation-export.md):** Atestação exportável de contribuição P2P.
-* **[ADR-002](./docs/adr/002-oauth-profile-enrich-client.md):** Enriquecimento de perfil client-only via OAuth.
-* **[ADR-003](./docs/adr/003-profile-card-gossip.md):** Cartão de malha e propagação gossip de perfis.
-* **[ADR-004](./docs/adr/004-gateway-honest-fallback.md):** Fallback transparente e honesto de leitura reserva de gateways.
-* **[ADR-005](./docs/adr/005-collective-profile-m-of-n.md):** Perfil coletivo M-de-N via multi-assinatura independente (Tese T02).
-* **[ADR-006](./docs/adr/006-p2p-profile-identity-gossip-hardening.md):** Hardening de identidade e gossip de perfis P2P.
-* **[ADR-007](./docs/adr/007-zero-complexity-monolith-decomposition.md):** Decomposição de monólito e limite de complexidade cognitiva.
-* **[ADR-008](./docs/adr/008-vox-populi-community-node-architecture.md):** Arquitetura do Nó Comunitário Vox Populi.
-* **[ADR-009](./docs/adr/009-multi-gateway-graphql-corroboration.md):** Corroboração de múltiplos gateways GraphQL.
-* **[ADR-010](./docs/adr/010-vox-contribution-engine-execute-e-ajude.md):** Motor de contribuição voluntária e nós anfitriões.
-* **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
-* **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
-* **[ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md):** Sistema de Voxels e Conquistas Cívicas.
-* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md) (substituído pelo 025):** Cofre cifrado e recuperação multi-dispositivo.
-* **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
-* **[ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md):** Design System Sovereign Agora e Democracia Direta.
-* **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** Consolidação do planejamento — ROADMAP único.
-* **[ADR-018](./docs/adr/018-selo-govbr-via-parceiro-publico.md) (proposto):** Selo gov.br opcional via parceiro público, desacoplado do login.
-* **[ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md):** Esquecer por padrão; memória cívica por três caminhos.
-* **[ADR-020](./docs/adr/020-postura-de-operacao-do-piloto-g1.md):** Postura de operação do piloto G1.
-* **[ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md):** Integridade na entrada — forma assinada guardada, tudo que entra é conferido.
-* **[ADR-022](./docs/adr/022-memoria-central-por-consentimento.md):** Memória central escolhida pela pessoa, nunca fonte de verdade.
-* **[ADR-023](./docs/adr/023-moderacao-em-camadas-e-moderador-natural.md):** Moderação em camadas e moderador natural assimétrico.
-* **[ADR-024](./docs/adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md):** Divulgação responsável e honestidade sobre segurança.
-* **[ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md):** Cofre de recuperação v2 — só a Senha Soberana abre.
+Destaques (status em [docs/adr/README.md](./docs/adr/README.md)):
 
-Índice com status: [docs/adr/README.md](./docs/adr/README.md). Todas as decisões institucionais e de arquitetura em vigor, numa página: [docs/DECISOES.md](./docs/DECISOES.md).
+* **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** ROADMAP único — checklist vivo do produto.
+* **[ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md):** Esquecer por padrão; preservação pela rede de seguidores.
+* **[ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md):** Cofre v2 — só a Senha Soberana abre.
+* **[ADR-035](./docs/adr/035-camadas-e-contextos.md):** Camadas e contextos (`identity/`, `vault/`, `app/`).
+* **[ADR-037](./docs/adr/037-cofre-na-malha.md):** Cofre na malha e recuperação entre aparelhos.
+
+Os **39** ADRs (001–039), com status, estão em [docs/adr/README.md](./docs/adr/README.md). Os marcados `proposed` ainda não são decisão em vigor. Decisões institucionais numa página: [docs/DECISOES.md](./docs/DECISOES.md).
 
 ---
 
@@ -359,7 +344,7 @@ O compromisso do Vox é permanecer aberto: código, protocolos, documentação e
 * Qualquer pessoa pode ler o código e a documentação, testar, relatar problemas e propor mudanças por issues e pull requests públicos no [GitHub](https://github.com/yurikayel/vox).
 * O histórico de revisão deve registrar motivação, evidências, testes e limitações. Mudanças que alterem protocolos ou regras precisam de explicação pública e tempo para contestação.
 * A revisão do mantenedor é hoje o caminho de integração; uma proposta pública não garante merge. Enquanto a administração permanecer concentrada, isso deve ser reconhecido como limite real da participação, não descrito como governança popular já alcançada.
-* Comece por [CONTRIBUTING.md](./CONTRIBUTING.md) (setup, branch → PR para `main`, testes). O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; DCO e lista de contribuidores em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
+* Comece por [CONTRIBUTING.md](./CONTRIBUTING.md) (setup, branch → PR para `develop`, testes). O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; DCO e lista de contribuidores em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
 
 ### Trabalho necessário para que o projeto seja maior que qualquer indivíduo
 
