@@ -60,11 +60,23 @@ test("dm - thread: sem chave do par mostra aviso e desabilita o envio", () => {
   assert.match(main.innerHTML, /id="btn-send-dm"[^>]*disabled/);
 });
 
-// Bugs achados (não consertados nesta rodada; ver PR). Reprodução: renderDmThread com mensagem recebida
-// { contextCard: { type: "topic", title: "t", url: "javascript:alert(1)" } } emite href="javascript:alert(1)";
-// e { mediaDataUrl: "data:text/html;base64,..." } emite <img src="data:text/html...">.
-test.todo("dm - thread: cartão de contexto recebido com href javascript: não vira link ativo (render/dm.js não normaliza m.contextCard; só escapeHtml no href)");
-test.todo("dm - thread: mediaDataUrl recebida só aceita imagem raster em base64 (render/dm.js não passa m.mediaDataUrl por sanitizeMediaUrl)");
+test("dm - thread: cartão de contexto recebido com href javascript: não vira link ativo", () => {
+  const main = fakeMain();
+  const bad = { id: "m_js", from: PEER, text: "oi", ts: 1, contextCard: { type: "topic", title: "Tópico", url: "javascript:alert(1)" } };
+  const ok = { id: "m_ok", from: PEER, text: "oi", ts: 2, contextCard: { type: "topic", title: "Interno", url: "#/t/123" } };
+  dm.renderDmThread(main, PEER, [bad, ok], ME, { hasDmPub: true });
+  assert.ok(!main.innerHTML.includes("javascript:"), "esquema javascript: descartado");
+  assert.ok(main.innerHTML.includes('href="#/t/123"'), "rota interna válida preservada");
+});
+
+test("dm - thread: mediaDataUrl recebida só aceita imagem raster em base64", () => {
+  const main = fakeMain();
+  const bad = { id: "m_html", from: PEER, text: "oi", ts: 1, mediaDataUrl: "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==" };
+  const ok = { id: "m_png", from: PEER, text: "foto", ts: 2, mediaDataUrl: "data:image/png;base64,iVBORw0KGgo=" };
+  dm.renderDmThread(main, PEER, [bad, ok], ME, { hasDmPub: true });
+  assert.ok(!main.innerHTML.includes("data:text/html"), "data:text/html descartado");
+  assert.ok(main.innerHTML.includes('src="data:image/png;base64,iVBORw0KGgo="'), "imagem raster válida preservada");
+});
 
 const TALLY = { yes: 3, no: 1, abstain: 0, totalEligible: 4, state: "open", ineligibleCount: 2, votesDetail: [] };
 
