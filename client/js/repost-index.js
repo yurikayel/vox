@@ -5,9 +5,15 @@ import { getOriginalId } from "./repost-draft.js";
 const KEY = "vox-own-reposts-v1";
 let counts = new Map();
 
+/** @param {unknown} raw */
+function normalizeOwnMap(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  return raw;
+}
+
 function readOwn() {
   try {
-    return JSON.parse(localStorage.getItem(KEY) || "{}") || {};
+    return normalizeOwnMap(JSON.parse(localStorage.getItem(KEY) || "{}"));
   } catch {
     return {};
   }
