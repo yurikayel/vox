@@ -2,7 +2,7 @@
  * @file Cliente GraphQL Arweave — gateways, comunidades, tópicos e cache de DM pub.
  */
 
-import { fetchWithTimeout } from "./fetch-timeout.js";
+import { fetchWithTimeout, readResponseText } from "./fetch-timeout.js";
 import { honestMessage } from "./honest-errors.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
@@ -361,8 +361,9 @@ async function queryOne(gqlUrl, query, variables) {
     body: JSON.stringify({ query, variables }),
     // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
   }, { timeoutMs: GATEWAY_TIMEOUT_MS });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
+  const raw = await readResponseText(res, 4096);
+  if (!res.ok) throw new Error(`HTTP ${res.status}${raw ? `: ${raw.slice(0, 200)}` : ""}`);
+  const json = JSON.parse(raw);
   if (json.errors?.length) throw new Error(json.errors[0].message);
   return filterGraphqlData(json.data);
 }
