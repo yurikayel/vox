@@ -181,6 +181,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ## 6. Auditorias e snapshots
 
+- [auditoria-features-arquitetura-2026-11.md](./audits/auditoria-features-arquitetura-2026-11.md): auditoria empírica Fases 1–3 (README × fatos, camadas/modularidade ADR-035/PM-01, `FEATURES.md` × código × testes, top 10 gaps doc vs código; 19/11/2026)
 - [honest-copy-audit-2026-10-23.md](./audits/honest-copy-audit-2026-10-23.md): copy honesta (re-auditoria = DOC-04 no ROADMAP)
 - [revisao-devsecops-2026-11-10.md](./audits/revisao-devsecops-2026-11-10.md) — estado, arquitetura, segurança e pipeline (10/11/2026)
 - [auditoria-permaweb-descoberta-seguranca-2026-10-29.md](./audits/auditoria-permaweb-descoberta-seguranca-2026-10-29.md)
