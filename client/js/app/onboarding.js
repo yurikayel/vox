@@ -215,6 +215,7 @@ export function checkOAuthEnrichStep() {
     checkPactModal();
     return;
   }
+  if (document.getElementById("oauth-enrich-overlay")) return;
   openOAuthEnrichModal({ onComplete: () => checkPactModal(), withPact: true });
 }
 
