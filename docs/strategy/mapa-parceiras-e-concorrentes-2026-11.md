@@ -21,7 +21,7 @@ Inclui projetos indicados pelo mantenedor (Etnias, Tramitado, **Sua Voz** — ma
 | # | Parceira | Tamanho ou adoção | Conf. | O que observar e aprender | Onde cooperamos |
 |---|---|---|---|---|---|
 | 1 | **Etnias** (`etnias.site`) | ~100 mil usuários, ~500 comunidades (reportagem, início nov/2026) [1][19] | B | Rede indígena (modelo *Opy*); 5 línguas; loja; pede telefone — soberania **cultural**, plataforma centralizada | Troca de termos e Feira; compartilhar por link; piloto só com **consentimento coletivo** |
-| 2 | **Énóis** (`Rede-ENois/enois-*`) | Open source BR (tech); ~70★ backend, ~63★ frontend; commits nov/2026 [20] | A | Rede social brasileira para devs (React 19 + Spring Boot); ritmo de comunidade | Troca de contribuidores, POSSE, boas práticas BR (sem assumir parceria) |
+| 2 | **Énóis** (`enois.ia.br`, `Rede-ENois/enois-*`) | **GPL-3.0**; backend ~70★/~46 forks, frontend ~63★/~57 forks; >1.090 PRs; push 19/11/2026 [20][23] | A | Rede social BR para quem trabalha com tech; design system + catraca de lint/QA (paralelo a `audit:docs`/`audit:layers`) | Troca de contribuidores, moderação transparente, cross-post no compositor — **sem assumir parceria** |
 | 3 | **Tramitado** | Sem repo/URL público confirmado. Conversa em andamento | N | Tradução de PLs e reflexão individual ([sinergia](../brainstorms/brainstorm-sinergia-tramitado-vox-2026-11.md)) | Protocolo LCP; pauta legislativa na Vox (F9) — **confirmar link com mantenedor** |
 | 4 | **Sua Voz** | **Mantida na lista por decisão do mantenedor.** Não localizada como rede aberta em buscas (homônimos: ouvidoria/compliance) | N | Confirmar projeto, URL e responsável antes de qualquer contato | A definir (ex. ponte com dados abertos Câmara/Senado, ver [brainstorm F9](../brainstorms/brainstorm-autossustento-10-features-2026-11.md)) |
 | 5 | **e-Cidadania (Senado)** | 35 mi+ perfis; 19,8 mil ideias em 2018; 105 mil ideias em 10 anos [2] | A | Participação em massa; funil ideia → apoio → projeto | Dados abertos; levar conversa de comunidade à consulta oficial |
@@ -107,10 +107,40 @@ Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2026-02-19.
 | **Varanda** | 2026-11-19 | P2P ativo; previews OG/JPEG; push; Feira/Páginas; App Store gate [19] | Página pública de link compartilhado + assinatura (**PM-105**); não o modelo SMS/associação | 2026-02-19 |
 | **Etnias** | 2026-11-19 | Lançamento nov/2026; escala declarada em imprensa [1] | Nicho identitário + Feira; termos e consentimento | 2026-02-19 |
 | **Poosting** | 2026-11-11 | Feed cronológico; convite; marketing "sem algoritmo" [17] | Discurso POSSE vs centralização; não copiar produto fechado | 2026-02-19 |
-| **Énóis** | 2026-11-19 | Commits ativos; stack web moderna [20] | Comunidade dev BR; POSSE e governança open source | 2026-02-19 |
+| **Énóis** | 2026-11-19 | `moderacao-transparencia`, `ComposerCrossPost`, painel storage, notif. por projeto [20][23] | **REV-20** / **LAN-04**; destino no compositor (Social/Cívico/Comunidade); inspiração dashboard **Vox Memoria** ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)) | 2026-02-19 |
 | **Kwai** | 2025-12 (imprensa) | MAU BR; live e comércio [16] | Cache, baixa banda (não competir em vídeo recomendado) | 2026-02-19 |
 
-## 4. O que a pesquisa mostrou (leitura crítica)
+### 3.2 Tracking — plataformas globais (out–nov/2026)
+
+| Fonte | Movimento recente | Lição prática para a Vox | Itens ROADMAP / ADR |
+|---|---|---|---|
+| **WhatsApp / Discord / Poosting** | ANPD manteve suspensão do Go Live do Discord; WhatsApp reforça **&lt;18** (ECA Digital); Poosting **18+** e custo de nuvem | Piloto 18+ honesto; sem live sem lastro jurídico; parecer **REV-12** | ADR-020, PM-67, REV-12 |
+| **Bluesky / ATProto** | *Atproto Spaces* (beta público **01/12/2026**); *Atmospheric Groups* por DID | Observar modelo de permissões antes de fechar malha comunitária | [ADR-038](../adr/038-subrede-malha-e-manifesto.md) |
+| **Telegram** | Bot API 10.4 — widgets HTML/JS na bolha (risco malicioso); *Hidden Chats* | Manter Webxdc em sandbox CSP rede-zero ([ADR-012](../adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)) | — |
+| **Mastodon 5.0 / Reddit / Instagram / X** | CW vs mídia sensível; Reddit *For You* vs *Following*; selo perfil IA (IG); crédito ao autor em repost de foto (X) | Futuro barato: CW separado, crédito em repost de foto, rótulo conta automatizada | — |
+| **PeerTube / Signal** | PeerTube **RCE via SVG** (v8.3.1+); CVE Signal RingRTC pós-desligar chamada | Bloquear `image/svg+xml` em upload/avatar/DM; WebRTC **fail-closed** | Ver nota técnica abaixo |
+
+**Nota técnica (SVG, 2026-11-19):** `composer-media.js` e feed inline limitam a JPEG/PNG/WebP/GIF. Alguns inputs de perfil/DM ainda usam `accept="image/*"` (poderia admitir SVG no OS) — reforço alinhado à lição PeerTube fica fora deste doc (código).
+
+## 4. Radar — aprendizados por ator (nov/2026)
+
+Síntese para a próxima rodada trimestral. **Nenhum código de terceiros** na Vox AGPL (Varanda = PolyForm Noncommercial).
+
+### 4.1 Varanda (concorrente P2P — *clean-room* only)
+
+- **Adotar (conceito):** (1) página pública + OG + capa JPEG no semeador → **[PM-105](../ROADMAP.md)**; (2) sync de "visto" entre aparelhos; (3) **Páginas** de coletivo/negócio na Feira + grupos privados.
+- **Não copiar:** licença não OSI; certificado central da Associação + **SMS** (`account phone`, pedido judicial) vs soberania Vox ([ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md), [ADR-037](../adr/037-cofre-na-malha.md)).
+
+### 4.2 Énóis (parceira de observação — GPL-3.0)
+
+- **Institucional:** forks ativos, nicho claro, QA com baseline de supressões — modelo para **bus factor** e editais.
+- **Features de referência (19/11/2026):** moderação transparente + fila emergência (**REV-20**, **LAN-04**); checkbox de cross-post no compositor; painel de operações de storage (inspira **Vox Memoria**); notificações por projeto na comunidade (**PM-23**).
+
+### 4.3 Ecossistema BR (Fediverso + cívico)
+
+**Etnias** reforça nicho identitário + Feira; **MSG GOV** (Matrix + `gov.br`) valida [ADR-018](../adr/018-selo-govbr-via-parceiro-publico.md); **Alquimídia / WebSocialBR / FediGov** são interlocutores naturais quando o Vox sair do modo fechado. **Sua Voz** e **Tramitado** permanecem na lista até confirmar links.
+
+## 5. O que a pesquisa mostrou (leitura crítica)
 
 1. **Os números não são comparáveis.** MAU, alcance de anúncios e estimativas não devem ser misturados.
 2. **Parceiras com mais escala continuam sendo as institucionais** (e-Cidadania, Brasil Participativo). Redes alternativas são pequenas no agregado global, mas **o Fediverso BR e o Varanda** são eixos vivos de soberania digital no Brasil — detalhe em §2.2 e §3.1.
@@ -119,14 +149,14 @@ Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2026-02-19.
 5. **Etnias** exige consentimento coletivo antes de qualquer proposta de piloto.
 6. **Homônimo Varanda Campinas** não é o produto P2P de `varanda.app`.
 
-## 5. Como observar e aprender (rotina)
+## 6. Como observar e aprender (rotina)
 
-- **Revisão trimestral:** atualizar §3.1, revisar Conf. e datas em §7.
+- **Revisão trimestral:** atualizar §3.1, §3.2 e §4, revisar Conf. e datas em §8.
 - **Checklist técnica:** para atores BR P2P/open, 1 passagem por GitHub (commits/PRs/releases) por rodada.
 - **Ficha por organização** (1 página): só fontes públicas; observação **não é contato**.
 - **Primeiras fichas sugeridas (atualizado):** Varanda (PM-105), Etnias, Data Privacy Brasil, Alquimídia/WebSocialBR, Poosting.
 
-## 6. Pendências antes de usar fora do repositório
+## 7. Pendências antes de usar fora do repositório
 
 - [x] **Varanda** — verificado em fonte primária GitHub (2026-11-19); classificado como concorrente; homônimo Campinas documentado.
 - [ ] Confirmar **Tramitado** (link, responsável, estado) com o mantenedor.
@@ -136,7 +166,7 @@ Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2026-02-19.
 - [ ] Trocar fontes secundárias por primárias onde possível (FediDB, comunicados).
 - [ ] Rodar [parecer jurídico](../ROADMAP.md) (REV-12) se a lista virar página pública.
 
-## 7. Fontes
+## 8. Fontes
 
 1. [Brasil 247 — Etnias](https://www.brasil247.com/tecnologia/indigenas-do-para-e-de-ms-lancam-primeira-rede-social-para-povos-originarios/)
 2. [Senado — e-Cidadania](https://www12.senado.leg.br/noticias/materias/2023/12/28/participacao-popular-no-processo-legislativo-triplicou-em-2023)
@@ -157,6 +187,7 @@ Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2026-02-19.
 17. [Mobile Time — Poosting](https://www.mobiletime.com.br/noticias/06/02/2026/poosting-rede-social-br/) · [Fast Company Brasil](https://fastcompanybrasil.com/tech/poosting-conheca-a-rede-social-sem-algoritmos-criada-pelo-zuckerberg-cearense/) · [Spalhe App Store](https://apps.apple.com/au/app/id6444139282)
 18. [OccupySaaS](https://occupysaas.com/) · [GitHub](https://github.com/occupysaas)
 19. [Varanda — GitHub `Varanda-org/varanda`](https://github.com/Varanda-org/varanda) · [varanda.app](https://varanda.app) (consultados 2026-11-19; atividade de PRs mergeados)
-20. [Énóis — GitHub `Rede-ENois`](https://github.com/Rede-ENois) (consultado 2026-11-19)
+20. [Énóis — GitHub `Rede-ENois`](https://github.com/Rede-ENois) · [enois.ia.br](https://enois.ia.br) (consultado 2026-11-19)
+23. Énóis — PRs/commits 19/11/2026 (nomes citados no repo: `moderacao-transparencia`, `ComposerCrossPost`, `storage-operacoes-painel`, `community-project-notifications`) — consulta GitHub mantenedor
 21. [Alquimídia](https://alquimidia.org/) · [nossa.social.br](https://nossa.social.br)
 22. [Bolha.us](https://bolha.us/) · [WebSocialBR](https://websocial.org.br/) · [FediGov](https://fedigov.org.br/) · [Rede pela Soberania Digital](https://red.org.br/) · [URSAL](https://ursal.zone/) (consultados 2026-11-19)
