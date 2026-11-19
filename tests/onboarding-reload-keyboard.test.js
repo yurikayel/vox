@@ -241,13 +241,18 @@ test("LT-07a: checkOAuthEnrichStep não redesenha quando #oauth-enrich-overlay j
   const prevDoc = globalThis.document;
   localStorage.clear();
   try {
-    const modalContainer = { innerHTML: "<p>digitando...</p>" };
+    const modalContainer = {
+      innerHTML: "<p>digitando...</p>",
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    };
     globalThis.document = {
       getElementById: (id) => {
         if (id === "oauth-enrich-overlay") return { id };
         if (id === "modal-container") return modalContainer;
         return null;
       },
+      addEventListener: () => {},
     };
     checkOAuthEnrichStep();
     assert.equal(modalContainer.innerHTML, "<p>digitando...</p>", "não deve sobrescrever o modal já aberto");
