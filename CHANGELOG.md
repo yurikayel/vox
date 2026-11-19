@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: prompt Claude auditoria + MVP técnico (nov/2026)
+- `docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
+
 ### Docs: análise honesta do repositório (nov/2026)
 - `docs/strategy/analise-repositorio-vox-2026-11.md`: retrato versionado (arquitetura, três portões, gatilho INF >50, estado Git pós-#281–#283); indexado em `docs/README.md`.
 - `docs/ROADMAP.md`: nota de leitura calendário 2027 × INF; "Onde estamos" aponta gatilho >50. Sem bump de SW.
