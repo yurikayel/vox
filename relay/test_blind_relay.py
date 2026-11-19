@@ -81,7 +81,7 @@ class TestBlindRelay(unittest.TestCase):
             "coveredSerial": 4,
             "snapshot": "Y_STATE_CONSOLIDADO_V2_BASE64",
         }
-        blind_relay.store_snapshot("comunidade_feira", snapshot, prune_older=True)
+        blind_relay.store_snapshot("comunidade_feira", snapshot, prune_older=True, proof="ab" * 32)
 
         latest = blind_relay.get_latest_snapshot("comunidade_feira")
         self.assertIsNotNone(latest)

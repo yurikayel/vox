@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from relay import snapshot_auth
 from relay.safe_path import child_of, only_chars
 
 MAX_ENVELOPE_SIZE = 64 * 1024  # 64 KB por envelope
@@ -53,6 +54,10 @@ def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
         return Path(base).resolve() / "blind_relay"
     return Path(__file__).resolve().parent / ".blind_relay"
 
+
+# Exceções de `store_snapshot` (RFC 0002), reexportadas: quem chama o relay cego não importa `snapshot_auth`.
+SnapshotConflict = snapshot_auth.SnapshotConflict
+SnapshotForbidden = snapshot_auth.SnapshotForbidden
 
 RELAY_DIR = resolve_relay_dir()
 
@@ -213,56 +218,128 @@ def _read_current_snapshot(snap_path: Path) -> Optional[Dict[str, Any]]:
 
 
 def _assert_snapshot_advances(curr: Dict[str, Any], epoch: int, covered_serial: int) -> None:
-    """Recusa snapshot que não avança a época ou que recua a cobertura.
+    """Recusa snapshot que não avança a época ou que recua a cobertura (`SnapshotConflict`, 409).
 
     Recuar `coveredSerial` deixaria um buraco: os deltas entre o novo e o antigo
     já foram podados pelo snapshot anterior e o cold boot não os recuperaria.
     """
     curr_epoch = _coerce_int(curr.get("epoch"), "epoch")
-    if epoch <= curr_epoch:
-        raise ValueError(f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})")
     curr_covered = _coerce_int(curr.get("coveredSerial"), "coveredSerial")
+    if epoch <= curr_epoch:
+        raise snapshot_auth.SnapshotConflict(
+            f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})",
+            curr_epoch,
+            curr_covered,
+        )
     if covered_serial < curr_covered:
-        raise ValueError(f"coveredSerial ({covered_serial}) não pode ficar abaixo do atual ({curr_covered})")
+        raise snapshot_auth.SnapshotConflict(
+            f"coveredSerial ({covered_serial}) não pode ficar abaixo do atual ({curr_covered})",
+            curr_epoch,
+            curr_covered,
+        )
 
 
-def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: bool = True) -> Dict[str, Any]:
+def _max_live_serial(chan_path: Path) -> int:
+    """Maior `serial` entre os envelopes vivos do canal (0 se não há nenhum com serial)."""
+    now = int(time.time())
+    top = 0
+    for file in chan_path.glob("env_*.json"):
+        stored = _stored_file(chan_path, file.name)
+        loaded = _load_listable(stored, now) if stored is not None else None
+        if loaded is not None:
+            top = max(top, loaded[2])
+    return top
+
+
+def _owner_numbers(record: Optional[Dict[str, Any]]) -> Optional[Tuple[int, int]]:
+    """`(epoch, coveredSerial)` do registro do dono, ou None se o canal não tem dono."""
+    if snapshot_auth.stored_owner(record) is None:
+        return None
+    return _coerce_int(record.get("epoch"), "epoch"), _coerce_int(record.get("coveredSerial"), "coveredSerial")
+
+
+def _is_same_snapshot(record: Optional[Dict[str, Any]], epoch: int, digest: str) -> bool:
+    """True se o dono já guardou exatamente este snapshot (mesma época e mesmo resumo)."""
+    if snapshot_auth.stored_owner(record) is None:
+        return False
+    return record.get("digest") == digest and _coerce_int(record.get("epoch"), "epoch") == epoch
+
+
+def _check_snapshot_rules(
+    chan_path: Path, curr: Optional[Dict[str, Any]], authed: bool, epoch: int, covered_serial: int
+) -> None:
+    """Regras de avanço. Autenticado ignora o registro sem dono (legado ou `auth: false`) e tem tetos de salto."""
+    if not authed:
+        if curr is not None:
+            _assert_snapshot_advances(curr, epoch, covered_serial)
+        return
+    owner_numbers = _owner_numbers(curr)
+    if owner_numbers is not None:
+        _assert_snapshot_advances(curr, epoch, covered_serial)
+    snapshot_auth.check_jumps(owner_numbers, _max_live_serial(chan_path), epoch, covered_serial)
+
+
+def _snapshot_record(
+    channel_id: str, snapshot_data: Dict[str, Any], numbers: Tuple[int, int, int], proof_hash: Optional[str]
+) -> Dict[str, Any]:
+    """Registro de `latest_snapshot.json`; só o autenticado leva `ownerHash`, `auth: true` e o resumo."""
+    epoch, timestamp, covered_serial = numbers
+    record = {
+        "channelId": channel_id,
+        "epoch": epoch,
+        "timestamp": timestamp,
+        "coveredSerial": covered_serial,
+        "storedAt": int(time.time()),
+        "data": snapshot_data,
+        "auth": proof_hash is not None,
+    }
+    if proof_hash is not None:
+        record[snapshot_auth.OWNER_FIELD] = proof_hash
+        record["digest"] = snapshot_auth.snapshot_digest(snapshot_data)
+    return record
+
+
+def _snapshot_numbers(snapshot_data: Dict[str, Any]) -> Tuple[int, int, int]:
+    """Valida o corpo do snapshot e devolve `(epoch, timestamp, coveredSerial)`."""
     if not isinstance(snapshot_data, dict):
         raise ValueError("Snapshot deve ser um dicionário JSON")
     if not snapshot_data.get("snapshot"):
         raise ValueError("Snapshot deve conter o campo 'snapshot'")
-
-    raw_bytes = json.dumps(snapshot_data).encode("utf-8")
-    if len(raw_bytes) > MAX_SNAPSHOT_SIZE:
+    if len(json.dumps(snapshot_data).encode("utf-8")) > MAX_SNAPSHOT_SIZE:
         raise ValueError(f"Snapshot excede limite de {MAX_SNAPSHOT_SIZE} bytes")
-
     epoch = _coerce_int(snapshot_data.get("epoch"), "epoch", 1)
     timestamp = _coerce_int(snapshot_data.get("timestamp"), "timestamp", int(time.time() * 1000))
     covered_raw = snapshot_data.get("coveredSerial") or snapshot_data.get("covered_serial")
-    covered_serial = _coerce_int(covered_raw, "coveredSerial")
+    return epoch, timestamp, _coerce_int(covered_raw, "coveredSerial")
 
+
+def store_snapshot(
+    channel_id: str, snapshot_data: Dict[str, Any], prune_older: bool = True, proof: Optional[str] = None
+) -> Dict[str, Any]:
+    """Grava o snapshot do canal e devolve o registro público (nunca com `ownerHash`).
+
+    `proof` é o valor de `X-Vox-Snapshot-Proof` (None se o cabeçalho não veio). Autorizar, checar as regras e
+    gravar é uma só decisão sob `_RELAY_LOCK` (RFC 0002): a poda só roda para snapshot autenticado; reenvio
+    idêntico do dono devolve o registro com `idempotent: true` sem regravar nem podar. Levanta
+    `SnapshotForbidden` (403), `SnapshotConflict` (409, subclasse de `ValueError`) ou `ValueError` (400).
+    """
+    numbers = _snapshot_numbers(snapshot_data)
+    presented = snapshot_auth.proof_hash(proof)
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
-        snap_path = _stored_file(chan_path, "latest_snapshot.json")
+        snap_path = _stored_file(chan_path, _SNAPSHOT_NAME)
         if snap_path is None:
             raise ValueError("nome de snapshot inválido")
         curr = _read_current_snapshot(snap_path)
-        if curr is not None:
-            _assert_snapshot_advances(curr, epoch, covered_serial)
-
-        record = {
-            "channelId": channel_id,
-            "epoch": epoch,
-            "timestamp": timestamp,
-            "coveredSerial": covered_serial,
-            "storedAt": int(time.time()),
-            "data": snapshot_data,
-        }
+        authed = snapshot_auth.authorize(curr, presented)
+        if authed and _is_same_snapshot(curr, numbers[0], snapshot_auth.snapshot_digest(snapshot_data)):
+            return snapshot_auth.public_view(curr, idempotent=True)
+        _check_snapshot_rules(chan_path, curr, authed, numbers[0], numbers[2])
+        record = _snapshot_record(channel_id, snapshot_data, numbers, presented if authed else None)
         snap_path.write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
-
-        if prune_older:
-            prune_covered_deltas(chan_path, covered_serial)
-        return record
+        if authed and prune_older:
+            prune_covered_deltas(chan_path, numbers[2])
+        return snapshot_auth.public_view(record)
 
 
 def get_latest_snapshot(channel_id: str) -> Optional[Dict[str, Any]]:
