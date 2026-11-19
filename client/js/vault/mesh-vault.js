@@ -443,15 +443,21 @@ export function loadNotices() {
   return Array.isArray(list) ? list.filter(isNotice) : [];
 }
 
+const MAX_NOTICES_PER_HOLDER = 7;
+const MAX_NOTICES = 50;
+
 /**
- * Guarda um aviso (sem repetir pedido do mesmo guarda).
+ * Guarda um aviso (sem repetir pedido do mesmo guarda e sem descartar pedido antigo ainda não decidido).
  * @param {{ holder: string, requestId: string, firstSeen: number }} notice
  * @returns {boolean} se era novo
  */
 export function addNotice(notice) {
   const list = loadNotices();
   if (list.some((n) => n.holder === notice.holder && n.requestId === notice.requestId)) return false;
-  writeJson(NOTICES_STORAGE, [...list, notice].slice(-50));
+  if (list.length >= MAX_NOTICES || list.filter((n) => n.holder === notice.holder).length >= MAX_NOTICES_PER_HOLDER) {
+    return false;
+  }
+  writeJson(NOTICES_STORAGE, [...list, notice]);
   return true;
 }
 
