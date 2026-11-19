@@ -9,16 +9,35 @@ import { showProfile, showHandleLookup, showWallet, showPixLookup } from "./scre
 import { showPeople, showConnect } from "./screens-people.js";
 import { showNetworkSettings, showStewardWizard, showLinkedAccounts } from "./screens-network.js";
 import { showDmList, showDmThread } from "./screens-dm.js";
-import { showVoxpedia } from "./screens-voxpedia.js";
-import { showAjudaTeste } from "./screens-ajuda-teste.js";
 import { showStatus } from "./screens-status.js";
 import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
 import { showSyncScreen } from "./screens-sync.js";
 import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
-import { showLabsFrames, showLabsMofn, showLabsDungeon, showDungeonScreen } from "./screens-labs.js";
 import { showNotFound } from "./screens-not-found.js";
+
+/** @type {Promise<typeof import("./screens-voxpedia.js")>|null} */
+let voxpediaRoute = null;
+/** @type {Promise<typeof import("./screens-ajuda-teste.js")>|null} */
+let ajudaTesteRoute = null;
+/** @type {Promise<typeof import("./screens-labs.js")>|null} */
+let labsRoute = null;
+
+function loadVoxpediaRoute() {
+  voxpediaRoute ??= import("./screens-voxpedia.js");
+  return voxpediaRoute;
+}
+
+function loadAjudaTesteRoute() {
+  ajudaTesteRoute ??= import("./screens-ajuda-teste.js");
+  return ajudaTesteRoute;
+}
+
+function loadLabsRoute() {
+  labsRoute ??= import("./screens-labs.js");
+  return labsRoute;
+}
 import { showAvisos, showComposeAviso } from "./aviso-flow.js";
 import {
   showComposeCommunity,
@@ -43,15 +62,15 @@ const ROUTE_DISPATCH_TABLE = {
   "handle-lookup": (r) => showHandleLookup(r.slug),
   "dm-list": () => showDmList(),
   "dm-thread": (r) => showDmThread(r.address),
-  voxpedia: () => showVoxpedia(),
+  voxpedia: async () => { (await loadVoxpediaRoute()).showVoxpedia(); },
   download: () => { window.location.href = "download.html"; },
   revolucao: () => { window.location.href = "revolucao.html"; },
-  "ajuda-teste": () => showAjudaTeste(),
+  "ajuda-teste": async () => { (await loadAjudaTesteRoute()).showAjudaTeste(); },
   status: () => showStatus(),
-  "labs-frames": () => showLabsFrames(),
-  "labs-mofn": () => showLabsMofn(),
-  "labs-dungeon": () => showLabsDungeon(),
-  dungeon: (r) => showDungeonScreen(r),
+  "labs-frames": async () => { (await loadLabsRoute()).showLabsFrames(); },
+  "labs-mofn": async () => { (await loadLabsRoute()).showLabsMofn(); },
+  "labs-dungeon": async () => { (await loadLabsRoute()).showLabsDungeon(); },
+  dungeon: async (r) => { (await loadLabsRoute()).showDungeonScreen(r); },
   community: (r) => showCommunity(r.id, r.tab),
   "community-avisos": (r) => showAvisos(r.communityId),
   "compose-aviso": (r) => showComposeAviso(r.communityId),

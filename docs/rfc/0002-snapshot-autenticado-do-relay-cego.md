@@ -1,7 +1,7 @@
 # RFC 0002 — Snapshot autenticado no relay cego
 
-**Status:** proposed — **não implementado** · pendente de decisão do dono (ver §9)  
-**Data:** 2026-11-18 · **Relacionados:** [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), [referência da API §6 (lacuna 12)](../specs/relay-api.md), `relay/blind_relay.py` (`store_snapshot`, `prune_covered_deltas`), `relay/test_blind_relay_adversarial.py`
+**Status:** accepted — opção A, modo `compat` · **relay implementado**; cliente pendente (ver §9, D2)  
+**Data:** 2026-11-18 · **Aceito:** 2026-11-19 · **Relacionados:** [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), [referência da API §6 (lacuna 12)](../specs/relay-api.md), `relay/blind_relay.py` (`store_snapshot`, `prune_covered_deltas`), `relay/test_blind_relay_adversarial.py`
 
 ## 1. Problema
 
@@ -42,7 +42,8 @@ prova = HEX( HMAC-SHA256( segredoSnapshot,
                           "vox-snapshot-proof-v1|" + host + "|" + channelId ) )   # 64 hex
 ```
 
-- `host`: nome do relay em minúsculas, com porta se não for a padrão (o mesmo que o cliente usa na URL). O relay usa o `Host` que o `request_guard` já validou (ADR-027 §3).
+- `host`: nome do relay em minúsculas, com porta se não for a padrão (o mesmo que o cliente usa na URL).
+  - **Correção na implementação:** o relay não tem o segredo e por isso **não consegue recalcular** a prova nem conferir `host` ou `channelId` dentro dela; guarda só o SHA-256 do valor recebido. O vínculo a `host` e `channelId` está no cálculo do cliente: a prova feita para outro relay ou outro canal é outro valor e não confere com o dono guardado (`403`). Por isso `store_snapshot` **não recebe `host`** e o `server.py` não lê o `Host` para isso (um parâmetro sem efeito seria uma garantia falsa). Consequência: relay atrás de proxy que reescreve o `Host` **não** precisa de `VOX_RELAY_ALLOWED_HOSTS` por causa da prova; mudar de domínio muda a prova e exige o reinício do dono (§7).
 - `channelId`: o id da rota, como o relay o valida (`[A-Za-z0-9_-]{1,128}`).
 
 **Envio.** Cabeçalho `X-Vox-Snapshot-Proof: <prova>` (64 hex). O corpo continua sendo o snapshot de hoje, sem campo novo. Relay antigo ignora o cabeçalho: nada quebra (§7).
@@ -145,7 +146,7 @@ Regras de registro:
 - **Reinício do dono** (segredo perdido, relay mudou de domínio, falso dono): o steward apaga `latest_snapshot.json` do canal e o próximo snapshot com prova reivindica. Documentar no [kit do steward](../operations/steward-relay-kit.md) na implementação. Troca de prova sem o steward fica fora desta fase.
 - Sem migração de dados em disco: o registro só ganha campos.
 
-Ordem de entrega sugerida: (1) este RFC e a spec; (2) relay (`blind_relay.py` + `server.py`) em `compat`; (3) cliente com `segredoSnapshot`, prova e conferência de `sig`; (4) `enforce`; (5) opção B, se decidida. A etapa 2 espera o PR de caminhos seguros do relay (sessão paralela) mesclar.
+Ordem de entrega: (1) este RFC e a spec ✅; (2) relay (`snapshot_auth.py`, `blind_relay.py`, `server.py`) em `compat` ✅; (3) cliente com `segredoSnapshot`, prova e conferência de `sig`; (4) `enforce`; (5) opção B, se decidida.
 
 ## 8. Testes que fecham os `skip`
 
@@ -170,15 +171,36 @@ prova mal formada → `400`; prova de outro canal → `403`; prova de outro `hos
 
 **Terceiro `skip` do arquivo** (`test_resposta_cortada_sinaliza_que_ha_mais`): não é de autenticação, **este RFC não o fecha**. Proposta curta, também pendente de decisão (D7): o `GET /relay/envelope/<canal>` mantém o corpo como lista e passa a mandar `X-Vox-Has-More: 1` e `X-Vox-Next-Serial: <maior serial devolvido>` quando cortou em 100. O teste povoa 120 envelopes e confere os dois cabeçalhos na primeira página e a ausência deles na segunda. Mexe em `server.py`.
 
-## 9. Decisões pendentes do dono
+## 9. Decisões do dono (2026-11-19)
 
-- **D1 — Mecanismo.** A (prova ao portador com resumo guardado, só biblioteca padrão; recomendada) ou ir direto a B (assinatura P-256 e desafio; exige verificador ECDSA no relay).
-- **D2 — Quem emite e de onde vem o segredo.** Só autores (recomendado) ou todo membro do canal. O laboratório atual não tem chave de canal: é preciso definir quem sorteia o `segredoSnapshot` e por qual caminho ele chega aos autores.
-- **D3 — Calendário.** Quanto tempo em `compat` antes de `enforce`. Como não há uso por humanos hoje, `compat` por um release e `enforce` no seguinte é suficiente.
-- **D4 — Tetos.** `MAX_COVERED_JUMP = 1000` e `MAX_EPOCH_JUMP = 16`, e o tratamento do relay novo e vazio (§5).
-- **D5 — Vínculo ao `Host`.** Prova presa ao nome do relay (recomendado) ou só ao canal. Preço: relay atrás de proxy que reescreve o `Host` precisa listá-lo em `VOX_RELAY_ALLOWED_HOSTS`, e mudar de domínio exige reinício do dono (§7).
-- **D6 — Primeiro a provar vira dono.** Aceitar esse limite, com a conferência de `sig` no cliente e o reinício pelo steward como defesa, ou exigir registro prévio do canal (rota nova de criação, mais superfície).
-- **D7 — Contrato de resposta.** `409` com época atual para conflito e idempotência explícita; aviso de corte no `GET` de envelopes (§8).
+Tomadas e implementadas no relay (`relay/snapshot_auth.py`, `relay/blind_relay.py`, `relay/server.py`). O cliente fica para outro PR.
+
+- **D1 — Mecanismo: opção A.** Prova HMAC-SHA256 em `X-Vox-Snapshot-Proof`; o relay guarda só `ownerHash`; só biblioteca padrão. A opção B (§4) segue como fase posterior, sem data.
+- **D2 — Quem emite: só autores.** O lado do cliente e a **origem do `segredoSnapshot` ficam fora do PR do relay e são pergunta aberta**: o laboratório atual não tem chave de canal, então falta definir quem sorteia o segredo e por qual caminho cifrado ele chega aos autores. Até lá nenhum cliente envia a prova e todo snapshot cai em `compat` como `auth: false`, **sem poda** (ver "Pendente do cliente" abaixo).
+- **D3 — Calendário.** `compat` é o padrão agora (`VOX_RELAY_SNAPSHOT_AUTH=compat|enforce`; valor ausente ou desconhecido vale `compat`); `enforce` num release seguinte, depois que o cliente emitir a prova.
+- **D4 — Tetos.** `MAX_COVERED_JUMP = 1000` e `MAX_EPOCH_JUMP = 16`, sobrescrevíveis por `VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP` e `VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP` (inteiro positivo; vazio, inválido ou `0` volta ao padrão). A limitação do relay novo e vazio (§5) continua valendo e é documentada.
+- **D5 — Vínculo ao host e ao canal.** A prova leva `host` e `channelId` (cálculo do cliente, §3). A correção do §3 explica por que o relay não confere isso por conta própria.
+- **D6 — Primeiro a provar vira dono.** Limite aceito. **Como o steward limpa o registro:** apagar `latest_snapshot.json` do diretório do canal (`<VOX_RELAY_BLIND_DIR>/<canal>/latest_snapshot.json`); o próximo snapshot com prova reivindica o canal. Os envelopes e o TTL de 7 dias não são tocados. Procedimento no [kit do steward](../operations/steward-relay-kit.md) e no [`relay/README.md`](../../relay/README.md).
+- **D7 — Contrato de resposta.** `409` com `{ "error", "currentEpoch", "currentCoveredSerial" }` para conflito e `200` com `"idempotent": true` para reenvio idêntico (sem regravar nem podar). A resposta do `POST` nunca traz `ownerHash`. O **aviso de corte no `GET` de envelopes (o terceiro `skip`) fica fora** deste trabalho.
+
+### Como ficou no relay
+
+- Sem dono e sem prova: `compat` grava `auth: false` e **nunca poda**; `enforce` devolve `403`.
+- Canal com dono: só a mesma prova (`hmac.compare_digest`); sem prova ou prova diferente, `403` nos dois modos. Um snapshot sem prova nunca se sobrepõe a um autenticado.
+- Registro legado (sem `auth`) ou `auth: false` não tem dono: não vale contra snapshot autenticado (`epoch` e `coveredSerial` dele são ignorados; só os tetos contra o maior `serial` visto valem).
+- Corpo e prova mal formados: `400`. `SnapshotConflict` é subclasse de `ValueError`; `SnapshotForbidden` não é (vira `403`).
+- Ler, autorizar e gravar são uma decisão só sob `_RELAY_LOCK`; a poda só roda para snapshot autenticado.
+- `Access-Control-Allow-Headers` passou a listar `X-Vox-Snapshot-Proof` (sem isso o preflight do navegador barraria o cabeçalho).
+
+### Pendente do cliente (fora do PR do relay)
+
+1. **D2:** quem sorteia o `segredoSnapshot` e como ele chega aos autores (pergunta aberta ao dono).
+2. `EpochCompactor` calcular e enviar `X-Vox-Snapshot-Proof` (§3), com vetores fixos de teste.
+3. Conferir a `sig` do snapshot contra os autores do canal antes de `mergeSnapshot` (§6, ataque 5; obrigatório).
+4. Tratar `409` rebuscando o snapshot e `403` como "este relay tem outro dono" (e `200` com `idempotent` como sucesso).
+5. Depois disso, subir um relay para `enforce` e só então promover o padrão.
+
+Enquanto o item 2 não existe, **a poda por snapshot está desligada na prática**: nenhum snapshot chega autenticado, então os envelopes saem só pelo TTL de 7 dias.
 
 ## 10. Consequências
 

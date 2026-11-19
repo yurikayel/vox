@@ -34,6 +34,14 @@ test("PM-85: convivência — assina v1 até SIGV2_FROM e v2 depois", () => {
   assert.deepEqual(withSigv({ a: 1 }, 2), { a: 1, sigv: 2 });
 });
 
+test("D5: ensaio SIGV2_FROM — no instante 00:00 UTC novos itens saem em v2 com campos aninhados", async () => {
+  const atFlip = await signedAt(SIGV2_FROM, { title: "virada", photoTags: TAGS, ts: SIGV2_FROM });
+  assert.equal(atFlip.sigv, 2);
+  assert.equal(await localAccount.verifyPayload(atFlip), true);
+  const tampered = { ...atFlip, photoTags: [{ ...TAGS[0], targetId: "vx_tampered" }] };
+  assert.equal(await localAccount.verifyPayload(tampered), false);
+});
+
 test("PM-85: post v2 protege as marcas da foto; v1 segue verificando", async () => {
   const v2 = await signedAt(SIGV2_FROM + 1000, { title: "foto", photoTags: TAGS, ts: SIGV2_FROM });
   assert.equal(v2.sigv, 2);

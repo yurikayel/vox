@@ -59,6 +59,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
+| Prompt Claude: auditoria features, docs e MVP técnico (nov/2026) | [prompt-claude-auditoria-mvp-tecnico-2026-11.md](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
@@ -66,6 +67,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
+| Retrato do repo (nov/2026, portões e drift main/develop) | [analise-repositorio-vox-2026-11.md](./strategy/analise-repositorio-vox-2026-11.md) |
+| Spec do MVP técnico (plataforma sem nicho, núcleo vs lazy vs labs, DoD) | [mvp-tecnico-vox-2026-11.md](./strategy/mvp-tecnico-vox-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 | Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
@@ -110,6 +113,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 2. Roadmap, estratégia e teses
 
 - [ROADMAP.md](./ROADMAP.md): **plano vivo**
+- [mvp-tecnico-vox-2026-11.md](./strategy/mvp-tecnico-vox-2026-11.md): **spec do MVP técnico** (10 seções: recorte do núcleo offline, recuperação, segurança, descentralização honesta, modularidade, DoD; sem nicho)
 - [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md): preceitos, escada de 4 camadas, moderação E1–E5
 - [rede-sustentada-participantes.md](./strategy/rede-sustentada-participantes.md) · [backlog-participacao-rede.md](./strategy/backlog-participacao-rede.md) (IDs V-P) · [infra-participativa-blindagem-crescimento.md](./strategy/infra-participativa-blindagem-crescimento.md) · [espacos-digitais-infra.md](./strategy/espacos-digitais-infra.md) (V-I01)
 - [campo-debate-aberto-ndp-2026-10.md](./strategy/campo-debate-aberto-ndp-2026-10.md): notas de campo, modelos A–D
@@ -179,6 +183,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ## 6. Auditorias e snapshots
 
+- [auditoria-features-arquitetura-2026-11.md](./audits/auditoria-features-arquitetura-2026-11.md): auditoria empírica Fases 1–3 (README × fatos, camadas/modularidade ADR-035/PM-01, `FEATURES.md` × código × testes, top 10 gaps doc vs código; 19/11/2026)
 - [honest-copy-audit-2026-10-23.md](./audits/honest-copy-audit-2026-10-23.md): copy honesta (re-auditoria = DOC-04 no ROADMAP)
 - [revisao-devsecops-2026-11-10.md](./audits/revisao-devsecops-2026-11-10.md) — estado, arquitetura, segurança e pipeline (10/11/2026)
 - [auditoria-permaweb-descoberta-seguranca-2026-10-29.md](./audits/auditoria-permaweb-descoberta-seguranca-2026-10-29.md)

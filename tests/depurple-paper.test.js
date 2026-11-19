@@ -8,8 +8,10 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "clie
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
+const SW_CACHE_ID = /vox-pwa-v7\.\d+(-[a-z0-9-]+)?/;
+
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v7\.\d+-real-network-audio-video-upload/);
+  assert.match(sw, SW_CACHE_ID);
   assert.ok(sw.includes('"./js/media-lofi.js"'));
   assert.ok(sw.includes('"./js/perma-notary.js"'));
   assert.ok(sw.includes('"./js/labs/parado/civic-credential.js"'));
@@ -28,7 +30,9 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/sky-theme.js"'));
   assert.ok(sw.includes('"./js/contribution-attestation.js"'));
   assert.ok(sw.includes('"./js/render/ajuda-teste.js"'));
-  assert.ok(sw.includes('"./js/app/screens-ajuda-teste.js"'));
+  assert.ok(sw.includes('"./js/app/onboarding-oauth-ui.js"'));
+  const shellOnly = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
+  assert.ok(!shellOnly.includes("screens-ajuda-teste.js"), "PM-01: tela ajuda-teste fora do precache");
 });
 
 test("service worker - shell assets 100% complete and exist on disk", () => {
@@ -59,10 +63,38 @@ test("service worker - shell assets 100% complete and exist on disk", () => {
   const unplugged = unpluggedMatch
     ? unpluggedMatch[1].split("\n").map((s) => s.trim().replace(/^['"]|['"],?$/g, "")).filter(Boolean)
     : [];
+  const IMPORT_RE = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|import\s*["']([^"']+)["']/g;
+  const toRel = (abs) => "./" + path.relative(root, abs).split(path.sep).join("/");
+  function entryPoints() {
+    const pages = fs.readdirSync(root).filter((f) => f.endsWith(".html")).map((f) => path.join(root, f));
+    for (const extra of ["download/index.html", "embed/demo.html", "embed/frame-demo.html"]) {
+      if (fs.existsSync(path.join(root, extra))) pages.push(path.join(root, extra));
+    }
+    const entries = [];
+    for (const page of pages) {
+      for (const m of fs.readFileSync(page, "utf8").matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) {
+        if (!/^https?:/.test(m[1])) entries.push(path.resolve(path.dirname(page), m[1]));
+      }
+    }
+    return entries;
+  }
+  const live = new Set();
+  const stack = entryPoints();
+  while (stack.length) {
+    const file = stack.pop();
+    if (live.has(file) || !fs.existsSync(file)) continue;
+    live.add(file);
+    for (const m of fs.readFileSync(file, "utf8").matchAll(IMPORT_RE)) {
+      const spec = m[1] || m[2] || m[3];
+      if (spec?.startsWith(".")) stack.push(path.resolve(path.dirname(file), spec));
+    }
+  }
+  const reachableJs = new Set([...live].map(toRel));
   const allJs = walk(path.join(root, "js"));
   for (const js of allJs) {
     const rel = "./" + path.relative(root, js).replace(/\\/g, "/");
-    assert.ok(assets.includes(rel) || unplugged.includes(rel), `Client JS file ${rel} must be listed in SHELL_ASSETS or UNPLUGGED_MODULES`);
+    const accounted = assets.includes(rel) || unplugged.includes(rel) || reachableJs.has(rel);
+    assert.ok(accounted, `Client JS file ${rel} must be in SHELL, UNPLUGGED or alcançável (PM-01 lazy)`);
     assert.ok(!(assets.includes(rel) && unplugged.includes(rel)), `${rel} não pode estar nas duas listas`);
   }
 });
