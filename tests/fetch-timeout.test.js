@@ -36,6 +36,15 @@ test("signal externo cancela antes do prazo", async () => {
   await assert.rejects(p, /cancelado/);
 });
 
+test("readResponseText exportado para drenar erros HTTP do relay", async () => {
+  const mod = await import("../client/js/fetch-timeout.js");
+  assert.equal(typeof mod.readResponseText, "function");
+  const res = new Response("x".repeat(20_000));
+  const out = await mod.readResponseText(res, 100);
+  assert.ok(out.endsWith("…"));
+  assert.equal(out.length, 100);
+});
+
 test("resposta rápida passa direto", async () => {
   const { fetchWithTimeout } = await import("../client/js/fetch-timeout.js");
   const res = await fetchWithTimeout("https://x.example/", {}, { timeoutMs: 1000, fetchImpl: async () => ({ ok: true }) });
