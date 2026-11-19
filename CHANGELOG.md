@@ -8,7 +8,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Docs: catálogo IXV (Énóis → Vox) e glossário (nov/2026)
 - `docs/brainstorms/brainstorm-enois-observacao-2026-11.md`: ondas 1–3 com IXV-01…14, §6 índice, §7 explicações (Salas Precisas, Nota de contexto, Coluna).
-- `docs/GLOSSARIO.md`: subseção candidatos IXV (Ágora × Explorar, Salas Precisas, etc.).
+- `docs/GLOSSARIO.md`: subseção candidatos IXV (Início × Explorar, Salas Precisas, etc.); alinha copy **Início** vs nav **Ágora** com síntese praça.
 - `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 ponte ao catálogo IXV.
 
 ### Docs: alavancas do mapa, observação Énóis, spec PM-23 (nov/2026)

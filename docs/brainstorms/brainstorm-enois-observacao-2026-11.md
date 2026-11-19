@@ -1,6 +1,6 @@
 # Brainstorm — observação Énóis (`enois.ia.br`)
 
-> **Status:** brainstorm · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-20 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Status:** brainstorm · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-19 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
 > **Fontes:** observação em `enois.ia.br` (nov/2026); repositórios públicos [`Rede-ENois/enois-frontend`](https://github.com/Rede-ENois/enois-frontend) (React 19, TanStack Start, `@rede-enois/design-system`) e [`Rede-ENois/enois-backend`](https://github.com/Rede-ENois/enois-backend) (Spring Boot 4, Java 25, MariaDB, **GPL-3.0**). Parceira de **observação**, não de parceria formal — ver [mapa §4.2](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md).
 
 Tudo aqui é **candidato** até virar linha no ROADMAP ou spec. Não copiar código GPL na Vox AGPL: só *clean-room* de UX e processo.
@@ -34,7 +34,7 @@ Tudo aqui é **candidato** até virar linha no ROADMAP ou spec. Não copiar cód
 
 Códigos **`IXV-01`…`IXV-14`** (*inspirados Énóis → Vox*) organizam ideias até spec/DoD; **não** abrem linhas novas no [ROADMAP](../ROADMAP.md) ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Nomes canônicos de UI: [GLOSSARIO.md](../GLOSSARIO.md) (candidatos IXV).
 
-**Ágora × Explorar:** a **Ágora** (feed / Início) é `#/` (`route-parse.js`, nav em `shell.js`). **`#/explorar`** (IXV-01) será o hub **lazy** de peças opcionais — stoas, Feira, Mesa, Salas Precisas — e **não** renomeia a Ágora. Não promover rota `#/agora`.
+**Início × Explorar:** o feed principal é `#/` (`route-parse.js`; nav `shell.js` com rótulo **Ágora** hoje, [ADR-016](../adr/016-design-system-sovereign-agora-e-democracia-direta.md)). Para copy pública, **Início** — *ágora* só em docs/manifesto ([síntese praça](./brainstorm-sintese-praca-de-colunas-2026-11-10.md)). **`#/explorar`** (IXV-01) será hub **lazy** de peças opcionais — stoas, Feira, Mesa, Salas Precisas — e **não** substitui `#/`. Não promover rota `#/agora`.
 
 ### Onda 1 — alto impacto, custo mínimo
 
@@ -53,7 +53,7 @@ Códigos **`IXV-01`…`IXV-14`** (*inspirados Énóis → Vox*) organizam ideias
 | IXV | Nome Vox (UI) | Rota / superfície | Encaixe técnico | ROADMAP / ADR | Por que vale | Inspiração Énóis |
 | --- | --- | --- | --- | --- | --- | --- |
 | **08** | **Nota de contexto** | No tópico | Post filho assinado ligado ao pai | REV-02, `bridging-rank`, `polis.js` | Camada verificável sem apagar o original | nota de rodapé no post |
-| **09** | **Coluna** | `#/perfil`, `#/c/:id` | `kind: "coluna"`; lista fora do feed da Ágora | candidata | Acervo longo (estatuto, diário) sem timeline | `/blogs`, *digital garden* |
+| **09** | **Coluna** | `#/perfil`, `#/c/:id` | `kind: "coluna"`; lista fora do feed / **Início** (`#/`) | candidata | Acervo longo (estatuto, diário) sem timeline | `/blogs`, *digital garden* |
 | **10** | **Molduras cívicas** | `#/perfil` | Voxels + paleta CSS fechada | ADR-013 | Calor identitário sem paywall/XSS | molduras em `/rede` |
 | **11** | *(adiado)* | — | Overlap com Recorrente, convocação, DM | fora do catálogo v1 | Ver §7 | `/par-de-estudo` |
 | **12** | **Mural fixado** + **Sugestão na pauta** | `#/c/:id` | Curadoria de posts + proposta leve em governança | `governance.js` | Sinalização estável + mudança de regra visível | murais + sugestões votadas |
@@ -101,7 +101,7 @@ Códigos **`IXV-01`…`IXV-14`** (*inspirados Énóis → Vox*) organizam ideias
 
 **IXV-08 — Nota de contexto:** post **filho assinado** preso a um tópico pai — quem leu o original vê um acrescento de outra pessoa (fonte, correção, “como ficou na reunião”). Não é censura: é **camada extra verificável**. Mesmo pipeline de assinatura; labs `bridging-rank` / Pol.is para destacar consenso depois.
 
-**IXV-09 — Coluna:** uma **coluna da praça** ([síntese stoas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md)) — textos longos que **não passam pelo feed da Ágora**. Payload `kind: "coluna"`; aba **Coluna** no perfil e na comunidade. Acervo, não timeline.
+**IXV-09 — Coluna:** uma **coluna da praça** ([síntese stoas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md)) — textos longos que **não passam pelo feed / Início** (`#/`). Payload `kind: "coluna"`; aba **Coluna** no perfil e na comunidade. Acervo, não timeline.
 
 **IXV-10 — Molduras cívicas:** Voxels desbloqueiam molduras/cores em lista CSS fechada (sem dinheiro real, sem XSS).
 

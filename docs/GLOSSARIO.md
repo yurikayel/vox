@@ -1,6 +1,6 @@
 # Glossário da interface (pt-BR)
 
-> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-20
+> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-19
 
 Este glossário traduz para português claro os nomes que aparecem no app, nas mensagens de ajuda e na documentação. Ele **não** substitui a **Voxpedia** (`#/voxpedia` no app), que é a ajuda dentro do PWA; aqui a fonte é o repositório, para quem escreve textos, revisa PRs ou responde dúvidas sem abrir o cliente.
 
@@ -85,8 +85,8 @@ Termos de produto inspirados na observação Énóis, com nome Vox. Códigos **I
 
 | Termo na UI (candidato) | O que significa, em poucas palavras |
 | --- | --- |
-| **Ágora** | Feed principal e **Início** da nav — rota `#/`, não confundir com `#/explorar`. |
-| **Explorar** (IXV-01) | Hub **lazy** (`#/explorar`, pós-PM-01) para descobrir módulos opcionais (Feira, Mesa, Salas Precisas); não substitui a Ágora. |
+| **Início** *(ágora nos docs)* | Feed principal — rota `#/`. Copy para quem organiza usa **Início** ([síntese praça](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): “Ágora” não na tela). Na nav do app hoje aparece **Ágora** (`shell.js`, [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md)). Não confundir com `#/explorar`. |
+| **Explorar** (IXV-01) | Hub **lazy** (`#/explorar`, pós-PM-01) para descobrir módulos opcionais (Feira, Mesa, Salas Precisas); não substitui o feed / **Início** (`#/`). |
 | **Posts temporários** (IXV-02) | Publicação com prazo visível (ex.: 24 h, 7 dias); política de esquecimento ([ADR-019](./adr/019-esquecer-por-padrao-e-memoria-civica.md)). |
 | **Assuntos** (IXV-04) | Filtros em pills numa comunidade (`#/c/:id`): avisos, pautas, Feira, dúvidas — em vez de um único mural sem foco. |
 | **Recorrente** (IXV-05) | Encontros que voltam no tempo (ritualRule); nome de UI para rituais ligados a aviso assinado e [modo assembleia](./specs/modo-assembleia-v0.md). |
@@ -94,7 +94,7 @@ Termos de produto inspirados na observação Énóis, com nome Vox. Códigos **I
 | **Mensagens protegidas** (IXV-07) | DM com linguagem simples sobre criptografia e senha no aparelho. |
 | **Para responsáveis** (IXV-07) | Página de orientação 18+ e uso seguro (`#/responsavel` ou Voxpedia), espelho do Énóis `/responsavel`. |
 | **Nota de contexto** (IXV-08) | Acrescento **assinado** preso a um tópico pai (correção, ata, fonte) — não é apagar nem moderar o post original. |
-| **Coluna** (IXV-09) | Texto longo da comunidade ou do perfil (`kind: "coluna"`) fora da timeline da Ágora — estatuto, guia, diário. |
+| **Coluna** (IXV-09) | Texto longo da comunidade ou do perfil (`kind: "coluna"`) fora do feed / **Início** — estatuto, guia, diário. |
 | **Molduras cívicas** (IXV-10) | Decoração de perfil via **Voxels**, só opções de uma lista CSS fechada. |
 | **Mural fixado** (IXV-12) | Conjunto de posts fixados pela moderação ou curadoria da comunidade. |
 | **Sugestão na pauta** (IXV-12) | Proposta leve de mudar regra local, votada na **Governança**, sem virar post no feed. |
