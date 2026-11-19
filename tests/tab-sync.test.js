@@ -89,3 +89,34 @@ test("tab-sync: BroadcastChannel propaga hash de rota entre abas", async () => {
   assert.deepEqual(reloaded, ["route"]);
   peer.close();
 });
+
+test("tab-sync (LT-06b): conta apagada em outra aba não fica viva em cachedAccount nem ressuscita no vault", async () => {
+  const { reloadIdentityFromStorage } = await tabSync();
+  localStorage.clear();
+  keyLock.__resetKeyLockForTests();
+  const born = await localAccount.ensureLocalAccount();
+  assert.equal(localAccount.getCachedRouteIdSync(), born.routeId);
+
+  localStorage.removeItem(ACCOUNT_KEY);
+  localStorage.removeItem("vox-accounts-vault-v1");
+
+  assert.equal(localAccount.getCachedRouteIdSync(), "", "cache síncrono invalida quando storage foi apagado");
+  localAccount.setDisplayName("Fantasma");
+  assert.deepEqual(localAccount.listVaultAccountsSync(), [], "conta apagada não ressuscita no cofre local");
+  const res = await reloadIdentityFromStorage({ localAccount });
+  assert.deepEqual(res, { adopted: false, routeId: "" });
+});
+
+test("local-account: JSON não-objeto em vault, enrichment ou pix não derruba nem vaza itens falsos", async () => {
+  localStorage.clear();
+  for (const bad of ["null", "[1,2,3]", "123", '"texto"', "{quebrado"]) {
+    localStorage.setItem("vox-accounts-vault-v1", bad);
+    localStorage.setItem("vox-profile-enrichment-v1", bad);
+    localStorage.setItem("vox-pix-key-v1", bad);
+    assert.deepEqual(localAccount.listVaultAccountsSync(), []);
+    assert.equal(localAccount.getProfileEnrichment(), null);
+    assert.equal(localAccount.getPixKey(), null);
+  }
+  localStorage.setItem("vox-accounts-vault-v1", '{"vx_a":null,"vx_b":[1],"vx_c":"x"}');
+  assert.deepEqual(localAccount.listVaultAccountsSync(), []);
+});
