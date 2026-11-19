@@ -2,6 +2,8 @@
 
 Stewards são **voluntários da comunidade**, não o mantenedor do repositório Vox. Este kit fecha o pacote mínimo para a camada **Steward** em [`espacos-digitais-infra.md`](../strategy/espacos-digitais-infra.md): qualquer coletivo sobe relay + sinalização **sem** depender do mantenedor.
 
+> **Steward kit ≠ 4º produto ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)):** é o **pacote de ops** para implantar o **Vox Memoria** (relay + memória + sinalização) em modo VPS/coletivo com TLS e cotas. Não é app na loja nem 4º produto na UI — o wizard `#/settings/network/steward` no **Vox** apenas aponta a URL.
+
 **Status:** canônico (V-I08 fechado em `main`) — compose + Caddy (`/health`, `/vox/*`), quota via env, wizard `#/settings/network/steward`, kits 1-clique Windows/Linux.
 
 ---
