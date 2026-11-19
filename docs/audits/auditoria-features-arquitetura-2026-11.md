@@ -111,10 +111,26 @@ Cobertura: **100% das 89 linhas** de [FEATURES.md](../FEATURES.md) (100% `no ar`
 | 1 | `FEATURES.md` l.103 marcava `idb-store.js` como `no ar` (está em `labs/parado/` e `UNPLUGGED_MODULES`, intencionalmente fora por REV-07/PM-72) | `client/sw.js`; `ROADMAP.md` PM-72 | **Só doc** | **Corrigido neste PR** |
 | 2 | `FEATURES.md` l.123 marcava `node-health-*.js` como `parcial` (todos os 6 estão em `labs/parado/` e `UNPLUGGED_MODULES`) | `client/sw.js` | **Só doc** | **Corrigido neste PR** |
 | 3 | Cofre na malha (ADR-037) e sincronização entre abas (`identity/tab-sync.js`) ausentes de `FEATURES.md` | `client/js/vault/mesh-vault.js`, `client/js/identity/tab-sync.js` | **Só doc** | **Corrigido neste PR** |
-| 4 | `render/dm.js` não sanitiza `contextCard.href` (`javascript:`) nem `mediaDataUrl` | `tests/render-dm-proposal-tag.test.js` (`2 todo`) | **Exige código** | Fila de código (D3) |
-| 5 | `probeVaultUrl` sem timeout (relay lento trava "Entrar") e `lockAfterPasswordBackup` trava conta mesmo com `remote=0` | `tests/login-rede-ruim.test.js` (`2 todo`) | **Exige código** | Fila de código (D3) |
+| 4 | `render/dm.js` sanitização de `contextCard`/`mediaDataUrl` | `tests/render-dm-proposal-tag.test.js` | **Exige código** | **Fechado #290** |
+| 5 | `probeVaultUrl` timeout; `lockAfterPasswordBackup` com `remote=0` | `tests/login-rede-ruim.test.js` | **Exige código** | **Timeout #291**; lock ainda `todo` (D3 produto) |
 | 6 | Cofre na malha: 4 achados adversariais em `skip` (fila de 50 avisos, replay de `soltar`, guarda antiga reaplicável, aviso de não-laço) | `tests/mesh-vault-adversarial-flow.test.js` (`4 skip`) | **Exige código** | Backlog (exige decisão de formato) |
 | 7 | Envelope de DM comum sem assinatura (aguarda RFC 0002 / `LAN-18`), replay de reação e DM sem teto de texto | `tests/dm-adversarial.test.js` (`4 skip`) | **Exige código** | Backlog (`LAN-18` / produto) |
 | 8 | `FEATURES.md` l.42 citava teste inexistente `signed-verify` | `tests/` | **Só doc** | **Corrigido neste PR** |
 | 9 | 18 linhas de `FEATURES.md` com caminhos pré-ADR-035 / pré-#177 | `client/js/identity/`, `vault/`, `app/`, `labs/parado/` | **Só doc** | **Corrigido neste PR** |
-| 10 | `plano-testes-login.md` §5.1 defasado (`tab-sync`, `onboarding-reload-keyboard`, `login-rede-ruim`) e `repost-index.js` quebra com storage não-objeto (`2 todo`) | `CHANGELOG.md`; `tests/repost-index.test.js` | **Doc + Código** | PR #4 (doc) + D4 (código) |
+| 10 | `repost-index.js` com storage não-objeto | `tests/repost-index.test.js` | **Doc + Código** | **Fechado D4 (nov/2026)**; plano login §5.1 segue em revisão |
+
+---
+
+## Addendum 2026-11-19 (pós-#290 / #291 / #292 e lote D4/D5)
+
+Medido localmente em `develop` após merges #290–#292 e o lote D4/D5 (sem novo release `main` até merge):
+
+| Métrica | Antes (corpo do relatório) | Depois (addendum) |
+|---------|---------------------------|-------------------|
+| Testes | 2276 passing · 9 skipped · **16** todo | **2281** passing · 9 skipped · **11** todo (total 2301) |
+| `CACHE_NAME` | `v7.143` | `v7.144-pm01-periphery-lazy` |
+| Ciclos de import | 1 componente (3 módulos onboarding) | **0** (`onboarding-oauth-ui.js` + `import()` em `screens-network.js`) |
+| Precache PM-04 | 2,73 MB / 302 arq. | ~2,58 MB / 284 arq. (`route.js` lazy: voxpedia, ajuda-teste, labs/dungeon) |
+| Gaps #4/#5/#10 | abertos | #290, #291 timeout, D4 `repost-index` fechados; lock `remote=0` ainda aberto |
+
+Ensaio **SIGV2_FROM:** `tests/sig-format.test.js` caso *D5* (assinatura no instante `SIGV2_FROM`). README canônico PTLD em #292; `release-line` alinhado ao SHA de `develop` no mesmo lote.

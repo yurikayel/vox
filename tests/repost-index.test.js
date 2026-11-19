@@ -74,13 +74,13 @@ test("repost-index - JSON corrompido no storage vira vazio, sem lançar", () => 
   assert.equal(idx.getOwnRepostId("o1"), "r1");
 });
 
-test("repost-index - storage com array JSON não perde a escrita", { todo: "readOwn aceita '[]' (truthy); setOwn grava propriedade em array e JSON.stringify a descarta: o repost some em silêncio" }, () => {
+test("repost-index - storage com array JSON não perde a escrita", () => {
   localStorage.setItem(KEY, "[]");
   idx.setOwn("o1", "r1");
   assert.equal(idx.getOwnRepostId("o1"), "r1");
 });
 
-test("repost-index - storage com string JSON não lança em setOwn", { todo: "readOwn devolve string para um JSON de texto; atribuir propriedade a primitivo em módulo ESM (strict) lança TypeError" }, () => {
+test("repost-index - storage com string JSON não lança em setOwn", () => {
   localStorage.setItem(KEY, JSON.stringify("x"));
   assert.doesNotThrow(() => idx.setOwn("o1", "r1"));
 });
