@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.144-pm01-periphery-lazy";
+const CACHE_NAME = "vox-pwa-v7.146-dm-limits-6b";
 
 const SHELL_ASSETS = [
 
@@ -330,6 +330,8 @@ const SHELL_ASSETS = [
   "./js/render/util.js",
   "./js/shared/html.js",
   "./js/shared/date-format.js",
+  "./js/shared/raster-file-to-jpeg.js",
+  "./js/shared/community-avatar-image.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",
