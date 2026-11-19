@@ -8,7 +8,7 @@ import * as render from "../render.js";
 import * as localAccount from "../identity/index.js";
 import * as emailKit from "../email-kit.js";
 import { normalizeVaultEmail } from "../vault/index.js";
-import { setOAuthButtonBusy, setOAuthEnrichError, warnIfAccountNotPersisted } from "./onboarding.js";
+import { setOAuthButtonBusy, setOAuthEnrichError, warnIfAccountNotPersisted } from "./onboarding-oauth-ui.js";
 
 /** Inputs de `#form-oauth-custom-name` (genesis-entry) para foco após erro na entrada (LT-07). */
 const EMAIL_ENTRY_FOCUS_ID = { name: "oauth-custom-name-input", email: "oauth-entry-email-input", pass: "oauth-entry-pass-input" };

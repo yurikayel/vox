@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11; calendário 2027, PM-99…109 abertos e PM-01, PM-13, PM-18 e PM-23 promovidos em 12/11; #92/#94/#101/#108/#115/#118 em `main` e fundamentais `REV-10`/`REV-14`/`PM-72` promovidos para P0 em 13/11; plano de testes para código feito por IA, PM-110 fechado e PM-111…115 abertos em 17/11; PM-111 fechado em 17/11) · **atualizado 2026-11-18 (`develop` até #230):** ADR-037 cofre na malha (#186); onda LT-01…LT-10 (#190–#213, #216, #220); DM adversarial (#202) e restore (`dm-card-restore-adversarial.test.js`); sinalização Python com prazos (`relay/test_signaling_robustez.py`); relay #228–#230; testes render/entrada
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11; calendário 2027, PM-99…109 abertos e PM-01, PM-13, PM-18 e PM-23 promovidos em 12/11; #92/#94/#101/#108/#115/#118 em `main` e fundamentais `REV-10`/`REV-14`/`PM-72` promovidos para P0 em 13/11; plano de testes para código feito por IA, PM-110 fechado e PM-111…115 abertos em 17/11; PM-111 fechado em 17/11) · **atualizado 2026-11-19 (`develop` pós-#292 `35dd0fe` + lote D4/D5 local):** #262 release `main` · #281–#285 auditoria/docs · #290–#292 README PTLD + `probeVaultUrl` timeout + promoção `render-dm` · D4 `repost-index` + ciclo onboarding zerado · D5 ensaio `SIGV2_FROM` + `PM-01` passo 1 (lazy voxpedia/ajuda/labs, SW `v7.144`) · `SIGV2_FROM` 24/11/2026 (PM-85)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -12,11 +12,31 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 
 - a sinalização depende de 1 nó Render; o caminho Nostr (REV-09 + reconexão automática PM-17) roda em paralelo, mas ainda não foi medido em campo; o servidor Python (`relay/signaling.py`) já tem prazo no handshake e remontagem de quadros fragmentados (`relay/test_signaling_robustez.py`);
 - o [plano de testes do login](./process/plano-testes-login.md) ([ADR-037](./adr/037-cofre-na-malha.md)): **LT-01, 03, 04, 05, 08 e 10** fechados em `develop`; **LT-02, 06 e 07** em parte, com achados abertos em §5.1 (LT-06a–c, LT-07a–d; #220); **LT-09** ainda aberto;
-- não há relay completo público nem TURN;
+- não há relay completo público; **ops** de TURN e 2º nó de sinalização ficam no gatilho **>50 ativos** ([INF-01…04](#infra-dos-relays--adiada-até-passar-de-50-usuários-ativos), decisão 19/11/2026) — abaixo disso vale o que já está no ar (1× Render + keepalive #282);
 - o espelho B (`vox-9df.pages.dev`, NET-01) está no ar e registrado, mas ainda sob o mesmo operador do A (independência depende do LAN-30);
 - **Sem gravação no Arweave por enquanto (`arweaveUpload: false` desde 13/11/2026):** nada é salvo usando Arweave neste momento — a preservação e a distribuição passam pela **rede de seguidores** (você replica o conteúdo de quem você segue, combinando a malha WebRTC/gossip/sync por inventário já no ar com o `PM-74`). O Arweave segue previsto apenas para alguns recursos futuros específicos (ex.: cartório cívico e memória consensual). *(Em código, `arweaveUpload: false` vem ligado por padrão em `client/config/flags.json` e `client/js/feature-flags.js`, com guardas ativos nos fluxos de escrita — ver `REV-07`.)*
 - o piloto humano (V-P09) não começou;
-- para abrir ao público faltam o parecer jurídico, a resposta a conteúdo grave e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan).
+- para abrir ao público faltam o parecer jurídico, a resposta a conteúdo grave e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan);
+- **Auditoria nov/2026:** #284 (análise + prompt) e #285 (README/metadata fase 1) integrados em `develop`; relatório de auditoria + `FEATURES.md` (`DOC-06`, PR #286) e spec do MVP técnico (`DOC-07`) em fila;
+- **Login (`LT-02/06/07`):** `LT-06a` parcialmente fechado (`identity/tab-sync.js` + `tests/tab-sync.test.js`); `LT-07` parcial (`tests/onboarding-reload-keyboard.test.js`); `LT-02` parcial — `probeVaultUrl` timeout fechado (#291); resta `lockAfterPasswordBackup`/`remote=0` (`test.todo`);
+- **24/11/2026 (`SIGV2_FROM`, PM-85):** virada automática para assinatura `sigv: 2` em [sig-format.js](../client/js/sig-format.js); ensaio com relógio simulado antes de 24/11 e conferência no dia.
+
+## Próximos 7 dias (19–26/11/2026)
+
+> Plano operacional de curto prazo; não substitui P0/P1. Próxima rotação: 27/11. **Evento fixo:** `SIGV2_FROM` = 24/11/2026 00:00 UTC ([sig-format.js](../client/js/sig-format.js)) — assinatura padrão `sigv: 2`.
+
+| Dia | Entrega principal | IDs |
+|---|---|---|
+| 19/11 | Merge #285 · PR doc relatório + `FEATURES.md` (#286) | DOC-04 parcial · DOC-06 |
+| 20/11 | Spec MVP técnico · sync `ROADMAP` / plano login / `THREAT-MODEL` T19 | DOC-07 |
+| 21–22/11 | Fixes `test.todo` (`render/dm.js`, `login-rede-ruim`, `repost-index`, ciclo `onboarding`) | — |
+| 23/11 | Ensaio `SIGV2_FROM` + `PM-01` passo 1 (lazy shell, meta −20% precache) | PM-01 · PM-85 |
+| 24/11 | Conferência `sigv: 2` no relógio real · spike `PM-112` | PM-112 |
+| 25–26/11 | JSDoc dívida `labs/`/`data/` · decisão release `develop` → `main` | DOC-04 |
+
+**Congelado nesta janela:** INF-01…04 · REV-01/10/NET-02 ops · PIL/V-P09/LAN parecer · cripto nova (LAN-18) · PM-79/mochila v2 · DM envelope assinado.
+
+**P0 executável (código/doc local):** fechar auditoria docs (`DOC-06`/`DOC-07`) · `PM-01` (passo 1) · `PM-112` (spike) · correções já cobertas por `test.todo` (sem mudança de protocolo).
 
 ## Calendário 2027
 
@@ -44,10 +64,13 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 | **T3 · jul–set** | Beta por convite | 5–10 comunidades, até ~300 pessoas | PM-97 para todos · PM-71 · PM-72 · PM-74 · PM-75 · PM-79 · REV-15 · REV-04 · NET-04 · LAN-09 · LAN-18 (com NLnet ou parceiro) · LAN-19 · LAN-22 · LAN-23 · LAN-25 · LAN-26 · REV-02 · REV-16 · PM-106 · PM-107 | **30/09:** sem steward de fora (NET-04), o beta não passa da onda 1 |
 | **T4 · out–dez** | Decidir o público e preparar 2028 | **LAN-29 → G3**, com go ou no-go escrito | LAN-30 completo · LAN-31 · LAN-32 · LAN-05 · LAN-06 · LAN-33 · LAN-34 · LAN-35 · PM-77 · NET-05 · EXP-03 · EXP-04 · PM-109 · PM-103 (retrospectiva anual e plano 2028) | **15/11:** se o go sair depois disso, a onda 2 começa em fev/2028 |
 
+- **Leitura com INF (19/11/2026):** com **≤50 usuários ativos**, não executar **ops** de REV-01, REV-10, NET-02 nem as linhas INF-01…04 (seção abaixo). O calendário acima ainda cita esses IDs como marcos do plano 2027; o **gatilho manda** na operação. As datas de desistência jurídicas (associação, parecer) são **independentes** do gatilho de infra. Retrato completo: [analise-repositorio-vox-2026-11.md](./strategy/analise-repositorio-vox-2026-11.md).
 - **PM-79 e PM-96** estão na tabela do G1, mas aqui aparecem no T3 e no T2. Pelo PM-76, o piloto roda com DM só online e sem login social. A troca depende do mantenedor ([brainstorm §8](./brainstorms/brainstorm-roadmap-2027.md#8-decisões-que-dependem-do-mantenedor)).
 - **Fora de 2027:** EXP-02, REV-08 (a menos que apareça um parceiro público), F7 e F8 (não haverá enquete cívica pública com peso), PM-39, PM-47, PM-49 e PM-56. Motivos no [brainstorm §7](./brainstorms/brainstorm-roadmap-2027.md#7-fora-de-2027-corte-deliberado).
 
 ## Agora (P0)
+
+*Itens REV-01, REV-10 e NET-02: apenas preparação em código/docs; **ops** só após >50 ativos (INF). PIL-01…03, REV-12, REV-18: bloqueados enquanto uso por pessoas estiver adiado.*
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
@@ -79,7 +102,9 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 | [ ] | **REV-21** | ops-humano | **Banda do Render (B8):** anotar a banda incluída real (Billing → *Monthly Included Usage*). Garantir que o nó só sinaliza, com limite de taxa e `/metrics` de bytes de saída. Sem cartão, estourar a banda suspende **todos** os serviços Free até o fim do mês; 750 h/workspace = um só serviço sempre ligado | [complementar §1-F](./research/pesquisa-complementar-2026-11.md#f-infraestrutura) |
 | [ ] | **REV-22** | ops-humano | **`FUNDING.yml` + GitHub Sponsors (B10):** Brasil é região aceita, 0% em patrocínio pessoal. NGI Zero Commons encerrado (01/06/2026); acompanhar NLnet (03/01/2027) e OTF IFF | [complementar §1-H](./research/pesquisa-complementar-2026-11.md#h-financiamento) |
 | [ ] | **REV-02** | code | Decidir, módulo a módulo, **plugar ou arquivar** os 21 módulos em `UNPLUGGED_MODULES` (`kit-genesis.js` é ganho rápido para o piloto) | lista em [FEATURES.md](./FEATURES.md); vários viram features do brainstorm · 17/11: os 21 foram para `client/js/labs/parado/` (guardados, isolados pela regra de camadas); plugar segue módulo a módulo |
-| [ ] | **LT-02,06,07,09** | code | **Lacunas restantes do plano de testes do login** (LT-01, 03, 04, 05, 08 e 10 fechados — ver *Concluído*): **LT-02** relay com falhas programáveis (parcial #207: 5xx, JSON ruim, duplicado; faltam lento, fora de ordem e perda); **LT-06** duas abas de verdade e aviso de storage cheio na criação (parcial #209, #217; achados §5.1 LT-06a–c); **LT-07** recarga na espera da malha, focus trap, teclado e kit após recarga (parcial #210, #224; achados §5.1 LT-07a–d); **LT-09** veto da dona no caminho dos guardiões (adiado ADR-037 §3.5) | [plano-testes-login.md](./process/plano-testes-login.md) §5 e §5.1 |
+| [ ] | **LT-02,06,07,09** | code | **Lacunas restantes do plano de testes do login** (LT-01, 03, 04, 05, 08 e 10 fechados — ver *Concluído*) | **LT-06a:** parcial — `identity/tab-sync.js` + `tests/tab-sync.test.js` (faltam corrida real entre duas abas na criação e aviso de storage cheio). **LT-07:** parcial — recarga/teclado (#210, #224, `onboarding-reload-keyboard.test.js`; faltam focus trap e kit e-mail). **LT-02:** parcial — #207 + #291 (`probeVaultUrl` timeout 4s; resta `lockAfterPasswordBackup` com `remote=0` em `test.todo`). **LT-09:** veto da dona nos guardiões (ADR-037 §3.5) — adiado · [plano-testes-login.md](./process/plano-testes-login.md) §5 e §5.1 |
+| [ ] | **DOC-06** | doc | **Relatório de auditoria (Fases 1–3) + alinhamento de [FEATURES.md](./FEATURES.md):** `docs/audits/auditoria-features-arquitetura-2026-11.md` + correções `idb-store`, `node-health-*`, ADR-037, `tab-sync`, paths pré-ADR-035 e teste `signed-verify` | PR #286 aberto em `develop` · [prompt](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
+| [ ] | **DOC-07** | doc | **Spec do MVP técnico (10 seções):** `docs/strategy/mvp-tecnico-vox-2026-11.md` (plataforma técnica sem nicho, núcleo precache vs lazy vs labs, DoD) + índice em `docs/README.md` | PR #3 após merge do #286 · [prompt](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
 | [ ] | **REV-04** | ops-humano | **Relay completo público** operado por steward (inbox de DM, `/oauth/exchange`, cofre) com buddy | [relay-api.md](./specs/relay-api.md), [steward-relay-buddy.md](./operations/steward-relay-buddy.md) |
 | [ ] | **NET-04** | ops-humano | Smoke de steward por alguém que não seja o mantenedor | [steward-relay-kit.md](./operations/steward-relay-kit.md) |
 | [ ] | **PIL-04** | ops-humano | Barra da semana 4: ≥3 Apoiadores ou 1 steward + espelho OK | V-P04/05/06 |
@@ -120,6 +145,17 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 | [ ] | **PM-106** | doc | **Árvore do repasse (spec):** mostrar quem criou o post e por quem ele passou até você, só com os saltos que você já vê, sem expor o grafo; análise de privacidade antes de qualquer código | 📅 spec no T3/2027; o código vira outra linha se a spec for aceita · base: `client/js/render/repost-cite.js` |
 | [ ] | **PM-107** | ops-humano | **Turma de extensão (coluna 8):** um professor parceiro, um pacote de issues e um nó por turma | 📅 semestre 2027.2 · DoD: ≥3 PRs de fora em `main` e 1 nó rodando · [primeiras tarefas](./process/primeiras-tarefas-contribuidor.md) |
 | [ ] | **PM-109** | doc | **Preparar 2028:** o que o modo eleitoral (REV-24) já cobre numa eleição municipal, o que falta e a revisão marcada para depois de 05/03/2028 (instruções do TSE) | 📅 T4/2027 · período eleitoral a partir de 16/08/2028 |
+
+### Infra dos relays — adiada até passar de 50 usuários ativos
+
+**Decisão do dono (19/11/2026):** não mexer na infra de relays (Cloudflare, Render etc.) agora; está **preparada** (runbook, RFC e ajustes de código já em `develop`) e só se executa quando houver **mais de 50 usuários ativos**. Sem uso por pessoas hoje, o custo e a superfície de operação não se justificam. "Ativo" ainda não tem medida automática: use o pico de `peers` em `/health` do nó de sinalização ou o relato do steward; a definição fina (janela de dias, por conta ou por aparelho) é do dono, e vale registrá-la aqui quando o gatilho se aproximar. Partida a frio do nó grátis da Render e alerta do keepalive são esperados nesse período (issue #280 foi só isso).
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **INF-01** | ops-humano | **TURN em produção:** Worker Cloudflare de credencial TURN (caminho A), teste com `curl`, depois PR que preenche `turnCredentialsUrl` em `client/config/signaling.json` (bump de SW). Antes: conferir os limites do plano grátis na fonte oficial (NÃO VERIFICADO), decidir cartão na conta e atualizar a nota de privacidade (o TURN vê os IPs) | 📅 gatilho: >50 ativos · [runbook](./operations/turn-e-segundo-no.md) (#271) · URL do Worker e print do uso citados aqui |
+| [ ] | **INF-02** | ops-humano | **Segundo nó de sinalização** com failover pela lista `signalingUrls` (hoje só `vox-sentinel.onrender.com`; o plano grátis dorme) | 📅 gatilho: >50 ativos · [runbook §4](./operations/turn-e-segundo-no.md) · `/health` e `wscat` dos dois nós citados aqui |
+| [ ] | **INF-03** | ops-humano | **Render:** definir `VOX_RELAY_TRUST_PROXY_HOPS` (valor sugerido **2**: Cloudflare + balanceador da Render; confirmar o formato real do `X-Forwarded-For` e testar que `X-Forwarded-For` forjado não muda o limite; se a lista tiver 1 entrada, usar 1) e pôr um **pinger externo** de 5 em 5 min no `/health`, porque o cron do GitHub roda a cada ~5–6 h e não mantém o nó acordado | 📅 gatilho: >50 ativos · [render.yaml](../relay/render.yaml) · [lacuna 2 da API](./specs/relay-api.md) · captura da variável (sem segredo) citada aqui |
+| [ ] | **INF-04** | code | **Snapshot autenticado, lado do cliente:** definir quem sorteia e distribui o `segredoSnapshot` (pergunta D2 do RFC), enviar `X-Vox-Snapshot-Proof`, conferir a `sig` dos autores antes de `mergeSnapshot`; depois passar o relay de `compat` para `enforce` | 📅 gatilho: >50 ativos (ou antes de ligar o laboratório `webxdc-crdt`) · [RFC 0002](./rfc/0002-snapshot-autenticado-do-relay-cego.md) · relay em `compat` no #281 |
 
 ## Rumo à rede pública (LAN)
 

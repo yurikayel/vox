@@ -1,56 +1,48 @@
-# ADR-011: Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado)
+# ADR-011: Taxonomia Canônica Tripartite — Vox, Vox Populi e Vox Memoria
 
-**Status:** accepted · **Fase 3.5 (Padronização e Governança de Produto)**
-
-> **Nota de nome:** o arquivo se chama `…-tripartite-…` por histórico (havia 3 papéis); a decisão vigente é **dual** (Cliente + Nó). O nome foi mantido para não quebrar links.
+**Status:** accepted · **Fase 3.5 (Padronização e Governança de Produto)** · **Emenda 2026-11-19:** taxonomia tripartite consolidada (`Vox`, `Vox Populi`, `Vox Memoria`), substituição de "Boost Local" por **Conexão local** e invariante de **nó local único (XOR)**.
 
 ---
 
 ## 1. Contexto
 
-A evolução do ecossistema Vox reuniu diversas frentes de engenharia: interfaces gráficas cívicas, nós de infraestrutura em segundo plano e serviços de relay/cache local.
-Ao longo do desenvolvimento, termos como "Farol", "VoxFarol", "Seeder" ou "Node Zero" foram usados de maneira sobreposta, gerando ruído conceitual entre a ferramenta do cidadão e o serviço de sustentação comunitária.
-
-Para garantir simplicidade, intuitividade e clareza absoluta, estabelece-se a taxonomia canônica dual:
-- **`Vox`** é o **CLIENTE** (UI, navegação cívica, PWA, feed e participação popular).
-- **`Vox Populi`** é o **NÓ DEDICADO** (infraestrutura em segundo plano, relay HTTP em loopback `127.0.0.1:3921`, cache SHA-256 e controle de recursos `127.0.0.1:3922`).
-- **Abrir ambos dá um boost mútuo:** o cliente se conecta ao nó dedicado local, acelerando o throughput e aquecendo o cache verificado.
-- Ambos compartilham a mesma identidade visual e ícone normalizado em fundo branco.
+A evolução do ecossistema Vox reuniu três papéis complementares sobre **um único cliente**:
+- **`Vox`** é o **CLIENTE ÚNICO** (UI, navegação cívica, PWA, feed, comunidades e DM). Todos usam o mesmo cliente — quem só quer usar a rede não precisa instalar nenhum serviço adicional.
+- **`Vox Populi`** é o **NÓ DE APOIO** (serviço leve em segundo plano, cache SHA-256 e relay em loopback `127.0.0.1:3921`, com **dashboard simplificado** para ligar/pausar, limitar só ao Wi-Fi e ajustar cota leve).
+- **`Vox Memoria`** é o **NÓ DE MEMÓRIA** (serviço dedicado de quem opta por ceder **X CPU, disco e banda** para sustentar a memória perene da rede — WAL, snapshot, delta sync e relay completo — com **dashboard de mantenedor** para configurar limites e acompanhar o estado; substitui os nomes antigos `VoxPopuli-ZeroMemory` e `Node Zero`).
+- **Conexão local** *(substitui "Local Boost" / "Boost Local")*: quando o `Vox` detecta `Vox Populi` ou `Vox Memoria` ativo na própria máquina (`127.0.0.1`), conecta automaticamente em loopback — exibido na UI como **"Usando seu nó"**.
+- Todos compartilham a mesma identidade visual e ícone normalizado em fundo branco.
 
 ---
 
 ## 2. Decisão
 
-Fica formalizada a **Taxonomia Canônica Dual** do ecossistema Vox em todas as plataformas:
+Fica formalizada a **Taxonomia Canônica Tripartite** do ecossistema Vox em todas as plataformas:
 
 ```mermaid
-flowchart TD
-    subgraph Cliente ["Vox — Aplicação Cliente (Cidadãos & Comunidades)"]
-        direction LR
-        AndroidClient["Vox Android\n(Micro-APK ~20 KiB)\nIdentificador: org.vox.client\nFoco: Celular, PWA, Interface"]
-        DesktopClient["Vox Desktop\n(Executável WebView2)\nProduto: Vox.exe\nFoco: PC, Navegação, Janela Nativa"]
-    end
+flowchart LR
+    Vox["Vox (cliente único)\nPWA · Vox.exe · vox.apk"]
+    Populi["Vox Populi (nó de apoio)\nApoio leve + dashboard simples"]
+    Memoria["Vox Memoria (nó de memória)\nMemória perene + dashboard CPU/disco/banda"]
 
-    subgraph NoDedicado ["Vox Populi — Nó Dedicado (Infraestrutura Comunitária)"]
-        direction LR
-        AndroidNode["Vox Populi Android\n(Micro-APK ~20 KiB)\nIdentificador: org.vox.populi\nFoco: Relay/Cache em Wi-Fi"]
-        DesktopNode["Vox Populi Windows\n(Executável de Bandeja)\nProduto: VoxPopuli.exe\nFoco: Daemon Tray, Relay Loopback"]
-    end
-
-    Cliente -->|"Conexão & Boost Local (127.0.0.1:3921/3922)"| NoDedicado
-    NoDedicado -->|"Cache SHA-256 Verificado & Relay"| Cliente
+    Vox -. "Conexão local (127.0.0.1)" .-> Populi
+    Vox -. "Conexão local (127.0.0.1)" .-> Memoria
+    Populi -. "XOR: um fecha e substitui o outro" .- Memoria
 ```
 
-### A. Matriz Simétrica Multiplataforma
+### A. Matriz de Papéis e Plataformas
 
-| Plataforma | Papel: CLIENTE (`Vox`) | Papel: NÓ DEDICADO (`Vox Populi`) | Sinergia (Boost) |
+| Plataforma | `Vox` (Cliente único) | `Vox Populi` (Nó de apoio) | `Vox Memoria` (Nó de memória) |
 |:---|:---|:---|:---|
-| **Windows Desktop** | `dist/Vox.exe` (WebView2, interface de navegação cívica) | `dist/VoxPopuli.exe` (Daemon sem janela, ícone na System Tray, relay `3921`) | `Vox.exe` dispara `POST /api/resume` no nó local e acelera renderização via cache local. |
-| **Android** | `android/vox.apk` (`org.vox.client`, tela cheia, navegação PWA) | `android/vox-populi.apk` (`org.vox.populi`, tela nativa enxuta, foreground service) | O cliente consome o cache mantido pelo nó local em loopback quando em Wi-Fi. |
+| **Windows Desktop** | `Vox.exe` (WebView2, interface única) | `VoxPopuli.exe` (serviço de bandeja + painel simples) | `VoxMemoria.exe` *(hoje compilado localmente via `packaging/zero-central-memory-windows/build.ps1`; painel de CPU/disco/banda)* |
+| **Android** | `vox.apk` (`org.vox.client`, PWA em tela cheia) | `vox-populi.apk` (`org.vox.populi`, foreground service leve em Wi-Fi) | — *(nó dedicado pensado para desktop/SBC/servidor)* |
+| **Linux / macOS** | Guia WebKitGTK / Safari PWA | Daemon `systemd` / `launchd` leve | `relay/server.py` (`central_memory.py`) com cotas configuráveis |
 
 ### B. Princípios e Diretrizes
 
-1. **Abandono do termo "Farol":** Toda nomenclatura pública e executáveis abandonam a denominação transitória "Farol" ou "VoxFarol". O nó dedicado é exclusivamente **Vox Populi**.
-2. **Ícone Unificado:** Ambos os produtos utilizam o mesmo ícone oficial normalizado em fundo branco, simplificando o reconhecimento da marca pelo usuário.
-3. **Distribuição Ultraleve:** Ambos os APKs (`vox.apk` e `vox-populi.apk`) são mantidos estritamente abaixo do limite de 100 KiB para viabilizar permanência no Free Tier do Turbo Arweave.
-4. **Segurança de Bind:** O nó dedicado em qualquer plataforma escuta estritamente em loopback (`127.0.0.1`), sem exposição externa de portas ou alteração indevida de regras de firewall.
+1. **Abandono de nomes legados:** `Farol`, `VoxFarol`, `Node Zero`, `VoxPopuli-ZeroMemory` e `Local Boost` / `Boost Local` deixam de ser termos canônicos. O trio oficial é **`Vox`**, **`Vox Populi`** e **`Vox Memoria`**; o enlace em loopback chama-se **Conexão local** (na UI: **"Usando seu nó"**).
+2. **Cliente único + dashboards enxutos:** ninguém troca de cliente para apoiar ou manter a rede. `Vox Populi` e `Vox Memoria` oferecem apenas **dashboard simplificado** em loopback (`127.0.0.1`) ou janela nativa para configurar cotas e saúde — sem duplicar feed/DM e sem acrescentar bytes ao precache do PWA `Vox` (`PM-01`).
+3. **Exclusão mútua de nó local (`Vox Populi` XOR `Vox Memoria`):** existe **no máximo um nó local ativo por aparelho**. Abrir o `Vox Populi` com o `Vox Memoria` rodando (ou vice-versa) detecta o serviço ativo via lock/healthcheck local e oferece fechar um e abrir o outro. Se a pessoa confirmar, o nó anterior executa **encerramento limpo** (flush de WAL/snapshot e liberação das portas `127.0.0.1:3920–3922`) antes de o novo assumir; se cancelar, o nó atual permanece intacto.
+4. **Ícone unificado e distribuição ultraleve:** os produtos compartilham o mesmo ícone oficial normalizado; APKs (`vox.apk` e `vox-populi.apk`) ficam abaixo de 100 KiB.
+5. **Segurança de bind:** o dashboard e o relay local escutam estritamente em loopback (`127.0.0.1`) por padrão, sem exposição automática na LAN/WAN.
+6. **Steward kit ≠ 4º produto:** `packaging/steward-kit-*`, `relay/deploy` e [steward-relay-kit.md](../operations/steward-relay-kit.md) são o **pacote de ops** para voluntários implantarem o **Vox Memoria** em modo VPS/coletivo (HTTPS/WSS com Caddy/TLS, cotas e `/health` remoto). Não é um 4º app na UI: o wizard `#/settings/network/steward` no `Vox` apenas aponta a URL do steward.

@@ -2,6 +2,8 @@
 
 Stewards são **voluntários da comunidade**, não o mantenedor do repositório Vox. Este kit fecha o pacote mínimo para a camada **Steward** em [`espacos-digitais-infra.md`](../strategy/espacos-digitais-infra.md): qualquer coletivo sobe relay + sinalização **sem** depender do mantenedor.
 
+> **Steward kit ≠ 4º produto ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)):** é o **pacote de ops** para implantar o **Vox Memoria** (relay + memória + sinalização) em modo VPS/coletivo com TLS e cotas. Não é app na loja nem 4º produto na UI — o wizard `#/settings/network/steward` no **Vox** apenas aponta a URL.
+
 **Status:** canônico (V-I08 fechado em `main`) — compose + Caddy (`/health`, `/vox/*`), quota via env, wizard `#/settings/network/steward`, kits 1-clique Windows/Linux.
 
 ---
@@ -79,7 +81,21 @@ O `server.py` confere cada pedido antes da rota ([ADR-027](../adr/027-autorizaca
 - **Relay em loopback atrás de túnel ou proxy** (cloudflared, Caddy no mesmo host): ponha o nome público em **`VOX_RELAY_ALLOWED_HOSTS`** (ex.: `VOX_RELAY_ALLOWED_HOSTS=signal.coletivo.org`). Sem isso, o relay responde `421`.
 - **Espelho do app em outro domínio:** ponha a origem em **`VOX_RELAY_ALLOWED_ORIGINS`**. As origens oficiais (GitHub Pages, Cloudflare Pages) e localhost já estão liberadas; a variável vale também para o CORS: origem fora da lista não consegue ler as respostas do relay.
 - **Limite de escrita:** `VOX_RELAY_WRITE_LIMIT_PER_MIN` (padrão 120 por IP). Atrás de proxy, todo mundo chega com o IP do proxy; suba o limite se a comunidade for grande.
-- O nó Windows (`VoxPopuli-ZeroMemory.exe`) libera o próprio túnel sozinho.
+- O nó Windows (**Vox Memoria**, compilado em `packaging/zero-central-memory-windows/`) libera o próprio túnel sozinho.
+
+### Snapshot do relay cego: dono do canal e reinício ([RFC 0002](../rfc/0002-snapshot-autenticado-do-relay-cego.md))
+
+- **Modo:** `VOX_RELAY_SNAPSHOT_AUTH=compat` (padrão) aceita snapshot sem prova, mas **sem apagar envelopes**; `enforce` recusa (`403`) o que vier sem prova. Mude para `enforce` só depois que os clientes da sua comunidade enviarem `X-Vox-Snapshot-Proof` (cliente ainda pendente na data deste kit).
+- **Tetos:** `VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP` (1000) e `VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP` (16). Num relay novo e vazio (canal migrado) o primeiro snapshot só cobre até o teto de cobertura; suba a variável ou peça aos clientes que reenviem os envelopes recentes antes.
+- **Quem é o dono:** o primeiro snapshot com prova num canal. Quem conhece só o id do canal não consegue ser dono depois disso, mas pode ser o primeiro se chegar antes (limite aceito, D6).
+- **Reinício do dono** (segredo perdido, mudança de domínio do relay, falso dono): apague só o arquivo do canal e deixe o resto:
+
+```bash
+rm "$VOX_RELAY_BLIND_DIR/<canal>/latest_snapshot.json"
+```
+
+  Sem `VOX_RELAY_BLIND_DIR`, o diretório fica em `$VOX_RELAY_CACHE_DIR/blind_relay/` (ou `relay/.blind_relay/`). Nada mais muda: envelopes e TTL de 7 dias continuam, o próximo snapshot **com prova** reivindica o canal, e o snapshot que o cold boot entrega some até alguém emitir outro. O relay não precisa reiniciar (a leitura é feita a cada pedido).
+- **Trocar de domínio** muda a prova (ela inclui o nome do relay): o canal vira do primeiro snapshot com a prova nova depois do reinício acima.
 
 ---
 

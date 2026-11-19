@@ -22,7 +22,6 @@ import * as voxels from "../voxels.js";
 import * as webrtcPeer from "../webrtc-peer.js";
 import { applySupporterMode, normalizeStorageCommitment } from "../supporter-mode.js";
 import { escapeHtml } from "../render/util.js";
-import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { bindInboxBackupSection, renderInboxBackupSection } from "./inbox-backup-ui.js";
 import { bindOwnPostsSection, renderOwnPostsSection } from "./own-posts-ui.js";
@@ -648,7 +647,9 @@ export function bindLinkedAccountsUi(onRefresh) {
   }
 
   document.getElementById("btn-open-oauth-from-linked")?.addEventListener("click", () => {
-    openOAuthEnrichModal({ mode: "import", onComplete: () => onRefresh && onRefresh() });
+    void import("./onboarding.js").then(({ openOAuthEnrichModal }) => {
+      openOAuthEnrichModal({ mode: "import", onComplete: () => onRefresh && onRefresh() });
+    });
   });
 
   bindLinkedAccountFormsAndButtons(onRefresh);

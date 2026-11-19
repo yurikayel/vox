@@ -6,6 +6,48 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: D4 repost-index, ciclo onboarding, D5 SIGV2 ensaio e PM-01 passo 1 (SW `v7.144`)
+- `client/js/repost-index.js`: normaliza `localStorage` não-objeto; promove `2 todo` em `tests/repost-index.test.js`.
+- `client/js/app/onboarding-oauth-ui.js` (novo): UI OAuth compartilhada; `screens-network.js` abre modal via `import()`; `scripts/cycles-debt.json` **0 ciclos**.
+- `client/js/app/route.js`: rotas voxpedia, ajuda-teste e labs/dungeon em `import()` dinâmico; precache −18 arquivos (~2,58 MiB).
+- `tests/sig-format.test.js`: ensaio `SIGV2_FROM` (D5).
+- `docs/ROADMAP.md`, `docs/strategy/mvp-tecnico-vox-2026-11.md`, `docs/audits/auditoria-features-arquitetura-2026-11.md`: banner e DoD pós-#290–#292.
+
+### Docs: revisão PTLD e reorganização escaneável do `README.md`
+- `README.md`: reestruturado (~361 → 269 linhas) preservando todos os fatos e os padrões do `scripts/release_line.py` — alerta `[!IMPORTANT]` de estado logo no topo (laboratório sem piloto, `arweaveUpload: false`, sinalização 1× Render + Nostr sem TURN, infra adiada até >50 ativos, `main` atrás de `develop`), navegação rápida em lista, arquitetura tripartite (`Vox` / `Vox Populi` / `Vox Memoria`, Steward kit ≠ 4º produto e mini-Mermaid de nó único), matriz de plataformas em 3 colunas, quickstart com requisitos (Node ≥ 22, Python 3.11+, `npm ci`, `npm run validate`), capacidades em 5 temas responsivos com legenda fixa (`✅`/`🧪`/`🚧`/`⏸️`) conferida contra `docs/FEATURES.md`, novidades e tags em `<details>`, diagrama Mermaid de arquitetura, seção de transparência técnica, jargão alinhado ao `GLOSSARIO.md`, remoção de nomes legados (`Nó Zero`/`Node Zero`), um emoji único por H2 e links para `mvp-tecnico-vox-2026-11.md`, `auditoria-features-arquitetura-2026-11.md` e `SECURITY.md`.
+- `docs/release-metadata.json` e selo/nota de testes no `README.md`: regerados por `npm run release-line` pós-#290/#291 (**2279 passing · 9 skipped · 13 todo**, total 2301 = 1981 JS + 320 Python). Sem código de produto nem bump de SW.
+
+### Docs: taxonomia tripartite `Vox` · `Vox Populi` · `Vox Memoria` e Conexão local (ADR-011)
+- `docs/adr/011-taxonomia-tripartite-produtos-vox.md`: emenda formalizando cliente único (`Vox`), nó de apoio + dashboard simples (`Vox Populi`) e nó de memória perene + dashboard CPU/disco/banda (`Vox Memoria`, substituindo `VoxPopuli-ZeroMemory` / `Node Zero`), além de **Conexão local** (*Usando seu nó*, substituindo `Local Boost`) e exclusão mútua de nó local (`Vox Populi` XOR `Vox Memoria`, encerramento limpo ao trocar).
+- `docs/GLOSSARIO.md`, `README.md`, `docs/strategy/analise-repositorio-vox-2026-11.md`, `docs/operations/steward-relay-kit.md`: alinhados à nova nomenclatura. Sem alteração de código nem bump de SW.
+
+### Docs: spec do MVP técnico da plataforma (DOC-07, nov/2026)
+- `docs/strategy/mvp-tecnico-vox-2026-11.md` (novo): especificação do MVP técnico em 10 seções (recorte do núcleo offline vs lazy vs labs, recuperação soberana, segurança e `SIGV2_FROM`, descentralização honesta sem TURN/Arweave write, escalabilidade incremental PM-01/REV-02/ADR-035/INF >50, corte explícito fora do MVP e DoD verificável); indexado em `docs/README.md`. Sem código de produto e sem bump de SW.
+
+### Docs: relatório de auditoria (Fases 1–3) e alinhamento de `FEATURES.md` (DOC-06, nov/2026)
+- `docs/audits/auditoria-features-arquitetura-2026-11.md` (novo): consolidação empírica das Fases 1–3 (README × fatos, camadas/ciclos/portas ADR-035 e PM-01, matriz `FEATURES.md` × código × testes e top 10 gaps doc vs código); indexado em `docs/README.md`.
+- `docs/FEATURES.md`: revisado em 19/11/2026 — corrige `idb-store.js` e `node-health-*.js` (todos em `labs/parado/` / `UNPLUGGED_MODULES`), acrescenta Cofre na malha (ADR-037) e `identity/tab-sync.js`, corrige referência de teste `signed-verify` → `assinaturas-e-sinais-malicioso` e atualiza 18 caminhos pós-ADR-035 / #177 (`identity/`, `vault/`, `app/`, `labs/parado/`). Sem bump de SW.
+
+### Docs: README e metadados de release alinhados ao código (auditoria fase 1, nov/2026)
+- `README.md`: selo de armazenamento deixa de dizer "Arweave Permaweb" (gravação pausada, REV-07); badge de testes **2276 passing · 9 skipped · 16 todo**; tabela e nota `develop` vs `main` e Release `v7.40`; Android 7.0+; ADRs apontam para o índice (39); PM-83 em laboratório; PR para `develop`; link para [análise do repositório](./docs/strategy/analise-repositorio-vox-2026-11.md).
+- `docs/release-metadata.json`: regerado por `npm run release-line` (`667fcda`, 1981 JS + 320 Python = 2301).
+- Sem bump de SW. `main` segue no release #262; o README só chega à `main` no próximo release.
+
+### Docs: prompt Claude auditoria + MVP técnico (nov/2026)
+- `docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
+
+### Docs: análise honesta do repositório (nov/2026)
+- `docs/strategy/analise-repositorio-vox-2026-11.md`: retrato versionado (arquitetura, três portões, gatilho INF >50, estado Git pós-#281–#283); indexado em `docs/README.md`.
+- `docs/ROADMAP.md`: nota de leitura calendário 2027 × INF; "Onde estamos" aponta gatilho >50. Sem bump de SW.
+
+### CI: keepalive do Render tolera partida a frio (#280)
+- `sentinel-keepalive.yml`: 60 s por tentativa, até 3 tentativas com pausa de 10 s; só conta falha se as 3 falharem, e o log/issue dizem quantas tentativas e o tempo de cada. Aviso no arquivo e no runbook: o cron do GitHub não é pontual; pinger externo de 5 em 5 min é decisão do dono. Sem bump de SW.
+### Docs: infra dos relays adiada até 50 usuários ativos (ROADMAP INF-01…04)
+- `docs/ROADMAP.md`: seção com o gatilho de >50 usuários ativos e quatro itens preparados (TURN, segundo nó, `VOX_RELAY_TRUST_PROXY_HOPS` e pinger externo, snapshot autenticado no cliente), com runbook e RFC já em `develop`.
+### Correção: snapshot do relay cego autenticado (RFC 0002, opção A, modo `compat`)
+- `relay/snapshot_auth.py` (novo) e `relay/blind_relay.py`: `POST /relay/snapshot/<canal>` lê `X-Vox-Snapshot-Proof` (64 hex); o relay guarda só o SHA-256 (`ownerHash`) e o primeiro a provar vira dono. Dono diferente ou ausente → `403`; tetos de salto `MAX_COVERED_JUMP` 1000 e `MAX_EPOCH_JUMP` 16 (`VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP`/`_MAX_EPOCH_JUMP`); conflito → `409` com `currentEpoch`/`currentCoveredSerial`; reenvio idêntico → `200` `"idempotent": true` sem regravar nem podar. **Só snapshot autenticado poda**; `VOX_RELAY_SNAPSHOT_AUTH=compat` (padrão) aceita sem prova como `auth: false` sem podar nem travar, `enforce` dá `403`. Decisão e autorização sob o lock existente; `hmac.compare_digest`; a resposta e o `GET` nunca trazem `ownerHash`. `server.py` mapeia `SnapshotForbidden`→403 e `SnapshotConflict` (subclasse de `ValueError`)→409 e libera o cabeçalho no preflight.
+- O relay não recebe o `Host`: sem o segredo ele não consegue conferir `host`/`channelId` dentro da prova; o vínculo está no cálculo do cliente (registrado no RFC §3).
+- **Pendente (cliente):** origem do `segredoSnapshot` (D2), `EpochCompactor` enviar a prova e conferir `sig` antes de aplicar; enquanto isso nenhum snapshot chega autenticado e **a poda por snapshot fica desligada** (envelopes saem só pelo TTL de 7 dias). Reinício do dono pelo steward: apagar `latest_snapshot.json` do canal. Testes: `relay/test_blind_relay_snapshot_auth.py` (34); os dois `skip` de `TestSnapshotSemAutenticacao` viraram 7 testes; `test_store_snapshot_and_prune_deltas` e os testes de poda do adversarial agora mandam a prova (sem prova não se poda mais). RFC 0002 `accepted`; `relay-api.md` lacuna 12 e kit do steward atualizados. O `skip` do aviso de corte no `GET` segue aberto. Sem bump de SW.
 ### Correção: sinalização (`signaling.py`) com a mesma política de origem do relay completo (R6)
 - Fim do `Access-Control-Allow-Origin: *` e do `Allow-Headers: *`: o CORS usa `request_guard.cors_allow_origin` (valor da lista, `Vary: Origin` sempre, nada de `Allow-*` para origem estranha). O handshake do WebSocket recusa com `403` `Origin` fora da lista ou com caractere de controle; sem `Origin` (cliente nativo, nó Linux) segue permitido. App no GitHub Pages/Cloudflare Pages e `localhost` continuam conectando. Testes: `relay/test_signaling_origem.py` (10); `test_signaling.py` não afirma mais `*`. Sem bump de SW.
 ### Segurança: contêiner do relay roda como `vox` (não-root), sem senha de modelo no coturn e portas no host só em loopback
