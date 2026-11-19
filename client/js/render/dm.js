@@ -18,6 +18,7 @@ import {
   sortAndFilterConversations,
 } from "../dm-messenger.js";
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
+import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 
 function resolvePeerLabel(peer) {
   if (!peer) return "";
@@ -297,7 +298,7 @@ function renderThreadComposerHtml(hasDmPub, pendingContextCard) {
       </div>
       <form id="form-send-dm" class="dm-form-sticky">
         <label for="dm-media-input" class="btn btn-outline btn-sm dm-attach-btn" title="Anexar foto ou comprovante (cifrado E2E)" aria-label="Anexar foto">📷</label>
-        <input type="file" id="dm-media-input" accept="image/*" hidden />
+        <input type="file" id="dm-media-input" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" hidden />
         <input type="text" id="dm-message-input" class="form-control" placeholder="Escreva aqui…" autocomplete="off" maxlength="${MAX_DM_TEXT_CHARS}" />
         <button type="submit" id="btn-send-dm" class="btn btn-primary" ${!hasDmPub ? "disabled" : ""}>Enviar</button>
       </form>
