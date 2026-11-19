@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: prompt Claude auditoria + MVP técnico (nov/2026)
+- `docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
+
+### Docs: análise honesta do repositório (nov/2026)
+- `docs/strategy/analise-repositorio-vox-2026-11.md`: retrato versionado (arquitetura, três portões, gatilho INF >50, estado Git pós-#281–#283); indexado em `docs/README.md`.
+- `docs/ROADMAP.md`: nota de leitura calendário 2027 × INF; "Onde estamos" aponta gatilho >50. Sem bump de SW.
+
 ### CI: keepalive do Render tolera partida a frio (#280)
 - `sentinel-keepalive.yml`: 60 s por tentativa, até 3 tentativas com pausa de 10 s; só conta falha se as 3 falharem, e o log/issue dizem quantas tentativas e o tempo de cada. Aviso no arquivo e no runbook: o cron do GitHub não é pontual; pinger externo de 5 em 5 min é decisão do dono. Sem bump de SW.
 ### Docs: infra dos relays adiada até 50 usuários ativos (ROADMAP INF-01…04)
