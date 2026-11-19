@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: taxonomia tripartite `Vox` · `Vox Populi` · `Vox Memoria` e Conexão local (ADR-011)
+- `docs/adr/011-taxonomia-tripartite-produtos-vox.md`: emenda formalizando cliente único (`Vox`), nó de apoio + dashboard simples (`Vox Populi`) e nó de memória perene + dashboard CPU/disco/banda (`Vox Memoria`, substituindo `VoxPopuli-ZeroMemory` / `Node Zero`), além de **Conexão local** (*Usando seu nó*, substituindo `Local Boost`) e exclusão mútua de nó local (`Vox Populi` XOR `Vox Memoria`, encerramento limpo ao trocar).
+- `docs/GLOSSARIO.md`, `README.md`, `docs/strategy/analise-repositorio-vox-2026-11.md`, `docs/operations/steward-relay-kit.md`: alinhados à nova nomenclatura. Sem alteração de código nem bump de SW.
+
 ### Docs: spec do MVP técnico da plataforma (DOC-07, nov/2026)
 - `docs/strategy/mvp-tecnico-vox-2026-11.md` (novo): especificação do MVP técnico em 10 seções (recorte do núcleo offline vs lazy vs labs, recuperação soberana, segurança e `SIGV2_FROM`, descentralização honesta sem TURN/Arweave write, escalabilidade incremental PM-01/REV-02/ADR-035/INF >50, corte explícito fora do MVP e DoD verificável); indexado em `docs/README.md`. Sem código de produto e sem bump de SW.
 
