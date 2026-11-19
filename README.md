@@ -209,7 +209,7 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `35dd0fe` |
+| **Commit SHA** | `d00b3d1` |
 | **Suíte de Testes** | **2302** (`1982` JS + `320` Python) |
 | **Service Worker** | `vox-pwa-v7.144-pm01-periphery-lazy` |
 
