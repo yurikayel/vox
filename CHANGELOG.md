@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: infra dos relays adiada até 50 usuários ativos (ROADMAP INF-01…04)
+- `docs/ROADMAP.md`: seção com o gatilho de >50 usuários ativos e quatro itens preparados (TURN, segundo nó, `VOX_RELAY_TRUST_PROXY_HOPS` e pinger externo, snapshot autenticado no cliente), com runbook e RFC já em `develop`.
 ### Correção: sinalização (`signaling.py`) com a mesma política de origem do relay completo (R6)
 - Fim do `Access-Control-Allow-Origin: *` e do `Allow-Headers: *`: o CORS usa `request_guard.cors_allow_origin` (valor da lista, `Vary: Origin` sempre, nada de `Allow-*` para origem estranha). O handshake do WebSocket recusa com `403` `Origin` fora da lista ou com caractere de controle; sem `Origin` (cliente nativo, nó Linux) segue permitido. App no GitHub Pages/Cloudflare Pages e `localhost` continuam conectando. Testes: `relay/test_signaling_origem.py` (10); `test_signaling.py` não afirma mais `*`. Sem bump de SW.
 ### Segurança: contêiner do relay roda como `vox` (não-root), sem senha de modelo no coturn e portas no host só em loopback
