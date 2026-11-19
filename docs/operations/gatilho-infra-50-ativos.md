@@ -1,6 +1,6 @@
 # Gatilho de infraestrutura — mais de 50 usuários ativos
 
-> **Status:** esboço operacional (sem deploy automático) · **Atualizado:** 2026-11-19 · **Decisão:** infra relay/TURN adiada até passar deste limiar ([ROADMAP.md](../ROADMAP.md), seção INF).
+> **Status:** canônico (esboço operacional, sem deploy) · **Owner:** mantenedor · **Revisado:** 2026-11-19 · **Decisão:** infra relay/TURN adiada até passar deste limiar ([ROADMAP.md](../ROADMAP.md), seção INF).
 
 ## Quando disparar
 
