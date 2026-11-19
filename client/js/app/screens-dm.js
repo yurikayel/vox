@@ -16,6 +16,7 @@ import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { applyBubbleReaction, dispatchSealedEnvelope, ingestDecryptedEnvelope } from "./dm-wire.js";
+import { compressRasterFileToJpegDataUrl } from "../shared/raster-file-to-jpeg.js";
 
 let activeReplyDraft = null;
 let pendingContextDraft = null;
@@ -195,24 +196,7 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
 }
 
 function compressDmImageFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Falha ao ler imagem"));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("Imagem inválida"));
-      img.onload = () => {
-        const scale = Math.min(1, 380 / Math.max(img.width || 1, img.height || 1));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.56));
-      };
-      img.src = String(reader.result || "");
-    };
-    reader.readAsDataURL(file);
-  });
+  return compressRasterFileToJpegDataUrl(file, { maxEdge: 380, quality: 0.56 });
 }
 
 function bindDmMediaAttachmentEvents() {
