@@ -95,13 +95,13 @@ function assertWrappedShape(env) {
 
 async function decryptWrappedBytes(env, passphrase) {
   const secret = requireSecret(passphrase, "Este arquivo está cifrado — informe a senha");
-  const key = await deriveWrapKey(
-    secret,
-    b64UrlToBytes(env.salt),
-    ["decrypt"],
-    wrapIterations(env.iter)
-  );
   try {
+    const key = await deriveWrapKey(
+      secret,
+      b64UrlToBytes(env.salt),
+      ["decrypt"],
+      wrapIterations(env.iter)
+    );
     return await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: b64UrlToBytes(env.iv) },
       key,
