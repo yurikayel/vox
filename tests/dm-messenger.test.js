@@ -264,4 +264,8 @@ test("dm-messenger: read receipt and E2E compressed photo payload roundtrip", ()
   assert.ok(main.innerHTML.includes("dm-bubble-img"));
   assert.ok(main.innerHTML.includes("✓✓ Lido"));
   assert.ok(main.innerHTML.includes('id="dm-media-input"'));
+  assert.ok(
+    main.innerHTML.includes('accept="image/jpeg,image/png,image/webp,image/gif"'),
+    "DM media input restringe MIME raster"
+  );
 });

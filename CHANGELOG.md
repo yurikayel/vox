@@ -6,6 +6,36 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+_Sem entradas pendentes após release 2026-11-19._
+
+## [2026-11-19] — SW `v7.146-dm-limits-6b` (release #296–#302)
+
+### Release
+- `develop` → `main`: #296 mapa BR · #297 IXV/docs · #298 foto comunidade · #299 accept raster · #300 DM 32k + ledger react/read · #301 gatilho INF · #302 [`pacote-anti-bus-factor.md`](./docs/operations/pacote-anti-bus-factor.md). Pós-deploy: hard refresh ([`ops-pages-rollback.md`](./docs/operations/ops-pages-rollback.md)).
+
+### Code: DM #6b — teto de texto 32k e anti-replay de reação/leitura
+- `MAX_DM_TEXT_CHARS` (32.768) em `dm-messenger.js`; `maxlength` no compositor; payload acima do teto não vira balão.
+- `dm-envelope-ledger.js` + `dm-wire.js`: `env.id` de react/read processado uma vez (`duplicate` no replay).
+- SW `v7.146-dm-limits-6b`. Testes adversariais reativados.
+
+### Code: foto de comunidade — raster, compressão e filtro na malha
+- `client/js/shared/raster-file-to-jpeg.js`, `community-avatar-image.js`: JPEG na criação/troca; `sanitizeMediaUrl` na renderização; gossip `community`/`community_update` recusa SVG e data URL acima do teto.
+- DM reusa `compressRasterFileToJpegDataUrl`. Testes `tests/community-avatar-image.test.js`.
+
+### Docs: catálogo IXV (Énóis → Vox) e glossário (nov/2026)
+- `docs/brainstorms/brainstorm-enois-observacao-2026-11.md`: ondas 1–3 com IXV-01…14, §6 índice, §7 explicações (Salas Precisas, Nota de contexto, Coluna).
+- `docs/GLOSSARIO.md`: subseção candidatos IXV (**Ágora**, **Explorar**, **Coluna** = blog, Salas Precisas).
+- `docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md`: **Ágora** na aba do feed (duplo sentido grego + agora).
+- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 ponte ao catálogo IXV.
+
+### Docs: alavancas do mapa, observação Énóis, spec PM-23 (nov/2026)
+- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 Énóis expandido; §4.4 cinco alavancas; §4.5 top 5; §3.1 próxima checagem 2027-02-19; §8 fontes reordenadas.
+- `docs/brainstorms/brainstorm-enois-observacao-2026-11.md` (novo): 11 rotas, não-copiar, ondas candidatas.
+- `docs/specs/modo-assembleia-v0.md` (novo): stub PM-23 (Loomio/Decidim, rituais, campos planos). Sem código nem bump de SW.
+
+### Docs: mapa do tecido social digital BR (nov/2026)
+- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: rede P2P BR de referência reclassificado (concorrente P2P, Conf. A, PolyForm); §2.2 Fediverso BR; §2.3 cívico; §3.1–3.2 tracking; §4 radar de aprendizados; Énóis (GPL-3.0); **Sua Voz** mantida; notas POSITIONING/LESSONS. Sem código nem bump de SW.
+
 ### Code: D4 repost-index, ciclo onboarding, D5 SIGV2 ensaio e PM-01 passo 1 (SW `v7.144`)
 - `client/js/repost-index.js`: normaliza `localStorage` não-objeto; promove `2 todo` em `tests/repost-index.test.js`.
 - `client/js/app/onboarding-oauth-ui.js` (novo): UI OAuth compartilhada; `screens-network.js` abre modal via `import()`; `scripts/cycles-debt.json` **0 ciclos**.

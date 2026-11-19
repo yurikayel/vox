@@ -1,6 +1,6 @@
 # Lições Estratégicas e Posicionamento Competitivo — Vox
 
-> **Status:** canônico (diagnóstico comparativo) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+> **Status:** canônico (diagnóstico comparativo) · **Owner:** mantenedor · **Revisado:** 2026-11-19
 
 Este documento consolida o diagnóstico comparativo realizado sobre iniciativas de redes sociais alternativas, protocolos abertos e infraestruturas descentralizadas (**rede P2P BR de referência, Bluesky, Mastodon, Channel-01/Arboard e Pix**). Ele formaliza os erros a evitar, os acertos a incorporar e o *sweet spot* estratégico do Vox.
 
@@ -10,7 +10,7 @@ Este documento consolida o diagnóstico comparativo realizado sobre iniciativas 
 
 | Iniciativa | Acertos a Preservar no Vox | Armadilha a Proibir no Design | Lição Operacional para o Vox |
 |---|---|---|---|
-| **A. rede P2P BR de referência** (Holepunch / P2P puro) | Identidade Ed25519 local; diários assinados (*append-only*); zero retenção de biometria/KYC; vocabulário cultural brasileiro (*A Rua*, *Cadeiras*). | Dependência de nós semeadores (*seeders*) sempre ativos; checagem paga de idade; bloqueios severos de NAT/CGNAT em redes móveis 4G/5G; encargo de controlador LGPD/Marco Civil. | **Herança do rede P2P BR de referência sem a armadilha P2P obrigatória:** Adotamos chaves locais e diários assinados. Para resiliência, permitimos **nós participativos opt-in de leitura e cache** (PWA leve enquanto aberto ou relay desktop local), mas **proibimos** transformar o celular em infraestrutura 24/7 de hospedagem da rede no 4G. |
+| **A. rede P2P BR de referência** (Holepunch / P2P puro) | Identidade Ed25519 local; diários assinados (*append-only*); zero retenção de biometria/KYC; vocabulário cultural brasileiro (*A Rua*, *Cadeiras*). | Dependência de nós semeadores (*seeders*) sempre ativos; checagem paga de idade; bloqueios severos de NAT/CGNAT em redes móveis 4G/5G; encargo de controlador LGPD/Marco Civil. | **Herança do rede P2P BR de referência sem a armadilha P2P obrigatória:** Adotamos chaves locais e diários assinados. Para resiliência, permitimos **nós participativos opt-in de leitura e cache** (PWA leve enquanto aberto ou relay desktop local), mas **proibimos** transformar o celular em infraestrutura 24/7 de hospedagem da rede no 4G. Produto real ativo nov/2026: ver [mapa §3.1](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md). |
 | **B. Bluesky** (AT Protocol) | Forte efeito de rede inicial; protocolo aberto com APIs públicas de leitura; portabilidade de repositórios. | **Falsa soberania:** AppView centralizado e dependência da Bluesky PBC (empresa C-Corp nos EUA). Vulnerável a mudanças unilaterais de termos de uso e sanções/ordens estrangeiras. | **Desacoplamento corporativo:** Não depender de AppViews proprietários de empresas estrangeiras. O protocolo deve ser interoperável com múltiplos gateways neutros. |
 | **C. Mastodon** (Fediverso / ActivityPub) | Federação genuína; governança comunitária; ausência de algoritmos tóxicos de retenção. | **Fricção de entrada e custo ao voluntário:** Exigir que o usuário "escolha uma instância"; custo mensal de servidores/VPS nos ombros de administradores voluntários; perda de rede por defederação arbitrária. | **Descentralização invisível:** O usuário entra para participar de comunidades, não para escolher servidores. Zero custos fixos mensais de VPS para mantenedores do projeto. |
 | **D. Channel-01 / Arboard** (Arweave / Turbo Gateway) | **Prova do "servidor zero":** HTML/JS ultraleve (< 20 KB); leitura instantânea via GraphQL multi-gateway; resiliência distribuída com fallback automático. | **Unilateralidade:** Projetado apenas como canal unidirecional de transmissão (broadcast), sem interação social ou agregação comunitária. | **Evolução bidirecional:** Adotamos a mesma fundação de gateways GraphQL abertos, expandindo o modelo de canal individual para um ecossistema bidirecional de comunidades, fóruns e respostas via convenção de tags. |
@@ -137,6 +137,12 @@ O repositório **[Arboard](https://github.com/rodrigopavezi/arboard)** (template
 | Canal de broadcast do autor → audiência | **Comunidades bidirecionais** (tópicos, respostas, moderação `mod-action`, malha P2P) |
 
 **O que o Vox não replica:** Arboard é essencialmente **unidirecional** (um canal, transmissão). O Vox expande a fundação de gateways para ecossistema social — incluindo **steward UX** (camadas Passivo→Steward), relay HTTP configurável e **retratação gossip** na malha — sem tratar o template como modelo completo de produto.
+
+---
+
+## 8b. Retenção por utilidade (mapa nov/2026)
+
+Redes que retêm sem algoritmo tóxico (Nextdoor, grupos locais, Kwai em aparelho barato) voltam por **aviso, feira, assembleia e ritual**, não por feed infinito. Na Vox, a trinca **PM-97 + Feira + PM-23** é o motor de hábito; soberania é o pacto, não o gancho semanal. Detalhe: [mapa §4.4](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md).
 
 ---
 

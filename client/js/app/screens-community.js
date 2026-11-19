@@ -8,6 +8,7 @@
  */
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { escapeHtml, sanitizeMediaUrl } from "../shared/html.js";
+import { compressCommunityAvatarFile, validateCommunityAvatarFile, acceptCommunityAvatarDataUrl } from "../shared/community-avatar-image.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 
@@ -318,33 +319,41 @@ function bindSeedAndNeighborControls(communityId, meta, peerSettings) {
   });
 }
 
+function paintCommunityPhotoOnDom(safeSrc, meta, communityId) {
+  const img = document.querySelector(".community-avatar-img");
+  if (img) { img.src = safeSrc; img.style.display = "block"; }
+  else {
+    const box = document.querySelector(".community-avatar-box");
+    if (box) {
+      box.innerHTML = `<img class="community-avatar-img" src="${escapeHtml(safeSrc)}" alt="${escapeHtml(meta.title || communityId)}" />`;
+    }
+  }
+  const fb = document.querySelector(".community-avatar-fallback");
+  if (fb) fb.style.display = "none";
+}
+
 async function uploadCommunityPhoto(file, communityId, meta) {
   if (!communityUpdates.canUpdateCommunity(meta, await localAccount.getRouteId())) {
     share.showToast("Só o dono ou um moderador desta comunidade pode trocar a foto.", "error");
     return;
   }
-  const dataUrl = await new Promise((res, rej) => {
-    const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
-  });
-  const updatePayload = {
+  const check = validateCommunityAvatarFile(file);
+  if (!check.ok) {
+    share.showToast(check.message, "error");
+    return;
+  }
+  const dataUrl = await compressCommunityAvatarFile(file);
+  const signed = await localAccount.signPayload({
     id: `comm_update_${communityId}_${Date.now()}`,
     type: communityUpdates.COMMUNITY_UPDATE_TYPE,
     communityId,
     image: dataUrl,
     avatar: dataUrl,
     updatedAt: Date.now(),
-  };
-  const signed = await localAccount.signPayload(updatePayload);
+  });
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
-  const img = document.querySelector(".community-avatar-img");
-  if (img) { img.src = dataUrl; img.style.display = "block"; }
-  else {
-    const box = document.querySelector(".community-avatar-box");
-    if (box) box.innerHTML = `<img class="community-avatar-img" src="${escapeHtml(dataUrl)}" alt="${escapeHtml(meta.title || communityId)}" />`;
-  }
-  const fb = document.querySelector(".community-avatar-fallback");
-  if (fb) fb.style.display = "none";
+  paintCommunityPhotoOnDom(acceptCommunityAvatarDataUrl(dataUrl), meta, communityId);
   share.showToast("Foto da comunidade atualizada!");
 }
 

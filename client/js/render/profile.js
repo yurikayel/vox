@@ -27,6 +27,7 @@ import { renderStep, renderSteps, renderReviewList } from "./compose-steps.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
 import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
 import { renderSovereigntyCard } from "./profile-sovereignty.js";
+import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -833,7 +834,7 @@ function renderComposeCommunityPhotoSection() {
         <div style="flex:1;">
           <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
             📁 Escolher foto do aparelho
-            <input type="file" id="comm-photo-file" accept="image/*" style="display:none;" />
+            <input type="file" id="comm-photo-file" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" style="display:none;" />
           </label>
           <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
         </div>

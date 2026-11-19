@@ -90,6 +90,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
 - [moderador-natural-v0.md](./specs/moderador-natural-v0.md): vínculo assinado (implementado) e moderador natural nas denúncias (a implementar)
 - [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (implementado em laboratório, atrás da flag `vox.lab.aviso`): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
+- [modo-assembleia-v0.md](./specs/modo-assembleia-v0.md): **modo assembleia (stub PM-23)** — pauta, voto com `blockReason`, `decisionStatus`, rituais sobre aviso `convocacao`
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
 - [mochila-dm-v0.md](./specs/mochila-dm-v0.md): caixa de saída das DMs (implementada) e repasse cego por outros aparelhos (não implementado)
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho e replicação via **rede de seguidores** (diretriz base sem gravação no Arweave por enquanto; teto e regras por grau pendentes no PM-74)
@@ -118,7 +119,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [rede-sustentada-participantes.md](./strategy/rede-sustentada-participantes.md) · [backlog-participacao-rede.md](./strategy/backlog-participacao-rede.md) (IDs V-P) · [infra-participativa-blindagem-crescimento.md](./strategy/infra-participativa-blindagem-crescimento.md) · [espacos-digitais-infra.md](./strategy/espacos-digitais-infra.md) (V-I01)
 - [campo-debate-aberto-ndp-2026-10.md](./strategy/campo-debate-aberto-ndp-2026-10.md): notas de campo, modelos A–D
 - [estrategia-5-pontos-fracos-90-dias-2026-11.md](./strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md): **plano de 90 dias por ponto fraco**, com as decisões de 10/11 (cunha do piloto: modo assembleia)
-- [mapa-mapa-ecossistema-aposentado-2026-11.md](./strategy/mapa-mapa-ecossistema-aposentado-2026-11.md): **20 parceiras e 20 concorrentes para observar** (com fonte, confiança e pendências)
+- [mapa-mapa-ecossistema-aposentado-2026-11.md](./strategy/mapa-mapa-ecossistema-aposentado-2026-11.md): **20 parceiras e 20 concorrentes** + anexo Fediverso BR e **§3.1 tracking de features** (fonte, Conf., pendências; rev. 2026-11-19)
 - [tese-praca-civica-militancia-pro-democratica-2026-10.md](./strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
 - [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
 - [POSITIONING.md](./product/POSITIONING.md) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
@@ -145,6 +146,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorms/brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
 - [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorms/brainstorm-tracao-escalabilidade-incubacao.md) · [incubacao-p2-backlog.md](./strategy/incubacao-p2-backlog.md)
 - [brainstorm-oauth-tradicional-descoberta-2026-10-24.md](./brainstorms/brainstorm-oauth-tradicional-descoberta-2026-10-24.md): OAuth e descoberta social
+- [brainstorm-enois-observacao-2026-11.md](./brainstorms/brainstorm-enois-observacao-2026-11.md): **observação Énóis** (11 rotas, ondas 1–3, o que não copiar; GPL-3.0, *clean-room* only)
 - [brainstorm-sintese-praca-de-colunas-2026-11-10.md](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): **síntese dos seis brainstorms de 10/11 (comece por aqui)**: tese da praça de colunas com a imagem da ágora (no lugar do WeChat), dois relógios (compromisso da organização e missão do membro), seis peças comuns com matriz de reuso, ordem de construção candidata, três frentes de captação, neutralidade pelo pacto, métricas e decisões pendentes
 - [brainstorm-5-pontos-fracos-2026-11-10.md](./brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md): **os 5 pontos fracos do produto hoje** (identidade, falso verde, densidade da rede, exposição de quem participa, concentração), com ação e métrica para cada um
 - [brainstorm-terceiro-lugar-2026-11-10.md](./brainstorms/brainstorm-terceiro-lugar-2026-11-10.md): **o Vox como "terceiro lugar"**: raiz comum dos pontos fracos, ferramentas de quem organiza usadas a partir do WhatsApp, escada de esforço do membro, ata em sessão permanente (Lei 14.309/2022), distribuição de guerrilha

@@ -11,6 +11,8 @@ import * as listing from "../listing.js";
 import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
+import { sanitizeMediaUrl } from "../shared/html.js";
+import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderPageHead } from "./shell.js";
@@ -42,7 +44,7 @@ export { CIVIC_TAGS, extractTopicCivicTag } from "./topic-badges.js";
  * @returns {string} HTML do bloco de avatar.
  */
 export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
-  const image = meta.image || meta.avatar || meta.photo || "";
+  const image = sanitizeMediaUrl(meta.image || meta.avatar || meta.photo || "");
   const title = meta.title || communityId || "Comunidade";
   const initial = (title || "C").slice(0, 1).toUpperCase();
   const accent = getCommunityColor(communityId);
@@ -162,8 +164,9 @@ function topicReplyCount(topic) {
 }
 
 function renderTopicRowThumb(topic, topicHref) {
-  if (!topic.image || gossipRetract.shouldHideGossipDeletedPost(topic)) return "";
-  return `<a class="community-topic-row-thumb" href="${topicHref}" aria-hidden="true"><img src="${escapeHtml(topic.image)}" alt="" width="48" height="48" loading="lazy" /></a>`;
+  const thumb = sanitizeMediaUrl(topic.image);
+  if (!thumb || gossipRetract.shouldHideGossipDeletedPost(topic)) return "";
+  return `<a class="community-topic-row-thumb" href="${topicHref}" aria-hidden="true"><img src="${escapeHtml(thumb)}" alt="" width="48" height="48" loading="lazy" /></a>`;
 }
 
 function resolveTopicAuthorMeta(topic) {
@@ -587,7 +590,7 @@ export function renderCommunityPeopleStrip(people = []) {
 function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   const photoBtn = canChangePhoto ? `
     <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
-      <input type="file" id="input-comm-photo-file" accept="image/*" style="display:none;" />
+      <input type="file" id="input-comm-photo-file" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" style="display:none;" />
       <span class="btn-change-comm-photo-label">📷 Alterar foto</span>
     </label>` : "";
   return `<div class="community-vox-avatar-wrap">${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}${photoBtn}</div>`;
