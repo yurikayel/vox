@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### CI: keepalive do Render tolera partida a frio (#280)
+- `sentinel-keepalive.yml`: 60 s por tentativa, até 3 tentativas com pausa de 10 s; só conta falha se as 3 falharem, e o log/issue dizem quantas tentativas e o tempo de cada. Aviso no arquivo e no runbook: o cron do GitHub não é pontual; pinger externo de 5 em 5 min é decisão do dono. Sem bump de SW.
 ### Docs: infra dos relays adiada até 50 usuários ativos (ROADMAP INF-01…04)
 - `docs/ROADMAP.md`: seção com o gatilho de >50 usuários ativos e quatro itens preparados (TURN, segundo nó, `VOX_RELAY_TRUST_PROXY_HOPS` e pinger externo, snapshot autenticado no cliente), com runbook e RFC já em `develop`.
 ### Correção: snapshot do relay cego autenticado (RFC 0002, opção A, modo `compat`)
