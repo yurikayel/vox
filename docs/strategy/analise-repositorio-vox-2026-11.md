@@ -20,7 +20,7 @@ Decisões de produto recentes (alinhadas ao handoff `lobby.md` na raiz do worksp
 
 Tese de tração (não é roadmap): [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) — Brasil, nicho relacional, **uma praça que funciona** antes de “viralizar protocolo”; 4 camadas (Passivo → Steward); **sem leaderboard**.
 
-Tripé de produtos ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)): **cliente** (`vox`), **nó apoio** (`vox populi`), **memória central dev** (ZeroMemory / `central_memory.py`).
+Tripé de produtos ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)): **cliente único** (`Vox`), **nó de apoio** (`Vox Populi`), **nó de memória** (`Vox Memoria` / `central_memory.py`), com exclusão mútua de nó local (XOR) e **Conexão local**.
 
 ---
 
