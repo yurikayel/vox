@@ -159,9 +159,20 @@ async function openRequests(x, entry) {
   return out;
 }
 
+const MAX_REQUESTS_PER_OWNER = 7;
+
+function undecidedRequestCount(requests, now) {
+  let count = 0;
+  for (const r of Object.values(requests)) {
+    if (!r?.decision && !r?.answered && Number.isFinite(r?.t) && now - r.t <= mesh.REQUEST_MAX_AGE_MS) count += 1;
+  }
+  return count;
+}
+
 async function noteNewRequests(x, me, owner, entry) {
   for (const req of await openRequests(x, entry)) {
     if (entry.requests[req.id]) continue;
+    if (undecidedRequestCount(entry.requests, x.now()) >= MAX_REQUESTS_PER_OWNER) break;
     entry.requests[req.id] = { k: req.k, t: req.t, firstSeen: x.now() };
     await sendSigned(x, me, owner, mesh.buildNoticeBody({ to: owner, requestId: req.id, firstSeen: x.now() })).catch(() => false);
   }

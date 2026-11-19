@@ -338,7 +338,7 @@ test("quem recebe — quem já guardava a cópia velha e deixou de ser laço mú
 /** Dois aparelhos da dona levam o aviso em tempos diferentes: 51 avisos falsos empurram o verdadeiro para fora. */
 const FLOOD = 60;
 
-test("avisos — a dona vê o pedido verdadeiro mesmo com muitos pedidos falsos depois (veto sem teto)", { skip: "ACHADO alta: addNotice guarda só os últimos 50; quem tem e-mail e senha manda 60 pedidos e o primeiro (o verdadeiro) sai da fila sem que a dona possa vetá-lo. Correção muda o fluxo (teto por guarda, ou decidir em lote)." }, async () => {
+test("avisos — a dona vê o pedido verdadeiro mesmo com muitos pedidos falsos depois (veto sem teto)", async () => {
   const w = makeWorld(OWNER, H1);
   await giveVault(w, OWNER, H1);
   const real = await pushRequest(w);
