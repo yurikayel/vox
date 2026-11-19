@@ -3,7 +3,7 @@
 > **Status:** implementada atrás da flag de laboratório `vox.lab.aviso` (lotes A–D, chamada de ação, competências, termo e mediação); ligar para todos depende do piloto G1 · **Owner:** mantenedor · **Revisado:** 2026-11-11
 > **Código:** `client/js/aviso.js`, `aviso-replies.js`, `aviso-roles.js`, `community-termo.js`, `render/aviso.js`, `app/aviso-flow.js`, `app/aviso-roles-dm.js`, `app/community-termo-flow.js`; página leve `client/aviso.html` + `client/aviso/`. Acompanhamento: **PM-97** no [ROADMAP](../ROADMAP.md).
 > Primeira peça da [síntese — a praça de colunas](../brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) (§5 e §6). Junta numa peça o selo contra golpe, o "Ciente", o "Vou / Talvez" e o "Fixar no mural".
-> Relacionados: [canal da comunidade (PM-81)](./canal-comunidade-v0.md), dono e moderação (PM-09, `moderation.js`), [integridade na entrada (ADR-021)](../adr/021-integridade-na-entrada-forma-assinada.md), forma assinada `sigv` (PM-85, `sig-format.js`), modo assembleia (PM-23), teste com 5 leigos (LAN-25).
+> Relacionados: [canal da comunidade (PM-81)](./canal-comunidade-v0.md), dono e moderação (PM-09, `moderation.js`), [integridade na entrada (ADR-021)](../adr/021-integridade-na-entrada-forma-assinada.md), forma assinada `sigv` (PM-85, `sig-format.js`), [modo assembleia (PM-23)](./modo-assembleia-v0.md), teste com 5 leigos (LAN-25).
 
 ## Problema
 
