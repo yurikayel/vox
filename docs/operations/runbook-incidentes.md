@@ -47,3 +47,5 @@ Rollback do PWA e do `CACHE_NAME`: [ops-pages-rollback.md](./ops-pages-rollback.
 ## Alertas automáticos (PM-61)
 
 Falhas de rotina abrem uma issue com o label `alerta-automatico`, sem servidor: keepalive do Render (`sentinel-keepalive.yml`), teste de fumaça Nostr (`nostr-smoke.yml`), rotina mensal de dependências (`deps-mensal.yml`) e deploy do shell B no `main` (`deploy-shell-b.yml`). Enquanto a issue de um alerta estiver aberta, novas falhas do mesmo tipo não abrem outra: **feche a issue quando resolver**, para o próximo alerta voltar a aparecer.
+
+**Keepalive e partida a frio.** O ping do Render tenta até 3 vezes (60 s cada, pausa de 10 s) e só conta falha se as 3 falharem; a 1ª tentativa acorda o nó (plano grátis: ~13 s após ocioso). A issue informa quantas tentativas e o tempo de cada uma. O cron do GitHub não é pontual (medido: roda a cada ~5-6 h, não a cada 14 min), então o keepalive reduz mas não elimina a partida a frio. A alternativa robusta é um pinger externo gratuito de 5 em 5 min — decisão do dono, ainda não implementada.
