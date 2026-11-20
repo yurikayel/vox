@@ -56,6 +56,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `tests/login-rede-ruim.test.js`: promove o `test.todo` — criação com relay fora garante `saved.locked`, chaves travadas e export bloqueado mesmo quando só a cópia local do cofre existe.
 ### Code: LT-07d — retoma poll da malha após recarga na espera do cofre
 - `app/onboarding-email.js`: com `loadMeshPending` e rascunho `meshWaiting`, após recarga mostra status da malha, repõe `vaultEmail` no formulário e reinicia o poll (senha continua fora do storage; CodeQL 282). `app/onboarding.js`: `onMeshRestored` no fluxo de entrada. Testes: `tests/onboarding-reload-keyboard.test.js`.
+### Code: PM-01 passo 2 — lazy routing aviso/compose e menos bytes no precache (SW `v7.147-pm01-passo-2-lazy`)
+- `client/js/app/route.js`: `import()` sob demanda para rotas de aviso (`#/c/…/avisos`, `#/compose/aviso`) e composição (`#/compose/*`), no mesmo padrão do passo 1 (voxpedia/ajuda/labs).
+- `client/sw.js`: remove do `SHELL_ASSETS` render Voxpedia/ajuda-teste, pilha de aviso/termo/sorteio e fluxos de moderação natural já alcançáveis só por `import()` dinâmico; mantém `screens-compose.js` no precache (respostas inline em `init.js`).
+- `tests/shell-reachability.test.js`, `tests/depurple-paper.test.js`: guardiões PM-01 passo 2.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 
