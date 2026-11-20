@@ -47,7 +47,10 @@
 | `render/voxpedia.js` | Arweave: gravação pausada (`arweaveUpload: false`); carteira = leitura/chaves. Comunidades: criação na malha sem exigir carteira para Arweave. Privacidade: entrada sem Google/Meta; OAuth só no Perfil. Moderação: sem “permanece no permaweb” como promessa automática. |
 | `tests/voxpedia.test.js` | Assert copy Arweave pausado. |
 
-**Falta (DOC-04):** varredura `render/feed.js`, `render/network.js`, `render/status.js` × tabela `FEATURES.md`; Voxpedia labs (dungeon/frames) vs “não plugado”. |
+| `render/ajuda-teste.js`, `render/feed.js` (20/11, PR ajuda) | Ajuda teste: malha vs permaweb; Arweave pausado; carteira honesta. Feed: barra “Escudo” sem “100% cronológico” inflado. |
+| `tests/ajuda-teste.test.js` | Assert `arweaveUpload: false`. |
+
+**Falta (DOC-04):** `render/network.js`, `render/status.js` × `FEATURES.md`; labs (dungeon/frames) vs “não plugado”. |
 
 ## OK (manter)
 
