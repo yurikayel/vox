@@ -8,8 +8,14 @@ import { parseDiceCommand, rollDiceFormula } from "./dice-engine.js";
 import { chronicleToMarkdown, markdownToNote, markdownToSheet, splitFrontmatter } from "./obsidian-bridge.js";
 import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { reduceCampaign } from "./vtt-reducer.js";
-import { createCampaign, createVttOp, ensureSheetMeta } from "./vtt-schema.js";
+import { createCampaign, createNoteDoc, createVttOp, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
+import { formatInWorldDate } from "./vtt-calendar.js";
+import { listInventoryItems, totalCarriedWeight } from "./vtt-inventory.js";
+import { buildLevelUpPlan } from "./vtt-levelup.js";
+import { parseObsidianCanvas } from "./obsidian-bridge.js";
+
+const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
@@ -27,13 +33,19 @@ function buildUiSheetProjection(rawSheet, fallbackInventory) {
   const sheet = ensureSheetMeta(rawSheet);
   const attrs = sheet.attributes_lww || {};
   const ab = attrs.abilities || {};
+  const invItems = listInventoryItems(sheet.inventory_orset);
+  const inventoryLabels = invItems.length
+    ? invItems.map((it) => `${it.label}${it.qty > 1 ? ` ×${it.qty}` : ""}${it.equipped ? " (E)" : ""}`)
+    : Array.isArray(sheet.inventory) ? sheet.inventory : fallbackInventory || [];
   return {
     ...sheet,
     char_id: sheet.character_id,
     name: attrs.name || "Aventureiro",
     role_title: attrs.class_name || "Aventureiro",
     attributes: { vitalidade: ab.con ?? 12, astucia: ab.dex ?? 12, sabedoria: ab.wis ?? 12 },
-    inventory: Array.isArray(sheet.inventory) ? sheet.inventory : fallbackInventory || [],
+    inventory: inventoryLabels,
+    inventoryItems: invItems,
+    carryWeight: totalCarriedWeight(sheet.inventory_orset),
   };
 }
 
@@ -58,6 +70,8 @@ export function hydrateStateFromCampaign(state, campaign) {
   const activeScene = pickRecord(campaign.scenesById, campaign.activeSceneId);
   if (activeScene) state.scene = activeScene;
   if (campaign.initiative) state.initiative = campaign.initiative;
+  if (campaign.calendar) state.worldCalendar = campaign.calendar;
+  state.worldDateLabel = formatInWorldDate(campaign.calendar);
   if (Array.isArray(campaign.chronicle) && campaign.chronicle.length) state.chronicle = [...campaign.chronicle];
   state.rolls = [...(campaign.rolls || [])];
   state.notes = Object.values(campaign.notesById || {});
@@ -395,6 +409,19 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const name = String(fileSpec?.name || "").trim();
   const rawBytes = fileSpec?.bytes instanceof Uint8Array ? fileSpec.bytes : ENC.encode(String(fileSpec?.bytes ?? ""));
+  if (/\.canvas$/i.test(name)) {
+    const canvasJson = parseObsidianCanvas(JSON.parse(DEC.decode(rawBytes)));
+    const note = createNoteDoc({
+      title: name.replace(/\.canvas$/i, ""),
+      folder: "Pistas",
+      canvasJson,
+      visibility: "shared",
+    });
+    if (!state.campaignId) await createAndSelectCampaign(state, state.tableName || "Campanha Importada", { store });
+    await upsertCampaignNote(state, note, store);
+    state.campaignNotice = `Quadro Obsidian "${note.title}" importado.`;
+    return { ok: true, kind: "canvas", campaignId: state.campaignId };
+  }
   if (/\.md$/i.test(name)) return importMarkdownIntoCampaign(state, DEC.decode(rawBytes), name, store);
   if (/\.enc$/i.test(name) || rawBytes[0] === 0x7b) {
     const unpacked = await unpackEncryptedVoxRpg(DEC.decode(rawBytes), opts.passphrase);
@@ -402,4 +429,87 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
   }
   const unpacked = await unpackVoxRpg(rawBytes);
   return saveRestoredPackage(state, unpacked, store, "voxrpg-zip");
+}
+
+/**
+ * Lê preferências locais da Mesa (dados 3D, etc.) do `localStorage`.
+ * @returns {{ dice3d: boolean }}
+ */
+export function loadDungeonPrefs() {
+  try {
+    const raw = globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { dice3d: parsed.dice3d !== false };
+  } catch {
+    return { dice3d: true };
+  }
+}
+
+/**
+ * Salva preferências locais da Mesa no `localStorage`.
+ * @param {object} prefs Preferências parciais.
+ */
+export function saveDungeonPrefs(prefs = {}) {
+  const current = loadDungeonPrefs();
+  const next = { ...current, ...prefs };
+  globalThis.localStorage?.setItem(DUNGEON_PREFS_KEY, JSON.stringify(next));
+}
+
+/**
+ * Avança o relógio de campanha (`CALENDAR_ADVANCE`), só com campanha ativa.
+ * @param {object} state Sessão.
+ * @param {string} delta Atalho de tempo.
+ * @param {object} [store] Store.
+ * @returns {Promise<object>} Campanha atualizada após `CALENDAR_ADVANCE`.
+ */
+export async function advanceCampaignCalendar(state, delta, store = getDefaultVttStore()) {
+  const reduced = await applyAndPersistOp(state, "CALENDAR_ADVANCE", { delta }, store);
+  if (reduced?.calendar) {
+    state.worldCalendar = reduced.calendar;
+    state.worldDateLabel = formatInWorldDate(reduced.calendar);
+  }
+  return reduced;
+}
+
+/**
+ * Muta o inventário OR-Set da ficha ativa.
+ * @param {object} state Sessão.
+ * @param {string} kind Tipo (`add`, `remove`, `toggle_equip`, `set_qty`).
+ * @param {object} payload Dados.
+ * @param {object} [store] Store.
+ * @returns {Promise<object>} Campanha atualizada após `INVENTORY_MUTATE`.
+ */
+export async function mutateSheetInventory(state, kind, payload, store = getDefaultVttStore()) {
+  return applyAndPersistOp(state, "INVENTORY_MUTATE", { sheetId: state.sheet?.character_id, kind, ...payload }, store);
+}
+
+/**
+ * Aplica subida de nível guiada na ficha ativa.
+ * @param {object} state Sessão.
+ * @param {object} [store] Store.
+ * @returns {Promise<{ ok: boolean, error?: string }>} Resultado do assistente.
+ */
+export async function applySheetLevelUp(state, store = getDefaultVttStore()) {
+  const preset = state.campaignDoc?.dungeonPrefs?.preset || state.campaignDoc?.system || "libre";
+  const level = (Number(state.sheet?.attributes_lww?.level) || 1) + 1;
+  const plan = buildLevelUpPlan(state.sheet, level, preset);
+  if (!plan.ok) {
+    state.rollError = plan.error;
+    return plan;
+  }
+  await applyAndPersistOp(state, "LEVEL_UP_APPLY", { sheetId: state.sheet?.character_id, plan: plan.plan }, store);
+  state.campaignNotice = `Nível ${level} alcançado.`;
+  return { ok: true };
+}
+
+/**
+ * Cria ou atualiza nota com opcional canvas JSON.
+ * @param {object} state Sessão.
+ * @param {object} note `NoteDoc` parcial.
+ * @param {object} [store] Store.
+ * @returns {Promise<void>} Concluído após `NOTE_UPSERT`.
+ */
+export async function upsertCampaignNote(state, note, store = getDefaultVttStore()) {
+  await applyAndPersistOp(state, "NOTE_UPSERT", { note }, store);
+  state.notes = Object.values(state.campaignDoc?.notesById || {});
 }

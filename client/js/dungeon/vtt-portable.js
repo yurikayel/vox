@@ -5,7 +5,7 @@
  */
 import { sha256Hex } from "../rpg-crypto-table.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
-import { chronicleToMarkdown, noteToMarkdown, sheetToMarkdown } from "./obsidian-bridge.js";
+import { chronicleToMarkdown, exportNoteCanvas, noteToMarkdown, sheetToMarkdown } from "./obsidian-bridge.js";
 import { createCampaign, validateCampaignDoc } from "./vtt-schema.js";
 
 /** Tamanho máximo aceito por entrada no ZIP (16 MiB — INV-4/INV-6). */
@@ -204,6 +204,8 @@ export async function packVoxRpg(campaign, blobs = new Map(), { includeGmSecrets
   }
   for (const note of Object.values(campaign.notesById || {})) {
     rawEntries.push({ name: `notas/${note.id}.md`, data: ENC.encode(noteToMarkdown(note, { includeGmSecrets })) });
+    const canvas = exportNoteCanvas(note);
+    if (canvas) rawEntries.push({ name: `mapas/${note.id}.canvas`, data: ENC.encode(canvas) });
   }
   rawEntries.push({ name: "sessoes/cronica.md", data: ENC.encode(chronicleToMarkdown(campaign, { includePrivate: includeGmSecrets })) });
   for (const [hash, bytes] of blobs instanceof Map ? blobs.entries() : []) {
@@ -251,6 +253,11 @@ export async function unpackVoxRpg(zipBytes) {
   for (const [name, bytes] of filesMap.entries()) {
     if (name.startsWith("assets/")) blobs.set(name.slice("assets/".length), bytes);
     else if (name.endsWith(".md")) markdownFiles.set(name, DEC.decode(bytes));
+    else if (name.endsWith(".canvas") && name.startsWith("mapas/")) {
+      const noteId = name.slice("mapas/".length, -".canvas".length);
+      const campaignNote = parsed.notesById?.[noteId];
+      if (campaignNote) parsed.notesById[noteId] = { ...campaignNote, canvasJson: JSON.parse(DEC.decode(bytes)) };
+    }
   }
   return { campaign: createCampaign(parsed), blobs, manifest, markdownFiles };
 }
