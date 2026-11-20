@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: desmembramento de `screens-community.js` (< 25 imports e <= 350 linhas, Fraqueza #14)
+- `client/js/app/`: extrai `community-metadata.js` (metadados, `checkCommunityMembership`, `dispatchCommunityModAction`), `community-data.js`, `community-controls.js`, `community-listing-handlers.js`, `community-topic-screen.js` (`showTopic`, `resolveTopicContent`) e `screens-vote.js` (`showProposal`, `showVote`, apuração e voto), reduzindo `screens-community.js` de 40 para 23 imports (1.280 → 187 linhas) com 0 ciclos.
+- `client/js/app/route.js`, `client/js/app/init.js`: importam `showTopic`, `showProposal` e `showVote` dos novos módulos focados.
+- `client/sw.js`, `docs/release-metadata.json`: registra os 6 novos módulos em `SHELL_ASSETS` e atualiza `CACHE_NAME` para `vox-pwa-v7.147-community-split`.
+- `tests/community-forum-refinements.test.js`: catraca `< 25` imports em `screens-community.js` e preservação de exports.
+
 ### Code: LT-06c — corrida de criação de conta entre abas e promoção de teste `storage-corrupt-2`
 - `client/js/identity/local-account.js` (`LT-06c`): `createAccountUnlessWiped` confere `!hasStoredAccount()` antes de gravar chave de DM e concluir a criação; se outra aba já gravou `vox-local-account-v1` durante a geração assíncrona de chaves, descarta a semente gerada em voo e adota a conta existente.
 - `tests/local-account-race.test.js`, `tests/storage-corrupt-2.test.js`, `docs/process/plano-testes-login.md`: teste `PM-111` red-on-base para `LT-06c` e promoção do `TODO` de `local-account` em `storage-corrupt-2.test.js`.
