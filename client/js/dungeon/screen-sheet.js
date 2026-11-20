@@ -51,6 +51,28 @@ function renderSheetHero(sheet) {
     </section>`;
 }
 
+function renderAddActionForm() {
+  return `
+    <form class="dungeon-action-form" data-dungeon="add-action-form">
+      <div class="dungeon-input-row">
+        <label class="sr-only" for="dungeon-action-label">Nome da ação</label>
+        <input id="dungeon-action-label" class="dungeon-input" type="text" maxlength="60" placeholder="Nova ação (ex.: Arco Longo)" autocomplete="off" />
+        <label class="sr-only" for="dungeon-action-formula">Fórmula da rolagem</label>
+        <input id="dungeon-action-formula" class="dungeon-input" type="text" maxlength="80" placeholder="Rolagem (ex.: 1d20+@des+@prof)" autocomplete="off" />
+        <label class="sr-only" for="dungeon-action-damage">Fórmula de dano opcional</label>
+        <input id="dungeon-action-damage" class="dungeon-input" type="text" maxlength="80" placeholder="Dano opcional (ex.: 1d8+@des)" autocomplete="off" />
+        <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar Ação</button>
+      </div>
+    </form>`;
+}
+
+function renderRollStatusBanner(state) {
+  if (state.rollError) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`;
+  const last = state.lastFormulaRoll;
+  if (!last?.ok) return "";
+  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
+}
+
 function renderClickableActionsPanel(state) {
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const mode = state.rollMode || "normal";
@@ -62,12 +84,6 @@ function renderClickableActionsPanel(state) {
     const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
     return `<button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${escapeHtml(act.id)}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>`;
   }).join("");
-  const last = state.lastFormulaRoll;
-  const statusHtml = state.rollError
-    ? `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`
-    : last?.ok
-      ? `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`
-      : "";
   return `
     <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
       <div class="dungeon-section-head">
@@ -78,7 +94,8 @@ function renderClickableActionsPanel(state) {
         <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${modesHtml}</div>
       </div>
       <div class="dungeon-brain-grid">${buttonsHtml || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
-      ${statusHtml}
+      ${renderRollStatusBanner(state)}
+      ${renderAddActionForm()}
     </section>`;
 }
 
@@ -96,6 +113,8 @@ function renderResourceMeters(sheet, projected) {
           <h2>Vida, Moedas e Mochila</h2>
         </div>
         <div class="dungeon-card-actions">
+          <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-minus">-1 PV</button>
+          <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-plus">+1 PV</button>
           <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="spend-10">Comprar Poção (-10 moedas)</button>
           <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Gasto Sem Saldo</button>
         </div>
@@ -154,6 +173,16 @@ function renderBackpackAndLedger(sheet) {
     </div>`;
 }
 
+function renderPublicNotesSection(notes) {
+  if (!Array.isArray(notes) || !notes.length) return "";
+  const cards = notes.map((n) => {
+    const tags = (n.tags || []).map((t) => `<span class="dungeon-code-tag">#${escapeHtml(t)}</span>`).join(" ");
+    const links = (n.links || []).length ? `<p class="dungeon-muted">Vínculos: ${n.links.map((l) => `<code>[[${escapeHtml(l)}]]</code>`).join(", ")}</p>` : "";
+    return `<article class="dungeon-lore-card"><div class="dungeon-lore-top"><h3>${escapeHtml(n.title)}</h3><div>${tags}</div></div><p class="dungeon-muted">${escapeHtml(n.publicMarkdown || "")}</p>${links}</article>`;
+  }).join("");
+  return `<section class="dungeon-panel" aria-label="Notas públicas importadas"><span class="dungeon-eyebrow">Obsidian · Handouts Públicos</span><h2>Notas e Pistas da Campanha</h2><div class="dungeon-lore-grid">${cards}</div></section>`;
+}
+
 /**
  * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT e verificação bilateral de fatos.
  *
@@ -168,6 +197,7 @@ export function renderSheetScreen(state) {
     ${renderClickableActionsPanel(state)}
     ${renderResourceMeters(state.sheet, projected)}
     ${renderBackpackAndLedger(state.sheet)}
+    ${renderPublicNotesSection(state.notes)}
     <section class="dungeon-panel">
       <div class="dungeon-section-head">
         <div>

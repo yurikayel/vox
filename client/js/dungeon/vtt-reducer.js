@@ -162,14 +162,16 @@ function sanitizeNoteForPlayer(note) {
 }
 
 /**
- * Projeta o estado da campanha para um papel específico (em E1, `gm` vê tudo; `player` já omite segredos GM e rolagens cegas).
+ * Projeta o estado da campanha de forma fail-closed: apenas `viewerRole === "gm"` recebe segredos;
+ * qualquer outro papel (`"player"`, indefinido ou desconhecido) recebe projeção sem segredos GM nem rolagens cegas.
  * @param {object} state Estado completo da campanha.
- * @param {"gm"|"player"} [viewerRole="gm"] Papel de quem lê.
+ * @param {"gm"|"player"} [viewerRole="player"] Papel de quem lê.
  * @param {string} [viewerRouteId=""] Identidade do jogador.
- * @returns {object} Estado projetado sem vazamento de segredos.
+ * @returns {object|null} Estado projetado sem vazamento de segredos.
  */
-export function projectStateForPlayer(state, viewerRole = "gm", viewerRouteId = "") {
-  if (!state || viewerRole !== "player") return structuredClone(state);
+export function projectStateForPlayer(state, viewerRole = "player", viewerRouteId = "") {
+  if (!state) return null;
+  if (viewerRole === "gm") return structuredClone(state);
   const sheetsById = Object.fromEntries(
     Object.entries(state.sheetsById || {}).map(([id, s]) => [id, sanitizeSheetForPlayer(s)]),
   );

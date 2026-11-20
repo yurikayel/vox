@@ -14,12 +14,16 @@ import {
   inspectPeerPromptForRole,
 } from "./dungeon-state.js";
 import {
+  addCustomSheetAction,
   bootstrapDungeonPersistence,
   createAndSelectCampaign,
+  deleteSavedCampaign,
   exportCampaignBackup,
   importCampaignFile,
   openSavedCampaign,
+  persistD20RollIfActive,
   persistSheetDeltaIfActive,
+  persistTableTurnIfActive,
   recordAbilityRoll,
   recordFormulaRoll,
   recordSheetActionRoll,
@@ -41,6 +45,13 @@ const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
 
 function openVaultIfTriggered(state) {
   return state.vaultSecret?.triggerMet && !state.vaultSecret.unlocked ? triggerShamirVaultUnlock(state) : state;
+}
+
+function rollD20AndPersist(state, opts) {
+  performFairD20Roll(state);
+  const vaultStep = openVaultIfTriggered(state);
+  if (!state.campaignId) return vaultStep;
+  return Promise.resolve(vaultStep).then(() => persistD20RollIfActive(state, state.lastRoll.value, opts.store));
 }
 
 function triggerBrowserDownload(artifact, onDownload) {
@@ -67,22 +78,27 @@ async function runExportAction(state, container, format, opts) {
   }
 }
 
-function spendAndPersist(state, delta, reason, opts) {
-  applySheetResourceDelta(state, "coins", delta, reason);
-  return persistSheetDeltaIfActive(state, "coins", delta, reason, opts.store);
+function deltaAndPersist(state, poolKey, delta, reason, opts) {
+  applySheetResourceDelta(state, poolKey, delta, reason);
+  return persistSheetDeltaIfActive(state, poolKey, delta, reason, opts.store);
 }
 
 const ACTION_HANDLERS = {
   failover: (state) => simulatePillarFailover(state),
-  "roll-d20": (state) => openVaultIfTriggered(performFairD20Roll(state)),
+  "roll-d20": (state, _el, _c, opts) => rollD20AndPersist(state, opts),
   "grid-cell": (state, el) => openVaultIfTriggered(movePlayerOnGrid(state, el.dataset.x, el.dataset.y)),
-  "spend-10": (state, _el, _c, opts) => spendAndPersist(state, -10, "Poção de vigília", opts),
-  "test-overdraft": (state, _el, _c, opts) => spendAndPersist(state, -500, "Tentativa sem saldo", opts),
+  "hp-minus": (state, _el, _c, opts) => deltaAndPersist(state, "hp_current", -1, "Ajuste manual (-1 PV)", opts),
+  "hp-plus": (state, _el, _c, opts) => deltaAndPersist(state, "hp_current", 1, "Ajuste manual (+1 PV)", opts),
+  "spend-10": (state, _el, _c, opts) => deltaAndPersist(state, "coins", -10, "Poção de vigília", opts),
+  "test-overdraft": (state, _el, _c, opts) => deltaAndPersist(state, "coins", -500, "Tentativa sem saldo", opts),
   "confirm-lore": (state, el) => attestLoreNodeInState(state, el.dataset.loreId, "CONFIRM"),
   "dispute-lore": (state, el) => attestLoreNodeInState(state, el.dataset.loreId, "REJECT"),
   "unlock-vault": (state) => triggerShamirVaultUnlock(state),
   "inspect-role": (state, el) => inspectPeerPromptForRole(state, el.dataset.role),
   "open-campaign": (state, el, _c, opts) => openSavedCampaign(state, el.dataset.campaignId, opts.store),
+  "arm-delete-campaign": (state, el) => { state.pendingDeleteId = el.dataset.campaignId || ""; },
+  "cancel-delete-campaign": (state) => { state.pendingDeleteId = ""; },
+  "confirm-delete-campaign": (state, el, _c, opts) => deleteSavedCampaign(state, el.dataset.campaignId, opts.store),
   "roll-mode": (state, el) => { state.rollMode = el.dataset.mode || "normal"; },
   "roll-quick": (state, el, _c, opts) => recordFormulaRoll(state, el.dataset.formula, { store: opts.store }),
   "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, { store: opts.store }),
@@ -146,27 +162,41 @@ function handleActionFormSubmit(container, viewOpts, form) {
   if (SLASH_ROLL_RE.test(cleanText)) {
     return settleAndRedraw(recordFormulaRoll(state, cleanText, { store: viewOpts.store }), container, viewOpts, "#dungeon-action-input");
   }
+  const prevChronicleLen = state.chronicle.length;
+  const prevLedgerLen = state.sheet?.delta_ledger?.length || 0;
   submitTableAction(state, cleanText);
   redrawContainer(container, viewOpts);
   container.querySelector("#dungeon-action-input")?.focus?.();
-  return undefined;
+  if (!state.campaignId) return undefined;
+  const addedEntries = state.chronicle.slice(prevChronicleLen);
+  const addedDeltas = (state.sheet?.delta_ledger || []).slice(prevLedgerLen);
+  return settleAndRedraw(persistTableTurnIfActive(state, addedEntries, addedDeltas, viewOpts.store), container, viewOpts);
 }
+
+function handleAddActionSubmit(container, viewOpts, form) {
+  const state = viewOpts.state || getDungeonSession();
+  const label = String(form.querySelector("#dungeon-action-label")?.value || "").trim();
+  const roll = String(form.querySelector("#dungeon-action-formula")?.value || "").trim();
+  const damage = String(form.querySelector("#dungeon-action-damage")?.value || "").trim();
+  return settleAndRedraw(addCustomSheetAction(state, { label, roll, damage }, { store: viewOpts.store }), container, viewOpts);
+}
+
+const SUBMIT_FORMS = new Set(["action-form", "create-campaign-form", "roll-formula-form", "add-action-form"]);
 
 function handleDungeonSubmit(container, viewOpts, ev) {
   const form = ev.target;
   const kind = form?.dataset?.dungeon;
-  if (!["action-form", "create-campaign-form", "roll-formula-form"].includes(kind)) return undefined;
+  if (!SUBMIT_FORMS.has(kind)) return undefined;
   ev.preventDefault();
-  const state = viewOpts.state || getDungeonSession();
   if (kind === "action-form") return handleActionFormSubmit(container, viewOpts, form);
+  if (kind === "add-action-form") return handleAddActionSubmit(container, viewOpts, form);
+  const state = viewOpts.state || getDungeonSession();
   if (kind === "create-campaign-form") {
     const name = String(form.querySelector("#dungeon-campaign-name")?.value || "").trim();
-    if (!name) return undefined;
-    return settleAndRedraw(createAndSelectCampaign(state, name, { store: viewOpts.store }), container, viewOpts);
+    return name ? settleAndRedraw(createAndSelectCampaign(state, name, { store: viewOpts.store }), container, viewOpts) : undefined;
   }
   const formula = String(form.querySelector("#dungeon-roll-input")?.value || "").trim();
-  if (!formula) return undefined;
-  return settleAndRedraw(recordFormulaRoll(state, formula, { store: viewOpts.store }), container, viewOpts, "#dungeon-roll-input");
+  return formula ? settleAndRedraw(recordFormulaRoll(state, formula, { store: viewOpts.store }), container, viewOpts, "#dungeon-roll-input") : undefined;
 }
 
 async function readUploadedBytes(file) {
@@ -198,6 +228,19 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts);
 }
 
+function hydrateViewPersistence(container, viewOpts) {
+  const state = viewOpts.state || getDungeonSession();
+  const hasBackend = Boolean(viewOpts.store || typeof globalThis.indexedDB?.open === "function");
+  if (!hasBackend) return;
+  if (!state.persistenceReady) {
+    settleAndRedraw(bootstrapDungeonPersistence(state, viewOpts.store), container, viewOpts);
+    return;
+  }
+  if (viewOpts.tableId && viewOpts.tableId !== state.campaignId && state.campaigns?.some((c) => c.id === viewOpts.tableId)) {
+    settleAndRedraw(openSavedCampaign(state, viewOpts.tableId, viewOpts.store), container, viewOpts);
+  }
+}
+
 /**
  * Conecta delegação de eventos interativos das 4 telas no contêiner montado e hidrata a persistência local quando disponível.
  *
@@ -209,7 +252,6 @@ export function wireDungeonView(container, opts = {}) {
   if (!container || container.dataset.dungeonWired === "1") return;
   container.dataset.dungeonWired = "1";
   const viewOpts = { ...opts };
-
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));
   container.addEventListener("input", (ev) => {
     const target = ev.target;
@@ -220,10 +262,5 @@ export function wireDungeonView(container, opts = {}) {
   });
   container.addEventListener("submit", (ev) => handleDungeonSubmit(container, viewOpts, ev));
   container.addEventListener("change", (ev) => handleDungeonChange(container, viewOpts, ev));
-
-  const state = viewOpts.state || getDungeonSession();
-  const shouldBootstrap = Boolean(viewOpts.store || typeof globalThis.indexedDB?.open === "function");
-  if (shouldBootstrap && !state.persistenceReady) {
-    settleAndRedraw(bootstrapDungeonPersistence(state, viewOpts.store), container, viewOpts);
-  }
+  hydrateViewPersistence(container, viewOpts);
 }

@@ -3,28 +3,39 @@
  * do Mestre (`%%...%%` e `> [!gm]`), extração de `[[wikilinks]]` e conversão de fichas/notas/crônica em `.md`.
  * @module dungeon/obsidian-bridge
  */
-import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
+import { appendPoolDeltaOp, projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { createNoteDoc, ensureSheetMeta, sanitizeVttId } from "./vtt-schema.js";
 
 const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
-const UNSAFE_YAML_RE = /(^|\s)(!![a-z0-9_-]+|[&*][a-z0-9_-]+)/i;
+const UNSAFE_YAML_VALUE_RE = /^(?:!!|[&*][a-z0-9_-])/i;
 const WIKILINK_RE = /(!?)\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g;
 const INLINE_SECRET_RE = /%%([\s\S]*?)%%/g;
 const GM_CALLOUT_HEAD_RE = /^>\s*\[!gm\b[^\]]*\](.*)$/i;
 
+function isQuotedScalar(val) {
+  return (val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"));
+}
+
+function parseFlowArray(val) {
+  const inner = val.slice(1, -1).trim();
+  if (!inner) return [];
+  if (inner.includes("[") || inner.includes("]")) throw new Error("Lista YAML aninhada não suportada.");
+  return inner.split(",").map((item) => parseYamlScalar(item)).filter((item) => item !== "");
+}
+
 function parseYamlScalar(raw) {
   const val = String(raw || "").trim();
+  if (isQuotedScalar(val)) return val.slice(1, -1);
+  if (UNSAFE_YAML_VALUE_RE.test(val)) throw new Error("Constructo YAML não suportado (tags ou âncoras).");
+  if (val.startsWith("[") && val.endsWith("]")) return parseFlowArray(val);
   if (val === "true") return true;
   if (val === "false") return false;
   if (/^-?\d+(?:\.\d+)?$/.test(val)) return Number(val);
-  if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-    return val.slice(1, -1);
-  }
   return val;
 }
 
 function assertSafeYamlKey(key) {
-  if (!key || FORBIDDEN_KEYS.has(key)) throw new Error(`Chave YAML inválida: "${key}".`);
+  if (!key || FORBIDDEN_KEYS.has(key) || /^[!&*]/.test(key)) throw new Error(`Chave YAML inválida: "${key}".`);
 }
 
 function parseNestedLine(trimmed, root, sectionKey) {
@@ -55,7 +66,6 @@ export function parseSimpleYaml(yamlText) {
   for (const rawLine of String(yamlText || "").split(/\r?\n/)) {
     const trimmed = rawLine.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
-    if (UNSAFE_YAML_RE.test(trimmed)) throw new Error("Constructo YAML não suportado (tags ou âncoras).");
     if (/^\s+/.test(rawLine)) {
       if (!currentSection) throw new Error("Indentação YAML sem chave pai.");
       parseNestedLine(trimmed, root, currentSection);
@@ -260,12 +270,18 @@ export function markdownToSheet(markdown, fallback = {}) {
   const { publicMarkdown, gmSecretMarkdown } = splitGmSecrets(body);
   const cleanBody = publicMarkdown.replace(/^#\s+.+\r?\n?/, "").trim();
   const actions = Array.isArray(data.acoes) ? data.acoes.map(parseActionItem).filter(Boolean) : undefined;
-  return ensureSheetMeta({
+  const hpMax = Number(data.hp_max ?? data.pv_max) || 20;
+  let sheet = ensureSheetMeta({
     ...extractSheetIdentity(data, publicMarkdown, fallback),
     abilities: mapYamlAbilities(data.atributos || data.abilities),
-    pools_base: { hp_max: Number(data.hp_max ?? data.pv_max) || 20, gold_initial: Number(data.ouro ?? data.gold) || 0 },
+    pools_base: { hp_max: hpMax, gold_initial: Number(data.ouro ?? data.gold) || 0 },
     sheet_meta: { ...(actions ? { clickable_actions: actions } : {}), notes_public: cleanBody, notes_gm: gmSecretMarkdown },
   });
+  const hpAtual = Number(data.hp_atual ?? data.pv_atual);
+  if (Number.isFinite(hpAtual) && hpAtual >= 0 && hpAtual < hpMax) {
+    sheet = appendPoolDeltaOp(sheet, { op_id: `md-hp-${sheet.character_id}`, lamport_clock: 1, actor_pubkey: "obsidian-import", target_pool: "hp_current", delta: hpAtual - hpMax, reason: "Importação Obsidian" });
+  }
+  return sheet;
 }
 
 /**
