@@ -219,11 +219,9 @@ test("saídas da conta — array, número ou string no registro contam como vazi
   }
 });
 
-// ---- local-account.js: achados, ainda sem correção (arquivo fora do escopo) ----
+// ---- local-account.js ----
 
-const TODO = { todo: "local-account.js fora do escopo (lock do PR #218): corrigir em PR próprio" };
-
-test("local-account — lista de contas que não é mapa não quebra nem perde a conta ativa", TODO, async (t) => {
+test("local-account — lista de contas que não é mapa não quebra nem perde a conta ativa", async (t) => {
   for (const raw of ["null", "[]", "[1,2]", "42", '"texto"', "{quebrado"]) {
     await t.test(raw, async () => {
       await localAccount.wipeLocalAccount();
