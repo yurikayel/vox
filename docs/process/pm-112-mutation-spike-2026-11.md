@@ -4,49 +4,63 @@
 
 ## Objetivo
 
-Validar se **Stryker** (ou alternativa sem dependência nova) roda com `node:test` nos módulos **Tier A** ([§3.3 Tier A](../TESTES.md#33-tier-a-o-que-exige-mais-prova)) antes de virar catraca no CI.
+Validar se mutação executável com `node:test` nos módulos **Tier A** ([§3.3 Tier A](../TESTES.md#33-tier-a-o-que-exige-mais-prova)) pode virar catraca no CI — comparando **Stryker** (dependência dedicada) com **mutador AST próprio** (`espree`, zero dep nova).
 
-## Experimento
+## Experimento (planejado)
 
 | Abordagem | Resultado |
 |-----------|-----------|
-| **Stryker + `@stryker-mutator/nodejs-runner`** | Não está no `package.json`. Integração com `node --test` exige runner dedicado (`stryker.conf.json`). **Custo:** dependência nova (LAN-20) + tempo de CI. **Recomendação:** dispensável enquanto o protótipo AST sobre `espree` cobrir Tier A. |
-| **Mutador AST mínimo sobre `espree` (implementado)** | Implementado em [`scripts/mutate-tier-a.mjs`](../../scripts/mutate-tier-a.mjs) (`npm run audit:mutate:tier-a`) com **zero dependência npm nova** (usa o `espree` já instalado pelo ESLint). Executa `node --test` por mutante via hook ESM (`module.register`) em sandbox temporário (`os.tmpdir()`), sem alterar o arquivo original no disco e verificando SHA-256 antes/depois. Suporta `--file`/`--test`, `--base <gitRef>` (diff Tier A via [`.github/CODEOWNERS`](../../.github/CODEOWNERS)), `--max`, `--timeout` e `--json`. |
+| **Stryker + `tap-runner`** | Integração via `stryker.conf.json` + `@stryker-mutator/tap-runner` (executa `node:test` com `--test-reporter=tap`). **Custo:** devDeps novas (LAN-20) + minutos de pipeline se entrar no CI. Piloto offline: `npm run test:mutation:pm112`. |
+| **Mutador AST mínimo sobre `espree` (implementado)** | [`scripts/mutate-tier-a.mjs`](../../scripts/mutate-tier-a.mjs) — `npm run audit:mutate:tier-a` — zero dependência npm nova; hook ESM em sandbox temporário. |
 | **Red-on-base (PM-111)** | Já cobre PRs `fix:` no diff de testes; complementa mutação para defeitos conhecidos. |
 
-## Protótipo AST implementado (`scripts/mutate-tier-a.mjs`)
+## Protótipo AST (`scripts/mutate-tier-a.mjs`)
 
-Operadores mutados via AST (`espree`, ESM puro, zero regex):
-- Relacionais e igualdade (`BinaryExpression`): `===` ↔ `!==`, `==` ↔ `!=`, `<` ↔ `<=`, `>` ↔ `>=`.
+Operadores mutados via AST (`espree`, ESM puro):
+- Relacionais e igualdade (`BinaryExpression`): `===` ↔ `!==`, etc.
 - Lógicos (`LogicalExpression`): `&&` ↔ `||`.
 - Condição de desvio (`IfStatement`): `if (cond)` → `if (!(cond))`.
 - Literais booleanos (`Literal`): `true` ↔ `false`.
 
-Classificação por mutante: `killed` (`exit !== 0`), `survived` (`exit === 0`) ou `timeout` (padrão 10s). O placar (`score`) é conservador: `killed / total * 100` (timeouts não inflam o placar). Suíte própria em [`tests/mutate-tier-a.test.js`](../../tests/mutate-tier-a.test.js).
+Classificação: `killed` / `survived` / `timeout`. Suíte em [`tests/mutate-tier-a.test.js`](../../tests/mutate-tier-a.test.js).
 
-## Resultados reais medidos (2026-11-20)
+## Resultados AST medidos (2026-11-20, develop)
 
-| Comando | Mutantes | Killed | Survived | Timeout | Score | Tempo |
-|---------|----------|--------|----------|---------|-------|-------|
-| `node scripts/mutate-tier-a.mjs --file client/js/sig-format.js --test tests/sig-format.test.js --max 10` | 10 | 10 | 0 | 0 | **100%** | 10,9s |
-| `node scripts/mutate-tier-a.mjs --file client/js/sig-format.js --test tests/sig-format.test.js` (completo) | 11 | 11 | 0 | 0 | **100%** | 11,6s |
-| `node scripts/mutate-tier-a.mjs --file client/js/inbox.js --test tests/inbox.test.js --max 25` | 25 | 20 | 5 | 0 | **80%** | 7,5s |
+| Comando | Mutantes | Killed | Survived | Score | Tempo |
+|---------|----------|--------|----------|-------|-------|
+| `--file client/js/sig-format.js --test tests/sig-format.test.js --max 10` | 10 | 10 | 0 | **100%** | 10,9s |
+| `--file client/js/sig-format.js` (completo) | 11 | 11 | 0 | **100%** | 11,6s |
+| `--file client/js/inbox.js --test tests/inbox.test.js --max 25` | 25 | 20 | 5 | **80%** | 7,5s |
 
-Sobreviventes reais identificados em `client/js/inbox.js` (`--max 25`):
-- `client/js/inbox.js:107 [logical] || -> &&`
-- `client/js/inbox.js:134 [logical] || -> &&`
-- `client/js/inbox.js:168 [logical] || -> &&`
-- `client/js/inbox.js:168 [boolean-literal] false -> true`
-- `client/js/inbox.js:171 [boolean-literal] false -> true`
+Sobreviventes em `inbox.js` (`--max 25`): linhas 107, 134, 168 (`logical` / `boolean-literal`).
+
+## Piloto Stryker — worktree `feat/pm-112-stryker-pilot` (2026-11-20)
+
+| Item | Valor |
+|------|-------|
+| **ESM (`"type": "module"`)** | Sem bloqueio — instrumentação e `import` nativos OK. |
+| **Runner** | `@stryker-mutator/tap-runner` v10.1.1 (`@stryker-mutator/nodejs-runner` **não existe** no npm). |
+| **Alvo** | `client/js/inbox.js` + `tests/inbox*.test.js` |
+| **Comando** | `npm run test:mutation:pm112` / `npx stryker run` (`stryker.conf.json`). |
+| **Duração** | ~14 s (149 mutantes, `coverageAnalysis: "off"`, concurrency 2). |
+| **Mutantes** | 149 · **88 mortos** · 44 sobreviventes · 17 sem cobertura · 0 erros |
+| **Mutation score** | **59,06%** total · **66,67%** covered |
+| **Relatório** | `reports/mutation/mutation-report.json` (evidência deste PR). |
+| **Nota** | Tap-runner agrupa por **arquivo de teste**; `inbox-backup.test.js` não importa `inbox.js`. |
+
+Após merge de `develop`, testes de `inbox` reforçados (PR #361) devem elevar o score Stryker na próxima execução local.
 
 ## Próximos passos (F2)
 
-1. Rodar `npm run audit:mutate:tier-a -- --base origin/develop --max 20 --json` como job informativo em PRs que toquem Tier A antes de avaliar catraca bloqueante.
-2. Usar os sobreviventes apontados em `client/js/inbox.js` como pauta de reforço de testes (fora do escopo deste spike).
+1. **AST:** `npm run audit:mutate:tier-a -- --base origin/develop --max 20 --json` como job informativo em PRs Tier A.
+2. **Stryker:** manter piloto local; avaliar `coverageAnalysis: perTest` quando o runner nativo `node:test` do Stryker estabilizar (upstream #6020).
+3. **Nenhum** wire em `ci.yml` ou `npm run validate` neste lote.
 
 ## Decisão (spike)
 
-**Protótipo AST próprio sobre `espree` validado sem dependência nova**; substitui a necessidade imediata de Stryker para o piloto Tier A. Segue como auditoria sob demanda (`npm run audit:mutate:tier-a`), ainda fora do gate bloqueante do `npm run validate` até calibração em PRs reais (F2).
+- **Caminho preferido F2:** protótipo AST (`espree`) — zero dep nova, já com score 100% em `sig-format` e 80% amostral em `inbox`.
+- **Stryker validado** em ESM + `node:test` via tap-runner; útil como referência de mutantes ricos e relatório HTML/JSON, mas **opcional** enquanto o AST cobrir o gate informativo.
+- Catraca bloqueante PM-112 no CI permanece adiada até calibração em PRs reais.
 
 ## Fora de escopo
 

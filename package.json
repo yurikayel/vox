@@ -7,6 +7,7 @@
   "scripts": {
     "start": "python relay/signaling.py",
     "test:client": "node --test tests/*.test.js",
+    "test:mutation:pm112": "stryker run",
     "test:relay": "python -m unittest discover -s relay -p \"test_*.py\"",
     "test:e2e": "python -m unittest discover -s e2e -p \"test_*.py\" -v",
     "test:js": "npm run test:client",
@@ -27,6 +28,8 @@
   },
   "devDependencies": {
     "@jsquash/avif": "2.1.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/tap-runner": "^10.1.1",
     "eslint": "^10.15.0",
     "globals": "^17.14.0"
   },
