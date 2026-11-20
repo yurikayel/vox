@@ -7,8 +7,10 @@ import { fileURLToPath } from "node:url";
 import * as render from "../client/js/render.js";
 import { renderDemoModeBanner } from "../client/js/render/shell.js";
 import { MOCK_DEMO_COMMUNITY } from "../client/js/mock.js";
+import { readFeedRenderSource } from "./helpers/feed-render-source.mjs";
 
 const CLIENT_JS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../client/js");
+const CLIENT_ROOT = path.join(CLIENT_JS_DIR, "..");
 const FORBIDDEN_PATTERNS = [/100% P2P/i, /imunidade total/i, /imunidade regulat/i, /ranking de nós/i];
 
 const readClientJs = (relPath) => fs.readFileSync(path.join(CLIENT_JS_DIR, relPath), "utf8");
@@ -55,7 +57,7 @@ test("DOC-04 - demo: mock tour e banner citam malha sem permaweb automático", (
 });
 
 test("DOC-04 - compositor e feed: badges Lo-Fi sem '100% Grátis' ou 'Permaweb Arweave'", () => {
-  const feedSrc = readClientJs("render/feed.js");
+  const feedSrc = readFeedRenderSource(CLIENT_ROOT);
   const composerSrc = readClientJs("app/inline-composer.js");
   assert.doesNotMatch(feedSrc, /100% Grátis/i);
   assert.doesNotMatch(composerSrc, /100% Grátis/i);
