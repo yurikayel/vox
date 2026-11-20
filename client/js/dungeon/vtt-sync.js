@@ -172,6 +172,7 @@ async function handleGmActionOp(ctx, msg) {
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
     ctx.connectedPlayers.add(msg.from);
+    ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
     await sendFilteredSnapshot(ctx, msg.from);
     return;
   }
@@ -226,13 +227,8 @@ async function dispatchSyncOp(ctx, rawOp) {
   return op;
 }
 
-/**
- * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`).
- * @returns {{ join: () => void, dispatchOp: (rawOp: object) => Promise<object>, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
- */
-export function createVttSyncPeer(opts) {
-  const ctx = {
+function buildSyncContext(opts) {
+  return {
     role: opts.role === "gm" ? "gm" : "player",
     campaignId: opts.campaignId,
     keypair: opts.keypair,
@@ -245,7 +241,17 @@ export function createVttSyncPeer(opts) {
     onUpdate: opts.onUpdate,
     onBlobReceived: opts.onBlobReceived,
     onRejected: opts.onRejected,
+    onPeerCountChange: opts.onPeerCountChange,
   };
+}
+
+/**
+ * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
+ * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`).
+ * @returns {{ join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
+ */
+export function createVttSyncPeer(opts) {
+  const ctx = buildSyncContext(opts);
   let chain = Promise.resolve();
   const detach = ctx.transport.onMessage((msg) => {
     if (!msg || msg.roomKey !== ctx.roomKey) return;
@@ -256,6 +262,7 @@ export function createVttSyncPeer(opts) {
   return {
     join: () => { if (ctx.role === "player") ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey }); },
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
+    getPeerCount: () => ctx.connectedPlayers.size,
     flush: () => chain,
     close: () => { detach(); ctx.transport.close?.(); },
   };

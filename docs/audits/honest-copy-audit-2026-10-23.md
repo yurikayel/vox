@@ -33,24 +33,24 @@
 | `render/dm.js` | DM: “neste navegador” (dados não vão à malha como posts) |
 | `render/profile.js` | Pix lookup: índice local vs posts na malha |
 
-## P2 — backlog
-
-| Área | Ação sugerida |
-|------|----------------|
-| `mock.js` tour | Harmonizar narrativa `#localfirst` quando houver hashtag demo |
-| `render/status.js`, `render/network.js`, `render/ajuda-teste.js` | Revisar “neste aparelho” (telemetria local) vs copy de posts |
-
-## P2 — parcial (20/11/2026, DOC-04 · Voxpedia)
+## P2 — fechado (20/11/2026, DOC-04 completo)
 
 | Área | Mudança |
 |------|---------|
 | `render/voxpedia.js` | Arweave: gravação pausada (`arweaveUpload: false`); carteira = leitura/chaves. Comunidades: criação na malha sem exigir carteira para Arweave. Privacidade: entrada sem Google/Meta; OAuth só no Perfil. Moderação: sem “permanece no permaweb” como promessa automática. |
 | `tests/voxpedia.test.js` | Assert copy Arweave pausado. |
-
-| `render/ajuda-teste.js`, `render/feed.js` (20/11, PR ajuda) | Ajuda teste: malha vs permaweb; Arweave pausado; carteira honesta. Feed: barra “Escudo” sem “100% cronológico” inflado. |
+| `render/ajuda-teste.js`, `render/feed.js` (20/11, #346) | Ajuda teste: malha vs permaweb; Arweave pausado; carteira honesta. Feed: barra “Escudo” sem “100% cronológico” inflado. |
 | `tests/ajuda-teste.test.js` | Assert `arweaveUpload: false`. |
+| `render/status.js`, `render/network.js` (20/11, #352) | “Neste aparelho” mantido para telemetria local; nota explícita leitura ≠ gravação Arweave (`arweaveUpload: false`). |
+| `voxpedia.js` labs | Webxdc em `labs/parado/`, Mesa como lab. |
+| `mock.js`, `shell.js` demo, `network.js` tour (20/11, #353) | Tour fictício na malha; sem promessa de permaweb automático. |
+| `render/profile.js` avançado (20/11, #353) | Carteira opcional; `arweaveUpload: false`; preservação pela malha. |
+| `render/community.js` métricas (20/11, #353) | “Na malha” / “Via gateway” (não “Permaweb”). |
+| `render/topic.js` badges (20/11, #353) | “Na malha” / “Via gateway” (não “Guardado”). |
+| `render/feed.js`, `app/inline-composer.js` (20/11, #354) | Badges Lo-Fi removem `(100% Grátis)` e `Permaweb Arweave` em favor de mídia leve para a malha. |
+| `tests/doc-04-honest-copy.test.js` (20/11, #353/#354) | Catraca de regressão para proibições DOC-04 e copy honesta em `mock`, `shell`, `profile`, `community`, `topic`, `feed` e `inline-composer`. |
 
-**Falta (DOC-04):** `render/network.js`, `render/status.js` × `FEATURES.md`; labs (dungeon/frames) vs “não plugado”. |
+**Status DOC-04:** fechado em 20/11/2026.
 
 ## OK (manter)
 

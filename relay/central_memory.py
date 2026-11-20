@@ -15,6 +15,7 @@ import binascii
 import functools
 import hashlib
 import json
+import math
 import os
 import re
 import tempfile
@@ -217,9 +218,25 @@ def save_state() -> Dict[str, Any]:
 def _item_timestamp(item: Dict[str, Any]) -> int:
     for field in ("editedAt", "ts", "timestamp", "createdAt"):
         val = item.get(field)
-        if isinstance(val, (int, float)) and val > 0:
+        if isinstance(val, (int, float)) and not isinstance(val, bool) and math.isfinite(val) and val > 0:
             return int(val)
     return 0
+
+
+def _parse_nonneg_int(value: Any, field: str, default: int = 0) -> int:
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        raise ValueError(f"Campo '{field}' deve ser inteiro não negativo")
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"Campo '{field}' deve ser inteiro finito")
+    try:
+        number = int(value)
+    except (ValueError, TypeError, OverflowError) as err:
+        raise ValueError(f"Campo '{field}' deve ser inteiro não negativo") from err
+    if number < 0:
+        raise ValueError(f"Campo '{field}' deve ser inteiro não negativo")
+    return number
 
 
 def _is_valid_id(raw_id: Any) -> bool:
@@ -383,11 +400,16 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
         return False
     if _blob_sha256(data) != blob_hash:
         return False
+    try:
+        byte_length = _parse_nonneg_int(blob.get("byteLength"), "byteLength", len(data)) or len(data)
+    except ValueError:
+        return False
+    mime = str(blob.get("mime") or "application/octet-stream")
     raw_bytes = json.dumps(
         {
             "hash": blob_hash,
-            "mime": str(blob.get("mime") or "application/octet-stream"),
-            "byteLength": int(blob.get("byteLength") or len(data)),
+            "mime": mime,
+            "byteLength": byte_length,
             "data": data,
         },
         ensure_ascii=False,
@@ -402,8 +424,8 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     _atomic_write_bytes(blob_file, raw_bytes)
     state["blobs"][blob_hash] = {
         "hash": blob_hash,
-        "mime": str(blob.get("mime") or "application/octet-stream"),
-        "byteLength": int(blob.get("byteLength") or len(data)),
+        "mime": mime,
+        "byteLength": byte_length,
         "storedAt": int(time.time() * 1000),
     }
     state["revision"] += 1
@@ -474,7 +496,8 @@ def sync_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError("Payload de sincronização deve ser um objeto JSON")
     with _MEMORY_LOCK:
         state = load_state()
-        client_rev = int(payload.get("clientRevision") or 0)
+        client_rev = _parse_nonneg_int(payload.get("clientRevision"), "clientRevision")
+        since = _parse_nonneg_int(payload.get("since"), "since")
         changes = 0
         changes += _ingest_collection(state, payload.get("tombstones"), _apply_tombstone)
         changes += _ingest_collection(state, payload.get("posts"), _apply_post)
@@ -498,7 +521,6 @@ def sync_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
                 "manifests": [],
                 "blobs": [],
             }
-        since = int(payload.get("since") or 0)
         include_blobs = bool(payload.get("includeBlobs", True))
         raw_known = payload.get("knownBlobs")
         known_blobs = {str(h).strip().lower() for h in raw_known} if isinstance(raw_known, list) else set()

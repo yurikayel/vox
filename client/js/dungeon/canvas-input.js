@@ -1,6 +1,6 @@
 /**
  * @file Máquina de estados unificada de `PointerEvents` (desktop + touch/pinça mobile) para o `<canvas>` 2D (E2 + E3):
- * seleção/arraste de tokens, clique em portas, pan/pinça, régua, desenho livre, corte de névoa e gabaritos AoE.
+ * seleção/arraste de tokens, clique em portas, pan/pinça, régua, desenho livre, corte de névoa e gabaritos AoE com preview ao vivo.
  * @module dungeon/canvas-input
  */
 import {
@@ -36,6 +36,17 @@ function normalizedRect(a, b) {
   };
 }
 
+function buildAoeSpec(st, endPt, opts) {
+  const end = endPt || st.lastWorld || st.originWorld;
+  const floor = activeFloor(opts.getScene());
+  const cellPx = floor?.grid?.cellPx || 64;
+  const distCells = Math.max(1, Number((Math.hypot(end.wx - st.originWorld.wx, end.wy - st.originWorld.wy) / cellPx).toFixed(1)));
+  const angleRad = Math.atan2(end.wy - st.originWorld.wy, end.wx - st.originWorld.wx);
+  const wx = st.aoeKind === "cube" ? Math.min(st.originWorld.wx, end.wx) : st.originWorld.wx;
+  const wy = st.aoeKind === "cube" ? Math.min(st.originWorld.wy, end.wy) : st.originWorld.wy;
+  return { kind: st.aoeKind, wx, wy, radiusCells: distCells, lengthCells: distCells, angleRad };
+}
+
 function beginToolGesture(st, tool, worldPt, opts) {
   st.originWorld = worldPt;
   if (tool === "ruler") {
@@ -51,6 +62,7 @@ function beginToolGesture(st, tool, worldPt, opts) {
   } else if (tool.startsWith("aoe-")) {
     st.mode = "aoe";
     st.aoeKind = tool.slice(4);
+    opts.onAoePreview?.(buildAoeSpec(st, worldPt, opts));
   }
 }
 
@@ -61,10 +73,12 @@ function beginSelectGesture(st, pt, worldPt, ev, opts) {
   const role = opts.getViewerRole?.() || "player";
   const floorTokens = (scene.tokens || []).filter((t) => t.floorZ === floor.z);
   const hitTok = ev.button === 2 ? null : hitTestTokens(worldPt.wx, worldPt.wy, floorTokens, floor.grid, role);
+  st.didDrag = false;
   if (hitTok) {
     st.mode = "drag-token";
     st.dragToken = hitTok;
     st.dragCell = { x: hitTok.x, y: hitTok.y };
+    st.tappedTokenId = hitTok.tokenId;
     opts.onSelectToken?.(hitTok.tokenId);
     return;
   }
@@ -76,6 +90,7 @@ function beginSelectGesture(st, pt, worldPt, ev, opts) {
   }
   st.mode = "pan";
   st.lastPt = pt;
+  st.tappedTokenId = "";
   opts.onSelectToken?.("");
 }
 
@@ -89,6 +104,7 @@ function beginGesture(st, canvas, ev, opts) {
     st.pinchStartDist = m.dist;
     st.pinchStartZoom = opts.getCamera().zoom;
     st.dragToken = null;
+    st.didDrag = true;
     return;
   }
   const worldPt = screenToWorld(pt.sx, pt.sy, opts.getCamera());
@@ -106,7 +122,36 @@ function updateToolGesture(st, worldPt, opts) {
     opts.onDraftStroke?.({ points: st.stroke, color: "#78d6cf", width: 3 });
   } else if (st.mode === "fog-reveal" && st.originWorld) {
     opts.onFogPreview?.(normalizedRect(st.originWorld, worldPt));
+  } else if (st.mode === "aoe" && st.originWorld) {
+    opts.onAoePreview?.(buildAoeSpec(st, worldPt, opts));
   }
+}
+
+function updatePanOrPinch(st, pt, opts) {
+  if (st.mode === "pinch" && st.pointers.size >= 2) {
+    const m = twoPointerMetrics(st.pointers);
+    opts.onCameraChange?.(zoomCameraAt(opts.getCamera(), m.midX, m.midY, clampZoom(st.pinchStartZoom * (m.dist / st.pinchStartDist))));
+    return true;
+  }
+  if (st.mode === "pan" && st.lastPt) {
+    const dx = pt.sx - st.lastPt.sx;
+    const dy = pt.sy - st.lastPt.sy;
+    if (Math.hypot(dx, dy) > 2) st.didDrag = true;
+    const cam = opts.getCamera();
+    opts.onCameraChange?.({ ...cam, panX: cam.panX + dx, panY: cam.panY + dy });
+    st.lastPt = pt;
+    return true;
+  }
+  return false;
+}
+
+function updateDragToken(st, worldPt, opts) {
+  const floor = activeFloor(opts.getScene());
+  if (!floor) return;
+  const snapped = snapWorldToCell(worldPt.wx, worldPt.wy, floor.grid);
+  st.dragCell = clampTokenToFloor(snapped.x, snapped.y, st.dragToken.sizeCells, floor);
+  if (st.dragCell.x !== st.dragToken.x || st.dragCell.y !== st.dragToken.y) st.didDrag = true;
+  opts.onDragPreview?.({ tokenId: st.dragToken.tokenId, x: st.dragCell.x, y: st.dragCell.y });
 }
 
 function updateGesture(st, canvas, ev, opts) {
@@ -114,40 +159,13 @@ function updateGesture(st, canvas, ev, opts) {
   if (!st.pointers.has(id)) return;
   const pt = pointerLocalPoint(canvas, ev);
   st.pointers.set(id, pt);
-  if (st.mode === "pinch" && st.pointers.size >= 2) {
-    const m = twoPointerMetrics(st.pointers);
-    opts.onCameraChange?.(zoomCameraAt(opts.getCamera(), m.midX, m.midY, clampZoom(st.pinchStartZoom * (m.dist / st.pinchStartDist))));
-    return;
-  }
-  if (st.mode === "pan" && st.lastPt) {
-    const cam = opts.getCamera();
-    opts.onCameraChange?.({ ...cam, panX: cam.panX + (pt.sx - st.lastPt.sx), panY: cam.panY + (pt.sy - st.lastPt.sy) });
-    st.lastPt = pt;
-    return;
-  }
+  if (updatePanOrPinch(st, pt, opts)) return;
   const worldPt = screenToWorld(pt.sx, pt.sy, opts.getCamera());
-  if (st.mode === "drag-token" && st.dragToken) {
-    const floor = activeFloor(opts.getScene());
-    if (!floor) return;
-    const snapped = snapWorldToCell(worldPt.wx, worldPt.wy, floor.grid);
-    st.dragCell = clampTokenToFloor(snapped.x, snapped.y, st.dragToken.sizeCells, floor);
-    opts.onDragPreview?.({ tokenId: st.dragToken.tokenId, x: st.dragCell.x, y: st.dragCell.y });
-    return;
-  }
+  if (st.mode === "drag-token" && st.dragToken) return updateDragToken(st, worldPt, opts);
   updateToolGesture(st, worldPt, opts);
 }
 
-function commitAoeFinish(st, opts) {
-  const end = st.lastWorld || st.originWorld;
-  const floor = activeFloor(opts.getScene());
-  const cellPx = floor?.grid?.cellPx || 64;
-  const distCells = Math.max(1, Number((Math.hypot(end.wx - st.originWorld.wx, end.wy - st.originWorld.wy) / cellPx).toFixed(1)));
-  const angleRad = Math.atan2(end.wy - st.originWorld.wy, end.wx - st.originWorld.wx);
-  opts.onAoeCommit?.({ kind: st.aoeKind, wx: st.originWorld.wx, wy: st.originWorld.wy, radiusCells: distCells, lengthCells: distCells, angleRad });
-}
-
-function commitToolFinish(st, opts) {
-  if (st.mode === "ruler") opts.onRulerChange?.(null);
+function commitDrawOrFog(st, opts) {
   if (st.mode === "draw" && st.stroke?.length >= 2) {
     opts.onDraftStroke?.(null);
     opts.onDrawingCommit?.(simplifyPolyline(st.stroke, 4));
@@ -156,7 +174,27 @@ function commitToolFinish(st, opts) {
     opts.onFogPreview?.(null);
     opts.onFogReveal?.(normalizedRect(st.originWorld, st.lastWorld));
   }
-  if (st.mode === "aoe" && st.originWorld) commitAoeFinish(st, opts);
+}
+
+function commitToolFinish(st, opts) {
+  if (st.mode === "ruler") opts.onRulerChange?.(null);
+  commitDrawOrFog(st, opts);
+  if (st.mode === "aoe" && st.originWorld) {
+    opts.onAoePreview?.(null);
+    opts.onAoeCommit?.(buildAoeSpec(st, st.lastWorld || st.originWorld, opts));
+  }
+}
+
+function resetGestureState(st) {
+  st.mode = "idle";
+  st.dragToken = null;
+  st.dragCell = null;
+  st.lastPt = null;
+  st.originWorld = null;
+  st.lastWorld = null;
+  st.stroke = null;
+  st.didDrag = false;
+  st.tappedTokenId = null;
 }
 
 function finishGesture(st, canvas, ev, opts) {
@@ -169,22 +207,17 @@ function finishGesture(st, canvas, ev, opts) {
     const target = st.dragCell;
     opts.onDragPreview?.(null);
     if (moved) opts.onTokenMove?.(tokId, target.x, target.y);
+    else opts.onSelectCommitted?.(tokId);
+  } else if (st.mode === "pan") {
+    if (!st.didDrag) opts.onSelectCommitted?.("");
   } else {
     commitToolFinish(st, opts);
   }
-  if (st.pointers.size === 0) {
-    st.mode = "idle";
-    st.dragToken = null;
-    st.dragCell = null;
-    st.lastPt = null;
-    st.originWorld = null;
-    st.lastWorld = null;
-    st.stroke = null;
-  }
+  if (st.pointers.size === 0) resetGestureState(st);
 }
 
 /**
- * Conecta interações de mouse e toque (`PointerEvents` + roda de zoom) em um `<canvas>` 2D da mesa.
+ * Conecta interações de mouse e toque (`PointerEvents` + `Ctrl+roda` para zoom) em um `<canvas>` 2D da mesa.
  * @param {HTMLCanvasElement|object} canvas Elemento `<canvas>`.
  * @param {object} opts Callbacks de cena, câmera, papel, ferramenta ativa e commits táticos.
  * @returns {() => void} Função para remover todos os listeners ao desmontar.
@@ -192,11 +225,12 @@ function finishGesture(st, canvas, ev, opts) {
 export function attachCanvasInput(canvas, opts) {
   if (!canvas || typeof canvas.addEventListener !== "function") return () => {};
   if (canvas.style) canvas.style.touchAction = "none";
-  const st = { pointers: new Map(), mode: "idle", dragToken: null, dragCell: null, lastPt: null, originWorld: null, lastWorld: null, stroke: null, aoeKind: "circle", pinchStartDist: 1, pinchStartZoom: 1 };
+  const st = { pointers: new Map(), mode: "idle", dragToken: null, dragCell: null, lastPt: null, originWorld: null, lastWorld: null, stroke: null, aoeKind: "circle", pinchStartDist: 1, pinchStartZoom: 1, didDrag: false, tappedTokenId: null };
   const onDown = (ev) => beginGesture(st, canvas, ev, opts);
   const onMove = (ev) => updateGesture(st, canvas, ev, opts);
   const onUp = (ev) => finishGesture(st, canvas, ev, opts);
   const onWheel = (ev) => {
+    if (!ev.ctrlKey && !ev.metaKey && !opts.wheelZoomAlways) return;
     ev.preventDefault?.();
     const pt = pointerLocalPoint(canvas, ev);
     const cam = opts.getCamera();

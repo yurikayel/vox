@@ -76,7 +76,7 @@ function renderParticipationLayers(settings, customSignalingUrl) {
 function renderGatewayHealthBlock(gatewayHealth) {
   const state = gatewayHealth?.state || "all_ok";
   if (state === "all_ok") {
-    return `<p class="desc" style="font-size:0.8rem; margin:0.85rem 0 0;">Leitura pública: normal neste aparelho.</p>`;
+    return `<p class="desc" style="font-size:0.8rem; margin:0.85rem 0 0;">Leitura pública: normal neste aparelho (gateways). Publicar no Arweave exige flag e carteira — hoje desligado por padrão.</p>`;
   }
   const label =
     state === "critical"
@@ -355,7 +355,7 @@ function renderRelayHealthAndTourHtml(opts) {
       <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Modo demonstração</label>
       <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">${opts.demoMode
         ? "Ligado: perfis de exemplo (fictícios) aparecem com uma faixa no topo da tela."
-        : "Desligado: só pessoas e posts reais da rede. Ligue para mostrar perfis de exemplo, sempre marcados como fictícios."}</p>
+        : "Desligado: só pessoas e posts reais na malha. Ligue para o tour com perfis fictícios (faixa no topo; sem Arweave por padrão)."}</p>
       <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm" data-demo-on="${opts.demoMode ? "1" : "0"}">${opts.demoMode ? "Desligar demonstração" : "Ligar demonstração"}</button>
     </div>`;
 }
