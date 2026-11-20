@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: desmembramento de `screens-compose.js` em módulos de domínio focados
+- `client/js/app/screens-compose.js` (1058 → 34 linhas) convertido em fachada pura re-exportando 7 módulos coesos (`compose-shared`, `compose-community`, `compose-topic`, `compose-listing`, `compose-proposal`, `compose-reply`, `compose-inline-replies`), todos `<= 350` linhas e 0 ciclos; `client/sw.js` e `docs/release-metadata.json` atualizados (`vox-pwa-v7.148-compose-split`).
+
 ### Fix: hardening de bordas HTTP, tipos JSON, disco em GET e signaling em `relay/`
 - `relay/blind_relay.py`: `GET /relay/envelope/<id>` e `GET /relay/snapshot/<id>` não criam mais diretórios vazios no disco para canais inexistentes.
 - `relay/server.py`, `relay/oauth_exchange.py`: `/oauth/exchange` responde `400` (em vez de `502`) para JSON/UTF-8 inválidos ou payload não-objeto; `/oauth/exchange`, `/peer/beacon` e `/p2p/seed` respondem `413` quando o corpo excede o teto.
