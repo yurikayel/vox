@@ -101,12 +101,14 @@ export function persistGenesisEntryDraft(values, store = globalThis.sessionStora
 }
 
 /**
- * Marca que a espera da malha está em curso; não grava e-mail nem senha.
+ * Marca que a espera da malha está em curso; grava só o e-mail normalizado (nunca a senha).
+ * @param {string} [vaultEmail]
  * @param {Storage} [store]
  * @returns {void}
  */
-export function persistGenesisMeshWait(store = globalThis.sessionStorage) {
-  writeGenesisResume({ step: "have", meshWaiting: true }, store);
+export function persistGenesisMeshWait(vaultEmail = "", store = globalThis.sessionStorage) {
+  const email = normalizeVaultEmail(vaultEmail);
+  writeGenesisResume({ step: "have", meshWaiting: true, ...(email ? { vaultEmail: email } : {}) }, store);
 }
 
 function setInputValue(id, value) {
@@ -123,9 +125,11 @@ function applyEntryResume(resume) {
   document.getElementById("oauth-entry-email-input")?.focus();
 }
 
-/** Reabre a volta sem dados guardados; e-mail e senha são preenchidos de novo. */
-function applyRestoreResume() {
-  document.getElementById("oauth-restore-email-input")?.focus();
+/** Reabre a volta: e-mail do rascunho quando houver; senha sempre vazia. */
+function applyRestoreResume(resume) {
+  setInputValue("oauth-restore-email-input", resume?.vaultEmail);
+  const passFirst = Boolean(resume?.vaultEmail);
+  document.getElementById(passFirst ? "oauth-sovereign-passphrase-input" : "oauth-restore-email-input")?.focus();
 }
 
 function bindEntryDraftPersistence(form) {
@@ -237,7 +241,21 @@ export function readRestoreInputs() {
 }
 
 const MESH_POLL_MS = 15 * 1000;
-const MESH_WAITING = "Pedimos seu cofre à sua rede. Chega em até 24 h, ou na hora se você aprovar num aparelho seu. Pode deixar esta tela aberta.";
+/** Texto de `#oauth-mesh-status` enquanto o pedido à malha está ativo (LT-07d). */
+export const MESH_WAITING_STATUS =
+  "Pedimos seu cofre à sua rede. Chega em até 24 h, ou na hora se você aprovar num aparelho seu. Pode deixar esta tela aberta.";
+
+let meshPollGen = 0;
+
+/** @returns {boolean} há ciclo de poll da malha ativo (uso em testes LT-07d). */
+export function isMeshPollActive() {
+  return meshPollGen > 0;
+}
+
+/** Invalida polls em andamento (teardown de testes). */
+export function stopMeshPoll() {
+  meshPollGen += 1;
+}
 
 function setMeshStatus(text) {
   const el = document.getElementById("oauth-mesh-status");
@@ -254,9 +272,36 @@ function setMeshStatus(text) {
 export async function tryMeshRestoreOnce({ email, pass }, { collect, restore, cancel }) {
   const got = await collect();
   if (!got.ok) return got;
+  if (!pass?.trim()) return { ok: false, reason: "waiting" };
   const res = await restore(pass, { email, directRecord: got.record });
   if (res.ok) cancel();
   return res.ok ? res : { ok: false, reason: res.reason || "O cofre chegou, mas a senha não abriu." };
+}
+
+function resolveMeshCreds(inputs) {
+  const resume = readGenesisResume();
+  return { email: inputs.email || resume?.vaultEmail || "", pass: inputs.pass || "" };
+}
+
+function startMeshPollLoop(getInputs, onRestored) {
+  const gen = (meshPollGen += 1);
+  void (async () => {
+    const { ops } = await meshOps();
+    const poll = async () => {
+      if (gen !== meshPollGen) return;
+      if (!document.getElementById("oauth-mesh-status")) return;
+      const creds = resolveMeshCreds(getInputs());
+      const res = await tryMeshRestoreOnce(creds, ops).catch(() => ({ ok: false, reason: "waiting" }));
+      if (res.ok) {
+        meshPollGen = 0;
+        clearGenesisResume();
+        return onRestored(res);
+      }
+      if (res.reason !== "waiting") setOAuthEnrichError(res.reason);
+      setTimeout(() => void poll(), MESH_POLL_MS);
+    };
+    void poll();
+  })();
 }
 
 async function meshOps() {
@@ -272,26 +317,16 @@ async function meshOps() {
  * @returns {Promise<void>}
  */
 export async function startMeshRestore({ email, pass }, onRestored) {
-  persistGenesisMeshWait();
-  const { flow, vault, ops } = await meshOps();
+  persistGenesisMeshWait(email);
+  const { flow, vault } = await meshOps();
   const address = await vault.meshVaultAddress(pass, email);
   if (vault.loadMeshPending()?.address !== address) {
     const out = await flow.requestFromMesh(email, pass);
     if (!out.ok) return setOAuthEnrichError("Este navegador não consegue guardar o pedido com segurança. Use o link do e-mail ou a frase.");
   }
   setOAuthEnrichError("");
-  setMeshStatus(MESH_WAITING);
-  const poll = async () => {
-    if (!document.getElementById("oauth-mesh-status")) return;
-    const res = await tryMeshRestoreOnce({ email, pass }, ops).catch(() => ({ ok: false, reason: "waiting" }));
-    if (res.ok) {
-      clearGenesisResume();
-      return onRestored(res);
-    }
-    if (res.reason !== "waiting") return setOAuthEnrichError(res.reason);
-    setTimeout(() => void poll(), MESH_POLL_MS);
-  };
-  void poll();
+  setMeshStatus(MESH_WAITING_STATUS);
+  startMeshPollLoop(() => ({ email, pass }), onRestored);
 }
 
 function genesisStepShower(panel) {
@@ -300,14 +335,24 @@ function genesisStepShower(panel) {
   };
 }
 
+/** Retoma o poll se `loadMeshPending` ainda existe após recarga (LT-07d). */
+async function resumeMeshPollIfPending(onMeshRestored) {
+  if (!onMeshRestored) return;
+  const { vault } = await meshOps();
+  if (!vault.loadMeshPending()) return;
+  setMeshStatus(MESH_WAITING_STATUS);
+  startMeshPollLoop(readRestoreInputs, onMeshRestored);
+}
+
 /**
- * A senha não fica guardada: com a malha em espera, a pessoa a digita de novo. Ao enviar, o fluxo da volta
- * retoma o mesmo pedido pelo endereço (`loadMeshPending`) e volta a olhar a resposta.
+ * Senha não fica guardada: com pedido à malha ativo, repõe o e-mail e reinicia o poll (`loadMeshPending`).
  */
-function resumeGenesisHave(resume, show) {
+function resumeGenesisHave(resume, show, onMeshRestored) {
   show("have");
-  applyRestoreResume();
-  if (resume.meshWaiting) setOAuthEnrichError(MESH_RESUME_ASK_PASS);
+  applyRestoreResume(resume);
+  if (!resume.meshWaiting) return;
+  setOAuthEnrichError(MESH_RESUME_ASK_PASS);
+  void resumeMeshPollIfPending(onMeshRestored);
 }
 
 function hydrateKitFromMailto(mailtoUrl) {
@@ -331,20 +376,19 @@ function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
 }
 
 /**
- * Depois de `renderOAuthEnrich`, reabre o passo salvo (entrada, volta ou cartão do e-mail). Campos de senha
- * voltam vazios com o foco; a espera da malha só recomeça quando a pessoa digita a senha de novo.
+ * Depois de `renderOAuthEnrich`, reabre o passo salvo (entrada, volta ou cartão do e-mail).
  * @param {ParentNode} modalContainer `#modal-container`
- * @param {{ onEmailKitFinish: Function }} hooks
+ * @param {{ onEmailKitFinish: Function, onMeshRestored?: Function }} hooks
  * @returns {void}
  */
-export function resumeGenesisAfterRender(modalContainer, { onEmailKitFinish }) {
+export function resumeGenesisAfterRender(modalContainer, { onEmailKitFinish, onMeshRestored = null }) {
   const resume = readGenesisResume();
   if (!resume?.step) return;
   const panel = modalContainer.querySelector(".genesis-panel--steps");
   if (!panel) return;
   const show = genesisStepShower(panel);
   if (resume.step === "entry") return void (show("entry"), applyEntryResume(resume));
-  if (resume.step === "have") return resumeGenesisHave(resume, show);
+  if (resume.step === "have") return resumeGenesisHave(resume, show, onMeshRestored);
   if (resume.step === "email-kit") resumeGenesisEmailKit(resume, show, onEmailKitFinish);
 }
 
