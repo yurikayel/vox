@@ -54,6 +54,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `tests/relay-413-client.test.js`: prova que `readResponseText`, `central-memory` e `upload` leem o corpo antes do fechamento (`bodyUsed`), evitando RST/10053 e mantendo o status legível; alinha `upload.js` ao mesmo helper.
 ### Testes: LT-02 — `lockAfterPasswordBackup` com `remote=0`
 - `tests/login-rede-ruim.test.js`: promove o `test.todo` — criação com relay fora garante `saved.locked`, chaves travadas e export bloqueado mesmo quando só a cópia local do cofre existe.
+### Code: LT-07d — retoma poll da malha após recarga na espera do cofre
+- `app/onboarding-email.js`: com `loadMeshPending` e rascunho `meshWaiting`, após recarga mostra status da malha, repõe `vaultEmail` no formulário e reinicia o poll (senha continua fora do storage; CodeQL 282). `app/onboarding.js`: `onMeshRestored` no fluxo de entrada. Testes: `tests/onboarding-reload-keyboard.test.js`.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 
