@@ -209,7 +209,9 @@ function renderTopicToolbar({ topicId, topic, author, authorDisplay, authorHandl
 
 function renderTopicHeader(author, labels, topic, topicTs) {
   const { authorDisplay } = labels;
-  const originBadge = topic?.isLocalP2p ? `<span class="badge-pill p2p-pill">Na rede</span>` : `<span class="badge-pill permanent-pill">Guardado</span>`;
+  const originBadge = topic?.isLocalP2p
+    ? `<span class="badge-pill p2p-pill">Na malha</span>`
+    : `<span class="badge-pill permanent-pill" title="Leitura por espelho ou gateway — não implica gravação automática no Arweave">Via gateway</span>`;
   const timeLabel = formatTimeAgo(topicTs);
   const metaLines = renderPostAuthorMetaLines(author, labels, timeLabel, { ts: topicTs });
   const ownerMenu = renderPostOwnerMenu(topic);
@@ -230,7 +232,9 @@ function renderTopicHeader(author, labels, topic, topicTs) {
 function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", isLocked = false } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, { authorDisplay: r.authorDisplay, isOwnLocalPost: r.isOwnLocalPost });
-  const rBadge = r.isLocalP2p ? `<span class="badge-pill p2p-pill">Na rede</span>` : `<span class="badge-pill permanent-pill">Guardado</span>`;
+  const rBadge = r.isLocalP2p
+    ? `<span class="badge-pill p2p-pill">Na malha</span>`
+    : `<span class="badge-pill permanent-pill" title="Leitura por espelho ou gateway — não implica gravação automática no Arweave">Via gateway</span>`;
   const rTime = postTimeParts(r.ts);
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply" aria-label="Ocultar resposta da rede" title="Ocultar resposta da rede"><span aria-hidden="true">🛡️</span></button>` : "";
   const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;

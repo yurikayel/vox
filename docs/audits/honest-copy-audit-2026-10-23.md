@@ -37,8 +37,7 @@
 
 | Área | Ação sugerida |
 |------|----------------|
-| `mock.js` tour | Harmonizar narrativa `#localfirst` quando houver hashtag demo |
-| `render/feed.js`, `render/community.js`, `render/profile.js` | Cruzar microcopy com `FEATURES.md` (pós-Voxpedia) |
+| `render/feed.js` | Varredura fina de composer/mídia (ex. badge lo-fi) × `FEATURES.md` |
 
 ## P2 — parcial (20/11/2026, DOC-04 · Voxpedia)
 
@@ -52,8 +51,12 @@
 
 | `render/status.js`, `render/network.js` (20/11) | “Neste aparelho” mantido para telemetria local; nota explícita leitura ≠ gravação Arweave (`arweaveUpload: false`). |
 | `voxpedia.js` labs | Webxdc em `labs/parado/`, Mesa como lab. |
+| `mock.js`, `shell.js` demo, `network.js` tour (20/11) | Tour fictício na malha; sem promessa de permaweb automático. |
+| `render/profile.js` avançado | Carteira opcional; `arweaveUpload: false`; preservação pela malha. |
+| `render/community.js` métricas | “Na malha” / “Via gateway” (não “Permaweb”). |
+| `render/topic.js` badges | “Na malha” / “Via gateway” (não “Guardado”). |
 
-**Falta (DOC-04):** `mock.js` tour; varredura fina `render/feed.js`, `render/community.js`, `render/profile.js`. |
+**Falta (DOC-04):** varredura fina `render/feed.js` (composer/mídia). |
 
 ## OK (manter)
 
