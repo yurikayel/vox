@@ -60,12 +60,16 @@ export function getAccountStorageIssue() {
   return accountPersistIssue;
 }
 
-async function loadStoredLocalAccount(epoch) {
+function hasStoredAccount() {
   const parsed = readStoredRecord(ACCOUNT_STORAGE, null);
-  if (!parsed?.routeId || !parsed.publicJwk || !parsed.privateJwk) return null;
+  return Boolean(parsed?.routeId && parsed.publicJwk && parsed.privateJwk);
+}
+
+async function loadStoredLocalAccount(epoch) {
+  if (!hasStoredAccount()) return null;
   const dm = await cryptoDm.ensureDmKeys();
   if (epoch !== wipeEpoch) dropDmKeypairOf(dm.publicJwk);
-  return parsed;
+  return readStoredRecord(ACCOUNT_STORAGE, null);
 }
 
 /** Tira a chave de DM do armazenamento só se for a deste par; a de outra conta (mais nova) fica. */
@@ -75,17 +79,17 @@ function dropDmKeypairOf(publicJwk) {
 }
 
 /**
- * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio. Se rodou, desfaz o que já foi gravado
- * (semente e chave de DM) e devolve `null`: a conta apagada não pode voltar.
+ * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio e outra aba ainda não gravou conta.
+ * Se rodou, desfaz o que já foi gravado (semente e chave de DM) e devolve `null`.
  */
 async function createAccountUnlessWiped(epoch) {
   const born = await identitySeed.createSeededAccount();
   let account = null;
-  if (epoch === wipeEpoch) {
+  if (epoch === wipeEpoch && !hasStoredAccount()) {
     await cryptoDm.setDmKeypair(born.dmKeypair);
     account = { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
   }
-  if (account && epoch === wipeEpoch) return account;
+  if (account && epoch === wipeEpoch && !hasStoredAccount()) return account;
   dropDmKeypairOf(born.dmKeypair.publicJwk);
   identitySeed.forgetSeed(born.routeId);
   return null;
@@ -151,7 +155,11 @@ async function resolveLocalAccount(epoch) {
  */
 export async function ensureLocalAccount() {
   if (ensureLocalAccountInflight) return ensureLocalAccountInflight;
-  const run = resolveLocalAccount(wipeEpoch).then((acc) => acc || ensureLocalAccount());
+  const run = resolveLocalAccount(wipeEpoch).then((acc) => {
+    if (acc) return acc;
+    if (ensureLocalAccountInflight === run) ensureLocalAccountInflight = null;
+    return ensureLocalAccount();
+  });
   ensureLocalAccountInflight = run;
   try {
     return await run;

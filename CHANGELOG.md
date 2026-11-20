@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: LT-06c — corrida de criação de conta entre abas e promoção de teste `storage-corrupt-2`
+- `client/js/identity/local-account.js` (`LT-06c`): `createAccountUnlessWiped` confere `!hasStoredAccount()` antes de gravar chave de DM e concluir a criação; se outra aba já gravou `vox-local-account-v1` durante a geração assíncrona de chaves, descarta a semente gerada em voo e adota a conta existente.
+- `tests/local-account-race.test.js`, `tests/storage-corrupt-2.test.js`, `docs/process/plano-testes-login.md`: teste `PM-111` red-on-base para `LT-06c` e promoção do `TODO` de `local-account` em `storage-corrupt-2.test.js`.
+
 ### Code: LT-07a/b/c — proteção contra redesenho no `hashchange`, focus trap/Escape e retomada do kit de e-mail
 - `client/js/app/onboarding.js` (`LT-07a`): `checkOAuthEnrichStep` não redesenha o modal quando `#oauth-enrich-overlay` já está aberto.
 - `client/js/render/genesis-entry.js`, `client/js/render/focus-trap.js` (`LT-07b`): `renderOAuthEnrich` ativa focus trap (ignorando seções `[hidden]` e tratando `Escape`), foca o primeiro campo ao abrir e `closeOAuthEnrich` devolve o foco ao elemento anterior.
