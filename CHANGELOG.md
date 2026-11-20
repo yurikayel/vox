@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: blindagem contra JSON não-objeto em storage de cofre/backup e fuzzing `LT-04` sem exclusões
+- `client/js/vault/mesh-vault.js`: `loadMine` e `pickHolders` validam `plainRecord` e normalizam `sentTo`/`previousHolders` como arrays (evita `TypeError: ... is not iterable` em `markSent`/`rememberMine`/`pickHolders`); `loadPending` exige `plainRecord(p)` e `plainRecord(p.request)`.
+- `client/js/vault/vault-store.js`: `readLocalVaultRecord` rejeita JSON não-objeto no `localStorage` para impedir que lixo local em array/primitivo bloqueie a recuperação remota do cofre.
+- `client/js/identity/inbox-backup.js`: `readState` usa `readStoredRecord` (`keystore.js`), ignorando valores não-objeto no `localStorage`.
+- `tests/login-properties-files.test.js`, `docs/process/plano-testes-login.md`: remove exclusões de `SEED_STORAGE`, `local-account`, `accounts-vault` e `HELD_STORAGE` no sorteio `LT-04`, exercita `storeSeed`/`holderTick`/`inboxBackup` sob JSON aleatório e adiciona teste `PM-111` red-on-base.
+
 ### Refactor: desmembramento de `screens-community.js` (< 25 imports e <= 350 linhas, Fraqueza #14)
 - `client/js/app/`: extrai `community-metadata.js` (metadados, `checkCommunityMembership`, `dispatchCommunityModAction`), `community-data.js`, `community-controls.js`, `community-listing-handlers.js`, `community-topic-screen.js` (`showTopic`, `resolveTopicContent`) e `screens-vote.js` (`showProposal`, `showVote`, apuração e voto), reduzindo `screens-community.js` de 40 para 23 imports (1.280 → 187 linhas) com 0 ciclos.
 - `client/js/app/route.js`, `client/js/app/init.js`: importam `showTopic`, `showProposal` e `showVote` dos novos módulos focados.
