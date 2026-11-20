@@ -94,6 +94,51 @@ function renderChronicleColumn(state) {
     </section>`;
 }
 
+const ROLL_MODES = [
+  { id: "normal", label: "Normal" },
+  { id: "advantage", label: "Vantagem" },
+  { id: "disadvantage", label: "Desvantagem" },
+];
+
+const QUICK_FORMULAS = [
+  { label: "1d20+@for", formula: "1d20+@for # Ataque" },
+  { label: "1d20+@des", formula: "1d20+@des # Destreza" },
+  { label: "2d6+3", formula: "2d6+3 # Dano" },
+  { label: "/gmroll 1d20", formula: "/gmroll 1d20 # Teste Secreto" },
+];
+
+function renderRollModeChips(activeMode) {
+  const mode = activeMode || "normal";
+  return ROLL_MODES.map((m) => {
+    const cls = m.id === mode ? " is-selected" : "";
+    return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="roll-mode" data-mode="${m.id}" aria-pressed="${m.id === mode}">${escapeHtml(m.label)}</button>`;
+  }).join("");
+}
+
+function renderLastFormulaSummary(state) {
+  if (state.rollError) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`;
+  const r = state.lastFormulaRoll;
+  if (!r || !r.ok) return "";
+  const dice = (r.rolls || []).map((d) => (d.kept ? String(d.value) : `(${d.value})`)).join(", ");
+  const tag = r.crits ? " · CRÍTICO!" : r.fumbles ? " · FALHA CRÍTICA!" : "";
+  return `<p class="dungeon-inline-status" role="status">${escapeHtml(r.label || r.formula)}: [${escapeHtml(dice)}] = <strong>${r.total}</strong>${tag}</p>`;
+}
+
+function renderFormulaTray(state) {
+  const quickBtns = QUICK_FORMULAS.map((q) => `<button type="button" class="dungeon-chip-btn" data-dungeon="roll-quick" data-formula="${escapeHtml(q.formula)}">${escapeHtml(q.label)}</button>`).join("");
+  return `
+    <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${renderRollModeChips(state.rollMode)}</div>
+    <form class="dungeon-action-form" data-dungeon="roll-formula-form">
+      <label class="sr-only" for="dungeon-roll-input">Fórmula de dados</label>
+      <div class="dungeon-input-row">
+        <input id="dungeon-roll-input" class="dungeon-input" type="text" name="formula" placeholder="ex.: 2d20kh1+@for ou /gmroll 1d20" autocomplete="off" />
+        <button type="submit" class="dungeon-btn dungeon-btn-primary">Rolar</button>
+      </div>
+      <div class="dungeon-chips-row">${quickBtns}</div>
+    </form>
+    ${renderLastFormulaSummary(state)}`;
+}
+
 function renderDiceAside(state) {
   const gridCells = renderTacticalGridCells(state.playerPos);
   return `
@@ -103,7 +148,10 @@ function renderDiceAside(state) {
         <h2>Bandeja de Dados</h2>
         <div class="dungeon-d20-stage">${renderD20DieSvg(state.lastRoll.value, state.lastRoll.committed)}</div>
         <p class="dungeon-muted">Resultado atual: <strong>d20 = ${state.lastRoll.value}</strong> · sorteado neste aparelho, sem viés.</p>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="roll-d20">${dungeonIcon("casino", 16)}<span>Rolar d20</span></button>
+        <div class="dungeon-card-actions">
+          <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="roll-d20">${dungeonIcon("casino", 16)}<span>Rolar d20</span></button>
+        </div>
+        ${renderFormulaTray(state)}
       </div>
       <details class="dungeon-panel dungeon-tactical-box" open>
         <summary>Mapa Tático da Cripta (5×5 · Clique para mover)</summary>

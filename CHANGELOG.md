@@ -30,6 +30,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/` (`central-memory-hydrate.js`, `color-mode.js`, `listing-ui.js`, `peers-blob-affinity.js`, `profile-card.js`, `qr-url-codec.js`, `sig-format.js`, `social-login.js`, `steward-wizard.js`, `storage-persistence.js`, `topic-permaweb.js`, `upload.js`): cabeçalhos `@file` e JSDoc (`@param`, `@returns`) nos exports.
 - `scripts/docs-debt.json`: podado via `npm run audit:docs -- --prune` (dívida cai de 301 para 199 achados; os 12 módulos zerados).
 
+### Code: Mesa Soberana (Entrega 1) — núcleo VTT local-first em `#/dungeon`
+- `client/js/dungeon/dice-engine.js`, `vtt-schema.js`, `vtt-reducer.js`: parser tokenizado de dados (`kh/kl/dh/dl/!`, `@for`/`@des`/`@prof`, `/roll`, `/gmroll`, `/blindroll`, Normal/Vantagem/Desvantagem) sobre amostragem sem viés (`rpg-crypto-table.js`), schema de campanha e redutor puro determinístico por `(lamport, opId)` com projeção Zero-Spoiler.
+- `client/js/dungeon/obsidian-bridge.js`, `vtt-portable.js`: ponte bidirecional `.md`/YAML estrito com separação de segredos GM (`%%...%%`, `> [!gm]`), empacotamento `.voxrpg.zip` (STORE zero deps, CRC32 + `manifest.json` SHA-256 em layout Vault Obsidian) e backup cifrado `.voxrpg.enc` via Senha Soberana (`vault/envelope.js`).
+- `client/js/dungeon/vtt-store.js`, `dungeon-persistence.js`: persistência em IndexedDB dedicado (`vox-vtt-db-v1`) com backend em memória testável, auto-snapshot a cada 50 ops, blobs deduplicados por SHA-256 e medidor honesto de cota local (`storage-persistence.js`).
+- `client/js/dungeon/screen-camp.js`, `screen-table.js`, `screen-sheet.js`, `dungeon-controller.js`, `dungeon-state.js`: seção de campanhas locais e backup/import no Acampamento (mantendo o bloco demo W-DRF sob ADR-033), rolagem por fórmula na Mesa e ficha CRDT clicável (`attributes_lww.abilities` + `sheet_meta.clickable_actions`), tudo lazy-loaded sem novos bytes no precache cívico.
+- `tests/vtt-dice-engine.test.js`, `vtt-obsidian-bridge.test.js`, `vtt-portable.test.js`, `vtt-reducer.test.js`, `vtt-store.test.js`, `vtt-ui-e1.test.js`, `vtt-e1-adversarial.test.js`, `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: suíte completa (unitária + adversarial) e atualização documental.
+
 ### Code: LT-07a/b/c — proteção contra redesenho no `hashchange`, focus trap/Escape e retomada do kit de e-mail
 - `client/js/app/onboarding.js` (`LT-07a`): `checkOAuthEnrichStep` não redesenha o modal quando `#oauth-enrich-overlay` já está aberto.
 - `client/js/render/genesis-entry.js`, `client/js/render/focus-trap.js` (`LT-07b`): `renderOAuthEnrich` ativa focus trap (ignorando seções `[hidden]` e tratando `Escape`), foca o primeiro campo ao abrir e `closeOAuthEnrich` devolve o foco ao elemento anterior.
