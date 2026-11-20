@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: fatiamento SLAP de `graphql.js` (Onda 3 PR1)
+- `client/js/graphql.js` (~820 → ~310 linhas) virou fachada; extraídos `graphql-queries.js` (strings GraphQL), `graphql-gateway.js` (transporte/config) e `graphql-mappers.js` (tagValue + mapeadores); imports externos permanecem em `graphql.js`; 0 ciclos (`audit:layers`).
+
+### Testes: guardas Tier A verify/Shamir/vault (`tests/tier-a-mutation-guards.test.js`)
+- Cobertura de bordas em `signed-verify.js`, `shamir-gf256.js` e `vault/vault-crypto.js` (PM-112 / TESTES §3.3); sem alteração de produção.
+
 ### Refactor: desmembramento de `screens-compose.js` em módulos de domínio focados
 - `client/js/app/screens-compose.js` (1058 → 34 linhas) convertido em fachada pura re-exportando 7 módulos coesos (`compose-shared`, `compose-community`, `compose-topic`, `compose-listing`, `compose-proposal`, `compose-reply`, `compose-inline-replies`), todos `<= 350` linhas e 0 ciclos; `client/sw.js` e `docs/release-metadata.json` atualizados (`vox-pwa-v7.148-compose-split`).
 

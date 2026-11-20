@@ -1,480 +1,37 @@
 /**
- * @file Cliente GraphQL Arweave — gateways, comunidades, tópicos e cache de DM pub.
+ * @file Cliente GraphQL Arweave — fachada: consultas públicas e cache de DM pub.
  */
 
-import { fetchWithTimeout, readResponseText } from "./fetch-timeout.js";
-import { honestMessage } from "./honest-errors.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as handles from "./handles.js";
-import { recordGatewayAttempt, recordReadOrigin } from "./gateway-telemetry.js";
-import { filterGraphqlData } from "./genesis.js";
+import { recordReadOrigin } from "./gateway-telemetry.js";
+import {
+  QUERIES,
+  loadConfig,
+  graphqlGateways,
+  __resetGatewayConfigForTests,
+  queryOne,
+  withGateways,
+  queryAllGateways,
+  mergeTopicEdgesWithConsensus,
+  fetchRawFromGateways,
+} from "./graphql-gateway.js";
+import { tagValue, mapCommunity, mapTopic, mapReply, mapProfileCard } from "./graphql-mappers.js";
 
-const QUERIES = {
-  communities: `query ListCommunities($after: String) {
-    transactions(
-      first: 30
-      after: $after
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["community"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      pageInfo { hasNextPage }
-      edges {
-        cursor
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  topics: `query ListTopics($communityId: String!, $after: String) {
-    transactions(
-      first: 50
-      after: $after
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["topic"] }
-        { name: "Community-Id", values: [$communityId] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      pageInfo { hasNextPage }
-      edges {
-        cursor
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  replies: `query ListReplies($topicId: String!) {
-    transactions(
-      first: 100
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["reply"] }
-        { name: "Reply-To", values: [$topicId] }
-      ]
-      sort: HEIGHT_ASC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  topicById: `query GetTopic($id: ID!) {
-    transaction(id: $id) {
-      id
-      owner { address }
-      tags { name value }
-      block { timestamp }
-    }
-  }`,
-  memberships: `query ListMemberships($address: String!) {
-    transactions(
-      first: 50
-      owners: [$address]
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["membership"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  modActions: `query ListModActions($communityId: String!) {
-    transactions(
-      first: 50
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["mod-action"] }
-        { name: "Community-Id", values: [$communityId] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  profileKeys: `query GetProfileKey($address: String!) {
-    transactions(
-      first: 10
-      owners: [$address]
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["profile-key", "membership"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  handlesBySlug: `query GetHandleBySlug($slug: String!) {
-    transactions(
-      first: 10
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["handle"] }
-        { name: "Handle", values: [$slug] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  handlesByAddress: `query GetHandleByAddress($address: String!) {
-    transactions(
-      first: 5
-      owners: [$address]
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["handle"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-
-  profileCardByAddress: `query GetProfileCardByAddress($address: String!) {
-    transactions(
-      first: 5
-      owners: [$address]
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["profile-card"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  profileCardByRoute: `query GetProfileCardByRoute($routeId: String!) {
-    transactions(
-      first: 5
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["profile-card"] }
-        { name: "Route-Id", values: [$routeId] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  topicsByOwners: `query ListTopicsByOwners($owners: [String!]!, $after: String) {
-    transactions(
-      first: 30
-      after: $after
-      owners: $owners
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["topic"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      pageInfo { hasNextPage }
-      edges {
-        cursor
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`,
-  recentTopics: `query ListRecentTopics($after: String) {
-    transactions(
-      first: 30
-      after: $after
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["topic"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      pageInfo { hasNextPage }
-      edges {
-        cursor
-        node {
-          id
-          owner { address }
-          tags { name value }
-          block { timestamp }
-        }
-      }
-    }
-  }`
+export {
+  loadConfig,
+  graphqlGateways,
+  __resetGatewayConfigForTests,
+  tagValue,
+  queryAllGateways,
+  mergeTopicEdgesWithConsensus,
 };
 
-let gatewayConfig = null;
 const dataCache = new Map();
 
-/** Carrega Config do armazenamento ou rede.
- * @returns {*} Resultado da operação.
- */
-export async function loadConfig() {
-  if (gatewayConfig) return gatewayConfig;
-  const res = await fetchWithTimeout("./config/gateways.json");
-  gatewayConfig = await res.json();
-  return gatewayConfig;
-}
-
 /**
- * PM-50: só gateways com URL GraphQL entram nas consultas. Um gateway que não indexa o
- * `App-Name` do Vox responderia "nada" e contaria como testemunha de omissão.
- 
- * @param {*} [cfg] Configuração carregada.
- * @returns {*} Resultado da operação.*/
-export function graphqlGateways(cfg) {
-  return (cfg?.gateways || []).filter((gw) => typeof gw.graphql === "string" && gw.graphql.startsWith("http"));
-}
-
-/** Reset de estado interno para testes.
- */
-export function __resetGatewayConfigForTests() {
-  gatewayConfig = null;
-}
-
-/** Operação `tagValue` do módulo.
- * @param {*} [tags] Lista de tags ANS-104.
- * @param {*} [name] Parâmetro `name`.
- * @returns {*} Resultado da operação.
- */
-export function tagValue(tags, name) {
-  if (!Array.isArray(tags)) return "";
-  const t = tags.find((x) => x.name === name);
-  return t ? t.value : "";
-}
-
-function mapCommunity(node) {
-  const tags = node.tags || [];
-  return {
-    id: tagValue(tags, "Community-Id") || node.id,
-    txId: node.id,
-    title: tagValue(tags, "Title") || "Comunidade sem título",
-    description: tagValue(tags, "Description") || "",
-    category: tagValue(tags, "Category") || "",
-    moderators: tagValue(tags, "Moderators") || "",
-    owner: node.owner?.address || "",
-  };
-}
-
-function mapTopic(node, communityId) {
-  const tags = node.tags || [];
-  const mediaTx = tagValue(tags, "Media-Tx");
-  const mediaMime = tagValue(tags, "Media-Type") || "image/webp";
-  const aspect = tagValue(tags, "Aspect-Ratio") || "original";
-  return {
-    id: node.id,
-    communityId: communityId || tagValue(tags, "Community-Id"),
-    title: tagValue(tags, "Topic-Title") || tagValue(tags, "Title") || "Tópico",
-    owner: node.owner?.address || "",
-    mediaTx: mediaTx || null,
-    image: mediaTx ? `https://turbo-gateway.com/raw/${mediaTx}` : null,
-    mediaType: mediaMime,
-    aspectRatio: aspect,
-    tags,
-  };
-}
-
-function mapReply(node) {
-  const tags = node.tags || [];
-  return {
-    id: node.id,
-    replyTo: tagValue(tags, "Reply-To"),
-    communityId: tagValue(tags, "Community-Id"),
-    body: tagValue(tags, "Body") || tagValue(tags, "Content") || "",
-    owner: node.owner?.address || "",
-    tags,
-  };
-}
-
-const GATEWAY_TIMEOUT_MS = 8000;
-
-async function queryOne(gqlUrl, query, variables) {
-  const res = await fetchWithTimeout(gqlUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-    // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
-  }, { timeoutMs: GATEWAY_TIMEOUT_MS });
-  let json;
-  if (typeof res.text === "function") {
-    const raw = await readResponseText(res, 4096);
-    if (!res.ok) throw new Error(`HTTP ${res.status}${raw ? `: ${raw.slice(0, 200)}` : ""}`);
-    json = JSON.parse(raw);
-  } else {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    json = await res.json();
-  }
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return filterGraphqlData(json.data);
-}
-
-async function withGateways(fn) {
-  const cfg = await loadConfig();
-  let lastErr = null;
-  for (const gw of graphqlGateways(cfg)) {
-    const label = gw.label || gw.graphql || "gateway";
-    try {
-      const data = await fn(gw.graphql);
-      recordGatewayAttempt(label, true);
-      return { data, gateway: gw.label };
-    } catch (e) {
-      recordGatewayAttempt(label, false);
-      lastErr = e;
-    }
-  }
-  const err = new Error(honestMessage("gatewaysDown"));
-  err.kind = "gatewaysDown";
-  err.cause = lastErr;
-  throw err;
-}
-
-function rawUrlsForTx(cfg, txId) {
-  const urls = [];
-  for (const gw of cfg.gateways || []) {
-    if (typeof gw.raw === "string" && gw.raw.includes("{txId}")) {
-      urls.push(gw.raw.replace("{txId}", txId));
-    }
-  }
-  if (!urls.length) {
-    urls.push(`https://arweave.net/${txId}`, `https://turbo-gateway.com/raw/${txId}`);
-  }
-  return urls;
-}
-
-function parseGatewayRawPayload(text) {
-  const parsed = { body: text, raw: text };
-  try {
-    const json = JSON.parse(text);
-    if (typeof json === "object" && json !== null) {
-      if (typeof json.body === "string") {
-        parsed.body = json.body;
-      } else if (typeof json.content === "string") {
-        parsed.body = json.content;
-      } else if (typeof json.text === "string") {
-        parsed.body = json.text;
-      } else {
-        parsed.body = "";
-      }
-      parsed.title = typeof json.title === "string" ? json.title : "";
-      if (json.mediaTx) parsed.mediaTx = json.mediaTx;
-      if (json.communityId) parsed.communityId = json.communityId;
-    }
-  } catch {}
-  return parsed;
-}
-
-function isValidRawResponse(res, text) {
-  if (!res.ok) return false;
-  const ctype = res.headers?.get?.("content-type") || "";
-  if (ctype.includes("text/html")) return false;
-  const trimmed = text.trim().toLowerCase();
-  return !trimmed.startsWith("<!doctype html") && !trimmed.startsWith("<html");
-}
-
-async function tryFetchRawFromUrl(url, label) {
-  try {
-    const res = await fetchWithTimeout(url, {}, { timeoutMs: 6000 });
-    const text = await res.text();
-    if (!isValidRawResponse(res, text)) {
-      recordGatewayAttempt(label, false);
-      return null;
-    }
-    const parsed = parseGatewayRawPayload(text);
-    recordGatewayAttempt(label, true);
-    return parsed;
-  } catch {
-    recordGatewayAttempt(label, false);
-    return null;
-  }
-}
-
-async function fetchRawFromGateways(txId) {
-  const cfg = await loadConfig();
-  const tried = new Set();
-  for (const gw of cfg.gateways || []) {
-    if (typeof gw.raw !== "string" || !gw.raw.includes("{txId}")) continue;
-    const url = gw.raw.replace("{txId}", txId);
-    if (tried.has(url)) continue;
-    tried.add(url);
-    const parsed = await tryFetchRawFromUrl(url, gw.label || url);
-    if (parsed) return parsed;
-  }
-  for (const url of rawUrlsForTx(cfg, txId)) {
-    if (tried.has(url)) continue;
-    tried.add(url);
-    const parsed = await tryFetchRawFromUrl(url, url);
-    if (parsed) return parsed;
-  }
-  return null;
-}
-
-/** Busca Communities nos gateways configurados.
+ * Busca comunidades nos gateways configurados.
  * @returns {*} Resultado da operação.
  */
 export async function fetchCommunities() {
@@ -486,10 +43,10 @@ export async function fetchCommunities() {
   return { items, gateway, demo: false };
 }
 
-
-/** Busca TopicsByOwners nos gateways configurados.
- * @param {*} [owners] Parâmetro `owners`.
- * @param {object} [options={}] Opções adicionais da consulta.
+/**
+ * Busca tópicos por donos nos gateways configurados.
+ * @param {string[]} [owners]
+ * @param {object} [options]
  * @returns {*} Resultado da operação.
  */
 export async function fetchTopicsByOwners(owners = [], { after } = {}) {
@@ -504,8 +61,9 @@ export async function fetchTopicsByOwners(owners = [], { after } = {}) {
   return { items, gateway, demo: false };
 }
 
-/** Busca Topics nos gateways configurados.
- * @param {*} [communityId] Id da comunidade.
+/**
+ * Busca tópicos de uma comunidade nos gateways configurados.
+ * @param {string} communityId
  * @returns {*} Resultado da operação.
  */
 export async function fetchTopics(communityId) {
@@ -517,72 +75,9 @@ export async function fetchTopics(communityId) {
   return { items, gateway, demo: false };
 }
 
-/** Operação `queryAllGateways` do módulo.
- * @param {*} [query] Parâmetro `query`.
- * @param {*} [variables] Parâmetro `variables`.
- * @returns {*} Resultado da operação.
- */
-export async function queryAllGateways(query, variables) {
-  const cfg = await loadConfig();
-  const gateways = graphqlGateways(cfg);
-  const results = [];
-
-  for (const gw of gateways) {
-    const label = gw.label || gw.graphql || "gateway";
-    try {
-      const data = await queryOne(gw.graphql, query, variables);
-      recordGatewayAttempt(label, true);
-      results.push({ gateway: label, data });
-    } catch {
-      recordGatewayAttempt(label, false);
-    }
-  }
-  return results;
-}
-
-function recordEdgeInMap(edgeMap, edge, gateway) {
-  const id = edge.node?.id;
-  if (!id) return;
-  if (!edgeMap.has(id)) {
-    edgeMap.set(id, {
-      node: edge.node,
-      cursor: edge.cursor,
-      witnesses: [gateway],
-      conflict: false,
-    });
-    return;
-  }
-  const item = edgeMap.get(id);
-  item.witnesses.push(gateway);
-  if (item.node?.owner?.address !== edge.node?.owner?.address) {
-    item.conflict = true;
-  }
-}
-
-/** Operação `mergeTopicEdgesWithConsensus` do módulo.
- * @param {*} [gatewayResults] Parâmetro `gatewayResults`.
- * @returns {*} Resultado da operação.
- */
-export function mergeTopicEdgesWithConsensus(gatewayResults) {
-  const edgeMap = new Map();
-  for (const res of gatewayResults || []) {
-    for (const edge of res.data?.transactions?.edges || []) {
-      recordEdgeInMap(edgeMap, edge, res.gateway);
-    }
-  }
-
-  return Array.from(edgeMap.values()).map((item) => ({
-    node: item.node,
-    cursor: item.cursor,
-    crossChecked: item.witnesses.length >= 2,
-    consensusCount: item.witnesses.length,
-    witnesses: item.witnesses,
-    conflict: item.conflict,
-  }));
-}
-
-/** Busca RecentTopics nos gateways configurados.
- * @param {object} [options={}] Opções da consulta.
+/**
+ * Busca tópicos recentes nos gateways configurados.
+ * @param {object} [options]
  * @returns {*} Resultado da operação.
  */
 export async function fetchRecentTopics({ crossCheck = false } = {}) {
@@ -603,7 +98,7 @@ export async function fetchRecentTopics({ crossCheck = false } = {}) {
         return { items, gateway: gws, demo: false, crossChecked: true };
       }
     } catch {
-      /* fallback to standard withGateways */
+      /* fallback */
     }
   }
 
@@ -615,8 +110,9 @@ export async function fetchRecentTopics({ crossCheck = false } = {}) {
   return { items, gateway, demo: false, crossChecked: false };
 }
 
-/** Busca TopicById nos gateways configurados.
- * @param {*} [topicId] Parâmetro `topicId`.
+/**
+ * Busca um tópico por id nos gateways configurados.
+ * @param {string} topicId
  * @returns {*} Resultado da operação.
  */
 export async function fetchTopicById(topicId) {
@@ -631,8 +127,9 @@ export async function fetchTopicById(topicId) {
   }
 }
 
-/** Busca Replies nos gateways configurados.
- * @param {*} [topicId] Parâmetro `topicId`.
+/**
+ * Busca respostas de um tópico nos gateways configurados.
+ * @param {string} topicId
  * @returns {*} Resultado da operação.
  */
 export async function fetchReplies(topicId) {
@@ -644,8 +141,9 @@ export async function fetchReplies(topicId) {
   return { items, gateway, demo: false };
 }
 
-/** Busca UserMemberships nos gateways configurados.
- * @param {*} [address] Parâmetro `address`.
+/**
+ * Busca filiações de um endereço nos gateways configurados.
+ * @param {string} address
  * @returns {*} Resultado da operação.
  */
 export async function fetchUserMemberships(address) {
@@ -669,9 +167,10 @@ export async function fetchUserMemberships(address) {
 
 const KNOWN_DM_PUBS_KEY = "vox-known-dm-pubs";
 
-/** Operação `cacheUserDmPub` do módulo.
- * @param {*} [address] Parâmetro `address`.
- * @param {*} [pubJwk] Parâmetro `pubJwk`.
+/**
+ * Grava chave pública DM conhecida no `localStorage`.
+ * @param {string} address
+ * @param {object|string} pubJwk
  */
 export function cacheUserDmPub(address, pubJwk) {
   if (!address || !pubJwk) return;
@@ -680,11 +179,14 @@ export function cacheUserDmPub(address, pubJwk) {
     const map = raw ? JSON.parse(raw) : {};
     map[address] = typeof pubJwk === "string" ? JSON.parse(pubJwk) : pubJwk;
     localStorage.setItem(KNOWN_DM_PUBS_KEY, JSON.stringify(map));
-  } catch {}
+  } catch {
+    /* storage */
+  }
 }
 
-/** Obtém CachedUserDmPub.
- * @param {*} [address] Parâmetro `address`.
+/**
+ * Obtém chave pública DM em cache.
+ * @param {string} address
  * @returns {*} Resultado da operação.
  */
 export function getCachedUserDmPub(address) {
@@ -699,8 +201,9 @@ export function getCachedUserDmPub(address) {
   }
 }
 
-/** Busca UserDmPub nos gateways configurados.
- * @param {*} [address] Parâmetro `address`.
+/**
+ * Busca chave pública DM nos gateways configurados.
+ * @param {string} address
  * @returns {*} Resultado da operação.
  */
 export async function fetchUserDmPub(address) {
@@ -720,12 +223,15 @@ export async function fetchUserDmPub(address) {
         return parsed;
       }
     }
-  } catch {}
+  } catch {
+    /* gateways */
+  }
   return null;
 }
 
-/** Busca Handle nos gateways configurados.
- * @param {*} [rawSlug] Parâmetro `rawSlug`.
+/**
+ * Busca handle (@slug) nos gateways configurados.
+ * @param {string} rawSlug
  * @returns {*} Resultado da operação.
  */
 export async function fetchHandle(rawSlug) {
@@ -750,8 +256,9 @@ export async function fetchHandle(rawSlug) {
   }
 }
 
-/** Busca HandleForAddress nos gateways configurados.
- * @param {*} [address] Parâmetro `address`.
+/**
+ * Busca handle de um endereço nos gateways configurados.
+ * @param {string} address
  * @returns {*} Resultado da operação.
  */
 export async function fetchHandleForAddress(address) {
@@ -770,12 +277,15 @@ export async function fetchHandleForAddress(address) {
         return slug;
       }
     }
-  } catch {}
+  } catch {
+    /* gateways */
+  }
   return null;
 }
 
-/** Busca ModActions nos gateways configurados.
- * @param {*} [communityId] Id da comunidade.
+/**
+ * Busca ações de moderação nos gateways configurados.
+ * @param {string} communityId
  * @returns {*} Resultado da operação.
  */
 export async function fetchModActions(communityId) {
@@ -806,9 +316,10 @@ function cacheAndRecordTx(txId, data, origin, comm) {
   return data;
 }
 
-/** Busca TransactionData nos gateways configurados.
- * @param {*} [txId] Parâmetro `txId`.
- * @param {object} [options={}] Opções adicionais da consulta.
+/**
+ * Busca corpo de transação (cache, relay, malha, gateway).
+ * @param {string} txId
+ * @param {object} [options]
  * @returns {*} Resultado da operação.
  */
 export async function fetchTransactionData(txId, { communityId = "" } = {}) {
@@ -833,24 +344,9 @@ export async function fetchTransactionData(txId, { communityId = "" } = {}) {
   return empty;
 }
 
-function mapProfileCard(node) {
-  const tags = node.tags || [];
-  return {
-    txId: node.id,
-    owner: node.owner?.address || "",
-    routeId: tagValue(tags, "Route-Id"),
-    displayName: tagValue(tags, "Display-Name"),
-    name: tagValue(tags, "Display-Name"),
-    bio: tagValue(tags, "Bio"),
-    avatarUrl: tagValue(tags, "Avatar-Url"),
-    discoverable: tagValue(tags, "Discoverable") !== "false",
-    timestamp: Number(tagValue(tags, "Timestamp") || 0),
-    tags,
-  };
-}
-
-/** Busca ProfileCardOnChain nos gateways configurados.
- * @param {object} [options={}] Opções da consulta.
+/**
+ * Busca profile-card on-chain nos gateways configurados.
+ * @param {object} [options]
  * @returns {*} Resultado da operação.
  */
 export async function fetchProfileCardOnChain({ address, routeId } = {}) {
@@ -869,4 +365,3 @@ export async function fetchProfileCardOnChain({ address, routeId } = {}) {
     return null;
   }
 }
-
