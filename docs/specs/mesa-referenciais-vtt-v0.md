@@ -71,7 +71,7 @@ Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OB
 2. **mesa hospedada B-power só onde paga:** fórmulas, inventário, tático — **sem** loja de módulos no cliente cívico.
 3. **Kraken-workflow sem lock-in:** handouts, pistas e campanha num fluxo; portabilidade zip/Obsidian em vez de biblioteca proprietária.
 4. **Anti-sessão fantasma (mesa hospedada B):** uma presença P2P por `routeId`; reconexão idempotente.
-5. **Performance como feature:** `client/js/dungeon/` lazy; precache civil **0 bytes**; dados 3D opcionais e leves (E4).
+5. **Performance como feature:** `client/js/dungeon/` lazy; precache civil **0 bytes** (`SHELL_ASSETS` sem entradas `dungeon/`, auditado 2026-11-20 pós-fila E2–E5); dados 3D opcionais e leves (E4).
 6. **BR como dados, não SaaS:** presets nomeados (Tormenta20, etc.) em schema/redutor, não dependência de template cloud.
 
 ---
