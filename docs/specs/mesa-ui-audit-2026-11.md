@@ -132,9 +132,9 @@ Critério: **OK** = comportamento confirmado (E2E ou code review + teste unitár
 | Prioridade | Itens |
 | :--- | :--- |
 | **P0** | — (nenhum vazamento GM→jogador confirmado; join utilizável com BC) |
-| **P1** | UX-002: onboarding ou default jogador na primeira visita `#/dungeon/mesa` |
-| **P2** | UX-003 ruído demo; UX-004 convite copiável; UX-005 notice na mesa para join |
-| **P3** | UX-006 polish grid; UX-008 tormenta20 seletor; UX-009 foco rota |
+| **P1** | — (UX-002 entregue **#356**: default jogador na mesa sem prefs) |
+| **P2** | — (UX-003/004/005 entregues **#356**) |
+| **P3** | UX-008 tormenta20 seletor; UX-009 foco rota |
 
 **Ondas opcionais pós-aprovação:** UX-A (E2E join+handouts — **entregue neste lote**), UX-B layout Handouts 960px, UX-C convite UX, UX-D foco civil/dungeon.
 
@@ -193,10 +193,10 @@ Legenda: **C** coberto · **P** planejado neste lote · **N/A** não produto.
 
 | Comando | Saída | Classificação |
 | :--- | :--- | :--- |
-| `npm run validate` | exit **0** · Node **2112** tests, **2107** pass, **5** skipped, **0** fail · Python relay **320** OK (1 skipped) | **PASS** |
-| `python -m unittest e2e.test_mesa_ttrpg_e2e -v` | **9** tests OK (07–15), ~19.5s | **PASS** |
+| `npm run validate` | exit **0** · Node **2113** tests, **2108** pass, **5** skip, **0** fail · Python relay **320** OK (1 skipped) | **PASS** |
+| `python -m unittest e2e.test_mesa_ttrpg_e2e -v` | **9** tests OK (07–15), ~23s | **PASS** |
 
-SHA do working tree no momento da medição: `b6095f426807459fc353021986b4e66da8cb4d3d` (alterações locais: audit, E2E 12–15, join UX, testes integração).
+**SHA `develop` pós-onda (20/11):** `30e823d` — merges **#355** (audit+E2E), **#356** (UX P1–P2), **#354** (DOC-04 feed/composer). **P1/P2 UX-002…006** implementados; **P3** (tormenta20 UI, foco h1) em fila.
 
 ---
 
