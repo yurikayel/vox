@@ -1,13 +1,31 @@
 /**
- * Pol.is-lite: Deliberação Coletiva e Matriz de Consenso Local (Fase 5.12)
- * Algoritmo determinístico para identificar pontes de consenso e pontos de divisão
- * entre grupos de opinião divergentes, sem dependência de servidores centralizados.
+ * @file Deliberação tipo Pol.is local: consenso e divisão entre grupos (laboratório).
+ * @module labs/parado/polis
  */
 
+/**
+ * Voto de concordância normalizado.
+ * @type {number}
+ */
 export const VOTE_AGREE = 1;
+
+/**
+ * Voto de discordância normalizado.
+ * @type {number}
+ */
 export const VOTE_DISAGREE = -1;
+
+/**
+ * Abstenção ou neutro.
+ * @type {number}
+ */
 export const VOTE_PASS = 0;
 
+/**
+ * Converte entrada textual ou numérica para voto canônico.
+ * @param {unknown} value Entrada do formulário ou API.
+ * @returns {number} Um de {@link VOTE_AGREE}, {@link VOTE_DISAGREE}, {@link VOTE_PASS}.
+ */
 export function normalizePolisVote(value) {
   if (value === 1 || value === "agree" || value === "concordo") return VOTE_AGREE;
   if (value === -1 || value === "disagree" || value === "discordo") return VOTE_DISAGREE;
@@ -37,6 +55,12 @@ function calculateStatementMetrics(agrees, disagrees, total) {
   return { agreePct, disagreePct, passPct, variance };
 }
 
+/**
+ * Estatísticas agregadas de votos numa declaração.
+ * @param {string} statementId Id da declaração.
+ * @param {object[]} [votes=[]] Votos com `statementId` e `vote`.
+ * @returns {object} Totais, percentuais e variância.
+ */
 export function computeStatementStats(statementId, votes = []) {
   const statementVotes = votes.filter((v) => v.statementId === statementId);
   const total = statementVotes.length;
@@ -57,6 +81,12 @@ export function computeStatementStats(statementId, votes = []) {
   };
 }
 
+/**
+ * Mapa eleitor → (declaração → voto normalizado).
+ * @param {object[]} [_statements=[]] Reservado; usa só votos hoje.
+ * @param {object[]} [votes=[]] Votos com `voter`/`voterId`, `statementId`, `vote`.
+ * @returns {Map<string, Map<string, number>>}
+ */
 export function buildVoterMatrix(_statements = [], votes = []) {
   const voterMap = new Map();
   for (const v of votes) {
@@ -68,43 +98,59 @@ export function buildVoterMatrix(_statements = [], votes = []) {
   return voterMap;
 }
 
-export function clusterVotersIntoTwoGroups(statements = [], votes = []) {
-  const voterMap = buildVoterMatrix(statements, votes);
-  const voters = Array.from(voterMap.keys());
-  if (voters.length < 2) {
-    return { groupA: voters, groupB: [] };
-  }
-
-  // Encontra a declaração com maior variância para usar como semente de divisão
-  let maxVarStatement = null;
+/** Declaração com maior variância de voto (semente de clusterização). */
+function findPolarizingStatementId(statements, votes) {
+  let seedId = null;
   let maxVar = -1;
   for (const s of statements) {
     const stats = computeStatementStats(s.id, votes);
     if (stats.variance > maxVar && stats.total >= 2) {
       maxVar = stats.variance;
-      maxVarStatement = s.id;
+      seedId = s.id;
     }
   }
+  return seedId;
+}
 
+/**
+ * Divide eleitores em dois grupos pela declaração mais polarizada.
+ * @param {object[]} [statements=[]] Declarações com `id`.
+ * @param {object[]} [votes=[]] Votos.
+ * @returns {{groupA: string[], groupB: string[]}}
+ */
+export function clusterVotersIntoTwoGroups(statements = [], votes = []) {
+  const voterMap = buildVoterMatrix(statements, votes);
+  const voters = Array.from(voterMap.keys());
+  if (voters.length < 2) return { groupA: voters, groupB: [] };
+
+  const seedId = findPolarizingStatementId(statements, votes);
   const groupA = [];
   const groupB = [];
 
   for (const voter of voters) {
-    const vVal = maxVarStatement ? voterMap.get(voter)?.get(maxVarStatement) : 0;
+    const vVal = seedId ? voterMap.get(voter)?.get(seedId) : 0;
     if (vVal === VOTE_AGREE) {
       groupA.push(voter);
     } else if (vVal === VOTE_DISAGREE) {
       groupB.push(voter);
+    } else if (groupA.length <= groupB.length) {
+      groupA.push(voter);
     } else {
-      // Neutro distribui equilibradamente
-      if (groupA.length <= groupB.length) groupA.push(voter);
-      else groupB.push(voter);
+      groupB.push(voter);
     }
   }
 
   return { groupA, groupB };
 }
 
+/**
+ * Compara apoio a uma declaração entre dois grupos e marca ponte vs divisivo.
+ * @param {string} statementId Id da declaração.
+ * @param {object[]} votes Todos os votos.
+ * @param {string[]} [groupA=[]] Ids do grupo A.
+ * @param {string[]} [groupB=[]] Ids do grupo B.
+ * @returns {object} Métricas por grupo e flags `isBridge` / `isDivisive`.
+ */
 export function evaluateStatementAcrossGroups(statementId, votes, groupA = [], groupB = []) {
   const votesA = votes.filter((v) => groupA.includes(v.voter));
   const votesB = votes.filter((v) => groupB.includes(v.voter));
@@ -154,6 +200,12 @@ function evaluateAllStatements(statements, votes, groupA, groupB) {
   return { statementReports, bridgeStatements, divisiveStatements };
 }
 
+/**
+ * Relatório completo Pol.is: grupos, pontes e declarações divisivas.
+ * @param {object[]} [statements=[]] Declarações.
+ * @param {object[]} [votes=[]] Votos.
+ * @returns {object}
+ */
 export function computePolisReport(statements = [], votes = []) {
   const totalVoters = buildVoterMatrix(statements, votes).size;
   const { groupA, groupB } = clusterVotersIntoTwoGroups(statements, votes);

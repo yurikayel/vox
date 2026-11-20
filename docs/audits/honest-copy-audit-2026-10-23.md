@@ -1,6 +1,6 @@
 # Auditoria copy honestidade (pós-gossip retract)
 
-> **Status:** auditoria (retrato de 2026-10-23, revisto em 2026-10-26) · **Owner:** mantenedor / revisor · **Revisado:** 2026-10-26
+> **Status:** auditoria (retrato de 2026-10-23, revisto em 2026-11-20) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-20
 
 **Fonte:** spike Cursor 23/10 · **Revisão:** 26/10/2026 (grep mutex client)
 
@@ -39,6 +39,18 @@
 |------|----------------|
 | `mock.js` tour | Harmonizar narrativa `#localfirst` quando houver hashtag demo |
 | `render/status.js`, `render/network.js`, `render/ajuda-teste.js` | Revisar “neste aparelho” (telemetria local) vs copy de posts |
+
+## P2 — parcial (20/11/2026, DOC-04 · Voxpedia)
+
+| Área | Mudança |
+|------|---------|
+| `render/voxpedia.js` | Arweave: gravação pausada (`arweaveUpload: false`); carteira = leitura/chaves. Comunidades: criação na malha sem exigir carteira para Arweave. Privacidade: entrada sem Google/Meta; OAuth só no Perfil. Moderação: sem “permanece no permaweb” como promessa automática. |
+| `tests/voxpedia.test.js` | Assert copy Arweave pausado. |
+
+| `render/ajuda-teste.js`, `render/feed.js` (20/11, PR ajuda) | Ajuda teste: malha vs permaweb; Arweave pausado; carteira honesta. Feed: barra “Escudo” sem “100% cronológico” inflado. |
+| `tests/ajuda-teste.test.js` | Assert `arweaveUpload: false`. |
+
+**Falta (DOC-04):** `render/network.js`, `render/status.js` × `FEATURES.md`; labs (dungeon/frames) vs “não plugado”. |
 
 ## OK (manter)
 

@@ -6,6 +6,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Doc: DOC-04 — ajuda-teste e feed (copy honesta)
+- `client/js/render/ajuda-teste.js`: Arweave pausado, POSSE sem permaweb automático.
+- `client/js/render/feed.js`: barra Escudo Cidadão sem hype “100% cronológico”.
+
+### Doc: DOC-04 parcial — Voxpedia × FEATURES (Arweave pausado)
+- `client/js/render/voxpedia.js`: copy alinhada a `FEATURES.md` (`arweaveUpload: false`, malha, OAuth fora da entrada).
+- `docs/audits/honest-copy-audit-2026-10-23.md`, `tests/voxpedia.test.js`.
+
+### Doc: JSDoc completo em `client/js/labs/parado/` (dívida #316)
+- 14 módulos do laboratório: cabeçalho `@file` + JSDoc em todos os exports; `audit:docs` **79 → 0** (`docs-debt.json` esvaziado com `--prune`).
+
 ### Fix: Mesa E5 P1 handouts + prefs visão jogador
 - `screen-notes.js`: `renderHandoutViewer` usa visibilidade `shared` (schema VTT), links `https?` externos; drawer Z3 na sessão jogador.
 - `dungeon-persistence.js` / `dungeon-controller.js`: `viewerRole` persiste em `vox-dungeon-prefs-v1`.

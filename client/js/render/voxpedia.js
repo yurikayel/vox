@@ -6,6 +6,7 @@ export const VOX_GITHUB_DOCS = {
   repo: "https://github.com/yurikayel/vox",
   docsIndex: "https://github.com/yurikayel/vox/tree/main/docs",
   docsReadme: "https://github.com/yurikayel/vox/blob/main/docs/README.md",
+  features: "https://github.com/yurikayel/vox/blob/main/docs/FEATURES.md",
   devGuide: "https://github.com/yurikayel/vox/blob/main/client/DEV.md",
 };
 
@@ -77,7 +78,7 @@ function layerPrCivico() {
 function layerContaCarteira() {
   return layer(
     "Conta, carteira e identidade",
-    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> nascido de uma semente no aparelho. Com e-mail e Senha Soberana, o cofre é endereçado por <code>e-mail:senha</code> (o e-mail não sai em claro) e o kit de volta (<code>#/sync?b=…</code> / <code>VOX1:…</code>) vai por <code>mailto:</code> para você mesmo; <a href="#/frase">frase de 12 palavras</a> e <a href="#/guardioes">guardiões</a> completam as saídas. Para publicar na Arweave, configure <a href="#/wallet">Carteira</a>.</p>
+    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> nascido de uma semente no aparelho. Com e-mail e Senha Soberana, o cofre é endereçado por <code>e-mail:senha</code> (o e-mail não sai em claro) e o kit de volta (<code>#/sync?b=…</code> / <code>VOX1:…</code>) vai por <code>mailto:</code> para você mesmo; <a href="#/frase">frase de 12 palavras</a> e <a href="#/guardioes">guardiões</a> completam as saídas. A <a href="#/wallet">Carteira</a> guarda chaves e habilita <strong>leitura</strong> de registros públicos; <strong>gravação no Arweave está pausada</strong> por padrão (<code>arweaveUpload: false</code> — ver <a href="${VOX_GITHUB_DOCS.features}" target="_blank" rel="noopener noreferrer">FEATURES</a>).</p>
     ${layer("Handles @nome", `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`)}
     ${layer("Perfil e Pix", `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`)}`
   );
@@ -154,14 +155,14 @@ function renderComunidades() {
     ${layer(
       "Publicar e responder",
       `<ol class="voxpedia-steps">
-        <li>Crie comunidade em <code>#/compose/community</code> (requer carteira).</li>
+        <li>Crie comunidade em <code>#/compose/community</code> (índice local e malha; envio Arweave só com flag e carteira).</li>
         <li>Novo tópico: <strong>Postar</strong> ou <code>#/compose/topic?c=…</code>.</li>
         <li>Respostas inline no feed do tópico; compartilhar gera link <code>#/t/&lt;id&gt;</code>.</li>
       </ol>`
     )}
     ${layer(
       "Moderação e hashtags",
-      `<p>Moderadores da comunidade assinam ações <code>mod-action</code> (ocultar, silenciar). Seu cliente aplica filtros — a transação pública permanece no permaweb, mas você pode não ver conteúdo suprimido.</p>
+      `<p>Moderadores da comunidade assinam ações <code>mod-action</code> (ocultar, silenciar). Seu cliente aplica filtros localmente — o restante da rede pode ainda ter a cópia assinada na malha; gravação automática no Arweave não está ativa por padrão.</p>
       ${layer(
         "Classificados e mini-apps",
         `<p>A aba Classificados lista anúncios assinados; o feed suporta <strong>frames</strong> nativos (enquetes, petições) com allowlist local — não são apps arbitrários de terceiros.</p>`
@@ -211,7 +212,7 @@ function renderPrivacidade() {
   const layers = `
     ${layer(
       "O que é público",
-      `<p>Comunidades, tópicos, respostas e ações de moderação assinadas são indexáveis via gateways GraphQL — natureza do permaweb. Não publique segredos em posts públicos.</p>`
+      `<p>Posts públicos assinados circulam na malha e podem ser lidos via gateways GraphQL quando existirem on-chain. Hoje a <strong>escrita</strong> no Arweave está pausada por padrão; não publique segredos em posts públicos.</p>`
     )}
     ${layer(
       "O que fica local",
@@ -219,7 +220,7 @@ function renderPrivacidade() {
     )}
     ${layer(
       "Bloquear, silenciar e exportar",
-      `<p>Em Sua rede você exporta/importa bundle de moderação, desbloqueia autores e restaura tour demo. OAuth Google/Meta enriquece perfil — opcional; política em <code>privacy.html</code> no site.</p>
+      `<p>Em Sua rede você exporta/importa bundle de moderação, desbloqueia autores e restaura tour demo. Entrada sem Google/Meta; importar nome/foto de redes é opcional no <a href="#/perfil">Perfil</a>. Política em <code>privacy.html</code> no site.</p>
       ${layer(
         "Exclusão de dados",
         `<p>Página <code>data-deletion.html</code> descreve o que o operador do site pode remover vs. o que já está on-chain. Apagar cache local não apaga transações já propagadas.</p>`
@@ -237,7 +238,7 @@ function renderPrivacidade() {
 function layerLeituraPublicacao() {
   return layer(
     "Leitura e publicação",
-    `<p>Consultas GraphQL em <code>graphql.js</code> contra gateways em <code>config/gateways.json</code>. Upload assinado em <code>upload.js</code> com tags Vox. Cache: <code>cache-node.js</code>; malha: <code>peers.js</code>, <code>webrtc-peer.js</code>.</p>
+    `<p>Consultas GraphQL em <code>graphql.js</code> contra gateways em <code>config/gateways.json</code>. <code>upload.js</code> assina tags Vox, mas o envio Arweave respeita <code>arweaveUpload</code> (desligado por padrão). Cache: <code>cache-node.js</code>; malha: <code>peers.js</code>, <code>webrtc-peer.js</code>.</p>
     ${layer(
       "Gossip e retratação",
       `<p>Ofertas assinadas e retratações (<code>GOSSIP_UPDATE</code> / <code>GOSSIP_DELETE</code>) atualizam status local; UI mostra badge <strong>Editado</strong> ou tombstone quando ativado.</p>`

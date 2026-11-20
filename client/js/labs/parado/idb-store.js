@@ -1,23 +1,36 @@
 /**
- * idb-store.js — Armazenamento Transacional IndexedDB & Fila Outbox Offline (Vox)
- *
- * Provê persistência assíncrona desacoplada de localStorage para:
- * 1. Fila Outbox (operações criadas offline aguardando sincronização de rede ou malha);
- * 2. Blobs binários e mídias cacheadas com integridade;
- * 3. Tabela chave-valor genérica assíncrona.
+ * @file IndexedDB: fila outbox offline, blobs e KV assíncrono (laboratório).
+ * @module labs/parado/idb-store
  */
 
 import { randomBase36 } from "../../shared/html.js";
 
+/**
+ * Nome do banco IndexedDB do módulo.
+ * @type {string}
+ */
 export const DB_NAME = "vox-store-db";
+
+/**
+ * Versão do esquema do banco.
+ * @type {number}
+ */
 export const DB_VERSION = 1;
 
+/**
+ * Nomes das object stores.
+ * @type {Readonly<{OUTBOX: string, BLOBS: string, KV: string}>}
+ */
 export const STORES = {
   OUTBOX: "outbox",
   BLOBS: "blobs",
   KV: "kv",
 };
 
+/**
+ * Estados possíveis de um item na fila outbox.
+ * @type {Readonly<{PENDING: string, SYNCING: string, DELIVERED: string, FAILED: string}>}
+ */
 export const OUTBOX_STATUS = {
   PENDING: "pending",
   SYNCING: "syncing",
@@ -37,10 +50,18 @@ function getIndexedDB() {
   return null;
 }
 
+/**
+ * Reseta o singleton de conexão (somente testes).
+ * @returns {void}
+ */
 export function resetDbHandleForTesting() {
   dbPromise = null;
 }
 
+/**
+ * Abre ou reutiliza a conexão IndexedDB, criando stores na primeira migração.
+ * @returns {Promise<IDBDatabase>}
+ */
 export function openStoreDB() {
   if (dbPromise) return dbPromise;
   const idb = getIndexedDB();
@@ -54,7 +75,6 @@ export function openStoreDB() {
     };
     req.onsuccess = (e) => {
       const db = e.target.result || req.result;
-      // "Apagar conta local" remove o banco: solta a conexão para a remoção não ficar presa.
       db.onversionchange = () => {
         db.close();
         dbPromise = null;
@@ -93,6 +113,16 @@ function executeTx(storeName, mode, callback) {
   });
 }
 
+/**
+ * Enfileira operação offline para sincronização posterior.
+ * @param {object} [options={}]
+ * @param {string} options.action Nome da operação.
+ * @param {unknown} options.payload Corpo serializável.
+ * @param {string} [options.target="arweave"] Destino da sincronização.
+ * @param {string|null} [options.id=null] Id fixo; gera um se omitido.
+ * @param {object} [options.meta={}] Metadados extras.
+ * @returns {Promise<object>} Item gravado.
+ */
 export function enqueueOutboxItem({ action, payload, target = "arweave", id = null, meta = {} } = {}) {
   if (!action || !payload) {
     return Promise.reject(new Error("action e payload são mandatários na fila outbox"));
@@ -116,6 +146,11 @@ export function enqueueOutboxItem({ action, payload, target = "arweave", id = nu
   });
 }
 
+/**
+ * Lista itens da outbox, opcionalmente filtrados por status.
+ * @param {string|null} [statusFilter=null] Um de {@link OUTBOX_STATUS}.
+ * @returns {Promise<object[]>}
+ */
 export function listOutboxItems(statusFilter = null) {
   return executeTx(STORES.OUTBOX, "readonly", (store, resolve) => {
     const req = store.getAll();
@@ -128,6 +163,11 @@ export function listOutboxItems(statusFilter = null) {
   });
 }
 
+/**
+ * Carrega um item da outbox por id.
+ * @param {string} id Chave do item.
+ * @returns {Promise<object|null>}
+ */
 export function getOutboxItem(id) {
   if (!id) return Promise.resolve(null);
   return executeTx(STORES.OUTBOX, "readonly", (store, resolve) => {
@@ -137,6 +177,12 @@ export function getOutboxItem(id) {
   });
 }
 
+/**
+ * Mescla campos num item existente.
+ * @param {string} id Chave do item.
+ * @param {object} [updates={}] Campos a sobrescrever.
+ * @returns {Promise<object|null>}
+ */
 export function updateOutboxItem(id, updates = {}) {
   return getOutboxItem(id).then((existing) => {
     if (!existing) return null;
@@ -148,6 +194,11 @@ export function updateOutboxItem(id, updates = {}) {
   });
 }
 
+/**
+ * Remove item da outbox.
+ * @param {string} id Chave do item.
+ * @returns {Promise<boolean>}
+ */
 export function removeOutboxItem(id) {
   if (!id) return Promise.resolve(false);
   return executeTx(STORES.OUTBOX, "readwrite", (store, resolve) => {
@@ -156,6 +207,13 @@ export function removeOutboxItem(id) {
   });
 }
 
+/**
+ * Grava blob binário ou string na store de blobs.
+ * @param {string} id Chave do blob.
+ * @param {string|ArrayBuffer|Uint8Array} data Conteúdo.
+ * @param {string} [mimeType="application/octet-stream"] Tipo MIME.
+ * @returns {Promise<object>} Entrada persistida.
+ */
 export function putBlob(id, data, mimeType = "application/octet-stream") {
   if (!id || data === undefined || data === null) {
     return Promise.reject(new Error("id e data são mandatários para putBlob"));
@@ -173,6 +231,11 @@ export function putBlob(id, data, mimeType = "application/octet-stream") {
   });
 }
 
+/**
+ * Lê blob por id.
+ * @param {string} id Chave do blob.
+ * @returns {Promise<object|null>}
+ */
 export function getBlob(id) {
   if (!id) return Promise.resolve(null);
   return executeTx(STORES.BLOBS, "readonly", (store, resolve) => {
@@ -182,6 +245,12 @@ export function getBlob(id) {
   });
 }
 
+/**
+ * Grava par chave-valor na store KV.
+ * @param {string} key Chave.
+ * @param {unknown} value Valor serializável pelo IndexedDB.
+ * @returns {Promise<unknown>}
+ */
 export function setKeyValue(key, value) {
   if (!key) return Promise.reject(new Error("key é mandatária"));
   return executeTx(STORES.KV, "readwrite", (store, resolve) => {
@@ -190,6 +259,11 @@ export function setKeyValue(key, value) {
   });
 }
 
+/**
+ * Lê valor da store KV.
+ * @param {string} key Chave.
+ * @returns {Promise<unknown|null>}
+ */
 export function getKeyValue(key) {
   if (!key) return Promise.resolve(null);
   return executeTx(STORES.KV, "readonly", (store, resolve) => {
@@ -202,6 +276,11 @@ export function getKeyValue(key) {
   });
 }
 
+/**
+ * Esvazia uma object store inteira.
+ * @param {string} storeName Nome em {@link STORES}.
+ * @returns {Promise<true>}
+ */
 export function clearStore(storeName) {
   return executeTx(storeName, "readwrite", (store, resolve) => {
     store.clear();

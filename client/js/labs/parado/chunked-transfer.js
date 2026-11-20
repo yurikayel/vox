@@ -1,18 +1,31 @@
 /**
- * chunked-transfer.js — Fatiamento P2P & Backpressure sobre RTCDataChannel (Vox)
- *
- * Garante que transferências de blobs, mídias e posts grandes (>16 KiB) trafeguem
- * sem estourar buffers WebRTC e sem derrubar nós seeders móveis (Android WebView).
+ * @file Fatiamento P2P e backpressure em RTCDataChannel (laboratório).
+ * @module labs/parado/chunked-transfer
  */
 
 import { randomBase36 } from "../../shared/html.js";
 
-export const DEFAULT_CHUNK_SIZE = 16 * 1024; // 16 KiB
-export const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64 KiB backpressure limit
+/**
+ * Tamanho padrão de cada chunk enviado (bytes).
+ * @type {number}
+ */
+export const DEFAULT_CHUNK_SIZE = 16 * 1024;
+
+/**
+ * Limite de `bufferedAmount` antes de pausar envio (bytes).
+ * @type {number}
+ */
+export const MAX_BUFFERED_AMOUNT = 64 * 1024;
+
 /** Intervalo do poll de backpressure enquanto o buffer do canal está cheio (ms). */
 /** @type {number} */
 export const BACKPRESSURE_POLL_MS = 20;
 
+/**
+ * Hash FNV-1a 32-bit sobre string (checksum leve por chunk).
+ * @param {string} str Conteúdo do chunk.
+ * @returns {number} Hash sem sinal.
+ */
 export function computeChecksum(str) {
   let hash = 2166136261;
   for (let i = 0; i < str.length; i++) {
@@ -22,6 +35,14 @@ export function computeChecksum(str) {
   return hash;
 }
 
+/**
+ * Serializa payload e fatia em mensagens `CHUNK` com checksum.
+ * @param {unknown} payload Objeto ou string a enviar.
+ * @param {number} [chunkSize=DEFAULT_CHUNK_SIZE] Tamanho máximo por fatia (bytes).
+ * @param {string|null} [transferId=null] Id estável; gera um se omitido.
+ * @returns {object[]} Lista de envelopes de chunk.
+ * @throws {Error} Quando payload é null/undefined.
+ */
 export function slicePayloadIntoChunks(payload, chunkSize = DEFAULT_CHUNK_SIZE, transferId = null) {
   if (payload === undefined || payload === null) {
     throw new Error("payload é obrigatório para fatiamento");
@@ -46,6 +67,9 @@ export function slicePayloadIntoChunks(payload, chunkSize = DEFAULT_CHUNK_SIZE, 
   return chunks;
 }
 
+/**
+ * Remonta payloads fragmentados recebidos por DataChannel.
+ */
 export class ChunkReassembler {
   constructor() {
     this.transfers = new Map();
