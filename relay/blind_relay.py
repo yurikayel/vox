@@ -68,14 +68,18 @@ def set_relay_dir(path: Path) -> Path:
     return RELAY_DIR
 
 
-def ensure_channel_dir(channel_id: str) -> Path:
-    # Tira o que não é id e depois `basename`, para um separador não virar caminho.
+def _channel_dir(channel_id: str) -> Path:
+    """Resolve e valida o diretório do canal dentro de `RELAY_DIR`, sem criar nada no disco."""
     stripped = "".join(c for c in str(channel_id) if c.isalnum() or c in ("-", "_"))
     base = os.path.basename(stripped)
     try:
-        chan_path = child_of(RELAY_DIR, base)
+        return child_of(RELAY_DIR, base)
     except ValueError as err:
         raise ValueError("ID de canal comunitário inválido") from err
+
+
+def ensure_channel_dir(channel_id: str) -> Path:
+    chan_path = _channel_dir(channel_id)
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
 
@@ -185,8 +189,10 @@ def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, li
     """
     with _RELAY_LOCK:
         try:
-            chan_path = ensure_channel_dir(channel_id)
+            chan_path = _channel_dir(channel_id)
         except ValueError:
+            return []
+        if not chan_path.is_dir():
             return []
 
         now = int(time.time())
@@ -345,8 +351,10 @@ def store_snapshot(
 def get_latest_snapshot(channel_id: str) -> Optional[Dict[str, Any]]:
     with _RELAY_LOCK:
         try:
-            chan_path = ensure_channel_dir(channel_id)
+            chan_path = _channel_dir(channel_id)
         except ValueError:
+            return None
+        if not chan_path.is_dir():
             return None
         snap_path = _stored_file(chan_path, "latest_snapshot.json")
         if snap_path is None or not snap_path.is_file():
