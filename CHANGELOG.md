@@ -50,6 +50,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Fix
 - `client/js/webrtc-peer.js`: `getNostrSignalingRelays` filtra relays antes do transporte Nostr (`buildNostrSignalingCandidates`); `ws://` na config não é mais repassado. Sem bump de SW.
 - `tests/assinaturas-e-sinais-malicioso.test.js`: o único `test.todo` com asserção falha virou teste de regressão documentando o v1 (ADR-021 §2.6), sem mudança de protocolo LAN-18.
+### Tests: cliente drena 413/429 do relay (#306)
+- `tests/relay-413-client.test.js`: prova que `readResponseText`, `central-memory` e `upload` leem o corpo antes do fechamento (`bodyUsed`), evitando RST/10053 e mantendo o status legível; alinha `upload.js` ao mesmo helper.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 

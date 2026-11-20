@@ -1,7 +1,7 @@
 /**
  * @file Envio de dados e mídia ao Arweave via Turbo (cota gratuita) ou L1.
  */
-import { fetchWithTimeout } from "./fetch-timeout.js";
+import { fetchWithTimeout, readResponseText } from "./fetch-timeout.js";
 import { getStoredJwk, ensureWallet } from "./wallet.js";
 import { loadArweave } from "./arweave-lib.js";
 import { createSignedDataItem } from "./ans104.js";
@@ -75,7 +75,7 @@ export async function uploadToTurbo(itemBytes) {
         headers: { "Content-Type": "application/octet-stream" },
         body: itemBytes,
       }, { timeoutMs: 15000 });
-      const text = typeof res.text === "function" ? await res.text().catch(() => "") : "";
+      const text = typeof res.text === "function" ? await readResponseText(res) : "";
       if (res.ok) {
         const body = await parseTurboOkBody(res, text);
         return { ok: true, status: res.status, body };
