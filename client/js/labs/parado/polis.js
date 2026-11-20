@@ -98,6 +98,20 @@ export function buildVoterMatrix(_statements = [], votes = []) {
   return voterMap;
 }
 
+/** Declaração com maior variância de voto (semente de clusterização). */
+function findPolarizingStatementId(statements, votes) {
+  let seedId = null;
+  let maxVar = -1;
+  for (const s of statements) {
+    const stats = computeStatementStats(s.id, votes);
+    if (stats.variance > maxVar && stats.total >= 2) {
+      maxVar = stats.variance;
+      seedId = s.id;
+    }
+  }
+  return seedId;
+}
+
 /**
  * Divide eleitores em dois grupos pela declaração mais polarizada.
  * @param {object[]} [statements=[]] Declarações com `id`.
@@ -107,25 +121,14 @@ export function buildVoterMatrix(_statements = [], votes = []) {
 export function clusterVotersIntoTwoGroups(statements = [], votes = []) {
   const voterMap = buildVoterMatrix(statements, votes);
   const voters = Array.from(voterMap.keys());
-  if (voters.length < 2) {
-    return { groupA: voters, groupB: [] };
-  }
+  if (voters.length < 2) return { groupA: voters, groupB: [] };
 
-  let maxVarStatement = null;
-  let maxVar = -1;
-  for (const s of statements) {
-    const stats = computeStatementStats(s.id, votes);
-    if (stats.variance > maxVar && stats.total >= 2) {
-      maxVar = stats.variance;
-      maxVarStatement = s.id;
-    }
-  }
-
+  const seedId = findPolarizingStatementId(statements, votes);
   const groupA = [];
   const groupB = [];
 
   for (const voter of voters) {
-    const vVal = maxVarStatement ? voterMap.get(voter)?.get(maxVarStatement) : 0;
+    const vVal = seedId ? voterMap.get(voter)?.get(seedId) : 0;
     if (vVal === VOTE_AGREE) {
       groupA.push(voter);
     } else if (vVal === VOTE_DISAGREE) {
