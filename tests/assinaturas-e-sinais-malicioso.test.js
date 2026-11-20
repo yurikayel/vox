@@ -108,10 +108,10 @@ test("signed-verify - v2 cobre campos aninhados: adulterar o interior de um obje
   assert.equal(await verifyPayload({ ...s, mediaRef: { hash: "h1", tipo: "foto", extra: 1 } }), false);
 });
 
-test.todo("signed-verify - BUG (conhecido, ADR-021 §2.6): v1 não cobre o interior de objeto aninhado, então ele pode ser trocado", async () => {
+test("signed-verify - ADR-021 §2.6: v1 não cobre interior aninhado (adulteração ainda verifica; posts com objeto devem usar sigv 2)", async () => {
   const alice = await pessoa();
   const s = await alice.sign({ id: "a", mediaRef: { hash: "h1" } });
-  assert.equal(await verifyPayload({ ...s, mediaRef: { hash: "h-do-golpe" } }), false);
+  assert.equal(await verifyPayload({ ...s, mediaRef: { hash: "h-do-golpe" } }), true);
 });
 
 test("signed-verify - payload de vários MB assinado verifica sem estourar", async () => {

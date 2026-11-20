@@ -344,6 +344,15 @@ export function getNostrRelays(config) {
 }
 
 /**
+ * Relays Nostr seguros para sinalização (só `wss://`, via `buildNostrSignalingCandidates`).
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string[]} Candidatos filtrados para o transporte e a malha.
+ */
+export function getNostrSignalingRelays(config) {
+  return buildNostrSignalingCandidates(getNostrRelays(config));
+}
+
+/**
  * Todos os caminhos de sinalização conhecidos, para a tela de rede.
  * @param {object} config Configuração de `loadSignalingConfig`.
  * @returns {{baseUrls: string[], webtorrentTrackers: string[], nostrRelays: string[], totalEndpoints: number}}
@@ -353,12 +362,12 @@ export function getNostrRelays(config) {
 export function getDecentralizedSignalingMesh(config) {
   const baseUrls = getSignalingCandidates(config);
   const trackers = getWebTorrentTrackers(config);
-  const nostr = getNostrRelays(config);
+  const nostrRelays = getNostrSignalingRelays(config);
   return {
     baseUrls,
     webtorrentTrackers: trackers,
-    nostrRelays: buildNostrSignalingCandidates(nostr),
-    totalEndpoints: baseUrls.length + trackers.length + nostr.length,
+    nostrRelays,
+    totalEndpoints: baseUrls.length + trackers.length + nostrRelays.length,
   };
 }
 
@@ -407,7 +416,7 @@ export async function initWebRtc(peerId, customUrl = null) {
 }
 
 function isNostrSignalingEnabled(config) {
-  return config?.nostrSignaling?.enabled !== false && getNostrRelays(config).length > 0;
+  return config?.nostrSignaling?.enabled !== false && getNostrSignalingRelays(config).length > 0;
 }
 
 function onNostrSignalingMessage(msg) {
@@ -423,7 +432,7 @@ async function startNostrSignaling() {
   const config = await loadSignalingConfig();
   if (!isNostrSignalingEnabled(config) || typeof WebSocket === "undefined") return;
   nostrTransport = createNostrTransport({
-    relays: getNostrRelays(config),
+    relays: getNostrSignalingRelays(config),
     room: config.nostrSignaling?.room || DEFAULT_ROOM,
     maxRelays: config.nostrSignaling?.maxRelays || 3,
     peerId: currentPeerId,
