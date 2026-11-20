@@ -10,6 +10,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/identity/local-account.js` (`LT-06c`): `createAccountUnlessWiped` confere `!hasStoredAccount()` antes de gravar chave de DM e concluir a criação; se outra aba já gravou `vox-local-account-v1` durante a geração assíncrona de chaves, descarta a semente gerada em voo e adota a conta existente.
 - `tests/local-account-race.test.js`, `tests/storage-corrupt-2.test.js`, `docs/process/plano-testes-login.md`: teste `PM-111` red-on-base para `LT-06c` e promoção do `TODO` de `local-account` em `storage-corrupt-2.test.js`.
 
+### Docs: quitação de 102 achados JSDoc em 12 módulos raiz de `client/js/` (`audit:docs` 301 → 199)
+- `client/js/` (`central-memory-hydrate.js`, `color-mode.js`, `listing-ui.js`, `peers-blob-affinity.js`, `profile-card.js`, `qr-url-codec.js`, `sig-format.js`, `social-login.js`, `steward-wizard.js`, `storage-persistence.js`, `topic-permaweb.js`, `upload.js`): cabeçalhos `@file` e JSDoc (`@param`, `@returns`) nos exports.
+- `scripts/docs-debt.json`: podado via `npm run audit:docs -- --prune` (dívida cai de 301 para 199 achados; os 12 módulos zerados).
+
 ### Code: LT-07a/b/c — proteção contra redesenho no `hashchange`, focus trap/Escape e retomada do kit de e-mail
 - `client/js/app/onboarding.js` (`LT-07a`): `checkOAuthEnrichStep` não redesenha o modal quando `#oauth-enrich-overlay` já está aberto.
 - `client/js/render/genesis-entry.js`, `client/js/render/focus-trap.js` (`LT-07b`): `renderOAuthEnrich` ativa focus trap (ignorando seções `[hidden]` e tratando `Escape`), foca o primeiro campo ao abrir e `closeOAuthEnrich` devolve o foco ao elemento anterior.
