@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: ROADMAP pós-release v7.147 (#319/#320)
+- `docs/ROADMAP.md`: § "Onde estamos (nov/2026)" e janela 19–26/11 encerrada — `main` `f39f344`, lacunas LT pós-#310, DOC-06/07 em `main`, foco pós-release em hardening doc.
+
 ### Docs: Mesa Soberana — referenciais VTT e roadmap E5
 - `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs mesa hospedada A, mesa hospedada B e mesa hospedada D; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
 - `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: links para o spec de referenciais.
