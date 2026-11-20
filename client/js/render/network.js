@@ -76,7 +76,7 @@ function renderParticipationLayers(settings, customSignalingUrl) {
 function renderGatewayHealthBlock(gatewayHealth) {
   const state = gatewayHealth?.state || "all_ok";
   if (state === "all_ok") {
-    return `<p class="desc" style="font-size:0.8rem; margin:0.85rem 0 0;">Leitura pública: normal neste aparelho.</p>`;
+    return `<p class="desc" style="font-size:0.8rem; margin:0.85rem 0 0;">Leitura pública: normal neste aparelho (gateways). Publicar no Arweave exige flag e carteira — hoje desligado por padrão.</p>`;
   }
   const label =
     state === "critical"
