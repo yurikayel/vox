@@ -14,6 +14,7 @@ A lista e a data vêm de `relay/genesis_data.py`, gerado de `client/js` por `scr
 
 from __future__ import annotations
 
+import math
 from typing import Any, Dict
 
 from relay.genesis_data import GENESIS_MS, TEST_ROUTE_IDS
@@ -29,7 +30,7 @@ def is_test_route_id(route_id: Any) -> bool:
 def _created_ms(item: Dict[str, Any]) -> int:
     for field in _CREATED_FIELDS:
         val = item.get(field)
-        if isinstance(val, (int, float)) and not isinstance(val, bool) and val > 0:
+        if isinstance(val, (int, float)) and not isinstance(val, bool) and math.isfinite(val) and val > 0:
             return int(val)
     return 0
 
