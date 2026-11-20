@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Doc: fechamento DOC-04 — feed, inline-composer e catraca de regressão
+- `client/js/render/feed.js`, `client/js/app/inline-composer.js`: badges Lo-Fi removem `(100% Grátis)` e `Permaweb Arweave`, descrevendo mídia leve para a malha.
+- `tests/doc-04-honest-copy.test.js`: amplia a catraca DOC-04 para `render/feed.js`, `app/inline-composer.js` e varredura de termos proibidos (`100% P2P`, `imunidade total`, `imunidade regulat`, `ranking de nós`).
+- `docs/ROADMAP.md`, `docs/audits/honest-copy-audit-2026-10-23.md`: DOC-04 marcado concluído (`[x]`).
+
 ### Doc: DOC-04 — mock, profile, community e topic (copy honesta)
 - `mock.js`, faixa demo (`shell.js`) e tour em `network.js`: tour fictício na malha, sem Arweave por padrão.
 - `render/profile.js`, `community.js`, `topic.js`: origem malha vs gateway; carteira Arweave opcional com `arweaveUpload: false`.
