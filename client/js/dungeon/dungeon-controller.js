@@ -374,6 +374,15 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts);
 }
 
+/** @param {string} [code] Código de erro de {@link attachVttPlayerJoin}. */
+function joinFailureRollMessage(code) {
+  if (code === "broadcast_channel_unavailable") {
+    return "Convite P2P exige duas abas na mesma origem (BroadcastChannel indisponível neste contexto).";
+  }
+  if (code === "invalid_invite") return "Link de convite inválido ou incompleto.";
+  return "Não foi possível entrar na mesa.";
+}
+
 function hydrateP2pJoin(container, viewOpts) {
   if (!viewOpts.joinP2p) return false;
   const state = viewOpts.state || getDungeonSession();
@@ -381,6 +390,9 @@ function hydrateP2pJoin(container, viewOpts) {
   const job = attachVttPlayerJoin(state, hash, {
     store: viewOpts.store,
     onCampaign: () => redrawContainer(container, viewOpts),
+  }).then((res) => {
+    if (res?.ok === false) state.rollError = joinFailureRollMessage(res.error);
+    return res;
   });
   settleAndRedraw(job, container, viewOpts);
   return true;
