@@ -21,6 +21,7 @@ function fakeInput(id) {
   return {
     id,
     value: "",
+    textContent: "",
     type: "text",
     hidden: false,
     checked: false,
@@ -116,44 +117,59 @@ function storedText(...storages) {
   return storages.flatMap((s) => [...s.store.entries()].flat()).join(" ");
 }
 
-test("persistGenesisMeshWait grava passo have + meshWaiting, sem e-mail nem senha", async () => {
+test("persistGenesisMeshWait grava passo have + meshWaiting e vaultEmail, sem senha", async () => {
   const { persistGenesisMeshWait, readGenesisResume } = await genesisEmail();
   const ss = mapStorage();
-  persistGenesisMeshWait(ss);
+  persistGenesisMeshWait("Ana@Exemplo.com", ss);
   const resume = readGenesisResume(ss);
   assert.equal(resume.step, "have");
   assert.equal(resume.meshWaiting, true);
+  assert.equal(resume.vaultEmail, "ana@exemplo.com");
   assert.equal("email" in resume, false);
   assert.equal("pass" in resume, false);
   assert.equal(storedText(ss).includes(SENHA), false);
-  assert.equal(storedText(ss).includes("ana@exemplo.com"), false);
 });
 
-test("resumeGenesisAfterRender reabre a volta com senha vazia, foco nela e sem retomar a malha sozinha (LT-07)", async () => {
-  const { writeGenesisResume, resumeGenesisAfterRender } = await genesisEmail();
+function meshReloadHarness() {
   const { modal, doc, mk } = mountGenesisModal();
-  mk("oauth-restore-email-input");
-  mk("oauth-sovereign-passphrase-input");
+  const emailInput = mk("oauth-restore-email-input");
+  const pass = mk("oauth-sovereign-passphrase-input");
   const errorBox = { textContent: "", hidden: true };
   const getById = doc.getElementById;
   doc.getElementById = (id) => (id === "oauth-enrich-error" ? errorBox : getById(id));
-  const prevDoc = globalThis.document;
-  const prevSs = globalThis.sessionStorage;
+  return { modal, doc, emailInput, pass, errorBox };
+}
+
+test("LT-07d: recarga com pedido na malha repõe e-mail, foco na senha e retoma o poll", async () => {
+  const email = await genesisEmail();
+  const vault = await import("../client/js/vault/index.js");
+  const { modal, doc, emailInput, pass } = meshReloadHarness();
+  const prev = { doc: globalThis.document, ss: globalThis.sessionStorage, ls: globalThis.localStorage };
+  const ls = mapStorage();
   try {
     globalThis.document = doc;
     globalThis.sessionStorage = mapStorage();
-    writeGenesisResume({ step: "have", email: "ana@exemplo.com", meshWaiting: true });
-    resumeGenesisAfterRender(modal, { onEmailKitFinish: () => {} });
-    assert.equal(doc.getElementById("oauth-restore-email-input").value, "");
-    const pass = doc.getElementById("oauth-sovereign-passphrase-input");
+    globalThis.localStorage = ls;
+    email.writeGenesisResume({ step: "have", meshWaiting: true, vaultEmail: "ana@exemplo.com" });
+    vault.saveMeshPending({
+      address: "addr-test",
+      request: { t: Date.now(), k: "ephemeral" },
+      requestId: "req-test",
+      sealedPrivate: { v: 0 },
+    });
+    email.resumeGenesisAfterRender(modal, { onEmailKitFinish: () => {}, onMeshRestored: () => {} });
+    assert.equal(emailInput.value, "ana@exemplo.com");
     assert.equal(pass.value, "");
-    assert.equal(doc.getElementById("oauth-restore-email-input").focused, true);
-    assert.equal(modal._steps.get("have").hidden, false);
-    assert.equal(errorBox.hidden, false);
-    assert.match(errorBox.textContent, /não guarda e-mail nem senha/);
+    assert.equal(pass.focused, true);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(doc.getElementById("oauth-mesh-status").textContent, email.MESH_WAITING_STATUS);
+    assert.equal(email.isMeshPollActive(), true);
   } finally {
-    globalThis.document = prevDoc;
-    globalThis.sessionStorage = prevSs;
+    email.stopMeshPoll();
+    vault.saveMeshPending(null);
+    globalThis.document = prev.doc;
+    globalThis.sessionStorage = prev.ss;
+    globalThis.localStorage = prev.ls;
   }
 });
 
