@@ -57,6 +57,7 @@ export function hydrateStateFromCampaign(state, campaign) {
   if (activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
   const activeScene = pickRecord(campaign.scenesById, campaign.activeSceneId);
   if (activeScene) state.scene = activeScene;
+  if (campaign.initiative) state.initiative = campaign.initiative;
   if (Array.isArray(campaign.chronicle) && campaign.chronicle.length) state.chronicle = [...campaign.chronicle];
   state.rolls = [...(campaign.rolls || [])];
   state.notes = Object.values(campaign.notesById || {});

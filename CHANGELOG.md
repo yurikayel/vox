@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: Mesa Soberana (Entrega 3) — tático & combate (iniciativa, condições, névoa, desenho/régua, AoE e portas/andares)
+- `client/js/dungeon/vtt-tactics-schema.js`, `vtt-tactics-geometry.js`, `vtt-tactics-reducer.js`: catálogo de 12 condições com decremento automático por turno na iniciativa, portas (`closed`/`open`/`locked`/`secret`, Zero-Spoiler e permissões fail-closed), andares (`elevation_z`), simplificação RDP de polilinhas (`simplifyPolyline`), hit-test de 4 gabaritos AoE (`circle`, `cone`, `cube`, `line`) e névoa de guerra manual.
+- `client/js/dungeon/canvas-tactics-layers.js`, `canvas-renderer.js`, `canvas-input.js`: renderização em 8 camadas (desenhos, AoE com destaque nos alvos, portas, badges de condições, névoa `evenodd` e régua em células/metros) + ferramentas interativas no `PointerEvents`.
+- `client/js/dungeon/dungeon-tactics-actions.js`, `screen-table-tactics.js`, `screen-table.js`, `dungeon-controller.js`, `vtt-sync.js`, `tests/vtt-tactics-{geometry,combat}.test.js`: barra tática, painel de iniciativa Zero-Spoiler e suíte completa sem novos bytes no precache cívico.
+
 ### Code: Mesa Soberana (Entrega 2) — mapa `<canvas>` 2D, tokens, Camada do Mestre e protocolo sync P2P
 - `client/js/dungeon/vtt-scene-schema.js`, `vtt-geometry.js`, `vtt-reducer.js`: cenas/andares/tokens (`player` vs `gm`), câmera pan/zoom, grade quadrada/hex, distâncias (`5e`, `5e-alt`, euclidiana, hex), permissões Mestre/Jogador (`isAuthorizedVttOp`) e projeção Zero-Spoiler fail-closed (remove tokens GM e redige PV exato quando `hpVisible === "status"`).
 - `client/js/dungeon/canvas-renderer.js`, `canvas-input.js`, `dungeon-scene-actions.js`: renderização 2D sob demanda (0% CPU em repouso), gestos desktop + touch mobile (`PointerEvents`, pinça 2 dedos, snap na grade) e upload de mapas deduplicados por SHA-256.

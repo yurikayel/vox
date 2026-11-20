@@ -1,7 +1,14 @@
 /**
- * @file Contratos puros de Cenas, Andares e Tokens para o mapa 2D e Camada do Mestre (E2).
+ * @file Contratos puros de Cenas, Andares e Tokens para o mapa 2D e Camada do Mestre (E2 + E3).
  * @module dungeon/vtt-scene-schema
  */
+import {
+  createAoeDoc,
+  createDoorDoc,
+  createDrawingDoc,
+  createFogState,
+  normalizeTokenConditions,
+} from "./vtt-tactics-schema.js";
 
 const SAFE_ID_RE = /^[a-z0-9][a-z0-9_-]{1,63}$/i;
 const VALID_LAYERS = new Set(["player", "gm"]);
@@ -57,6 +64,10 @@ export function createFloorDoc(opts = {}) {
     widthPx: Math.max(256, Math.min(8192, intOr(opts.widthPx, 768))),
     heightPx: Math.max(256, Math.min(8192, intOr(opts.heightPx, 576))),
     grid: normalizeSceneGrid(opts.grid),
+    fog: createFogState(opts.fog),
+    doors: Array.isArray(opts.doors) ? opts.doors.map(createDoorDoc) : [],
+    drawings: Array.isArray(opts.drawings) ? opts.drawings.map(createDrawingDoc) : [],
+    aoes: Array.isArray(opts.aoes) ? opts.aoes.map(createAoeDoc) : [],
   };
 }
 
@@ -98,7 +109,7 @@ export function createTokenDoc(opts = {}) {
     layer,
     hpVisible: VALID_HP_MODES.has(opts.hpVisible) ? opts.hpVisible : "bar",
     ...normalizeTokenHp(opts),
-    conditions: Array.isArray(opts.conditions) ? opts.conditions.map((c) => String(c).trim()).filter(Boolean) : [],
+    conditions: normalizeTokenConditions(opts.conditions),
   };
 }
 
@@ -135,7 +146,19 @@ export function createDefaultScene(ownerRouteId = "local") {
     sceneId: "sc-cripta",
     name: "Cripta das Águas Sussurrantes",
     activeFloorZ: 0,
-    floors: [createFloorDoc({ z: 0, name: "Câmara Principal", widthPx: 768, heightPx: 576, grid: { type: "square", cellPx: 64, unitMeters: 1.5, visible: true } })],
+    floors: [
+      createFloorDoc({
+        z: 0,
+        name: "Câmara Principal",
+        widthPx: 768,
+        heightPx: 576,
+        grid: { type: "square", cellPx: 64, unitMeters: 1.5, visible: true },
+        doors: [
+          createDoorDoc({ doorId: "door-cripta", x1: 4, y1: 2, x2: 4, y2: 3, state: "closed" }),
+          createDoorDoc({ doorId: "door-secreta", x1: 6, y1: 1, x2: 7, y2: 1, state: "secret" }),
+        ],
+      }),
+    ],
     tokens: [
       createTokenDoc({ tokenId: "tok-lyra", sheetId: "lyra", ownerRouteId, name: "Lyra", initials: "LY", color: "#78d6cf", x: 2, y: 3, layer: "player", hpVisible: "exact", hpCurrent: 24, hpMax: 24 }),
       createTokenDoc({ tokenId: "tok-sentinela", ownerRouteId: "gm", name: "Sentinela da Cripta", initials: "SC", color: "#e7c26b", x: 7, y: 4, layer: "gm", hpVisible: "status", hpCurrent: 30, hpMax: 30 }),

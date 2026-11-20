@@ -187,35 +187,47 @@ async function resolveMapBitmap(scene, store) {
   return globalThis.createImageBitmap(new Blob([bytes]));
 }
 
+function buildCanvasCallbacks(state, ov, draw, opts) {
+  const store = opts.store || getDefaultVttStore();
+  const refresh = () => opts.onStateMutated?.();
+  return {
+    getScene: () => getActiveScene(state),
+    getCamera: () => createCamera(state.camera),
+    getViewerRole: () => (state.viewerRole === "gm" ? "gm" : "player"),
+    getTool: () => state.activeTool || "select",
+    onCameraChange: (cam) => { state.camera = cam; draw(); },
+    onSelectToken: (tokId) => { state.selectedTokenId = tokId; draw(); refresh(); },
+    onDragPreview: (prev) => { ov.dragPreview = prev; draw(); },
+    onTokenMove: (tokId, x, y) => { moveTokenInScene(state, tokId, x, y, { store }).then(refresh); },
+    onRulerChange: (r) => { ov.ruler = r; draw(); },
+    onDraftStroke: (s) => { ov.draftStroke = s; draw(); },
+    onFogPreview: (r) => { ov.draftFogRect = r; draw(); },
+    onDoorToggle: (id) => { opts.onDoorToggle?.(id)?.then?.(refresh); },
+    onDrawingCommit: (pts) => { opts.onDrawingCommit?.(pts)?.then?.(refresh); },
+    onFogReveal: (rect) => { opts.onFogReveal?.(rect)?.then?.(refresh); },
+    onAoeCommit: (aoe) => { opts.onAoeCommit?.(aoe)?.then?.(refresh); },
+  };
+}
+
 /**
  * Monta e conecta o `<canvas>` 2D da Mesa (`renderSceneToCanvas` + `attachCanvasInput`) de forma idempotente.
  * @param {ParentNode} container Contêiner da tela da Mesa.
  * @param {object} state Estado da sessão.
- * @param {object} [opts={}] Opções (`store`, `onStateMutated`).
+ * @param {object} [opts={}] Opções (`store`, `onStateMutated`, callbacks táticos).
  * @returns {() => void} Função para desconectar listeners do canvas atual.
  */
 export function mountSceneCanvas(container, state, opts = {}) {
   const canvas = container?.querySelector?.("#dungeon-vtt-canvas");
   if (!canvas || typeof canvas.getContext !== "function") return () => {};
   const store = opts.store || getDefaultVttStore();
-  let mapImage = null;
-  let dragPreview = null;
+  const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, ruler: null };
   const draw = () => renderSceneToCanvas(canvas, getActiveScene(state), {
     camera: createCamera(state.camera),
     viewerRole: state.viewerRole === "gm" ? "gm" : "player",
     selectedTokenId: state.selectedTokenId || "",
-    mapImage,
-    dragPreview,
+    ...ov,
   });
   draw();
-  resolveMapBitmap(getActiveScene(state), store).then((bmp) => { if (bmp) { mapImage = bmp; draw(); } }).catch(() => {});
-  return attachCanvasInput(canvas, {
-    getScene: () => getActiveScene(state),
-    getCamera: () => createCamera(state.camera),
-    getViewerRole: () => (state.viewerRole === "gm" ? "gm" : "player"),
-    onCameraChange: (cam) => { state.camera = cam; draw(); },
-    onSelectToken: (tokId) => { state.selectedTokenId = tokId; draw(); opts.onStateMutated?.(); },
-    onDragPreview: (prev) => { dragPreview = prev; draw(); },
-    onTokenMove: (tokId, x, y) => { moveTokenInScene(state, tokId, x, y, { store }).then(() => opts.onStateMutated?.()); },
-  });
+  resolveMapBitmap(getActiveScene(state), store).then((bmp) => { if (bmp) { ov.mapImage = bmp; draw(); } }).catch(() => {});
+  return attachCanvasInput(canvas, buildCanvasCallbacks(state, ov, draw, opts));
 }
