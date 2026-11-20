@@ -86,16 +86,16 @@ Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OB
 | Backup portátil | — (diferencial) | **Já temos** | `vtt-portable.js`, `.voxrpg.zip` |
 | Quadro de pistas | Kraken | **Parcial** (E4) | `obsidian-bridge.js` (`.canvas`), `screen-notes.js` |
 | Pin no mapa | Kraken POI | **Parcial** (E4.1) | `NOTE_PIN`, `vtt-note-pins.js` |
-| Sync P2P real em sessão | Foundry world / Kraken sala | **Fazer E5** | `vtt-sync.js` (código; falta jogo multi-dispositivo) |
-| UI jogador mínima | Owlbear ✅ | **Fazer E5** | `screen-table.js`, chrome |
+| Sync P2P real em sessão | Foundry world / Kraken sala | **Parcial (E5 P0)** | `vtt-sync.js` + `#/dungeon/entrar/…` via `BroadcastChannel` (2 abas, mesma origem); WebRTC/cross-device **fora do P0** |
+| UI jogador mínima | Owlbear ✅ | **Já temos (E5.0)** | `screen-table.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` |
 | Login Google + mídia nuvem | Owlbear ✅ | **Não fazer** (civil) | Identidade Vox local |
 | Marketplace de módulos | Foundry | **Não fazer** | — |
 | VTT 3D WebGL | Kraken | **Não v1** | ADR futuro se necessário |
 | Áudio / mixer | Owlbear / Kraken | **Lab opt-in só** | Zero áudio no escopo atual |
 | Discord bot / Activity | Kraken | **Não fazer** | Malha Vox, não Discord |
 | PDF como ficha principal | Owlbear ❌ | **Não fazer** | Obsidian/md preferido |
-| Preset Tormenta20 | Kraken ✅ | **Fazer E5** | `vtt-levelup.js` presets |
-| Handout viewer rico | Kraken / PDF Owlbear | **Fazer E5 P1** | import portable; viewer leve |
+| Preset Tormenta20 | Kraken ✅ | **Já temos (E5 P1)** | `vtt-levelup.js` · `dungeonPrefs.preset` |
+| Handout viewer rico | Kraken / PDF Owlbear | **Parcial (E5 P1)** | drawer Z3 `renderHandoutViewer` · links `https?` externos; sem renderizador PDF embutido |
 
 ---
 

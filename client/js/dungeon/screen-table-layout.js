@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderD20DieSvg } from "./rpg-illustrations.js";
+import { renderHandoutViewer } from "./screen-notes.js";
 
 /** Atalhos de ação sugeridos na crônica da Mesa. */
 export const QUICK_CHIPS = [
@@ -151,6 +152,7 @@ export function renderZ3SessionBlock(state, playerSession = false) {
   if (!playerSession) {
     return `<div class="dungeon-table-layout">${chronicle}${dice}</div>`;
   }
+  const handouts = renderHandoutViewer(state);
   return `
     <div class="dungeon-z3-drawer" data-dungeon-zone="narrativeRoll">
       <details class="dungeon-drawer-segment" open>
@@ -160,6 +162,10 @@ export function renderZ3SessionBlock(state, playerSession = false) {
       <details class="dungeon-drawer-segment" open>
         <summary>Bandeja de dados</summary>
         ${dice}
+      </details>
+      <details class="dungeon-drawer-segment">
+        <summary>Handouts</summary>
+        ${handouts}
       </details>
     </div>`;
 }

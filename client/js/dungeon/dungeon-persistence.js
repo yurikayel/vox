@@ -433,15 +433,16 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
 
 /**
  * Lê preferências locais da Mesa (dados 3D, etc.) do `localStorage`.
- * @returns {{ dice3d: boolean }}
+ * @returns {{ dice3d: boolean, viewerRole: "gm"|"player" }}
  */
 export function loadDungeonPrefs() {
   try {
     const raw = globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return { dice3d: parsed.dice3d !== false };
+    const role = parsed.viewerRole === "player" ? "player" : "gm";
+    return { dice3d: parsed.dice3d !== false, viewerRole: role };
   } catch {
-    return { dice3d: true };
+    return { dice3d: true, viewerRole: "gm" };
   }
 }
 

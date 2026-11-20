@@ -155,6 +155,7 @@ const ACTION_HANDLERS = {
   "toggle-viewer-role": (state) => {
     state.viewerRole = state.viewerRole === "gm" ? "player" : "gm";
     state.mapNotice = "";
+    saveDungeonPrefs({ viewerRole: state.viewerRole });
   },
   "select-token": (state, el) => { state.selectedTokenId = el.dataset.tokenId || ""; },
   "toggle-token-layer": (state, el, _c, opts) => toggleTokenLayerInScene(state, el.dataset.tokenId, { store: opts.store }),
@@ -413,6 +414,13 @@ export function wireDungeonView(container, opts = {}) {
   else if (typeof document !== "undefined") ensureDungeonLayoutStyles(document);
   container.dataset.dungeonWired = "1";
   const viewOpts = { ...opts };
+  const sessionState = viewOpts.state || getDungeonSession();
+  if (!sessionState._dungeonPrefsApplied && sessionState.joinMode !== "p2p_player") {
+    const prefs = loadDungeonPrefs();
+    sessionState.dice3dEnabled = prefs.dice3d;
+    sessionState.viewerRole = prefs.viewerRole;
+    sessionState._dungeonPrefsApplied = true;
+  }
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));
   container.addEventListener("input", (ev) => {
     const target = ev.target;
