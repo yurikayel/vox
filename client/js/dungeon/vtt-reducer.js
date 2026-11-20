@@ -137,6 +137,16 @@ function applySheetActionUpsert(state, op) {
   return { ...state, sheetsById: { ...state.sheetsById, [sheetId]: { ...normalized, sheet_meta: { ...normalized.sheet_meta, clickable_actions: nextActions } } } };
 }
 
+function applySheetActionRemove(state, op) {
+  const sheetId = op.payload?.sheetId || state.activeSheetId;
+  const current = state.sheetsById?.[sheetId];
+  const actionId = String(op.payload?.actionId || "");
+  if (!current || !actionId) return state;
+  const normalized = ensureSheetMeta(current);
+  const nextActions = normalized.sheet_meta.clickable_actions.filter((a) => a.id !== actionId);
+  return { ...state, sheetsById: { ...state.sheetsById, [sheetId]: { ...normalized, sheet_meta: { ...normalized.sheet_meta, clickable_actions: nextActions } } } };
+}
+
 function applyNoteUpsert(state, op) {
   const note = createNoteDoc({ ...op.payload?.note, updatedAt: op.ts });
   return { ...state, notesById: { ...state.notesById, [note.id]: note } };
@@ -230,6 +240,7 @@ const OP_HANDLERS = {
   SHEET_UPSERT: applySheetUpsert,
   SHEET_DELTA: applySheetDelta,
   SHEET_ACTION_UPSERT: applySheetActionUpsert,
+  SHEET_ACTION_REMOVE: applySheetActionRemove,
   NOTE_UPSERT: applyNoteUpsert,
   CAMPAIGN_META_UPDATE: applyCampaignMetaUpdate,
   SCENE_UPSERT: applySceneUpsert,

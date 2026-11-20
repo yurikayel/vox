@@ -1,44 +1,16 @@
 /**
  * @file Ações táticas da Entrega 3 (Iniciativa, Condições, Névoa, Desenho, AoE, Portas e Andares)
- * integradas à persistência local (`VttStore`) e ao redutor determinístico (`vtt-reducer.js`).
+ * integradas à ponte de persistência/P2P (`dungeon-sync-bridge.js`) e ao redutor determinístico.
  * @module dungeon/dungeon-tactics-actions
  */
 import { rollDiceFormula } from "./dice-engine.js";
-import { buildCampaignFromSession, hydrateStateFromCampaign } from "./dungeon-persistence.js";
 import { getActiveScene } from "./dungeon-scene-actions.js";
-import { reduceCampaign } from "./vtt-reducer.js";
-import { createVttOp } from "./vtt-schema.js";
+import { dispatchCampaignOp } from "./dungeon-sync-bridge.js";
 import { getDefaultVttStore } from "./vtt-store.js";
-import { createInitiativeState, normalizeTokenConditions } from "./vtt-tactics-schema.js";
+import { normalizeTokenConditions } from "./vtt-tactics-schema.js";
 
 function getActiveFloor(scene) {
   return scene.floors.find((f) => f.z === scene.activeFloorZ) || scene.floors[0];
-}
-
-async function applyTacticsOp(state, type, payload, store) {
-  const op = createVttOp({
-    type,
-    payload,
-    actor: state.localActor || "local",
-    lamport: (state.campaignDoc?.lamport || 0) + 1,
-  });
-  if (state.campaignId) {
-    const res = await store.appendOp(state.campaignId, op);
-    hydrateStateFromCampaign(state, res.campaign);
-    return res.campaign;
-  }
-  const base = buildCampaignFromSession(state);
-  const currentScene = getActiveScene(state);
-  const seeded = {
-    ...base,
-    activeSceneId: currentScene.sceneId,
-    scenesById: { ...(base.scenesById || {}), [currentScene.sceneId]: currentScene },
-    initiative: createInitiativeState(state.initiative),
-  };
-  const reduced = reduceCampaign(seeded, op);
-  state.scene = reduced.scenesById[reduced.activeSceneId];
-  state.initiative = reduced.initiative;
-  return reduced;
 }
 
 /**
@@ -55,9 +27,9 @@ export async function rollInitiativeForScene(state, opts = {}) {
     const formula = tok.sheetId && tok.sheetId === state.sheet?.character_id ? "1d20+@des" : "1d20";
     const rolled = rollDiceFormula(formula, { sheet: state.sheet, randomBytesFn: opts.randomBytesFn });
     const rollVal = rolled.ok ? rolled.total : 10;
-    await applyTacticsOp(state, "INITIATIVE_SET_ENTRY", {
+    await dispatchCampaignOp(state, "INITIATIVE_SET_ENTRY", {
       entry: { tokenId: tok.tokenId, name: tok.name, roll: rollVal, tieBreak: tok.layer === "player" ? 1 : 0, hidden: tok.layer === "gm" },
-    }, store);
+    }, { store });
   }
   state.mapNotice = `Iniciativa rolada para ${tokens.length} combatente(s).`;
   return state.initiative;
@@ -71,7 +43,7 @@ export async function rollInitiativeForScene(state, opts = {}) {
  */
 export async function advanceInitiativeTurn(state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
-  await applyTacticsOp(state, "INITIATIVE_NEXT", {}, store);
+  await dispatchCampaignOp(state, "INITIATIVE_NEXT", {}, { store });
   return state.initiative;
 }
 
@@ -83,7 +55,7 @@ export async function advanceInitiativeTurn(state, opts = {}) {
  */
 export async function resetInitiativeTracker(state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
-  await applyTacticsOp(state, "INITIATIVE_RESET", {}, store);
+  await dispatchCampaignOp(state, "INITIATIVE_RESET", {}, { store });
   return state.initiative;
 }
 
@@ -106,7 +78,7 @@ export async function toggleConditionOnToken(state, tokenId, conditionId, opts =
   const payload = hasIt
     ? { sceneId: scene.sceneId, tokenId, conditionId: cleanId }
     : { sceneId: scene.sceneId, tokenId, condition: { id: cleanId, durationRounds: opts.durationRounds ?? 2 } };
-  await applyTacticsOp(state, type, payload, store);
+  await dispatchCampaignOp(state, type, payload, { store });
   return getActiveScene(state);
 }
 
@@ -121,7 +93,7 @@ export async function toggleFogEnabled(state, opts = {}) {
   const scene = getActiveScene(state);
   const floor = getActiveFloor(scene);
   const next = !floor?.fog?.enabled;
-  await applyTacticsOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: next }, store);
+  await dispatchCampaignOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: next }, { store });
   state.mapNotice = next ? "Névoa de guerra ativada neste andar." : "Névoa de guerra desativada.";
   return getActiveScene(state);
 }
@@ -136,7 +108,7 @@ export async function toggleFogEnabled(state, opts = {}) {
 export async function revealFogRectInScene(state, rect, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: true, revealRect: rect }, store);
+  await dispatchCampaignOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: true, revealRect: rect }, { store });
   return getActiveScene(state);
 }
 
@@ -149,7 +121,7 @@ export async function revealFogRectInScene(state, rect, opts = {}) {
 export async function resetFogInScene(state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: true, reset: true }, store);
+  await dispatchCampaignOp(state, "FOG_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, enabled: true, reset: true }, { store });
   return getActiveScene(state);
 }
 
@@ -163,11 +135,11 @@ export async function resetFogInScene(state, opts = {}) {
 export async function commitDrawingStroke(state, points, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "DRAWING_ADD", {
+  await dispatchCampaignOp(state, "DRAWING_ADD", {
     sceneId: scene.sceneId,
     floorZ: scene.activeFloorZ,
     drawing: { points, color: opts.color || "#78d6cf", width: opts.width || 3, layer: opts.layer || "player" },
-  }, store);
+  }, { store });
   return getActiveScene(state);
 }
 
@@ -180,7 +152,7 @@ export async function commitDrawingStroke(state, points, opts = {}) {
 export async function clearSceneDrawings(state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "DRAWING_CLEAR", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ }, store);
+  await dispatchCampaignOp(state, "DRAWING_CLEAR", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ }, { store });
   return getActiveScene(state);
 }
 
@@ -194,7 +166,7 @@ export async function clearSceneDrawings(state, opts = {}) {
 export async function commitAoeTemplate(state, aoeSpec, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "AOE_UPSERT", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, aoe: aoeSpec }, store);
+  await dispatchCampaignOp(state, "AOE_UPSERT", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, aoe: aoeSpec }, { store });
   return getActiveScene(state);
 }
 
@@ -207,7 +179,7 @@ export async function commitAoeTemplate(state, aoeSpec, opts = {}) {
 export async function clearSceneAoes(state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "AOE_CLEAR", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ }, store);
+  await dispatchCampaignOp(state, "AOE_CLEAR", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ }, { store });
   return getActiveScene(state);
 }
 
@@ -234,7 +206,7 @@ export async function toggleDoorInScene(state, doorId, opts = {}) {
   const isGm = state.viewerRole === "gm";
   const next = opts.forceState && isGm ? opts.forceState : nextDoorState(door.state, isGm);
   if (!next) return scene;
-  await applyTacticsOp(state, "DOOR_STATE_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, doorId, state: next }, store);
+  await dispatchCampaignOp(state, "DOOR_STATE_SET", { sceneId: scene.sceneId, floorZ: scene.activeFloorZ, doorId, state: next }, { store });
   return getActiveScene(state);
 }
 
@@ -248,7 +220,7 @@ export async function toggleDoorInScene(state, doorId, opts = {}) {
 export async function addFloorToScene(state, name = "", opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "FLOOR_ADD", { sceneId: scene.sceneId, select: true, floor: { ...(opts.z !== undefined ? { z: opts.z } : {}), ...(name ? { name } : {}) } }, store);
+  await dispatchCampaignOp(state, "FLOOR_ADD", { sceneId: scene.sceneId, select: true, floor: { ...(opts.z !== undefined ? { z: opts.z } : {}), ...(name ? { name } : {}) } }, { store });
   return getActiveScene(state);
 }
 
@@ -262,7 +234,7 @@ export async function addFloorToScene(state, name = "", opts = {}) {
 export async function selectSceneFloor(state, floorZ, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "FLOOR_SELECT", { sceneId: scene.sceneId, floorZ: Number(floorZ) }, store);
+  await dispatchCampaignOp(state, "FLOOR_SELECT", { sceneId: scene.sceneId, floorZ: Number(floorZ) }, { store });
   return getActiveScene(state);
 }
 
@@ -277,6 +249,6 @@ export async function selectSceneFloor(state, floorZ, opts = {}) {
 export async function moveTokenToFloor(state, tokenId, targetFloorZ, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
-  await applyTacticsOp(state, "TOKEN_CHANGE_FLOOR", { sceneId: scene.sceneId, tokenId, floorZ: Number(targetFloorZ) }, store);
+  await dispatchCampaignOp(state, "TOKEN_CHANGE_FLOOR", { sceneId: scene.sceneId, tokenId, floorZ: Number(targetFloorZ) }, { store });
   return getActiveScene(state);
 }

@@ -152,14 +152,38 @@ function prepareCanvasViewport(canvas, floor, opts) {
   return { dpr, cssW, cssH };
 }
 
+function drawPinnedNotesLayer(ctx, scene, floor, notes, role) {
+  const pins = (notes || []).filter((n) => n?.pin && n.pin.sceneId === scene.sceneId && n.pin.floorZ === floor.z && (role === "gm" || n.visibility !== "gm_only"));
+  const cellPx = floor.grid?.cellPx || 64;
+  for (const n of pins) {
+    const px = (Number(n.pin.x) || 0) * cellPx + cellPx * 0.5;
+    const py = (Number(n.pin.y) || 0) * cellPx + cellPx * 0.5;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px, py, 9, 0, Math.PI * 2);
+    ctx.fillStyle = "#e7c26b";
+    ctx.fill();
+    ctx.strokeStyle = "#0c0e11";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#0c0e11";
+    ctx.font = "700 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("P", px, py);
+    ctx.restore();
+  }
+}
+
 function drawAllSceneLayers(ctx, scene, floor, opts) {
   const role = opts.viewerRole === "gm" ? "gm" : "player";
   drawFloorBackground(ctx, floor, opts.mapImage || null);
   drawGridLayer(ctx, floor);
   const tokens = resolveRenderedTokens(scene, floor, opts);
   const drawnDrawings = drawDrawingsLayer(ctx, floor, role, opts.draftStroke || null);
-  const aoeHits = drawAoeLayer(ctx, floor, tokens, role);
+  const aoeHits = drawAoeLayer(ctx, floor, tokens, role, opts.draftAoe || null);
   const drawnDoors = drawDoorsLayer(ctx, floor, role);
+  drawPinnedNotesLayer(ctx, scene, floor, opts.notes, role);
   for (const tok of tokens) drawSingleToken(ctx, tok, floor, opts);
   const fogDrawn = drawFogLayer(ctx, floor, role, opts.draftFogRect || null);
   drawRulerLayer(ctx, opts.ruler || null, floor.grid);

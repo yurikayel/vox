@@ -20,16 +20,17 @@ const TOOLS = [
 
 function renderFloorPills(scene, isGm) {
   const floors = scene.floors || [];
+  if (!isGm && floors.length <= 1) return "";
   const pills = floors.map((f) => {
-    const cls = f.z === scene.activeFloorZ ? " is-selected" : "";
-    return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="select-floor" data-floor-z="${f.z}">${escapeHtml(f.name)} (z=${f.z})</button>`;
+    const active = f.z === scene.activeFloorZ;
+    return `<button type="button" class="dungeon-chip-btn${active ? " is-selected" : ""}" data-dungeon="select-floor" data-floor-z="${f.z}" aria-pressed="${active}">${escapeHtml(f.name)} (z=${f.z})</button>`;
   }).join("");
   const addBtn = isGm ? `<button type="button" class="dungeon-chip-btn" data-dungeon="add-floor">+ Andar</button>` : "";
   return `<div class="dungeon-chips-row" role="group" aria-label="Andares da cena">${pills}${addBtn}</div>`;
 }
 
 /**
- * Renderiza a barra de ferramentas táticas (ferramenta ativa, névoa, limpeza e seletor de andares).
+ * Renderiza a barra de ferramentas táticas (ferramenta ativa, névoa/limpeza GM e seletor de andares).
  * @param {object} state Estado da sessão.
  * @param {object} scene Cena ativa.
  * @param {object} floor Piso ativo.
@@ -39,19 +40,21 @@ function renderFloorPills(scene, isGm) {
 export function renderTacticalToolbar(state, scene, floor, isGm) {
   const activeTool = state.activeTool || "select";
   const toolBtns = TOOLS.filter((t) => isGm || !t.gmOnly).map((t) => {
-    const cls = t.id === activeTool ? " is-selected" : "";
-    return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="select-tool" data-tool="${t.id}" aria-pressed="${t.id === activeTool}">${escapeHtml(t.label)}</button>`;
+    const sel = t.id === activeTool;
+    return `<button type="button" class="dungeon-chip-btn${sel ? " is-selected" : ""}" data-dungeon="select-tool" data-tool="${t.id}" aria-pressed="${sel}">${escapeHtml(t.label)}</button>`;
   }).join("");
-  const fogControls = isGm
-    ? `<button type="button" class="dungeon-chip-btn${floor?.fog?.enabled ? " is-selected" : ""}" data-dungeon="toggle-fog">Névoa: ${floor?.fog?.enabled ? "ON" : "OFF"}</button><button type="button" class="dungeon-chip-btn" data-dungeon="reset-fog">Cobrir Névoa</button>`
+  const fogOn = Boolean(floor?.fog?.enabled);
+  const gmActionRow = isGm
+    ? `<div class="dungeon-chips-row">
+        <button type="button" class="dungeon-chip-btn${fogOn ? " is-selected" : ""}" data-dungeon="toggle-fog" aria-pressed="${fogOn}">Névoa: ${fogOn ? "ON" : "OFF"}</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="reset-fog">Cobrir Névoa</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="clear-drawings">Limpar Desenhos</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="clear-aoes">Limpar AoE</button>
+      </div>`
     : "";
   return `
-    <div class="dungeon-chips-row" role="group" aria-label="Ferramentas do mapa">${toolBtns}</div>
-    <div class="dungeon-chips-row">
-      ${fogControls}
-      <button type="button" class="dungeon-chip-btn" data-dungeon="clear-drawings">Limpar Desenhos</button>
-      <button type="button" class="dungeon-chip-btn" data-dungeon="clear-aoes">Limpar AoE</button>
-    </div>
+    <div class="dungeon-chips-row dungeon-tactics-tools" role="group" aria-label="Ferramentas do mapa">${toolBtns}</div>
+    ${gmActionRow}
     ${renderFloorPills(scene, isGm)}`;
 }
 
@@ -61,8 +64,8 @@ function renderConditionControls(scene, selectedId, isGm) {
   if (!tok) return "";
   const activeIds = new Set(normalizeTokenConditions(tok.conditions).map((c) => c.id));
   const condBtns = CONDITION_CATALOG.slice(0, 8).map((c) => {
-    const cls = activeIds.has(c.id) ? " is-selected" : "";
-    return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="toggle-condition" data-token-id="${escapeHtml(tok.tokenId)}" data-condition-id="${c.id}">${escapeHtml(c.glyph)} ${escapeHtml(c.label)}</button>`;
+    const active = activeIds.has(c.id);
+    return `<button type="button" class="dungeon-chip-btn${active ? " is-selected" : ""}" data-dungeon="toggle-condition" data-token-id="${escapeHtml(tok.tokenId)}" data-condition-id="${c.id}" aria-pressed="${active}">${escapeHtml(c.glyph)} ${escapeHtml(c.label)}</button>`;
   }).join("");
   const otherFloors = (scene.floors || []).filter((f) => f.z !== tok.floorZ);
   const floorBtns = otherFloors.map((f) => `<button type="button" class="dungeon-chip-btn" data-dungeon="move-token-floor" data-token-id="${escapeHtml(tok.tokenId)}" data-floor-z="${f.z}">Mover p/ ${escapeHtml(f.name)}</button>`).join("");

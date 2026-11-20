@@ -1,13 +1,17 @@
 /**
  * @file Tela 2 do AI Social Dungeon: A Mesa de Jogo (#/dungeon/mesa/:id).
+ * Mapa 2D como herói (Z2), ferramentas táticas seguras p/ jogador e GM, editor de token, iniciativa e drawer Z3.
  */
 import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
-import { createDefaultScene } from "./vtt-scene-schema.js";
-import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
-import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
 import { resolveSessionMode, SESSION_MODES } from "./dungeon-ui-contract.js";
+import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
 import { renderZ3SessionBlock } from "./screen-table-layout.js";
+import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
+import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
+import { createDefaultScene } from "./vtt-scene-schema.js";
+import { projectInitiativeForPlayer } from "./vtt-tactics-reducer.js";
+import { createInitiativeState } from "./vtt-tactics-schema.js";
 
 const TABLE_SCENE_TITLES = {
   "floresta-de-vidro": "Assembleia na Floresta de Vidro",
@@ -22,7 +26,14 @@ function renderUnlockedVaultBanner(vaultSecret) {
     </section>`;
 }
 
-function renderPlayerStatusStrip(state, pools) {
+function renderStatusChip(state, scene) {
+  const tok = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
+  const firstCond = tok?.conditions?.[0];
+  if (firstCond?.label) return `<span class="dungeon-chip">${escapeHtml(firstCond.label)}</span>`;
+  return state.joinMode === "p2p_player" ? `<span class="dungeon-chip">Conectado P2P</span>` : `<span class="dungeon-chip">Pronto</span>`;
+}
+
+function renderPlayerStatusStrip(state, pools, scene) {
   const hp = pools.hp_current ?? 24;
   const hpMax = state.sheet.pools_base?.hp_max || 24;
   const pct = Math.max(0, Math.min(100, Math.round((hp / hpMax) * 100)));
@@ -33,7 +44,7 @@ function renderPlayerStatusStrip(state, pools) {
         <span class="dungeon-badge-shield">${dungeonIcon("shield", 18)}</span>
         <div>
           <strong>${escapeHtml(state.sheet.name)}</strong>
-          <span class="dungeon-muted">${escapeHtml(state.sheet.role_title || "Paladina")}</span>
+          <span class="dungeon-muted">${escapeHtml(state.sheet.role_title || "Aventureiro")}</span>
         </div>
       </div>
       <div class="dungeon-vital-meters">
@@ -42,37 +53,49 @@ function renderPlayerStatusStrip(state, pools) {
           <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${pct}%"></div></div>
         </div>
         <span class="dungeon-coin-pill">${pools.currency_gp ?? 50} Moedas</span>
-        <span class="dungeon-chip">Em Vigília</span>
-        <a class="dungeon-btn dungeon-btn-ghost" href="${charHref}">Ver Grimório →</a>
+        ${renderStatusChip(state, scene)}
+        <a class="dungeon-btn dungeon-btn-ghost" href="${charHref}">Abrir Ficha →</a>
       </div>
     </section>`;
 }
 
 function renderTokenRosterRow(tok, isGm, selectedId) {
-  const selCls = tok.tokenId === selectedId ? " is-selected" : "";
+  const sel = tok.tokenId === selectedId;
+  const selCls = sel ? " is-selected" : "";
   const layerTag = tok.layer === "gm" ? " [GM]" : "";
   const gmBtns = isGm
     ? `<button type="button" class="dungeon-chip-btn" data-dungeon="toggle-token-layer" data-token-id="${escapeHtml(tok.tokenId)}">${tok.layer === "gm" ? "Revelar" : "Ocultar GM"}</button><button type="button" class="dungeon-chip-btn" data-dungeon="remove-token" data-token-id="${escapeHtml(tok.tokenId)}">Remover</button>`
     : "";
-  return `<li><button type="button" class="dungeon-chip-btn${selCls}" data-dungeon="select-token" data-token-id="${escapeHtml(tok.tokenId)}">${escapeHtml(tok.name)}${layerTag} (${tok.x},${tok.y})</button>${gmBtns}</li>`;
+  return `<li><button type="button" class="dungeon-chip-btn${selCls}" data-dungeon="select-token" data-token-id="${escapeHtml(tok.tokenId)}" aria-pressed="${sel}">${escapeHtml(tok.name)}${layerTag} (${tok.x},${tok.y})</button>${gmBtns}</li>`;
+}
+
+function renderRoleToggleOrBadge(state, isGm) {
+  if (state.joinMode === "p2p_player") {
+    return `<span class="dungeon-code-tag">Visão: Jogador (P2P)</span>`;
+  }
+  const roleLabel = isGm ? "Visão: Mestre" : "Visão: Jogador";
+  return `<button type="button" class="dungeon-chip-btn${isGm ? " is-selected" : ""}" data-dungeon="toggle-viewer-role" aria-pressed="${isGm}">${roleLabel}</button>`;
 }
 
 function renderMapControlsBar(scene, floor, state, isGm) {
   const gridLabel = floor?.grid?.type === "hex" ? "Hex" : "Quadrada";
   const zoomPct = Math.round((state.camera?.zoom || 1) * 100);
-  const roleLabel = isGm ? "Visão: Mestre" : "Visão: Jogador";
+  const gridBtn = isGm
+    ? `<button type="button" class="dungeon-chip-btn" data-dungeon="toggle-grid-type" aria-pressed="${floor?.grid?.type === "hex"}">Grade: ${gridLabel}</button>`
+    : "";
   return `
     <div class="dungeon-section-head">
       <div>
-        <span class="dungeon-eyebrow">Mapa 2D Interativo · Arraste Tokens ou Pinça para Zoom</span>
-        <h2>${escapeHtml(scene.name)} (${gridLabel} · ${zoomPct}%)</h2>
+        <span class="dungeon-eyebrow">Mapa 2D Interativo · Arraste Tokens · Ctrl+Roda ou Pinça para Zoom</span>
+        <h2>${escapeHtml(scene.name)} (${gridLabel} · <span data-dungeon-zoom-label>${zoomPct}%</span>)</h2>
       </div>
       <div class="dungeon-chips-row">
-        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-out" aria-label="Diminuir zoom">-</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-out" aria-label="Diminuir zoom">−</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-fit" aria-label="Enquadrar mapa inteiro">Ajustar</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-reset">100%</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-in" aria-label="Aumentar zoom">+</button>
-        <button type="button" class="dungeon-chip-btn" data-dungeon="toggle-grid-type">Grade: ${gridLabel}</button>
-        <button type="button" class="dungeon-chip-btn is-selected" data-dungeon="toggle-viewer-role">${roleLabel}</button>
+        ${gridBtn}
+        ${renderRoleToggleOrBadge(state, isGm)}
       </div>
     </div>`;
 }
@@ -91,63 +114,92 @@ function renderMapFormsRow(isGm) {
         </div>
       </form>
       <div class="dungeon-action-form">
-        <label for="dungeon-map-upload" class="dungeon-muted">Subir imagem de mapa (deduplicada por SHA-256):</label>
-        <input id="dungeon-map-upload" class="dungeon-input" type="file" accept="image/*" data-dungeon="upload-map" />
+        <span class="dungeon-eyebrow">Mapa de fundo (SHA-256)</span>
+        <label for="dungeon-map-upload" class="dungeon-btn dungeon-btn-ghost dungeon-file-trigger">Carregar imagem do mapa</label>
+        <input id="dungeon-map-upload" class="sr-only" type="file" accept="image/*" data-dungeon="upload-map" />
       </div>
-    </div>`;
+    </div>
+    ${renderAddDoorForm(isGm)}`;
 }
 
-function renderInteractiveMapSection(state) {
-  const scene = state.scene?.floors?.length ? state.scene : createDefaultScene(state.localActor || "local");
+function shouldShowInitiative(state, scene, isGm) {
+  if (isGm) return true;
+  const projected = projectInitiativeForPlayer(createInitiativeState(state.initiative), { [scene.sceneId]: scene });
+  return projected.entries.length > 0;
+}
+
+function renderInteractiveMapSection(state, scene) {
   const floor = scene.floors.find((f) => f.z === scene.activeFloorZ) || scene.floors[0];
   const isGm = state.viewerRole === "gm";
   const visibleTokens = (scene.tokens || []).filter((t) => t.floorZ === floor.z && (isGm || t.layer === "player"));
   const rosterHtml = visibleTokens.map((t) => renderTokenRosterRow(t, isGm, state.selectedTokenId)).join("");
   const notice = isGm && state.mapNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.mapNotice)}</p>` : "";
+  const initHtml = shouldShowInitiative(state, scene, isGm) ? renderInitiativePanel(state, scene, isGm) : "";
   return `
     <section class="dungeon-panel dungeon-map-hero" aria-label="Mapa tático 2D" data-dungeon-zone="mapHero">
       ${renderMapControlsBar(scene, floor, state, isGm)}
-      ${isGm ? renderTacticalToolbar(state, scene, floor, isGm) : ""}
-      <canvas id="dungeon-vtt-canvas" width="768" height="420" style="width:100%;max-height:420px;display:block;border-radius:6px;background:#0c0e11;touch-action:none" aria-label="Tabuleiro 2D da cena"></canvas>
+      ${renderTacticalToolbar(state, scene, floor, isGm)}
+      <canvas id="dungeon-vtt-canvas" class="dungeon-vtt-canvas" width="768" height="480" tabindex="0" aria-label="Tabuleiro 2D da cena"></canvas>
       ${notice}
+      <ul class="dungeon-clean-list dungeon-token-roster">${rosterHtml}</ul>
+      ${renderSelectedTokenEditor(scene, state.selectedTokenId, isGm)}
       ${renderMapFormsRow(isGm)}
-      <ul class="dungeon-clean-list">${rosterHtml}</ul>
     </section>
-    ${isGm ? renderInitiativePanel(state, scene, isGm) : ""}`;
+    ${initHtml}`;
 }
 
-/**
- * Renderiza a Tela 2 (A Mesa de Jogo) focada em mapa 2D, leitura narrativa, rolagem justa e grade tática.
- *
- * @param {object} state Estado atual da sessão AI Social Dungeon.
- * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
- */
-export function renderTableScreen(state) {
-  const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
-  const sceneTitle = TABLE_SCENE_TITLES[state.tableId] || "Cripta das Águas Sussurrantes";
-  const sessionMode = resolveSessionMode("mesa", state.viewerRole || "player");
-  const playerLayout = sessionMode === SESSION_MODES.PLAYER_SESSION;
-  const sessionNotice = state.campaignNotice
-    ? `<p class="dungeon-inline-status dungeon-join-notice" role="status">${escapeHtml(state.campaignNotice)}</p>`
-    : "";
+function resolveCoords(state, scene) {
+  const tok = (scene.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
+  return tok ? { x: tok.x, y: tok.y } : state.playerPos;
+}
+
+function renderSceneVignette(sceneTitle, pos) {
   return `
-    ${sessionNotice}
-    ${renderPlayerStatusStrip(state, projected.pools)}
     <section class="dungeon-scene-vignette dungeon-scene-vignette--compact">
       ${renderCavernArchSvg()}
       <div class="dungeon-scene-caption">
-        <span class="dungeon-eyebrow">Local Atual · Posição [${state.playerPos.x}, ${state.playerPos.y}]</span>
+        <span class="dungeon-eyebrow">Local Atual · Posição [${pos.x}, ${pos.y}]</span>
         <h1>${escapeHtml(sceneTitle)}</h1>
       </div>
-    </section>
-    ${renderUnlockedVaultBanner(state.vaultSecret)}
-    ${renderInteractiveMapSection(state)}
-    ${renderZ3SessionBlock(state, playerLayout)}
-    <details class="dungeon-audit">
+    </section>`;
+}
+
+function renderDiceAuditBlock() {
+  return `
+    <details class="dungeon-audit" data-dungeon-details="dice-audit">
       <summary>Como o dado funciona</summary>
       <div class="dungeon-audit-body">
         <p>Aqui o d20 é sorteado só neste aparelho (<code>crypto.getRandomValues</code>, sem viés de módulo).</p>
         <p>Numa mesa com outros aparelhos, a rolagem justa entre jogadores (Commit-Reveal²) já está escrita e testada em <code>rpg-crypto-table.js</code>, mas ainda não é usada nesta demonstração.</p>
       </div>
     </details>`;
+}
+
+/**
+ * Renderiza a Tela 2 (A Mesa de Jogo) focada em mapa 2D herói, ferramentas táticas, crônica e rolagem justa.
+ *
+ * @param {object} state Estado atual da sessão AI Social Dungeon.
+ * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
+ */
+export function renderTableScreen(state) {
+  const scene = state.scene?.floors?.length ? state.scene : createDefaultScene(state.localActor || "local");
+  const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
+  const sceneTitle = state.campaignId
+    ? state.tableName || scene.name
+    : TABLE_SCENE_TITLES[state.tableId] || scene.name || "Cripta das Águas Sussurrantes";
+  const playerLayout = resolveSessionMode("mesa", state.viewerRole || "player") === SESSION_MODES.PLAYER_SESSION;
+  const isGm = state.viewerRole === "gm";
+  const noticeBanner = state.campaignNotice
+    ? `<p class="dungeon-inline-status dungeon-table-notice" role="status">${escapeHtml(state.campaignNotice)}</p>`
+    : "";
+  const clockHtml = state.campaignId || isGm ? renderCompactWorldClock(state, isGm) : "";
+  return `
+    ${noticeBanner}
+    ${renderPlayerStatusStrip(state, projected.pools, scene)}
+    ${renderSceneVignette(sceneTitle, resolveCoords(state, scene))}
+    ${renderUnlockedVaultBanner(state.vaultSecret)}
+    ${renderInteractiveMapSection(state, scene)}
+    ${clockHtml}
+    ${renderZ3SessionBlock(state, playerLayout)}
+    ${renderDiceAuditBlock()}`;
 }

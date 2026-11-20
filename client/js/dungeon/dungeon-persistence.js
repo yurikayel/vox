@@ -1,22 +1,31 @@
 /**
- * @file Fachada de persistência, rolagem por fórmula e backup/importação da Mesa Soberana (E1).
- * Conecta `vtt-store.js`, `vtt-reducer.js`, `dice-engine.js`, `vtt-portable.js` e `obsidian-bridge.js`
+ * @file Fachada de persistência, rolagem por fórmula, notas, ficha e backup/importação da Mesa Soberana (E1 + E4).
+ * Conecta `dungeon-sync-bridge.js`, `vtt-store.js`, `dice-engine.js`, `vtt-portable.js` e `obsidian-bridge.js`
  * ao estado de sessão do `#/dungeon` sem acoplamento circular com `dungeon-state.js`.
  * @module dungeon/dungeon-persistence
  */
 import { parseDiceCommand, rollDiceFormula } from "./dice-engine.js";
-import { chronicleToMarkdown, markdownToNote, markdownToSheet, splitFrontmatter } from "./obsidian-bridge.js";
-import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
-import { reduceCampaign } from "./vtt-reducer.js";
-import { createCampaign, createNoteDoc, createVttOp, ensureSheetMeta } from "./vtt-schema.js";
-import { getDefaultVttStore } from "./vtt-store.js";
+import {
+  buildCampaignFromSession,
+  dispatchCampaignOp,
+  hydrateStateFromCampaign,
+} from "./dungeon-sync-bridge.js";
+import {
+  chronicleToMarkdown,
+  markdownToNote,
+  markdownToSheet,
+  parseObsidianCanvas,
+  splitFrontmatter,
+} from "./obsidian-bridge.js";
 import { formatInWorldDate } from "./vtt-calendar.js";
-import { listInventoryItems, totalCarriedWeight } from "./vtt-inventory.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
-import { parseObsidianCanvas } from "./obsidian-bridge.js";
+import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
+import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
+import { getDefaultVttStore } from "./vtt-store.js";
+
+export { buildCampaignFromSession, hydrateStateFromCampaign };
 
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
-
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
 
@@ -28,76 +37,6 @@ const ABILITY_LABELS_PTBR = Object.freeze({
   wis: "Sabedoria",
   cha: "Carisma",
 });
-
-function buildUiSheetProjection(rawSheet, fallbackInventory) {
-  const sheet = ensureSheetMeta(rawSheet);
-  const attrs = sheet.attributes_lww || {};
-  const ab = attrs.abilities || {};
-  const invItems = listInventoryItems(sheet.inventory_orset);
-  const inventoryLabels = invItems.length
-    ? invItems.map((it) => `${it.label}${it.qty > 1 ? ` ×${it.qty}` : ""}${it.equipped ? " (E)" : ""}`)
-    : Array.isArray(sheet.inventory) ? sheet.inventory : fallbackInventory || [];
-  return {
-    ...sheet,
-    char_id: sheet.character_id,
-    name: attrs.name || "Aventureiro",
-    role_title: attrs.class_name || "Aventureiro",
-    attributes: { vitalidade: ab.con ?? 12, astucia: ab.dex ?? 12, sabedoria: ab.wis ?? 12 },
-    inventory: inventoryLabels,
-    inventoryItems: invItems,
-    carryWeight: totalCarriedWeight(sheet.inventory_orset),
-  };
-}
-
-function pickRecord(map, preferredId) {
-  if (!map || typeof map !== "object") return null;
-  return map[preferredId] || Object.values(map)[0] || null;
-}
-
-/**
- * Hidrata o estado de sessão da UI a partir de um `CampaignDoc` persistido sem sobrescrever blocos demo W-DRF.
- * @param {object} state Estado de sessão do `#/dungeon`.
- * @param {object} campaign Documento `CampaignDoc` carregado do `VttStore`.
- * @returns {object} Estado atualizado.
- */
-export function hydrateStateFromCampaign(state, campaign) {
-  state.campaignId = campaign.id;
-  state.campaignDoc = campaign;
-  state.tableId = campaign.id;
-  state.tableName = campaign.name;
-  const activeSheet = pickRecord(campaign.sheetsById, campaign.activeSheetId);
-  if (activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
-  const activeScene = pickRecord(campaign.scenesById, campaign.activeSceneId);
-  if (activeScene) state.scene = activeScene;
-  if (campaign.initiative) state.initiative = campaign.initiative;
-  if (campaign.calendar) state.worldCalendar = campaign.calendar;
-  state.worldDateLabel = formatInWorldDate(campaign.calendar);
-  if (Array.isArray(campaign.chronicle) && campaign.chronicle.length) state.chronicle = [...campaign.chronicle];
-  state.rolls = [...(campaign.rolls || [])];
-  state.notes = Object.values(campaign.notesById || {});
-  const lastRoll = state.rolls[state.rolls.length - 1];
-  const keptD20 = lastRoll?.rolls?.find((d) => d.kept && d.sides === 20);
-  if (keptD20) state.lastRoll = { dieSides: 20, value: keptD20.value, committed: false };
-  return state;
-}
-
-/**
- * Constrói um `CampaignDoc` a partir do estado atual da sessão quando ainda não há campanha salva selecionada.
- * @param {object} state Estado da sessão.
- * @returns {object} Documento `CampaignDoc` válido.
- */
-export function buildCampaignFromSession(state) {
-  if (state.campaignDoc) return state.campaignDoc;
-  const sheet = ensureSheetMeta(state.sheet || {});
-  return createCampaign({
-    id: state.tableId || "mesa-local",
-    name: state.tableName || "Mesa Local",
-    activeSheetId: sheet.character_id,
-    sheetsById: { [sheet.character_id]: sheet },
-    chronicle: state.chronicle || [],
-    rolls: state.rolls || [],
-  });
-}
 
 async function refreshStoreSummary(state, store) {
   state.campaigns = await store.listCampaigns();
@@ -131,9 +70,11 @@ export async function bootstrapDungeonPersistence(state, store = getDefaultVttSt
 export async function createAndSelectCampaign(state, name, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const cleanName = String(name || "").trim() || "Nova Campanha";
+  const system = String(opts.system || "d20_fantasy").trim() || "d20_fantasy";
   const doc = createCampaign({
     name: cleanName,
-    system: opts.system || "d20-livre",
+    system,
+    dungeonPrefs: { preset: system },
     chronicle: [
       {
         id: "turn-inicio",
@@ -170,29 +111,8 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
   return loaded;
 }
 
-async function applyAndPersistOp(state, type, payload, store) {
-  const op = createVttOp({
-    type,
-    payload,
-    actor: state.localActor || "local",
-    lamport: (state.campaignDoc?.lamport || 0) + 1,
-  });
-  if (state.campaignId) {
-    const res = await store.appendOp(state.campaignId, op);
-    hydrateStateFromCampaign(state, res.campaign);
-    state.campaigns = await store.listCampaigns();
-    return res.campaign;
-  }
-  const reduced = reduceCampaign(buildCampaignFromSession(state), op);
-  state.chronicle = [...reduced.chronicle];
-  state.rolls = [...reduced.rolls];
-  const keptD20 = state.rolls[state.rolls.length - 1]?.rolls?.find((d) => d.kept && d.sides === 20);
-  if (keptD20) state.lastRoll = { dieSides: 20, value: keptD20.value, committed: false };
-  return reduced;
-}
-
 /**
- * Avalia uma fórmula de dados (`/roll`, `/gmroll`, `2d20kh1+@for`), registra na crônica e persiste se houver campanha ativa.
+ * Avalia uma fórmula de dados (`/roll`, `/gmroll`, `2d20kh1+@for`), registra na crônica e persiste/sincroniza.
  * @param {object} state Estado da sessão.
  * @param {string} rawInput Comando ou fórmula de dados.
  * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
@@ -208,7 +128,7 @@ export async function recordFormulaRoll(state, rawInput, opts = {}) {
   }
   state.rollError = "";
   state.lastFormulaRoll = result;
-  await applyAndPersistOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult: result }, store);
+  await dispatchCampaignOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult: result }, { store, refreshCampaignsList: true });
   return result;
 }
 
@@ -248,7 +168,7 @@ export async function recordSheetActionRoll(state, actionId, opts = {}) {
 }
 
 /**
- * Persiste uma alteração CRDT de recurso (`hp_current`, `currency_gp`, `spell_slot_l1`) quando há campanha salva ativa.
+ * Persiste uma alteração CRDT de recurso (`hp_current`, `currency_gp`, `spell_slot_l1`) quando há campanha ativa ou P2P.
  * @param {object} state Estado da sessão.
  * @param {string} poolKey Chave do pool.
  * @param {number} delta Valor da variação.
@@ -257,9 +177,9 @@ export async function recordSheetActionRoll(state, actionId, opts = {}) {
  * @returns {Promise<object|null>} Campanha atualizada ou `null` fora de campanha salva.
  */
 export async function persistSheetDeltaIfActive(state, poolKey, delta, reason, store = getDefaultVttStore()) {
-  if (!state.campaignId) return null;
+  if (!state.campaignId && !state.syncPeer) return null;
   const targetPool = poolKey === "coins" ? "currency_gp" : poolKey;
-  return applyAndPersistOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, target_pool: targetPool, delta, reason }, store);
+  return dispatchCampaignOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, target_pool: targetPool, delta, reason }, { store });
 }
 
 function validateCustomAction(action) {
@@ -291,10 +211,55 @@ export async function addCustomSheetAction(state, action, opts = {}) {
     return check;
   }
   state.rollError = "";
-  const reduced = await applyAndPersistOp(state, "SHEET_ACTION_UPSERT", { sheetId: state.sheet?.character_id, action: check.action }, store);
-  const activeSheet = reduced?.sheetsById?.[reduced.activeSheetId];
-  if (!state.campaignId && activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
+  await dispatchCampaignOp(state, "SHEET_ACTION_UPSERT", { sheetId: state.sheet?.character_id, action: check.action }, { store });
+  state.campaignNotice = `Ação "${check.action.label}" adicionada à ficha.`;
   return { ok: true };
+}
+
+/**
+ * Remove uma ação clicável customizada da ficha ativa (`SHEET_ACTION_REMOVE`).
+ * @param {object} state Estado da sessão.
+ * @param {string} actionId Identificador da ação.
+ * @param {object} [opts={}] Opções (`store`).
+ * @returns {Promise<object>} Estado reduzido.
+ */
+export async function removeCustomSheetAction(state, actionId, opts = {}) {
+  const store = opts.store || getDefaultVttStore();
+  return dispatchCampaignOp(state, "SHEET_ACTION_REMOVE", { sheetId: state.sheet?.character_id, actionId }, { store });
+}
+
+function mergePatchedAbilities(baseAbilities, patch) {
+  const ab = { ...(baseAbilities || {}) };
+  for (const key of Object.keys(ABILITY_LABELS_PTBR)) {
+    const num = Number(patch[key]);
+    if (patch[key] !== undefined && Number.isFinite(num)) {
+      ab[key] = Math.max(1, Math.min(30, Math.trunc(num)));
+    }
+  }
+  return ab;
+}
+
+/**
+ * Atualiza dados básicos da ficha ativa (nome, classe, CA e atributos FOR–CAR) via `SHEET_UPSERT`.
+ * @param {object} state Estado da sessão.
+ * @param {object} patch Campos editados na UI.
+ * @param {object} [opts={}] Opções (`store`).
+ * @returns {Promise<object>} Campanha ou ficha atualizada.
+ */
+export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
+  const store = opts.store || getDefaultVttStore();
+  const base = ensureSheetMeta(state.sheet || {});
+  const attrs = base.attributes_lww || {};
+  const nextName = String(patch.name || attrs.name || "Aventureiro").trim().slice(0, 60);
+  const nextClass = String(patch.class_name || attrs.class_name || "Aventureiro").trim().slice(0, 60);
+  const nextAc = Math.max(1, Math.min(40, Math.trunc(Number(patch.armor_class) || attrs.armor_class || 10)));
+  const updated = ensureSheetMeta({
+    ...base,
+    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities: mergePatchedAbilities(attrs.abilities, patch) },
+  });
+  const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
+  state.campaignNotice = `Ficha "${updated.attributes_lww.name}" atualizada.`;
+  return res;
 }
 
 /**
@@ -328,12 +293,12 @@ export async function deleteSavedCampaign(state, campaignId, store = getDefaultV
  * @returns {Promise<void>} Concluído após persistir as operações.
  */
 export async function persistTableTurnIfActive(state, newEntries, newDeltas = [], store = getDefaultVttStore()) {
-  if (!state.campaignId) return;
+  if (!state.campaignId && !state.syncPeer) return;
   for (const entry of newEntries || []) {
-    await applyAndPersistOp(state, "CHRONICLE_APPEND", { speaker: entry.speaker, badge: entry.badge, text: entry.text, rollNote: entry.rollNote }, store);
+    await dispatchCampaignOp(state, "CHRONICLE_APPEND", { speaker: entry.speaker, badge: entry.badge, text: entry.text, rollNote: entry.rollNote }, { store });
   }
   for (const op of newDeltas || []) {
-    await applyAndPersistOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, deltaOpId: op.op_id, target_pool: op.target_pool, delta: op.delta, reason: op.reason }, store);
+    await dispatchCampaignOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, deltaOpId: op.op_id, target_pool: op.target_pool, delta: op.delta, reason: op.reason }, { store });
   }
 }
 
@@ -345,9 +310,9 @@ export async function persistTableTurnIfActive(state, newEntries, newDeltas = []
  * @returns {Promise<void>} Concluído após persistir a rolagem.
  */
 export async function persistD20RollIfActive(state, value, store = getDefaultVttStore()) {
-  if (!state.campaignId) return;
+  if (!state.campaignId && !state.syncPeer) return;
   const rollResult = { formula: "1d20", resolvedFormula: "1d20", label: "Bandeja D20", visibility: "public", rolls: [{ sides: 20, value, kept: true, exploded: false }], total: value, crits: value === 20 ? 1 : 0, fumbles: value === 1 ? 1 : 0 };
-  await applyAndPersistOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult }, store);
+  await dispatchCampaignOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult }, { store });
 }
 
 /**
@@ -379,12 +344,12 @@ async function importMarkdownIntoCampaign(state, text, fileName, store) {
   const isSheet = data.tipo === "ficha" || data.tipo === "npc" || data.vox_tipo === "ficha" || Boolean(data.atributos) || Boolean(data.abilities);
   if (isSheet) {
     const sheet = markdownToSheet(text, { campaign_id: state.campaignId, name: fileName.replace(/\.md$/i, "") });
-    await applyAndPersistOp(state, "SHEET_UPSERT", { sheet, setActive: true }, store);
+    await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet, setActive: true }, { store });
     state.campaignNotice = `Ficha "${sheet.attributes_lww.name}" importada do Markdown.`;
     return { ok: true, kind: "sheet-md", campaignId: state.campaignId };
   }
   const note = markdownToNote(text, { title: fileName.replace(/\.md$/i, "") });
-  await applyAndPersistOp(state, "NOTE_UPSERT", { note }, store);
+  await dispatchCampaignOp(state, "NOTE_UPSERT", { note }, { store });
   state.campaignNotice = `Nota "${note.title}" importada do Markdown.`;
   return { ok: true, kind: "note-md", campaignId: state.campaignId };
 }
@@ -399,7 +364,7 @@ async function saveRestoredPackage(state, unpacked, store, label) {
 }
 
 /**
- * Importa arquivo `.voxrpg.zip`, backup cifrado `.voxrpg.enc` ou nota/ficha `.md` (Obsidian) para o `VttStore`.
+ * Importa arquivo `.voxrpg.zip`, backup cifrado `.voxrpg.enc`, nota/ficha `.md` ou quadro `.canvas` (Obsidian) para o `VttStore`.
  * @param {object} state Estado da sessão.
  * @param {{ name?: string, bytes: Uint8Array|string }} fileSpec Arquivo selecionado pelo usuário.
  * @param {object} [opts={}] Opções (`passphrase`, `store`).
@@ -411,12 +376,7 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
   const rawBytes = fileSpec?.bytes instanceof Uint8Array ? fileSpec.bytes : ENC.encode(String(fileSpec?.bytes ?? ""));
   if (/\.canvas$/i.test(name)) {
     const canvasJson = parseObsidianCanvas(JSON.parse(DEC.decode(rawBytes)));
-    const note = createNoteDoc({
-      title: name.replace(/\.canvas$/i, ""),
-      folder: "Pistas",
-      canvasJson,
-      visibility: "shared",
-    });
+    const note = createNoteDoc({ title: name.replace(/\.canvas$/i, ""), folder: "Pistas", canvasJson, visibility: "shared" });
     if (!state.campaignId) await createAndSelectCampaign(state, state.tableName || "Campanha Importada", { store });
     await upsertCampaignNote(state, note, store);
     state.campaignNotice = `Quadro Obsidian "${note.title}" importado.`;
@@ -444,7 +404,7 @@ export function hasStoredDungeonPrefs() {
 }
 
 /**
- * Lê preferências locais da Mesa (dados 3D, etc.) do `localStorage`.
+ * Lê preferências locais da Mesa (dados 3D e papel visual) do `localStorage`.
  * @returns {{ dice3d: boolean, viewerRole: "gm"|"player" }}
  */
 export function loadDungeonPrefs() {
@@ -469,14 +429,14 @@ export function saveDungeonPrefs(prefs = {}) {
 }
 
 /**
- * Avança o relógio de campanha (`CALENDAR_ADVANCE`), só com campanha ativa.
+ * Avança o relógio de campanha (`CALENDAR_ADVANCE`) e atualiza `worldDateLabel`.
  * @param {object} state Sessão.
  * @param {string} delta Atalho de tempo.
  * @param {object} [store] Store.
  * @returns {Promise<object>} Campanha atualizada após `CALENDAR_ADVANCE`.
  */
 export async function advanceCampaignCalendar(state, delta, store = getDefaultVttStore()) {
-  const reduced = await applyAndPersistOp(state, "CALENDAR_ADVANCE", { delta }, store);
+  const reduced = await dispatchCampaignOp(state, "CALENDAR_ADVANCE", { delta }, { store });
   if (reduced?.calendar) {
     state.worldCalendar = reduced.calendar;
     state.worldDateLabel = formatInWorldDate(reduced.calendar);
@@ -485,33 +445,38 @@ export async function advanceCampaignCalendar(state, delta, store = getDefaultVt
 }
 
 /**
- * Muta o inventário OR-Set da ficha ativa.
+ * Muta o inventário OR-Set da ficha ativa (`add`, `remove`, `toggle_equip`, `set_qty`).
  * @param {object} state Sessão.
- * @param {string} kind Tipo (`add`, `remove`, `toggle_equip`, `set_qty`).
- * @param {object} payload Dados.
+ * @param {string} kind Tipo da mutação.
+ * @param {object} payload Dados do item.
  * @param {object} [store] Store.
  * @returns {Promise<object>} Campanha atualizada após `INVENTORY_MUTATE`.
  */
 export async function mutateSheetInventory(state, kind, payload, store = getDefaultVttStore()) {
-  return applyAndPersistOp(state, "INVENTORY_MUTATE", { sheetId: state.sheet?.character_id, kind, ...payload }, store);
+  const res = await dispatchCampaignOp(state, "INVENTORY_MUTATE", { sheetId: state.sheet?.character_id, kind, ...payload }, { store });
+  state.campaignNotice = kind === "add" ? `Item "${payload.label || "item"}" adicionado à mochila.` : "Mochila atualizada.";
+  return res;
 }
 
 /**
- * Aplica subida de nível guiada na ficha ativa.
+ * Aplica subida de nível guiada na ficha ativa com o preset escolhido.
  * @param {object} state Sessão.
  * @param {object} [store] Store.
+ * @param {string} [presetOverride] Preset opcional (`libre`, `d20_fantasy`, `tormenta20`, `investigacao`).
  * @returns {Promise<{ ok: boolean, error?: string }>} Resultado do assistente.
  */
-export async function applySheetLevelUp(state, store = getDefaultVttStore()) {
-  const preset = state.campaignDoc?.dungeonPrefs?.preset || state.campaignDoc?.system || "libre";
+export async function applySheetLevelUp(state, store = getDefaultVttStore(), presetOverride = "") {
+  const preset = presetOverride || state.levelUpPreset || state.campaignDoc?.dungeonPrefs?.preset || state.campaignDoc?.system || "libre";
   const level = (Number(state.sheet?.attributes_lww?.level) || 1) + 1;
   const plan = buildLevelUpPlan(state.sheet, level, preset);
   if (!plan.ok) {
     state.rollError = plan.error;
     return plan;
   }
-  await applyAndPersistOp(state, "LEVEL_UP_APPLY", { sheetId: state.sheet?.character_id, plan: plan.plan }, store);
-  state.campaignNotice = `Nível ${level} alcançado.`;
+  state.rollError = "";
+  await dispatchCampaignOp(state, "LEVEL_UP_APPLY", { sheetId: state.sheet?.character_id, plan: plan.plan }, { store });
+  state.levelUpOpen = false;
+  state.campaignNotice = `Nível ${level} alcançado (+${plan.plan.hpGain} PV máx · proficiência +${plan.plan.proficiencyBonus}).`;
   return { ok: true };
 }
 
@@ -523,6 +488,36 @@ export async function applySheetLevelUp(state, store = getDefaultVttStore()) {
  * @returns {Promise<void>} Concluído após `NOTE_UPSERT`.
  */
 export async function upsertCampaignNote(state, note, store = getDefaultVttStore()) {
-  await applyAndPersistOp(state, "NOTE_UPSERT", { note }, store);
-  state.notes = Object.values(state.campaignDoc?.notesById || {});
+  await dispatchCampaignOp(state, "NOTE_UPSERT", { note }, { store });
+  if (state.campaignDoc?.notesById) state.notes = Object.values(state.campaignDoc.notesById);
+}
+
+/**
+ * Alterna visibilidade de uma nota/handout (`shared` ↔ `gm_only`) via `NOTE_VISIBILITY`.
+ * @param {object} state Sessão.
+ * @param {string} noteId Identificador da nota.
+ * @param {"shared"|"gm_only"} visibility Nova visibilidade.
+ * @param {object} [store] Store.
+ * @returns {Promise<object>} Campanha atualizada.
+ */
+export async function updateNoteVisibility(state, noteId, visibility, store = getDefaultVttStore()) {
+  const res = await dispatchCampaignOp(state, "NOTE_VISIBILITY", { noteId, visibility }, { store });
+  state.campaignNotice = visibility === "shared" ? "Handout compartilhado com a mesa." : "Nota recolhida para a Camada do Mestre.";
+  return res;
+}
+
+/**
+ * Fixa uma nota como alfinete no mapa da cena ativa (`NOTE_PIN`).
+ * @param {object} state Sessão.
+ * @param {string} noteId Identificador da nota.
+ * @param {{ x?: number, y?: number }} [pos={}] Coordenada em células.
+ * @param {object} [store] Store.
+ * @returns {Promise<object>} Campanha atualizada.
+ */
+export async function pinNoteToScene(state, noteId, pos = {}, store = getDefaultVttStore()) {
+  const sceneId = state.scene?.sceneId || state.campaignDoc?.activeSceneId || "sc-cripta";
+  const floorZ = state.scene?.activeFloorZ ?? 0;
+  const res = await dispatchCampaignOp(state, "NOTE_PIN", { noteId, sceneId, floorZ, x: pos.x ?? 3, y: pos.y ?? 2 }, { store });
+  state.campaignNotice = "Nota fixada como alfinete no mapa ativo.";
+  return res;
 }
