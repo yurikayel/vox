@@ -3,6 +3,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
+import { createDefaultScene } from "./vtt-scene-schema.js";
 import { dungeonIcon, renderCavernArchSvg, renderD20DieSvg } from "./rpg-illustrations.js";
 
 const QUICK_CHIPS = [
@@ -161,8 +162,75 @@ function renderDiceAside(state) {
     </aside>`;
 }
 
+function renderTokenRosterRow(tok, isGm, selectedId) {
+  const selCls = tok.tokenId === selectedId ? " is-selected" : "";
+  const layerTag = tok.layer === "gm" ? " [GM]" : "";
+  const gmBtns = isGm
+    ? `<button type="button" class="dungeon-chip-btn" data-dungeon="toggle-token-layer" data-token-id="${escapeHtml(tok.tokenId)}">${tok.layer === "gm" ? "Revelar" : "Ocultar GM"}</button><button type="button" class="dungeon-chip-btn" data-dungeon="remove-token" data-token-id="${escapeHtml(tok.tokenId)}">Remover</button>`
+    : "";
+  return `<li><button type="button" class="dungeon-chip-btn${selCls}" data-dungeon="select-token" data-token-id="${escapeHtml(tok.tokenId)}">${escapeHtml(tok.name)}${layerTag} (${tok.x},${tok.y})</button>${gmBtns}</li>`;
+}
+
+function renderMapControlsBar(scene, floor, state, isGm) {
+  const gridLabel = floor?.grid?.type === "hex" ? "Hex" : "Quadrada";
+  const zoomPct = Math.round((state.camera?.zoom || 1) * 100);
+  const roleLabel = isGm ? "Visão: Mestre" : "Visão: Jogador";
+  return `
+    <div class="dungeon-section-head">
+      <div>
+        <span class="dungeon-eyebrow">Mapa 2D Interativo · Arraste Tokens ou Pinça para Zoom</span>
+        <h2>${escapeHtml(scene.name)} (${gridLabel} · ${zoomPct}%)</h2>
+      </div>
+      <div class="dungeon-chips-row">
+        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-out" aria-label="Diminuir zoom">-</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-reset">100%</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-in" aria-label="Aumentar zoom">+</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="toggle-grid-type">Grade: ${gridLabel}</button>
+        <button type="button" class="dungeon-chip-btn is-selected" data-dungeon="toggle-viewer-role">${roleLabel}</button>
+      </div>
+    </div>`;
+}
+
+function renderMapFormsRow(isGm) {
+  const layerSelect = isGm
+    ? `<label class="sr-only" for="dungeon-token-layer">Camada do token</label><select id="dungeon-token-layer" class="dungeon-input"><option value="player">Camada Jogadores</option><option value="gm">Camada Mestre (oculto)</option></select>`
+    : "";
+  return `
+    <div class="dungeon-two-col">
+      <form class="dungeon-action-form" data-dungeon="add-token-form">
+        <div class="dungeon-input-row">
+          <label class="sr-only" for="dungeon-token-name">Nome do token</label>
+          <input id="dungeon-token-name" class="dungeon-input" type="text" maxlength="48" placeholder="Novo token (ex.: Goblin Arqueiro)" autocomplete="off" />
+          ${layerSelect}
+          <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar Token</button>
+        </div>
+      </form>
+      <div class="dungeon-action-form">
+        <label for="dungeon-map-upload" class="dungeon-muted">Subir imagem de mapa (deduplicada por SHA-256):</label>
+        <input id="dungeon-map-upload" class="dungeon-input" type="file" accept="image/*" data-dungeon="upload-map" />
+      </div>
+    </div>`;
+}
+
+function renderInteractiveMapSection(state) {
+  const scene = state.scene?.floors?.length ? state.scene : createDefaultScene(state.localActor || "local");
+  const floor = scene.floors.find((f) => f.z === scene.activeFloorZ) || scene.floors[0];
+  const isGm = state.viewerRole === "gm";
+  const visibleTokens = (scene.tokens || []).filter((t) => isGm || t.layer === "player");
+  const rosterHtml = visibleTokens.map((t) => renderTokenRosterRow(t, isGm, state.selectedTokenId)).join("");
+  const notice = isGm && state.mapNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.mapNotice)}</p>` : "";
+  return `
+    <section class="dungeon-panel" aria-label="Mapa tático 2D">
+      ${renderMapControlsBar(scene, floor, state, isGm)}
+      <canvas id="dungeon-vtt-canvas" width="768" height="420" style="width:100%;max-height:420px;display:block;border-radius:6px;background:#0c0e11;touch-action:none" aria-label="Tabuleiro 2D da cena"></canvas>
+      ${notice}
+      ${renderMapFormsRow(isGm)}
+      <ul class="dungeon-clean-list">${rosterHtml}</ul>
+    </section>`;
+}
+
 /**
- * Renderiza a Tela 2 (A Mesa de Jogo) focada em leitura narrativa, rolagem D20 justa e grade tática.
+ * Renderiza a Tela 2 (A Mesa de Jogo) focada em mapa 2D, leitura narrativa, rolagem justa e grade tática.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
@@ -180,6 +248,7 @@ export function renderTableScreen(state) {
       </div>
     </section>
     ${renderUnlockedVaultBanner(state.vaultSecret)}
+    ${renderInteractiveMapSection(state)}
     <div class="dungeon-table-layout">
       ${renderChronicleColumn(state)}
       ${renderDiceAside(state)}

@@ -1,8 +1,6 @@
 /**
- * @file Redutor puro determinístico da Mesa Soberana (E1) + projeção Zero-Spoiler por papel.
- *
- * Aplica `VttOp` de forma idempotente por `opId` com ordenação determinística `(lamport, opId)`,
- * preparando o mesmo motor para sincronização P2P na Entrega 2.
+ * @file Redutor puro determinístico da Mesa Soberana (E1 + E2): crônica, rolagens, fichas CRDT,
+ * notas, cenas 2D, tokens, permissões Mestre/Jogador e projeção Zero-Spoiler fail-closed.
  * @module dungeon/vtt-reducer
  */
 import { appendPoolDeltaOp } from "../rpg-sheet-and-lore.js";
@@ -13,11 +11,45 @@ import {
   ensureSheetMeta,
   sanitizeVttId,
 } from "./vtt-schema.js";
+import { createFloorDoc, createSceneDoc, createTokenDoc, hpStatusLabel, normalizeSceneGrid } from "./vtt-scene-schema.js";
+import { clampTokenToFloor } from "./vtt-geometry.js";
+
+const GM_ONLY_OPS = new Set([
+  "SCENE_UPSERT",
+  "SCENE_SELECT",
+  "SCENE_MAP_SET",
+  "TOKEN_UPSERT",
+  "TOKEN_LAYER_SET",
+  "TOKEN_REMOVE",
+  "CAMPAIGN_META_UPDATE",
+]);
+
+function isGmActor(state, actor) {
+  const gmId = String(state?.gmRouteId || "");
+  if (!gmId || gmId === "local") return true;
+  return Boolean(actor && actor === gmId);
+}
+
+/**
+ * Verifica se o autor de uma operação `VttOp` tem permissão para aplicá-la no estado atual (INV-7).
+ * @param {object} state Estado atual da campanha.
+ * @param {object} op Operação `VttOp` candidata.
+ * @returns {boolean} `true` quando autorizada.
+ */
+export function isAuthorizedVttOp(state, op) {
+  if (!state || !op?.type) return false;
+  if (isGmActor(state, op.actor)) return true;
+  if (GM_ONLY_OPS.has(op.type)) return false;
+  if (op.type === "TOKEN_MOVE") {
+    const scene = state.scenesById?.[op.payload?.sceneId || state.activeSceneId];
+    const tok = scene?.tokens?.find((t) => t.tokenId === op.payload?.tokenId);
+    return Boolean(tok && tok.layer === "player" && tok.ownerRouteId && tok.ownerRouteId === op.actor);
+  }
+  return true;
+}
 
 function formatRollSummary(roll) {
-  const diceText = roll.rolls
-    .map((d) => (d.kept ? `${d.value}` : `~~${d.value}~~`))
-    .join(", ");
+  const diceText = roll.rolls.map((d) => (d.kept ? `${d.value}` : `~~${d.value}~~`)).join(", ");
   const tag = roll.crits ? " · CRÍTICO!" : roll.fumbles ? " · FALHA CRÍTICA!" : "";
   const vis = roll.visibility === "gm" ? "[Mestre] " : roll.visibility === "blind" ? "[Cega] " : "";
   const label = roll.label ? `${roll.label}: ` : "";
@@ -87,8 +119,7 @@ function applySheetActionUpsert(state, op) {
     tag: String(op.payload.action.tag || "acao").trim().slice(0, 24),
   };
   const nextActions = [...existing.filter((a) => a.id !== action.id), action];
-  const nextSheet = { ...normalized, sheet_meta: { ...normalized.sheet_meta, clickable_actions: nextActions } };
-  return { ...state, sheetsById: { ...state.sheetsById, [sheetId]: nextSheet } };
+  return { ...state, sheetsById: { ...state.sheetsById, [sheetId]: { ...normalized, sheet_meta: { ...normalized.sheet_meta, clickable_actions: nextActions } } } };
 }
 
 function applyNoteUpsert(state, op) {
@@ -105,6 +136,79 @@ function applyCampaignMetaUpdate(state, op) {
   return { ...state, name: name || state.name, system: system || state.system, activeSheetId };
 }
 
+function withUpdatedScene(state, sceneId, updater) {
+  const targetId = sceneId || state.activeSceneId;
+  const current = state.scenesById?.[targetId];
+  if (!current) return state;
+  const nextScene = updater(current);
+  return { ...state, scenesById: { ...state.scenesById, [targetId]: nextScene } };
+}
+
+function applySceneUpsert(state, op) {
+  const sc = createSceneDoc(op.payload?.scene || {});
+  const scenesById = { ...(state.scenesById || {}), [sc.sceneId]: sc };
+  const activeSceneId = op.payload?.setActive ? sc.sceneId : state.activeSceneId || sc.sceneId;
+  return { ...state, scenesById, activeSceneId };
+}
+
+function applySceneSelect(state, op) {
+  const target = op.payload?.sceneId;
+  return target && state.scenesById?.[target] ? { ...state, activeSceneId: target } : state;
+}
+
+function applySceneMapSet(state, op) {
+  return withUpdatedScene(state, op.payload?.sceneId, (scene) => {
+    const floorZ = Number.isFinite(Number(op.payload?.floorZ)) ? Math.trunc(Number(op.payload.floorZ)) : scene.activeFloorZ;
+    const floors = scene.floors.map((f) => {
+      if (f.z !== floorZ) return f;
+      return createFloorDoc({
+        ...f,
+        mapBlobHash: op.payload?.mapBlobHash !== undefined ? op.payload.mapBlobHash : f.mapBlobHash,
+        widthPx: op.payload?.widthPx ?? f.widthPx,
+        heightPx: op.payload?.heightPx ?? f.heightPx,
+        grid: op.payload?.grid ? normalizeSceneGrid({ ...f.grid, ...op.payload.grid }) : f.grid,
+      });
+    });
+    return { ...scene, floors };
+  });
+}
+
+function applyTokenUpsert(state, op) {
+  return withUpdatedScene(state, op.payload?.sceneId, (scene) => {
+    const raw = op.payload?.token || {};
+    const tok = createTokenDoc({ floorZ: scene.activeFloorZ, ...raw, tokenId: raw.tokenId || `tok-${op.opId}` });
+    const rest = scene.tokens.filter((t) => t.tokenId !== tok.tokenId);
+    return { ...scene, tokens: [...rest, tok] };
+  });
+}
+
+function applyTokenMove(state, op) {
+  return withUpdatedScene(state, op.payload?.sceneId, (scene) => {
+    const floor = scene.floors.find((f) => f.z === scene.activeFloorZ) || scene.floors[0];
+    const tokens = scene.tokens.map((t) => {
+      if (t.tokenId !== op.payload?.tokenId) return t;
+      const pos = clampTokenToFloor(op.payload.x, op.payload.y, t.sizeCells, floor);
+      return { ...t, x: pos.x, y: pos.y };
+    });
+    return { ...scene, tokens };
+  });
+}
+
+function applyTokenLayerSet(state, op) {
+  const layer = op.payload?.layer === "gm" ? "gm" : "player";
+  return withUpdatedScene(state, op.payload?.sceneId, (scene) => ({
+    ...scene,
+    tokens: scene.tokens.map((t) => (t.tokenId === op.payload?.tokenId ? { ...t, layer } : t)),
+  }));
+}
+
+function applyTokenRemove(state, op) {
+  return withUpdatedScene(state, op.payload?.sceneId, (scene) => ({
+    ...scene,
+    tokens: scene.tokens.filter((t) => t.tokenId !== op.payload?.tokenId),
+  }));
+}
+
 const OP_HANDLERS = {
   CHRONICLE_APPEND: applyChronicleAppend,
   ROLL_RECORDED: applyRollRecorded,
@@ -113,17 +217,25 @@ const OP_HANDLERS = {
   SHEET_ACTION_UPSERT: applySheetActionUpsert,
   NOTE_UPSERT: applyNoteUpsert,
   CAMPAIGN_META_UPDATE: applyCampaignMetaUpdate,
+  SCENE_UPSERT: applySceneUpsert,
+  SCENE_SELECT: applySceneSelect,
+  SCENE_MAP_SET: applySceneMapSet,
+  TOKEN_UPSERT: applyTokenUpsert,
+  TOKEN_MOVE: applyTokenMove,
+  TOKEN_LAYER_SET: applyTokenLayerSet,
+  TOKEN_REMOVE: applyTokenRemove,
 };
 
 /**
- * Reduz uma `VttOp` sobre um `CampaignDoc` de forma pura e idempotente por `opId`.
+ * Reduz uma `VttOp` sobre um `CampaignDoc` de forma pura, autorizada e idempotente por `opId`.
  * @param {object} state Estado atual da campanha.
  * @param {object} op Operação `VttOp`.
- * @returns {object} Novo estado da campanha (ou o mesmo se `opId` já foi aplicado ou tipo desconhecido).
+ * @returns {object} Novo estado da campanha (ou o mesmo se `opId` duplicado, tipo inválido ou sem permissão).
  */
 export function reduceCampaign(state, op) {
   if (!state || !op?.opId || !OP_HANDLERS[op.type]) return state;
   if (state.appliedOpIds?.includes(op.opId)) return state;
+  if (!isAuthorizedVttOp(state, op)) return state;
   const next = OP_HANDLERS[op.type](state, op);
   return {
     ...next,
@@ -152,18 +264,23 @@ function canPlayerSeeEntry(entry, viewerRouteId) {
   return false;
 }
 
-function sanitizeSheetForPlayer(sheet) {
-  if (!sheet?.sheet_meta) return sheet;
-  return { ...sheet, sheet_meta: { ...sheet.sheet_meta, notes_gm: "" } };
+function projectTokenForPlayer(tok, viewerRouteId) {
+  if (tok.hpVisible === "status" && tok.ownerRouteId !== viewerRouteId) {
+    return { ...tok, hpCurrent: null, hpMax: null, hpStatus: hpStatusLabel(tok.hpCurrent, tok.hpMax) };
+  }
+  return { ...tok };
 }
 
-function sanitizeNoteForPlayer(note) {
-  return { ...note, gmSecretMarkdown: "" };
+function projectSceneForPlayer(scene, viewerRouteId) {
+  const visibleTokens = (scene.tokens || [])
+    .filter((t) => t.layer === "player")
+    .map((t) => projectTokenForPlayer(t, viewerRouteId));
+  return { ...scene, tokens: visibleTokens };
 }
 
 /**
  * Projeta o estado da campanha de forma fail-closed: apenas `viewerRole === "gm"` recebe segredos;
- * qualquer outro papel (`"player"`, indefinido ou desconhecido) recebe projeção sem segredos GM nem rolagens cegas.
+ * qualquer outro papel recebe projeção sem camada GM, sem segredos `%%...%%`, sem PV exato oculto e sem rolagens cegas.
  * @param {object} state Estado completo da campanha.
  * @param {"gm"|"player"} [viewerRole="player"] Papel de quem lê.
  * @param {string} [viewerRouteId=""] Identidade do jogador.
@@ -173,15 +290,19 @@ export function projectStateForPlayer(state, viewerRole = "player", viewerRouteI
   if (!state) return null;
   if (viewerRole === "gm") return structuredClone(state);
   const sheetsById = Object.fromEntries(
-    Object.entries(state.sheetsById || {}).map(([id, s]) => [id, sanitizeSheetForPlayer(s)]),
+    Object.entries(state.sheetsById || {}).map(([id, s]) => [id, s?.sheet_meta ? { ...s, sheet_meta: { ...s.sheet_meta, notes_gm: "" } } : s]),
   );
   const notesById = Object.fromEntries(
-    Object.entries(state.notesById || {}).map(([id, n]) => [id, sanitizeNoteForPlayer(n)]),
+    Object.entries(state.notesById || {}).map(([id, n]) => [id, { ...n, gmSecretMarkdown: "" }]),
+  );
+  const scenesById = Object.fromEntries(
+    Object.entries(state.scenesById || {}).map(([id, sc]) => [id, projectSceneForPlayer(sc, viewerRouteId)]),
   );
   return {
     ...state,
     sheetsById,
     notesById,
+    scenesById,
     chronicle: (state.chronicle || []).filter((e) => canPlayerSeeEntry(e, viewerRouteId)),
     rolls: (state.rolls || []).filter((r) => canPlayerSeeEntry(r, viewerRouteId)),
   };
