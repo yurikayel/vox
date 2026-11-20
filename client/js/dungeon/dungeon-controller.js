@@ -37,6 +37,23 @@ import {
   toggleTokenLayerInScene,
   uploadSceneMapBlob,
 } from "./dungeon-scene-actions.js";
+import {
+  addFloorToScene,
+  advanceInitiativeTurn,
+  clearSceneAoes,
+  clearSceneDrawings,
+  commitAoeTemplate,
+  commitDrawingStroke,
+  moveTokenToFloor,
+  resetFogInScene,
+  resetInitiativeTracker,
+  revealFogRectInScene,
+  rollInitiativeForScene,
+  selectSceneFloor,
+  toggleConditionOnToken,
+  toggleDoorInScene,
+  toggleFogEnabled,
+} from "./dungeon-tactics-actions.js";
 import { clampZoom } from "./vtt-geometry.js";
 import { renderDungeonChrome } from "./dungeon-chrome.js";
 import { renderCampScreen, refreshFavoriteSlider } from "./screen-camp.js";
@@ -135,6 +152,18 @@ const ACTION_HANDLERS = {
   "toggle-token-layer": (state, el, _c, opts) => toggleTokenLayerInScene(state, el.dataset.tokenId, { store: opts.store }),
   "remove-token": (state, el, _c, opts) => removeTokenFromScene(state, el.dataset.tokenId, { store: opts.store }),
   "generate-invite": (state, _el, _c, opts) => generateTableInvite(state, { store: opts.store }),
+  "select-tool": (state, el) => { state.activeTool = el.dataset.tool || "select"; },
+  "toggle-fog": (state, _el, _c, opts) => toggleFogEnabled(state, { store: opts.store }),
+  "reset-fog": (state, _el, _c, opts) => resetFogInScene(state, { store: opts.store }),
+  "clear-drawings": (state, _el, _c, opts) => clearSceneDrawings(state, { store: opts.store }),
+  "clear-aoes": (state, _el, _c, opts) => clearSceneAoes(state, { store: opts.store }),
+  "add-floor": (state, _el, _c, opts) => addFloorToScene(state, "", { store: opts.store }),
+  "select-floor": (state, el, _c, opts) => selectSceneFloor(state, el.dataset.floorZ, { store: opts.store }),
+  "move-token-floor": (state, el, _c, opts) => moveTokenToFloor(state, el.dataset.tokenId, el.dataset.floorZ, { store: opts.store }),
+  "roll-initiative": (state, _el, _c, opts) => rollInitiativeForScene(state, { store: opts.store }),
+  "next-turn": (state, _el, _c, opts) => advanceInitiativeTurn(state, { store: opts.store }),
+  "reset-initiative": (state, _el, _c, opts) => resetInitiativeTracker(state, { store: opts.store }),
+  "toggle-condition": (state, el, _c, opts) => toggleConditionOnToken(state, el.dataset.tokenId, el.dataset.conditionId, { store: opts.store }),
 };
 
 function handleChipClick(rootEl, el) {
@@ -169,9 +198,14 @@ export function renderDungeonView(opts = {}) {
 function bindActiveCanvas(container, opts) {
   CANVAS_DETACHERS.get(container)?.();
   const state = opts.state || getDungeonSession();
+  const storeOpts = { store: opts.store };
   const detach = mountSceneCanvas(container, state, {
     store: opts.store,
     onStateMutated: () => redrawContainer(container, opts),
+    onDoorToggle: (doorId) => toggleDoorInScene(state, doorId, storeOpts),
+    onDrawingCommit: (pts) => commitDrawingStroke(state, pts, storeOpts),
+    onFogReveal: (rect) => revealFogRectInScene(state, rect, storeOpts),
+    onAoeCommit: (aoe) => commitAoeTemplate(state, aoe, storeOpts),
   });
   CANVAS_DETACHERS.set(container, detach);
 }
