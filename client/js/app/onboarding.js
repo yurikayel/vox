@@ -164,6 +164,15 @@ function endGenesis(modalContainer, onComplete, res) {
   if (onComplete) onComplete(res);
 }
 
+function completeMeshRestoredOnboarding(modalContainer, onComplete, ok) {
+  completeEntryOnboarding(
+    modalContainer,
+    onComplete,
+    { ok: true, restored: true, routeId: ok.routeId },
+    `Identidade restaurada com sucesso! Bem-vindo(a), ${ok.displayName || "Cidadão"}!`,
+  );
+}
+
 /**
  * Abre a entrada (primeiro acesso) ou, com `mode: "import"`, só a importação de nome e foto do Perfil (ADR-032).
  * @param {{ onComplete?: Function, withPact?: boolean, mode?: "entry" | "import" }} [opts]
@@ -197,6 +206,7 @@ export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "ent
 
   resumeGenesisAfterRender(modalContainer, {
     onEmailKitFinish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
+    onMeshRestored: (ok) => completeMeshRestoredOnboarding(modalContainer, onComplete, ok),
   });
 }
 
