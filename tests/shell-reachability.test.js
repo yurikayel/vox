@@ -76,3 +76,11 @@ test("PM-02: o peso do precache é medido e informado, sem teto", (t) => {
   t.diagnostic(`precache: ${total} bytes em ${assets.length} arquivos`);
   assert.ok(total > 0, "todo arquivo do SHELL_ASSETS existe e foi somado");
 });
+
+test("PM-01 passo 2: rotas periféricas usam import() dinâmico em route.js", () => {
+  const routeSrc = fs.readFileSync(path.join(root, "js/app/route.js"), "utf8");
+  assert.match(routeSrc, /loadAvisoRoute/);
+  assert.match(routeSrc, /loadComposeRoute/);
+  assert.doesNotMatch(routeSrc, /import\s+\{[^}]*showAvisos[^}]*\}\s+from\s+["']\.\/aviso-flow\.js["']/);
+  assert.doesNotMatch(routeSrc, /import\s+\{[^}]*showComposeCommunity[^}]*\}\s+from\s+["']\.\/screens-compose\.js["']/);
+});
