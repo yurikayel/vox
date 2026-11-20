@@ -614,7 +614,7 @@ function mountOpsNotice(main) {
 export function renderDemoModeBanner() {
   return `
     <div class="demo-mode-banner" role="status" id="demo-mode-banner">
-      <strong>Modo demonstração</strong> — perfis, chaves Pix e pessoas "online" de exemplo são <strong>fictícios</strong>.
+      <strong>Modo demonstração</strong> — perfis, chaves Pix e pessoas "online" de exemplo são <strong>fictícios</strong> (malha local; sem gravação Arweave por padrão).
       <button type="button" class="btn btn-outline btn-sm" id="btn-exit-demo">Sair da demonstração</button>
     </div>`;
 }
