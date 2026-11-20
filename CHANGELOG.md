@@ -52,6 +52,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `tests/assinaturas-e-sinais-malicioso.test.js`: o único `test.todo` com asserção falha virou teste de regressão documentando o v1 (ADR-021 §2.6), sem mudança de protocolo LAN-18.
 ### Tests: cliente drena 413/429 do relay (#306)
 - `tests/relay-413-client.test.js`: prova que `readResponseText`, `central-memory` e `upload` leem o corpo antes do fechamento (`bodyUsed`), evitando RST/10053 e mantendo o status legível; alinha `upload.js` ao mesmo helper.
+### Testes: LT-02 — `lockAfterPasswordBackup` com `remote=0`
+- `tests/login-rede-ruim.test.js`: promove o `test.todo` — criação com relay fora garante `saved.locked`, chaves travadas e export bloqueado mesmo quando só a cópia local do cofre existe.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 
