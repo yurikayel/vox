@@ -1,6 +1,6 @@
 /**
- * Módulo de compatibilidade e schemas base.
- * Modo 100% real: feeds, comunidades e listagens mock desativados.
+ * @file Schemas e comunidades de demonstração (LAN-10).
+ * Fora do modo demo explícito (`vox-demo-mode`), listagens mock ficam vazias — nada fictício na malha real.
  */
 
 import {
@@ -57,14 +57,14 @@ export const MOCK_DEMO_COMMUNITY = {
   id: "demo-aprenda-vox",
   communityId: "demo-aprenda-vox",
   title: "Brasil Estereótipo (Demo Vox)",
-  description: "27 perfis demo para testar feed e comunidade.",
+  description: "27 perfis fictícios para testar feed e comunidade na malha local — sem Arweave nem permaweb automático.",
   category: "Tour",
   owner: "vx_demo_mg",
   author: "vx_demo_mg",
   commercialEnabled: false,
   visibility: "open",
   memberCount: 27,
-  welcomeRecado: "Recado da comunidade: bem-vindos ao tour! Tratem este espaço como recados de Orkut.",
+  welcomeRecado: "Tour local-first: personagens e posts aqui são fictícios e circulam só como demonstração na malha — não prometem arquivo no permaweb.",
   headerTagline: "Comunidade do Brasil estereótipo",
 };
 

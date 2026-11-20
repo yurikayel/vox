@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Doc: DOC-04 — mock, profile, community e topic (copy honesta)
+- `mock.js`, faixa demo (`shell.js`) e tour em `network.js`: tour fictício na malha, sem Arweave por padrão.
+- `render/profile.js`, `community.js`, `topic.js`: origem malha vs gateway; carteira Arweave opcional com `arweaveUpload: false`.
+- `tests/doc-04-honest-copy.test.js`; `honest-copy-audit`.
+
 ### Doc: DOC-04 — status, rede e Voxpedia (copy honesta)
 - `client/js/render/status.js`, `render/network.js`: leitura via gateways vs gravação Arweave (`arweaveUpload: false`).
 - `client/js/render/voxpedia.js`: labs Webxdc/Mesa alinhados a `FEATURES.md`.
