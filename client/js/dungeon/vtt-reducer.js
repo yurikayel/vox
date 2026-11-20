@@ -13,6 +13,12 @@ import {
 } from "./vtt-schema.js";
 import { createFloorDoc, createSceneDoc, createTokenDoc, hpStatusLabel, normalizeSceneGrid } from "./vtt-scene-schema.js";
 import { clampTokenToFloor } from "./vtt-geometry.js";
+import {
+  isPlayerAuthorizedForTacticsOp,
+  projectInitiativeForPlayer,
+  projectTacticsFloorForPlayer,
+  TACTICS_OP_HANDLERS,
+} from "./vtt-tactics-reducer.js";
 
 const GM_ONLY_OPS = new Set([
   "SCENE_UPSERT",
@@ -30,6 +36,12 @@ function isGmActor(state, actor) {
   return Boolean(actor && actor === gmId);
 }
 
+function canPlayerMoveToken(state, op) {
+  const scene = state.scenesById?.[op.payload?.sceneId || state.activeSceneId];
+  const tok = scene?.tokens?.find((t) => t.tokenId === op.payload?.tokenId);
+  return Boolean(tok && tok.layer === "player" && tok.ownerRouteId && tok.ownerRouteId === op.actor);
+}
+
 /**
  * Verifica se o autor de uma operação `VttOp` tem permissão para aplicá-la no estado atual (INV-7).
  * @param {object} state Estado atual da campanha.
@@ -40,11 +52,8 @@ export function isAuthorizedVttOp(state, op) {
   if (!state || !op?.type) return false;
   if (isGmActor(state, op.actor)) return true;
   if (GM_ONLY_OPS.has(op.type)) return false;
-  if (op.type === "TOKEN_MOVE") {
-    const scene = state.scenesById?.[op.payload?.sceneId || state.activeSceneId];
-    const tok = scene?.tokens?.find((t) => t.tokenId === op.payload?.tokenId);
-    return Boolean(tok && tok.layer === "player" && tok.ownerRouteId && tok.ownerRouteId === op.actor);
-  }
+  if (op.type in TACTICS_OP_HANDLERS) return isPlayerAuthorizedForTacticsOp(state, op);
+  if (op.type === "TOKEN_MOVE") return canPlayerMoveToken(state, op);
   return true;
 }
 
@@ -224,6 +233,7 @@ const OP_HANDLERS = {
   TOKEN_MOVE: applyTokenMove,
   TOKEN_LAYER_SET: applyTokenLayerSet,
   TOKEN_REMOVE: applyTokenRemove,
+  ...TACTICS_OP_HANDLERS,
 };
 
 /**
@@ -275,12 +285,13 @@ function projectSceneForPlayer(scene, viewerRouteId) {
   const visibleTokens = (scene.tokens || [])
     .filter((t) => t.layer === "player")
     .map((t) => projectTokenForPlayer(t, viewerRouteId));
-  return { ...scene, tokens: visibleTokens };
+  const floors = (scene.floors || []).map(projectTacticsFloorForPlayer);
+  return { ...scene, floors, tokens: visibleTokens };
 }
 
 /**
  * Projeta o estado da campanha de forma fail-closed: apenas `viewerRole === "gm"` recebe segredos;
- * qualquer outro papel recebe projeção sem camada GM, sem segredos `%%...%%`, sem PV exato oculto e sem rolagens cegas.
+ * qualquer outro papel recebe projeção sem camada GM, portas secretas, iniciativa oculta, segredos `%%...%%`, PV exato oculto e rolagens cegas.
  * @param {object} state Estado completo da campanha.
  * @param {"gm"|"player"} [viewerRole="player"] Papel de quem lê.
  * @param {string} [viewerRouteId=""] Identidade do jogador.
@@ -303,6 +314,7 @@ export function projectStateForPlayer(state, viewerRole = "player", viewerRouteI
     sheetsById,
     notesById,
     scenesById,
+    initiative: projectInitiativeForPlayer(state.initiative, state.scenesById),
     chronicle: (state.chronicle || []).filter((e) => canPlayerSeeEntry(e, viewerRouteId)),
     rolls: (state.rolls || []).filter((r) => canPlayerSeeEntry(r, viewerRouteId)),
   };

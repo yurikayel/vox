@@ -4,6 +4,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
+import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
 import { dungeonIcon, renderCavernArchSvg, renderD20DieSvg } from "./rpg-illustrations.js";
 
 const QUICK_CHIPS = [
@@ -216,17 +217,19 @@ function renderInteractiveMapSection(state) {
   const scene = state.scene?.floors?.length ? state.scene : createDefaultScene(state.localActor || "local");
   const floor = scene.floors.find((f) => f.z === scene.activeFloorZ) || scene.floors[0];
   const isGm = state.viewerRole === "gm";
-  const visibleTokens = (scene.tokens || []).filter((t) => isGm || t.layer === "player");
+  const visibleTokens = (scene.tokens || []).filter((t) => t.floorZ === floor.z && (isGm || t.layer === "player"));
   const rosterHtml = visibleTokens.map((t) => renderTokenRosterRow(t, isGm, state.selectedTokenId)).join("");
   const notice = isGm && state.mapNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.mapNotice)}</p>` : "";
   return `
     <section class="dungeon-panel" aria-label="Mapa tático 2D">
       ${renderMapControlsBar(scene, floor, state, isGm)}
+      ${renderTacticalToolbar(state, scene, floor, isGm)}
       <canvas id="dungeon-vtt-canvas" width="768" height="420" style="width:100%;max-height:420px;display:block;border-radius:6px;background:#0c0e11;touch-action:none" aria-label="Tabuleiro 2D da cena"></canvas>
       ${notice}
       ${renderMapFormsRow(isGm)}
       <ul class="dungeon-clean-list">${rosterHtml}</ul>
-    </section>`;
+    </section>
+    ${renderInitiativePanel(state, scene, isGm)}`;
 }
 
 /**
