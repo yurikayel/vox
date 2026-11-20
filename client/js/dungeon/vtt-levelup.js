@@ -8,6 +8,7 @@ import { ensureSheetMeta } from "./vtt-schema.js";
 const PRESET_TABLE = Object.freeze({
   libre: { hpGain: 5, slots: {}, profStep: 0 },
   d20_fantasy: { hpGain: 8, slots: { l1: 1 }, profStep: 1 },
+  tormenta20: { hpGain: 6, slots: { l1: 1, l2: 0 }, profStep: 1 },
   investigacao: { hpGain: 3, slots: {}, profStep: 0 },
 });
 

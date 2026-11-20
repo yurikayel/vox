@@ -11,6 +11,14 @@ test("level-up: não desce nível", () => {
   assert.equal(plan.ok, false);
 });
 
+test("level-up: preset tormenta20", () => {
+  const sheet = createCharacterSheetDoc({ character_id: "t20" });
+  const built = buildLevelUpPlan(sheet, 2, "tormenta20");
+  assert.equal(built.ok, true);
+  assert.equal(built.plan?.preset, "tormenta20");
+  assert.equal(built.plan?.hpGain, 6);
+});
+
 test("level-up: marco imutável e PV", () => {
   const sheet = createCharacterSheetDoc({ character_id: "p", pools_base: { hp_max: 20 } });
   const built = buildLevelUpPlan(sheet, 2, "libre");
