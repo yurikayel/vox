@@ -9,6 +9,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Testes: PM-112 — protótipo de mutador AST Tier A sobre `espree`
 - `scripts/mutate-tier-a.mjs` (`npm run audit:mutate:tier-a`) e `tests/mutate-tier-a.test.js`: descoberta de mutantes via AST (`espree`, zero dependência nova), execução segura por hook ESM em `os.tmpdir()` (com conferência SHA-256) nos modos `--file`/`--base`/`--max`/`--json`; resultados medidos em `docs/process/pm-112-mutation-spike-2026-11.md`.
 
+### Testes: `inbox.js` — mata 5 mutantes sobreviventes de Tier A (PM-112)
+- `tests/inbox.test.js`: cobre validação de parâmetros e propagação de `lastErr`/erro padrão em `pushSealed`, failover de push, bordas de `pullMine` e `getRelayHttpUrls`, e retorno `false` em argumentos ausentes ou falhas de relay em `deleteSealed` (eliminando os 5 sobreviventes em `:107`, `:134`, `:168` e `:171`).
+
 ### Doc: fechamento DOC-04 — feed, inline-composer e catraca de regressão
 - `client/js/render/feed.js`, `client/js/app/inline-composer.js`: badges Lo-Fi removem `(100% Grátis)` e `Permaweb Arweave`, descrevendo mídia leve para a malha.
 - `tests/doc-04-honest-copy.test.js`: amplia a catraca DOC-04 para `render/feed.js`, `app/inline-composer.js` e varredura de termos proibidos (`100% P2P`, `imunidade total`, `imunidade regulat`, `ranking de nós`).
