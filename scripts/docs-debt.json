@@ -9,9 +9,6 @@
   "jsdoc:createAirgapAnswer",
   "jsdoc:completeAirgapHandshake"
  ],
- "client/js/arweave-lib.js": [
-  "returns:loadArweave"
- ],
  "client/js/labs/parado/bridging-rank.js": [
   "jsdoc:MIN_VOTERS_FOR_BRIDGING",
   "jsdoc:calculateClusterAgreeRate",
@@ -20,14 +17,6 @@
   "jsdoc:computeCommentBridgingStats",
   "jsdoc:rankCommentsByBridging",
   "jsdoc:shouldApplyConstructiveFriction"
- ],
- "client/js/chat-bridge.js": [
-  "jsdoc:detectWebhookPlatform",
-  "jsdoc:formatDiscordWebhookPayload",
-  "jsdoc:formatSlackWebhookPayload",
-  "jsdoc:adaptWebhookPayloadForUrl",
-  "jsdoc:buildChatSummaryCopy",
-  "jsdoc:parseChatTranscriptToMarkdown"
  ],
  "client/js/labs/parado/chunked-transfer.js": [
   "jsdoc:DEFAULT_CHUNK_SIZE",
@@ -41,45 +30,6 @@
   "jsdoc:issueCivicCredential",
   "jsdoc:verifyCivicCredential",
   "jsdoc:renderCivicCredentialBadgeHtml"
- ],
- "client/js/contacts.js": [
-  "jsdoc:listContacts",
-  "jsdoc:addContact",
-  "jsdoc:removeContact",
-  "jsdoc:hasContact",
-  "jsdoc:__resetContactsForTests"
- ],
- "client/js/data/profiles-brazil-uf.js": [
-  "jsdoc:STEREOTYPE_DISCLAIMER_NOTE",
-  "jsdoc:UF_STEREOTYPE_SEEDS",
-  "jsdoc:MOCK_DEMO_UF_COUNT",
-  "jsdoc:MOCK_DEMO_POSTS_PER_UF",
-  "jsdoc:MOCK_DEMO_TOPIC_COUNT",
-  "jsdoc:UF_ROUTE_IDS",
-  "jsdoc:buildUfDemoProfilesMap"
- ],
- "client/js/electoral-period.js": [
-  "jsdoc:isInElectoralWindow",
-  "jsdoc:isElectoralModeActive"
- ],
- "client/js/gateway-telemetry.js": [
-  "jsdoc:READ_ORIGIN_MIN_SAMPLE",
-  "jsdoc:getGatewayHealthSummary",
-  "returns:getReadOriginAggregate",
-  "jsdoc:__resetGatewayHealthForTests"
- ],
- "client/js/gossip-retract-ui.js": [
-  "jsdoc:isGossipRetractUiEnabled",
-  "jsdoc:renderGossipDeletedTopicShellHtml"
- ],
- "client/js/handles.js": [
-  "jsdoc:RESERVED_HANDLES",
-  "jsdoc:normalizeSlug",
-  "jsdoc:validateSlug",
-  "jsdoc:resolveHandleClaimants",
-  "jsdoc:getCachedHandleMapping",
-  "jsdoc:getCachedAddressHandle",
-  "jsdoc:cacheHandleMapping"
  ],
  "client/js/labs/parado/idb-store.js": [
   "jsdoc:DB_NAME",
@@ -109,13 +59,6 @@
   "jsdoc:validateKitManifest",
   "jsdoc:instantiateCommunityFromKit"
  ],
- "client/js/labs/mofn-lab.js": [
-  "jsdoc:renderMofnLab",
-  "jsdoc:wireMofnLab"
- ],
- "client/js/mesh-profile.js": [
-  "jsdoc:syncMeshProfileCard"
- ],
  "client/js/labs/parado/node-health-api.js": [
   "jsdoc:pingNodeEndpoint",
   "jsdoc:pingNodeList"
@@ -142,36 +85,6 @@
   "jsdoc:getNodeHealthAriaLabel",
   "jsdoc:formatLatency"
  ],
- "client/js/nostr-transport.js": [
-  "jsdoc:SIGNAL_KIND",
-  "jsdoc:DEFAULT_ROOM",
-  "jsdoc:encryptFor",
-  "jsdoc:decryptFrom",
-  "returns:createNostrTransport"
- ],
- "client/js/peers-cache-manifest.js": [
-  "jsdoc:getLatestManifestForCommunity",
-  "jsdoc:listKnownManifests",
-  "jsdoc:collectPriorityPinTxIds",
-  "jsdoc:isManifestPriorityTx",
-  "jsdoc:ingestSignedCacheManifestItem",
-  "jsdoc:buildCacheManifestGossipDraft"
- ],
- "client/js/peers-gossip-profile.js": [
-  "returns:routeIdFromProfileCardId",
-  "param:isProfileCardSeen:item",
-  "returns:isProfileCardSeen",
-  "jsdoc:markProfileCardSeen",
-  "param:seenStamp:item",
-  "returns:seenStamp"
- ],
- "client/js/pix-key.js": [
-  "jsdoc:detectPixType",
-  "jsdoc:normalizePixKey",
-  "jsdoc:validatePixKey",
-  "jsdoc:maskForDisplay",
-  "jsdoc:PIX_PAYER_CHECK_NOTICE_PT"
- ],
  "client/js/labs/parado/polis.js": [
   "jsdoc:VOTE_AGREE",
   "jsdoc:VOTE_DISAGREE",
@@ -183,90 +96,9 @@
   "jsdoc:evaluateStatementAcrossGroups",
   "jsdoc:computePolisReport"
  ],
- "client/js/post-ownership.js": [
-  "param:deriveTopicTitleFromBody:bodyRaw",
-  "returns:deriveTopicTitleFromBody",
-  "jsdoc:sanitizeBodyString",
-  "jsdoc:formatPostDisplay",
-  "jsdoc:canMutateLocalPost",
-  "jsdoc:withOwnLocalFlag",
-  "jsdoc:mapOwnLocalFlags",
-  "jsdoc:createPostTombstone"
- ],
- "client/js/post-wire.js": [
-  "jsdoc:WIRE_MARK",
-  "jsdoc:LOCAL_POST_DEFAULTS",
-  "param:toStoredRecord:post",
-  "returns:toStoredRecord",
-  "param:normalizeLocalPost:record",
-  "returns:normalizeLocalPost",
-  "param:toWireForm:record",
-  "returns:toWireForm"
- ],
- "client/js/qr-url-gf.js": [
-  "jsdoc:gfMul",
-  "jsdoc:rsDivisor",
-  "jsdoc:rsRemainder"
- ],
- "client/js/qr-url.js": [
-  "jsdoc:QR_URL_HONEST_COPY",
-  "jsdoc:encodeVoxUrl",
-  "jsdoc:decodeQrModules",
-  "jsdoc:modulesToSvg",
-  "jsdoc:closeQrUrlSheet",
-  "jsdoc:openQrUrlSheet",
-  "jsdoc:attachQrUrlHandlers"
- ],
- "client/js/rate-limit.js": [
-  "jsdoc:GOSSIP_WINDOW_MS",
-  "jsdoc:GOSSIP_MAX_PER_WINDOW",
-  "jsdoc:createRateLimiter",
-  "jsdoc:allowGossipFromAuthor"
- ],
  "client/js/labs/parado/node-health-badge.js": [
   "jsdoc:renderNodeHealthBadgeHtml",
   "jsdoc:renderNodeHealthListHtml"
- ],
- "client/js/reply-thread.js": [
-  "jsdoc:MAX_THREAD_DEPTH",
-  "param:groupRepliesForThread:replies",
-  "returns:groupRepliesForThread",
-  "param:flattenReplyThread:replies",
-  "param:flattenReplyThread:maxDepth",
-  "returns:flattenReplyThread"
- ],
- "client/js/repost-index.js": [
-  "jsdoc:rememberVisible",
-  "jsdoc:hasOwnRepost",
-  "jsdoc:getOwnRepostId",
-  "jsdoc:getVisibleCount",
-  "jsdoc:setOwn",
-  "jsdoc:markCreated",
-  "jsdoc:markRemoved"
- ],
- "client/js/repost.js": [
-  "jsdoc:persistRepost",
-  "jsdoc:republicarLocal",
-  "jsdoc:republicarFromContext",
-  "jsdoc:findOwnRepostRecord",
-  "jsdoc:undoOwnRepost",
-  "jsdoc:toggleFromContext"
- ],
- "client/js/sky-theme.js": [
-  "jsdoc:SKY_PERIOD_HOURS",
-  "jsdoc:SKY_FOLLOW_CLOCK_KEY",
-  "returns:hourToSkyPeriod",
-  "jsdoc:prefersDarkScheme",
-  "jsdoc:applySkyTheme",
-  "jsdoc:initSkyTheme"
- ],
- "client/js/story-card.js": [
-  "jsdoc:STORY_CARD_WIDTH",
-  "jsdoc:STORY_CARD_HEIGHT",
-  "jsdoc:wrapTextLines",
-  "jsdoc:renderStoryCardCanvas",
-  "jsdoc:downloadStoryCardPng",
-  "jsdoc:copyStoryCardToClipboard"
  ],
  "client/js/labs/parado/webxdc-host.js": [
   "jsdoc:MAX_INFO_LEN",

@@ -10,10 +10,17 @@
  *   GOSSIP_WINDOW_MS = 10 min · GOSSIP_MAX_PER_WINDOW = 20 posts por autor.
  */
 
+/** Janela deslizante do limitador de gossip em milissegundos (10 min). */
 export const GOSSIP_WINDOW_MS = 10 * 60 * 1000;
+/** Máximo de posts novos aceitos por autor dentro da janela de gossip. */
 export const GOSSIP_MAX_PER_WINDOW = 20;
 const MAX_TRACKED_KEYS = 5000;
 
+/**
+ * Cria um limitador de taxa em memória com janela deslizante por chave.
+ * @param {{ windowMs?: number, max?: number, now?: () => number }} [options={}] Parâmetros da janela.
+ * @returns {{ allow: (key: string) => boolean, size: () => number }} Instância do limitador.
+ */
 export function createRateLimiter({ windowMs = GOSSIP_WINDOW_MS, max = GOSSIP_MAX_PER_WINDOW, now = () => Date.now() } = {}) {
   const hits = new Map();
 
@@ -43,6 +50,11 @@ export function createRateLimiter({ windowMs = GOSSIP_WINDOW_MS, max = GOSSIP_MA
 
 const gossipLimiter = createRateLimiter();
 
+/**
+ * Verifica e contabiliza se o autor ainda pode propagar um item novo de gossip nesta janela.
+ * @param {string} author Identificador/chave pública do autor.
+ * @returns {boolean} `true` quando dentro do limite.
+ */
 export function allowGossipFromAuthor(author) {
   return gossipLimiter.allow(author);
 }
