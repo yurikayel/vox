@@ -47,6 +47,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/dungeon/canvas-renderer.js`, `canvas-input.js`, `dungeon-scene-actions.js`: renderização 2D sob demanda (0% CPU em repouso), gestos desktop + touch mobile (`PointerEvents`, pinça 2 dedos, snap na grade) e upload de mapas deduplicados por SHA-256.
 - `client/js/dungeon/vtt-sync-codec.js`, `vtt-sync.js`: convites `#/dungeon/entrar/:id?gm=...#k=...`, assinatura ECDSA P-256 (`INV-7`) vinculada ao `routeId`, `SNAPSHOT_FILTERED`/`COMMIT_OP` sem vazamentos e `WANT_BLOB`/`BLOB_CHUNK` (16 KiB) com verificação SHA-256 e bloqueio de blobs ocultos.
 - `client/js/dungeon/screen-table.js`, `screen-dm.js`, `dungeon-controller.js`, `tests/vtt-{geometry,sync,canvas}.test.js`: tabuleiro 2D e painel Camada GM/convite P2P integrados sem novos bytes no precache cívico.
+### Fix
+- `client/js/webrtc-peer.js`: `getNostrSignalingRelays` filtra relays antes do transporte Nostr (`buildNostrSignalingCandidates`); `ws://` na config não é mais repassado. Sem bump de SW.
+- `tests/assinaturas-e-sinais-malicioso.test.js`: o único `test.todo` com asserção falha virou teste de regressão documentando o v1 (ADR-021 §2.6), sem mudança de protocolo LAN-18.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 
