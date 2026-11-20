@@ -37,6 +37,11 @@ function buildUiSheetProjection(rawSheet, fallbackInventory) {
   };
 }
 
+function pickRecord(map, preferredId) {
+  if (!map || typeof map !== "object") return null;
+  return map[preferredId] || Object.values(map)[0] || null;
+}
+
 /**
  * Hidrata o estado de sessão da UI a partir de um `CampaignDoc` persistido sem sobrescrever blocos demo W-DRF.
  * @param {object} state Estado de sessão do `#/dungeon`.
@@ -48,8 +53,10 @@ export function hydrateStateFromCampaign(state, campaign) {
   state.campaignDoc = campaign;
   state.tableId = campaign.id;
   state.tableName = campaign.name;
-  const activeSheet = campaign.sheetsById?.[campaign.activeSheetId] || Object.values(campaign.sheetsById || {})[0];
+  const activeSheet = pickRecord(campaign.sheetsById, campaign.activeSheetId);
   if (activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
+  const activeScene = pickRecord(campaign.scenesById, campaign.activeSceneId);
+  if (activeScene) state.scene = activeScene;
   if (Array.isArray(campaign.chronicle) && campaign.chronicle.length) state.chronicle = [...campaign.chronicle];
   state.rolls = [...(campaign.rolls || [])];
   state.notes = Object.values(campaign.notesById || {});

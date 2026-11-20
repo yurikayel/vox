@@ -97,6 +97,31 @@ function renderPromptInspector(state) {
     </section>`;
 }
 
+function renderP2pInvitePanel(state) {
+  const tokens = state.scene?.tokens || [];
+  const gmCount = tokens.filter((t) => t.layer === "gm").length;
+  const playerCount = tokens.filter((t) => t.layer === "player").length;
+  const roleLabel = state.viewerRole === "gm" ? "Mestre (vê Camada GM)" : "Prévia Jogador (Zero-Spoiler)";
+  const inviteBox = state.inviteHref
+    ? `<pre class="dungeon-prompt-preview">${escapeHtml(state.inviteHref)}</pre>`
+    : `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P sem servidor central.</p>`;
+  return `
+    <section class="dungeon-panel" aria-label="Camada do Mestre e convite P2P">
+      <div class="dungeon-section-head">
+        <div>
+          <span class="dungeon-eyebrow">Mesa Soberana E2 · Zero-Spoiler</span>
+          <h2>Camada do Mestre &amp; Convite P2P</h2>
+        </div>
+        <span class="dungeon-code-tag">${gmCount} oculto(s) GM · ${playerCount} visível(is)</span>
+      </div>
+      <div class="dungeon-card-actions">
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="toggle-viewer-role">Papel atual: ${escapeHtml(roleLabel)}</button>
+        <button type="button" class="dungeon-btn dungeon-btn-primary" data-dungeon="generate-invite">Gerar Convite da Mesa (P2P)</button>
+      </div>
+      ${inviteBox}
+    </section>`;
+}
+
 function renderGmNotesPanel(state) {
   const notes = (state.notes || []).filter((n) => n.gmSecretMarkdown);
   const sheetSecret = state.sheet?.sheet_meta?.notes_gm || "";
@@ -123,6 +148,7 @@ export function renderDmScreen(state) {
         <p class="dungeon-muted">O Escudo do Mestre fica protegido no seu aparelho e nunca é replicado aos feeds públicos do Vox.</p>
       </div>
     </section>
+    ${renderP2pInvitePanel(state)}
     ${renderGmNotesPanel(state)}
     <div class="dungeon-two-col">
       ${renderNarratorPanel()}
