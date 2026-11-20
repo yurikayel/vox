@@ -13,6 +13,7 @@ import {
   triggerShamirVaultUnlock,
   inspectPeerPromptForRole,
 } from "./dungeon-state.js";
+import { attachVttPlayerJoin } from "./dungeon-vtt-join.js";
 import {
   addCustomSheetAction,
   bootstrapDungeonPersistence,
@@ -372,7 +373,20 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts);
 }
 
+function hydrateP2pJoin(container, viewOpts) {
+  if (!viewOpts.joinP2p) return false;
+  const state = viewOpts.state || getDungeonSession();
+  const hash = typeof location !== "undefined" ? location.hash : "";
+  const job = attachVttPlayerJoin(state, hash, {
+    store: viewOpts.store,
+    onCampaign: () => redrawContainer(container, viewOpts),
+  });
+  settleAndRedraw(job, container, viewOpts);
+  return true;
+}
+
 function hydrateViewPersistence(container, viewOpts) {
+  if (hydrateP2pJoin(container, viewOpts)) return;
   const state = viewOpts.state || getDungeonSession();
   const hasBackend = Boolean(viewOpts.store || typeof globalThis.indexedDB?.open === "function");
   if (!hasBackend) return;
