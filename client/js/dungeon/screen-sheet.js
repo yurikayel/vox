@@ -5,6 +5,7 @@ import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
+import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
 
 const ABILITY_META = [
   { key: "str", short: "FOR", label: "Força" },
@@ -26,6 +27,12 @@ function formatMod(score) {
   return mod >= 0 ? `+${mod}` : String(mod);
 }
 
+function derivePortraitCode(sheet) {
+  const src = String(sheet?.role_title || sheet?.attributes_lww?.class_name || sheet?.name || "AVT").trim();
+  const letters = src.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/gi, "");
+  return (letters.slice(0, 3) || "AVT").toUpperCase();
+}
+
 function renderAbilityButtons(sheet) {
   const ab = sheet.attributes_lww?.abilities || {};
   return ABILITY_META.map((item) => {
@@ -38,10 +45,10 @@ function renderSheetHero(sheet) {
   const attrs = sheet.attributes_lww || {};
   const level = Number(attrs.level) || 1;
   const ac = Number(attrs.armor_class) || 10;
-  const subtitle = sheet.role_title || attrs.class_name || "Paladina da Vigília";
+  const subtitle = sheet.role_title || attrs.class_name || "Aventureiro";
   return `
     <section class="dungeon-sheet-hero">
-      <div class="dungeon-portrait-box">${renderHeroPortraitSvg("PAL")}</div>
+      <div class="dungeon-portrait-box">${renderHeroPortraitSvg(derivePortraitCode(sheet))}</div>
       <div class="dungeon-hero-copy">
         <span class="dungeon-eyebrow">Ficha Local Soberana (CRDT Offline) · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
@@ -82,7 +89,12 @@ function renderClickableActionsPanel(state) {
   }).join("");
   const buttonsHtml = actions.map((act) => {
     const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
-    return `<button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${escapeHtml(act.id)}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>`;
+    const id = escapeHtml(act.id);
+    return `
+      <div class="dungeon-action-card-wrap">
+        <button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${id}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>
+        <button type="button" class="dungeon-chip-btn dungeon-action-remove" data-dungeon="remove-action" data-action-id="${id}" aria-label="Remover ação ${escapeHtml(act.label)}">×</button>
+      </div>`;
   }).join("");
   return `
     <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
@@ -102,6 +114,7 @@ function renderClickableActionsPanel(state) {
 function renderResourceMeters(sheet, projected) {
   const pools = projected.pools;
   const hpMax = sheet.pools_base?.hp_max || 24;
+  const slotMax = Number(sheet.pools_base?.spell_slots_max?.l1) || 3;
   const conflictHtml = projected.overdraftConflicts.length
     ? `<p class="dungeon-alert-warn" role="status"><strong>Proteção contra Saldo Negativo (CRDT):</strong> ${projected.overdraftConflicts.length} tentativa(s) de gasto acima do limite foram travadas com segurança em 0.</p>`
     : "";
@@ -110,19 +123,18 @@ function renderResourceMeters(sheet, projected) {
       <div class="dungeon-section-head">
         <div>
           <span class="dungeon-eyebrow">Recursos da Expedição</span>
-          <h2>Vida, Moedas e Mochila</h2>
+          <h2>Vida, Moedas e Magia</h2>
         </div>
         <div class="dungeon-card-actions">
           <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-minus">-1 PV</button>
           <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-plus">+1 PV</button>
           <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="spend-10">Comprar Poção (-10 moedas)</button>
-          <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Gasto Sem Saldo</button>
         </div>
       </div>
       <div class="dungeon-meters-grid">
         <div class="dungeon-meter-card"><span>Vida Total</span><strong>${pools.hp_current ?? hpMax} / ${hpMax} PV</strong></div>
         <div class="dungeon-meter-card"><span>Moedas de Ouro</span><strong>${pools.currency_gp ?? 0}</strong></div>
-        <div class="dungeon-meter-card"><span>Rações / Slots</span><strong>${pools.spell_slot_l1 ?? 3} / 3</strong></div>
+        <div class="dungeon-meter-card"><span>Espaços de Magia (1º)</span><strong>${pools.spell_slot_l1 ?? slotMax} / ${slotMax}</strong></div>
       </div>
       ${conflictHtml}
     </section>`;
@@ -151,58 +163,61 @@ function renderLoreCard(node) {
     </article>`;
 }
 
-function renderInventoryPanel(state) {
-  const items = state.sheet?.inventoryItems || [];
-  const rows = items.map((it) => `
+function renderInventoryRow(it) {
+  const weightTag = it.weightLb ? ` (${(it.weightLb * it.qty).toFixed(1)} kg)` : "";
+  return `
     <li class="dungeon-inventory-row">
       ${dungeonIcon("backpack", 15)}
-      <span>${escapeHtml(it.label)} ×${it.qty}${it.equipped ? " · equipado" : ""}</span>
+      <span>${escapeHtml(it.label)} ×${it.qty}${weightTag}${it.equipped ? " · equipado" : ""}</span>
       <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}">Equipar</button>
-        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
+        <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}">${it.equipped ? "Desequipar" : "Equipar"}</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
       </div>
-    </li>`).join("");
+    </li>`;
+}
+
+function renderInventoryPanel(state) {
+  const rows = (state.sheet?.inventoryItems || []).map(renderInventoryRow).join("");
   const weight = Number(state.sheet?.carryWeight) || 0;
   return `
-    <section class="dungeon-panel">
+    <section class="dungeon-panel" aria-label="Inventário da ficha">
       <div class="dungeon-section-head">
-        <div><span class="dungeon-eyebrow">Inventário OR-Set</span><h2>Mochila (${weight.toFixed(1)} lb)</h2></div>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up">Subir de Nível</button>
+        <div><span class="dungeon-eyebrow">Inventário CRDT (OR-Set)</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
       </div>
       <form class="dungeon-action-form" data-dungeon="add-item-form">
         <div class="dungeon-input-row">
-          <input class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item" autocomplete="off" />
-          <button type="submit" class="dungeon-btn dungeon-btn-ghost">Adicionar</button>
+          <label class="sr-only" for="dungeon-item-label">Nome do novo item</label>
+          <input id="dungeon-item-label" class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item (ex.: Tocha)" autocomplete="off" />
+          <label class="sr-only" for="dungeon-item-qty">Quantidade</label>
+          <input id="dungeon-item-qty" class="dungeon-input dungeon-input-qty" name="itemQty" type="number" min="1" max="99" value="1" aria-label="Quantidade" />
+          <label class="sr-only" for="dungeon-item-weight">Peso em kg</label>
+          <input id="dungeon-item-weight" class="dungeon-input dungeon-input-qty" name="itemWeight" type="number" min="0" max="500" step="0.5" value="0.5" aria-label="Peso em kg" />
+          <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar</button>
         </div>
       </form>
-      <ul class="dungeon-clean-list">${rows || "<li>Nenhum item no OR-Set — adicione acima.</li>"}</ul>
+      <ul class="dungeon-clean-list">${rows || "<li class=\"dungeon-muted\">Mochila vazia — adicione itens acima.</li>"}</ul>
     </section>`;
 }
 
-function renderBackpackAndLedger(sheet) {
-  const items = (sheet.inventory || []).map((item) => `<li>${dungeonIcon("backpack", 15)}<span>${escapeHtml(item)}</span></li>`).join("");
-  const ops = (sheet.delta_ledger || []).slice(-4).reverse().map((op) => {
+function renderLedgerPanel(sheet) {
+  const ops = (sheet.delta_ledger || []).slice(-6).reverse().map((op) => {
     const sign = op.delta >= 0 ? "+" : "";
     const label = op.target_pool === "currency_gp" ? "moedas" : op.target_pool === "hp_current" ? "PV" : (op.target_pool || "recurso");
     return `<li><strong>${sign}${op.delta} ${escapeHtml(label)}</strong> — ${escapeHtml(op.reason || "Ação em mesa")}</li>`;
   }).join("");
   return `
-    <div class="dungeon-two-col">
-      <section class="dungeon-panel">
-        <span class="dungeon-eyebrow">Equipamento Rápido</span>
-        <h2>Mochila de Viagem</h2>
-        <ul class="dungeon-clean-list">${items}</ul>
-      </section>
-      <section class="dungeon-panel">
-        <span class="dungeon-eyebrow">Registro Imutável</span>
-        <h2>Histórico da Mesa</h2>
-        <ul class="dungeon-clean-list">${ops || "<li>Nenhuma movimentação ainda neste turno.</li>"}</ul>
-      </section>
-    </div>`;
+    <section class="dungeon-panel">
+      <span class="dungeon-eyebrow">Registro Imutável</span>
+      <h2>Histórico da Mesa</h2>
+      <ul class="dungeon-clean-list">${ops || "<li class=\"dungeon-muted\">Nenhuma movimentação ainda neste turno.</li>"}</ul>
+    </section>`;
 }
 
-function renderPublicNotesSection(notes) {
-  if (!Array.isArray(notes) || !notes.length) return "";
+function renderPublicNotesSection(state) {
+  const isGm = state.viewerRole === "gm";
+  const notes = (state.notes || []).filter((n) => isGm || n.visibility !== "gm_only");
+  if (!notes.length) return "";
   const cards = notes.map((n) => {
     const tags = (n.tags || []).map((t) => `<span class="dungeon-code-tag">#${escapeHtml(t)}</span>`).join(" ");
     const links = (n.links || []).length ? `<p class="dungeon-muted">Vínculos: ${n.links.map((l) => `<code>[[${escapeHtml(l)}]]</code>`).join(", ")}</p>` : "";
@@ -211,37 +226,49 @@ function renderPublicNotesSection(notes) {
   return `<section class="dungeon-panel" aria-label="Notas públicas importadas"><span class="dungeon-eyebrow">Obsidian · Handouts Públicos</span><h2>Notas e Pistas da Campanha</h2><div class="dungeon-lore-grid">${cards}</div></section>`;
 }
 
+function renderLoreSection(loreNodes) {
+  const loreHtml = loreNodes.map(renderLoreCard).join("");
+  return `
+    <section class="dungeon-panel">
+      <div class="dungeon-section-head">
+        <div><span class="dungeon-eyebrow">Memória Coletiva Anti-Metagaming</span><h2>Crônica @tag (Fatos vs Boatos de Taverna)</h2></div>
+      </div>
+      <p class="dungeon-muted">Boatos unilaterais começam com <strong>peso baixo</strong> até outro jogador ou o Mestre confirmar em mesa.</p>
+      <div class="dungeon-lore-grid">${loreHtml}</div>
+    </section>`;
+}
+
+function renderSheetAudit(orderedOpsCount) {
+  return `
+    <details class="dungeon-audit" data-dungeon-details="sheet-audit">
+      <summary>Auditoria Técnica (CRDT Delta-Ledger &amp; Hybrid RRF)</summary>
+      <div class="dungeon-audit-body">
+        <p><strong>Operações assinadas:</strong> <code>${orderedOpsCount}</code> deltas ordenados por relógio lógico de Lamport + idempotência de <code>op_id</code>.</p>
+        <p><strong>Pesos RAG:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
+        <div class="dungeon-card-actions"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Proteção Contra Saldo Negativo</button></div>
+      </div>
+    </details>`;
+}
+
 /**
- * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT e verificação bilateral de fatos.
+ * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT, mochila unificada e Assistente de Nível.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
  */
 export function renderSheetScreen(state) {
   const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
-  const loreHtml = state.loreNodes.map(renderLoreCard).join("");
+  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   return `
+    ${noticeHtml}
     ${renderSheetHero(state.sheet)}
+    ${renderSheetEditPanel(state.sheet)}
+    ${renderLevelUpWizard(state)}
     ${renderClickableActionsPanel(state)}
     ${renderResourceMeters(state.sheet, projected)}
     ${renderInventoryPanel(state)}
-    ${renderBackpackAndLedger(state.sheet)}
-    ${renderPublicNotesSection(state.notes)}
-    <section class="dungeon-panel">
-      <div class="dungeon-section-head">
-        <div>
-          <span class="dungeon-eyebrow">Memória Coletiva Anti-Metagaming</span>
-          <h2>Crônica @tag (Fatos vs Boatos de Taverna)</h2>
-        </div>
-      </div>
-      <p class="dungeon-muted">Boatos unilaterais começam com <strong>peso baixo</strong> até outro jogador ou o Mestre confirmar em mesa.</p>
-      <div class="dungeon-lore-grid">${loreHtml}</div>
-    </section>
-    <details class="dungeon-audit">
-      <summary>Auditoria Técnica (CRDT Delta-Ledger &amp; Hybrid RRF)</summary>
-      <div class="dungeon-audit-body">
-        <p><strong>Operações assinadas:</strong> <code>${projected.orderedOpsCount}</code> deltas ordenados por relógio lógico de Lamport + idempotência de <code>op_id</code>.</p>
-        <p><strong>Pesos RAG:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
-      </div>
-    </details>`;
+    ${renderLedgerPanel(state.sheet)}
+    ${renderPublicNotesSection(state)}
+    ${renderLoreSection(state.loreNodes)}
+    ${renderSheetAudit(projected.orderedOpsCount)}`;
 }

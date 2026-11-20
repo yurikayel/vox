@@ -2,8 +2,11 @@
  * @file Tela 4 do AI Social Dungeon: Escudo do Mestre Sovereign (#/dungeon/mestre/:id).
  */
 import { escapeHtml } from "../shared/html.js";
+import { buildFullInviteUrl } from "./dungeon-dom-focus.js";
 import { inspectPeerPromptForRole } from "./dungeon-state.js";
 import { dungeonIcon, renderShamirSealSvg } from "./rpg-illustrations.js";
+import { renderNotesPanel } from "./screen-notes.js";
+import { renderCompactWorldClock } from "./screen-table-panels.js";
 
 const INSPECT_ROLES = [
   { id: "STAGE1_JUDGE_RULES", label: "Juiz de Regras" },
@@ -80,8 +83,8 @@ function renderVaultCard(vault) {
 function renderPromptInspector(state) {
   const inspection = inspectPeerPromptForRole(state, state.inspectedRole);
   const roleBtns = INSPECT_ROLES.map((r) => {
-    const active = r.id === state.inspectedRole ? " is-selected" : "";
-    return `<button type="button" class="dungeon-chip-btn${active}" data-dungeon="inspect-role" data-role="${r.id}">${escapeHtml(r.label)}</button>`;
+    const active = r.id === state.inspectedRole;
+    return `<button type="button" class="dungeon-chip-btn${active ? " is-selected" : ""}" data-dungeon="inspect-role" data-role="${r.id}" aria-pressed="${active}">${escapeHtml(r.label)}</button>`;
   }).join("");
   return `
     <section class="dungeon-panel">
@@ -97,26 +100,24 @@ function renderPromptInspector(state) {
     </section>`;
 }
 
-function renderInviteHrefBox(state) {
-  if (!state.inviteHref) {
-    return `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P sem servidor central.</p>`;
+function renderInviteBox(fullUrl) {
+  if (!fullUrl) {
+    return `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P na mesma origem (sem servidor central).</p>`;
   }
-  return `<pre class="dungeon-prompt-preview" id="dungeon-invite-href">${escapeHtml(state.inviteHref)}</pre>
-        <div class="dungeon-card-actions">
-          <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="copy-invite">Copiar convite</button>
-        </div>
-        <p class="dungeon-muted">Abra uma segunda aba neste mesmo navegador, cole o link e entre como jogador (P2P local, sem servidor).</p>`;
+  return `<div class="dungeon-invite-row">
+    <pre class="dungeon-prompt-preview">${escapeHtml(fullUrl)}</pre>
+    <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="copy-invite">Copiar link</button>
+  </div>`;
 }
 
 function renderP2pInvitePanel(state) {
   const tokens = state.scene?.tokens || [];
   const gmCount = tokens.filter((t) => t.layer === "gm").length;
   const playerCount = tokens.filter((t) => t.layer === "player").length;
-  const roleLabel = state.viewerRole === "gm" ? "Mestre (vê Camada GM)" : "Prévia Jogador (Zero-Spoiler)";
-  const notice = state.campaignNotice
-    ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>`
-    : "";
-  const inviteBox = renderInviteHrefBox(state);
+  const isGm = state.viewerRole === "gm";
+  const roleLabel = isGm ? "Mestre (vê Camada GM)" : "Prévia Jogador (Zero-Spoiler)";
+  const peers = Number(state.connectedPeersCount) || 0;
+  const notice = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   return `
     <section class="dungeon-panel" aria-label="Camada do Mestre e convite P2P">
       <div class="dungeon-section-head">
@@ -124,14 +125,14 @@ function renderP2pInvitePanel(state) {
           <span class="dungeon-eyebrow">Mesa Soberana E2 · Zero-Spoiler</span>
           <h2>Camada do Mestre &amp; Convite P2P</h2>
         </div>
-        <span class="dungeon-code-tag">${gmCount} oculto(s) GM · ${playerCount} visível(is)</span>
+        <span class="dungeon-code-tag">${gmCount} oculto(s) GM · ${playerCount} visível(is) · ${peers} conectado(s)</span>
       </div>
       <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="toggle-viewer-role">Papel atual: ${escapeHtml(roleLabel)}</button>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="toggle-viewer-role" aria-pressed="${isGm}">Papel atual: ${escapeHtml(roleLabel)}</button>
         <button type="button" class="dungeon-btn dungeon-btn-primary" data-dungeon="generate-invite">Gerar Convite da Mesa (P2P)</button>
       </div>
       ${notice}
-      ${inviteBox}
+      ${renderInviteBox(buildFullInviteUrl(state.inviteHref))}
     </section>`;
 }
 
@@ -147,7 +148,7 @@ function renderGmNotesPanel(state) {
 }
 
 /**
- * Renderiza a Tela 4 (Escudo do Mestre): narrador por roteiro, dicas por regras, cofre de Shamir e inspetor por papel.
+ * Renderiza a Tela 4 (Escudo do Mestre): convite P2P, relógio, handouts/notas, segredos GM e ferramentas demo.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
@@ -162,7 +163,9 @@ export function renderDmScreen(state) {
       </div>
     </section>
     ${renderP2pInvitePanel(state)}
+    ${renderCompactWorldClock(state, true)}
     ${renderGmNotesPanel(state)}
+    ${(state.notes || []).length ? renderNotesPanel(state) : ""}
     <div class="dungeon-two-col">
       ${renderNarratorPanel()}
       ${renderCoDmSection(state)}

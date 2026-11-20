@@ -3,7 +3,7 @@
  * @module dungeon/dungeon-vtt-join
  */
 import { hydrateStateFromCampaign } from "./dungeon-persistence.js";
-import { getDefaultVttStore } from "./vtt-store.js";
+import { createMemoryVttBackend, createVttStore } from "./vtt-store.js";
 import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
 import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
 
@@ -20,6 +20,10 @@ function stampPlayerJoinState(state, invite, keypair) {
   state.campaignNotice = "Sincronizando com a Mesa do Mestre (aba paralela na mesma origem)…";
 }
 
+function createGuestStore(opts) {
+  return opts.store || createVttStore(createMemoryVttBackend());
+}
+
 /** @param {object} state @param {object} invite @param {object} opts */
 function wirePlayerSyncPeer(state, invite, opts) {
   if (state.syncPeer?.close) state.syncPeer.close();
@@ -28,14 +32,14 @@ function wirePlayerSyncPeer(state, invite, opts) {
     role: "player",
     campaignId: invite.tableId,
     keypair: state.vttKeypair,
-    store: opts.store || getDefaultVttStore(),
+    store: createGuestStore(opts),
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
     onUpdate: (camp) => {
       hydrateStateFromCampaign(state, camp);
       state.campaignNotice = "Conectado à Mesa (visão de jogador).";
-      opts.onCampaign?.(camp);
+      (opts.onCampaign || state._onSyncUpdate)?.(camp);
     },
     onRejected: () => { state.rollError = "Ação recusada pelo Mestre ou assinatura inválida."; },
   });
@@ -43,7 +47,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
 }
 
 /**
- * Conecta a sessão como jogador P2P (sem clonar campanha local do GM).
+ * Conecta a sessão como jogador P2P em store isolado (sem sobrescrever o IndexedDB do Mestre na mesma origem).
  * @param {object} state Estado da sessão dungeon.
  * @param {string} locationHash `location.hash` com query `gm` e fragmento `#k=`.
  * @param {{ store?: object, onCampaign?: (campaign: object) => void }} [opts]
@@ -55,8 +59,11 @@ export async function attachVttPlayerJoin(state, locationHash, opts = {}) {
   if (typeof globalThis.BroadcastChannel !== "function") {
     return { ok: false, error: "broadcast_channel_unavailable" };
   }
+  if (state.joinMode === "p2p_player" && state.syncPeer && state.campaignId === invite.tableId && state.roomKey === invite.roomKey) {
+    return { ok: true };
+  }
   const keypair = state.vttKeypair || await generateVttKeypair();
   stampPlayerJoinState(state, invite, keypair);
-  wirePlayerSyncPeer(state, invite, { ...opts, store: opts.store || getDefaultVttStore() });
+  wirePlayerSyncPeer(state, invite, opts);
   return { ok: true };
 }

@@ -69,32 +69,21 @@ function drawAoeShape(ctx, aoe, cellPx) {
   ctx.stroke();
 }
 
-/**
- * Desenha os gabaritos de Área de Efeito do piso e destaca os tokens visíveis atingidos.
- * @param {CanvasRenderingContext2D} ctx Contexto 2D.
- * @param {object} floor Documento `FloorDoc`.
- * @param {Array<object>} tokens Tokens visíveis no piso.
- * @param {"gm"|"player"} viewerRole Papel do observador.
- * @returns {number} Quantidade de tokens destacados em AoE.
- */
-export function drawAoeLayer(ctx, floor, tokens, viewerRole) {
-  const isGm = viewerRole === "gm";
-  const cellPx = floor.grid?.cellPx || 64;
-  const visibleAoes = (floor.aoes || []).filter((a) => isGm || a.layer !== "gm");
-  const hitIds = new Set();
-  for (const aoe of visibleAoes) {
-    ctx.save();
-    ctx.fillStyle = aoe.color || "#ff8a65";
-    ctx.globalAlpha = aoe.layer === "gm" ? 0.16 : 0.24;
-    ctx.strokeStyle = aoe.color || "#ff8a65";
-    ctx.lineWidth = 2;
-    drawAoeShape(ctx, aoe, cellPx);
-    ctx.restore();
-    for (const tok of tokensInsideAoe(aoe, tokens, floor.grid, viewerRole)) hitIds.add(tok.tokenId);
-  }
+function drawSingleAoeOverlay(ctx, aoe, cellPx) {
+  ctx.save();
+  ctx.fillStyle = aoe.color || "#ff8a65";
+  ctx.globalAlpha = aoe._draft ? 0.2 : aoe.layer === "gm" ? 0.16 : 0.24;
+  ctx.strokeStyle = aoe._draft ? "#e7c26b" : aoe.color || "#ff8a65";
+  ctx.lineWidth = 2;
+  if (aoe._draft && typeof ctx.setLineDash === "function") ctx.setLineDash([6, 4]);
+  drawAoeShape(ctx, aoe, cellPx);
+  ctx.restore();
+}
+
+function highlightAoeHitTokens(ctx, tokens, hitIds, grid) {
   for (const tok of tokens || []) {
     if (!hitIds.has(tok.tokenId)) continue;
-    const b = tokenBoundsWorld(tok, floor.grid);
+    const b = tokenBoundsWorld(tok, grid);
     ctx.save();
     ctx.strokeStyle = "#ff8a65";
     ctx.lineWidth = 3;
@@ -103,6 +92,28 @@ export function drawAoeLayer(ctx, floor, tokens, viewerRole) {
     ctx.stroke();
     ctx.restore();
   }
+}
+
+/**
+ * Desenha os gabaritos de Área de Efeito do piso (mais rascunho ao vivo) e destaca os tokens visíveis atingidos.
+ * @param {CanvasRenderingContext2D} ctx Contexto 2D.
+ * @param {object} floor Documento `FloorDoc`.
+ * @param {Array<object>} tokens Tokens visíveis no piso.
+ * @param {"gm"|"player"} viewerRole Papel do observador.
+ * @param {object|null} [draftAoe=null] Gabarito AoE em arrasto ao vivo.
+ * @returns {number} Quantidade de tokens destacados em AoE.
+ */
+export function drawAoeLayer(ctx, floor, tokens, viewerRole, draftAoe = null) {
+  const isGm = viewerRole === "gm";
+  const cellPx = floor.grid?.cellPx || 64;
+  const visibleAoes = (floor.aoes || []).filter((a) => isGm || a.layer !== "gm");
+  const allAoes = draftAoe ? [...visibleAoes, { ...draftAoe, _draft: true }] : visibleAoes;
+  const hitIds = new Set();
+  for (const aoe of allAoes) {
+    drawSingleAoeOverlay(ctx, aoe, cellPx);
+    for (const tok of tokensInsideAoe(aoe, tokens, floor.grid, viewerRole)) hitIds.add(tok.tokenId);
+  }
+  highlightAoeHitTokens(ctx, tokens, hitIds, floor.grid);
   return hitIds.size;
 }
 
