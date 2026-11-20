@@ -1,25 +1,34 @@
 # Mesa Soberana — referenciais VTT e posicionamento (v0)
 
 > **Status:** canônico (produto) · **Owner:** mantenedor · **Revisado:** 2026-11-20
-> **Relacionados:** [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md) · `client/js/dungeon/`
+> **Relacionados:** [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md) · `client/js/dungeon/`
 
-Este documento fixa **referenciais de mercado** (Owlbear Rodeo, Foundry VTT, Mini Kraken) e o que a Mesa Soberana **copia, evita ou já entrega**, sem endorse comercial. Roadmap de engenharia da Entrega 5 está na §5.
+Este documento fixa **referenciais de mercado** (Roll20, Owlbear Rodeo, Foundry VTT, Mini Kraken) e o que a Mesa Soberana **copia, evita ou já entrega**, sem endorse comercial. **Anatomia de UI** consolidada em [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md). Roadmap de engenharia da Entrega 5 está na §5.
 
 ---
 
 ## 1. Síntese comparativa
 
-| Dimensão | Owlbear Rodeo | Foundry VTT | Mini Kraken | Mesa Soberana (alvo) |
+| Dimensão | Roll20 | Owlbear Rodeo | Foundry VTT | Mini Kraken | Mesa Soberana (alvo) |
 | :--- | :--- | :--- | :--- | :--- |
-| Filosofia | Canvas minimalista; ficha em geral fora (PDF) | Self-host + módulos; GM “dono” do servidor | SaaS all-in-one no browser | **Local-first** + sync P2P Vox; cópia CRDT por participante |
-| Onboarding | Quase instantâneo | Pesado (host, módulos, updates) | Link; curva média | Campanha no aparelho; módulo `#/dungeon` **lazy** |
-| Ficha | Externa ao VTT | Builder rico + automação | Schemas + fórmulas (D&D, Tormenta, Ordem, etc.) | Ficha **CRDT clicável** + export Obsidian / `.voxrpg.zip` |
-| Mapa | 2D leve, fog, tokens | 2D/3D, extensível | 2D/3D, fog, GM screen, som | Canvas **2D em 8 camadas** (E3); sem VTT 3D no v1 |
-| Performance | Pouca UI → menos lag | Risco de engasgo, F5, clone de jogador | Infra gerenciada; foco mobile | Canvas **0% CPU em repouso**; projeção Zero-Spoiler fail-closed |
-| Áudio / mídia | Player de áudio do SO + mídia na conta | Depende de módulos/setup | Soundboard, mixer, storage na nuvem | **Fora do escopo civil v1** (sem áudio/vídeo no precache) |
-| Investigação | Fraca nativamente | Via módulos | Quadro cortiça, handouts visuais, wiki | `.canvas` Obsidian, pins no mapa, notas por pasta (E4) |
-| Ecossistema | Extensões (ex.: Kraken → Owlbear) | Marketplace grande | Discord, OBS, integração Owlbear/Foundry | Malha **comunitária Vox** (futuro; não Discord Activity) |
-| Brasil / idioma | EN-first | EN-first | **PT-first**, BRL, sistemas BR | UI em PT; presets `libre` / `d20_fantasy` / `investigacao` (expandir Tormenta20) |
+| Filosofia | Sala única SaaS; mapa + chat + sheets | Canvas minimalista; ficha em geral fora (PDF) | Self-host + módulos; GM “dono” do servidor | SaaS all-in-one no browser | **Local-first** + sync P2P Vox; cópia CRDT por participante |
+| UI sessão | Três colunas (chat, mapa, journal) | Canvas quase fullscreen | Dock + canvas + sidebar tabs | Hub → VTT + escudo mestre | **Mapa hero + drawer Z3** (ver UI brainstorm) |
+| Onboarding | Conta + curva de abas | Quase instantâneo | Pesado (host, módulos, updates) | Link; curva média | Campanha no aparelho; módulo `#/dungeon` **lazy** |
+| Ficha | Abas na coluna direita | Externa ao VTT | Builder rico + automação | Schemas + fórmulas (D&D, Tormenta, Ordem, etc.) | Ficha **CRDT clicável** + export Obsidian / `.voxrpg.zip` |
+| Mapa | 2D; páginas; tokens | 2D leve, fog, tokens | 2D/3D, extensível | 2D/3D, fog, GM screen, som | Canvas **2D em 8 camadas** (E3); sem VTT 3D no v1 |
+| Performance | Denso em mobile | Pouca UI → menos lag | Risco de engasgo, F5, clone de jogador | Infra gerenciada; foco mobile | Canvas **0% CPU em repouso**; projeção Zero-Spoiler fail-closed |
+| Áudio / mídia | Integrações limitadas | Player de áudio do SO + mídia na conta | Depende de módulos/setup | Soundboard, mixer, storage na nuvem | **Fora do escopo civil v1** (sem áudio/vídeo no precache) |
+| Investigação | Journal / handouts | Fraca nativamente | Via módulos | Quadro cortiça, handouts visuais, wiki | `.canvas` Obsidian, pins no mapa, notas por pasta (E4) |
+| Ecossistema | Marketplace próprio | Extensões (ex.: Kraken → Owlbear) | Marketplace grande | Discord, OBS, integração Owlbear/Foundry | Malha **comunitária Vox** (futuro; não Discord Activity) |
+| Brasil / idioma | EN-first | EN-first | EN-first | **PT-first**, BRL, sistemas BR | UI em PT; presets `libre` / `d20_fantasy` / `investigacao` (expandir Tormenta20) |
+
+### 1.0 Roll20 (leitura de produto + UI)
+
+| | |
+| :--- | :--- |
+| **Prós** | Chat + log de rolagens na mesma sala; macros e fórmulas; journal/handouts no fluxo da sessão. |
+| **Contras** | Layout tricoluna pesado; muitas abas; mobile fraco; ficha competindo com mapa por espaço. |
+| **Para a Mesa** | Copiar **hábito** crônica + rolagem (Z3), **não** o layout 3 colunas fixas. Grimório em rota própria. Detalhe: [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) §2.1. |
 
 ### 1.1 Owlbear Rodeo (feedback da mesa + leitura de produto)
 
@@ -49,6 +58,7 @@ Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OB
 
 ### 1.4 Links oficiais (consulta externa)
 
+- Roll20: [https://roll20.net/](https://roll20.net/)
 - Owlbear Rodeo: [https://www.owlbear.rodeo/](https://www.owlbear.rodeo/)
 - Foundry VTT: [https://foundryvtt.com/](https://foundryvtt.com/)
 - Mini Kraken: [https://erpg.app/pt/](https://erpg.app/pt/)
@@ -102,7 +112,7 @@ Cada item = PR pequeno, `npm run validate`, **precache civil inalterado**.
 | P | Entrega | Inspiração | Módulos prováveis | Explicitamente não |
 | :---: | :--- | :--- | :--- | :--- |
 | **P0** | Sync P2P jogável (2 clientes, sem clone) | Foundry ❌ reconexão | `vtt-sync.js`, `vtt-sync-codec.js`, testes adversariais | Servidor VTT dedicado |
-| **P0** | Modo jogador enxuto | Owlbear ✅ simples | `screen-table.js`, `dungeon-chrome.js` | Esconder mecânica da ficha |
+| **P0** | Modo jogador enxuto (mapa hero + Z3 drawer) | Owlbear ✅ simples | `screen-table.js`, `dungeon-chrome.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` | Esconder mecânica da ficha |
 | **P1** | Handout viewer (imagem / link PDF externo) | Owlbear PDF + Kraken handouts | `screen-notes.js`, portable | Editor visual tipo Kraken |
 | **P1** | Preset **Tormenta20** (ficha + level-up) | Kraken ✅ BR | `vtt-levelup.js`, `vtt-schema.js` | Loja de templates |
 | **P2** | Pin de nota por clique no mapa | Kraken POI | `canvas-input.js`, `NOTE_PIN` | — |

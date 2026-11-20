@@ -141,8 +141,8 @@ def _complete_onboarding(page, display_name, errors=None):
     page.locator("#feed-inline-composer").wait_for(state="visible", timeout=15000)
 
 
-class VoxPlaywrightE2ETests(unittest.TestCase):
-    """Cobre fluxos críticos do PWA Vox em Chromium headless real."""
+class PlaywrightE2EHarness(unittest.TestCase):
+    """Servidor estático + Chromium compartilhado para suítes E2E."""
 
     @classmethod
     def setUpClass(cls):
@@ -163,6 +163,10 @@ class VoxPlaywrightE2ETests(unittest.TestCase):
         cls.pw.stop()
         cls.httpd.shutdown()
         cls.httpd.server_close()
+
+
+class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
+    """Cobre fluxos críticos do PWA Vox em Chromium headless real."""
 
     def test_01_onboarding_inline_post_and_idb_reload(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)

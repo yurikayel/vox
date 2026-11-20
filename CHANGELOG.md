@@ -9,6 +9,19 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Docs: ROADMAP pós-release v7.147 (#319/#320)
 - `docs/ROADMAP.md`: § "Onde estamos (nov/2026)" e janela 19–26/11 encerrada — `main` `f39f344`, lacunas LT pós-#310, DOC-06/07 em `main`, foco pós-release em hardening doc.
 
+### E2E Playwright: Mesa TTRPG (UI completa)
+- `e2e/test_mesa_ttrpg_e2e.py`: modo jogador (`is-session-player`, drawer Z3, aba Mestre oculta), GM (canvas, fórmula, crônica), acampamento (4 rotas, calendário), mobile.
+
+### Testes: cobertura TTRPG / Mesa (E5.0)
+- Novos: `ttrpg-screens-smoke`, `ttrpg-actions-smoke`, `ttrpg-table-tactics`, `dungeon-controller-e4`, `dungeon-layout-style`, `vtt-campaign-reducer`, `vtt-tactics-schema`, `vtt-tactics-reducer`, `canvas-tactics-layers`.
+- Correções UI: abas Mestre ocultas para jogador em todas as rotas; drawer Z3 com bandeja visível no desktop.
+- Matriz de testes em `mesa-ui-brainstorm-v0.md` §5.1.
+
+### Docs + UI: Mesa Soberana E5.0 — brainstorm UI VTT e layout sessão
+- `docs/specs/mesa-ui-brainstorm-v0.md`: anatomia Roll20/Owlbear/Foundry/Kraken, zonas Z0–Z5, wireframes, backlog UI.
+- `client/js/dungeon/dungeon-ui-contract.js`, `screen-table-layout.js`, `dungeon-layout-style.js`, `client/css/dungeon-layout.css`: modo jogador (mapa hero, drawer crônica/dados), cromo por papel, CSS lazy.
+- `mesa-referenciais-vtt-v0.md`: coluna Roll20 + link ao brainstorm.
+
 ### Docs: Mesa Soberana — referenciais VTT e roadmap E5
 - `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs Owlbear Rodeo, Foundry VTT e Mini Kraken; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
 - `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: links para o spec de referenciais.
