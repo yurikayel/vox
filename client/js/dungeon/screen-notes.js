@@ -12,6 +12,16 @@ function folderOf(note) {
 }
 
 /**
+ * Visão leve de handouts públicos (sem pastas GM).
+ * @param {object} state Sessão.
+ * @returns {string} HTML.
+ */
+export function renderHandoutViewer(state) {
+  const publicNotes = (state.notes || []).filter((n) => n.visibility === "public");
+  return renderNotesPanel({ ...state, notes: publicNotes, viewerRole: "player" });
+}
+
+/**
  * Renderiza o painel de notas da campanha agrupado por pasta.
  * @param {object} state Sessão.
  * @returns {string} HTML.
