@@ -228,9 +228,11 @@ Cobertura por **import direto** em `tests/*.test.js` (worktree `vox-wt-mesa-e4`,
 | Arquivo | Cenários |
 | :--- | :--- |
 | [`e2e/test_vox_e2e.py`](../../e2e/test_vox_e2e.py) | Demo honesta: acampamento → mesa (d20, grid, cofre) → ficha → mestre → sair |
-| [`e2e/test_mesa_ttrpg_e2e.py`](../../e2e/test_mesa_ttrpg_e2e.py) | E5 jogador (chrome, Z3, CSS lazy), GM (zoom, fórmula, crônica), acampamento (rotas, calendário), mobile, grimório/level-up |
+| [`e2e/test_mesa_ttrpg_e2e.py`](../../e2e/test_mesa_ttrpg_e2e.py) | E5 jogador (chrome, Z3, CSS lazy), GM (zoom, fórmula, crônica), acampamento (rotas, calendário), mobile, grimório/level-up, convite (12), join 2 contextos (13), handouts (14), BC indisponível (15) |
 
 Comando: `npm run test:e2e` · só Mesa: `python -m unittest discover -s e2e -p test_mesa_ttrpg_e2e.py -v`
+
+Matriz feature×camada e lacunas UX: [`mesa-ui-audit-2026-11.md`](./mesa-ui-audit-2026-11.md) §8.
 
 ---
 
@@ -239,3 +241,4 @@ Comando: `npm run test:e2e` · só Mesa: `python -m unittest discover -s e2e -p 
 | Data | Nota |
 | :--- | :--- |
 | 2026-11-20 | v0: anatomia Roll20/Owlbear/Foundry/Kraken, zonas, wireframes, backlog E5.0 UI. |
+| 2026-11-20 | Auditoria UI/UX E5: [`mesa-ui-audit-2026-11.md`](./mesa-ui-audit-2026-11.md) (Z0–Z5, jornadas J1–J7, backlog P0–P3, E2E 12–15). |
