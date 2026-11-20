@@ -370,3 +370,46 @@ test("screens-community mantém acoplamento abaixo de 25 imports e preserva fach
     assert.equal(typeof screensVote[name], "function", `screens-vote deve exportar ${name}`);
   }
 });
+
+test("screens-compose mantém módulos focados (<= 350 linhas) e preserva todos os 20 exports na fachada", () => {
+  const modules = [
+    "screens-compose.js",
+    "compose-shared.js",
+    "compose-community.js",
+    "compose-topic.js",
+    "compose-listing.js",
+    "compose-proposal.js",
+    "compose-reply.js",
+    "compose-inline-replies.js",
+  ];
+  for (const file of modules) {
+    const src = fs.readFileSync(new URL(`../client/js/app/${file}`, import.meta.url), "utf8");
+    const lines = src.split(/\r?\n/).length;
+    assert.ok(lines <= 350, `esperado <= 350 linhas em ${file}, obteve ${lines}`);
+  }
+  const expectedExports = [
+    "showComposeCommunity",
+    "showComposeTopic",
+    "showComposeListing",
+    "handleComposeListingSubmit",
+    "showComposeProposal",
+    "attachComposeProposalHandlers",
+    "publishProposal",
+    "showComposeReply",
+    "persistLocalReply",
+    "loadInlineReplies",
+    "setCommentOpen",
+    "closeOtherCommentPanels",
+    "fillCommentFeed",
+    "togglePostComments",
+    "appendInlineReply",
+    "appendNestedInlineReply",
+    "toggleCommentReplyComposer",
+    "onNestedCommentReplySubmit",
+    "bumpReplyCount",
+    "onInlineReplySubmit",
+  ];
+  for (const name of expectedExports) {
+    assert.equal(typeof screensCompose[name], "function", `screens-compose deve exportar ${name}`);
+  }
+});

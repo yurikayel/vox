@@ -1,9 +1,9 @@
 {
-  "git_sha": "0131446",
-  "branch": "feat/pm-01-passo-2-lazy",
-  "test_js": 2021,
+  "git_sha": "4989df2",
+  "branch": "refactor/screens-compose-split",
+  "test_js": 2111,
   "test_python": 320,
-  "test_total": 2341,
-  "cache_name": "vox-pwa-v7.147-pm01-passo-2-lazy",
-  "generated_at": "2026-11-20T02:15:41Z"
+  "test_total": 2431,
+  "cache_name": "vox-pwa-v7.148-compose-split",
+  "generated_at": "2026-11-20T11:40:06Z"
 }
