@@ -5,20 +5,37 @@ import * as profileNote from "./profile-note.js";
 import { getLocalIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 import * as upload from "./upload.js";
 
+/** Tipo de payload de cartão de perfil na malha e no Arweave. */
 export const PROFILE_CARD_TYPE = "profile-card";
+/** Tempo máximo de vida de um cartão de perfil (30 dias). */
 export const CARD_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * Monta o ID determinístico do cartão de perfil a partir do `routeId`.
+ * @param {string} routeId Identificador `vx_…` da conta.
+ * @returns {string} ID canônico (`pc_vx_…`) ou string vazia.
+ */
 export function canonicalProfileCardId(routeId) {
   const id = String(routeId || "").trim();
   return id ? `pc_${id}` : "";
 }
 
+/**
+ * Indica se o cartão ultrapassou `CARD_TTL_MS` ou não traz timestamp válido.
+ * @param {object} item Cartão de perfil recebido.
+ * @returns {boolean} `true` se expirado ou sem timestamp.
+ */
 export function isProfileCardExpired(item) {
   const t = Number(item?.editedAt || item?.ts || 0);
   if (!t) return true;
   return Date.now() - t > CARD_TTL_MS;
 }
 
+/**
+ * Valida a forma, identidade, assinatura e validade de um cartão de perfil.
+ * @param {object} item Cartão candidato.
+ * @returns {{ ok: boolean, reason?: string }} Resultado da validação.
+ */
 export function validateProfileCardItem(item) {
   if (!item || typeof item !== "object") return { ok: false, reason: "missing" };
   if (item.type !== PROFILE_CARD_TYPE) return { ok: false, reason: "type" };
@@ -55,6 +72,11 @@ function resolveCardIdentityMeta(metaOverride, routeId) {
   return pickIdentityMeta(metaOverride, getLocalIdentityMeta(routeId));
 }
 
+/**
+ * Monta e assina o cartão de perfil da conta ativa para divulgação na malha.
+ * @param {{ displayName?: string, avatarUrl?: string, bio?: string, pronouns?: string, gender?: string, orientation?: string }} [opts] Sobrescritas de campos.
+ * @returns {Promise<object>} Cartão assinado.
+ */
 export async function buildSignedProfileCard({ displayName = "", avatarUrl = "", bio = "", pronouns = "", gender = "", orientation = "" } = {}) {
   const routeId = await localAccount.getRouteId();
   const enrich = localAccount.getProfileEnrichment();
@@ -82,6 +104,10 @@ export async function buildSignedProfileCard({ displayName = "", avatarUrl = "",
   return localAccount.signPayload(payload);
 }
 
+/**
+ * Monta e assina um cartão de revogação (`discoverable: false`) para a conta ativa.
+ * @returns {Promise<object>} Cartão assinado de revogação.
+ */
 export async function buildRevokeProfileCard() {
   const routeId = await localAccount.getRouteId();
   const payload = {
@@ -102,6 +128,11 @@ function getCardTagValue(val, maxLen) {
   return maxLen ? str.slice(0, maxLen) : str;
 }
 
+/**
+ * Constrói as tags Arweave de um cartão de perfil.
+ * @param {object} card Cartão de perfil.
+ * @returns {{ name: string, value: string }[]} Lista de tags.
+ */
 export function buildProfileCardArweaveTags(card) {
   const c = card || {};
   const name = c.displayName || c.name || "";
@@ -123,6 +154,12 @@ export function buildProfileCardArweaveTags(card) {
   return tags;
 }
 
+/**
+ * Publica o cartão de perfil no Arweave usando `uploadFn` (sujeito às guardas de upload).
+ * @param {object} card Cartão assinado.
+ * @param {{ uploadFn?: Function }} [opts] Função de upload injetável.
+ * @returns {Promise<{ ok: boolean, id?: string, via?: string, reason?: string, error?: string }>} Resultado do envio.
+ */
 export async function publishProfileCardOnChain(card, { uploadFn = upload.postData } = {}) {
   if (!card?.routeId) return { ok: false, reason: "invalid-card" };
   const tags = buildProfileCardArweaveTags(card);

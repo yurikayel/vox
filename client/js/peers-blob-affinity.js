@@ -1,6 +1,8 @@
-// Vox Peer Blob Affinity (V-I09) - Afinidade comportamental local de pares
-// Prefere unicast WANT para pares RTC que serviram BLOB recentemente antes de flood.
-// Alinhado a "sem score público": puramente local, efêmero e com flag off por padrão.
+/**
+ * @file Vox Peer Blob Affinity (V-I09) — afinidade comportamental local de pares.
+ * Prefere unicast WANT para pares RTC que serviram BLOB recentemente antes de flood.
+ * Alinhado a "sem score público": puramente local, efêmero e com flag off por padrão.
+ */
 
 const MAX_AFFINITY_PEERS = 16;
 const DEFAULT_TTL_MS = 15 * 60 * 1000; // 15 minutos
@@ -11,6 +13,10 @@ const STORAGE_FLAG_KEY = "vox-blob-peer-soft-priority";
 let blobPeerSoftPriority = false;
 const affinityMap = new Map(); // peerId -> { score, lastHit, expiresAt }
 
+/**
+ * Indica se a prioridade suave de blobs por afinidade local está ligada.
+ * @returns {boolean} `true` quando habilitada em memória ou `localStorage`.
+ */
 export function isBlobPeerSoftPriorityEnabled() {
   if (blobPeerSoftPriority) return true;
   if (typeof localStorage !== "undefined") {
@@ -23,6 +29,11 @@ export function isBlobPeerSoftPriorityEnabled() {
   return false;
 }
 
+/**
+ * Liga ou desliga a prioridade suave local de blobs em memória e `localStorage`.
+ * @param {boolean} enabled Novo estado da flag.
+ * @returns {void}
+ */
 export function setBlobPeerSoftPriorityEnabled(enabled) {
   blobPeerSoftPriority = Boolean(enabled);
   if (typeof localStorage !== "undefined") {
@@ -56,6 +67,12 @@ function evictOldestIfNeeded() {
   }
 }
 
+/**
+ * Incrementa a afinidade local de um par após entrega bem-sucedida de blob.
+ * @param {string} peerId Identificador do par.
+ * @param {number} [now=Date.now()] Timestamp em ms.
+ * @returns {void}
+ */
 export function bumpAffinity(peerId, now = Date.now()) {
   if (!peerId || typeof peerId !== "string") return;
 
@@ -75,6 +92,12 @@ export function bumpAffinity(peerId, now = Date.now()) {
   });
 }
 
+/**
+ * Calcula a pontuação efetiva de um par com decaimento exponencial e expiração.
+ * @param {string} peerId Identificador do par.
+ * @param {number} [now=Date.now()] Timestamp em ms.
+ * @returns {number} Pontuação atual (>= 0).
+ */
 export function getPeerAffinity(peerId, now = Date.now()) {
   if (!peerId) return 0;
   const record = affinityMap.get(peerId);
@@ -90,6 +113,12 @@ export function getPeerAffinity(peerId, now = Date.now()) {
   return record.score * decay;
 }
 
+/**
+ * Ordena `peerIds` por afinidade decrescente, descartando pares com pontuação 0.
+ * @param {string[]} [peerIds=[]] Lista de pares candidatos.
+ * @param {number} [now=Date.now()] Timestamp em ms.
+ * @returns {string[]} Pares ordenados do maior para o menor escore.
+ */
 export function rankAffinity(peerIds = [], now = Date.now()) {
   if (!Array.isArray(peerIds) || !peerIds.length) return [];
 
@@ -105,10 +134,19 @@ export function rankAffinity(peerIds = [], now = Date.now()) {
   return candidates.map((c) => c.id);
 }
 
+/**
+ * Limpa todo o mapa em memória de afinidades de pares.
+ * @returns {void}
+ */
 export function clearAffinity() {
   affinityMap.clear();
 }
 
+/**
+ * Retorna um retrato serializável das entradas de afinidade ainda vigentes.
+ * @param {number} [now=Date.now()] Timestamp em ms.
+ * @returns {Record<string, { score: number, effectiveScore: number, lastHit: number, expiresAt: number }>} Mapa por par.
+ */
 export function getAffinityEntries(now = Date.now()) {
   const entries = {};
   for (const [peerId, record] of affinityMap.entries()) {

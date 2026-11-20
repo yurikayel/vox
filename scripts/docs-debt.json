@@ -21,16 +21,6 @@
   "jsdoc:rankCommentsByBridging",
   "jsdoc:shouldApplyConstructiveFriction"
  ],
- "client/js/central-memory-hydrate.js": [
-  "jsdoc:itemTimestamp",
-  "param:hydrateBlobs:blobs",
-  "returns:hydrateBlobs",
-  "jsdoc:hydrateTombstones",
-  "param:hydratePosts:posts",
-  "param:hydratePosts:blobsByHash",
-  "param:hydratePosts:onAccepted",
-  "returns:hydratePosts"
- ],
  "client/js/chat-bridge.js": [
   "jsdoc:detectWebhookPlatform",
   "jsdoc:formatDiscordWebhookPayload",
@@ -51,16 +41,6 @@
   "jsdoc:issueCivicCredential",
   "jsdoc:verifyCivicCredential",
   "jsdoc:renderCivicCredentialBadgeHtml"
- ],
- "client/js/color-mode.js": [
-  "jsdoc:VOX_COLOR_MODE_KEY",
-  "param:parseColorMode:raw",
-  "returns:readColorMode",
-  "returns:resolveEffectiveDark",
-  "returns:cycleColorMode",
-  "returns:colorModeLabel",
-  "returns:colorModeToggleHint",
-  "returns:initColorMode"
  ],
  "client/js/contacts.js": [
   "jsdoc:listContacts",
@@ -133,17 +113,6 @@
   "jsdoc:renderMofnLab",
   "jsdoc:wireMofnLab"
  ],
- "client/js/listing-ui.js": [
-  "jsdoc:filterListingsForGossipRetract",
-  "param:prepareListingsForTab:listings",
-  "param:prepareListingsForTab:routeId",
-  "returns:prepareListingsForTab",
-  "jsdoc:filterListingsByStoredTombstones",
-  "jsdoc:isListingVerifiedShape",
-  "jsdoc:renderListingVerifiedBadgeHtml",
-  "jsdoc:renderListingOwnerMenu",
-  "jsdoc:renderListingHeaderBadges"
- ],
  "client/js/mesh-profile.js": [
   "jsdoc:syncMeshProfileCard"
  ],
@@ -179,16 +148,6 @@
   "jsdoc:encryptFor",
   "jsdoc:decryptFrom",
   "returns:createNostrTransport"
- ],
- "client/js/peers-blob-affinity.js": [
-  "header",
-  "jsdoc:isBlobPeerSoftPriorityEnabled",
-  "jsdoc:setBlobPeerSoftPriorityEnabled",
-  "jsdoc:bumpAffinity",
-  "jsdoc:getPeerAffinity",
-  "jsdoc:rankAffinity",
-  "jsdoc:clearAffinity",
-  "jsdoc:getAffinityEntries"
  ],
  "client/js/peers-cache-manifest.js": [
   "jsdoc:getLatestManifestForCommunity",
@@ -244,27 +203,6 @@
   "param:toWireForm:record",
   "returns:toWireForm"
  ],
- "client/js/profile-card.js": [
-  "jsdoc:PROFILE_CARD_TYPE",
-  "jsdoc:CARD_TTL_MS",
-  "jsdoc:canonicalProfileCardId",
-  "jsdoc:isProfileCardExpired",
-  "jsdoc:validateProfileCardItem",
-  "jsdoc:buildSignedProfileCard",
-  "jsdoc:buildRevokeProfileCard",
-  "jsdoc:buildProfileCardArweaveTags",
-  "jsdoc:publishProfileCardOnChain"
- ],
- "client/js/qr-url-codec.js": [
-  "jsdoc:VOX_SHARE_HASH",
-  "jsdoc:isVoxShareUrl",
-  "jsdoc:assertVoxShareUrl",
-  "jsdoc:urlToBytes",
-  "jsdoc:chooseVersion",
-  "jsdoc:pushBits",
-  "jsdoc:encodeBytePayload",
-  "jsdoc:parseBytePayload"
- ],
  "client/js/qr-url-gf.js": [
   "jsdoc:gfMul",
   "jsdoc:rsDivisor",
@@ -314,17 +252,6 @@
   "jsdoc:undoOwnRepost",
   "jsdoc:toggleFromContext"
  ],
- "client/js/sig-format.js": [
-  "param:signingVersion:now",
-  "returns:signingVersion",
-  "param:isKnownSigv:obj",
-  "returns:isKnownSigv",
-  "param:canonicalString:obj",
-  "returns:canonicalString",
-  "param:withSigv:payload",
-  "param:withSigv:version",
-  "returns:withSigv"
- ],
  "client/js/sky-theme.js": [
   "jsdoc:SKY_PERIOD_HOURS",
   "jsdoc:SKY_FOLLOW_CLOCK_KEY",
@@ -333,38 +260,6 @@
   "jsdoc:applySkyTheme",
   "jsdoc:initSkyTheme"
  ],
- "client/js/social-login.js": [
-  "jsdoc:CALLBACK_KEY",
-  "returns:availableLoginProviders",
-  "jsdoc:oauthRedirectUri",
-  "param:buildAuthorizeUrl:provider",
-  "param:buildAuthorizeUrl:#2",
-  "returns:buildAuthorizeUrl",
-  "param:startSocialLogin:netId",
-  "returns:startSocialLogin",
-  "returns:takePendingCallback"
- ],
- "client/js/steward-wizard.js": [
-  "jsdoc:loadDraft",
-  "jsdoc:saveDraft",
-  "jsdoc:loadStep",
-  "jsdoc:saveStep",
-  "jsdoc:verifyRelayHttp",
-  "param:formatRelayHealthSummary:data",
-  "returns:formatRelayHealthSummary",
-  "jsdoc:readFormStep"
- ],
- "client/js/storage-persistence.js": [
-  "jsdoc:STORAGE_DISMISSED_KEY",
-  "jsdoc:requestPersistence",
-  "jsdoc:checkPersistence",
-  "jsdoc:estimateStorage",
-  "jsdoc:isStandaloneMode",
-  "jsdoc:isSafariNormalTab",
-  "jsdoc:shouldShowSafariHomePrompt",
-  "jsdoc:dismissSafariHomePrompt",
-  "jsdoc:renderSafariHomeBannerHtml"
- ],
  "client/js/story-card.js": [
   "jsdoc:STORY_CARD_WIDTH",
   "jsdoc:STORY_CARD_HEIGHT",
@@ -372,27 +267,6 @@
   "jsdoc:renderStoryCardCanvas",
   "jsdoc:downloadStoryCardPng",
   "jsdoc:copyStoryCardToClipboard"
- ],
- "client/js/topic-permaweb.js": [
-  "header",
-  "param:uploadTopicMediaToPermaweb:blob",
-  "param:uploadTopicMediaToPermaweb:aspectRatio",
-  "param:uploadTopicMediaToPermaweb:upload",
-  "returns:uploadTopicMediaToPermaweb",
-  "param:uploadTopicToPermaweb:#1",
-  "param:uploadTopicToPermaweb:deps",
-  "returns:uploadTopicToPermaweb"
- ],
- "client/js/upload.js": [
-  "header",
-  "jsdoc:TURBO_ENDPOINTS",
-  "jsdoc:FREE_TIER_MAX_BYTES",
-  "param:buildTags:type",
-  "param:buildTags:fields",
-  "returns:buildTags",
-  "jsdoc:uploadToTurbo",
-  "jsdoc:postData",
-  "jsdoc:postBinary"
  ],
  "client/js/labs/parado/webxdc-host.js": [
   "jsdoc:MAX_INFO_LEN",
