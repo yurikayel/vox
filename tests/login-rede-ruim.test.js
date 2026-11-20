@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import * as localAccount from "../client/js/identity/local-account.js";
+import * as keystore from "../client/js/identity/keystore.js";
 import { savePassphraseVault, restoreFromPassphraseVault } from "../client/js/vault/passphrase-vault.js";
 import { VAULT_STORAGE_PREFIX } from "../client/js/vault/vault-store.js";
 import { deriveVaultAddress } from "../client/js/vault/vault-crypto.js";
@@ -232,4 +233,18 @@ test("restaurar: GET do cofre tem timeout — relay lento não deixa 'Entrar' pe
   assert.equal(relay.calls[0]?.signal?.aborted, true, "AbortSignal passado ao fetch foi abortado no timeout");
 });
 
-test.todo("criar: conta trava (lockAfterPasswordBackup) mesmo quando nenhum servidor aceitou o cofre (remote=0) e a só cópia está neste aparelho");
+test("criar: conta trava (lockAfterPasswordBackup) mesmo quando nenhum servidor aceitou o cofre (remote=0) e a só cópia está neste aparelho", async () => {
+  const routeId = await createAccount();
+  installRelay({ current: "down" });
+  const saved = await savePassphraseVault(PASS, EMAIL);
+  assert.equal(saved.ok, true);
+  assert.equal(saved.remote, 0, "nenhum servidor aceitou o cofre");
+  assert.equal(saved.locked, true, "trava após backup mesmo com remote=0");
+  assert.equal(saved.routeId, routeId);
+  const active = JSON.parse(localStorage.getItem("vox-local-account-v1"));
+  assert.equal(keystore.isLocked(active.privateJwk), true, "chave de assinatura travada");
+  const dmAtRest = JSON.parse(localStorage.getItem("vox-dm-keypair"));
+  assert.equal(keystore.isLocked(dmAtRest?.privateJwk), true, "chave de DM travada");
+  await assert.rejects(() => localAccount.exportLocalAccountBundle(), keystore.KeyLockedError);
+  assert.ok(localStorage.getItem(VAULT_STORAGE_PREFIX + (await emailVaultAddress())), "só cópia local do cofre");
+});

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import * as localAccount from "../client/js/identity/local-account.js";
+import { LOCAL_ACCOUNT_CREATE_LOCK } from "../client/js/identity/tab-sync.js";
 
 const ACCOUNT_KEY = "vox-local-account-v1";
 const SEED_KEY = "vox-identity-seed-v1";
@@ -45,5 +46,57 @@ test("LT-06c: outra aba grava conta durante a criação em voo — adota a conta
     assert.equal(seeds[discardedRouteId], undefined, "semente descartada não fica órfã");
   } finally {
     localStorage.setItem = realSet;
+  }
+});
+
+test("LT-06a: primeira criação pede Web Lock exclusivo entre abas", async () => {
+  await localAccount.wipeLocalAccount();
+  localStorage.clear();
+  const names = [];
+  const orig = navigator.locks.request.bind(navigator.locks);
+  navigator.locks.request = (name, opts, cb) => {
+    names.push(name);
+    return orig(name, opts, cb);
+  };
+  try {
+    await localAccount.ensureLocalAccount();
+    assert.ok(names.includes(LOCAL_ACCOUNT_CREATE_LOCK));
+  } finally {
+    navigator.locks.request = orig;
+  }
+});
+
+test("LT-06a: duas abas simuladas — Web Lock serializa e uma só conta no storage", async () => {
+  await localAccount.wipeLocalAccount();
+  localStorage.clear();
+  let lockDepth = 0;
+  let maxLockDepth = 0;
+  const orig = navigator.locks.request.bind(navigator.locks);
+  navigator.locks.request = async (name, opts, cb) => {
+    return orig(name, opts, async () => {
+      lockDepth += 1;
+      maxLockDepth = Math.max(maxLockDepth, lockDepth);
+      await new Promise((r) => setTimeout(r, 8));
+      const out = await cb();
+      lockDepth -= 1;
+      return out;
+    });
+  };
+  try {
+    const tabA = (async () => {
+      localAccount.__resetEnsureLocalAccountInflightForTests();
+      return localAccount.ensureLocalAccount();
+    })();
+    await new Promise((r) => setTimeout(r, 2));
+    const tabB = (async () => {
+      localAccount.__resetEnsureLocalAccountInflightForTests();
+      return localAccount.ensureLocalAccount();
+    })();
+    const [a, b] = await Promise.all([tabA, tabB]);
+    assert.equal(a.routeId, b.routeId);
+    assert.equal(maxLockDepth, 1, "só uma criação dentro do lock por vez");
+    assert.equal(JSON.parse(localStorage.getItem(ACCOUNT_KEY)).routeId, a.routeId);
+  } finally {
+    navigator.locks.request = orig;
   }
 });
