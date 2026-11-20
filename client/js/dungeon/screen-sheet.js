@@ -3,23 +3,99 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
+import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 
+const ABILITY_META = [
+  { key: "str", short: "FOR", label: "Força" },
+  { key: "dex", short: "DES", label: "Destreza" },
+  { key: "con", short: "CON", label: "Constituição" },
+  { key: "int", short: "INT", label: "Inteligência" },
+  { key: "wis", short: "SAB", label: "Sabedoria" },
+  { key: "cha", short: "CAR", label: "Carisma" },
+];
+
+const SHEET_ROLL_MODES = [
+  { id: "normal", label: "Normal" },
+  { id: "advantage", label: "Vantagem" },
+  { id: "disadvantage", label: "Desvantagem" },
+];
+
+function formatMod(score) {
+  const mod = abilityModifier(score);
+  return mod >= 0 ? `+${mod}` : String(mod);
+}
+
+function renderAbilityButtons(sheet) {
+  const ab = sheet.attributes_lww?.abilities || {};
+  return ABILITY_META.map((item) => {
+    const score = Number(ab[item.key]) || 10;
+    return `<button type="button" class="dungeon-choice-card dungeon-attr-box" data-dungeon="roll-ability" data-ability="${item.key}" aria-label="Rolar teste de ${item.label}"><strong>${score} (${formatMod(score)})</strong><span>${item.short} · Rolar</span></button>`;
+  }).join("");
+}
+
 function renderSheetHero(sheet) {
-  const attrs = sheet.attributes || { vitalidade: 16, astucia: 12, sabedoria: 14 };
+  const attrs = sheet.attributes_lww || {};
+  const level = Number(attrs.level) || 1;
+  const ac = Number(attrs.armor_class) || 10;
+  const subtitle = sheet.role_title || attrs.class_name || "Paladina da Vigília";
   return `
     <section class="dungeon-sheet-hero">
       <div class="dungeon-portrait-box">${renderHeroPortraitSvg("PAL")}</div>
       <div class="dungeon-hero-copy">
-        <span class="dungeon-eyebrow">Ficha Local Soberana (CRDT Offline)</span>
+        <span class="dungeon-eyebrow">Ficha Local Soberana (CRDT Offline) · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
-        <p class="dungeon-muted">${escapeHtml(sheet.role_title || "Paladina da Vigília")}</p>
-        <div class="dungeon-attr-row">
-          <span class="dungeon-attr-box"><strong>${attrs.vitalidade}</strong><span>Vitalidade</span></span>
-          <span class="dungeon-attr-box"><strong>${attrs.astucia}</strong><span>Astúcia</span></span>
-          <span class="dungeon-attr-box"><strong>${attrs.sabedoria}</strong><span>Sabedoria</span></span>
-        </div>
+        <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
+        <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
       </div>
+    </section>`;
+}
+
+function renderAddActionForm() {
+  return `
+    <form class="dungeon-action-form" data-dungeon="add-action-form">
+      <div class="dungeon-input-row">
+        <label class="sr-only" for="dungeon-action-label">Nome da ação</label>
+        <input id="dungeon-action-label" class="dungeon-input" type="text" maxlength="60" placeholder="Nova ação (ex.: Arco Longo)" autocomplete="off" />
+        <label class="sr-only" for="dungeon-action-formula">Fórmula da rolagem</label>
+        <input id="dungeon-action-formula" class="dungeon-input" type="text" maxlength="80" placeholder="Rolagem (ex.: 1d20+@des+@prof)" autocomplete="off" />
+        <label class="sr-only" for="dungeon-action-damage">Fórmula de dano opcional</label>
+        <input id="dungeon-action-damage" class="dungeon-input" type="text" maxlength="80" placeholder="Dano opcional (ex.: 1d8+@des)" autocomplete="off" />
+        <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar Ação</button>
+      </div>
+    </form>`;
+}
+
+function renderRollStatusBanner(state) {
+  if (state.rollError) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`;
+  const last = state.lastFormulaRoll;
+  if (!last?.ok) return "";
+  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
+}
+
+function renderClickableActionsPanel(state) {
+  const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+  const mode = state.rollMode || "normal";
+  const modesHtml = SHEET_ROLL_MODES.map((m) => {
+    const cls = m.id === mode ? " is-selected" : "";
+    return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="roll-mode" data-mode="${m.id}" aria-pressed="${m.id === mode}">${escapeHtml(m.label)}</button>`;
+  }).join("");
+  const buttonsHtml = actions.map((act) => {
+    const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
+    return `<button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${escapeHtml(act.id)}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>`;
+  }).join("");
+  return `
+    <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
+      <div class="dungeon-section-head">
+        <div>
+          <span class="dungeon-eyebrow">Ficha Clicável · Dados Sem Viés</span>
+          <h2>Ataques, Perícias e Atalhos</h2>
+        </div>
+        <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${modesHtml}</div>
+      </div>
+      <div class="dungeon-brain-grid">${buttonsHtml || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
+      ${renderRollStatusBanner(state)}
+      ${renderAddActionForm()}
     </section>`;
 }
 
@@ -37,6 +113,8 @@ function renderResourceMeters(sheet, projected) {
           <h2>Vida, Moedas e Mochila</h2>
         </div>
         <div class="dungeon-card-actions">
+          <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-minus">-1 PV</button>
+          <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hp-plus">+1 PV</button>
           <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="spend-10">Comprar Poção (-10 moedas)</button>
           <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Gasto Sem Saldo</button>
         </div>
@@ -95,6 +173,16 @@ function renderBackpackAndLedger(sheet) {
     </div>`;
 }
 
+function renderPublicNotesSection(notes) {
+  if (!Array.isArray(notes) || !notes.length) return "";
+  const cards = notes.map((n) => {
+    const tags = (n.tags || []).map((t) => `<span class="dungeon-code-tag">#${escapeHtml(t)}</span>`).join(" ");
+    const links = (n.links || []).length ? `<p class="dungeon-muted">Vínculos: ${n.links.map((l) => `<code>[[${escapeHtml(l)}]]</code>`).join(", ")}</p>` : "";
+    return `<article class="dungeon-lore-card"><div class="dungeon-lore-top"><h3>${escapeHtml(n.title)}</h3><div>${tags}</div></div><p class="dungeon-muted">${escapeHtml(n.publicMarkdown || "")}</p>${links}</article>`;
+  }).join("");
+  return `<section class="dungeon-panel" aria-label="Notas públicas importadas"><span class="dungeon-eyebrow">Obsidian · Handouts Públicos</span><h2>Notas e Pistas da Campanha</h2><div class="dungeon-lore-grid">${cards}</div></section>`;
+}
+
 /**
  * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT e verificação bilateral de fatos.
  *
@@ -106,8 +194,10 @@ export function renderSheetScreen(state) {
   const loreHtml = state.loreNodes.map(renderLoreCard).join("");
   return `
     ${renderSheetHero(state.sheet)}
+    ${renderClickableActionsPanel(state)}
     ${renderResourceMeters(state.sheet, projected)}
     ${renderBackpackAndLedger(state.sheet)}
+    ${renderPublicNotesSection(state.notes)}
     <section class="dungeon-panel">
       <div class="dungeon-section-head">
         <div>
