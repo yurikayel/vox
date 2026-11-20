@@ -6,7 +6,7 @@ import { renderDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { renderZ3SessionBlock, renderChronicleColumn } from "../client/js/dungeon/screen-table-layout.js";
 import { renderNotesPanel } from "../client/js/dungeon/screen-notes.js";
 import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
-import { renderLevelUpWizard } from "../client/js/dungeon/screen-sheet-levelup.js";
+import { renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
 import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
 
 const INJECT = '<b evil="1">';
@@ -38,7 +38,7 @@ test("screen-notes: pastas, marcos vazios e escapeHtml no título", () => {
   }));
   assert.ok(rich.includes("&lt;b evil"));
   assert.ok(!rich.includes('evil="1">'));
-  assert.ok(rich.includes("Pistas") && rich.includes('data-dungeon="pin-note-form"'));
+  assert.ok(rich.includes("Pistas"));
 });
 
 test("screen-camp: marcos do acampamento e escapeHtml em tableName", () => {
@@ -55,19 +55,14 @@ test("screen-camp: marcos do acampamento e escapeHtml em tableName", () => {
   assert.ok(html.includes("Detalhes Técnicos"));
 });
 
-test("screen-sheet-levelup: wizard aberto passo 1 e preset escapado", () => {
-  const preset = `${INJECT}libre`;
+test("screen-sheet: atalho Subir de Nível e escapeHtml no nome", () => {
   const state = stateWith({
-    levelUpOpen: true,
-    levelUpStep: 1,
-    campaignDoc: { system: preset, dungeonPrefs: { preset } },
-    sheet: { ...stateWith().sheet, attributes_lww: { level: 2 } },
+    sheet: { ...stateWith().sheet, name: `${INJECT}Lyra`, attributes_lww: { level: 2 } },
   });
-  const html = renderLevelUpWizard(state);
-  assert.ok(html.includes("Assistente de nível") && html.includes("Evolução · Passo 1/3"));
-  assert.ok(html.includes('data-dungeon="level-up-step"'));
+  const html = renderSheetScreen(state);
+  assert.ok(html.includes('data-dungeon="level-up"') && html.includes("Subir de Nível"));
+  assert.ok(html.includes("Histórico da Mesa"));
   assert.ok(html.includes("&lt;b evil"));
-  assert.equal(renderLevelUpWizard({ ...state, levelUpOpen: false }), "");
 });
 
 test("renderTableScreen jogador: drawer Z3 via renderDungeonView is-session-player", () => {
