@@ -432,6 +432,18 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
 }
 
 /**
+ * Indica se já existe objeto de prefs da Mesa persistido no aparelho.
+ * @returns {boolean}
+ */
+export function hasStoredDungeonPrefs() {
+  try {
+    return globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY) != null;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Lê preferências locais da Mesa (dados 3D, etc.) do `localStorage`.
  * @returns {{ dice3d: boolean, viewerRole: "gm"|"player" }}
  */

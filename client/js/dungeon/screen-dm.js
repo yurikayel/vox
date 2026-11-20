@@ -97,14 +97,26 @@ function renderPromptInspector(state) {
     </section>`;
 }
 
+function renderInviteHrefBox(state) {
+  if (!state.inviteHref) {
+    return `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P sem servidor central.</p>`;
+  }
+  return `<pre class="dungeon-prompt-preview" id="dungeon-invite-href">${escapeHtml(state.inviteHref)}</pre>
+        <div class="dungeon-card-actions">
+          <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="copy-invite">Copiar convite</button>
+        </div>
+        <p class="dungeon-muted">Abra uma segunda aba neste mesmo navegador, cole o link e entre como jogador (P2P local, sem servidor).</p>`;
+}
+
 function renderP2pInvitePanel(state) {
   const tokens = state.scene?.tokens || [];
   const gmCount = tokens.filter((t) => t.layer === "gm").length;
   const playerCount = tokens.filter((t) => t.layer === "player").length;
   const roleLabel = state.viewerRole === "gm" ? "Mestre (vê Camada GM)" : "Prévia Jogador (Zero-Spoiler)";
-  const inviteBox = state.inviteHref
-    ? `<pre class="dungeon-prompt-preview">${escapeHtml(state.inviteHref)}</pre>`
-    : `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P sem servidor central.</p>`;
+  const notice = state.campaignNotice
+    ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>`
+    : "";
+  const inviteBox = renderInviteHrefBox(state);
   return `
     <section class="dungeon-panel" aria-label="Camada do Mestre e convite P2P">
       <div class="dungeon-section-head">
@@ -118,6 +130,7 @@ function renderP2pInvitePanel(state) {
         <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="toggle-viewer-role">Papel atual: ${escapeHtml(roleLabel)}</button>
         <button type="button" class="dungeon-btn dungeon-btn-primary" data-dungeon="generate-invite">Gerar Convite da Mesa (P2P)</button>
       </div>
+      ${notice}
       ${inviteBox}
     </section>`;
 }

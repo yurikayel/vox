@@ -20,6 +20,7 @@ import {
   createAndSelectCampaign,
   deleteSavedCampaign,
   exportCampaignBackup,
+  hasStoredDungeonPrefs,
   importCampaignFile,
   openSavedCampaign,
   persistD20RollIfActive,
@@ -161,6 +162,17 @@ const ACTION_HANDLERS = {
   "toggle-token-layer": (state, el, _c, opts) => toggleTokenLayerInScene(state, el.dataset.tokenId, { store: opts.store }),
   "remove-token": (state, el, _c, opts) => removeTokenFromScene(state, el.dataset.tokenId, { store: opts.store }),
   "generate-invite": (state, _el, _c, opts) => generateTableInvite(state, { store: opts.store }),
+  "copy-invite": (state) => {
+    const href = String(state.inviteHref || "").trim();
+    if (!href) return undefined;
+    if (typeof globalThis.navigator?.clipboard?.writeText === "function") {
+      return globalThis.navigator.clipboard.writeText(href).then(() => {
+        state.campaignNotice = "Convite copiado para a área de transferência.";
+      });
+    }
+    state.campaignNotice = "Copie o link manualmente (área de transferência indisponível).";
+    return undefined;
+  },
   "select-tool": (state, el) => { state.activeTool = el.dataset.tool || "select"; },
   "toggle-fog": (state, _el, _c, opts) => toggleFogEnabled(state, { store: opts.store }),
   "reset-fog": (state, _el, _c, opts) => resetFogInScene(state, { store: opts.store }),
@@ -412,6 +424,21 @@ function hydrateViewPersistence(container, viewOpts) {
   }
 }
 
+/** @param {object} sessionState @param {object} viewOpts */
+function applyDungeonWirePrefs(sessionState, viewOpts) {
+  if (sessionState._dungeonPrefsApplied || sessionState.joinMode === "p2p_player") return;
+  const prefs = loadDungeonPrefs();
+  sessionState.dice3dEnabled = prefs.dice3d;
+  const screen = viewOpts.screen || "acampamento";
+  const stored = hasStoredDungeonPrefs();
+  sessionState.viewerRole = !stored && screen === "mesa"
+    ? "player"
+    : stored
+      ? prefs.viewerRole
+      : sessionState.viewerRole || prefs.viewerRole;
+  sessionState._dungeonPrefsApplied = true;
+}
+
 /**
  * Conecta delegação de eventos interativos das 4 telas no contêiner montado, monta o canvas 2D e hidrata a persistência local.
  *
@@ -427,12 +454,7 @@ export function wireDungeonView(container, opts = {}) {
   container.dataset.dungeonWired = "1";
   const viewOpts = { ...opts };
   const sessionState = viewOpts.state || getDungeonSession();
-  if (!sessionState._dungeonPrefsApplied && sessionState.joinMode !== "p2p_player") {
-    const prefs = loadDungeonPrefs();
-    sessionState.dice3dEnabled = prefs.dice3d;
-    sessionState.viewerRole = prefs.viewerRole;
-    sessionState._dungeonPrefsApplied = true;
-  }
+  applyDungeonWirePrefs(sessionState, viewOpts);
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));
   container.addEventListener("input", (ev) => {
     const target = ev.target;
