@@ -20,9 +20,9 @@ export function buildDungeonTabs(tableId = "vila-nova", charId = "lyra") {
   const safeTable = encodeURIComponent(tableId || "vila-nova");
   const safeChar = encodeURIComponent(charId || "lyra");
   return [
-    { id: "acampamento", label: "Acampamento", shortLabel: "Acampamento", href: "#/dungeon", icon: "flame" },
+    { id: "acampamento", label: "Acampamento", shortLabel: "Campanhas", href: "#/dungeon", icon: "flame" },
     { id: "mesa", label: "A Mesa", shortLabel: "A Mesa", href: `#/dungeon/mesa/${safeTable}`, icon: "sword" },
-    { id: "ficha", label: "Grimório", shortLabel: "Ficha", href: `#/dungeon/ficha/${safeChar}`, icon: "scroll" },
+    { id: "ficha", label: "Grimório", shortLabel: "Grimório", href: `#/dungeon/ficha/${safeChar}`, icon: "scroll" },
     { id: "mestre", label: "Mestre", shortLabel: "Mestre", href: `#/dungeon/mestre/${safeTable}`, icon: "eye" },
   ];
 }
