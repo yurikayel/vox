@@ -30,6 +30,10 @@ function applyLocalCardFromSigned(signed) {
   }
 }
 
+/**
+ * Sincroniza ou revoga o cartão de perfil local e propaga a atualização pela malha.
+ * @returns {Promise<object>} Cartão assinado ou registro de revogação emitido.
+ */
 export async function syncMeshProfileCard() {
   if (localAccount.getMeshDiscoverable()) {
     const signed = await profileCard.buildSignedProfileCard();

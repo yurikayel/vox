@@ -4,6 +4,7 @@
  * Tratamento de conflitos comunitários sem autoridade central.
  */
 
+/** Conjunto de handles reservados que não podem ser registrados por usuários. */
 export const RESERVED_HANDLES = new Set([
   "admin",
   "vox",
@@ -22,6 +23,11 @@ export const RESERVED_HANDLES = new Set([
 const SLUG_REGEX = /^[a-z0-9]([a-z0-9-]{1,22}[a-z0-9])?$/;
 const HANDLES_CACHE_KEY = "vox-handles-cache";
 
+/**
+ * Normaliza um handle removendo espaços, maiúsculas e `@` inicial.
+ * @param {string} raw Texto bruto do handle.
+ * @returns {string} Slug normalizado ou string vazia.
+ */
 export function normalizeSlug(raw) {
   if (!raw) return "";
   let clean = String(raw).trim().toLowerCase();
@@ -29,6 +35,11 @@ export function normalizeSlug(raw) {
   return clean;
 }
 
+/**
+ * Valida formato, comprimento e reserva de um handle comunitário.
+ * @param {string} raw Handle informado.
+ * @returns {{ valid: true, slug: string }|{ valid: false, error: string }} Resultado da validação.
+ */
 export function validateSlug(raw) {
   const slug = normalizeSlug(raw);
   if (!slug) {
@@ -46,6 +57,11 @@ export function validateSlug(raw) {
   return { valid: true, slug };
 }
 
+/**
+ * Agrupa reivindicantes de um handle a partir de arestas ordenadas de transações.
+ * @param {object[]} [edges=[]] Arestas retornadas pela consulta de claims.
+ * @returns {{ primaryOwner: string, primaryTx: string, isConflict: boolean, claimants: object[] }|null} Resolução ou `null`.
+ */
 export function resolveHandleClaimants(edges = []) {
   if (!Array.isArray(edges) || edges.length === 0) return null;
 
@@ -75,6 +91,11 @@ export function resolveHandleClaimants(edges = []) {
   };
 }
 
+/**
+ * Consulta no cache local o endereço associado a um handle.
+ * @param {string} slug Handle a pesquisar.
+ * @returns {string|null} Endereço em cache ou `null`.
+ */
 export function getCachedHandleMapping(slug) {
   const clean = normalizeSlug(slug);
   if (!clean) return null;
@@ -88,6 +109,11 @@ export function getCachedHandleMapping(slug) {
   }
 }
 
+/**
+ * Consulta no cache local o handle associado a um endereço.
+ * @param {string} address Endereço/rota do usuário.
+ * @returns {string|null} Handle em cache ou `null`.
+ */
 export function getCachedAddressHandle(address) {
   if (!address) return null;
   try {
@@ -100,6 +126,12 @@ export function getCachedAddressHandle(address) {
   }
 }
 
+/**
+ * Persiste no cache local o mapeamento bidirecional entre handle e endereço.
+ * @param {string} slug Handle normalizável.
+ * @param {string} address Endereço correspondente.
+ * @returns {void}
+ */
 export function cacheHandleMapping(slug, address) {
   const cleanSlug = normalizeSlug(slug);
   if (!cleanSlug || !address) return;

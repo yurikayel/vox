@@ -13,6 +13,11 @@ function clip(str, max = 280) {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
+/**
+ * Detecta a plataforma de webhook a partir da URL informada.
+ * @param {string} [url=""] URL do webhook.
+ * @returns {"discord"|"slack"|"generic"} Plataforma identificada.
+ */
 export function detectWebhookPlatform(url = "") {
   const u = String(url || "").trim().toLowerCase();
   if (!u) return "generic";
@@ -99,6 +104,11 @@ function buildDiscordTopicEmbed(p) {
   return embed;
 }
 
+/**
+ * Formata um payload do Vox como Rich Embed para webhook do Discord.
+ * @param {object} [payload={}] Dados do tópico, proposta ou oferta.
+ * @returns {{ username: string, content: string, embeds: object[] }} Corpo pronto para POST no Discord.
+ */
 export function formatDiscordWebhookPayload(payload = {}) {
   const kind = resolveKind(payload);
   const embed =
@@ -140,6 +150,11 @@ function buildSlackExtraBlocks(payload, kind) {
   return blocks;
 }
 
+/**
+ * Formata um payload do Vox em Block Kit para webhook do Slack.
+ * @param {object} [payload={}] Dados do tópico, proposta ou oferta.
+ * @returns {{ text: string, blocks: object[] }} Corpo pronto para POST no Slack.
+ */
 export function formatSlackWebhookPayload(payload = {}) {
   const kind = resolveKind(payload);
   const prefix = kind === "proposal" ? "🗳️ Proposta:" : kind === "listing" ? "🛒 Oferta:" : "📣";
@@ -165,6 +180,12 @@ export function formatSlackWebhookPayload(payload = {}) {
   };
 }
 
+/**
+ * Adapta o payload do Vox ao formato nativo exigido pela URL do webhook.
+ * @param {string} url URL de destino do webhook.
+ * @param {object} payload Payload genérico do Vox.
+ * @returns {object} Payload adaptado para Discord, Slack ou genérico.
+ */
 export function adaptWebhookPayloadForUrl(url, payload) {
   const platform = detectWebhookPlatform(url);
   if (platform === "discord") return formatDiscordWebhookPayload(payload);
@@ -192,6 +213,12 @@ function buildListingSummaryLines(payload) {
   return [parts.join(" · ")];
 }
 
+/**
+ * Gera resumo copia-e-cola em Markdown para canais de chat externos.
+ * @param {object} [payload={}] Dados do tópico, proposta ou oferta.
+ * @param {{ format?: "discord"|"slack" }} [options] Formato de marcação.
+ * @returns {string} Resumo formatado para colar no chat.
+ */
 export function buildChatSummaryCopy(payload = {}, { format = "discord" } = {}) {
   const kind = resolveKind(payload);
   const bold = format === "slack" ? "*" : "**";
@@ -250,6 +277,11 @@ function collectTranscriptEntries(lines) {
   return entries;
 }
 
+/**
+ * Converte transcrição bruta do Slack/Discord em ata comunitária Markdown.
+ * @param {string} [rawTranscript=""] Texto copiado da conversa.
+ * @returns {{ markdown: string, messageCount: number, participants: string[], suggestedTitle: string }} Ata estruturada.
+ */
 export function parseChatTranscriptToMarkdown(rawTranscript = "") {
   const raw = String(rawTranscript || "").trim();
   if (!raw) return { markdown: "", messageCount: 0, participants: [], suggestedTitle: "" };

@@ -1,10 +1,13 @@
 /** @file Árvore de respostas (pura, sem DOM): agrupamento por parentId e achatamento com profundidade limitada. */
 
+/** Profundidade visual máxima ao achatar respostas aninhadas. */
 export const MAX_THREAD_DEPTH = 4;
 
 /**
  * Agrupa respostas por pai. Órfãs (parentId ausente no conjunto) sobem para a raiz,
  * para nunca sumirem quando o pai foi moderado ou ainda não chegou via gossip.
+ * @param {object[]} [replies=[]] Lista de respostas de um tópico.
+ * @returns {{ tops: object[], byParent: Record<string, object[]> }} Raízes e mapa de filhos por `parentId`.
  */
 export function groupRepliesForThread(replies = []) {
   if (!Array.isArray(replies)) return { tops: [], byParent: {} };
@@ -23,7 +26,12 @@ export function groupRepliesForThread(replies = []) {
   return { tops, byParent };
 }
 
-/** Achata em ordem de leitura (DFS cronológico). Profundidade visual travada em maxDepth. */
+/**
+ * Achata respostas em ordem de leitura (DFS cronológico) com profundidade visual limitada.
+ * @param {object[]} [replies=[]] Lista de respostas do tópico.
+ * @param {number} [maxDepth=MAX_THREAD_DEPTH] Profundidade visual máxima.
+ * @returns {{ reply: object, depth: number }[]} Sequência ordenada para renderização.
+ */
 export function flattenReplyThread(replies = [], maxDepth = MAX_THREAD_DEPTH) {
   if (!Array.isArray(replies)) return [];
   const { tops, byParent } = groupRepliesForThread(replies);

@@ -26,6 +26,11 @@ function validateCpfDigits(cpf) {
   return rev === parseInt(cpf.charAt(10), 10);
 }
 
+/**
+ * Detecta o tipo sintático de uma chave Pix brasileira.
+ * @param {string} raw Texto bruto da chave Pix.
+ * @returns {"cpf"|"email"|"phone"|"random"|"unknown"} Tipo identificado.
+ */
 export function detectPixType(raw) {
   const trimmed = String(raw || "").trim();
   if (EMAIL_REGEX.test(trimmed)) return "email";
@@ -57,6 +62,12 @@ export function detectPixType(raw) {
   return "unknown";
 }
 
+/**
+ * Normaliza uma chave Pix conforme o tipo detectado ou informado.
+ * @param {string} raw Texto bruto da chave Pix.
+ * @param {"cpf"|"email"|"phone"|"random"|null} [typeHint=null] Tipo opcional já conhecido.
+ * @returns {string} Chave normalizada.
+ */
 export function normalizePixKey(raw, typeHint = null) {
   const trimmed = String(raw || "").trim();
   const type = typeHint || detectPixType(trimmed);
@@ -85,6 +96,11 @@ const PIX_VALIDATORS = {
   random: (norm) => (!UUID_REGEX.test(norm) ? "Chave aleatória inválida (formato UUID esperado)." : ""),
 };
 
+/**
+ * Valida sintaticamente e normaliza uma chave Pix no cliente.
+ * @param {string} raw Texto bruto da chave Pix.
+ * @returns {{ ok: boolean, type: string, normalized: string, errorPt: string }} Resultado da validação.
+ */
 export function validatePixKey(raw) {
   const trimmed = String(raw || "").trim();
   if (!trimmed) {
@@ -129,6 +145,12 @@ const PIX_MASKERS = {
   random: maskRandom,
 };
 
+/**
+ * Mascara uma chave Pix para exibição com privacidade visual.
+ * @param {string} key Chave Pix original ou normalizada.
+ * @param {"cpf"|"email"|"phone"|"random"|null} [type=null] Tipo opcional da chave.
+ * @returns {string} Chave mascarada.
+ */
 export function maskForDisplay(key, type = null) {
   if (!key) return "";
   const keyType = type || detectPixType(key);
@@ -144,6 +166,7 @@ export function maskForDisplay(key, type = null) {
 export const PIX_RECEIVER_NAME_NOTICE_PT =
   "Atenção: quem paga vê o seu nome completo como está no banco (e parte do CPF/CNPJ), com qualquer tipo de chave — inclusive a aleatória. Se você usa pseudônimo no Vox, receba numa chave do seu coletivo ou associação.";
 
+/** Aviso ao pagador para conferir a titularidade da chave Pix no próprio banco. */
 export const PIX_PAYER_CHECK_NOTICE_PT =
   "Antes de confirmar, o seu banco mostra o nome de quem vai receber. Confira se é quem você espera — o Vox não verifica a titularidade da chave.";
 

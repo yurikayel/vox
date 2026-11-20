@@ -15,7 +15,9 @@ import {
 } from "./nostr-event.js";
 import { randomBase36 } from "./shared/html.js";
 
+/** Tipo de evento efêmero Nostr usado na sinalização WebRTC do Vox. */
 export const SIGNAL_KIND = 25050;
+/** Sala padrão de descoberta WebRTC nos relays Nostr. */
 export const DEFAULT_ROOM = "vox-brasil-v1";
 const KEY_LABEL = new TextEncoder().encode("vox-nostr-signal-v1");
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -45,6 +47,13 @@ async function deriveKey(secretKey, theirPubHex) {
   return globalThis.crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
+/**
+ * Cifra um objeto JSON para outro par usando ECDH secp256k1 + AES-GCM.
+ * @param {Uint8Array} secretKey Chave secreta Nostr efêmera local.
+ * @param {string} theirPubHex Chave pública hexadecimal do destinatário.
+ * @param {object} obj Payload JSON a cifrar.
+ * @returns {Promise<string>} Texto cifrado em Base64 (`iv || ciphertext`).
+ */
 export async function encryptFor(secretKey, theirPubHex, obj) {
   const key = await deriveKey(secretKey, theirPubHex);
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
@@ -52,6 +61,13 @@ export async function encryptFor(secretKey, theirPubHex, obj) {
   return b64(new Uint8Array([...iv, ...ct]));
 }
 
+/**
+ * Decifra conteúdo Base64 recebido via evento Nostr direcionado.
+ * @param {Uint8Array} secretKey Chave secreta Nostr efêmera local.
+ * @param {string} theirPubHex Chave pública hexadecimal do remetente.
+ * @param {string} content Conteúdo cifrado em Base64.
+ * @returns {Promise<object>} Objeto JSON decifrado.
+ */
 export async function decryptFrom(secretKey, theirPubHex, content) {
   const bytes = unb64(content);
   const key = await deriveKey(secretKey, theirPubHex);
@@ -312,9 +328,11 @@ function createContext(opts) {
 }
 
 /**
+ * Cria o transporte de sinalização WebRTC sobre relays Nostr.
  * @param {{ relays: string[], room?: string, peerId: string, getIdentity?: () => ({address?: string, dmPub?: any}),
  *   onMessage: (msg: object) => void, onStatus?: (s: {open: number, pending: number}) => void,
- *   WebSocketImpl?: any, maxRelays?: number, reconnectBaseMs?: number }} opts
+ *   WebSocketImpl?: any, maxRelays?: number, reconnectBaseMs?: number }} opts Opções de conexão e callbacks.
+ * @returns {{ publicKey: string, start: () => void, stop: () => void, knows: (peerId: string) => boolean, status: () => { open: number, pending: number }, relays: () => string[], send: (msg: object) => boolean, _handleEvent: (event: object) => Promise<void> }} Controlador do transporte.
  */
 export function createNostrTransport(opts) {
   const ctx = createContext(opts);

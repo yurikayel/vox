@@ -7,11 +7,13 @@
  */
 import * as hashtags from "./hashtags.js";
 
+/** Campo marcador que identifica registro gravado na forma assinada original (`_wire`). */
 export const WIRE_MARK = "_wire";
 /** Mídia anexada no aparelho (vídeo, áudio ou imagem de um `mediaRef`): fica no registro, fora da assinatura. */
 export const MEDIA_FIELD = "_media";
 const LOCAL_ONLY_KEYS = new Set(["tags", "isLocalP2p", WIRE_MARK, MEDIA_FIELD]);
 
+/** Valores padrão aplicados apenas na leitura de posts locais para exibição em tela. */
 export const LOCAL_POST_DEFAULTS = Object.freeze({
   communityId: "",
   replyTo: "",
@@ -51,10 +53,18 @@ export const LOCAL_POST_DEFAULTS = Object.freeze({
   editedAt: 0,
 });
 
-/** O que vai para o banco: o post como chegou, mais a marca. */
+/**
+ * Envolve o post na forma armazenada em IndexedDB adicionando a marca `_wire`.
+ * @param {object} post Post assinado recebido ou criado.
+ * @returns {object} Registro pronto para persistência local.
+ */
 export const toStoredRecord = (post) => ({ ...post, [WIRE_MARK]: 1 });
 
-/** Forma de tela: padrões, hashtags e `isLocalP2p` (o que o app sempre leu). */
+/**
+ * Converte um registro armazenado para a forma de tela com padrões, hashtags e `isLocalP2p`.
+ * @param {object} record Registro lido do armazenamento local.
+ * @returns {object} Post normalizado para exibição.
+ */
 export function normalizeLocalPost(record) {
   const { [WIRE_MARK]: _mark, [MEDIA_FIELD]: media, ...post } = record;
   const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
@@ -86,7 +96,11 @@ function stripLegacyFields(record) {
   return out;
 }
 
-/** Forma assinada do registro, para repassar ou assinar de novo. */
+/**
+ * Recupera a forma assinada limpa do registro para repasse na rede ou verificação.
+ * @param {object} record Registro local ou normalizado.
+ * @returns {object} Payload sem campos apenas-locais (`_wire`, `_media`, etc.).
+ */
 export function toWireForm(record) {
   if (!record || typeof record !== "object") return record;
   if (record[WIRE_MARK]) {
