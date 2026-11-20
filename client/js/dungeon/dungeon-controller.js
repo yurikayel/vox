@@ -61,6 +61,7 @@ import {
 } from "./dungeon-tactics-actions.js";
 import { clampZoom } from "./vtt-geometry.js";
 import { renderDungeonChrome } from "./dungeon-chrome.js";
+import { ensureDungeonLayoutStyles } from "./dungeon-layout-style.js";
 import { renderCampScreen, refreshFavoriteSlider } from "./screen-camp.js";
 import { renderTableScreen } from "./screen-table.js";
 import { renderSheetScreen } from "./screen-sheet.js";
@@ -208,6 +209,7 @@ export function renderDungeonView(opts = {}) {
     tableId: state.tableId,
     charId: state.sheet.char_id,
     guardiansOnline: state.leases.length,
+    viewerRole: state.viewerRole || "player",
     bodyHtml: renderer(state),
   });
 }
@@ -392,6 +394,9 @@ function hydrateViewPersistence(container, viewOpts) {
  */
 export function wireDungeonView(container, opts = {}) {
   if (!container || container.dataset.dungeonWired === "1") return;
+  const layoutDoc = container.ownerDocument;
+  if (layoutDoc) ensureDungeonLayoutStyles(layoutDoc);
+  else if (typeof document !== "undefined") ensureDungeonLayoutStyles(document);
   container.dataset.dungeonWired = "1";
   const viewOpts = { ...opts };
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));

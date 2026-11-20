@@ -44,7 +44,7 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 ### 3.1 E2E no navegador (`e2e/test_*.py`)
 
-`npm run test:e2e` abre Chromium real (Playwright para Python: `pip install playwright` e `python -m playwright install chromium`), com o cliente servido localmente e **toda rede de fora bloqueada**. Cobre entrada e recarga com IndexedDB, as rotas principais, os assistentes em etapas e dois navegadores na malha. Não roda no CI; a malha de dois navegadores do CI é `scripts/mesh-e2e.mjs`.
+`npm run test:e2e` abre Chromium real (Playwright para Python: `pip install playwright` e `python -m playwright install chromium`), com o cliente servido localmente e **toda rede de fora bloqueada**. Cobre entrada e recarga com IndexedDB, as rotas principais, os assistentes em etapas e dois navegadores na malha. **Mesa / VTT:** `e2e/test_vox_e2e.py` (fluxo demo campanha→mesa→ficha→mestre) e `e2e/test_mesa_ttrpg_e2e.py` (modo jogador E5, canvas, rolagem por fórmula, acampamento/calendário, mobile). Só mesa: `python -m unittest e2e.test_mesa_ttrpg_e2e -v`. Não roda no CI; a malha de dois navegadores do CI é `scripts/mesh-e2e.mjs`.
 
 ### 3.1.1 Login no navegador (`scripts/login-e2e.mjs`, LT-08)
 
