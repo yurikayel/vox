@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { renderZ3SessionBlock, renderChronicleColumn } from "../client/js/dungeon/screen-table-layout.js";
-import { renderNotesPanel } from "../client/js/dungeon/screen-notes.js";
+import { renderHandoutViewer, renderNotesPanel } from "../client/js/dungeon/screen-notes.js";
 import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
 import { renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
 import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
@@ -22,10 +22,25 @@ test("screen-table-layout: Z3 jogador drawer vs GM grade e ids da crônica", () 
   assert.ok(gmBlock.includes("dungeon-table-layout") && !gmBlock.includes("dungeon-z3-drawer"));
   assert.ok(plBlock.includes('class="dungeon-z3-drawer"'));
   assert.ok(plBlock.includes('data-dungeon-zone="narrativeRoll"'));
+  assert.ok(plBlock.includes('summary>Handouts</summary>'));
   const col = renderChronicleColumn(state);
   assert.ok(col.includes('id="dungeon-action-input"'));
   assert.ok(col.includes('aria-label="Crônica da Mesa"'));
   assert.ok(col.includes("Declarar Ação"));
+});
+
+test("renderHandoutViewer: notas shared e links https, ignora gm_only", () => {
+  const toxic = `${INJECT}Doc`;
+  const html = renderHandoutViewer(stateWith({
+    notes: [
+      { id: "h1", title: toxic, visibility: "shared", publicMarkdown: "Texto", links: ["https://example.com/a.pdf"] },
+      { id: "h2", title: "Secreto", visibility: "gm_only", publicMarkdown: "x" },
+    ],
+  }));
+  assert.ok(html.includes("handout-stack"));
+  assert.ok(html.includes("&lt;b evil") && !html.includes('evil="1">'));
+  assert.ok(html.includes("https://example.com/a.pdf"));
+  assert.ok(!html.includes("Secreto"));
 });
 
 test("screen-notes: pastas, marcos vazios e escapeHtml no título", () => {

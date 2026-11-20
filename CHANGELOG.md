@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Fix: Mesa E5 P1 handouts + prefs visão jogador
+- `screen-notes.js`: `renderHandoutViewer` usa visibilidade `shared` (schema VTT), links `https?` externos; drawer Z3 na sessão jogador.
+- `dungeon-persistence.js` / `dungeon-controller.js`: `viewerRole` persiste em `vox-dungeon-prefs-v1`.
+- `docs/FEATURES.md`, `docs/specs/mesa-referenciais-vtt-v0.md`: status E5 alinhado.
+
 ### Code: Mesa E5 P0/P1 — join P2P jogador, handouts, Tormenta20
 - `dungeon-vtt-join.js`, `route-parse.js`, `dungeon-controller.js`: rota `#/dungeon/entrar/:id?gm=...#k=...` conecta jogador via `BroadcastChannel` + `createVttSyncPeer` (visão filtrada, sem clonar campanha GM).
 - `screen-notes.js`: `renderHandoutViewer` para handouts públicos; `vtt-levelup.js`: preset `tormenta20`.
