@@ -5,6 +5,14 @@
  */
 import { cellToWorldCenter, createCamera, tokenBoundsWorld } from "./vtt-geometry.js";
 import { hpStatusLabel } from "./vtt-scene-schema.js";
+import {
+  drawAoeLayer,
+  drawDoorsLayer,
+  drawDrawingsLayer,
+  drawFogLayer,
+  drawRulerLayer,
+  drawTokenConditionBadges,
+} from "./canvas-tactics-layers.js";
 
 const SQRT3 = Math.sqrt(3);
 
@@ -115,6 +123,7 @@ function drawSingleToken(ctx, token, floor, opts) {
   ctx.font = "600 11px sans-serif";
   ctx.fillText(isGmTok ? `[GM] ${token.name}` : token.name, b.cx, b.top + b.height + 10);
   drawTokenHpBar(ctx, token, b);
+  drawTokenConditionBadges(ctx, token, b);
   ctx.restore();
 }
 
@@ -143,12 +152,26 @@ function prepareCanvasViewport(canvas, floor, opts) {
   return { dpr, cssW, cssH };
 }
 
+function drawAllSceneLayers(ctx, scene, floor, opts) {
+  const role = opts.viewerRole === "gm" ? "gm" : "player";
+  drawFloorBackground(ctx, floor, opts.mapImage || null);
+  drawGridLayer(ctx, floor);
+  const tokens = resolveRenderedTokens(scene, floor, opts);
+  const drawnDrawings = drawDrawingsLayer(ctx, floor, role, opts.draftStroke || null);
+  const aoeHits = drawAoeLayer(ctx, floor, tokens, role);
+  const drawnDoors = drawDoorsLayer(ctx, floor, role);
+  for (const tok of tokens) drawSingleToken(ctx, tok, floor, opts);
+  const fogDrawn = drawFogLayer(ctx, floor, role, opts.draftFogRect || null);
+  drawRulerLayer(ctx, opts.ruler || null, floor.grid);
+  return { drawnTokens: tokens.length, drawnDoors, drawnDrawings, aoeHits, fogDrawn, viewerRole: role, floorZ: floor.z };
+}
+
 /**
  * Renderiza a cena tática 2D num elemento `<canvas>` sob demanda (0% CPU em repouso).
  * @param {HTMLCanvasElement|object} canvas Elemento `<canvas>` (ou mock compatível em testes).
  * @param {object} scene Documento `SceneDoc`.
- * @param {object} [opts={}] Opções (`camera`, `viewerRole`, `selectedTokenId`, `mapImage`, `dragPreview`, `dpr`).
- * @returns {{ drawnTokens: number, viewerRole: "gm"|"player", floorZ: number }} Resumo da renderização.
+ * @param {object} [opts={}] Opções (`camera`, `viewerRole`, `selectedTokenId`, `mapImage`, `dragPreview`, `draftStroke`, `draftFogRect`, `ruler`, `dpr`).
+ * @returns {object} Resumo da renderização.
  */
 export function renderSceneToCanvas(canvas, scene, opts = {}) {
   const ctx = canvas?.getContext?.("2d");
@@ -162,10 +185,7 @@ export function renderSceneToCanvas(canvas, scene, opts = {}) {
   ctx.fillRect(0, 0, cssW, cssH);
   ctx.translate(camera.panX, camera.panY);
   ctx.scale(camera.zoom, camera.zoom);
-  drawFloorBackground(ctx, floor, opts.mapImage || null);
-  drawGridLayer(ctx, floor);
-  const tokens = resolveRenderedTokens(scene, floor, opts);
-  for (const tok of tokens) drawSingleToken(ctx, tok, floor, opts);
+  const summary = drawAllSceneLayers(ctx, scene, floor, opts);
   ctx.restore();
-  return { drawnTokens: tokens.length, viewerRole: opts.viewerRole === "gm" ? "gm" : "player", floorZ: floor.z };
+  return summary;
 }
