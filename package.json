@@ -22,6 +22,7 @@
     "audit:complexity": "node scripts/complexity-audit.mjs",
     "audit:docs": "node scripts/docs-audit.mjs",
     "audit:layers": "node scripts/layers-audit.mjs && node scripts/cycles-audit.mjs",
+    "audit:mutate:tier-a": "node scripts/mutate-tier-a.mjs",
     "release-line": "python scripts/release_line.py",
     "release-metadata": "python scripts/release_line.py --metadata-only"
   },
