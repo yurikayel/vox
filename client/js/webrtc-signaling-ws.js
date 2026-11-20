@@ -4,7 +4,6 @@
  */
 import { createNostrTransport, DEFAULT_ROOM } from "./nostr-transport.js";
 import { recordSignalingDial } from "./signaling-telemetry.js";
-import { sendSignaling } from "./webrtc-signaling-send.js";
 import {
   loadSignalingConfig,
   getSignalingUrl,
