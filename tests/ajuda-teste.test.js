@@ -70,6 +70,11 @@ describe("renderAjudaTeste", () => {
     assert.match(html, new RegExp(`href="${VOX_GITHUB_ISSUES.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
   });
 
+  it("states Arweave upload paused (DOC-04)", () => {
+    assert.match(html, /arweaveUpload:\s*false/i);
+    assert.match(html, /Grava[cç][aã]o no Arweave está pausada/i);
+  });
+
   it("avoids banned hype phrases in tester copy", () => {
     for (const re of BANNED) {
       assert.doesNotMatch(html, re, `banned phrase matched: ${re}`);
