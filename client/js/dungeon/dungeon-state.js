@@ -30,6 +30,8 @@ import {
 } from "../rpg-crypto-table.js";
 import { buildOverhearingCoDmSuggestion } from "../rpg-maritaca-router.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
+import { createDefaultScene } from "./vtt-scene-schema.js";
+import { createInitiativeState } from "./vtt-tactics-schema.js";
 
 /** Selo do narrador na crônica: é roteiro fixo, não IA (ADR-033). */
 export const NARRATOR_BADGE = "Roteiro";
@@ -162,6 +164,14 @@ function createPersistenceDefaults() {
     campaigns: [],
     rolls: [],
     notes: [],
+    scene: createDefaultScene("local"),
+    initiative: createInitiativeState(),
+    activeTool: "select",
+    viewerRole: "gm",
+    camera: { panX: 0, panY: 0, zoom: 1 },
+    selectedTokenId: "",
+    inviteHref: "",
+    mapNotice: "",
     rollMode: "normal",
     lastFormulaRoll: null,
     rollError: "",

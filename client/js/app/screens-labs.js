@@ -103,7 +103,12 @@ export async function showDungeonScreen(route = {}) {
   if (!appRoot) return;
   const notice = render.renderOpsNotice?.(getFlags().notice) || "";
   const demoBanner = mock.isDemoMode?.() ? render.renderDemoModeBanner?.() || "" : "";
-  const opts = { screen: route.screen || "acampamento", tableId: route.tableId, charId: route.charId };
+  const opts = {
+    screen: route.screen || "acampamento",
+    tableId: route.tableId,
+    charId: route.charId,
+    joinP2p: Boolean(route.joinP2p),
+  };
   appRoot.innerHTML = `${notice}${demoBanner}<div id="dungeon-host">${renderDungeonLab(opts)}</div>`;
   const host = appRoot.querySelector("#dungeon-host");
   wireDungeonLab(host, opts);

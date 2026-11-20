@@ -151,6 +151,34 @@ function renderLoreCard(node) {
     </article>`;
 }
 
+function renderInventoryPanel(state) {
+  const items = state.sheet?.inventoryItems || [];
+  const rows = items.map((it) => `
+    <li class="dungeon-inventory-row">
+      ${dungeonIcon("backpack", 15)}
+      <span>${escapeHtml(it.label)} ×${it.qty}${it.equipped ? " · equipado" : ""}</span>
+      <div class="dungeon-card-actions">
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}">Equipar</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
+      </div>
+    </li>`).join("");
+  const weight = Number(state.sheet?.carryWeight) || 0;
+  return `
+    <section class="dungeon-panel">
+      <div class="dungeon-section-head">
+        <div><span class="dungeon-eyebrow">Inventário OR-Set</span><h2>Mochila (${weight.toFixed(1)} lb)</h2></div>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up">Subir de Nível</button>
+      </div>
+      <form class="dungeon-action-form" data-dungeon="add-item-form">
+        <div class="dungeon-input-row">
+          <input class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item" autocomplete="off" />
+          <button type="submit" class="dungeon-btn dungeon-btn-ghost">Adicionar</button>
+        </div>
+      </form>
+      <ul class="dungeon-clean-list">${rows || "<li>Nenhum item no OR-Set — adicione acima.</li>"}</ul>
+    </section>`;
+}
+
 function renderBackpackAndLedger(sheet) {
   const items = (sheet.inventory || []).map((item) => `<li>${dungeonIcon("backpack", 15)}<span>${escapeHtml(item)}</span></li>`).join("");
   const ops = (sheet.delta_ledger || []).slice(-4).reverse().map((op) => {
@@ -196,6 +224,7 @@ export function renderSheetScreen(state) {
     ${renderSheetHero(state.sheet)}
     ${renderClickableActionsPanel(state)}
     ${renderResourceMeters(state.sheet, projected)}
+    ${renderInventoryPanel(state)}
     ${renderBackpackAndLedger(state.sheet)}
     ${renderPublicNotesSection(state.notes)}
     <section class="dungeon-panel">

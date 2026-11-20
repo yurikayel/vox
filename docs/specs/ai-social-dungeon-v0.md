@@ -1,9 +1,11 @@
 # AI Social Dungeon — Mesas P2P, Cota de 2 Comunidades Favoritas e Colunas de IA (v0)
 
-> **Status:** parcial (bloco W-DRF/guardiões e narrador continuam **demonstração de laboratório sem IA e sem rede** ([ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md)); núcleo local-first **Mesa Soberana E1** implementado com IndexedDB, rolagem por fórmulas, fichas clicáveis e backup `.voxrpg.zip` / Obsidian / cifrado) · **Owner:** mantenedor · **Revisado:** 2026-11-19
-> Relacionados: [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [guardioes-v0.md](./guardioes-v0.md), `client/js/community-pillar-pool.js`, `client/js/rpg-sheet-and-lore.js`, `client/js/rpg-crypto-table.js`, `client/js/rpg-maritaca-router.js`, `client/js/dungeon/dungeon-controller.js`, `client/js/dungeon/dice-engine.js`, `client/js/dungeon/vtt-schema.js`, `client/js/dungeon/vtt-reducer.js`, `client/js/dungeon/obsidian-bridge.js`, `client/js/dungeon/vtt-portable.js`, `client/js/dungeon/vtt-store.js`, `client/js/dungeon/dungeon-persistence.js`, `client/js/labs/ai-social-dungeon-lab.js`.
+> **Status:** parcial (bloco W-DRF/guardiões e narrador continuam **demonstração de laboratório sem IA e sem rede** ([ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md)); núcleos **Mesa Soberana E1 + E2 + E3 + E4** implementados com IndexedDB, dados, fichas clicáveis, backup `.voxrpg.zip`/Obsidian/cifrado, mapa `<canvas>` 2D em 8 camadas, tokens, Camada do Mestre Zero-Spoiler, sync P2P, iniciativa, condições com decremento, névoa, desenho/régua, AoE e portas/andares) · **Referenciais VTT e E5:** [mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md) · **Owner:** mantenedor · **Revisado:** 2026-11-20
+> Relacionados: [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [guardioes-v0.md](./guardioes-v0.md), `client/js/community-pillar-pool.js`, `client/js/rpg-sheet-and-lore.js`, `client/js/rpg-crypto-table.js`, `client/js/rpg-maritaca-router.js`, `client/js/dungeon/dungeon-controller.js`, `client/js/dungeon/dice-engine.js`, `client/js/dungeon/vtt-schema.js`, `client/js/dungeon/vtt-scene-schema.js`, `client/js/dungeon/vtt-tactics-schema.js`, `client/js/dungeon/vtt-geometry.js`, `client/js/dungeon/vtt-tactics-geometry.js`, `client/js/dungeon/vtt-reducer.js`, `client/js/dungeon/vtt-tactics-reducer.js`, `client/js/dungeon/obsidian-bridge.js`, `client/js/dungeon/vtt-portable.js`, `client/js/dungeon/vtt-store.js`, `client/js/dungeon/vtt-sync-codec.js`, `client/js/dungeon/vtt-sync.js`, `client/js/dungeon/canvas-renderer.js`, `client/js/dungeon/canvas-tactics-layers.js`, `client/js/dungeon/canvas-input.js`, `client/js/dungeon/dungeon-persistence.js`, `client/js/dungeon/dungeon-scene-actions.js`, `client/js/dungeon/dungeon-tactics-actions.js`, `client/js/dungeon/screen-table-tactics.js`, `client/js/labs/ai-social-dungeon-lab.js`.
 
 ## 0. O que existe hoje
+
+Posicionamento vs mesa hospedada C, mesa hospedada A, mesa hospedada B e mesa hospedada D (referenciais de produto, road map E5): **[mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md)** · anatomia de UI: **[mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md)**.
 
 | Parte | Estado |
 | :--- | :--- |
@@ -11,7 +13,8 @@
 | Persistência local (`vox-vtt-db-v1`) | **De verdade (E1):** IndexedDB dedicado (`campaigns`, `snapshots`, `ops`, `blobs`) com compactação automática a cada 50 ops, medidor honesto de cota local (`storage-persistence.js`) e proteção contra limpeza solicitada na 1ª campanha. |
 | Motor de dados (`dice-engine.js`) | **De verdade (E1):** parser tokenizado sem `eval`, suportando `kh/kl/dh/dl/!`, mods `+/-`, refs `@for`/`@des`/`@prof`, modos Normal/Vantagem/Desvantagem e comandos `/roll`, `/gmroll` e `/blindroll` com amostragem sem viés via `crypto.getRandomValues`. |
 | Ficha CRDT clicável | **De verdade (E1):** alinhada a `attributes_lww.abilities` (`FOR`..`CAR` clicáveis), `sheet_meta.clickable_actions` e `projectCharacterPools`, gravando rolagens e deltas no log da campanha. |
-| Backup portátil & Obsidian | **De verdade (E1):** `.voxrpg.zip` (STORE zero deps, CRC32 + manifesto SHA-256 + pastas `fichas/`, `notas/`, `sessoes/` compatíveis com Vault Obsidian), ponte `.md`/YAML estrito (`%%...%%` e `> [!gm]` separados) e backup cifrado `.voxrpg.enc` via Senha Soberana (`vault/envelope.js`). |
+| Calendário, inventário OR-Set, level-up, `.canvas`, dados 3D lazy | **De verdade (E4):** `vtt-calendar.js`, `vtt-inventory.js`, `vtt-levelup.js`, notas por pasta (`screen-notes.js`), import/export `mapas/*.canvas`, overlay `dice-3d.js` (sem WebGL obrigatório, respeita `prefers-reduced-motion`). |
+| Backup portátil & Obsidian | **De verdade (E1+E4):** `.voxrpg.zip` (STORE zero deps, CRC32 + manifesto SHA-256 + pastas `fichas/`, `notas/`, `sessoes/` compatíveis com Vault Obsidian), ponte `.md`/YAML estrito (`%%...%%` e `> [!gm]` separados) e backup cifrado `.voxrpg.enc` via Senha Soberana (`vault/envelope.js`). |
 | Narrador | **Roteiro fixo** (3 frases), sem IA. O selo na crônica diz "Roteiro". |
 | Cofre de Shamir da tela | De verdade: `sealLoreVaultSecret` / `unlockLoreVaultSecret`, abre só com o gatilho do jogo e 3 de 5 partes. Na demo, as 5 partes ficam neste aparelho. |
 | Commit-Reveal² entre jogadores, W-DRF, leases, DataChannels | Escritos e testados como funções puras; **não usados** (P2P entre aparelhos fica para a Entrega 2). |
@@ -230,4 +233,26 @@ A Entrega 1 acrescenta 7 módulos lazy-loaded em `client/js/dungeon/` (fora do p
 - **`vtt-schema.js` e `vtt-reducer.js`**: contratos `CampaignDoc`, `DiceRollEntry`, `NoteDoc`, `VttOp`, extensão opcional `sheet_meta.clickable_actions` sobre `VoxCRDTCharacterSheet`, redutor puro idempotente por `(lamport, opId)` e projeção Zero-Spoiler (`projectStateForPlayer`).
 - **`obsidian-bridge.js`**: conversão bidirecional de fichas e notas `.md` com frontmatter YAML estrito (sem `eval`), separação de segredos do Mestre (`%%...%%` e `> [!gm]`), extração de `[[wikilinks]]` e exportação da crônica em Markdown.
 - **`vtt-portable.js`**: empacotamento `.voxrpg.zip` (ZIP método STORE sem dependências npm, validação CRC32 + `manifest.json` SHA-256 + proteção contra path traversal e limites de tamanho) em layout compatível com Vault Obsidian, além de backup cifrado opcional `.voxrpg.enc` via Senha Soberana (`client/js/vault/envelope.js`).
-- **`vtt-store.js` e `dungeon-persistence.js`**: banco IndexedDB dedicado (`vox-vtt-db-v1`) com backend em memória injetável para testes, compactação de `ops` para `snapshots` a cada 50 operações, deduplicação de `blobs` por SHA-256 e medidor honesto de cota local (sem prometer nuvem ilimitada).
+- **`vtt-store.js` e `dungeon-persistence.js`**: banco IndexedDB dedicado (`vox-vtt-db-v1`) com backend em memória injetável para testes, fila serializada por campanha (anti-race), compactação de `ops` para `snapshots` a cada 50 operações, deduplicação de `blobs` por SHA-256 e medidor honesto de cota local (sem prometer nuvem ilimitada).
+
+---
+
+## 8. Mesa Soberana — Entrega 2 (Mapa 2D, Tokens, Camada do Mestre & Sync P2P)
+
+A Entrega 2 acrescenta 7 módulos lazy-loaded em `client/js/dungeon/` (ainda **0 bytes** no precache cívico):
+
+- **`vtt-scene-schema.js` e `vtt-geometry.js`**: contratos de `SceneDoc`, `FloorDoc` e `TokenDoc` (`layer: "player"|"gm"`, `hpVisible: "exact"|"bar"|"status"`), câmera pan/zoom com âncora fixa, grade quadrada e hexagonal (`odd-r`), cálculo de distâncias (`5e`, `5e-alt`, euclidiana e hex) e `hitTestTokens` fail-closed.
+- **`canvas-renderer.js` e `canvas-input.js`**: renderização `<canvas>` 2D sob demanda (0% CPU em repouso), suporte desktop + touch mobile (`touch-action: none`, pan, arraste com snap na grade, pinça de 2 dedos e zoom na roda do mouse) e exibição translúcida da Camada do Mestre apenas para o papel `gm`.
+- **`vtt-sync-codec.js` e `vtt-sync.js`**: convites com `roomKey` no fragmento `#k=`, assinatura ECDSA P-256 (`INV-7`) com vinculação `actor === routeId(pubKeyJwk)`, autorização por papel no redutor (`isAuthorizedVttOp`), projeção Zero-Spoiler antes da serialização (`SNAPSHOT_FILTERED` e `COMMIT_OP`) e transferência de mapas/avatares em chunks de 16 KiB (`WANT_BLOB`/`BLOB_CHUNK`) com conferência SHA-256 e bloqueio de blobs ocultos.
+- **`dungeon-scene-actions.js`**: fachada conectando upload deduplicado de mapas, criação/movimentação/revelação de tokens, alternância de grade e ativação do par GM local via `BroadcastChannel`.
+
+---
+
+## 9. Mesa Soberana — Entrega 3 (Tático & Combate)
+
+A Entrega 3 acrescenta 6 módulos lazy-loaded em `client/js/dungeon/` (ainda **0 bytes** no precache cívico):
+
+- **`vtt-tactics-schema.js` e `vtt-tactics-geometry.js`**: catálogo de 12 condições (`CONDITION_CATALOG`) com duração em rodadas, contratos de portas (`closed`/`open`/`locked`/`secret`), desenhos livres (simplificados via Ramer-Douglas-Peucker `simplifyPolyline`), 4 gabaritos de Área de Efeito (`circle`, `cone`, `cube`, `line`) com `tokensInsideAoe`, `hitTestDoors` fail-closed e `isPointRevealedByFog`.
+- **`vtt-tactics-reducer.js`**: operações táticas de iniciativa (ordenando por rolagem, ocultando combatentes da Camada GM e decrementando `durationRounds` ao passar o turno), névoa de guerra manual, desenhos, AoE, portas (jogador só alterna `closed`/`open`; GM destranca e revela `secret`) e andares (`elevation_z`, preservando PV/condições ao mover tokens entre pisos).
+- **`canvas-tactics-layers.js`**: renderização das 8 camadas no `<canvas>` 2D (desenhos, AoE com realce nos alvos atingidos, portas codificadas por cor, badges de condições nos tokens, névoa `evenodd` opaca p/ jogadores e 48% p/ GM, e régua de distância em células/metros).
+- **`dungeon-tactics-actions.js` e `screen-table-tactics.js`**: barra tática de ferramentas, seletor de andares, painel de iniciativa Zero-Spoiler e botões rápidos de condições integrados à Tela 2.
