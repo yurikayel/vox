@@ -1,3 +1,6 @@
+/**
+ * @file Publicação de tópicos e mídias do Vox na Permaweb (Arweave/Turbo).
+ */
 import * as defaultUpload from "./upload.js";
 import * as defaultWallet from "./wallet.js";
 import * as defaultPermanence from "./permanence-notice.js";
@@ -10,6 +13,10 @@ const DEFAULT_DEPS = Object.freeze({ upload: defaultUpload, wallet: defaultWalle
 /**
  * Sobe ao Arweave a mídia de um post, a partir do blob de `mediaBlob.detachMedia`
  * (`{ hash, mime, byteLength, data }`, com `data` em data URL). Devolve o id da transação ou null.
+ * @param {{ hash?: string, mime?: string, data?: string }|null} blob Blob destacado da mídia.
+ * @param {string} [aspectRatio] Proporção original da mídia.
+ * @param {typeof defaultUpload} [upload=defaultUpload] Cliente de upload injetável.
+ * @returns {Promise<string|null>} ID da transação de mídia ou `null`.
  */
 export async function uploadTopicMediaToPermaweb(blob, aspectRatio, upload = defaultUpload) {
   if (!blob?.data || !mediaBlob.isDataUrl(blob.data)) return null;
@@ -26,7 +33,12 @@ export async function uploadTopicMediaToPermaweb(blob, aspectRatio, upload = def
   return mediaRes?.success ? mediaRes.id : null;
 }
 
-/** Publica o tópico no Arweave (mídia primeiro, ligada pela tag `Media-Tx`). Sem carteira, não faz nada. */
+/**
+ * Publica o tópico no Arweave (mídia primeiro, ligada pela tag `Media-Tx`). Sem carteira, não faz nada.
+ * @param {{ topicId: string, commSlug: string, title: string, body: string, blob?: object|null, aspectRatio?: string }} topic Dados do tópico.
+ * @param {typeof DEFAULT_DEPS} [deps=DEFAULT_DEPS] Dependências injetáveis para teste.
+ * @returns {Promise<object|null>} Recibo do envio, marcador de apenas-malha ou `null`.
+ */
 export async function uploadTopicToPermaweb({ topicId, commSlug, title, body, blob, aspectRatio }, deps = DEFAULT_DEPS) {
   const { upload, wallet, permanence, featureFlags = defaultFeatureFlags } = deps;
   if (!featureFlags.isFeatureEnabled("arweaveUpload")) return { success: false, skipped: "arweave-disabled" };

@@ -7,6 +7,18 @@ import { renderPactStepHtml } from "./welcome-pact.js";
 import * as localAccount from "../identity/index.js";
 import { escapeHtml } from "./util.js";
 import { renderImportPanelHtml } from "./oauth-import.js";
+import { createFocusTrap } from "./focus-trap.js";
+
+let genesisTrap = null;
+
+function handleGenesisEscape(container) {
+  const have = container?.querySelector?.('[data-genesis-step="have"]');
+  if (have && !have.hidden) {
+    showGenesisStep(container, "entry");
+    return;
+  }
+  container?.querySelector?.("#btn-oauth-skip")?.click?.();
+}
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
   const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}"><span aria-hidden="true">←</span> Voltar</button>` : "";
@@ -129,6 +141,12 @@ export function renderOAuthEnrich(container, { invite = null, mode = "entry" } =
         ${mode === "import" ? renderImportPanelHtml() : renderGenesisStepsHtml(currentName, invite)}
       </div>
     </div>`;
+  genesisTrap?.deactivate();
+  genesisTrap = createFocusTrap(container, { onEscape: () => handleGenesisEscape(container) });
+  genesisTrap.activate();
+  if (!showGenesisStep(container, "entry")) {
+    container.querySelector?.("input, button:not(.genesis-back)")?.focus?.({ preventScroll: true });
+  }
 }
 
 /**
@@ -150,9 +168,11 @@ export function showGenesisStep(root, key) {
 }
 
 /**
- * Fecha o modal de entrada, esvaziando o contêiner.
+ * Fecha o modal de entrada, esvaziando o contêiner e devolvendo o foco a quem abriu.
  * @param {HTMLElement|null} container
  */
 export function closeOAuthEnrich(container) {
   if (container) container.innerHTML = "";
+  genesisTrap?.deactivate();
+  genesisTrap = null;
 }

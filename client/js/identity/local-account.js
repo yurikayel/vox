@@ -7,7 +7,7 @@
 import * as cryptoDm from "../crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
 import { HELD_STORAGE as GUARDIAN_SHARES_STORAGE } from "./guardians.js";
-import { isLocked, openSealed, sealJson } from "./keystore.js";
+import { isLocked, isPlainRecord, openSealed, readStoredRecord, sealJson, writeStoredJson } from "./keystore.js";
 import { dropSessionPassphrase, dropStorageKeys } from "./local-wipe.js";
 import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "../sig-format.js";
@@ -60,40 +60,36 @@ export function getAccountStorageIssue() {
   return accountPersistIssue;
 }
 
+function hasStoredAccount() {
+  const parsed = readStoredRecord(ACCOUNT_STORAGE, null);
+  return Boolean(parsed?.routeId && parsed.publicJwk && parsed.privateJwk);
+}
+
 async function loadStoredLocalAccount(epoch) {
-  try {
-    const stored = localStorage.getItem(ACCOUNT_STORAGE);
-    if (!stored) return null;
-    const parsed = JSON.parse(stored);
-    if (parsed?.routeId && parsed?.publicJwk && parsed?.privateJwk) {
-      const dm = await cryptoDm.ensureDmKeys();
-      if (epoch !== wipeEpoch) dropDmKeypairOf(dm.publicJwk);
-      return parsed;
-    }
-  } catch {}
-  return null;
+  if (!hasStoredAccount()) return null;
+  const dm = await cryptoDm.ensureDmKeys();
+  if (epoch !== wipeEpoch) dropDmKeypairOf(dm.publicJwk);
+  return readStoredRecord(ACCOUNT_STORAGE, null);
 }
 
 /** Tira a chave de DM do armazenamento só se for a deste par; a de outra conta (mais nova) fica. */
 function dropDmKeypairOf(publicJwk) {
-  try {
-    const stored = JSON.parse(localStorage.getItem(DM_KEYPAIR_STORAGE) || "null");
-    if (JSON.stringify(stored?.publicJwk) === JSON.stringify(publicJwk)) localStorage.removeItem(DM_KEYPAIR_STORAGE);
-  } catch {}
+  const stored = readStoredRecord(DM_KEYPAIR_STORAGE, null);
+  if (JSON.stringify(stored?.publicJwk) === JSON.stringify(publicJwk)) localStorage.removeItem(DM_KEYPAIR_STORAGE);
 }
 
 /**
- * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio. Se rodou, desfaz o que já foi gravado
- * (semente e chave de DM) e devolve `null`: a conta apagada não pode voltar.
+ * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio e outra aba ainda não gravou conta.
+ * Se rodou, desfaz o que já foi gravado (semente e chave de DM) e devolve `null`.
  */
 async function createAccountUnlessWiped(epoch) {
   const born = await identitySeed.createSeededAccount();
   let account = null;
-  if (epoch === wipeEpoch) {
+  if (epoch === wipeEpoch && !hasStoredAccount()) {
     await cryptoDm.setDmKeypair(born.dmKeypair);
     account = { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
   }
-  if (account && epoch === wipeEpoch) return account;
+  if (account && epoch === wipeEpoch && !hasStoredAccount()) return account;
   dropDmKeypairOf(born.dmKeypair.publicJwk);
   identitySeed.forgetSeed(born.routeId);
   return null;
@@ -123,15 +119,12 @@ function buildVaultAccountEntry(acc, existing, extras = {}) {
 }
 
 function syncCurrentAccountMetadataToVault() {
+  if (cachedAccount && !accountPersistIssue && !readStoredRecord(ACCOUNT_STORAGE, null)?.routeId) cachedAccount = null;
   const acc = cachedAccount;
   if (!acc?.routeId) return;
-  try {
-    const raw = localStorage.getItem(VAULT_STORAGE);
-    const vault = raw ? JSON.parse(raw) : {};
-    const existing = vault[acc.routeId] || {};
-    vault[acc.routeId] = buildVaultAccountEntry(acc, existing);
-    localStorage.setItem(VAULT_STORAGE, JSON.stringify(vault));
-  } catch {}
+  const vault = readVaultMap();
+  vault[acc.routeId] = buildVaultAccountEntry(acc, vault[acc.routeId] || {});
+  writeVaultMap(vault);
 }
 
 /** Uma tentativa de achar ou criar a conta; `null` se o wipe rodou no meio (nada foi gravado em nome da conta apagada). */
@@ -162,7 +155,11 @@ async function resolveLocalAccount(epoch) {
  */
 export async function ensureLocalAccount() {
   if (ensureLocalAccountInflight) return ensureLocalAccountInflight;
-  const run = resolveLocalAccount(wipeEpoch).then((acc) => acc || ensureLocalAccount());
+  const run = resolveLocalAccount(wipeEpoch).then((acc) => {
+    if (acc) return acc;
+    if (ensureLocalAccountInflight === run) ensureLocalAccountInflight = null;
+    return ensureLocalAccount();
+  });
   ensureLocalAccountInflight = run;
   try {
     return await run;
@@ -185,17 +182,15 @@ export async function getRouteId() {
  * @returns {string} `vx_…`, ou "" se ainda não há conta
  */
 export function getCachedRouteIdSync() {
-  if (cachedAccount?.routeId) return cachedAccount.routeId;
-  try {
-    const stored = localStorage.getItem(ACCOUNT_STORAGE);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed?.routeId) {
-        cachedAccount = parsed;
-        return parsed.routeId;
-      }
-    }
-  } catch {}
+  const stored = readStoredRecord(ACCOUNT_STORAGE, null);
+  if (cachedAccount?.routeId) {
+    if (!accountPersistIssue && !stored?.routeId) cachedAccount = null;
+    else return cachedAccount.routeId;
+  }
+  if (stored?.routeId) {
+    cachedAccount = stored;
+    return stored.routeId;
+  }
   return "";
 }
 
@@ -232,12 +227,7 @@ export function setDisplayName(name) {
  * @returns {object|null}
  */
 export function getProfileEnrichment() {
-  try {
-    const raw = localStorage.getItem(ENRICHMENT_STORAGE);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  return readStoredRecord(ENRICHMENT_STORAGE, null);
 }
 
 /**
@@ -406,12 +396,7 @@ export async function importLocalAccountBundle(bundle) {
  * @returns {{ normalized: string, type: string, masked: string, updatedAt: number }|null}
  */
 export function getPixKey() {
-  try {
-    const raw = localStorage.getItem(PIX_STORAGE);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  return readStoredRecord(PIX_STORAGE, null);
 }
 
 /**
@@ -532,21 +517,12 @@ export function wipeLocalAccount() {
 
 
 function readVaultMap() {
-  try {
-    const raw = localStorage.getItem(VAULT_STORAGE);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  const raw = readStoredRecord(VAULT_STORAGE);
+  return Object.fromEntries(Object.entries(raw).filter(([, item]) => isPlainRecord(item)));
 }
 
 function writeVaultMap(map) {
-  try {
-    localStorage.setItem(VAULT_STORAGE, JSON.stringify(map));
-    return true;
-  } catch {
-    return false;
-  }
+  return writeStoredJson(VAULT_STORAGE, map);
 }
 
 /**

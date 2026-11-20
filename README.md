@@ -5,7 +5,7 @@
 [![Preservação](https://img.shields.io/badge/Preserva%C3%A7%C3%A3o-rede%20de%20seguidores-black.svg)](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-2288%20passing%20%C2%B7%209%20skipped%20%C2%B7%2011%20todo-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.146--dm--limits--6b-informational.svg)](./client/sw.js)
+[![Service Worker](https://img.shields.io/badge/SW-v7.147--community--split-informational.svg)](./client/sw.js)
 
 **Vox** é um PWA cívico *local-first* — sem bundler, sem servidor central de login e sem leilão de alcance — para ampliar a participação popular e a autonomia das comunidades. Conta, chaves e dados nascem no aparelho; o conteúdo circula pela **rede de seguidores** (você replica o que segue).
 
@@ -18,7 +18,7 @@ A ambição é ser um **bem comum aberto**: transparente, copiável, modificáve
 > - **Sem gravação no Arweave** (`arweaveUpload: false`, REV-07): a preservação passa pela rede de seguidores e pelo nó opcional **Vox Memoria**.
 > - **Sinalização frágil:** 1 nó Render mais o caminho Nostr em paralelo; sem TURN.
 > - **Infra extra adiada** até passar de 50 usuários ativos (INF-01…04).
-> - **`main` atrás de `develop`:** a `main` pública está no release #262; o trabalho recente vive em `develop`.
+> - **`main` atrás de `develop`:** a `main` pública está no release 19/11 (#304); o hardening **#306–#317** aguarda merge `develop` → `main`.
 >
 > Detalhes em [ROADMAP.md](./docs/ROADMAP.md) e no [retrato do repositório](./docs/strategy/analise-repositorio-vox-2026-11.md).
 
@@ -209,9 +209,9 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `ec95779` |
-| **Suíte de Testes** | **2309** (`1989` JS + `320` Python) |
-| **Service Worker** | `vox-pwa-v7.146-dm-limits-6b` |
+| **Commit SHA** | `aa937b9` |
+| **Suíte de Testes** | **2341** (`2021` JS + `320` Python) |
+| **Service Worker** | `vox-pwa-v7.147-community-split` |
 
 *Tabela regenerada por `npm run release-line` (grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 

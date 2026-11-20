@@ -14,7 +14,7 @@ const FOCUSABLE =
 export function focusableIn(root) {
   if (!root?.querySelectorAll) return [];
   return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
-    if (el.hidden || el.getAttribute?.("aria-hidden") === "true") return false;
+    if (el.hidden || el.closest?.("[hidden]") || el.getAttribute?.("aria-hidden") === "true") return false;
     if (el.hasAttribute?.("disabled")) return false;
     return true;
   });
@@ -51,16 +51,17 @@ function handleTrapTab(e, root, doc) {
  * @param {ParentNode} root Contêiner onde o foco deve ficar.
  * @param {object} [options]
  * @param {Document} [options.doc=globalThis.document] Documento alvo.
+ * @param {((e: KeyboardEvent) => void)|null} [options.onEscape=null] Ação opcional ao pressionar Escape.
  * @returns {{ activate: (opts?: { returnFocus?: Element|null }) => void, deactivate: () => void, active: () => boolean }}
  */
-export function createFocusTrap(root, { doc = globalThis.document } = {}) {
+export function createFocusTrap(root, { doc = globalThis.document, onEscape = null } = {}) {
   let restoreFocus = null;
   let onKeyDown = null;
 
   /** @returns {void} */
   function deactivate() {
     if (!onKeyDown) return;
-    doc.removeEventListener("keydown", onKeyDown, true);
+    doc?.removeEventListener?.("keydown", onKeyDown, true);
     onKeyDown = null;
     const target = restoreFocus;
     restoreFocus = null;
@@ -74,13 +75,17 @@ export function createFocusTrap(root, { doc = globalThis.document } = {}) {
    */
   function activate({ returnFocus } = {}) {
     deactivate();
-    const candidate = returnFocus ?? doc.activeElement;
+    const candidate = returnFocus ?? doc?.activeElement;
     restoreFocus = candidate?.focus ? candidate : null;
     onKeyDown = (e) => {
+      if (e.key === "Escape" && onEscape) {
+        onEscape(e);
+        return;
+      }
       if (e.key !== "Tab") return;
       handleTrapTab(e, root, doc);
     };
-    doc.addEventListener("keydown", onKeyDown, true);
+    doc?.addEventListener?.("keydown", onKeyDown, true);
   }
 
   return { activate, deactivate, active: () => Boolean(onKeyDown) };

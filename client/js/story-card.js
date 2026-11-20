@@ -3,9 +3,19 @@
 import { encodeVoxUrl } from "./qr-url.js";
 import { buildCanonicalTopicUrl } from "./posse-dispatch.js";
 
+/** Largura padrão (px) do card vertical 9:16 de compartilhamento. */
 export const STORY_CARD_WIDTH = 540;
+/** Altura padrão (px) do card vertical 9:16 de compartilhamento. */
 export const STORY_CARD_HEIGHT = 960;
 
+/**
+ * Quebra um texto em linhas que cabem na largura máxima do canvas com reticências na última linha.
+ * @param {CanvasRenderingContext2D} ctx Contexto 2D usado para medir largura do texto.
+ * @param {string} text Texto original.
+ * @param {number} maxWidth Largura máxima em pixels.
+ * @param {number} [maxLines=4] Quantidade máxima de linhas.
+ * @returns {string[]} Linhas quebradas.
+ */
 export function wrapTextLines(ctx, text, maxWidth, maxLines = 4) {
   const words = String(text || "").split(/\s+/);
   const lines = [];
@@ -144,6 +154,11 @@ function drawCardFooter(ctx, w, h) {
   ctx.fillText("VOX • 100% Livre de Algoritmos de Ódio e Vigilância", w / 2, h - 30);
 }
 
+/**
+ * Renderiza o card visual 9:16 de uma publicação em um `<canvas>` HTML5 com QR Code.
+ * @param {object} post Publicação com `id`, `title`, `body`, `author`, `communityId` e/ou `canonicalUrl`.
+ * @returns {HTMLCanvasElement|null} Canvas renderizado ou `null` sem DOM.
+ */
 export function renderStoryCardCanvas(post) {
   if (typeof document === "undefined") return null;
   const canvas = document.createElement("canvas");
@@ -162,6 +177,12 @@ export function renderStoryCardCanvas(post) {
   return canvas;
 }
 
+/**
+ * Dispara o download do canvas renderizado como imagem PNG.
+ * @param {HTMLCanvasElement|null} canvas Canvas do card.
+ * @param {string} [filename="story-card-vox.png"] Nome do arquivo PNG baixado.
+ * @returns {void}
+ */
 export function downloadStoryCardPng(canvas, filename = "story-card-vox.png") {
   if (!canvas || typeof document === "undefined") return;
   const link = document.createElement("a");
@@ -172,6 +193,11 @@ export function downloadStoryCardPng(canvas, filename = "story-card-vox.png") {
   document.body.removeChild(link);
 }
 
+/**
+ * Copia o card PNG para a área de transferência ou faz fallback para download direto.
+ * @param {object} post Publicação a transformar em card.
+ * @returns {Promise<{ ok: boolean, method?: string, reason?: string }>} Resultado da cópia/download.
+ */
 export async function copyStoryCardToClipboard(post) {
   const canvas = renderStoryCardCanvas(post);
   if (!canvas) return { ok: false, reason: "canvas_unavailable" };

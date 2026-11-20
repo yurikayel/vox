@@ -37,12 +37,23 @@ export function countBits(version) {
   return version <= 9 ? 8 : 16;
 }
 
+/** Expressão que reconhece rotas válidas para QR compartilhável do Vox. */
 export const VOX_SHARE_HASH = /#\/(t|connect|c|sync|guardiao)(\/|\?|$)/;
 
+/**
+ * Indica se a URL pertence às rotas compartilháveis do Vox aceitas no QR.
+ * @param {string} url URL candidata.
+ * @returns {boolean} `true` quando casa com `VOX_SHARE_HASH`.
+ */
 export function isVoxShareUrl(url) {
   return VOX_SHARE_HASH.test(String(url || ""));
 }
 
+/**
+ * Normaliza e valida que a URL é uma rota compartilhável do Vox.
+ * @param {string} url URL candidata.
+ * @returns {string} URL limpa.
+ */
 export function assertVoxShareUrl(url) {
   const text = String(url || "").trim();
   if (!isVoxShareUrl(text)) {
@@ -51,6 +62,11 @@ export function assertVoxShareUrl(url) {
   return text;
 }
 
+/**
+ * Converte uma string ASCII imprimível em array de bytes para o modo byte do QR.
+ * @param {string} url URL em ASCII imprimível.
+ * @returns {number[]} Bytes (0–126).
+ */
 export function urlToBytes(url) {
   const out = [];
   for (let i = 0; i < url.length; i++) {
@@ -61,12 +77,24 @@ export function urlToBytes(url) {
   return out;
 }
 
+/**
+ * Escolhe a menor versão QR suportada (2–9 ou 11) capaz de comportar `byteLen`.
+ * @param {number} byteLen Quantidade de bytes do payload.
+ * @returns {number} Número da versão QR escolhida.
+ */
 export function chooseVersion(byteLen) {
   const version = ORDERED_VERSIONS.find((v) => byteLen <= VERSIONS[v].maxBytes);
   if (version) return version;
   throw new Error(`QR: URL too long for versions 2–${MAX_VERSION} (max ${QR_MAX_BYTES} bytes)`);
 }
 
+/**
+ * Empurra `n` bits menos significativos de `value` (MSB primeiro) em `bits`.
+ * @param {number[]} bits Buffer de bits.
+ * @param {number} value Inteiro fonte.
+ * @param {number} n Quantidade de bits.
+ * @returns {void}
+ */
 export function pushBits(bits, value, n) {
   for (let i = n - 1; i >= 0; i--) bits.push((value >>> i) & 1);
 }
@@ -93,6 +121,13 @@ function bitsToCodewords(bits, n) {
   return cw;
 }
 
+/**
+ * Codifica `bytes` no modo byte (0100) do QR com terminador e padding até `dataCodewords`.
+ * @param {number[]} bytes Bytes do payload.
+ * @param {number} dataCodewords Total de codewords de dados da versão.
+ * @param {number} [version=2] Versão QR alvo.
+ * @returns {Uint8Array} Codewords preenchidos.
+ */
 export function encodeBytePayload(bytes, dataCodewords, version = 2) {
   const cap = dataCodewords * 8;
   const bits = [];
@@ -156,6 +191,12 @@ export function deinterleaveDataBits(bits, spec) {
   return out;
 }
 
+/**
+ * Decodifica uma string do fluxo de bits de dados no modo byte do QR.
+ * @param {number[]} bits Fluxo de bits em ordem de bloco.
+ * @param {number} [version=2] Versão QR (define largura da contagem: 8 ou 16 bits).
+ * @returns {string} Texto decodificado.
+ */
 export function parseBytePayload(bits, version = 2) {
   let pos = 0;
   const take = (n) => {

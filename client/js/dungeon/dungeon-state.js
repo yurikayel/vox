@@ -29,6 +29,7 @@ import {
   unlockLoreVaultSecret,
 } from "../rpg-crypto-table.js";
 import { buildOverhearingCoDmSuggestion } from "../rpg-maritaca-router.js";
+import { ensureSheetMeta } from "./vtt-schema.js";
 
 /** Selo do narrador na crônica: é roteiro fixo, não IA (ADR-033). */
 export const NARRATOR_BADGE = "Roteiro";
@@ -102,12 +103,13 @@ const INITIAL_LORE_NODES = [
 ];
 
 function createSeedSheet() {
-  const doc = createCharacterSheetDoc({
+  const doc = ensureSheetMeta(createCharacterSheetDoc({
     character_id: "lyra",
     name: "Lyra, A Espada da Vila",
     class_name: "Paladina de Vigília · Vila Teste",
+    abilities: { str: 16, dex: 12, con: 14, int: 11, wis: 14, cha: 15 },
     pools_base: { hp_max: 24, gold_initial: 50, spell_slots_max: { l1: 3, l2: 1, l3: 0 } },
-  });
+  }));
   return {
     ...doc,
     char_id: "lyra",
@@ -153,6 +155,23 @@ function createSeedFavorites() {
   ];
 }
 
+function createPersistenceDefaults() {
+  return {
+    campaignId: "",
+    campaignDoc: null,
+    campaigns: [],
+    rolls: [],
+    notes: [],
+    rollMode: "normal",
+    lastFormulaRoll: null,
+    rollError: "",
+    campaignNotice: "",
+    storageUsage: null,
+    persistenceReady: false,
+    localActor: "local",
+  };
+}
+
 /**
  * Cria um estado completo e independente para uma sessão do AI Social Dungeon.
  *
@@ -169,6 +188,7 @@ export function createDungeonSessionState(overrides = {}) {
     sliderPct: 60,
     favorites,
     ...net,
+    ...createPersistenceDefaults(),
     manifests: BASE_MANIFESTS,
     peerAliases: Object.fromEntries(BASE_MANIFESTS.map((m) => [m.peerId, m.alias])),
     failoverNotice: "Todos os 5 guardiões aquecendo a fogueira sem falhas.",

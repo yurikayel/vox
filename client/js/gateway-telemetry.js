@@ -5,6 +5,7 @@ const STORAGE_KEY = "vox-gateway-health";
 const READ_ORIGIN_KEY = "vox-read-origin";
 const READ_ORIGIN_MAX = 50;
 const READ_ORIGIN_TTL_MS = 24 * 60 * 60 * 1000;
+/** Amostra mínima de leituras para reportar percentual local de origem. */
 export const READ_ORIGIN_MIN_SAMPLE = 5;
 
 /** @typedef {"all_ok"|"degraded"|"critical"} GatewayHealthState */
@@ -102,6 +103,10 @@ export function getGatewayHealthState() {
   return "all_ok";
 }
 
+/**
+ * Retorna resumo consolidado de saúde dos gateways observados localmente.
+ * @returns {{ state: GatewayHealthState, gateways: Record<string, { ok: number, fail: number }>, lastReserveAt: number }} Resumo atual.
+ */
 export function getGatewayHealthSummary() {
   const state = loadState();
   return {
@@ -113,7 +118,8 @@ export function getGatewayHealthSummary() {
 
 /**
  * Agregado local por comunidade (malha + relay + cache_idb).
- * @param {string} communityId
+ * @param {string} [communityId=""] Identificador da comunidade.
+ * @returns {{ total: number, localCount: number, localReadPct: number|null, sufficient: boolean, counts: Record<ReadOrigin, number> }} Contagens e percentual arredondado.
  */
 export function getReadOriginAggregate(communityId = "") {
   const empty = {
@@ -144,6 +150,10 @@ export function getReadOriginAggregate(communityId = "") {
   return { total, localCount, localReadPct, sufficient, counts };
 }
 
+/**
+ * Limpa a telemetria local de gateways e origem de leitura (uso em testes).
+ * @returns {void}
+ */
 export function __resetGatewayHealthForTests() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(READ_ORIGIN_KEY);

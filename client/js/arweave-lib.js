@@ -57,6 +57,7 @@ async function assertVendorIntegrity(bundleUrl) {
 /**
  * Carrega o bundle vendorizado e devolve uma instância apontando para arweave.net.
  * @param {number} timeout tempo limite HTTP da biblioteca, em milissegundos (1 a 120000).
+ * @returns {Promise<object>} Instância inicializada do cliente Arweave.
  */
 export async function loadArweave(timeout) {
   assertTimeoutMs(timeout);

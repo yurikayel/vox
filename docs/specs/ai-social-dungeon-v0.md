@@ -1,18 +1,20 @@
 # AI Social Dungeon — Mesas P2P, Cota de 2 Comunidades Favoritas e Colunas de IA (v0)
 
-> **Status:** parcial (a tela é **demonstração de laboratório sem IA** ([ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md)); módulos puros testados, mesa entre aparelhos ainda não) · **Owner:** mantenedor · **Revisado:** 2026-11-16
-> Relacionados: [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [guardioes-v0.md](./guardioes-v0.md), `client/js/community-pillar-pool.js`, `client/js/rpg-sheet-and-lore.js`, `client/js/rpg-crypto-table.js`, `client/js/rpg-maritaca-router.js`, `client/js/dungeon/dungeon-controller.js`, `client/js/labs/ai-social-dungeon-lab.js`.
+> **Status:** parcial (bloco W-DRF/guardiões e narrador continuam **demonstração de laboratório sem IA e sem rede** ([ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md)); núcleo local-first **Mesa Soberana E1** implementado com IndexedDB, rolagem por fórmulas, fichas clicáveis e backup `.voxrpg.zip` / Obsidian / cifrado) · **Owner:** mantenedor · **Revisado:** 2026-11-19
+> Relacionados: [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [guardioes-v0.md](./guardioes-v0.md), `client/js/community-pillar-pool.js`, `client/js/rpg-sheet-and-lore.js`, `client/js/rpg-crypto-table.js`, `client/js/rpg-maritaca-router.js`, `client/js/dungeon/dungeon-controller.js`, `client/js/dungeon/dice-engine.js`, `client/js/dungeon/vtt-schema.js`, `client/js/dungeon/vtt-reducer.js`, `client/js/dungeon/obsidian-bridge.js`, `client/js/dungeon/vtt-portable.js`, `client/js/dungeon/vtt-store.js`, `client/js/dungeon/dungeon-persistence.js`, `client/js/labs/ai-social-dungeon-lab.js`.
 
-## 0. O que existe hoje (SW v7.122)
+## 0. O que existe hoje
 
 | Parte | Estado |
 | :--- | :--- |
-| As 4 telas (`#/dungeon…`, `#/labs/dungeon`) | **Demonstração** numa aba só: jogadores, guardiões e mesas são de exemplo; nada vai para a rede. |
+| As 4 telas (`#/dungeon…`, `#/labs/dungeon`) | Bloco W-DRF/guardiões e narrador seguem como **demonstração** numa aba só (sem IA e sem rede); seção **Campanhas**, rolagem por fórmulas e fichas clicáveis já funcionam de verdade neste aparelho (E1). |
+| Persistência local (`vox-vtt-db-v1`) | **De verdade (E1):** IndexedDB dedicado (`campaigns`, `snapshots`, `ops`, `blobs`) com compactação automática a cada 50 ops, medidor honesto de cota local (`storage-persistence.js`) e proteção contra limpeza solicitada na 1ª campanha. |
+| Motor de dados (`dice-engine.js`) | **De verdade (E1):** parser tokenizado sem `eval`, suportando `kh/kl/dh/dl/!`, mods `+/-`, refs `@for`/`@des`/`@prof`, modos Normal/Vantagem/Desvantagem e comandos `/roll`, `/gmroll` e `/blindroll` com amostragem sem viés via `crypto.getRandomValues`. |
+| Ficha CRDT clicável | **De verdade (E1):** alinhada a `attributes_lww.abilities` (`FOR`..`CAR` clicáveis), `sheet_meta.clickable_actions` e `projectCharacterPools`, gravando rolagens e deltas no log da campanha. |
+| Backup portátil & Obsidian | **De verdade (E1):** `.voxrpg.zip` (STORE zero deps, CRC32 + manifesto SHA-256 + pastas `fichas/`, `notas/`, `sessoes/` compatíveis com Vault Obsidian), ponte `.md`/YAML estrito (`%%...%%` e `> [!gm]` separados) e backup cifrado `.voxrpg.enc` via Senha Soberana (`vault/envelope.js`). |
 | Narrador | **Roteiro fixo** (3 frases), sem IA. O selo na crônica diz "Roteiro". |
-| d20 da tela | Sorteio de verdade neste aparelho (`crypto.getRandomValues` + amostragem sem viés). |
 | Cofre de Shamir da tela | De verdade: `sealLoreVaultSecret` / `unlockLoreVaultSecret`, abre só com o gatilho do jogo e 3 de 5 partes. Na demo, as 5 partes ficam neste aparelho. |
-| Ficha CRDT, lore `@tag`, inspetor por papel | Funções puras de verdade, rodando sobre dados de exemplo. |
-| Commit-Reveal² entre jogadores, W-DRF, leases, DataChannels | Escritos e testados como funções puras; **não usados** (não há mesa com outros aparelhos). |
+| Commit-Reveal² entre jogadores, W-DRF, leases, DataChannels | Escritos e testados como funções puras; **não usados** (P2P entre aparelhos fica para a Entrega 2). |
 | Roteador Maritaca | Só monta rota e payload; **não faz chamada de rede** e não tem tela. Usar exige as regras do ADR-033. |
 
 ## 1. Visão geral
@@ -217,3 +219,15 @@ Para separar visualmente ficção colaborativa P2P de debates e votações cívi
 | **4. Escudo do Mestre** | `#/dungeon/mestre/:id` | Aviso de que o escudo fica neste aparelho, painel "Roteiro fixo, sem IA" (sem seletor de modelo), dicas por regras, **cofre de Shamir 3-de-5 de verdade** e inspetor de contexto por papel. |
 
 Todos os ícones e ilustrações vetoriais residem offline em `client/js/dungeon/rpg-illustrations.js`, sem dependências de CDNs externas ou telemetria de rede.
+
+---
+
+## 7. Mesa Soberana — Entrega 1 (Núcleo Local-First)
+
+A Entrega 1 acrescenta 7 módulos lazy-loaded em `client/js/dungeon/` (fora do precache cívico — zero bytes adicionados ao shell):
+
+- **`dice-engine.js`**: parser tokenizado de fórmulas (`2d20kh1+@for+@prof`, `4d6dl1`, `1d6!`, `/roll`, `/gmroll`, `/blindroll`, rótulos `#`) e modos `normal`/`advantage`/`disadvantage`, usando `sampleUnbiasedDieFromDigest` + `crypto.getRandomValues`.
+- **`vtt-schema.js` e `vtt-reducer.js`**: contratos `CampaignDoc`, `DiceRollEntry`, `NoteDoc`, `VttOp`, extensão opcional `sheet_meta.clickable_actions` sobre `VoxCRDTCharacterSheet`, redutor puro idempotente por `(lamport, opId)` e projeção Zero-Spoiler (`projectStateForPlayer`).
+- **`obsidian-bridge.js`**: conversão bidirecional de fichas e notas `.md` com frontmatter YAML estrito (sem `eval`), separação de segredos do Mestre (`%%...%%` e `> [!gm]`), extração de `[[wikilinks]]` e exportação da crônica em Markdown.
+- **`vtt-portable.js`**: empacotamento `.voxrpg.zip` (ZIP método STORE sem dependências npm, validação CRC32 + `manifest.json` SHA-256 + proteção contra path traversal e limites de tamanho) em layout compatível com Vault Obsidian, além de backup cifrado opcional `.voxrpg.enc` via Senha Soberana (`client/js/vault/envelope.js`).
+- **`vtt-store.js` e `dungeon-persistence.js`**: banco IndexedDB dedicado (`vox-vtt-db-v1`) com backend em memória injetável para testes, compactação de `ops` para `snapshots` a cada 50 operações, deduplicação de `blobs` por SHA-256 e medidor honesto de cota local (sem prometer nuvem ilimitada).

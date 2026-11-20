@@ -134,4 +134,8 @@ test("envelope: legado v1 abre com o segredo certo e recusa o errado, revogado o
   assert.equal(await vc.decryptLegacyRecord({ ...rec, v: 2 }, "senha-velha", "passphrase"), null);
 });
 
-test.todo("🔴 encryptVaultV2 recusa `iterations` abaixo do piso aceito (hoje grava cofre que o próprio app não abre: isV2Record → null)");
+test("envelope: encryptVaultV2 recusa `iterations` fora da faixa aceita por isV2Record", async () => {
+  for (const bad of [99_999, 50_000, 1, 5_000_001, 0, -1, NaN, "100000", null]) {
+    await assert.rejects(encryptVaultV2(BUNDLE, PASS, bad), /faixa/, `iter=${String(bad)}`);
+  }
+});

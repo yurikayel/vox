@@ -61,7 +61,7 @@ export async function reloadIdentityFromStorage(deps = {}) {
   const cached = localAccount.getCachedRouteIdSync();
 
   if (!stored) {
-    if (cached) await localAccount.wipeLocalAccount();
+    await localAccount.wipeLocalAccount();
     return { adopted: false, routeId: "" };
   }
 
