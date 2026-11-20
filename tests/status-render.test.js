@@ -77,6 +77,7 @@ test("renderStatusPage - exibe tabela WebSocket vs Nostr e tempo até conectar (
       firstPeer: { count: 2, lastMs: 450, avgMs: 380, medianMs: 380 },
     },
   });
+  assert.ok(main.innerHTML.includes("arweaveUpload: false"));
   assert.ok(main.innerHTML.includes("Canal WebSocket"));
   assert.ok(main.innerHTML.includes("Canal Nostr"));
   assert.ok(main.innerHTML.includes("450 ms"));

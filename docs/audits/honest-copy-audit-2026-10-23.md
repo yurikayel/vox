@@ -38,7 +38,7 @@
 | Área | Ação sugerida |
 |------|----------------|
 | `mock.js` tour | Harmonizar narrativa `#localfirst` quando houver hashtag demo |
-| `render/status.js`, `render/network.js`, `render/ajuda-teste.js` | Revisar “neste aparelho” (telemetria local) vs copy de posts |
+| `render/feed.js`, `render/community.js`, `render/profile.js` | Cruzar microcopy com `FEATURES.md` (pós-Voxpedia) |
 
 ## P2 — parcial (20/11/2026, DOC-04 · Voxpedia)
 
@@ -50,7 +50,10 @@
 | `render/ajuda-teste.js`, `render/feed.js` (20/11, PR ajuda) | Ajuda teste: malha vs permaweb; Arweave pausado; carteira honesta. Feed: barra “Escudo” sem “100% cronológico” inflado. |
 | `tests/ajuda-teste.test.js` | Assert `arweaveUpload: false`. |
 
-**Falta (DOC-04):** `render/network.js`, `render/status.js` × `FEATURES.md`; labs (dungeon/frames) vs “não plugado”. |
+| `render/status.js`, `render/network.js` (20/11) | “Neste aparelho” mantido para telemetria local; nota explícita leitura ≠ gravação Arweave (`arweaveUpload: false`). |
+| `voxpedia.js` labs | Webxdc em `labs/parado/`, Mesa como lab. |
+
+**Falta (DOC-04):** `mock.js` tour; varredura fina `render/feed.js`, `render/community.js`, `render/profile.js`. |
 
 ## OK (manter)
 
