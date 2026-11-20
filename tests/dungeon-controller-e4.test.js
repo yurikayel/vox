@@ -9,8 +9,10 @@ test("dungeon-e4: saveDungeonPrefs persiste toggle dice3d", () => {
   globalThis.localStorage?.clear();
   saveDungeonPrefs({ dice3d: true });
   assert.equal(loadDungeonPrefs().dice3d, true);
-  saveDungeonPrefs({ dice3d: false });
+  assert.equal(loadDungeonPrefs().viewerRole, "gm");
+  saveDungeonPrefs({ dice3d: false, viewerRole: "player" });
   assert.equal(loadDungeonPrefs().dice3d, false);
+  assert.equal(loadDungeonPrefs().viewerRole, "player");
 });
 
 test("dungeon-e4: applyInventoryMutation adiciona item na ficha", () => {
