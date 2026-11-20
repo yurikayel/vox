@@ -1,11 +1,6 @@
 /**
- * kit-genesis.js — Manifestos Declarativos e Motor de Gênese de Comunidades (Vox)
- *
- * Implementa:
- * 1. 3 arquétipos de comunidade soberana congelados (Kit Bairro, Sindicato, Coletivo);
- * 2. Validação estrita de esquema e isolamento generalizado de canais;
- * 3. Regra anti-rebaixamento estrita e tipada (no-downgrade) em securityPolicyOverrides;
- * 4. Validação estrita de creatorAddr e IDs com CSPRNG livre de colisões.
+ * @file Manifestos de kits de comunidade e instanciação validada (laboratório).
+ * @module labs/parado/kit-genesis
  */
 
 const ALLOWED_POLICY_KEYS = new Set([
@@ -19,6 +14,12 @@ const ALLOWED_POLICY_KEYS = new Set([
 
 const ALLOWED_CRDT_STRATEGIES = new Set(["id-lookup", "audit-log"]);
 
+/**
+ * Congela recursivamente objetos para manifestos imutáveis.
+ * @param {object|null|undefined} obj Raiz a congelar.
+ * @param {WeakSet<object>} [seen=new WeakSet()] Controle de ciclos.
+ * @returns {object|null|undefined} O mesmo objeto, congelado.
+ */
 export function deepFreeze(obj, seen = new WeakSet()) {
   if (obj === null || typeof obj !== "object") return obj;
   if (seen.has(obj)) return obj;
@@ -33,6 +34,10 @@ export function deepFreeze(obj, seen = new WeakSet()) {
   return Object.freeze(obj);
 }
 
+/**
+ * Kit manifesto: comunidade de bairro e comércio local.
+ * @type {object}
+ */
 export const KIT_BAIRRO = deepFreeze({
   id: "kit-bairro",
   version: "1.0.0",
@@ -93,6 +98,10 @@ export const KIT_BAIRRO = deepFreeze({
   },
 });
 
+/**
+ * Kit manifesto: sindicato e associação de trabalhadores.
+ * @type {object}
+ */
 export const KIT_SINDICATO = deepFreeze({
   id: "kit-sindicato",
   version: "1.0.0",
@@ -152,6 +161,10 @@ export const KIT_SINDICATO = deepFreeze({
   },
 });
 
+/**
+ * Kit manifesto: coletivo cultural ou de base.
+ * @type {object}
+ */
 export const KIT_COLETIVO = deepFreeze({
   id: "kit-coletivo",
   version: "1.0.0",
@@ -216,15 +229,30 @@ const KITS_MAP = new Map([
   [KIT_COLETIVO.id, KIT_COLETIVO],
 ]);
 
+/**
+ * Lista os três kits congelados disponíveis.
+ * @returns {object[]}
+ */
 export function listAvailableKits() {
   return [KIT_BAIRRO, KIT_SINDICATO, KIT_COLETIVO];
 }
 
+/**
+ * Busca manifesto por id de kit.
+ * @param {string} kitId Identificador do kit.
+ * @returns {object|null}
+ */
 export function getKitManifest(kitId) {
   if (typeof kitId !== "string") return null;
   return KITS_MAP.get(kitId.trim()) || null;
 }
 
+/**
+ * Valida estrutura, roles, canais, cartuchos e política de segurança.
+ * @param {object} manifest Manifesto do kit.
+ * @returns {true}
+ * @throws {Error} Quando o esquema viola regras do motor de gênese.
+ */
 export function validateKitManifest(manifest) {
   if (!manifest || typeof manifest !== "object") {
     throw new Error("Manifesto do kit deve ser um objeto válido");
@@ -357,6 +385,13 @@ function validatePolicyKeyValue(key, val) {
   }
 }
 
+/**
+ * Instancia estrutura de comunidade a partir de kit validado e metadados do criador.
+ * @param {string} kitId Id do kit registrado.
+ * @param {object} [communityMeta={}] `creatorAddr`, `id` opcional, overrides de policy.
+ * @returns {object} Payload de comunidade pronto para persistência.
+ * @throws {Error} Kit inexistente ou validação falha.
+ */
 export function instantiateCommunityFromKit(kitId, communityMeta = {}) {
   const manifest = getKitManifest(kitId);
   if (!manifest) {

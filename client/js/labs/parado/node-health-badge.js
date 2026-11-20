@@ -1,12 +1,17 @@
 /**
- * Componente Visual de Indicador de Saúde de Nós (Fase Piloto 1-3-9 / B1 junior-components)
- * Renderiza selos semafóricos e listas táteis de telemetria de nós.
+ * @file HTML de selos e listas de saúde de nós (laboratório).
+ * @module labs/parado/node-health-badge
  */
 
 import { escapeHtml } from "../../shared/html.js";
 import { getNodeHealthLabelPtBr, getNodeHealthAriaLabel, formatLatency } from "./node-health-ux.js";
 import { NODE_STATUS } from "./node-health-model.js";
 
+/**
+ * Selo semafórico para um único nó.
+ * @param {{url?: string, status?: string, latencyMs?: number}|null|undefined} record Registro de telemetria.
+ * @returns {string} HTML seguro para injeção.
+ */
 export function renderNodeHealthBadgeHtml(record) {
   if (!record || !record.url) {
     return `<span class="node-health-badge status-offline" aria-label="Nó desconhecido">Offline</span>`;
@@ -20,6 +25,11 @@ export function renderNodeHealthBadgeHtml(record) {
   return `<span class="node-health-badge ${statusClass}" aria-label="${ariaLabel}" title="${ariaLabel}"><span class="badge-dot"></span><span class="badge-label">${label}</span><span class="badge-latency">${latency}</span></span>`;
 }
 
+/**
+ * Lista HTML de nós com selo por linha.
+ * @param {object[]} [records=[]] Registros de telemetria.
+ * @returns {string} HTML seguro para injeção.
+ */
 export function renderNodeHealthListHtml(records = []) {
   if (!Array.isArray(records) || records.length === 0) {
     return `<div class="node-health-empty meta">Nenhum nó monitorado no momento.</div>`;
