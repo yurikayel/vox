@@ -3,7 +3,6 @@
  */
 import * as mock from "../mock.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
-import * as profileDirectory from "../profile-directory.js";
 import { sanitizeMediaUrl } from "../shared/html.js";
 import {
   escapeHtml,
@@ -15,9 +14,6 @@ import {
 } from "./util.js";
 import { extractTopicCivicTag, resolveTopicBadgesHtml } from "./topic-badges.js";
 import {
-  resolveCommunityMemberCount,
-  formatCommunityMembers,
-  resolveCommunityOnlinePeople,
   topicExcerptOneParagraph,
   topicReplyCount,
   buildCommunityMembersSummary,
