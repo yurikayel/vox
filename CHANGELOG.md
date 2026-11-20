@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+_Sem entradas pendentes pós-release 2026-11-20._
+
+## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
+
+### Release
+- `develop` → `main`: #306 drain HTTP · #307 cofre v2 · #308 mesh flood · #309–#311 identity/LT-06 · #310 LT-07 · #312–#316 JSDoc · #313 split comunidade (SW v7.147) · #314 Mesa E1 (lazy) · #315 JSON/LT-04 · #317 índice ops. Pós-deploy: hard refresh ([`ops-pages-rollback.md`](./docs/operations/ops-pages-rollback.md)).
+
 ### Docs: zera toda a dívida ativa de `audit:docs` fora de `labs/parado/` (199 → 79, -120 achados)
 - `client/js/` (24 módulos ativos restantes fora de `labs/parado/`, incluindo `arweave-lib.js`, `chat-bridge.js`, `contacts.js`, `data/profiles-brazil-uf.js`, `electoral-period.js`, `gateway-telemetry.js`, `gossip-retract-ui.js`, `handles.js`, `labs/mofn-lab.js`, `mesh-profile.js`, `nostr-transport.js`, `peers-cache-manifest.js`, `peers-gossip-profile.js`, `pix-key.js`, `post-ownership.js`, `post-wire.js`, `qr-url-gf.js`, `qr-url.js`, `rate-limit.js`, `reply-thread.js`, `repost-index.js`, `repost.js`, `sky-theme.js`, `story-card.js`): JSDoc (`@param`/`@returns`/descrições) nos exports sem alterar lógica.
 - `scripts/docs-debt.json`: podado via `npm run audit:docs -- --prune` (199 → 79 achados; 0 achados em módulos ativos, restando apenas `client/js/labs/parado/`).
