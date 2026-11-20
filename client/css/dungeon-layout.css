@@ -1,0 +1,68 @@
+/**
+ * Mesa Soberana — layout de sessão (E5.0 UI). Carregado sob demanda com o módulo dungeon.
+ */
+
+.dungeon-sanctum.is-session-player .dungeon-map-hero {
+  min-height: min(60vh, 520px);
+}
+
+.dungeon-sanctum.is-session-player .dungeon-map-hero #dungeon-vtt-canvas {
+  max-height: min(52vh, 480px);
+}
+
+.dungeon-sanctum.is-session-gm .dungeon-map-hero {
+  min-height: 42vh;
+}
+
+.dungeon-scene-vignette--compact {
+  margin-bottom: 0.75rem;
+}
+
+.dungeon-z3-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.dungeon-drawer-segment {
+  background: var(--sa-surface-low, #1a1c1f);
+  border-radius: var(--radius-sm, 0.25rem);
+  padding: 0.35rem 0.65rem 0.85rem;
+}
+
+.dungeon-drawer-segment > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.45rem 0.15rem;
+  list-style-position: inside;
+}
+
+.dungeon-drawer-segment .dungeon-chronicle-col,
+.dungeon-drawer-segment .dungeon-dice-col {
+  margin-top: 0.35rem;
+}
+
+@media (min-width: 960px) {
+  .dungeon-sanctum.is-session-player .dungeon-z3-drawer {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment > summary {
+    display: none;
+  }
+
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-dice-col,
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-chronicle-col {
+    display: block;
+  }
+
+  /* Desktop: conteúdo Z3 visível mesmo com <details> fechado pelo usuário. */
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-dice-col,
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-chronicle-col {
+    display: block;
+  }
+}

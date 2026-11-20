@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11; calendário 2027, PM-99…109 abertos e PM-01, PM-13, PM-18 e PM-23 promovidos em 12/11; #92/#94/#101/#108/#115/#118 em `main` e fundamentais `REV-10`/`REV-14`/`PM-72` promovidos para P0 em 13/11; plano de testes para código feito por IA, PM-110 fechado e PM-111…115 abertos em 17/11; PM-111 fechado em 17/11) · **atualizado 2026-11-19 (`develop` pós-#292 `35dd0fe` + lote D4/D5 local):** #262 release `main` · #281–#285 auditoria/docs · #290–#292 README PTLD + `probeVaultUrl` timeout + promoção `render-dm` · D4 `repost-index` + ciclo onboarding zerado · D5 ensaio `SIGV2_FROM` + `PM-01` passo 1 (lazy voxpedia/ajuda/labs, SW `v7.144`) · `SIGV2_FROM` 24/11/2026 (PM-85)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-20 · **atualizado 2026-11-20:** `main` em **`f39f344`** (release SW **`v7.147-community-split`**, #306–#317); `develop` alinhado após sync **`#319`**/**`#320`** · lacunas LT pós-#310/#315 em [plano-testes-login §5.1](./process/plano-testes-login.md) · janela operacional 19–26/11 encerrada (ver abaixo) · `SIGV2_FROM` 24/11/2026 (PM-85)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -8,35 +8,32 @@
 
 ## Onde estamos (nov/2026)
 
-O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pix Zaps, DMs E2E, contas vinculadas, fluxos em etapas. Ver o [CHANGELOG](../CHANGELOG.md). O que falta para a rede **se sustentar sem o mantenedor** é quase tudo **infra e gente**:
+O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pix Zaps, DMs E2E, contas vinculadas, fluxos em etapas. **`main`** em **`f39f344`** com release SW **`v7.147-community-split`** (#306–#317, ver [CHANGELOG](../CHANGELOG.md)); **`develop`** sincronizado após **`#319`**/**`#320`**. O que falta para a rede **se sustentar sem o mantenedor** é quase tudo **infra e gente**:
 
 - a sinalização depende de 1 nó Render; o caminho Nostr (REV-09 + reconexão automática PM-17) roda em paralelo, mas ainda não foi medido em campo; o servidor Python (`relay/signaling.py`) já tem prazo no handshake e remontagem de quadros fragmentados (`relay/test_signaling_robustez.py`);
-- o [plano de testes do login](./process/plano-testes-login.md) ([ADR-037](./adr/037-cofre-na-malha.md)): **LT-01, 03, 04, 05, 08 e 10** fechados em `develop`; **LT-02, 06 e 07** em parte, com achados abertos em §5.1 (LT-06a–c, LT-07a–d; #220); **LT-09** ainda aberto;
+- o [plano de testes do login](./process/plano-testes-login.md) ([ADR-037](./adr/037-cofre-na-malha.md)): **LT-01, 03, 04, 05, 08 e 10** fechados em `main`/`develop` (LT-04 reforçado em #315); **LT-02, 06 e 09** ainda em parte — lacunas conferidas em §5.1: **LT-07d** (poll da espera da malha após recarga); **LT-02** (`lockAfterPasswordBackup` com `remote=0` em `test.todo`); **LT-06a** parcial (sincronia entre abas ok; faltam corrida real na criação e aviso de storage cheio); **LT-06b/c** e **LT-07a/b/c** fechados no lote #309–#311 / **#310**; **LT-09** adiado (veto da dona nos guardiões, ADR-037 §3.5);
 - não há relay completo público; **ops** de TURN e 2º nó de sinalização ficam no gatilho **>50 ativos** ([INF-01…04](#infra-dos-relays--adiada-até-passar-de-50-usuários-ativos), decisão 19/11/2026) — abaixo disso vale o que já está no ar (1× Render + keepalive #282);
 - o espelho B (`vox-9df.pages.dev`, NET-01) está no ar e registrado, mas ainda sob o mesmo operador do A (independência depende do LAN-30);
 - **Sem gravação no Arweave por enquanto (`arweaveUpload: false` desde 13/11/2026):** nada é salvo usando Arweave neste momento — a preservação e a distribuição passam pela **rede de seguidores** (você replica o conteúdo de quem você segue, combinando a malha WebRTC/gossip/sync por inventário já no ar com o `PM-74`). O Arweave segue previsto apenas para alguns recursos futuros específicos (ex.: cartório cívico e memória consensual). *(Em código, `arweaveUpload: false` vem ligado por padrão em `client/config/flags.json` e `client/js/feature-flags.js`, com guardas ativos nos fluxos de escrita — ver `REV-07`.)*
 - o piloto humano (V-P09) não começou;
 - para abrir ao público faltam o parecer jurídico, a resposta a conteúdo grave e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan);
-- **Auditoria nov/2026:** #284 (análise + prompt) e #285 (README/metadata fase 1) integrados em `develop`; relatório de auditoria + `FEATURES.md` (`DOC-06`, PR #286) e spec do MVP técnico (`DOC-07`) em fila;
-- **Login (`LT-02/06/07`):** `LT-06a` parcialmente fechado (`identity/tab-sync.js` + `tests/tab-sync.test.js`); `LT-07` parcial (`tests/onboarding-reload-keyboard.test.js`); `LT-02` parcial — `probeVaultUrl` timeout fechado (#291); resta `lockAfterPasswordBackup`/`remote=0` (`test.todo`);
-- **24/11/2026 (`SIGV2_FROM`, PM-85):** virada automática para assinatura `sigv: 2` em [sig-format.js](../client/js/sig-format.js); ensaio com relógio simulado antes de 24/11 e conferência no dia.
+- **Auditoria nov/2026:** **DOC-06** ([`auditoria-features-arquitetura-2026-11.md`](./audits/auditoria-features-arquitetura-2026-11.md) + `FEATURES.md`) e **DOC-07** ([`mvp-tecnico-vox-2026-11.md`](./strategy/mvp-tecnico-vox-2026-11.md)) já em **`main`** desde a release **v7.146** (#290–#292; ver [CHANGELOG](../CHANGELOG.md)); pós-release **v7.147**, dívida ativa de `audit:docs` nos módulos fora de `labs/parado/` zerada (#312–#316);
+- **Hardening pós-release:** foco em **DOC-04** (copy Voxpedia × `FEATURES`), dívida remanescente só em `client/js/labs/parado/`, **`PM-01`** (passo 1 lazy no ar em SW v7.144; teto do precache ainda aberto), **`PM-112`** (spike registrado em #317) e `test.todo` restantes do login (sem mudança de protocolo);
+- **24/11/2026 (`SIGV2_FROM`, PM-85):** virada automática para assinatura `sigv: 2` em [sig-format.js](../client/js/sig-format.js); ensaio com relógio simulado já em `tests/sig-format.test.js` (D5, #292); conferência no relógio real em 24/11.
 
-## Próximos 7 dias (19–26/11/2026)
+## Próximos 7 dias (19–26/11/2026) — encerrado
 
-> Plano operacional de curto prazo; não substitui P0/P1. Próxima rotação: 27/11. **Evento fixo:** `SIGV2_FROM` = 24/11/2026 00:00 UTC ([sig-format.js](../client/js/sig-format.js)) — assinatura padrão `sigv: 2`.
+> **Supersedido em 20/11/2026** pelo ciclo pós-release **v7.147** e pela rotação de 27/11. Registro factual do que executou na janela; não substitui P0/P1.
 
-| Dia | Entrega principal | IDs |
+| Marco | Entrega | Evidência |
 |---|---|---|
-| 19/11 | Merge #285 · PR doc relatório + `FEATURES.md` (#286) | DOC-04 parcial · DOC-06 |
-| 20/11 | Spec MVP técnico · sync `ROADMAP` / plano login / `THREAT-MODEL` T19 | DOC-07 |
-| 21–22/11 | Fixes `test.todo` (`render/dm.js`, `login-rede-ruim`, `repost-index`, ciclo `onboarding`) | — |
-| 23/11 | Ensaio `SIGV2_FROM` + `PM-01` passo 1 (lazy shell, meta −20% precache) | PM-01 · PM-85 |
-| 24/11 | Conferência `sigv: 2` no relógio real · spike `PM-112` | PM-112 |
-| 25–26/11 | JSDoc dívida `labs/`/`data/` · decisão release `develop` → `main` | DOC-04 |
+| 19–20/11 | DOC-06/DOC-07 integrados; README PTLD e metadados | `main` v7.146 (#290–#292) |
+| 21–23/11 | D4/D5: `repost-index`, ciclo onboarding, ensaio `SIGV2_FROM`, **PM-01** passo 1 (lazy shell) | SW v7.144 (#292) |
+| 20/11 | Release **develop → main** (#306–#317), SW **v7.147** | `f39f344` · sync develop #319/#320 |
+| 24/11 (pendente) | Conferência `sigv: 2` no relógio real | `SIGV2_FROM` · PM-85 |
+| Pós-26/11 | Hardening doc (`audit:docs` em `labs/parado/`), **DOC-04**, lacunas LT-02/06a/07d | ver [Agora (P0)](#agora-p0) |
 
-**Congelado nesta janela:** INF-01…04 · REV-01/10/NET-02 ops · PIL/V-P09/LAN parecer · cripto nova (LAN-18) · PM-79/mochila v2 · DM envelope assinado.
-
-**P0 executável (código/doc local):** fechar auditoria docs (`DOC-06`/`DOC-07`) · `PM-01` (passo 1) · `PM-112` (spike) · correções já cobertas por `test.todo` (sem mudança de protocolo).
+**Congelado (inalterado):** INF-01…04 · REV-01/10/NET-02 ops · PIL/V-P09/LAN parecer · cripto nova (LAN-18) · PM-79/mochila v2 · DM envelope assinado.
 
 ## Calendário 2027
 
@@ -102,9 +99,7 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 | [ ] | **REV-21** | ops-humano | **Banda do Render (B8):** anotar a banda incluída real (Billing → *Monthly Included Usage*). Garantir que o nó só sinaliza, com limite de taxa e `/metrics` de bytes de saída. Sem cartão, estourar a banda suspende **todos** os serviços Free até o fim do mês; 750 h/workspace = um só serviço sempre ligado | [complementar §1-F](./research/pesquisa-complementar-2026-11.md#f-infraestrutura) |
 | [ ] | **REV-22** | ops-humano | **`FUNDING.yml` + GitHub Sponsors (B10):** Brasil é região aceita, 0% em patrocínio pessoal. NGI Zero Commons encerrado (01/06/2026); acompanhar NLnet (03/01/2027) e OTF IFF | [complementar §1-H](./research/pesquisa-complementar-2026-11.md#h-financiamento) |
 | [ ] | **REV-02** | code | Decidir, módulo a módulo, **plugar ou arquivar** os 21 módulos em `UNPLUGGED_MODULES` (`kit-genesis.js` é ganho rápido para o piloto) | lista em [FEATURES.md](./FEATURES.md); vários viram features do brainstorm · 17/11: os 21 foram para `client/js/labs/parado/` (guardados, isolados pela regra de camadas); plugar segue módulo a módulo |
-| [ ] | **LT-02,06,07,09** | code | **Lacunas restantes do plano de testes do login** (LT-01, 03, 04, 05, 08 e 10 fechados — ver *Concluído*) | **LT-06a:** parcial — `identity/tab-sync.js` + `tests/tab-sync.test.js` (faltam corrida real entre duas abas na criação e aviso de storage cheio). **LT-07:** parcial — recarga/teclado (#210, #224, `onboarding-reload-keyboard.test.js`; faltam focus trap e kit e-mail). **LT-02:** parcial — #207 + #291 (`probeVaultUrl` timeout 4s; resta `lockAfterPasswordBackup` com `remote=0` em `test.todo`). **LT-09:** veto da dona nos guardiões (ADR-037 §3.5) — adiado · [plano-testes-login.md](./process/plano-testes-login.md) §5 e §5.1 |
-| [ ] | **DOC-06** | doc | **Relatório de auditoria (Fases 1–3) + alinhamento de [FEATURES.md](./FEATURES.md):** `docs/audits/auditoria-features-arquitetura-2026-11.md` + correções `idb-store`, `node-health-*`, ADR-037, `tab-sync`, paths pré-ADR-035 e teste `signed-verify` | PR #286 aberto em `develop` · [prompt](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
-| [ ] | **DOC-07** | doc | **Spec do MVP técnico (10 seções):** `docs/strategy/mvp-tecnico-vox-2026-11.md` (plataforma técnica sem nicho, núcleo precache vs lazy vs labs, DoD) + índice em `docs/README.md` | PR #3 após merge do #286 · [prompt](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
+| [ ] | **LT-02,06,07,09** | code | **Lacunas restantes do plano de testes do login** (LT-01, 03–05, 08 e 10 fechados — ver *Concluído*; LT-06b/c e LT-07a–c fechados em #309–#311/#310) | **LT-06a:** parcial — `identity/tab-sync.js` + `tests/tab-sync.test.js` (faltam corrida real entre duas abas na criação e aviso de storage cheio). **LT-07d:** poll da espera da malha após recarga (§5.1). **LT-02:** parcial — #207 + #291 (`probeVaultUrl` timeout); resta `lockAfterPasswordBackup` com `remote=0` em `test.todo`. **LT-09:** veto da dona nos guardiões (ADR-037 §3.5) — adiado · [plano-testes-login.md](./process/plano-testes-login.md) §5 e §5.1 |
 | [ ] | **REV-04** | ops-humano | **Relay completo público** operado por steward (inbox de DM, `/oauth/exchange`, cofre) com buddy | [relay-api.md](./specs/relay-api.md), [steward-relay-buddy.md](./operations/steward-relay-buddy.md) |
 | [ ] | **NET-04** | ops-humano | Smoke de steward por alguém que não seja o mantenedor | [steward-relay-kit.md](./operations/steward-relay-kit.md) |
 | [ ] | **PIL-04** | ops-humano | Barra da semana 4: ≥3 Apoiadores ou 1 steward + espelho OK | V-P04/05/06 |
@@ -301,6 +296,8 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 | [x] | DOC-02 | doc | Contagem única de testes (agora só no README e na metadata) | herdado do dossiê §3.6 |
 | [x] | DOC-03 | doc | Índice [docs/README.md](./README.md) (v2.2 em 2026-11-08) | herdado do dossiê §3.6 |
 | [x] | DOC-05 | doc | `steward-wizard-brainstorm` com banner SUPERSEDED | herdado do dossiê §3.6 |
+| [x] | **DOC-06** | doc | Relatório de auditoria (Fases 1–3) + alinhamento de [FEATURES.md](./FEATURES.md) | ✅ `main` v7.146 (#290–#292) · [`auditoria-features-arquitetura-2026-11.md`](./audits/auditoria-features-arquitetura-2026-11.md) |
+| [x] | **DOC-07** | doc | Spec do MVP técnico (10 seções) + índice em `docs/README.md` | ✅ `main` v7.146 (#290–#292) · [`mvp-tecnico-vox-2026-11.md`](./strategy/mvp-tecnico-vox-2026-11.md) |
 | [x] | NET-03 | doc | Runbook V-P08 — [steward-relay-buddy.md](./operations/steward-relay-buddy.md) | herdado do dossiê §3.6 |
 | [x] | CODE-01 | code | Job `pilot-freeze` no CI + DEV §0.1 | herdado do dossiê §3.6 |
 | [x] | EXP-01 | code | POSSE Tier A/B | herdado do dossiê §3.6 |
