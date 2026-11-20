@@ -128,8 +128,11 @@ function renderLastFormulaSummary(state) {
 
 function renderFormulaTray(state) {
   const quickBtns = QUICK_FORMULAS.map((q) => `<button type="button" class="dungeon-chip-btn" data-dungeon="roll-quick" data-formula="${escapeHtml(q.formula)}">${escapeHtml(q.label)}</button>`).join("");
+  const dice3d = state.dice3dEnabled !== false;
+  const dice3dLabel = dice3d ? "Dados 3D ligados" : "Dados 3D desligados";
   return `
     <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${renderRollModeChips(state.rollMode)}</div>
+    <button type="button" class="dungeon-chip-btn" data-dungeon="toggle-dice3d" aria-pressed="${dice3d}">${escapeHtml(dice3dLabel)}</button>
     <form class="dungeon-action-form" data-dungeon="roll-formula-form">
       <label class="sr-only" for="dungeon-roll-input">Fórmula de dados</label>
       <div class="dungeon-input-row">

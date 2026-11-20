@@ -19,6 +19,7 @@ import {
   projectTacticsFloorForPlayer,
   TACTICS_OP_HANDLERS,
 } from "./vtt-tactics-reducer.js";
+import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
 
 const GM_ONLY_OPS = new Set([
   "SCENE_UPSERT",
@@ -28,6 +29,10 @@ const GM_ONLY_OPS = new Set([
   "TOKEN_LAYER_SET",
   "TOKEN_REMOVE",
   "CAMPAIGN_META_UPDATE",
+  "CALENDAR_SET",
+  "CALENDAR_ADVANCE",
+  "NOTE_PIN",
+  "NOTE_VISIBILITY",
 ]);
 
 function isGmActor(state, actor) {
@@ -53,6 +58,7 @@ export function isAuthorizedVttOp(state, op) {
   if (isGmActor(state, op.actor)) return true;
   if (GM_ONLY_OPS.has(op.type)) return false;
   if (op.type in TACTICS_OP_HANDLERS) return isPlayerAuthorizedForTacticsOp(state, op);
+  if (op.type in CAMPAIGN_OP_HANDLERS) return isPlayerAuthorizedForCampaignOp(state, op, false);
   if (op.type === "TOKEN_MOVE") return canPlayerMoveToken(state, op);
   return true;
 }
@@ -234,6 +240,7 @@ const OP_HANDLERS = {
   TOKEN_LAYER_SET: applyTokenLayerSet,
   TOKEN_REMOVE: applyTokenRemove,
   ...TACTICS_OP_HANDLERS,
+  ...CAMPAIGN_OP_HANDLERS,
 };
 
 /**
@@ -289,6 +296,21 @@ function projectSceneForPlayer(scene, viewerRouteId) {
   return { ...scene, floors, tokens: visibleTokens };
 }
 
+function projectNotesForPlayer(notesById, viewerRouteId) {
+  return Object.fromEntries(
+    Object.entries(notesById || {})
+      .filter(([, n]) => n.visibility !== "gm_only")
+      .map(([id, n]) => [
+        id,
+        {
+          ...n,
+          gmSecretMarkdown: "",
+          canvasJson: n.visibility === "player_private" && n.ownerRouteId && n.ownerRouteId !== viewerRouteId ? null : n.canvasJson,
+        },
+      ]),
+  );
+}
+
 /**
  * Projeta o estado da campanha de forma fail-closed: apenas `viewerRole === "gm"` recebe segredos;
  * qualquer outro papel recebe projeção sem camada GM, portas secretas, iniciativa oculta, segredos `%%...%%`, PV exato oculto e rolagens cegas.
@@ -303,9 +325,7 @@ export function projectStateForPlayer(state, viewerRole = "player", viewerRouteI
   const sheetsById = Object.fromEntries(
     Object.entries(state.sheetsById || {}).map(([id, s]) => [id, s?.sheet_meta ? { ...s, sheet_meta: { ...s.sheet_meta, notes_gm: "" } } : s]),
   );
-  const notesById = Object.fromEntries(
-    Object.entries(state.notesById || {}).map(([id, n]) => [id, { ...n, gmSecretMarkdown: "" }]),
-  );
+  const notesById = projectNotesForPlayer(state.notesById, viewerRouteId);
   const scenesById = Object.fromEntries(
     Object.entries(state.scenesById || {}).map(([id, sc]) => [id, projectSceneForPlayer(sc, viewerRouteId)]),
   );

@@ -3,6 +3,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderCampfireSceneSvg } from "./rpg-illustrations.js";
+import { renderNotesPanel } from "./screen-notes.js";
 
 const ROLE_LABELS_PTBR = {
   STAGE1_JUDGE_RULES: { title: "Juiz de Regras", duty: "Valida acertos e danos", icon: "shield" },
@@ -193,6 +194,21 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
     </article>`;
 }
 
+function renderCalendarPanel(state) {
+  const label = state.worldDateLabel || "Calendário disponível ao abrir uma campanha.";
+  return `
+    <div class="dungeon-action-form" aria-label="Calendário do mundo">
+      <span class="dungeon-eyebrow">Tempo do Mundo</span>
+      <p class="dungeon-inline-status" role="status">${escapeHtml(label)}</p>
+      <div class="dungeon-card-actions">
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-round">+1 Rodada (6s)</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-10m">+10 min</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-short-rest">Descanso Curto</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-long-rest">Descanso Longo</button>
+      </div>
+    </div>`;
+}
+
 function renderBackupControls() {
   return `
     <div class="dungeon-action-form">
@@ -208,19 +224,21 @@ function renderBackupControls() {
       </div>
       <div class="dungeon-input-row">
         <label for="dungeon-import-file" class="dungeon-muted">Importar <code>.voxrpg.zip</code>, <code>.voxrpg.enc</code> ou ficha/nota <code>.md</code> (Obsidian):</label>
-        <input id="dungeon-import-file" class="dungeon-input" type="file" accept=".zip,.enc,.md,application/zip,application/json,text/markdown" data-dungeon="import-file" />
+        <input id="dungeon-import-file" class="dungeon-input" type="file" accept=".zip,.enc,.md,.canvas,application/zip,application/json,text/markdown" data-dungeon="import-file" />
       </div>
     </div>`;
 }
 
+function renderSavedCampaignsGrid(state, list) {
+  if (!list.length) {
+    return `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha abaixo ou importe um pacote <code>.voxrpg.zip</code> / nota <code>.md</code> do Obsidian.</p>`;
+  }
+  return `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`;
+}
+
 function renderCampaignsSection(state) {
   const list = Array.isArray(state.campaigns) ? state.campaigns : [];
-  const cardsHtml = list.length
-    ? `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`
-    : `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha abaixo ou importe um pacote <code>.voxrpg.zip</code> / nota <code>.md</code> do Obsidian.</p>`;
-  const noticeHtml = state.campaignNotice
-    ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>`
-    : "";
+  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   return `
     <section class="dungeon-panel" aria-label="Campanhas salvas localmente">
       <div class="dungeon-section-head">
@@ -231,6 +249,7 @@ function renderCampaignsSection(state) {
         <span class="dungeon-code-tag">${list.length} campanha(s) salva(s)</span>
       </div>
       ${renderStorageMeter(state.storageUsage)}
+      ${state.campaignId ? renderCalendarPanel(state) : ""}
       <form class="dungeon-action-form" data-dungeon="create-campaign-form">
         <label class="sr-only" for="dungeon-campaign-name">Nome da nova campanha</label>
         <div class="dungeon-input-row">
@@ -239,7 +258,7 @@ function renderCampaignsSection(state) {
         </div>
       </form>
       ${noticeHtml}
-      ${cardsHtml}
+      ${renderSavedCampaignsGrid(state, list)}
       ${renderBackupControls()}
     </section>`;
 }
@@ -257,6 +276,7 @@ export function renderCampScreen(state) {
     ${renderGuardiansPanel(state)}
     ${renderFavoriteSliderSection(state)}
     ${renderCampaignsSection(state)}
+    ${state.campaignId ? renderNotesPanel(state) : ""}
     ${renderTablesSection(state)}
     <details class="dungeon-audit">
       <summary>Detalhes Técnicos (W-DRF, Quotas e Estabilidade MoA)</summary>
