@@ -1,6 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 function createMockEl(tag = "div") {
   return {
@@ -347,4 +348,25 @@ test("community-forum-refinements - renderComposeTopic renderiza seletor de cate
   assert.ok(html.includes('data-tag="[Bug]"'), "Deve conter botão [Bug]");
   assert.ok(html.includes('data-tag="[Ideia]"'), "Deve conter botão [Ideia]");
   assert.ok(html.includes('data-tag="[Debate Geral]"'), "Deve conter botão [Debate Geral]");
+});
+
+test("screens-community mantém acoplamento abaixo de 25 imports e preserva fachada e telas de votação", async () => {
+  const src = fs.readFileSync(new URL("../client/js/app/screens-community.js", import.meta.url), "utf8");
+  const importCount = (src.match(/^import\s/gm) || []).length;
+  assert.ok(importCount < 25, `esperado < 25 imports em screens-community.js, obteve ${importCount}`);
+  for (const name of [
+    "resolveCommunityMetadata",
+    "checkCommunityMembership",
+    "dispatchCommunityModAction",
+    "buildCommunityRecentPeople",
+    "showCommunity",
+    "attachCommunityListingHandlers",
+    "resolveTopicContent",
+  ]) {
+    assert.equal(typeof screensCommunity[name], "function", `screens-community deve exportar ${name}`);
+  }
+  const screensVote = await import("../client/js/app/screens-vote.js");
+  for (const name of ["showProposal", "fetchProposalData", "loadProposalVotes", "castGovernanceVote", "attachProposalVotingHandlers", "loadVoteItems", "showVote"]) {
+    assert.equal(typeof screensVote[name], "function", `screens-vote deve exportar ${name}`);
+  }
 });

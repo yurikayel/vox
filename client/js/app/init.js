@@ -20,11 +20,9 @@ import {
   showTagFeed,
 } from "./screens-home.js";
 import { showPeople } from "./screens-people.js";
-import {
-  showCommunity,
-  showTopic,
-  showProposal,
-} from "./screens-community.js";
+import { showCommunity } from "./screens-community.js";
+import { showTopic } from "./community-topic-screen.js";
+import { showProposal } from "./screens-vote.js";
 import {
   bumpReplyCount,
   appendInlineReply,
