@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Doc: JSDoc completo em `client/js/labs/parado/` (dívida #316)
+- 14 módulos do laboratório: cabeçalho `@file` + JSDoc em todos os exports; `audit:docs` **79 → 0** (`docs-debt.json` esvaziado com `--prune`).
+
 ### Fix: Mesa E5 P1 handouts + prefs visão jogador
 - `screen-notes.js`: `renderHandoutViewer` usa visibilidade `shared` (schema VTT), links `https?` externos; drawer Z3 na sessão jogador.
 - `dungeon-persistence.js` / `dungeon-controller.js`: `viewerRole` persiste em `vox-dungeon-prefs-v1`.

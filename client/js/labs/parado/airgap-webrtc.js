@@ -1,16 +1,21 @@
 /**
- * airgap-webrtc.js — Pareamento Serverless Air-Gapped via QR Code SDP (Vox)
- *
- * Viabiliza conexão P2P direta entre dois navegadores/dispositivos sem passar
- * por NENHUM servidor de sinalização WebSocket externo. O handshake de SDP
- * ocorre inteiramente através da leitura mútua de telas via câmera óptica.
+ * @file Handshake WebRTC air-gapped via envelope SDP em QR (laboratório; sem sinalização central).
+ * @module labs/parado/airgap-webrtc
  */
 
+/**
+ * Nome do canal de dados usado no pareamento.
+ * @type {string}
+ */
 export const AIRGAP_CHANNEL_NAME = "vox-airgap-v0";
 
+/**
+ * Filtra o SDP para linhas essenciais de DataChannel SCTP.
+ * @param {string} sdp SDP bruto.
+ * @returns {string} SDP compactado ou string vazia.
+ */
 export function cleanSdp(sdp) {
   if (!sdp || typeof sdp !== "string") return "";
-  // Mantém apenas linhas essenciais para DataChannel SCTP
   const keepPrefixes = ["v=", "o=", "s=", "t=", "c=", "m=application", "a=mid:", "a=sctp-port:", "a=max-message-size:", "a=ice-ufrag:", "a=ice-pwd:", "a=fingerprint:", "a=setup:", "a=candidate:"];
   return sdp
     .split(/\r?\n/)
@@ -18,6 +23,14 @@ export function cleanSdp(sdp) {
     .join("\r\n") + "\r\n";
 }
 
+/**
+ * Serializa oferta ou resposta SDP num envelope JSON para QR.
+ * @param {"offer"|"answer"} type Tipo WebRTC.
+ * @param {string} sdp SDP local.
+ * @param {string} [peerAddress=""] Endereço Vox opcional do par.
+ * @returns {string} JSON do envelope.
+ * @throws {Error} Quando faltam type ou sdp.
+ */
 export function encodeSdpEnvelope(type, sdp, peerAddress = "") {
   if (!type || !sdp) {
     throw new Error("type e sdp são obrigatórios");
@@ -32,6 +45,11 @@ export function encodeSdpEnvelope(type, sdp, peerAddress = "") {
   return JSON.stringify(envelope);
 }
 
+/**
+ * Desserializa envelope SDP; falhas retornam `{ valid: false, error }`.
+ * @param {string} envelopeStr JSON do envelope.
+ * @returns {{valid: boolean, error?: string, type?: string, sdp?: string, peerAddress?: string}}
+ */
 export function decodeSdpEnvelope(envelopeStr) {
   if (!envelopeStr || typeof envelopeStr !== "string") {
     return { valid: false, error: "Envelope vazio ou inválido" };
@@ -53,6 +71,12 @@ export function decodeSdpEnvelope(envelopeStr) {
   }
 }
 
+/**
+ * Cria oferta local, espera ICE e devolve envelope para QR.
+ * @param {RTCPeerConnection} pc Conexão peer.
+ * @param {string} [peerAddress=""] Endereço local opcional no envelope.
+ * @returns {Promise<{envelope: string, dataChannel: RTCDataChannel}>}
+ */
 export function createAirgapOffer(pc, peerAddress = "") {
   if (!pc || typeof pc.createOffer !== "function") {
     return Promise.reject(new Error("RTCPeerConnection válido é mandatário"));
@@ -69,6 +93,13 @@ export function createAirgapOffer(pc, peerAddress = "") {
     });
 }
 
+/**
+ * Aplica oferta do QR, gera resposta e devolve envelope da resposta.
+ * @param {RTCPeerConnection} pc Conexão peer.
+ * @param {string} offerEnvelopeStr JSON da oferta.
+ * @param {string} [peerAddress=""] Endereço local opcional.
+ * @returns {Promise<{envelope: string, offerPeerAddress: string}>}
+ */
 export function createAirgapAnswer(pc, offerEnvelopeStr, peerAddress = "") {
   const decoded = decodeSdpEnvelope(offerEnvelopeStr);
   if (!decoded.valid || decoded.type !== "offer") {
@@ -88,6 +119,12 @@ export function createAirgapAnswer(pc, offerEnvelopeStr, peerAddress = "") {
     });
 }
 
+/**
+ * Aplica resposta do QR e fecha o handshake.
+ * @param {RTCPeerConnection} pc Conexão peer.
+ * @param {string} answerEnvelopeStr JSON da resposta.
+ * @returns {Promise<{success: boolean, answerPeerAddress: string}>}
+ */
 export function completeAirgapHandshake(pc, answerEnvelopeStr) {
   const decoded = decodeSdpEnvelope(answerEnvelopeStr);
   if (!decoded.valid || decoded.type !== "answer") {
