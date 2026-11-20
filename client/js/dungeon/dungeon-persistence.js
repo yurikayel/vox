@@ -4,7 +4,7 @@
  * ao estado de sessão do `#/dungeon` sem acoplamento circular com `dungeon-state.js`.
  * @module dungeon/dungeon-persistence
  */
-import { rollDiceFormula } from "./dice-engine.js";
+import { parseDiceCommand, rollDiceFormula } from "./dice-engine.js";
 import { chronicleToMarkdown, markdownToNote, markdownToSheet, splitFrontmatter } from "./obsidian-bridge.js";
 import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { reduceCampaign } from "./vtt-reducer.js";
@@ -240,6 +240,94 @@ export async function persistSheetDeltaIfActive(state, poolKey, delta, reason, s
   return applyAndPersistOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, target_pool: targetPool, delta, reason }, store);
 }
 
+function validateCustomAction(action) {
+  const label = String(action?.label || "").trim();
+  const roll = String(action?.roll || "").trim();
+  const damage = String(action?.damage || "").trim();
+  if (!label || !roll) return { ok: false, error: "Informe nome e fórmula da ação (ex.: Arco Longo · 1d20+@des)." };
+  try {
+    parseDiceCommand(roll);
+    if (damage) parseDiceCommand(damage);
+    return { ok: true, action: { label, roll, damage, tag: action?.tag || "acao" } };
+  } catch (err) {
+    return { ok: false, error: err?.message || "Fórmula inválida para a ação." };
+  }
+}
+
+/**
+ * Adiciona ou atualiza uma ação clicável customizada na ficha ativa (`SHEET_ACTION_UPSERT`), validando a fórmula antes.
+ * @param {object} state Estado da sessão.
+ * @param {{ label: string, roll: string, damage?: string, tag?: string }} action Dados da ação.
+ * @param {object} [opts={}] Opções (`store`).
+ * @returns {Promise<{ ok: boolean, error?: string }>} Resultado da operação.
+ */
+export async function addCustomSheetAction(state, action, opts = {}) {
+  const store = opts.store || getDefaultVttStore();
+  const check = validateCustomAction(action);
+  if (!check.ok) {
+    state.rollError = check.error;
+    return check;
+  }
+  state.rollError = "";
+  const reduced = await applyAndPersistOp(state, "SHEET_ACTION_UPSERT", { sheetId: state.sheet?.character_id, action: check.action }, store);
+  const activeSheet = reduced?.sheetsById?.[reduced.activeSheetId];
+  if (!state.campaignId && activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
+  return { ok: true };
+}
+
+/**
+ * Exclui uma campanha salva do `VttStore` e atualiza a sessão ativa (abrindo a próxima restante, se houver).
+ * @param {object} state Estado da sessão.
+ * @param {string} campaignId Identificador da campanha a excluir.
+ * @param {object} [store] Instância de `VttStore`.
+ * @returns {Promise<void>} Concluído após atualizar o estado.
+ */
+export async function deleteSavedCampaign(state, campaignId, store = getDefaultVttStore()) {
+  await store.deleteCampaign(campaignId);
+  state.pendingDeleteId = "";
+  await refreshStoreSummary(state, store);
+  if (state.campaignId === campaignId) {
+    state.campaignId = "";
+    state.campaignDoc = null;
+    if (state.campaigns[0]?.id) {
+      const next = await store.loadCampaign(state.campaigns[0].id);
+      if (next) hydrateStateFromCampaign(state, next);
+    }
+  }
+  state.campaignNotice = `Campanha "${campaignId}" removida deste aparelho.`;
+}
+
+/**
+ * Persiste turnos narrativos recém-adicionados em `submitTableAction` e respectivos deltas CRDT quando há campanha ativa.
+ * @param {object} state Estado da sessão.
+ * @param {Array<object>} newEntries Entradas de crônica geradas no turno.
+ * @param {Array<object>} newDeltas Operações de `delta_ledger` geradas no turno.
+ * @param {object} [store] Instância de `VttStore`.
+ * @returns {Promise<void>} Concluído após persistir as operações.
+ */
+export async function persistTableTurnIfActive(state, newEntries, newDeltas = [], store = getDefaultVttStore()) {
+  if (!state.campaignId) return;
+  for (const entry of newEntries || []) {
+    await applyAndPersistOp(state, "CHRONICLE_APPEND", { speaker: entry.speaker, badge: entry.badge, text: entry.text, rollNote: entry.rollNote }, store);
+  }
+  for (const op of newDeltas || []) {
+    await applyAndPersistOp(state, "SHEET_DELTA", { sheetId: state.sheet?.character_id, deltaOpId: op.op_id, target_pool: op.target_pool, delta: op.delta, reason: op.reason }, store);
+  }
+}
+
+/**
+ * Persiste uma rolagem simples da Bandeja D20 quando há campanha salva ativa.
+ * @param {object} state Estado da sessão.
+ * @param {number} value Valor sorteado (`1..20`).
+ * @param {object} [store] Instância de `VttStore`.
+ * @returns {Promise<void>} Concluído após persistir a rolagem.
+ */
+export async function persistD20RollIfActive(state, value, store = getDefaultVttStore()) {
+  if (!state.campaignId) return;
+  const rollResult = { formula: "1d20", resolvedFormula: "1d20", label: "Bandeja D20", visibility: "public", rolls: [{ sides: 20, value, kept: true, exploded: false }], total: value, crits: value === 20 ? 1 : 0, fumbles: value === 1 ? 1 : 0 };
+  await applyAndPersistOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult }, store);
+}
+
 /**
  * Exporta a campanha ativa em `.voxrpg.zip`, `.voxrpg.enc` (cifrado via Senha Soberana) ou crônica `.md` (Obsidian).
  * @param {object} state Estado da sessão.
@@ -266,7 +354,7 @@ export async function exportCampaignBackup(state, opts = {}) {
 async function importMarkdownIntoCampaign(state, text, fileName, store) {
   if (!state.campaignId) await createAndSelectCampaign(state, state.tableName || "Campanha Importada", { store });
   const { data } = splitFrontmatter(text);
-  const isSheet = data.vox_tipo === "ficha" || Boolean(data.atributos) || Boolean(data.abilities);
+  const isSheet = data.tipo === "ficha" || data.tipo === "npc" || data.vox_tipo === "ficha" || Boolean(data.atributos) || Boolean(data.abilities);
   if (isSheet) {
     const sheet = markdownToSheet(text, { campaign_id: state.campaignId, name: fileName.replace(/\.md$/i, "") });
     await applyAndPersistOp(state, "SHEET_UPSERT", { sheet, setActive: true }, store);

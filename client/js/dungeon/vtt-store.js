@@ -219,6 +219,19 @@ async function estimateUsageWithCfg(cfg) {
   return { ...est, persisted };
 }
 
+function createCampaignQueue() {
+  const tails = new Map();
+  return (key, fn) => {
+    const prev = tails.get(key) || Promise.resolve();
+    const run = prev.catch(() => {}).then(fn);
+    const tail = run.finally(() => {
+      if (tails.get(key) === tail) tails.delete(key);
+    });
+    tails.set(key, tail);
+    return run;
+  };
+}
+
 /**
  * Instancia o repositório local-first da Mesa Soberana sobre um backend (IndexedDB ou memória).
  * @param {object} [backend] Backend de persistência; usa IndexedDB quando disponível, ou memória em fallback.
@@ -227,6 +240,7 @@ async function estimateUsageWithCfg(cfg) {
  */
 export function createVttStore(backend, opts = {}) {
   const b = backend || (typeof globalThis.indexedDB?.open === "function" ? createIdbVttBackend() : createMemoryVttBackend());
+  const enqueue = createCampaignQueue();
   const cfg = {
     snapshotInterval: Math.max(1, Math.trunc(Number(opts.snapshotInterval) || SNAPSHOT_INTERVAL)),
     requestPersistenceFn: opts.requestPersistenceFn || requestPersistence,
@@ -235,10 +249,10 @@ export function createVttStore(backend, opts = {}) {
   };
   return {
     listCampaigns: () => listCampaignsWithBackend(b),
-    saveCampaign: (doc) => saveCampaignWithBackend(b, cfg, doc),
+    saveCampaign: (doc) => enqueue(doc?.id || "__new__", () => saveCampaignWithBackend(b, cfg, doc)),
     loadCampaign: (id) => loadCampaignWithBackend(b, id),
-    appendOp: (id, op) => appendOpWithBackend(b, cfg, id, op),
-    deleteCampaign: (id) => deleteCampaignWithBackend(b, id),
+    appendOp: (id, op) => enqueue(id, () => appendOpWithBackend(b, cfg, id, op)),
+    deleteCampaign: (id) => enqueue(id, () => deleteCampaignWithBackend(b, id)),
     putBlob: (bytes, mime) => putBlobWithBackend(b, bytes, mime),
     getBlob: (sha256) => getBlobWithBackend(b, sha256),
     getAllBlobsMap: () => getAllBlobsMapWithBackend(b),

@@ -11,6 +11,10 @@ export const MAX_EXPLOSIONS = 20;
 export const MAX_DICE_PER_TERM = 100;
 /** Máximo de faces aceito em um dado. */
 export const MAX_DIE_SIDES = 1000;
+/** Tamanho máximo de texto aceito numa expressão de rolagem. */
+export const MAX_FORMULA_LENGTH = 160;
+/** Quantidade máxima de termos somados/subtraídos numa única fórmula. */
+export const MAX_TERMS = 20;
 
 /** Mapa de aliases PT-BR / EN de atributos para as chaves de `attributes_lww.abilities`. */
 export const ABILITY_ALIASES = Object.freeze({
@@ -129,8 +133,14 @@ function splitSignedTokens(formula) {
  * @returns {{ visibility: "public"|"gm"|"blind", formula: string, label: string, terms: Array<object> }} AST da rolagem.
  */
 export function parseDiceCommand(rawInput) {
+  if (String(rawInput || "").length > MAX_FORMULA_LENGTH) {
+    throw new Error(`Fórmula excede o limite de ${MAX_FORMULA_LENGTH} caracteres.`);
+  }
   const { visibility, formula, label } = extractCommandMeta(rawInput);
   const tokens = splitSignedTokens(formula);
+  if (tokens.length > MAX_TERMS) {
+    throw new Error(`Fórmula excede o limite de ${MAX_TERMS} termos.`);
+  }
   const terms = tokens.map(({ sign, token }) => parseSingleTerm(token, sign));
   return { visibility, formula, label, terms };
 }

@@ -171,11 +171,15 @@ function renderStorageMeter(usage) {
     </div>`;
 }
 
-function renderSavedCampaignCard(camp, activeId) {
+function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
   const isActive = camp.id === activeId;
+  const isConfirming = camp.id === pendingDeleteId;
   const badge = isActive
     ? `<span class="dungeon-badge-ok">Ativa neste aparelho</span>`
     : `<span class="dungeon-code-tag">Salva localmente</span>`;
+  const deleteControl = isConfirming
+    ? `<button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="confirm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}">Confirmar exclusão</button><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="cancel-delete-campaign">Cancelar</button>`
+    : `<button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="arm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}">Excluir</button>`;
   return `
     <article class="dungeon-table-card${isActive ? " is-featured" : ""}">
       <div class="dungeon-table-meta">${badge}<span class="dungeon-code-tag">${escapeHtml(camp.system || "d20-livre")}</span></div>
@@ -184,6 +188,7 @@ function renderSavedCampaignCard(camp, activeId) {
       <div class="dungeon-card-actions">
         <button type="button" class="dungeon-btn ${isActive ? "dungeon-btn-secondary" : "dungeon-btn-primary"}" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
         <a class="dungeon-btn dungeon-btn-ghost" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Ir para a Mesa →</a>
+        ${deleteControl}
       </div>
     </article>`;
 }
@@ -211,7 +216,7 @@ function renderBackupControls() {
 function renderCampaignsSection(state) {
   const list = Array.isArray(state.campaigns) ? state.campaigns : [];
   const cardsHtml = list.length
-    ? `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId)).join("")}</div>`
+    ? `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`
     : `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha abaixo ou importe um pacote <code>.voxrpg.zip</code> / nota <code>.md</code> do Obsidian.</p>`;
   const noticeHtml = state.campaignNotice
     ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>`

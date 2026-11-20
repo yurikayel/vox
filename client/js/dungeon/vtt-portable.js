@@ -10,6 +10,8 @@ import { createCampaign, validateCampaignDoc } from "./vtt-schema.js";
 
 /** Tamanho máximo aceito por entrada no ZIP (16 MiB — INV-4/INV-6). */
 export const MAX_ZIP_ENTRY_BYTES = 16 * 1024 * 1024;
+/** Tamanho máximo somado aceito por pacote ZIP (64 MiB — anti-OOM). */
+export const MAX_ZIP_TOTAL_BYTES = 64 * 1024 * 1024;
 /** Quantidade máxima de arquivos aceita por pacote `.voxrpg.zip`. */
 export const MAX_ZIP_ENTRIES = 512;
 /** Tipo de envelope para backup cifrado de campanha via Senha Soberana. */
@@ -133,7 +135,9 @@ function findEocdOffset(bytes) {
 }
 
 function readZipEntryAt(bytes, view, cdPos) {
-  if (view.getUint32(cdPos, true) !== 0x02014b50) throw new Error("Diretório central do ZIP corrompido.");
+  if (cdPos < 0 || cdPos + 46 > bytes.length || view.getUint32(cdPos, true) !== 0x02014b50) {
+    throw new Error("Diretório central do ZIP corrompido.");
+  }
   const method = view.getUint16(cdPos + 10, true);
   if (method !== 0) throw new Error(`Método ZIP não suportado (${method}); esperado STORE (0).`);
   const expectedCrc = view.getUint32(cdPos + 16, true);
@@ -143,6 +147,7 @@ function readZipEntryAt(bytes, view, cdPos) {
   const extraLen = view.getUint16(cdPos + 30, true);
   const commentLen = view.getUint16(cdPos + 32, true);
   const localOffset = view.getUint32(cdPos + 42, true);
+  if (cdPos + 46 + nameLen + extraLen + commentLen > bytes.length) throw new Error("Entrada do diretório central truncada.");
   const name = DEC.decode(bytes.subarray(cdPos + 46, cdPos + 46 + nameLen));
   assertSafeZipPath(name);
   if (localOffset + 30 > bytes.length || view.getUint32(localOffset, true) !== 0x04034b50) {
@@ -156,7 +161,7 @@ function readZipEntryAt(bytes, view, cdPos) {
 }
 
 /**
- * Decodifica e valida estritamente um arquivo ZIP STORE (magic bytes, CRC32, limites e path traversal).
+ * Decodifica e valida estritamente um arquivo ZIP STORE (magic bytes, CRC32, limites, duplicatas e path traversal).
  * @param {Uint8Array} zipBytes Bytes brutos do arquivo ZIP.
  * @returns {Map<string, Uint8Array>} Mapa `caminho -> bytes`.
  */
@@ -168,10 +173,15 @@ export function decodeZipStore(zipBytes) {
   const count = view.getUint16(eocdPos + 10, true);
   const cdOffset = view.getUint32(eocdPos + 16, true);
   if (count > MAX_ZIP_ENTRIES) throw new Error(`ZIP excede o teto de ${MAX_ZIP_ENTRIES} entradas.`);
+  if (cdOffset > eocdPos) throw new Error("Offset do diretório central inválido.");
   const out = new Map();
   let pos = cdOffset;
+  let totalBytes = 0;
   for (let i = 0; i < count; i += 1) {
     const entry = readZipEntryAt(zipBytes, view, pos);
+    if (out.has(entry.name)) throw new Error(`Entrada duplicada no ZIP: "${entry.name}".`);
+    totalBytes += entry.data.length;
+    if (totalBytes > MAX_ZIP_TOTAL_BYTES) throw new Error("Tamanho total do ZIP excede o teto de segurança.");
     out.set(entry.name, entry.data);
     pos = entry.nextCdPos;
   }
@@ -207,6 +217,12 @@ export async function packVoxRpg(campaign, blobs = new Map(), { includeGmSecrets
 
 async function verifyManifestHashes(filesMap, manifest) {
   if (!manifest?.files || typeof manifest.files !== "object") throw new Error("Manifesto inválido no pacote .voxrpg.zip.");
+  if (typeof manifest.files["campaign.json"] !== "string") throw new Error("Manifesto não declara o hash de campaign.json.");
+  for (const name of filesMap.keys()) {
+    if (name !== "manifest.json" && !(name in manifest.files)) {
+      throw new Error(`Arquivo não declarado no manifesto: "${name}".`);
+    }
+  }
   for (const [name, expected] of Object.entries(manifest.files)) {
     const bytes = filesMap.get(name);
     if (!bytes) throw new Error(`Arquivo declarado ausente no pacote: "${name}".`);
@@ -240,9 +256,11 @@ export async function unpackVoxRpg(zipBytes) {
 }
 
 function bytesToBase64(bytes) {
-  let bin = "";
-  for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
+  const chunks = [];
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + 0x8000)));
+  }
+  return btoa(chunks.join(""));
 }
 
 function base64ToBytes(b64) {
