@@ -25,7 +25,7 @@ def _goto_mesa(page, base_url, table_id="vila-nova"):
 
 
 def _set_viewer_player(page):
-    """Alterna até a etiqueta de jogador (demo inicia em GM)."""
+    """Alterna até a etiqueta de jogador (default mesa sem prefs já é jogador)."""
     toggle = page.locator("button[data-dungeon='toggle-viewer-role']")
     for _ in range(4):
         if "Jogador" in toggle.inner_text():
@@ -33,6 +33,17 @@ def _set_viewer_player(page):
         toggle.click()
         page.wait_for_timeout(120)
     raise AssertionError("Não foi possível ativar visão de jogador")
+
+
+def _set_viewer_gm(page):
+    """Alterna até visão de mestre (prefs novas na mesa iniciam como jogador)."""
+    toggle = page.locator("button[data-dungeon='toggle-viewer-role']")
+    for _ in range(4):
+        if "Mestre" in toggle.inner_text():
+            return
+        toggle.click()
+        page.wait_for_timeout(120)
+    raise AssertionError("Não foi possível ativar visão de mestre")
 
 
 def _onboard_and_campaign(page, base_url, display_name, campaign_name="E2E Mesa Audit"):
@@ -91,6 +102,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
             _complete_onboarding(page, "Mesa GM E2E", errors)
             _goto_mesa(page, self.base_url)
+            _set_viewer_gm(page)
             expect(page.locator(".dungeon-sanctum")).to_have_class(re.compile(r"\bis-session-gm\b"))
             page.locator("button[data-dungeon='canvas-zoom-in']").click()
             page.locator("button[data-dungeon='canvas-reset']").click()
