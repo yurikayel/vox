@@ -10,6 +10,9 @@ const CHANNEL_NAME = "vox-tab-sync-v0";
 const MSG_VERSION = 1;
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 
+/** Web Lock entre abas: só uma cria conta nova por vez (LT-06a; complementa LT-06c). */
+export const LOCAL_ACCOUNT_CREATE_LOCK = "vox-local-account-create-v0";
+
 const IDENTITY_KEYS = new Set([
   ACCOUNT_STORAGE,
   "vox-accounts-vault-v1",
@@ -32,6 +35,18 @@ let boundWin = globalThis.window;
  * @type {string}
  */
 export const TAB_SYNC_CHANNEL = CHANNEL_NAME;
+
+/**
+ * Serializa criação de conta entre abas via Web Locks; sem API, executa direto.
+ * @template T
+ * @param {() => Promise<T>} work criação ou leitura pós-lock
+ * @returns {Promise<T>}
+ */
+export async function withLocalAccountCreationLock(work) {
+  const locks = globalThis.navigator?.locks;
+  if (!locks?.request) return work();
+  return locks.request(LOCAL_ACCOUNT_CREATE_LOCK, { mode: "exclusive" }, () => work());
+}
 
 /**
  * Lê o `routeId` da conta ativa gravada no `localStorage`.
