@@ -148,8 +148,99 @@ function renderGuardiansPanel(state) {
     </section>`;
 }
 
+function formatBytesMb(bytes) {
+  const num = Number(bytes) || 0;
+  if (num < 1024 * 1024) return `${Math.max(0, Math.round(num / 1024))} KB`;
+  return `${(num / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function renderStorageMeter(usage) {
+  if (!usage || !usage.isSupported) {
+    return `<p class="dungeon-muted">Armazenamento local neste navegador (sem nuvem ilimitada): exporte backups <code>.voxrpg.zip</code> periodicamente.</p>`;
+  }
+  const pct = Math.max(0, Math.min(100, Number(usage.percentage) || 0));
+  const durLabel = usage.persisted ? "proteção contra limpeza ativa" : "proteção solicitada ao criar a 1ª campanha";
+  return `
+    <div class="dungeon-slider-card" aria-label="Uso de disco local da Mesa">
+      <div class="dungeon-hp-label">
+        <span>Disco local neste aparelho (${durLabel})</span>
+        <strong>${formatBytesMb(usage.usage)} / ${formatBytesMb(usage.quota)} (${pct}%)</strong>
+      </div>
+      <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${pct}%"></div></div>
+      <p class="dungeon-muted">Sem nuvem ilimitada: o teto real é a cota deste aparelho. Faça cópias <code>.voxrpg.zip</code> ou cifradas <code>.voxrpg.enc</code>.</p>
+    </div>`;
+}
+
+function renderSavedCampaignCard(camp, activeId) {
+  const isActive = camp.id === activeId;
+  const badge = isActive
+    ? `<span class="dungeon-badge-ok">Ativa neste aparelho</span>`
+    : `<span class="dungeon-code-tag">Salva localmente</span>`;
+  return `
+    <article class="dungeon-table-card${isActive ? " is-featured" : ""}">
+      <div class="dungeon-table-meta">${badge}<span class="dungeon-code-tag">${escapeHtml(camp.system || "d20-livre")}</span></div>
+      <h3>${escapeHtml(camp.name)}</h3>
+      <p class="dungeon-muted">${Number(camp.sheetCount) || 1} ficha(s) · ${Number(camp.chronicleCount) || 0} entrada(s) na crônica.</p>
+      <div class="dungeon-card-actions">
+        <button type="button" class="dungeon-btn ${isActive ? "dungeon-btn-secondary" : "dungeon-btn-primary"}" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
+        <a class="dungeon-btn dungeon-btn-ghost" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Ir para a Mesa →</a>
+      </div>
+    </article>`;
+}
+
+function renderBackupControls() {
+  return `
+    <div class="dungeon-action-form">
+      <span class="dungeon-eyebrow">Backup Portátil &amp; Obsidian</span>
+      <div class="dungeon-card-actions">
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="export-voxrpg">Exportar .voxrpg.zip</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-chronicle-md">Exportar Crônica .md</button>
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-voxrpg-enc">Exportar Cifrado (.voxrpg.enc)</button>
+      </div>
+      <div class="dungeon-input-row">
+        <label class="sr-only" for="dungeon-backup-passphrase">Senha Soberana para backup cifrado</label>
+        <input id="dungeon-backup-passphrase" class="dungeon-input" type="password" autocomplete="off" placeholder="Senha Soberana (mín. 12 caracteres) para cifrar/abrir .voxrpg.enc" />
+      </div>
+      <div class="dungeon-input-row">
+        <label for="dungeon-import-file" class="dungeon-muted">Importar <code>.voxrpg.zip</code>, <code>.voxrpg.enc</code> ou ficha/nota <code>.md</code> (Obsidian):</label>
+        <input id="dungeon-import-file" class="dungeon-input" type="file" accept=".zip,.enc,.md,application/zip,application/json,text/markdown" data-dungeon="import-file" />
+      </div>
+    </div>`;
+}
+
+function renderCampaignsSection(state) {
+  const list = Array.isArray(state.campaigns) ? state.campaigns : [];
+  const cardsHtml = list.length
+    ? `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId)).join("")}</div>`
+    : `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha abaixo ou importe um pacote <code>.voxrpg.zip</code> / nota <code>.md</code> do Obsidian.</p>`;
+  const noticeHtml = state.campaignNotice
+    ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>`
+    : "";
+  return `
+    <section class="dungeon-panel" aria-label="Campanhas salvas localmente">
+      <div class="dungeon-section-head">
+        <div>
+          <span class="dungeon-eyebrow">Mesa Soberana · Persistência Local</span>
+          <h2>Suas Campanhas neste Aparelho</h2>
+        </div>
+        <span class="dungeon-code-tag">${list.length} campanha(s) salva(s)</span>
+      </div>
+      ${renderStorageMeter(state.storageUsage)}
+      <form class="dungeon-action-form" data-dungeon="create-campaign-form">
+        <label class="sr-only" for="dungeon-campaign-name">Nome da nova campanha</label>
+        <div class="dungeon-input-row">
+          <input id="dungeon-campaign-name" class="dungeon-input" type="text" name="campaignName" maxlength="80" placeholder="Nome da campanha (ex.: Crônicas de Vila Nova)" autocomplete="off" />
+          <button type="submit" class="dungeon-btn dungeon-btn-primary">Criar Campanha</button>
+        </div>
+      </form>
+      ${noticeHtml}
+      ${cardsHtml}
+      ${renderBackupControls()}
+    </section>`;
+}
+
 /**
- * Renderiza a Tela 1 (Acampamento dos Guardiões) com fogueira SVG, pilares P2P e slider de comunidades.
+ * Renderiza a Tela 1 (Acampamento dos Guardiões) com fogueira SVG, pilares P2P, slider de comunidades e campanhas locais.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
@@ -160,6 +251,7 @@ export function renderCampScreen(state) {
     ${renderCampHero(state)}
     ${renderGuardiansPanel(state)}
     ${renderFavoriteSliderSection(state)}
+    ${renderCampaignsSection(state)}
     ${renderTablesSection(state)}
     <details class="dungeon-audit">
       <summary>Detalhes Técnicos (W-DRF, Quotas e Estabilidade MoA)</summary>
