@@ -1,5 +1,5 @@
 /**
- * @file Tela 1 do AI Social Dungeon: Acampamento dos Guardiões (#/dungeon).
+ * @file Tela 1 do AI Social Dungeon: Acampamento — Campanhas Locais no topo, Notas/Backup e bloco demo W-DRF abaixo.
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderCampfireSceneSvg } from "./rpg-illustrations.js";
@@ -12,6 +12,13 @@ const ROLE_LABELS_PTBR = {
   STAGE1_ACT_DIRECTOR: { title: "Diretor de Cena", duty: "Mantém o ritmo da aventura", icon: "bolt" },
   STAGE2_LEAD_NARRATOR: { title: "Narrador da Mesa", duty: "Tece a prosa em português", icon: "flame" },
 };
+
+const SYSTEM_PRESETS = [
+  { id: "d20_fantasy", label: "d20 Fantasia" },
+  { id: "tormenta20", label: "Tormenta20" },
+  { id: "libre", label: "Livre" },
+  { id: "investigacao", label: "Investigação" },
+];
 
 function renderGuardianCard(lease, peerAliases) {
   const meta = ROLE_LABELS_PTBR[lease.role] || { title: lease.role, duty: "Apoio à mesa", icon: "cpu" };
@@ -42,7 +49,6 @@ function nextTurnName(state) {
  */
 export function renderFavoriteSliderLabels(state) {
   const [first, second] = state.favorites;
-  // `??`, não `||`: com 0% a comunidade recebe 0 MB, e isso tem de aparecer como 0.
   const firstMb = Math.round(state.allocations?.[0]?.allocatedDiskMb ?? 614);
   const secondMb = Math.round(state.allocations?.[1]?.allocatedDiskMb ?? 410);
   return `
@@ -119,7 +125,7 @@ function renderCampHero(state) {
       <div class="dungeon-hero-art">${renderCampfireSceneSvg()}</div>
       <div class="dungeon-hero-copy">
         <span class="dungeon-eyebrow">Santuário da Guilda (exemplo)</span>
-        <h1>${escapeHtml(state.tableName)}</h1>
+        <h2>${escapeHtml(state.tableName)}</h2>
         <p class="dungeon-lead">5 guardiões virtuais dividem o trabalho do Mestre direto nos aparelhos da vizinhança — sem servidores centrais ou mensalidade.</p>
         <div class="dungeon-hero-actions">
           <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${encodeURIComponent(state.tableId)}">${dungeonIcon("sword", 16)}<span>Entrar na Mesa →</span></a>
@@ -183,12 +189,12 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
     : `<button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="arm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}">Excluir</button>`;
   return `
     <article class="dungeon-table-card${isActive ? " is-featured" : ""}">
-      <div class="dungeon-table-meta">${badge}<span class="dungeon-code-tag">${escapeHtml(camp.system || "d20-livre")}</span></div>
+      <div class="dungeon-table-meta">${badge}<span class="dungeon-code-tag">${escapeHtml(camp.system || "d20_fantasy")}</span></div>
       <h3>${escapeHtml(camp.name)}</h3>
       <p class="dungeon-muted">${Number(camp.sheetCount) || 1} ficha(s) · ${Number(camp.chronicleCount) || 0} entrada(s) na crônica.</p>
       <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-btn ${isActive ? "dungeon-btn-secondary" : "dungeon-btn-primary"}" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
-        <a class="dungeon-btn dungeon-btn-ghost" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Ir para a Mesa →</a>
+        <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Jogar na Mesa →</a>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
         ${deleteControl}
       </div>
     </article>`;
@@ -222,16 +228,16 @@ function renderBackupControls() {
         <label class="sr-only" for="dungeon-backup-passphrase">Senha Soberana para backup cifrado</label>
         <input id="dungeon-backup-passphrase" class="dungeon-input" type="password" autocomplete="off" placeholder="Senha Soberana (mín. 12 caracteres) para cifrar/abrir .voxrpg.enc" />
       </div>
-      <div class="dungeon-input-row">
-        <label for="dungeon-import-file" class="dungeon-muted">Importar <code>.voxrpg.zip</code>, <code>.voxrpg.enc</code> ou ficha/nota <code>.md</code> (Obsidian):</label>
-        <input id="dungeon-import-file" class="dungeon-input" type="file" accept=".zip,.enc,.md,.canvas,application/zip,application/json,text/markdown" data-dungeon="import-file" />
+      <div class="dungeon-input-row dungeon-import-row">
+        <label for="dungeon-import-file" class="dungeon-btn dungeon-btn-secondary dungeon-file-trigger">Importar .voxrpg.zip, .voxrpg.enc, .md ou .canvas</label>
+        <input id="dungeon-import-file" class="sr-only" type="file" accept=".zip,.enc,.md,.canvas,application/zip,application/json,text/markdown" data-dungeon="import-file" />
       </div>
     </div>`;
 }
 
 function renderSavedCampaignsGrid(state, list) {
   if (!list.length) {
-    return `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha abaixo ou importe um pacote <code>.voxrpg.zip</code> / nota <code>.md</code> do Obsidian.</p>`;
+    return `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha acima ou importe um pacote <code>.voxrpg.zip</code>, nota <code>.md</code> ou quadro <code>.canvas</code> do Obsidian.</p>`;
   }
   return `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`;
 }
@@ -239,32 +245,35 @@ function renderSavedCampaignsGrid(state, list) {
 function renderCampaignsSection(state) {
   const list = Array.isArray(state.campaigns) ? state.campaigns : [];
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const presetOpts = SYSTEM_PRESETS.map((p) => `<option value="${p.id}">${escapeHtml(p.label)}</option>`).join("");
   return `
     <section class="dungeon-panel" aria-label="Campanhas salvas localmente">
       <div class="dungeon-section-head">
         <div>
           <span class="dungeon-eyebrow">Mesa Soberana · Persistência Local</span>
-          <h2>Suas Campanhas neste Aparelho</h2>
+          <h1>Suas Campanhas neste Aparelho</h1>
         </div>
         <span class="dungeon-code-tag">${list.length} campanha(s) salva(s)</span>
       </div>
-      ${renderStorageMeter(state.storageUsage)}
-      ${state.campaignId ? renderCalendarPanel(state) : ""}
       <form class="dungeon-action-form" data-dungeon="create-campaign-form">
-        <label class="sr-only" for="dungeon-campaign-name">Nome da nova campanha</label>
         <div class="dungeon-input-row">
+          <label class="sr-only" for="dungeon-campaign-name">Nome da nova campanha</label>
           <input id="dungeon-campaign-name" class="dungeon-input" type="text" name="campaignName" maxlength="80" placeholder="Nome da campanha (ex.: Crônicas de Vila Nova)" autocomplete="off" />
+          <label class="sr-only" for="dungeon-campaign-system">Sistema / preset da campanha</label>
+          <select id="dungeon-campaign-system" class="dungeon-input dungeon-select-preset">${presetOpts}</select>
           <button type="submit" class="dungeon-btn dungeon-btn-primary">Criar Campanha</button>
         </div>
       </form>
       ${noticeHtml}
       ${renderSavedCampaignsGrid(state, list)}
+      ${state.campaignId ? renderCalendarPanel(state) : ""}
+      ${renderStorageMeter(state.storageUsage)}
       ${renderBackupControls()}
     </section>`;
 }
 
 /**
- * Renderiza a Tela 1 (Acampamento dos Guardiões) com fogueira SVG, pilares P2P, slider de comunidades e campanhas locais.
+ * Renderiza a Tela 1 (Acampamento): campanhas locais + notas no topo e blocos de demonstração W-DRF abaixo.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
@@ -272,13 +281,13 @@ function renderCampaignsSection(state) {
 export function renderCampScreen(state) {
   const utilPct = Math.round((state.stability?.utilization || 0.4) * 100);
   return `
-    ${renderCampHero(state)}
-    ${renderGuardiansPanel(state)}
-    ${renderFavoriteSliderSection(state)}
     ${renderCampaignsSection(state)}
     ${state.campaignId ? renderNotesPanel(state) : ""}
+    ${renderCampHero(state)}
     ${renderTablesSection(state)}
-    <details class="dungeon-audit">
+    ${renderGuardiansPanel(state)}
+    ${renderFavoriteSliderSection(state)}
+    <details class="dungeon-audit" data-dungeon-details="camp-audit">
       <summary>Detalhes Técnicos (W-DRF, Quotas e Estabilidade MoA)</summary>
       <div class="dungeon-audit-body">
         <p><strong>Escalonamento W-DRF:</strong> Utilização da fila em <code>${utilPct}%</code> (estável = <code>${String(state.stability?.stable)}</code> · taxa segura max <code>${state.stability?.maxSafeLambda ?? 0.6}</code>).</p>
