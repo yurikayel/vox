@@ -2,6 +2,7 @@
 
 import { readColorMode, resolveEffectiveDark } from "./color-mode.js";
 
+/** Faixas horárias dos períodos do céu usados na paleta Celeste. */
 export const SKY_PERIOD_HOURS = Object.freeze({
   madrugada: { start: 0, end: 5, label: "Madrugada" },
   manha: { start: 6, end: 11, label: "Manhã" },
@@ -10,6 +11,7 @@ export const SKY_PERIOD_HOURS = Object.freeze({
   noite: { start: 21, end: 23, label: "Noite" },
 });
 
+/** Chave do `localStorage` que controla se a paleta acompanha o relógio local. */
 export const SKY_FOLLOW_CLOCK_KEY = "vox-sky-follow-clock";
 
 const THEME_COLOR = Object.freeze({
@@ -22,7 +24,11 @@ const THEME_COLOR = Object.freeze({
 
 const REFRESH_MS = 15 * 60 * 1000;
 
-/** @param {number} hour 0-23 local */
+/**
+ * Converte a hora local (0–23) no identificador do período do céu.
+ * @param {number} hour Hora local (0–23).
+ * @returns {"madrugada"|"manha"|"tarde"|"entardecer"|"noite"} Período correspondente.
+ */
 export function hourToSkyPeriod(hour) {
   const h = ((Math.floor(hour) % 24) + 24) % 24;
   if (h <= SKY_PERIOD_HOURS.madrugada.end) return "madrugada";
@@ -32,6 +38,11 @@ export function hourToSkyPeriod(hour) {
   return "noite";
 }
 
+/**
+ * Verifica se o ambiente prefere esquema de cores escuro (`prefers-color-scheme: dark`).
+ * @param {Window|typeof globalThis} [view=globalThis] Janela alvo.
+ * @returns {boolean} `true` quando o sistema prefere modo escuro.
+ */
 export function prefersDarkScheme(view = globalThis) {
   return Boolean(view.matchMedia?.("(prefers-color-scheme: dark)").matches);
 }
@@ -54,6 +65,13 @@ function syncThemeColorMeta(doc, period, dark) {
   }
 }
 
+/**
+ * Aplica os atributos `data-sky-period`/`data-sky-palette` e atualiza a meta tag `theme-color`.
+ * @param {Document} doc Documento alvo.
+ * @param {number} [hour=new Date().getHours()] Hora local usada para escolher o período.
+ * @param {{ followClock?: boolean, dark?: boolean }} [opts={}] Sobrescritas opcionais.
+ * @returns {{ period: string|null, dark: boolean, followClock: boolean, colorMode?: string, themeColor?: string }} Estado aplicado.
+ */
 export function applySkyTheme(doc, hour = new Date().getHours(), opts = {}) {
   const root = doc.documentElement;
   const storage = doc.defaultView?.localStorage;
@@ -78,6 +96,12 @@ export function applySkyTheme(doc, hour = new Date().getHours(), opts = {}) {
   };
 }
 
+/**
+ * Inicializa o tema Celeste e agenda atualizações em trocas de esquema, visibilidade e intervalo.
+ * @param {Document} [doc=document] Documento alvo.
+ * @param {{ getHour?: () => number }} [hooks={}] Gancho opcional de relógio para testes.
+ * @returns {() => void} Função de limpeza que cancela o temporizador periódico.
+ */
 export function initSkyTheme(doc = document, hooks = {}) {
   const view = doc.defaultView ?? globalThis;
   const getHour = hooks.getHour ?? (() => new Date().getHours());

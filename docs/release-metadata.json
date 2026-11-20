@@ -1,9 +1,9 @@
 {
-  "git_sha": "ec95779",
-  "branch": "develop",
-  "test_js": 1989,
+  "git_sha": "aa937b9",
+  "branch": "release/2026-11-hardening",
+  "test_js": 2021,
   "test_python": 320,
-  "test_total": 2309,
-  "cache_name": "vox-pwa-v7.146-dm-limits-6b",
-  "generated_at": "2026-11-19T21:01:05Z"
+  "test_total": 2341,
+  "cache_name": "vox-pwa-v7.147-community-split",
+  "generated_at": "2026-11-20T01:42:01Z"
 }

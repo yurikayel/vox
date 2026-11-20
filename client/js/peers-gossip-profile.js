@@ -9,7 +9,11 @@ import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as profileNote from "./profile-note.js";
 
-/** @param {string} cardId */
+/**
+ * Extrai o `routeId` a partir de um ID canônico de cartão de perfil (`pc_vx_...`).
+ * @param {string} cardId ID do cartão de perfil.
+ * @returns {string} `routeId` extraído ou string vazia.
+ */
 export function routeIdFromProfileCardId(cardId) {
   const id = String(cardId || "");
   if (!id.startsWith("pc_vx_")) return "";
@@ -28,7 +32,11 @@ function isCovered(seen, item) {
   return seen.at > t || (seen.at === t && seen.sig === item.sig);
 }
 
-/** PM-84: o cartão que chega de novo (mesma versão ou mais velha) não é reaplicado nem repassado. */
+/**
+ * PM-84: verifica se a versão do cartão já foi aplicada/vista (evita reaplicar ou repassar versão igual ou mais velha).
+ * @param {object} item Item de cartão de perfil.
+ * @returns {boolean} `true` se o cartão já estiver coberto.
+ */
 export function isProfileCardSeen(item) {
   if (isCovered(seenCards.get(item.id), item)) return true;
   const stored = profileDirectory.getProfileCard(item.routeId);
@@ -36,6 +44,11 @@ export function isProfileCardSeen(item) {
   return isCovered({ at: Number(stored.gossipCardAt || 0), sig: stored.gossipCardSig }, item);
 }
 
+/**
+ * Registra o cartão de perfil na janela em memória de versões já vistas.
+ * @param {object} item Item de cartão de perfil assinado.
+ * @returns {void}
+ */
 export function markProfileCardSeen(item) {
   if (!item?.id) return;
   seenCards.delete(item.id);
@@ -46,6 +59,8 @@ export function markProfileCardSeen(item) {
 /**
  * Marca de versão guardada junto do cartão no diretório, com o próprio cartão assinado (`signedCard`):
  * é ele que viaja na sincronização (malha e memória central) e é a única coisa que quem recebe aceita.
+ * @param {object} item Cartão de perfil assinado.
+ * @returns {{ gossipCardId: string, gossipCardAt: number, gossipCardSig: string, signedCard: object }} Carimbo de versão.
  */
 export const seenStamp = (item) => ({ gossipCardId: item.id, gossipCardAt: cardTime(item), gossipCardSig: item.sig || "", signedCard: item });
 

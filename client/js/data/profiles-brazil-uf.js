@@ -11,6 +11,7 @@ const PORTRAIT = (gender, n) =>
 /** Banner no perfil UF — tom acolhedor, não caricatura cruel. */
 export const STEREOTYPE_GREETING =
   "Oi, sou só um estereótipo respeitoso — não me leve a mal!";
+/** Nota de transparência exibida nos perfis fictícios por UF. */
 export const STEREOTYPE_DISCLAIMER_NOTE =
   "Perfil fictício para demo e educação no Vox: clichês regionais leves (comida, música, orgulho) — nunca para ridicularizar pessoas reais. 🇧🇷";
 
@@ -130,6 +131,7 @@ function buildUfStereotypeSeeds() {
   });
 }
 
+/** Sementes estruturadas dos 27 perfis demo por UF. */
 export const UF_STEREOTYPE_SEEDS = buildUfStereotypeSeeds();
 
 for (const seed of UF_STEREOTYPE_SEEDS) {
@@ -137,9 +139,13 @@ for (const seed of UF_STEREOTYPE_SEEDS) {
   seed.disclaimerNote = seed.disclaimerNote || STEREOTYPE_DISCLAIMER_NOTE;
 }
 
+/** Quantidade de UFs com perfil demo gerado. */
 export const MOCK_DEMO_UF_COUNT = UF_STEREOTYPE_SEEDS.length;
+/** Número padrão de tópicos demo por UF. */
 export const MOCK_DEMO_POSTS_PER_UF = 3;
+/** Total de tópicos demo gerados somando todas as UFs. */
 export const MOCK_DEMO_TOPIC_COUNT = MOCK_DEMO_UF_COUNT * MOCK_DEMO_POSTS_PER_UF;
+/** Lista de `routeId` sintéticos dos perfis demo por UF. */
 export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLowerCase()}`);
 
 function readmeFor(seed) {
@@ -188,6 +194,10 @@ function buildSingleUfDemoProfile(seed, i) {
   };
 }
 
+/**
+ * Constrói o mapa completo de perfis demo indexado por `routeId`.
+ * @returns {Record<string, object>} Perfis fictícios das 27 UFs.
+ */
 export function buildUfDemoProfilesMap() {
   const map = {};
   UF_STEREOTYPE_SEEDS.forEach((seed, i) => {

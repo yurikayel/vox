@@ -1,7 +1,11 @@
 /** Regras de edição/exclusão — só posts locais assinados pelo autor ativo (vx_…). */
 import * as localAccount from "./identity/index.js";
 
-/** Título Nostr/metadata a partir do texto único do compositor. */
+/**
+ * Deriva título e corpo limpo a partir do texto único do compositor.
+ * @param {string} bodyRaw Texto bruto digitado.
+ * @returns {{ title: string, body: string }} Título derivado e corpo aparado.
+ */
 export function deriveTopicTitleFromBody(bodyRaw) {
   const body = String(bodyRaw || "").trim();
   if (!body) return { title: "", body: "" };
@@ -57,6 +61,11 @@ function tryParseJsonObject(str) {
   }
 }
 
+/**
+ * Limpa cercas de código e extrai texto legível caso o corpo venha encapsulado em JSON/objeto.
+ * @param {string|object|null|undefined} rawBody Corpo bruto da publicação.
+ * @returns {string} Texto higienizado.
+ */
 export function sanitizeBodyString(rawBody) {
   if (!rawBody) return "";
   if (typeof rawBody === "object") {
@@ -82,6 +91,11 @@ function isGenericTitle(t) {
   return t === "Tópico" || t === "Publicação" || t === "Sem título";
 }
 
+/**
+ * Formata título e corpo de um post evitando duplicação quando o título repete a primeira linha.
+ * @param {{ title?: string, body?: string }} [post={}] Título e corpo brutos.
+ * @returns {{ mode: "empty"|"caption"|"title-body", text?: string, title?: string, body?: string }} Layout textual resolvido.
+ */
 export function formatPostDisplay({ title = "", body = "" } = {}) {
   const t = extractTitleFromPossibleJson(String(title || "").trim());
   const b = sanitizeBodyString(body);
@@ -103,21 +117,44 @@ export function formatPostDisplay({ title = "", body = "" } = {}) {
   return { mode: "title-body", title: fallbackTitle, body: b };
 }
 
+/**
+ * Indica se o post local assinado pertence à rota ativa e pode ser editado/removido por ela.
+ * @param {object|null|undefined} post Registro do post.
+ * @param {string} routeId Rota ativa do usuário.
+ * @returns {boolean} `true` se o usuário puder mutar o post.
+ */
 export function canMutateLocalPost(post, routeId) {
   if (!routeId || !post?.id || !post?.sig) return false;
   const author = post.author || post.owner || "";
   return author === routeId;
 }
 
+/**
+ * Anexa a flag `isOwnLocalPost` a um registro de post.
+ * @param {object} post Registro do post.
+ * @param {string} routeId Rota ativa do usuário.
+ * @returns {object} Cópia rasa do post com `isOwnLocalPost`.
+ */
 export function withOwnLocalFlag(post, routeId) {
   return { ...post, isOwnLocalPost: canMutateLocalPost(post, routeId) };
 }
 
+/**
+ * Mapeia `isOwnLocalPost` em uma lista de posts para a rota informada.
+ * @param {object[]} posts Lista de posts.
+ * @param {string} routeId Rota ativa do usuário.
+ * @returns {object[]} Lista com flags aplicadas.
+ */
 export function mapOwnLocalFlags(posts, routeId) {
   if (!routeId || !Array.isArray(posts)) return posts || [];
   return posts.map((p) => withOwnLocalFlag(p, routeId));
 }
 
+/**
+ * Cria e assina um registro `tombstone` para exclusão lógica de um post próprio.
+ * @param {{ id: string, author: string, ts?: number }} post Post a ser removido.
+ * @returns {Promise<object>} Tombstone assinado pronto para gravação e gossip.
+ */
 export async function createPostTombstone(post) {
   if (!post?.id || !post?.author) throw new Error("Post inválido para exclusão");
   const deletePayload = {

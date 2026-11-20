@@ -14,11 +14,22 @@ const LOG = new Uint8Array(256);
   for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
 })();
 
+/**
+ * Multiplica dois bytes no corpo finito GF(256) com polinômio `0x11d`.
+ * @param {number} a Primeiro operando (0–255).
+ * @param {number} b Segundo operando (0–255).
+ * @returns {number} Produto em GF(256).
+ */
 export function gfMul(a, b) {
   if (a === 0 || b === 0) return 0;
   return EXP[LOG[a] + LOG[b]];
 }
 
+/**
+ * Calcula o polinômio gerador Reed-Solomon para o grau de correção de erro dado.
+ * @param {number} degree Número de bytes de correção de erro.
+ * @returns {Uint8Array} Coeficientes do divisor Reed-Solomon.
+ */
 export function rsDivisor(degree) {
   const result = new Uint8Array(degree);
   result[degree - 1] = 1;
@@ -33,6 +44,12 @@ export function rsDivisor(degree) {
   return result;
 }
 
+/**
+ * Calcula o resto Reed-Solomon (codewords ECC) para um bloco de dados.
+ * @param {Uint8Array} data Bloco de codewords de dados.
+ * @param {Uint8Array} divisor Polinômio divisor retornado por `rsDivisor`.
+ * @returns {Uint8Array} Bytes de paridade Reed-Solomon.
+ */
 export function rsRemainder(data, divisor) {
   const n = divisor.length;
   const result = new Uint8Array(n);

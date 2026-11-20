@@ -97,6 +97,17 @@ function renderPromptInspector(state) {
     </section>`;
 }
 
+function renderGmNotesPanel(state) {
+  const notes = (state.notes || []).filter((n) => n.gmSecretMarkdown);
+  const sheetSecret = state.sheet?.sheet_meta?.notes_gm || "";
+  if (!notes.length && !sheetSecret) return "";
+  const items = [
+    ...(sheetSecret ? [`<article class="dungeon-lore-card"><h3>Segredo da ficha (${escapeHtml(state.sheet.name)})</h3><p class="dungeon-muted">${escapeHtml(sheetSecret)}</p></article>`] : []),
+    ...notes.map((n) => `<article class="dungeon-lore-card"><h3>${escapeHtml(n.title)}</h3><p class="dungeon-muted">${escapeHtml(n.gmSecretMarkdown)}</p></article>`),
+  ].join("");
+  return `<section class="dungeon-panel" aria-label="Segredos Obsidian do Mestre"><span class="dungeon-eyebrow">Camada do Mestre · Obsidian %%segredos%%</span><h2>Notas Secretas do Mestre</h2><div class="dungeon-lore-grid">${items}</div></section>`;
+}
+
 /**
  * Renderiza a Tela 4 (Escudo do Mestre): narrador por roteiro, dicas por regras, cofre de Shamir e inspetor por papel.
  *
@@ -112,6 +123,7 @@ export function renderDmScreen(state) {
         <p class="dungeon-muted">O Escudo do Mestre fica protegido no seu aparelho e nunca é replicado aos feeds públicos do Vox.</p>
       </div>
     </section>
+    ${renderGmNotesPanel(state)}
     <div class="dungeon-two-col">
       ${renderNarratorPanel()}
       ${renderCoDmSection(state)}

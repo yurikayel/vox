@@ -2,6 +2,10 @@
 export const DRAFT_KEY = "vox-steward-wizard-draft";
 const STEP_KEY = "vox-steward-wizard-step";
 
+/**
+ * Lê o rascunho salvo do assistente de steward em `localStorage`.
+ * @returns {object} Rascunho atual ou `{}`.
+ */
 export function loadDraft() {
   try {
     return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}");
@@ -10,21 +14,40 @@ export function loadDraft() {
   }
 }
 
+/**
+ * Mescla campos parciais no rascunho salvo do assistente de steward.
+ * @param {object} partial Campos atualizados da etapa.
+ * @returns {object} Novo rascunho completo.
+ */
 export function saveDraft(partial) {
   const next = { ...loadDraft(), ...partial };
   localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
   return next;
 }
 
+/**
+ * Lê a etapa atual (1–5) do assistente de steward.
+ * @returns {number} Número da etapa válida (padrão 1).
+ */
 export function loadStep() {
   const n = Number(localStorage.getItem(STEP_KEY) || "1");
   return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 1;
 }
 
+/**
+ * Salva a etapa atual do assistente de steward limitada ao intervalo `[1, 5]`.
+ * @param {number} step Etapa alvo.
+ * @returns {void}
+ */
 export function saveStep(step) {
   localStorage.setItem(STEP_KEY, String(Math.min(5, Math.max(1, step))));
 }
 
+/**
+ * Consulta `/health` de um relay candidato para validar conectividade e status.
+ * @param {string} baseUrl URL base HTTP/HTTPS do relay.
+ * @returns {Promise<{ ok: boolean, data?: object, reason: string }>} Resultado da verificação.
+ */
 export async function verifyRelayHttp(baseUrl) {
   const root = String(baseUrl || "").trim().replace(/\/+$/, "");
   if (!root) return { ok: false, reason: "URL vazia" };
@@ -38,7 +61,11 @@ export async function verifyRelayHttp(baseUrl) {
   }
 }
 
-/** Linha curta para UI após GET /health (espelhos + quota). */
+/**
+ * Linha curta para UI após `GET /health` (espelhos + quota).
+ * @param {object|null|undefined} data JSON retornado por `/health`.
+ * @returns {string} Resumo legível ou string vazia.
+ */
 export function formatRelayHealthSummary(data) {
   if (!data || data.status !== "ok") return "";
   const n = data.communityIndexCount ?? 0;
@@ -84,6 +111,11 @@ const STEP_READERS = {
   5: readStepFive,
 };
 
+/**
+ * Lê os campos de formulário preenchidos para a etapa informada do assistente.
+ * @param {number} step Número da etapa (1, 2, 4 ou 5).
+ * @returns {object} Objeto parcial para mesclar no rascunho.
+ */
 export function readFormStep(step) {
   const reader = STEP_READERS[step];
   return reader ? reader() : {};

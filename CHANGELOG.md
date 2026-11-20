@@ -6,7 +6,69 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-_Sem entradas pendentes após release 2026-11-19._
+_Sem entradas pendentes pós-release 2026-11-20._
+
+## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
+
+### Release
+- `develop` → `main`: #306 drain HTTP · #307 cofre v2 · #308 mesh flood · #309–#311 identity/LT-06 · #310 LT-07 · #312–#316 JSDoc · #313 split comunidade (SW v7.147) · #314 Mesa E1 (lazy) · #315 JSON/LT-04 · #317 índice ops. Pós-deploy: hard refresh ([`ops-pages-rollback.md`](./docs/operations/ops-pages-rollback.md)).
+
+### Docs: zera toda a dívida ativa de `audit:docs` fora de `labs/parado/` (199 → 79, -120 achados)
+- `client/js/` (24 módulos ativos restantes fora de `labs/parado/`, incluindo `arweave-lib.js`, `chat-bridge.js`, `contacts.js`, `data/profiles-brazil-uf.js`, `electoral-period.js`, `gateway-telemetry.js`, `gossip-retract-ui.js`, `handles.js`, `labs/mofn-lab.js`, `mesh-profile.js`, `nostr-transport.js`, `peers-cache-manifest.js`, `peers-gossip-profile.js`, `pix-key.js`, `post-ownership.js`, `post-wire.js`, `qr-url-gf.js`, `qr-url.js`, `rate-limit.js`, `reply-thread.js`, `repost-index.js`, `repost.js`, `sky-theme.js`, `story-card.js`): JSDoc (`@param`/`@returns`/descrições) nos exports sem alterar lógica.
+- `scripts/docs-debt.json`: podado via `npm run audit:docs -- --prune` (199 → 79 achados; 0 achados em módulos ativos, restando apenas `client/js/labs/parado/`).
+
+### Code: blindagem contra JSON não-objeto em storage de cofre/backup e fuzzing `LT-04` sem exclusões
+- `client/js/vault/mesh-vault.js`: `loadMine` e `pickHolders` validam `plainRecord` e normalizam `sentTo`/`previousHolders` como arrays (evita `TypeError: ... is not iterable` em `markSent`/`rememberMine`/`pickHolders`); `loadPending` exige `plainRecord(p)` e `plainRecord(p.request)`.
+- `client/js/vault/vault-store.js`: `readLocalVaultRecord` rejeita JSON não-objeto no `localStorage` para impedir que lixo local em array/primitivo bloqueie a recuperação remota do cofre.
+- `client/js/identity/inbox-backup.js`: `readState` usa `readStoredRecord` (`keystore.js`), ignorando valores não-objeto no `localStorage`.
+- `tests/login-properties-files.test.js`, `docs/process/plano-testes-login.md`: remove exclusões de `SEED_STORAGE`, `local-account`, `accounts-vault` e `HELD_STORAGE` no sorteio `LT-04`, exercita `storeSeed`/`holderTick`/`inboxBackup` sob JSON aleatório e adiciona teste `PM-111` red-on-base.
+
+### Refactor: desmembramento de `screens-community.js` (< 25 imports e <= 350 linhas, Fraqueza #14)
+- `client/js/app/`: extrai `community-metadata.js` (metadados, `checkCommunityMembership`, `dispatchCommunityModAction`), `community-data.js`, `community-controls.js`, `community-listing-handlers.js`, `community-topic-screen.js` (`showTopic`, `resolveTopicContent`) e `screens-vote.js` (`showProposal`, `showVote`, apuração e voto), reduzindo `screens-community.js` de 40 para 23 imports (1.280 → 187 linhas) com 0 ciclos.
+- `client/js/app/route.js`, `client/js/app/init.js`: importam `showTopic`, `showProposal` e `showVote` dos novos módulos focados.
+- `client/sw.js`, `docs/release-metadata.json`: registra os 6 novos módulos em `SHELL_ASSETS` e atualiza `CACHE_NAME` para `vox-pwa-v7.147-community-split`.
+- `tests/community-forum-refinements.test.js`: catraca `< 25` imports em `screens-community.js` e preservação de exports.
+
+### Code: LT-06c — corrida de criação de conta entre abas e promoção de teste `storage-corrupt-2`
+- `client/js/identity/local-account.js` (`LT-06c`): `createAccountUnlessWiped` confere `!hasStoredAccount()` antes de gravar chave de DM e concluir a criação; se outra aba já gravou `vox-local-account-v1` durante a geração assíncrona de chaves, descarta a semente gerada em voo e adota a conta existente.
+- `tests/local-account-race.test.js`, `tests/storage-corrupt-2.test.js`, `docs/process/plano-testes-login.md`: teste `PM-111` red-on-base para `LT-06c` e promoção do `TODO` de `local-account` em `storage-corrupt-2.test.js`.
+
+### Docs: quitação de 102 achados JSDoc em 12 módulos raiz de `client/js/` (`audit:docs` 301 → 199)
+- `client/js/` (`central-memory-hydrate.js`, `color-mode.js`, `listing-ui.js`, `peers-blob-affinity.js`, `profile-card.js`, `qr-url-codec.js`, `sig-format.js`, `social-login.js`, `steward-wizard.js`, `storage-persistence.js`, `topic-permaweb.js`, `upload.js`): cabeçalhos `@file` e JSDoc (`@param`, `@returns`) nos exports.
+- `scripts/docs-debt.json`: podado via `npm run audit:docs -- --prune` (dívida cai de 301 para 199 achados; os 12 módulos zerados).
+
+### Code: Mesa Soberana (Entrega 1) — núcleo VTT local-first em `#/dungeon`
+- `client/js/dungeon/dice-engine.js`, `vtt-schema.js`, `vtt-reducer.js`: parser tokenizado de dados (`kh/kl/dh/dl/!`, `@for`/`@des`/`@prof`, `/roll`, `/gmroll`, `/blindroll`, Normal/Vantagem/Desvantagem) sobre amostragem sem viés (`rpg-crypto-table.js`), schema de campanha e redutor puro determinístico por `(lamport, opId)` com projeção Zero-Spoiler.
+- `client/js/dungeon/obsidian-bridge.js`, `vtt-portable.js`: ponte bidirecional `.md`/YAML estrito com separação de segredos GM (`%%...%%`, `> [!gm]`), empacotamento `.voxrpg.zip` (STORE zero deps, CRC32 + `manifest.json` SHA-256 em layout Vault Obsidian) e backup cifrado `.voxrpg.enc` via Senha Soberana (`vault/envelope.js`).
+- `client/js/dungeon/vtt-store.js`, `dungeon-persistence.js`: persistência em IndexedDB dedicado (`vox-vtt-db-v1`) com backend em memória testável, auto-snapshot a cada 50 ops, blobs deduplicados por SHA-256 e medidor honesto de cota local (`storage-persistence.js`).
+- `client/js/dungeon/screen-camp.js`, `screen-table.js`, `screen-sheet.js`, `dungeon-controller.js`, `dungeon-state.js`: seção de campanhas locais e backup/import no Acampamento (mantendo o bloco demo W-DRF sob ADR-033), rolagem por fórmula na Mesa e ficha CRDT clicável (`attributes_lww.abilities` + `sheet_meta.clickable_actions`), tudo lazy-loaded sem novos bytes no precache cívico.
+- `tests/vtt-dice-engine.test.js`, `vtt-obsidian-bridge.test.js`, `vtt-portable.test.js`, `vtt-reducer.test.js`, `vtt-store.test.js`, `vtt-ui-e1.test.js`, `vtt-e1-adversarial.test.js`, `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: suíte completa (unitária + adversarial) e atualização documental.
+
+### Code: LT-07a/b/c — proteção contra redesenho no `hashchange`, focus trap/Escape e retomada do kit de e-mail
+- `client/js/app/onboarding.js` (`LT-07a`): `checkOAuthEnrichStep` não redesenha o modal quando `#oauth-enrich-overlay` já está aberto.
+- `client/js/render/genesis-entry.js`, `client/js/render/focus-trap.js` (`LT-07b`): `renderOAuthEnrich` ativa focus trap (ignorando seções `[hidden]` e tratando `Escape`), foca o primeiro campo ao abrir e `closeOAuthEnrich` devolve o foco ao elemento anterior.
+- `client/js/app/onboarding-email.js` (`LT-07c`): `resumeGenesisEmailKit` reconstrói `to` e `copyText` do `mailtoUrl` salvo em `sessionStorage`, mantendo copiar e baixar funcionais após recarregar a página.
+- `tests/onboarding-reload-keyboard.test.js`, `docs/process/plano-testes-login.md`: 3 testes `PM-111` red-on-base.
+
+### Code: LT-06b (cache de conta entre abas) e leitura JSON segura em `local-account.js`
+- `client/js/identity/local-account.js`: `getCachedRouteIdSync` e `syncCurrentAccountMetadataToVault` descartam `cachedAccount` quando `vox-local-account-v1` foi apagado do `localStorage` por outra aba (`LT-06b`), impedindo que a conta apagada fique viva em memória ou ressuscite em `vox-accounts-vault-v1`; leituras de JSON (`readVaultMap`, `getProfileEnrichment`, `getPixKey`, `loadStoredLocalAccount`) passam por `readStoredRecord`/`isPlainRecord` (`keystore.js`).
+- `client/js/identity/tab-sync.js`, `tests/tab-sync.test.js`, `docs/process/plano-testes-login.md`: limpeza incondicional ao recarregar storage vazio e testes `PM-111` red-on-base.
+
+### Code: cofre na malha — teto de pedidos pendentes por guarda contra flood de avisos
+- `client/js/vault/mesh-vault.js`: `addNotice` deixa de descartar avisos antigos não decididos (`slice(-50)`) e aplica teto de 7 avisos pendentes por guarda (`MAX_NOTICES_PER_HOLDER = 7`, teto total 50).
+- `client/js/app/mesh-vault-flow.js`: `noteNewRequests` limita a 7 pedidos em aberto não decididos por dona em cada guarda (`MAX_REQUESTS_PER_OWNER = 7`), impedindo que flood de pedidos desloque o pedido inicial da fila de veto.
+- `tests/mesh-vault-adversarial-flow.test.js`: reativa teste adversarial de flood de 60 pedidos (`PM-111` red-on-base).
+
+### Code: bordas adversariais do cofre v2 e arquivo cifrado (`.voxid`)
+- `client/js/vault/vault-crypto.js`: `encryptVaultV2` valida `iterations` inteiro dentro da faixa aceita por `isV2Record` (`[100_000, 5_000_000]`), recusando com `RangeError` antes de gravar cofre que o app não abriria.
+- `client/js/identity/account-backup-wrap.js`: `decryptWrappedBytes` decodifica `env.salt` dentro do `try/catch`, devolvendo erro amigável quando o Base64 do sal está corrompido.
+- `tests/cofre-envelope-adversarial.test.js`, `tests/cofre-link-e-backup-adversarial.test.js`: 2 `test.todo` (`🔴`) promovidos a testes ativos (PM-111 red-on-base).
+
+### Code: drena corpo HTTP em erros relay (413/429)
+- `readResponseText` em `fetch-timeout.js`; `central-memory`, `graphql` e `upload` leem o corpo antes de fechar a resposta.
+
+### Docs: PM-112 spike mutação Tier A
+- `docs/process/pm-112-mutation-spike-2026-11.md` — Stryker adiado; PM-111 + adversarial até F2.
 
 ## [2026-11-19] — SW `v7.146-dm-limits-6b` (release #296–#302)
 

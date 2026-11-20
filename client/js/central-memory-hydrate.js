@@ -8,6 +8,11 @@ import * as mediaBlob from "./media-blob.js";
 import * as moderation from "./moderation.js";
 import { MEDIA_FIELD, WIRE_MARK } from "./post-wire.js";
 
+/**
+ * Retorna o maior timestamp conhecido de um item para desempate de atualização.
+ * @param {object|null|undefined} item Item recebido.
+ * @returns {number} Timestamp em ms ou 0.
+ */
 export function itemTimestamp(item) {
   if (!item || typeof item !== "object") return 0;
   return Number(item.updatedAt || item.editedAt || item.ts || item.timestamp || item.createdAt || 0);
@@ -23,7 +28,11 @@ async function isTrustedItem(item) {
   return localAccount.verifyPayload(item);
 }
 
-/** Guarda só blobs cujo conteúdo bate com o hash; devolve os aceitos por hash. */
+/**
+ * Guarda só blobs cujo conteúdo bate com o hash; devolve os aceitos por hash.
+ * @param {Array<{ hash: string, data: string }>|unknown} blobs Blobs vindos da memória central.
+ * @returns {Promise<Map<string, object>>} Mapa `hash -> blob` aceito.
+ */
 export async function hydrateBlobs(blobs) {
   const byHash = new Map();
   if (!Array.isArray(blobs)) return byHash;
@@ -43,6 +52,11 @@ async function hydrateSingleTombstone(tomb) {
   return true;
 }
 
+/**
+ * Valida e persiste tombstones confiáveis vindos da memória central.
+ * @param {object[]|unknown} tombstones Lista de tombstones candidatos.
+ * @returns {Promise<number>} Quantidade de tombstones gravados.
+ */
 export async function hydrateTombstones(tombstones) {
   if (!Array.isArray(tombstones)) return 0;
   let added = 0;
@@ -60,7 +74,13 @@ async function isAcceptablePost(post) {
   return current.author === post.author && itemTimestamp(current) < itemTimestamp(post);
 }
 
-/** `onAccepted(post)` roda para cada post aceito (ex.: cartão de diretório do autor). */
+/**
+ * Valida posts vindos da memória central e grava os aceitos com mídia local acoplada.
+ * @param {object[]|unknown} posts Posts candidatos.
+ * @param {Map<string, object>} [blobsByHash=new Map()] Blobs já validados indexados por hash.
+ * @param {(post: object) => void} [onAccepted=() => {}] Callback chamado para cada post aceito.
+ * @returns {Promise<number>} Quantidade de posts salvos localmente.
+ */
 export async function hydratePosts(posts, blobsByHash = new Map(), onAccepted = () => {}) {
   if (!Array.isArray(posts)) return 0;
   let added = 0;

@@ -19,24 +19,41 @@ function sortDeep(value) {
   return out;
 }
 
-/** Versão com que este aparelho assina agora. */
+/**
+ * Versão com que este aparelho assina agora.
+ * @param {number} [now=Date.now()] Timestamp em ms.
+ * @returns {1|2} Versão de assinatura ativa.
+ */
 export function signingVersion(now = Date.now()) {
   return now >= SIGV2_FROM ? 2 : 1;
 }
 
-/** v1 (ausente) e v2 são as únicas formas conhecidas; outra versão não verifica. */
+/**
+ * v1 (ausente) e v2 são as únicas formas conhecidas; outra versão não verifica.
+ * @param {object|null|undefined} obj Payload assinado.
+ * @returns {boolean} `true` se a versão é reconhecida.
+ */
 export function isKnownSigv(obj) {
   return obj?.sigv === undefined || obj.sigv === 2;
 }
 
-/** Texto assinado de um objeto, sem `sig` e `pubKey`, na versão que o próprio objeto declara. */
+/**
+ * Texto assinado de um objeto, sem `sig` e `pubKey`, na versão que o próprio objeto declara.
+ * @param {object} obj Objeto assinado ou a assinar.
+ * @returns {string} JSON canônico.
+ */
 export function canonicalString(obj) {
   const { sig: _sig, pubKey: _pubKey, ...rest } = obj;
   if (rest.sigv === 2) return JSON.stringify(sortDeep(rest));
   return JSON.stringify(rest, Object.keys(rest).sort());
 }
 
-/** Acrescenta (ou tira) `sigv` conforme a versão de assinatura. */
+/**
+ * Acrescenta (ou tira) `sigv` conforme a versão de assinatura.
+ * @param {object} payload Carga a assinar.
+ * @param {1|2} [version=signingVersion()] Versão alvo.
+ * @returns {object} Cópia do payload com ou sem `sigv: 2`.
+ */
 export function withSigv(payload, version = signingVersion()) {
   const { sigv: _old, ...rest } = payload;
   return version === 2 ? { ...rest, sigv: 2 } : rest;

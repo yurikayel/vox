@@ -365,7 +365,12 @@ export function decideRequest(req, now = Date.now()) {
  */
 export function loadMine() {
   const mine = readJson(MINE_STORAGE, null);
-  return mine && isVaultAddress(mine.address) ? mine : null;
+  if (!plainRecord(mine) || !isVaultAddress(mine.address)) return null;
+  return {
+    ...mine,
+    sentTo: Array.isArray(mine.sentTo) ? mine.sentTo : [],
+    previousHolders: Array.isArray(mine.previousHolders) ? mine.previousHolders : [],
+  };
 }
 
 /**
@@ -422,8 +427,9 @@ export function forgetAllMesh() {
  * @returns {string[]}
  */
 export function pickHolders(mine, candidates) {
-  const sent = new Set(mine.sentTo || []);
-  const order = [...new Set([...(mine.previousHolders || []), ...candidates])];
+  const sent = new Set(Array.isArray(mine?.sentTo) ? mine.sentTo : []);
+  const prev = Array.isArray(mine?.previousHolders) ? mine.previousHolders : [];
+  const order = [...new Set([...prev, ...(Array.isArray(candidates) ? candidates : [])])];
   const room = Math.max(0, MAX_HOLDERS - sent.size);
   return order.filter((id) => id && !sent.has(id)).slice(0, room);
 }
@@ -443,15 +449,21 @@ export function loadNotices() {
   return Array.isArray(list) ? list.filter(isNotice) : [];
 }
 
+const MAX_NOTICES_PER_HOLDER = 7;
+const MAX_NOTICES = 50;
+
 /**
- * Guarda um aviso (sem repetir pedido do mesmo guarda).
+ * Guarda um aviso (sem repetir pedido do mesmo guarda e sem descartar pedido antigo ainda não decidido).
  * @param {{ holder: string, requestId: string, firstSeen: number }} notice
  * @returns {boolean} se era novo
  */
 export function addNotice(notice) {
   const list = loadNotices();
   if (list.some((n) => n.holder === notice.holder && n.requestId === notice.requestId)) return false;
-  writeJson(NOTICES_STORAGE, [...list, notice].slice(-50));
+  if (list.length >= MAX_NOTICES || list.filter((n) => n.holder === notice.holder).length >= MAX_NOTICES_PER_HOLDER) {
+    return false;
+  }
+  writeJson(NOTICES_STORAGE, [...list, notice]);
   return true;
 }
 
@@ -475,7 +487,7 @@ export function takeNotices(requestId) {
  */
 export function loadPending(now = Date.now()) {
   const p = readJson(PENDING_STORAGE, null);
-  if (!Number.isFinite(p?.request?.t) || now - p.request.t > REQUEST_MAX_AGE_MS) return null;
+  if (!plainRecord(p) || !plainRecord(p.request) || !Number.isFinite(p.request.t) || now - p.request.t > REQUEST_MAX_AGE_MS) return null;
   return p;
 }
 
