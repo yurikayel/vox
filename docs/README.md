@@ -162,6 +162,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [runbook-incidentes.md](./operations/runbook-incidentes.md): o que fazer nos primeiros 15 min de cada incidente, kill-switch e simulados (LAN-24, falta o 1º simulado)
 - [steward-relay-kit.md](./operations/steward-relay-kit.md) · [steward-seed-15min.md](./operations/steward-seed-15min.md) · [steward-relay-buddy.md](./operations/steward-relay-buddy.md) (V-P08: segundo voluntário antes do burnout)
 - [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md): espelhos shell A/B · [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md) · [ops-pages-rollback.md](./operations/ops-pages-rollback.md)
+- [pacote-anti-bus-factor.md](./operations/pacote-anti-bus-factor.md): release, rollback e plantão para segunda pessoa (LAN-30)
+- [gatilho-infra-50-ativos.md](./operations/gatilho-infra-50-ativos.md): quando abrir TURN, 2º nó e relay de produção (>50 ativos)
 - [antigravity-operating.md](./process/antigravity-operating.md): operação da malha
 - Emergência de **72 h** (relay + TTL do inbox): restaurar ou usar URL alternativa. Se o PWA cair, use o shell A/B. Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)).
 - Componentes: [relay/README.md](../relay/README.md) · [relay/deploy/README.md](../relay/deploy/README.md) (VPS + TURN) · [vox-populi/README.md](../vox-populi/README.md) · [android/README.md](../android/README.md) · [vox-bridge/README.md](../vox-bridge/README.md)
