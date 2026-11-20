@@ -5,7 +5,7 @@ import {
   drawDrawingsLayer,
   drawDoorsLayer,
   drawFogLayer,
-  drawNotePinsLayer,
+  drawRulerLayer,
 } from "../client/js/dungeon/canvas-tactics-layers.js";
 
 /** @returns {CanvasRenderingContext2D} */
@@ -80,13 +80,11 @@ test("canvas-tactics-layers: drawFogLayer fail-closed quando névoa desativada",
   assert.equal(drawFogLayer(mockCtx(), floor, "gm"), true);
 });
 
-test("canvas-tactics-layers: drawNotePinsLayer conta pins válidos no grid", () => {
+test("canvas-tactics-layers: drawRulerLayer no-op sem régua e com fromWx/toWx", () => {
   const grid = { cellPx: 64, offsetX: 0, offsetY: 0 };
-  const drawn = drawNotePinsLayer(mockCtx(), { grid }, [
-    { title: "Pista", pin: { x: 2, y: 3 } },
-    { title: "Sem pin" },
-    { title: "GM", visibility: "gm_only", pin: { x: 0, y: 0 } },
-  ]);
-  assert.equal(drawn, 2);
-  assert.equal(drawNotePinsLayer(null, { grid }, []), 0);
+  assert.equal(drawRulerLayer(mockCtx(), null, grid), undefined);
+  assert.equal(
+    drawRulerLayer(mockCtx(), { fromWx: 0, fromWy: 0, toWx: 96, toWy: 0 }, grid),
+    undefined,
+  );
 });
