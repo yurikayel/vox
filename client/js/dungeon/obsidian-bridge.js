@@ -5,6 +5,11 @@
  */
 import { appendPoolDeltaOp, projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { createNoteDoc, ensureSheetMeta, sanitizeVttId } from "./vtt-schema.js";
+import { formatInWorldDate } from "./vtt-calendar.js";
+import { listInventoryItems } from "./vtt-inventory.js";
+
+/** Teto de bytes para JSON Canvas 1.0 (INV-6). */
+export const MAX_CANVAS_JSON_BYTES = 256 * 1024;
 
 const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const UNSAFE_YAML_VALUE_RE = /^(?:!!|[&*][a-z0-9_-])/i;
@@ -206,6 +211,10 @@ export function sheetToMarkdown(rawSheet, { includeGmNotes = true } = {}) {
   const sheet = ensureSheetMeta(rawSheet);
   const pools = projectCharacterPools(sheet.pools_base, sheet.delta_ledger).pools;
   const body = [`# ${sheet.attributes_lww.name}`, ""];
+  const inv = listInventoryItems(sheet.inventory_orset);
+  if (inv.length) {
+    body.push("## Inventário", ...inv.map((it) => `- ${it.label}${it.qty > 1 ? ` ×${it.qty}` : ""}${it.equipped ? " (equipado)" : ""}`), "");
+  }
   if (sheet.sheet_meta.notes_public) body.push(sheet.sheet_meta.notes_public.trim(), "");
   if (includeGmNotes && sheet.sheet_meta.notes_gm) body.push(`%%${sheet.sheet_meta.notes_gm.trim()}%%`, "");
   return `${buildSheetFrontmatter(sheet, pools)}\n\n${body.join("\n").trim()}\n`;
@@ -327,8 +336,62 @@ export function noteToMarkdown(note, { includeGmSecrets = true } = {}) {
  * @param {{ includePrivate?: boolean }} [opts={}] Se `false`, omite rolagens `gm`/`blind`.
  * @returns {string} Crônica em Markdown.
  */
+/**
+ * Valida e normaliza um JSON Canvas 1.0 do Obsidian.
+ * @param {unknown} json Objeto ou string JSON.
+ * @returns {{ nodes: Array<object>, edges: Array<object> }}
+ */
+export function parseObsidianCanvas(json) {
+  const raw = typeof json === "string" ? JSON.parse(json) : json;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Canvas inválido.");
+  const bytes = new TextEncoder().encode(JSON.stringify(raw)).length;
+  if (bytes > MAX_CANVAS_JSON_BYTES) throw new Error("Canvas excede o tamanho máximo.");
+  const nodes = Array.isArray(raw.nodes) ? raw.nodes.slice(0, 400) : [];
+  const edges = Array.isArray(raw.edges) ? raw.edges.slice(0, 800) : [];
+  const normNodes = nodes.map((n, i) => ({
+    id: String(n.id || `n${i}`).slice(0, 48),
+    type: ["text", "file", "link", "group"].includes(n.type) ? n.type : "text",
+    x: Number(n.x) || 0,
+    y: Number(n.y) || 0,
+    width: Math.min(2000, Math.max(1, Number(n.width) || 120)),
+    height: Math.min(2000, Math.max(1, Number(n.height) || 60)),
+    text: String(n.text || "").slice(0, 4000),
+    file: String(n.file || "").slice(0, 200),
+  }));
+  return { nodes: normNodes, edges: edges.map((e, i) => ({ id: String(e.id || `e${i}`), fromNode: String(e.fromNode || ""), toNode: String(e.toNode || "") })) };
+}
+
+/**
+ * Projeta nós de texto do Canvas para quadro de investigação na UI.
+ * @param {object} canvas `{ nodes, edges }`.
+ * @returns {Array<{ id: string, label: string, x: number, y: number }>}
+ */
+export function canvasToInvestigationBoard(canvas) {
+  const parsed = canvas?.nodes ? canvas : parseObsidianCanvas(canvas);
+  return parsed.nodes
+    .filter((n) => n.type === "text" && n.text.trim())
+    .map((n) => ({ id: n.id, label: n.text.trim().slice(0, 120), x: n.x, y: n.y }));
+}
+
+/**
+ * Serializa `canvasJson` de uma nota para arquivo `.canvas`.
+ * @param {object} note `NoteDoc`.
+ * @returns {string|null} JSON formatado.
+ */
+export function exportNoteCanvas(note) {
+  if (!note?.canvasJson) return null;
+  return `${JSON.stringify(note.canvasJson, null, 2)}\n`;
+}
+
+/**
+ * Exporta a crônica com carimbo `data_mundo` do calendário de campanha.
+ * @param {object} campaign `CampaignDoc`.
+ * @param {{ includePrivate?: boolean }} [opts={}] Se inclui rolagens privadas.
+ * @returns {string} Markdown da sessão.
+ */
 export function chronicleToMarkdown(campaign, { includePrivate = false } = {}) {
   const dateIso = new Date(campaign?.updatedAt || Date.now()).toISOString().slice(0, 10);
+  const worldDate = formatInWorldDate(campaign?.calendar);
   const sheetLinks = Object.values(campaign?.sheetsById || {})
     .map((s) => `[[${s.attributes_lww?.name || s.character_id}]]`)
     .join(", ");
@@ -338,9 +401,10 @@ export function chronicleToMarkdown(campaign, { includePrivate = false } = {}) {
     "tipo: sessao",
     `campanha: ${yamlStr(campaign?.name || "Campanha")}`,
     `data: ${dateIso}`,
+    `data_mundo: ${yamlStr(worldDate)}`,
     "---",
     "",
-    `# Crônica — ${campaign?.name || "Campanha"} (${dateIso})`,
+    `# Crônica — ${campaign?.name || "Campanha"} (${worldDate})`,
     "",
     sheetLinks ? `Personagens: ${sheetLinks}` : "",
     "",
