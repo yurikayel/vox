@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.147-community-split";
+const CACHE_NAME = "vox-pwa-v7.147-pm01-passo-2-lazy";
 
 const SHELL_ASSETS = [
 
@@ -203,21 +203,8 @@ const SHELL_ASSETS = [
   "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
-  "./js/aviso.js",
   "./js/aviso-roles.js",
-  "./js/community-termo.js",
-  "./js/sorteio.js",
   "./js/natural-mod.js",
-  "./js/aviso-replies.js",
-  "./aviso/aviso-link.js",
-  "./js/render/aviso.js",
-  "./js/app/aviso-flow.js",
-  "./js/app/aviso-roles-dm.js",
-  "./js/app/community-termo-flow.js",
-  "./js/app/sorteio-flow.js",
-  "./js/app/natural-mod-flow.js",
-  "./js/app/mediation-dm.js",
-  "./js/app/natural-case-flow.js",
 
   "./js/identity/account-backup-wrap.js",
 
@@ -417,10 +404,6 @@ const SHELL_ASSETS = [
   "./js/render/dm.js",
 
   "./js/render/tag-polis.js",
-
-  "./js/render/voxpedia.js",
-
-  "./js/render/ajuda-teste.js",
 
   "./js/share.js",
 

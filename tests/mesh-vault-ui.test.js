@@ -88,10 +88,14 @@ test("volta pela malha — cofre chegou mas não abriu: mantém o pedido e diz p
     cancel: () => assert.fail("não cancela"),
   });
   assert.deepEqual(res, { ok: false, reason: "Senha incorreta." });
-  const silent = await tryMeshRestoreOnce({ email: "", pass: "" }, {
+  const noPass = await tryMeshRestoreOnce({ email: "", pass: "" }, {
     collect: async () => ({ ok: true, record: {} }), restore: async () => ({ ok: false }), cancel: () => {},
   });
-  assert.match(silent.reason, /senha não abriu/);
+  assert.equal(noPass.reason, "waiting");
+  const bareFail = await tryMeshRestoreOnce({ email: "a@b.c", pass: "x" }, {
+    collect: async () => ({ ok: true, record: {} }), restore: async () => ({ ok: false }), cancel: () => {},
+  });
+  assert.match(bareFail.reason, /senha não abriu/);
 });
 
 /** Documento mínimo: guarda elementos por id e os botões com seus ouvintes. */

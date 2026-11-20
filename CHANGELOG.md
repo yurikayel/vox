@@ -47,6 +47,23 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/dungeon/canvas-renderer.js`, `canvas-input.js`, `dungeon-scene-actions.js`: renderização 2D sob demanda (0% CPU em repouso), gestos desktop + touch mobile (`PointerEvents`, pinça 2 dedos, snap na grade) e upload de mapas deduplicados por SHA-256.
 - `client/js/dungeon/vtt-sync-codec.js`, `vtt-sync.js`: convites `#/dungeon/entrar/:id?gm=...#k=...`, assinatura ECDSA P-256 (`INV-7`) vinculada ao `routeId`, `SNAPSHOT_FILTERED`/`COMMIT_OP` sem vazamentos e `WANT_BLOB`/`BLOB_CHUNK` (16 KiB) com verificação SHA-256 e bloqueio de blobs ocultos.
 - `client/js/dungeon/screen-table.js`, `screen-dm.js`, `dungeon-controller.js`, `tests/vtt-{geometry,sync,canvas}.test.js`: tabuleiro 2D e painel Camada GM/convite P2P integrados sem novos bytes no precache cívico.
+### Fix
+- `client/js/webrtc-peer.js`: `getNostrSignalingRelays` filtra relays antes do transporte Nostr (`buildNostrSignalingCandidates`); `ws://` na config não é mais repassado. Sem bump de SW.
+- `tests/assinaturas-e-sinais-malicioso.test.js`: o único `test.todo` com asserção falha virou teste de regressão documentando o v1 (ADR-021 §2.6), sem mudança de protocolo LAN-18.
+### Tests: cliente drena 413/429 do relay (#306)
+- `tests/relay-413-client.test.js`: prova que `readResponseText`, `central-memory` e `upload` leem o corpo antes do fechamento (`bodyUsed`), evitando RST/10053 e mantendo o status legível; alinha `upload.js` ao mesmo helper.
+### Testes: LT-02 — `lockAfterPasswordBackup` com `remote=0`
+- `tests/login-rede-ruim.test.js`: promove o `test.todo` — criação com relay fora garante `saved.locked`, chaves travadas e export bloqueado mesmo quando só a cópia local do cofre existe.
+### Code: LT-07d — retoma poll da malha após recarga na espera do cofre
+- `app/onboarding-email.js`: com `loadMeshPending` e rascunho `meshWaiting`, após recarga mostra status da malha, repõe `vaultEmail` no formulário e reinicia o poll (senha continua fora do storage; CodeQL 282). `app/onboarding.js`: `onMeshRestored` no fluxo de entrada. Testes: `tests/onboarding-reload-keyboard.test.js`.
+### Code: PM-01 passo 2 — lazy routing aviso/compose e menos bytes no precache (SW `v7.147-pm01-passo-2-lazy`)
+- `client/js/app/route.js`: `import()` sob demanda para rotas de aviso (`#/c/…/avisos`, `#/compose/aviso`) e composição (`#/compose/*`), no mesmo padrão do passo 1 (voxpedia/ajuda/labs).
+- `client/sw.js`: remove do `SHELL_ASSETS` render Voxpedia/ajuda-teste, pilha de aviso/termo/sorteio e fluxos de moderação natural já alcançáveis só por `import()` dinâmico; mantém `screens-compose.js` no precache (respostas inline em `init.js`).
+- `tests/shell-reachability.test.js`, `tests/depurple-paper.test.js`: guardiões PM-01 passo 2.
+### Code: LT-06a — Web Lock na criação entre abas e aviso de storage na entrada
+- `client/js/identity/tab-sync.js`: `withLocalAccountCreationLock` (`vox-local-account-create-v0`) serializa a primeira criação de conta entre abas (complementa LT-06c).
+- `client/js/identity/local-account.js`: criação nova sob o lock, com releitura do storage após esperar; `getAccountStorageIssue` + `warnIfAccountNotPersisted` na entrada.
+- `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js`, `tests/tab-sync.test.js`, `tests/setup.js` (mock `navigator.locks`), `docs/process/plano-testes-login.md` §5.1 `LT-06a`.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 

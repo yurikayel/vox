@@ -40,14 +40,21 @@ function loadLabsRoute() {
   labsRoute ??= import("./screens-labs.js");
   return labsRoute;
 }
-import { showAvisos, showComposeAviso } from "./aviso-flow.js";
-import {
-  showComposeCommunity,
-  showComposeTopic,
-  showComposeListing,
-  showComposeProposal,
-  showComposeReply,
-} from "./screens-compose.js";
+
+/** @type {Promise<typeof import("./aviso-flow.js")>|null} */
+let avisoRoute = null;
+/** @type {Promise<typeof import("./screens-compose.js")>|null} */
+let composeRoute = null;
+
+function loadAvisoRoute() {
+  avisoRoute ??= import("./aviso-flow.js");
+  return avisoRoute;
+}
+
+function loadComposeRoute() {
+  composeRoute ??= import("./screens-compose.js");
+  return composeRoute;
+}
 
 const ROUTE_DISPATCH_TABLE = {
   home: (r) => showHome(r.feed),
@@ -74,8 +81,8 @@ const ROUTE_DISPATCH_TABLE = {
   "labs-dungeon": async () => { (await loadLabsRoute()).showLabsDungeon(); },
   dungeon: async (r) => { (await loadLabsRoute()).showDungeonScreen(r); },
   community: (r) => showCommunity(r.id, r.tab),
-  "community-avisos": (r) => showAvisos(r.communityId),
-  "compose-aviso": (r) => showComposeAviso(r.communityId),
+  "community-avisos": async (r) => { (await loadAvisoRoute()).showAvisos(r.communityId); },
+  "compose-aviso": async (r) => { (await loadAvisoRoute()).showComposeAviso(r.communityId); },
   proposal: (r) => showProposal(r.communityId, r.proposalId),
   topic: (r) => showTopic(r.id, r.communityId),
   profile: (r) => showProfile(r.address, r.tab),
@@ -87,11 +94,13 @@ const ROUTE_DISPATCH_TABLE = {
   guardians: () => showGuardians(),
   "guardian-return": (r) => showGuardianReturn(r.query),
   "guardian-recover": () => showGuardianRecover(),
-  "compose-community": () => showComposeCommunity(),
-  "compose-listing": (r) => showComposeListing(r.communityId),
-  "compose-proposal": (r) => showComposeProposal(r.communityId),
-  "compose-topic": (r) => showComposeTopic(r.communityId),
-  "compose-reply": (r) => showComposeReply(r.topicId, r.communityId, r.parentId),
+  "compose-community": async () => { (await loadComposeRoute()).showComposeCommunity(); },
+  "compose-listing": async (r) => { (await loadComposeRoute()).showComposeListing(r.communityId); },
+  "compose-proposal": async (r) => { (await loadComposeRoute()).showComposeProposal(r.communityId); },
+  "compose-topic": async (r) => { (await loadComposeRoute()).showComposeTopic(r.communityId); },
+  "compose-reply": async (r) => {
+    (await loadComposeRoute()).showComposeReply(r.topicId, r.communityId, r.parentId);
+  },
   sync: (r) => showSyncScreen(r),
   "not-found": () => showNotFound(),
 };

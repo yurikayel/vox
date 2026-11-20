@@ -143,6 +143,19 @@ test("webrtc - getWebTorrentTrackers e getNostrRelays fornecem fallbacks gratuit
   assert.ok(fallbackRelays[0].includes("relay"));
 });
 
+test("webrtc - relays Nostr usados na sinalização não incluem ws:// da config", () => {
+  const config = { nostrRelays: ["ws://relay.exemplo", "wss://relay.seguro", "https://x"] };
+  const raw = webrtcPeer.getNostrRelays(config);
+  assert.ok(raw.includes("ws://relay.exemplo"), "a config pode listar ws://");
+  const forTransport =
+    typeof webrtcPeer.getNostrSignalingRelays === "function"
+      ? webrtcPeer.getNostrSignalingRelays(config)
+      : raw;
+  assert.ok(!forTransport.includes("ws://relay.exemplo"), "transporte Nostr não deve usar ws:// em claro");
+  assert.ok(!forTransport.includes("https://x"));
+  assert.ok(forTransport.includes("wss://relay.seguro"));
+});
+
 test("webrtc - modo só TURN tira STUN e força iceTransportPolicy relay (LAN-19)", () => {
   localStorage.clear();
   const baseCfg = {
