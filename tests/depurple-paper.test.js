@@ -29,10 +29,12 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/app/repost-ui.js"'));
   assert.ok(sw.includes('"./js/sky-theme.js"'));
   assert.ok(sw.includes('"./js/contribution-attestation.js"'));
-  assert.ok(sw.includes('"./js/render/ajuda-teste.js"'));
   assert.ok(sw.includes('"./js/app/onboarding-oauth-ui.js"'));
   const shellOnly = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
   assert.ok(!shellOnly.includes("screens-ajuda-teste.js"), "PM-01: tela ajuda-teste fora do precache");
+  assert.ok(!shellOnly.includes("render/ajuda-teste.js"), "PM-01 passo 2: render ajuda-teste fora do precache");
+  assert.ok(!shellOnly.includes("render/voxpedia.js"), "PM-01 passo 2: render voxpedia fora do precache");
+  assert.ok(!shellOnly.includes("aviso-flow.js"), "PM-01 passo 2: aviso-flow fora do precache");
 });
 
 test("service worker - shell assets 100% complete and exist on disk", () => {
