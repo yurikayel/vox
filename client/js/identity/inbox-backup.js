@@ -12,6 +12,7 @@ import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
 import * as accountExit from "./account-exit.js";
+import { readStoredRecord } from "./keystore.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-meta.js";
 
 /** Marca do arquivo de backup do e-mail. */
@@ -22,11 +23,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const stateKey = () => STATE_PREFIX + (localAccount.getCachedRouteIdSync() || "");
 
 function readState() {
-  try {
-    return JSON.parse(localStorage.getItem(stateKey()) || "null");
-  } catch {
-    return null;
-  }
+  return readStoredRecord(stateKey(), null);
 }
 
 function writeState(next) {

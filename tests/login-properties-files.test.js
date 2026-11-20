@@ -8,8 +8,12 @@ import { combineShares, MAX_N, MIN_M, splitSecret } from "../client/js/shamir-gf
 import { importAccountBundle } from "../client/js/identity/account-backup.js";
 import * as emailKit from "../client/js/email-kit.js";
 import * as localAccount from "../client/js/identity/local-account.js";
+import * as identitySeed from "../client/js/identity/identity-seed.js";
+import * as inboxBackup from "../client/js/identity/inbox-backup.js";
 import * as mesh from "../client/js/vault/mesh-vault.js";
-import { SEED_STORAGE } from "../client/js/identity/identity-seed.js";
+import * as vaultStore from "../client/js/vault/vault-store.js";
+import * as meshFlow from "../client/js/app/mesh-vault-flow.js";
+const { SEED_STORAGE } = identitySeed;
 
 const LT04_SEED = 0x4c543034;
 const PASS = "frase longa de teste soberana";
@@ -58,13 +62,8 @@ const ACCOUNT_KEYS = [
   "vox-dm-keypair",
 ];
 
-function randomStorageValue(rng, key) {
-  const objectOnly = [SEED_STORAGE, "vox-local-account-v1", "vox-accounts-vault-v1"].includes(key);
-  if (objectOnly) return JSON.stringify({ [`vx_${(rng() * 1e8) | 0}`]: rng() > 0.5 ? null : { nested: [1, "x"] } });
+function randomStorageValue(rng, _key) {
   const kind = Math.floor(rng() * 6);
-  if (key === mesh.HELD_STORAGE) {
-    return JSON.stringify({ [`vx_${(rng() * 1e8) | 0}`]: { address: "zz", record: {}, updatedAt: 1, requests: {} } });
-  }
   if (kind === 0) return String(rng());
   if (kind === 1) return JSON.stringify({ x: rng(), nest: { a: [null, true, "vx"] } });
   if (kind === 2) return JSON.stringify([rng(), "vx_fake", { t: Date.now() }]);
@@ -123,6 +122,53 @@ test("LT-04 storage — JSON aleatório nas chaves do login e da malha não derr
     assert.doesNotThrow(() => mesh.loadHeld());
     assert.doesNotThrow(() => mesh.loadNotices());
     assert.doesNotThrow(() => mesh.loadMine());
+    assert.doesNotThrow(() => inboxBackup.getInboxBackupSettings());
+    assert.doesNotThrow(() => inboxBackup.dueInboxBackups());
     await assert.doesNotReject(async () => localAccount.ensureLocalAccount());
+    await assert.doesNotReject(async () => identitySeed.storeSeed("vx_fuzz_seed", new Uint8Array(16)));
+    await assert.doesNotReject(async () =>
+      meshFlow.holderTick({
+        getMe: () => "vx_guarda_fuzz",
+        getContacts: () => [],
+        fetchRequests: async () => [],
+        fetchActions: async () => [],
+        push: async () => true,
+        seal: async (_p, text) => text,
+        sign: async (b) => b,
+        verify: async () => true,
+        now: () => 1_700_000_000_000,
+      }),
+    );
+  }
+});
+
+test("JSON corrompido ou não-objeto não quebra mine/pending/vault-store/inbox-backup", async () => {
+  localStorage.clear();
+  const validAddr = "a".repeat(64);
+  localStorage.setItem(mesh.MINE_STORAGE, JSON.stringify({ address: validAddr, sentTo: "corrupt", previousHolders: 42 }));
+  assert.doesNotThrow(() => mesh.rememberMine({ routeId: "vx_dona", address: validAddr, record: { v: 2 } }));
+  localStorage.setItem(mesh.MINE_STORAGE, JSON.stringify({ address: validAddr, sentTo: 99, previousHolders: {} }));
+  assert.doesNotThrow(() => mesh.markSent(["vx_guarda1"]));
+  assert.deepEqual(mesh.pickHolders({ sentTo: "bad", previousHolders: 123 }, ["vx_g1"]), ["vx_g1"]);
+
+  localStorage.setItem(mesh.PENDING_STORAGE, JSON.stringify([1, 2, 3]));
+  assert.equal(mesh.loadPending(), null);
+
+  const acc = await localAccount.ensureLocalAccount();
+  localStorage.setItem(`vox-inbox-backup-v1:${acc.routeId}`, JSON.stringify([1, 2, 3]));
+  assert.equal(inboxBackup.getInboxBackupSettings().ready, false);
+  assert.deepEqual(inboxBackup.dueInboxBackups(), []);
+  assert.doesNotThrow(() => inboxBackup.setInboxBackupCadence({ weekly: false }));
+  assert.equal(localStorage.getItem(`vox-inbox-backup-v1:${acc.routeId}`), JSON.stringify([1, 2, 3]));
+
+  const remoteRecord = { v: 2, updatedAt: 10, ciphertext: "ok" };
+  localStorage.setItem(`${vaultStore.VAULT_STORAGE_PREFIX}k_corrupt`, JSON.stringify([123]));
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ record: remoteRecord }) });
+  try {
+    const out = await vaultStore.findVaultRecordWithStatus("k_corrupt", vaultStore.VAULT_STORAGE_PREFIX);
+    assert.deepEqual(out.record, remoteRecord, "lixo local em array não deve impedir busca remota do cofre");
+  } finally {
+    globalThis.fetch = prevFetch;
   }
 });
