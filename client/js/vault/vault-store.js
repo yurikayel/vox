@@ -15,6 +15,8 @@ import { LEGACY_VAULT_PREFIX } from "./vault-legacy.js";
 export const VAULT_STORAGE_PREFIX = "vox-vault-v2:";
 const REMOTE_FETCH_TIMEOUT_MS = 4000;
 
+const isPlainRecord = (v) => Boolean(v) && typeof v === "object" && !Array.isArray(v);
+
 async function probeVaultUrl(baseUrl, lookupKey) {
   let res;
   try {
@@ -85,6 +87,7 @@ function readLocalVaultRecord(lookupKey, prefix) {
     const rawLocal = localStorage.getItem(prefix + lookupKey);
     if (!rawLocal) return { record: null, revoked: false };
     const parsed = JSON.parse(rawLocal);
+    if (!isPlainRecord(parsed)) return { record: null, revoked: false };
     return isRevokedRecord(parsed) ? { record: null, revoked: true } : { record: parsed, revoked: false };
   } catch {
     return { record: null, revoked: false };
