@@ -1,16 +1,26 @@
 /**
- * webxdc-host.js — Gerenciador de Host para Cartuchos Cívicos em Sandbox (Vox)
- *
- * Implementa:
- * 1. Iframe sandbox rigoroso com sandbox="allow-scripts" e referrerpolicy="no-referrer";
- * 2. Origem opaca (Origin: null) sem allow-same-origin;
- * 3. Validação estrita de postMessage por igualdade de janela (event.source === iframe.contentWindow);
- * 4. Validação de esquema do objeto de update e ciclo de vida do cartucho.
+ * @file Host sandboxed para cartuchos Webxdc no DOM (laboratório).
+ * @module labs/parado/webxdc-host
  */
 
+/**
+ * Limite de caracteres do campo `info` de um update.
+ * @type {number}
+ */
 export const MAX_INFO_LEN = 50;
+
+/**
+ * Limite de caracteres do campo `summary` de um update.
+ * @type {number}
+ */
 export const MAX_SUMMARY_LEN = 20;
 
+/**
+ * Valida esquema mínimo de update vindo do cartucho.
+ * @param {unknown} update Objeto de update.
+ * @returns {true}
+ * @throws {Error} Quando payload falta ou texto excede limites.
+ */
 export function validateWebxdcUpdate(update) {
   if (!update || typeof update !== "object") {
     throw new Error("Update do webxdc deve ser um objeto");
@@ -27,19 +37,34 @@ export function validateWebxdcUpdate(update) {
   return true;
 }
 
+/**
+ * Cria iframe com sandbox estrito (`allow-scripts` apenas).
+ * @param {string} srcdoc HTML do cartucho.
+ * @returns {HTMLIFrameElement|null} Null fora de ambiente com `document`.
+ */
 export function createSandboxedIframe(srcdoc) {
   if (typeof document === "undefined") {
     return null;
   }
   const iframe = document.createElement("iframe");
   iframe.className = "webxdc-cartridge-frame";
-  iframe.setAttribute("sandbox", "allow-scripts"); // Sem allow-same-origin -> Origin: null
+  iframe.setAttribute("sandbox", "allow-scripts");
   iframe.setAttribute("referrerpolicy", "no-referrer");
   iframe.setAttribute("loading", "lazy");
   iframe.srcdoc = srcdoc;
   return iframe;
 }
 
+/**
+ * Monta host com bridge `postMessage` e ciclo de vida.
+ * @param {object} options Parâmetros do host.
+ * @param {string} options.srcdoc HTML do cartucho.
+ * @param {HTMLElement|null} [options.container] Onde anexar o iframe.
+ * @param {(update: object, description: string) => void} [options.onSendUpdate] Callback de update do cartucho.
+ * @param {(serial: number) => void} [options.onReady] Cartucho pronto.
+ * @param {string} [options.instanceId="cartucho_default"] Id da instância.
+ * @returns {{iframe: HTMLIFrameElement|null, instanceId: string, sendUpdate: (update: object) => void, destroy: () => void}}
+ */
 export function createWebxdcHost({
   srcdoc,
   container,
