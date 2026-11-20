@@ -26,6 +26,35 @@ class MockLocalStorage {
   }
 }
 
+class MockLockManager {
+  constructor() {
+    /** @type {Map<string, Promise<void>>} */
+    this.tails = new Map();
+  }
+
+  /**
+   * @param {string} name
+   * @param {object|(() => Promise<unknown>)} optionsOrFn
+   * @param {() => Promise<unknown>} [maybeFn]
+   */
+  async request(name, optionsOrFn, maybeFn) {
+    const fn = typeof optionsOrFn === "function" ? optionsOrFn : maybeFn;
+    if (!fn) throw new TypeError("MockLockManager.request: callback ausente");
+    const prev = this.tails.get(name) || Promise.resolve();
+    let release;
+    const slot = new Promise((resolve) => {
+      release = resolve;
+    });
+    this.tails.set(name, prev.then(() => slot));
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }
+}
+
 class MockBroadcastChannel {
   static channels = new Map();
 
@@ -132,6 +161,9 @@ export function setupBrowserGlobals() {
     globalThis.navigator = {
       connection: { type: "wifi", saveData: false },
     };
+  }
+  if (!globalThis.navigator.locks) {
+    globalThis.navigator.locks = new MockLockManager();
   }
   if (!globalThis.location) {
     globalThis.location = { hash: "#/" };

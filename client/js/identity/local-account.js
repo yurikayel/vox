@@ -13,6 +13,7 @@ import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "../sig-format.js";
 import { bytesToB64Url, computeRouteId, verifyPayload } from "../signed-verify.js";
 import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "../account-social-match.js";
+import { withLocalAccountCreationLock } from "./tab-sync.js";
 
 export { computeRouteId, verifyPayload };
 export { LOCAL_WIPE_NOTICE, confirmLocalWipe, dropAllPersonalStorage, dropDatabases } from "./local-wipe.js";
@@ -136,16 +137,30 @@ async function resolveLocalAccount(epoch) {
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   }
-  const fresh = await createAccountUnlessWiped(epoch);
-  if (!fresh) return null;
-  try {
-    storeActiveAccount(fresh);
-  } catch (err) {
-    accountPersistIssue = { reason: err?.name || "storage_blocked" };
-    cachedAccount = fresh;
-  }
-  syncCurrentAccountMetadataToVault();
-  return cachedAccount;
+  return withLocalAccountCreationLock(async () => {
+    if (epoch !== wipeEpoch) return null;
+    const raced = await loadStoredLocalAccount(epoch);
+    if (raced) {
+      cachedAccount = raced;
+      syncCurrentAccountMetadataToVault();
+      return cachedAccount;
+    }
+    const fresh = await createAccountUnlessWiped(epoch);
+    if (!fresh) return null;
+    try {
+      storeActiveAccount(fresh);
+    } catch (err) {
+      accountPersistIssue = { reason: err?.name || "storage_blocked" };
+      cachedAccount = fresh;
+    }
+    syncCurrentAccountMetadataToVault();
+    return cachedAccount;
+  });
+}
+
+/** @internal só testes: simula outra aba sem `ensureLocalAccountInflight` compartilhado */
+export function __resetEnsureLocalAccountInflightForTests() {
+  ensureLocalAccountInflight = null;
 }
 
 /**

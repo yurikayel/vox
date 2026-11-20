@@ -14,6 +14,21 @@ async function tabSync() {
   return import("../client/js/identity/tab-sync.js");
 }
 
+test("LT-06a: withLocalAccountCreationLock serializa trabalho concorrente", async () => {
+  const { withLocalAccountCreationLock } = await tabSync();
+  let depth = 0;
+  let maxDepth = 0;
+  const work = () =>
+    withLocalAccountCreationLock(async () => {
+      depth += 1;
+      maxDepth = Math.max(maxDepth, depth);
+      await new Promise((r) => setTimeout(r, 10));
+      depth -= 1;
+    });
+  await Promise.all([work(), work()]);
+  assert.equal(maxDepth, 1);
+});
+
 test("tab-sync: precache do SW lista tab-sync.js (RED na base)", () => {
   const sw = fs.readFileSync(new URL("../client/sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./js/identity/tab-sync.js"'), "SHELL_ASSETS deve precachear tab-sync");

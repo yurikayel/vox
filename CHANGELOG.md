@@ -60,6 +60,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/app/route.js`: `import()` sob demanda para rotas de aviso (`#/c/…/avisos`, `#/compose/aviso`) e composição (`#/compose/*`), no mesmo padrão do passo 1 (voxpedia/ajuda/labs).
 - `client/sw.js`: remove do `SHELL_ASSETS` render Voxpedia/ajuda-teste, pilha de aviso/termo/sorteio e fluxos de moderação natural já alcançáveis só por `import()` dinâmico; mantém `screens-compose.js` no precache (respostas inline em `init.js`).
 - `tests/shell-reachability.test.js`, `tests/depurple-paper.test.js`: guardiões PM-01 passo 2.
+### Code: LT-06a — Web Lock na criação entre abas e aviso de storage na entrada
+- `client/js/identity/tab-sync.js`: `withLocalAccountCreationLock` (`vox-local-account-create-v0`) serializa a primeira criação de conta entre abas (complementa LT-06c).
+- `client/js/identity/local-account.js`: criação nova sob o lock, com releitura do storage após esperar; `getAccountStorageIssue` + `warnIfAccountNotPersisted` na entrada.
+- `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js`, `tests/tab-sync.test.js`, `tests/setup.js` (mock `navigator.locks`), `docs/process/plano-testes-login.md` §5.1 `LT-06a`.
 
 ## [2026-11-20] — SW `v7.147-community-split` (release #306–#317)
 
