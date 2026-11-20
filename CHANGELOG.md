@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Doc: DOC-04 — status, rede e Voxpedia (copy honesta)
+- `client/js/render/status.js`, `render/network.js`: leitura via gateways vs gravação Arweave (`arweaveUpload: false`).
+- `client/js/render/voxpedia.js`: labs Webxdc/Mesa alinhados a `FEATURES.md`.
+- `docs/ROADMAP.md`, `docs/audits/honest-copy-audit-2026-10-23.md`; testes em `status-render.test.js`, `supporter-mode.test.js`.
+
 ### Doc: DOC-04 — ajuda-teste e feed (copy honesta)
 - `client/js/render/ajuda-teste.js`: Arweave pausado, POSSE sem permaweb automático.
 - `client/js/render/feed.js`: barra Escudo Cidadão sem hype “100% cronológico”.

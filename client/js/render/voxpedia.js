@@ -254,7 +254,7 @@ function layerTestesRelease() {
       "Docs no repositório",
       `<ul class="voxpedia-steps">
         <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
-        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/dungeon">AI Social Dungeon (lab, demonstração sem IA)</a> · <a href="#/status">Status da malha</a></li>
+        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/dungeon">Mesa TTRPG (lab)</a> · Cartuchos Webxdc: código em <code>labs/parado/</code>, fora do núcleo offline · <a href="#/status">Status da malha</a></li>
         <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
         <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
       </ul>
