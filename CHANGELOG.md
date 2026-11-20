@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: fatiamento SLAP de `render/feed.js` (Onda 3 PR3)
+- `client/js/render/feed.js` (~1112 → ~14 linhas) virou fachada; extraídos `feed-composer.js`, `feed-comments.js`, `feed-post-toolbar.js`, `feed-post-media.js`, `feed-post-item.js` e `feed-chrome.js`; API pública preservada; `sw.js` inalterado no shell (só `./js/render/feed.js`); `CACHE_NAME` `vox-pwa-v7.149-feed-split`; helper `tests/helpers/feed-render-source.mjs` para asserções de string; 0 ciclos (`audit:layers`).
+
 ### Refactor: fatiamento SLAP de `render/community.js` (Onda 3 PR2)
 - `client/js/render/community.js` (~1138 → ~45 linhas) virou fachada; extraídos `community-shared.js`, `community-home.js`, `community-topics.js`, `community-neighbors.js`, `community-page.js` e `community-governance.js`; API pública preservada para `render.js` e testes; `sw.js` inalterado (só `./js/render/community.js`); 0 ciclos (`audit:layers`).
 

@@ -1,9 +1,9 @@
 {
-  "git_sha": "4989df2",
-  "branch": "refactor/screens-compose-split",
-  "test_js": 2111,
-  "test_python": 320,
-  "test_total": 2431,
-  "cache_name": "vox-pwa-v7.148-compose-split",
-  "generated_at": "2026-11-20T11:40:06Z"
+  "git_sha": "a037d8e",
+  "branch": "refactor/render-feed-split",
+  "test_js": 2157,
+  "test_python": 335,
+  "test_total": 2492,
+  "cache_name": "vox-pwa-v7.149-feed-split",
+  "generated_at": "2026-11-20T13:58:20Z"
 }
