@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.149-feed-split";
+const CACHE_NAME = "vox-pwa-v7.150-webrtc-split";
 
 const SHELL_ASSETS = [
 
