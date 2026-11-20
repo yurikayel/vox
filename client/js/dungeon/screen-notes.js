@@ -11,14 +11,40 @@ function folderOf(note) {
   return FOLDERS.includes(note.folder) ? note.folder : "Notas";
 }
 
+/** @param {string} raw URL candidata. @returns {string} Href seguro ou vazio. */
+function safeExternalHref(raw) {
+  const u = String(raw || "").trim();
+  return /^https?:\/\//i.test(u) ? u : "";
+}
+
 /**
- * Visão leve de handouts públicos (sem pastas GM).
+ * Visão leve de handouts compartilhados (jogador): cartões + links externos (PDF/imagem).
  * @param {object} state Sessão.
  * @returns {string} HTML.
  */
 export function renderHandoutViewer(state) {
-  const publicNotes = (state.notes || []).filter((n) => n.visibility === "public");
-  return renderNotesPanel({ ...state, notes: publicNotes, viewerRole: "player" });
+  const shared = (state.notes || []).filter(
+    (n) => n.visibility === "shared" || n.visibility === "public",
+  );
+  if (!shared.length) {
+    return `<p class="dungeon-muted">Nenhum handout compartilhado com a mesa ainda.</p>`;
+  }
+  const cards = shared.map((n) => {
+    const body = escapeHtml((n.publicMarkdown || "").slice(0, 220));
+    const linkBtns = (n.links || [])
+      .map((raw) => {
+        const href = safeExternalHref(raw);
+        if (!href) return "";
+        return `<a class="dungeon-btn dungeon-btn-ghost" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">Abrir anexo</a>`;
+      })
+      .filter(Boolean)
+      .join(" ");
+    const board = n.canvasJson ? canvasToInvestigationBoard(n.canvasJson).slice(0, 3) : [];
+    const pins = board.map((b) => `<li>${escapeHtml(b.label)}</li>`).join("");
+    const canvasHtml = pins ? `<ul class="dungeon-clean-list">${pins}</ul>` : "";
+    return `<article class="dungeon-lore-card"><h3>${escapeHtml(n.title)}</h3><p class="dungeon-muted">${body}</p>${canvasHtml}<div class="dungeon-card-actions">${linkBtns}</div></article>`;
+  }).join("");
+  return `<div class="dungeon-handout-stack" aria-label="Handouts compartilhados">${cards}</div>`;
 }
 
 /**
