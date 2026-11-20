@@ -157,7 +157,8 @@ test("feed - renderExternalFeedManagerHtml renders citizen shield, input, import
   const html = feed.renderExternalFeedManagerHtml(["lula.com.br", "intercept.com"]);
   assert.ok(html.includes("bsky-feed-manager"));
   assert.ok(html.includes("vox-citizen-shield-bar"));
-  assert.ok(html.includes("Escudo Cidadão Vox Ativo"));
+  assert.ok(html.includes("Escudo Cidadão Vox"));
+  assert.ok(html.includes("horário de assinatura"));
   assert.ok(html.includes("INGESTÃO PREDATÓRIA"));
   assert.ok(html.includes("@lula.com.br"));
   assert.ok(html.includes("@intercept.com"));

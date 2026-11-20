@@ -972,7 +972,7 @@ export function renderFeedTabsBar(activeFeed = "for-you") {
 function renderCitizenShieldBarHtml() {
   return `
     <div class="vox-citizen-shield-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:6px 10px; margin-bottom:0.65rem; border-radius:var(--radius-sm); background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.35); font-size:0.75rem;">
-      <span>🛡️ <strong>Escudo Cidadão Vox Ativo:</strong> 0 Rastreadores · 0 Algoritmo de Ódio · 100% Cronológico</span>
+      <span>🛡️ <strong>Escudo Cidadão Vox:</strong> sem rastreadores de terceiros no app · feed por horário de assinatura (sem leilão de boost)</span>
       <a href="#/settings/linked-accounts" style="font-weight:700; color:var(--accent); text-decoration:none;">🔗 Configurar Redes →</a>
     </div>`;
 }
