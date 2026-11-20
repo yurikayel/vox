@@ -101,9 +101,10 @@ test("PM-18: createNostrTransport reporta onRelayAttempt em sucesso e falha ante
   assert.ok(attempts.some((a) => a.ok === false));
 });
 
-test("PM-18: módulo está no precache do SW e ligado ao webrtc-peer e screens-status", () => {
+test("PM-18: módulo está no precache do SW e ligado ao webrtc-peer e screens-status", async () => {
   const sw = fs.readFileSync(path.join(ROOT, "client", "sw.js"), "utf8");
-  const peer = fs.readFileSync(path.join(ROOT, "client", "js", "webrtc-peer.js"), "utf8");
+  const { readWebRtcPeerSource } = await import("./helpers/webrtc-peer-source.mjs");
+  const peer = readWebRtcPeerSource(path.join(ROOT, "client"));
   const statusScreen = fs.readFileSync(path.join(ROOT, "client", "js", "app", "screens-status.js"), "utf8");
   assert.ok(sw.includes('"./js/signaling-telemetry.js"'));
   assert.ok(peer.includes("./signaling-telemetry.js"));
