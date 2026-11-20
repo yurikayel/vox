@@ -1,9 +1,9 @@
 {
-  "git_sha": "10247fb",
-  "branch": "refactor/screens-community-split",
-  "test_js": 1999,
+  "git_sha": "aa937b9",
+  "branch": "release/2026-11-hardening",
+  "test_js": 2021,
   "test_python": 320,
-  "test_total": 2319,
+  "test_total": 2341,
   "cache_name": "vox-pwa-v7.147-community-split",
-  "generated_at": "2026-11-20T00:25:30Z"
+  "generated_at": "2026-11-20T01:42:01Z"
 }
