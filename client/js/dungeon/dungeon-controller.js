@@ -27,6 +27,11 @@ import {
   recordAbilityRoll,
   recordFormulaRoll,
   recordSheetActionRoll,
+  advanceCampaignCalendar,
+  applySheetLevelUp,
+  loadDungeonPrefs,
+  mutateSheetInventory,
+  saveDungeonPrefs,
 } from "./dungeon-persistence.js";
 import {
   addTokenToScene,
@@ -69,7 +74,8 @@ const SCREEN_RENDERERS = {
 };
 
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
-const SUBMIT_FORMS = new Set(["action-form", "create-campaign-form", "roll-formula-form", "add-action-form", "add-token-form"]);
+const SUBMIT_FORMS = new Set(["action-form", "create-campaign-form", "roll-formula-form", "add-action-form", "add-token-form", "add-item-form"]);
+const DICE3D_PREFS = loadDungeonPrefs();
 const CANVAS_DETACHERS = new WeakMap();
 
 function openVaultIfTriggered(state) {
@@ -164,6 +170,17 @@ const ACTION_HANDLERS = {
   "next-turn": (state, _el, _c, opts) => advanceInitiativeTurn(state, { store: opts.store }),
   "reset-initiative": (state, _el, _c, opts) => resetInitiativeTracker(state, { store: opts.store }),
   "toggle-condition": (state, el, _c, opts) => toggleConditionOnToken(state, el.dataset.tokenId, el.dataset.conditionId, { store: opts.store }),
+  "calendar-round": (state, _el, _c, opts) => advanceCampaignCalendar(state, "round", opts.store),
+  "calendar-10m": (state, _el, _c, opts) => advanceCampaignCalendar(state, "minutes_10", opts.store),
+  "calendar-short-rest": (state, _el, _c, opts) => advanceCampaignCalendar(state, "short_rest", opts.store),
+  "calendar-long-rest": (state, _el, _c, opts) => advanceCampaignCalendar(state, "long_rest", opts.store),
+  "inv-equip": (state, el, _c, opts) => mutateSheetInventory(state, "toggle_equip", { itemId: el.dataset.itemId }, opts.store),
+  "inv-remove": (state, el, _c, opts) => mutateSheetInventory(state, "remove", { itemId: el.dataset.itemId }, opts.store),
+  "level-up": (state, _el, _c, opts) => applySheetLevelUp(state, opts.store),
+  "toggle-dice3d": (state) => {
+    state.dice3dEnabled = !state.dice3dEnabled;
+    saveDungeonPrefs({ dice3d: state.dice3dEnabled });
+  },
 };
 
 function handleChipClick(rootEl, el) {
@@ -234,7 +251,11 @@ function handleActionFormSubmit(container, viewOpts, form) {
   if (!cleanText) return undefined;
   const state = viewOpts.state || getDungeonSession();
   if (SLASH_ROLL_RE.test(cleanText)) {
-    return settleAndRedraw(recordFormulaRoll(state, cleanText, { store: viewOpts.store }), container, viewOpts, "#dungeon-action-input");
+    const job = recordFormulaRoll(state, cleanText, { store: viewOpts.store }).then((res) => {
+      maybeShowDice3d(container, res, state.dice3dEnabled ?? DICE3D_PREFS.dice3d);
+      return res;
+    });
+    return settleAndRedraw(job, container, viewOpts, "#dungeon-action-input");
   }
   const prevChronicleLen = state.chronicle.length;
   const prevLedgerLen = state.sheet?.delta_ledger?.length || 0;
@@ -245,6 +266,24 @@ function handleActionFormSubmit(container, viewOpts, form) {
   const addedEntries = state.chronicle.slice(prevChronicleLen);
   const addedDeltas = (state.sheet?.delta_ledger || []).slice(prevLedgerLen);
   return settleAndRedraw(persistTableTurnIfActive(state, addedEntries, addedDeltas, viewOpts.store), container, viewOpts);
+}
+
+async function maybeShowDice3d(container, rollResult, enabled) {
+  if (!enabled || !rollResult?.ok) return;
+  try {
+    const mod = await import("./dice-3d.js");
+    mod.mountDice3dOverlay(container.querySelector("#dungeon-main") || container, rollResult);
+  } catch {
+    /* overlay opcional */
+  }
+}
+
+function handleAddItemSubmit(container, viewOpts, form) {
+  const state = viewOpts.state || getDungeonSession();
+  const label = String(form.querySelector("[name=itemLabel]")?.value || "").trim();
+  if (!label) return undefined;
+  const job = mutateSheetInventory(state, "add", { label, qty: 1, weightLb: 1 }, viewOpts.store);
+  return settleAndRedraw(job, container, viewOpts);
 }
 
 function handleAddActionSubmit(container, viewOpts, form) {
@@ -262,21 +301,40 @@ function handleAddTokenSubmit(container, viewOpts, form) {
   return name ? settleAndRedraw(addTokenToScene(state, { name, layer }, { store: viewOpts.store }), container, viewOpts) : undefined;
 }
 
+const SUBMIT_ROUTES = {
+  "action-form": (c, v, f) => handleActionFormSubmit(c, v, f),
+  "add-action-form": (c, v, f) => handleAddActionSubmit(c, v, f),
+  "add-item-form": (c, v, f) => handleAddItemSubmit(c, v, f),
+  "add-token-form": (c, v, f) => handleAddTokenSubmit(c, v, f),
+};
+
+function submitCreateCampaign(container, viewOpts, form) {
+  const name = String(form.querySelector("#dungeon-campaign-name")?.value || "").trim();
+  if (!name) return undefined;
+  const state = viewOpts.state || getDungeonSession();
+  return settleAndRedraw(createAndSelectCampaign(state, name, { store: viewOpts.store }), container, viewOpts);
+}
+
+function submitRollFormula(container, viewOpts, form) {
+  const formula = String(form.querySelector("#dungeon-roll-input")?.value || "").trim();
+  if (!formula) return undefined;
+  const state = viewOpts.state || getDungeonSession();
+  const job = recordFormulaRoll(state, formula, { store: viewOpts.store }).then((res) => {
+    maybeShowDice3d(container, res, state.dice3dEnabled ?? DICE3D_PREFS.dice3d);
+    return res;
+  });
+  return settleAndRedraw(job, container, viewOpts, "#dungeon-roll-input");
+}
+
 function handleDungeonSubmit(container, viewOpts, ev) {
   const form = ev.target;
   const kind = form?.dataset?.dungeon;
   if (!SUBMIT_FORMS.has(kind)) return undefined;
   ev.preventDefault();
-  if (kind === "action-form") return handleActionFormSubmit(container, viewOpts, form);
-  if (kind === "add-action-form") return handleAddActionSubmit(container, viewOpts, form);
-  if (kind === "add-token-form") return handleAddTokenSubmit(container, viewOpts, form);
-  const state = viewOpts.state || getDungeonSession();
-  if (kind === "create-campaign-form") {
-    const name = String(form.querySelector("#dungeon-campaign-name")?.value || "").trim();
-    return name ? settleAndRedraw(createAndSelectCampaign(state, name, { store: viewOpts.store }), container, viewOpts) : undefined;
-  }
-  const formula = String(form.querySelector("#dungeon-roll-input")?.value || "").trim();
-  return formula ? settleAndRedraw(recordFormulaRoll(state, formula, { store: viewOpts.store }), container, viewOpts, "#dungeon-roll-input") : undefined;
+  if (SUBMIT_ROUTES[kind]) return SUBMIT_ROUTES[kind](container, viewOpts, form);
+  if (kind === "create-campaign-form") return submitCreateCampaign(container, viewOpts, form);
+  if (kind === "roll-formula-form") return submitRollFormula(container, viewOpts, form);
+  return undefined;
 }
 
 async function readUploadedBytes(file) {

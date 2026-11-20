@@ -6,6 +6,16 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: Mesa Soberana — referenciais VTT e roadmap E5
+- `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs Owlbear Rodeo, Foundry VTT e Mini Kraken; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
+- `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: links para o spec de referenciais.
+
+### Code: Mesa Soberana (Entrega 4) — campanha longa & polimento
+- `client/js/dungeon/vtt-calendar.js`, `vtt-inventory.js`, `vtt-levelup.js`, `vtt-campaign-reducer.js`: calendário customizável com atalhos de tempo, inventário OR-Set na ficha, evolução de nível com marcos imutáveis e ops `CALENDAR_*` / `INVENTORY_*` / `LEVEL_UP_APPLY` (GM para tempo; fail-closed na projeção de notas `gm_only`).
+- `client/js/dungeon/obsidian-bridge.js`, `vtt-portable.js`: parse JSON Canvas 1.0 (`mapas/*.canvas` no `.voxrpg.zip`), `data_mundo` na crônica exportada e inventário nas fichas `.md`.
+- `client/js/dungeon/screen-notes.js`, `screen-camp.js`, `screen-sheet.js`, `screen-table.js`, `dungeon-persistence.js`, `dungeon-controller.js`: painel de notas por pasta, relógio de campanha, UI de inventário/level-up, import `.canvas` e `dice-3d.js` com `import()` dinâmico + preferência `localStorage` (`vox-dungeon-prefs-v1`).
+- `tests/vtt-{calendar,inventory,levelup,canvas,e4-adversarial}.test.js`, `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: suíte E4 sem novos bytes no precache cívico.
+
 ### Code: Mesa Soberana (Entrega 3) — tático & combate (iniciativa, condições, névoa, desenho/régua, AoE e portas/andares)
 - `client/js/dungeon/vtt-tactics-schema.js`, `vtt-tactics-geometry.js`, `vtt-tactics-reducer.js`: catálogo de 12 condições com decremento automático por turno na iniciativa, portas (`closed`/`open`/`locked`/`secret`, Zero-Spoiler e permissões fail-closed), andares (`elevation_z`), simplificação RDP de polilinhas (`simplifyPolyline`), hit-test de 4 gabaritos AoE (`circle`, `cone`, `cube`, `line`) e névoa de guerra manual.
 - `client/js/dungeon/canvas-tactics-layers.js`, `canvas-renderer.js`, `canvas-input.js`: renderização em 8 camadas (desenhos, AoE com destaque nos alvos, portas, badges de condições, névoa `evenodd` e régua em células/metros) + ferramentas interativas no `PointerEvents`.
