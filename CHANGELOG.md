@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Fix: hardening de bordas HTTP, tipos JSON, disco em GET e signaling em `relay/`
+- `relay/blind_relay.py`: `GET /relay/envelope/<id>` e `GET /relay/snapshot/<id>` não criam mais diretórios vazios no disco para canais inexistentes.
+- `relay/server.py`, `relay/oauth_exchange.py`: `/oauth/exchange` responde `400` (em vez de `502`) para JSON/UTF-8 inválidos ou payload não-objeto; `/oauth/exchange`, `/peer/beacon` e `/p2p/seed` respondem `413` quando o corpo excede o teto.
+- `relay/p2p_seeder.py`, `relay/central_memory.py`, `relay/genesis_guard.py`: recusam JSON não-objeto, booleanos como inteiro/porta, tipos inválidos e `Infinity`/`NaN` com `400` (sem `500`), e `register_seed_request` lê metadados `byteLength`/`mime`/`data` da memória central.
+- `relay/signaling.py`: `on_register` valida `peerId` string não vazia, limpa registro anterior ao reregistrar e `cleanup()` só desregistra o handler ativo; 15 novos testes em `relay/test_relay_edge_hardening.py`.
+
 ### Testes: PM-112 — protótipo de mutador AST Tier A sobre `espree`
 - `scripts/mutate-tier-a.mjs` (`npm run audit:mutate:tier-a`) e `tests/mutate-tier-a.test.js`: descoberta de mutantes via AST (`espree`, zero dependência nova), execução segura por hook ESM em `os.tmpdir()` (com conferência SHA-256) nos modos `--file`/`--base`/`--max`/`--json`; resultados medidos em `docs/process/pm-112-mutation-spike-2026-11.md`.
 
