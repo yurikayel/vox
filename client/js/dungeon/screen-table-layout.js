@@ -115,10 +115,19 @@ export function renderChronicleColumn(state) {
  * Aside com bandeja de dados e mini-grade 5×5.
  *
  * @param {object} state Estado da sessão dungeon.
+ * @param {{ hideTacticalDemo?: boolean }} [opts] Opções de renderização.
  * @returns {string} HTML interno.
  */
-export function renderDiceAside(state) {
+export function renderDiceAside(state, opts = {}) {
+  const hideTactical = Boolean(opts.hideTacticalDemo);
   const gridCells = renderTacticalGridCells(state.playerPos);
+  const tactical = hideTactical
+    ? ""
+    : `<details class="dungeon-panel dungeon-tactical-box" open>
+        <summary>Mapa Tático da Cripta (5×5 · Clique para mover)</summary>
+        <div class="dungeon-tactical-grid">${gridCells}</div>
+        <p class="dungeon-muted"><code>LY</code> Você · <code>AL</code> Altar [3,1] · <code>SA</code> Saída [0,4]</p>
+      </details>`;
   return `
     <aside class="dungeon-dice-col">
       <div class="dungeon-panel dungeon-dice-tray">
@@ -131,11 +140,7 @@ export function renderDiceAside(state) {
         </div>
         ${renderFormulaTray(state)}
       </div>
-      <details class="dungeon-panel dungeon-tactical-box" open>
-        <summary>Mapa Tático da Cripta (5×5 · Clique para mover)</summary>
-        <div class="dungeon-tactical-grid">${gridCells}</div>
-        <p class="dungeon-muted"><code>LY</code> Você · <code>AL</code> Altar [3,1] · <code>SA</code> Saída [0,4]</p>
-      </details>
+      ${tactical}
     </aside>`;
 }
 
@@ -148,7 +153,7 @@ export function renderDiceAside(state) {
  */
 export function renderZ3SessionBlock(state, playerSession = false) {
   const chronicle = renderChronicleColumn(state);
-  const dice = renderDiceAside(state);
+  const dice = renderDiceAside(state, { hideTacticalDemo: playerSession });
   if (!playerSession) {
     return `<div class="dungeon-table-layout">${chronicle}${dice}</div>`;
   }

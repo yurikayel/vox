@@ -23,6 +23,7 @@ test("screen-table-layout: Z3 jogador drawer vs GM grade e ids da crônica", () 
   assert.ok(plBlock.includes('class="dungeon-z3-drawer"'));
   assert.ok(plBlock.includes('data-dungeon-zone="narrativeRoll"'));
   assert.ok(plBlock.includes('summary>Handouts</summary>'));
+  assert.ok(!plBlock.includes("Mapa Tático da Cripta"));
   const col = renderChronicleColumn(state);
   assert.ok(col.includes('id="dungeon-action-input"'));
   assert.ok(col.includes('aria-label="Crônica da Mesa"'));

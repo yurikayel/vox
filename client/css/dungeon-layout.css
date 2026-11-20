@@ -46,7 +46,7 @@
 @media (min-width: 960px) {
   .dungeon-sanctum.is-session-player .dungeon-z3-drawer {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     align-items: start;
   }
@@ -56,13 +56,15 @@
   }
 
   .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-dice-col,
-  .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-chronicle-col {
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-chronicle-col,
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment .dungeon-handout-stack {
     display: block;
   }
 
   /* Desktop: conteúdo Z3 visível mesmo com <details> fechado pelo usuário. */
   .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-dice-col,
-  .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-chronicle-col {
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-chronicle-col,
+  .dungeon-sanctum.is-session-player .dungeon-drawer-segment:not([open]) .dungeon-handout-stack {
     display: block;
   }
 }
