@@ -8,8 +8,13 @@
  * 4. Banner educativo nativo para instalação na Tela de Início (Home Screen).
  */
 
+/** Chave de `localStorage` que registra o descarte do banner educativo de Safari. */
 export const STORAGE_DISMISSED_KEY = "vox-safari-banner-dismissed-v1";
 
+/**
+ * Solicita armazenamento persistente ao navegador (`navigator.storage.persist`).
+ * @returns {Promise<{ persisted: boolean, isSupported: boolean }>} Resultado e suporte da API.
+ */
 export async function requestPersistence() {
   if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.persist === "function") {
     try {
@@ -22,6 +27,10 @@ export async function requestPersistence() {
   return { persisted: false, isSupported: false };
 }
 
+/**
+ * Verifica se o armazenamento já está marcado como persistente.
+ * @returns {Promise<boolean>} `true` quando persistente.
+ */
 export async function checkPersistence() {
   if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.persisted === "function") {
     try {
@@ -33,6 +42,10 @@ export async function checkPersistence() {
   return false;
 }
 
+/**
+ * Estima cota e uso atual de armazenamento local.
+ * @returns {Promise<{ quota: number, usage: number, percentage: number, isSupported: boolean }>} Métricas de uso em bytes.
+ */
 export async function estimateStorage() {
   if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.estimate === "function") {
     try {
@@ -53,6 +66,10 @@ export async function estimateStorage() {
   return { quota: 0, usage: 0, percentage: 0, isSupported: false };
 }
 
+/**
+ * Indica se o app está rodando instalado em modo standalone.
+ * @returns {boolean} `true` quando instalado na Tela de Início / PWA standalone.
+ */
 export function isStandaloneMode() {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   if (window.navigator && window.navigator.standalone === true) return true;
@@ -60,6 +77,11 @@ export function isStandaloneMode() {
   return false;
 }
 
+/**
+ * Detecta aba normal do Safari/WebKit (sujeita à limpeza de 7 dias do ITP).
+ * @param {string} [userAgent=""] User-Agent opcional para testes.
+ * @returns {boolean} `true` quando é Safari em aba normal fora do modo standalone.
+ */
 export function isSafariNormalTab(userAgent = "") {
   if (typeof navigator === "undefined" && !userAgent) return false;
   const ua = userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "");
@@ -72,6 +94,10 @@ export function isSafariNormalTab(userAgent = "") {
   return isIosOrMac && isSafari && !isStandalone;
 }
 
+/**
+ * Informa se o banner de aviso do Safari deve ser exibido agora.
+ * @returns {boolean} `true` se está no Safari normal e ainda não foi dispensado.
+ */
 export function shouldShowSafariHomePrompt() {
   if (typeof localStorage === "undefined") return false;
   if (!isSafariNormalTab()) return false;
@@ -82,6 +108,10 @@ export function shouldShowSafariHomePrompt() {
   }
 }
 
+/**
+ * Persiste que a pessoa dispensou o banner educativo do Safari.
+ * @returns {boolean} `true` se gravou no `localStorage`.
+ */
 export function dismissSafariHomePrompt() {
   if (typeof localStorage === "undefined") return false;
   try {
@@ -92,6 +122,10 @@ export function dismissSafariHomePrompt() {
   }
 }
 
+/**
+ * Gera o HTML do banner educativo para adicionar o PWA à Tela de Início no Safari.
+ * @returns {string} HTML do banner.
+ */
 export function renderSafariHomeBannerHtml() {
   return `
     <div class="safari-home-banner" id="safariHomeBanner" role="region" aria-label="Alerta de instalação no Safari">

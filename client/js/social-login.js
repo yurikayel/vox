@@ -12,6 +12,7 @@ import { appBaseUrl, b64url, startBskyLogin, completeBskyLogin } from "./bsky-oa
 
 const FLOW_KEY = "vox-social-oauth-flow";
 const BSKY_FLOW_KEY = "vox-bsky-oauth-flow";
+/** Chave de `sessionStorage` para o retorno de `oauth-callback.html`. */
 export const CALLBACK_KEY = "vox-oauth-callback";
 
 /** Provedores OAuth 2.0 + PKCE (troca de código no relay). */
@@ -27,7 +28,10 @@ function configured(v) {
   return Boolean(v) && !String(v).includes("YOUR_");
 }
 
-/** Quais redes têm "Conectar com login" disponível neste deploy. */
+/**
+ * Quais redes têm "Conectar com login" disponível neste deploy.
+ * @returns {Promise<Record<string, boolean>>} Mapa provedor → disponível.
+ */
 export async function availableLoginProviders() {
   const cfg = await loadOAuthConfig();
   const out = { bsky: true, facebook: configured(cfg.facebookAppId) };
@@ -36,6 +40,10 @@ export async function availableLoginProviders() {
   return out;
 }
 
+/**
+ * URI de retorno registrada para os callbacks OAuth do app.
+ * @returns {string} URL absoluta de `oauth-callback.html`.
+ */
 export function oauthRedirectUri() {
   return `${appBaseUrl()}oauth-callback.html`;
 }
@@ -46,7 +54,12 @@ async function pkcePair() {
   return { verifier, challenge };
 }
 
-/** URL de autorização (pura, testável). */
+/**
+ * URL de autorização (pura, testável).
+ * @param {string} provider Chave de `OAUTH_PROVIDERS`.
+ * @param {{ clientId: string, redirectUri: string, state: string, challenge: string }} params Parâmetros OAuth + PKCE.
+ * @returns {string} URL completa de autorização.
+ */
 export function buildAuthorizeUrl(provider, { clientId, redirectUri, state, challenge }) {
   const p = OAUTH_PROVIDERS[provider];
   const q = new URLSearchParams({ [p.idParam]: clientId, response_type: "code", redirect_uri: redirectUri, scope: p.scope, state, code_challenge: challenge, code_challenge_method: "S256" });
@@ -76,6 +89,8 @@ async function connectFacebook() {
 /**
  * Inicia o login da rede. Bluesky/X/GitHub/Threads/TikTok/Instagram saem da página e voltam
  * pelo callback; Facebook resolve aqui mesmo com { handle:"", name, id }.
+ * @param {string} netId Identificador da rede (`bsky`, `facebook` ou chave de `OAUTH_PROVIDERS`).
+ * @returns {Promise<object|void>} Identidade retornada no fluxo direto ou redirecionamento.
  */
 export async function startSocialLogin(netId) {
   clearPendingFlows();
@@ -102,7 +117,10 @@ async function exchangeViaRelay(flow, code) {
   return { netId: flow.provider, handle: data.handle, id: data.id || "", name: data.name || "" };
 }
 
-/** Lê e consome o callback guardado por oauth-callback.html. */
+/**
+ * Lê e consome o callback guardado por `oauth-callback.html`.
+ * @returns {object|null} Payload do callback ou `null`.
+ */
 export function takePendingCallback() {
   try {
     const raw = sessionStorage.getItem(CALLBACK_KEY);
