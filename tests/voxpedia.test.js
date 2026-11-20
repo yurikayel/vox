@@ -92,6 +92,11 @@ describe("renderVoxpedia", () => {
     assert.match(html, /n[aã]o quórum territorial/);
   });
 
+  it("states Arweave upload paused by default (DOC-04)", () => {
+    assert.match(html, /arweaveUpload:\s*false/i);
+    assert.match(html, /grava[cç][aã]o no Arweave está pausada/i);
+  });
+
   it("covers three logics fazenda pensão movimento", () => {
     assert.match(html, /Três lógicas: fazenda, pensão, movimento/);
     assert.match(html, /Big Tech = fazenda/);
