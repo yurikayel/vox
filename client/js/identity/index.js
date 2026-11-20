@@ -32,4 +32,11 @@ export { scalarFromBytes } from "./p256.js";
 export * from "./keystore.js";
 export * from "./key-at-rest.js";
 /** Sincronização de conta e rota entre abas do mesmo origin (S30-S5). */
-export { startTabSync, reloadIdentityFromStorage, readStoredRouteId, TAB_SYNC_CHANNEL } from "./tab-sync.js";
+export {
+  startTabSync,
+  reloadIdentityFromStorage,
+  readStoredRouteId,
+  TAB_SYNC_CHANNEL,
+  LOCAL_ACCOUNT_CREATE_LOCK,
+  withLocalAccountCreationLock,
+} from "./tab-sync.js";
