@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: Mesa Soberana — referenciais VTT e roadmap E5
+- `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs mesa hospedada A, mesa hospedada B e mesa hospedada D; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
+- `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: links para o spec de referenciais.
+
 ### Code: Mesa Soberana (Entrega 4) — campanha longa & polimento
 - `client/js/dungeon/vtt-calendar.js`, `vtt-inventory.js`, `vtt-levelup.js`, `vtt-campaign-reducer.js`: calendário customizável com atalhos de tempo, inventário OR-Set na ficha, evolução de nível com marcos imutáveis e ops `CALENDAR_*` / `INVENTORY_*` / `LEVEL_UP_APPLY` (GM para tempo; fail-closed na projeção de notas `gm_only`).
 - `client/js/dungeon/obsidian-bridge.js`, `vtt-portable.js`: parse JSON Canvas 1.0 (`mapas/*.canvas` no `.voxrpg.zip`), `data_mundo` na crônica exportada e inventário nas fichas `.md`.
