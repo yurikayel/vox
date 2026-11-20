@@ -512,7 +512,7 @@ function renderHomeCommunityMetrics(c) {
   return [
     renderCommunityMetric("Membros", members != null ? members.toLocaleString("pt-BR") : "—"),
     renderCommunityMetric("Novidades", unread > 0 ? `${unread} novos` : "Em dia", unread > 0 ? "emerald" : ""),
-    renderCommunityMetric("Origem", c.isLocalP2p === false ? "Permaweb" : "Rede local", "cobalt"),
+    renderCommunityMetric("Origem", c.isLocalP2p === false ? "Via gateway" : "Na malha", "cobalt"),
   ].join("");
 }
 
