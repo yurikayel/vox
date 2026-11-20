@@ -4,6 +4,7 @@
  * @module dungeon/vtt-schema
  */
 import { createCharacterSheetDoc } from "../rpg-sheet-and-lore.js";
+import { createDefaultScene, createSceneDoc } from "./vtt-scene-schema.js";
 
 /** Versão canônica do schema de campanha da Mesa Soberana. */
 export const VTT_SCHEMA_VERSION = "1.0.0";
@@ -194,6 +195,25 @@ function buildCampaignSheets(opts, campaignId) {
   return { [starter.character_id]: starter };
 }
 
+function buildCampaignScenes(opts, ownerRouteId) {
+  if (opts.scenesById && typeof opts.scenesById === "object") {
+    const out = {};
+    for (const raw of Object.values(opts.scenesById)) {
+      if (!raw || typeof raw !== "object") continue;
+      const sc = createSceneDoc(raw);
+      out[sc.sceneId] = sc;
+    }
+    if (Object.keys(out).length) return out;
+  }
+  const starter = createDefaultScene(ownerRouteId || "local");
+  return { [starter.sceneId]: starter };
+}
+
+function pickActiveKey(map, preferred) {
+  if (preferred && map[preferred]) return preferred;
+  return Object.keys(map)[0] || "";
+}
+
 /**
  * Cria um documento raiz `CampaignDoc` para persistência local (`vox-vtt-db-v1`) e export `.voxrpg.zip`.
  * @param {object} [opts={}] Opções iniciais da campanha.
@@ -203,16 +223,20 @@ export function createCampaign(opts = {}) {
   const now = finiteOr(opts.now, Date.now());
   const name = String(opts.name || "Nova Campanha").trim().slice(0, 80) || "Nova Campanha";
   const id = isValidVttId(opts.id) ? opts.id : sanitizeVttId(name, "camp");
+  const gmRouteId = String(opts.gmRouteId || opts.ownerRouteId || "local");
   const sheetsById = buildCampaignSheets(opts, id);
-  const activeSheetId = sheetsById[opts.activeSheetId] ? opts.activeSheetId : Object.keys(sheetsById)[0] || "";
+  const scenesById = buildCampaignScenes(opts, gmRouteId);
   return {
     schemaVersion: VTT_SCHEMA_VERSION,
     id,
     name,
     system: String(opts.system || "d20-livre").trim().slice(0, 40),
     ownerRouteId: String(opts.ownerRouteId || ""),
-    activeSheetId,
+    gmRouteId,
+    activeSheetId: pickActiveKey(sheetsById, opts.activeSheetId),
+    activeSceneId: pickActiveKey(scenesById, opts.activeSceneId),
     sheetsById,
+    scenesById,
     notesById: normalizeRecordMap(opts.notesById, (n) => createNoteDoc(n)),
     chronicle: Array.isArray(opts.chronicle) ? opts.chronicle.map(createChronicleEntry) : [],
     rolls: Array.isArray(opts.rolls) ? opts.rolls.map((r) => ({ ...r })) : [],

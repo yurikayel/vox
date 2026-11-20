@@ -1,5 +1,5 @@
 /**
- * @file Controlador unificado das 4 telas segregadas do AI Social Dungeon + Mesa Soberana (E1).
+ * @file Controlador unificado das 4 telas segregadas do AI Social Dungeon + Mesa Soberana (E1 + E2).
  */
 import {
   getDungeonSession,
@@ -28,6 +28,16 @@ import {
   recordFormulaRoll,
   recordSheetActionRoll,
 } from "./dungeon-persistence.js";
+import {
+  addTokenToScene,
+  generateTableInvite,
+  mountSceneCanvas,
+  removeTokenFromScene,
+  toggleSceneGridType,
+  toggleTokenLayerInScene,
+  uploadSceneMapBlob,
+} from "./dungeon-scene-actions.js";
+import { clampZoom } from "./vtt-geometry.js";
 import { renderDungeonChrome } from "./dungeon-chrome.js";
 import { renderCampScreen, refreshFavoriteSlider } from "./screen-camp.js";
 import { renderTableScreen } from "./screen-table.js";
@@ -42,6 +52,8 @@ const SCREEN_RENDERERS = {
 };
 
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
+const SUBMIT_FORMS = new Set(["action-form", "create-campaign-form", "roll-formula-form", "add-action-form", "add-token-form"]);
+const CANVAS_DETACHERS = new WeakMap();
 
 function openVaultIfTriggered(state) {
   return state.vaultSecret?.triggerMet && !state.vaultSecret.unlocked ? triggerShamirVaultUnlock(state) : state;
@@ -83,6 +95,11 @@ function deltaAndPersist(state, poolKey, delta, reason, opts) {
   return persistSheetDeltaIfActive(state, poolKey, delta, reason, opts.store);
 }
 
+function adjustCameraZoom(state, mult) {
+  const cam = state.camera || { panX: 0, panY: 0, zoom: 1 };
+  state.camera = mult === 0 ? { panX: 0, panY: 0, zoom: 1 } : { ...cam, zoom: clampZoom(cam.zoom * mult) };
+}
+
 const ACTION_HANDLERS = {
   failover: (state) => simulatePillarFailover(state),
   "roll-d20": (state, _el, _c, opts) => rollD20AndPersist(state, opts),
@@ -106,6 +123,18 @@ const ACTION_HANDLERS = {
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
+  "canvas-zoom-in": (state) => adjustCameraZoom(state, 1.2),
+  "canvas-zoom-out": (state) => adjustCameraZoom(state, 0.84),
+  "canvas-reset": (state) => adjustCameraZoom(state, 0),
+  "toggle-grid-type": (state, _el, _c, opts) => toggleSceneGridType(state, { store: opts.store }),
+  "toggle-viewer-role": (state) => {
+    state.viewerRole = state.viewerRole === "gm" ? "player" : "gm";
+    state.mapNotice = "";
+  },
+  "select-token": (state, el) => { state.selectedTokenId = el.dataset.tokenId || ""; },
+  "toggle-token-layer": (state, el, _c, opts) => toggleTokenLayerInScene(state, el.dataset.tokenId, { store: opts.store }),
+  "remove-token": (state, el, _c, opts) => removeTokenFromScene(state, el.dataset.tokenId, { store: opts.store }),
+  "generate-invite": (state, _el, _c, opts) => generateTableInvite(state, { store: opts.store }),
 };
 
 function handleChipClick(rootEl, el) {
@@ -137,8 +166,19 @@ export function renderDungeonView(opts = {}) {
   });
 }
 
+function bindActiveCanvas(container, opts) {
+  CANVAS_DETACHERS.get(container)?.();
+  const state = opts.state || getDungeonSession();
+  const detach = mountSceneCanvas(container, state, {
+    store: opts.store,
+    onStateMutated: () => redrawContainer(container, opts),
+  });
+  CANVAS_DETACHERS.set(container, detach);
+}
+
 function redrawContainer(container, opts) {
   container.innerHTML = renderDungeonView(opts);
+  bindActiveCanvas(container, opts);
 }
 
 function settleAndRedraw(promise, container, viewOpts, focusSelector = "") {
@@ -181,7 +221,12 @@ function handleAddActionSubmit(container, viewOpts, form) {
   return settleAndRedraw(addCustomSheetAction(state, { label, roll, damage }, { store: viewOpts.store }), container, viewOpts);
 }
 
-const SUBMIT_FORMS = new Set(["action-form", "create-campaign-form", "roll-formula-form", "add-action-form"]);
+function handleAddTokenSubmit(container, viewOpts, form) {
+  const state = viewOpts.state || getDungeonSession();
+  const name = String(form.querySelector("#dungeon-token-name")?.value || "").trim();
+  const layer = String(form.querySelector("#dungeon-token-layer")?.value || "player");
+  return name ? settleAndRedraw(addTokenToScene(state, { name, layer }, { store: viewOpts.store }), container, viewOpts) : undefined;
+}
 
 function handleDungeonSubmit(container, viewOpts, ev) {
   const form = ev.target;
@@ -190,6 +235,7 @@ function handleDungeonSubmit(container, viewOpts, ev) {
   ev.preventDefault();
   if (kind === "action-form") return handleActionFormSubmit(container, viewOpts, form);
   if (kind === "add-action-form") return handleAddActionSubmit(container, viewOpts, form);
+  if (kind === "add-token-form") return handleAddTokenSubmit(container, viewOpts, form);
   const state = viewOpts.state || getDungeonSession();
   if (kind === "create-campaign-form") {
     const name = String(form.querySelector("#dungeon-campaign-name")?.value || "").trim();
@@ -207,10 +253,14 @@ async function readUploadedBytes(file) {
 
 function handleDungeonChange(container, viewOpts, ev) {
   const target = ev.target;
-  if (target?.dataset?.dungeon !== "import-file") return undefined;
-  const file = target.files?.[0];
-  if (!file) return undefined;
+  const kind = target?.dataset?.dungeon;
+  const file = target?.files?.[0];
+  if (!file || (kind !== "import-file" && kind !== "upload-map")) return undefined;
   const state = viewOpts.state || getDungeonSession();
+  if (kind === "upload-map") {
+    const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
+    return settleAndRedraw(job, container, viewOpts);
+  }
   const passphrase = container.querySelector("#dungeon-backup-passphrase")?.value || "";
   const job = readUploadedBytes(file).then((bytes) => importCampaignFile(state, { name: file.name, bytes }, { passphrase, store: viewOpts.store }));
   return settleAndRedraw(job, container, viewOpts);
@@ -242,7 +292,7 @@ function hydrateViewPersistence(container, viewOpts) {
 }
 
 /**
- * Conecta delegação de eventos interativos das 4 telas no contêiner montado e hidrata a persistência local quando disponível.
+ * Conecta delegação de eventos interativos das 4 telas no contêiner montado, monta o canvas 2D e hidrata a persistência local.
  *
  * @param {HTMLElement} container Elemento raiz onde a UI do Dungeon está montada.
  * @param {object} [opts={}] Opções da sub-tela (`screen`, `tableId`, `charId`, `state`, `store`, `onDownload`).
@@ -262,5 +312,6 @@ export function wireDungeonView(container, opts = {}) {
   });
   container.addEventListener("submit", (ev) => handleDungeonSubmit(container, viewOpts, ev));
   container.addEventListener("change", (ev) => handleDungeonChange(container, viewOpts, ev));
+  bindActiveCanvas(container, viewOpts);
   hydrateViewPersistence(container, viewOpts);
 }
