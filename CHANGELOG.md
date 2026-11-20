@@ -6,6 +6,42 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: fatiamento SLAP de `graphql.js` (Onda 3 PR1)
+- `client/js/graphql.js` (~820 → ~310 linhas) virou fachada; extraídos `graphql-queries.js` (strings GraphQL), `graphql-gateway.js` (transporte/config) e `graphql-mappers.js` (tagValue + mapeadores); imports externos permanecem em `graphql.js`; 0 ciclos (`audit:layers`).
+
+### Testes: guardas Tier A verify/Shamir/vault (`tests/tier-a-mutation-guards.test.js`)
+- Cobertura de bordas em `signed-verify.js`, `shamir-gf256.js` e `vault/vault-crypto.js` (PM-112 / TESTES §3.3); sem alteração de produção.
+
+### Refactor: desmembramento de `screens-compose.js` em módulos de domínio focados
+- `client/js/app/screens-compose.js` (1058 → 34 linhas) convertido em fachada pura re-exportando 7 módulos coesos (`compose-shared`, `compose-community`, `compose-topic`, `compose-listing`, `compose-proposal`, `compose-reply`, `compose-inline-replies`), todos `<= 350` linhas e 0 ciclos; `client/sw.js` e `docs/release-metadata.json` atualizados (`vox-pwa-v7.148-compose-split`).
+
+### Fix: hardening de bordas HTTP, tipos JSON, disco em GET e signaling em `relay/`
+- `relay/blind_relay.py`: `GET /relay/envelope/<id>` e `GET /relay/snapshot/<id>` não criam mais diretórios vazios no disco para canais inexistentes.
+- `relay/server.py`, `relay/oauth_exchange.py`: `/oauth/exchange` responde `400` (em vez de `502`) para JSON/UTF-8 inválidos ou payload não-objeto; `/oauth/exchange`, `/peer/beacon` e `/p2p/seed` respondem `413` quando o corpo excede o teto.
+- `relay/p2p_seeder.py`, `relay/central_memory.py`, `relay/genesis_guard.py`: recusam JSON não-objeto, booleanos como inteiro/porta, tipos inválidos e `Infinity`/`NaN` com `400` (sem `500`), e `register_seed_request` lê metadados `byteLength`/`mime`/`data` da memória central.
+- `relay/signaling.py`: `on_register` valida `peerId` string não vazia, limpa registro anterior ao reregistrar e `cleanup()` só desregistra o handler ativo; 15 novos testes em `relay/test_relay_edge_hardening.py`.
+
+### Testes: PM-112 — protótipo de mutador AST Tier A sobre `espree`
+- `scripts/mutate-tier-a.mjs` (`npm run audit:mutate:tier-a`) e `tests/mutate-tier-a.test.js`: descoberta de mutantes via AST (`espree`, zero dependência nova), execução segura por hook ESM em `os.tmpdir()` (com conferência SHA-256) nos modos `--file`/`--base`/`--max`/`--json`; resultados medidos em `docs/process/pm-112-mutation-spike-2026-11.md`.
+
+### Testes: `inbox.js` — mata 5 mutantes sobreviventes de Tier A (PM-112)
+- `tests/inbox.test.js`: cobre validação de parâmetros e propagação de `lastErr`/erro padrão em `pushSealed`, failover de push, bordas de `pullMine` e `getRelayHttpUrls`, e retorno `false` em argumentos ausentes ou falhas de relay em `deleteSealed` (eliminando os 5 sobreviventes em `:107`, `:134`, `:168` e `:171`).
+
+### Doc: fechamento DOC-04 — feed, inline-composer e catraca de regressão
+- `client/js/render/feed.js`, `client/js/app/inline-composer.js`: badges Lo-Fi removem `(100% Grátis)` e `Permaweb Arweave`, descrevendo mídia leve para a malha.
+- `tests/doc-04-honest-copy.test.js`: amplia a catraca DOC-04 para `render/feed.js`, `app/inline-composer.js` e varredura de termos proibidos (`100% P2P`, `imunidade total`, `imunidade regulat`, `ranking de nós`).
+- `docs/ROADMAP.md`, `docs/audits/honest-copy-audit-2026-10-23.md`: DOC-04 marcado concluído (`[x]`).
+
+### Doc: DOC-04 — mock, profile, community e topic (copy honesta)
+- `mock.js`, faixa demo (`shell.js`) e tour em `network.js`: tour fictício na malha, sem Arweave por padrão.
+- `render/profile.js`, `community.js`, `topic.js`: origem malha vs gateway; carteira Arweave opcional com `arweaveUpload: false`.
+- `tests/doc-04-honest-copy.test.js`; `honest-copy-audit`.
+
+### Doc: DOC-04 — status, rede e Voxpedia (copy honesta)
+- `client/js/render/status.js`, `render/network.js`: leitura via gateways vs gravação Arweave (`arweaveUpload: false`).
+- `client/js/render/voxpedia.js`: labs Webxdc/Mesa alinhados a `FEATURES.md`.
+- `docs/ROADMAP.md`, `docs/audits/honest-copy-audit-2026-10-23.md`; testes em `status-render.test.js`, `supporter-mode.test.js`.
+
 ### Doc: DOC-04 — ajuda-teste e feed (copy honesta)
 - `client/js/render/ajuda-teste.js`: Arweave pausado, POSSE sem permaweb automático.
 - `client/js/render/feed.js`: barra Escudo Cidadão sem hype “100% cronológico”.

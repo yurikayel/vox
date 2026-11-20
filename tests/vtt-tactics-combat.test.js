@@ -118,6 +118,9 @@ test("vtt-tactics: render 8 camadas (névoa/portas/AoE/régua/condições) e fer
 });
 
 test("vtt-tactics controller: iniciativa, condições, névoa, andares e Zero-Spoiler na UI da Mesa", async () => {
+  globalThis.localStorage?.clear();
+  const { saveDungeonPrefs } = await import("../client/js/dungeon/dungeon-persistence.js");
+  saveDungeonPrefs({ viewerRole: "gm" });
   const store = createVttStore(createMemoryVttBackend(), {
     requestPersistenceFn: async () => ({ persisted: true, isSupported: true }),
     estimateStorageFn: async () => ({ quota: 10000, usage: 10, percentage: 0.1, isSupported: true }),

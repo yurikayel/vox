@@ -100,6 +100,8 @@ def parse_identity(provider, me):
 
 
 def _validate(payload):
+    if not isinstance(payload, dict):
+        raise OAuthError("Payload deve ser um objeto JSON.")
     provider = str(payload.get("provider", "")).lower()
     if provider not in PROVIDERS:
         raise OAuthError("Provedor desconhecido.")

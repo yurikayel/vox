@@ -23,6 +23,7 @@ test("screen-table-layout: Z3 jogador drawer vs GM grade e ids da crônica", () 
   assert.ok(plBlock.includes('class="dungeon-z3-drawer"'));
   assert.ok(plBlock.includes('data-dungeon-zone="narrativeRoll"'));
   assert.ok(plBlock.includes('summary>Handouts</summary>'));
+  assert.ok(!plBlock.includes("Mapa Tático da Cripta"));
   const col = renderChronicleColumn(state);
   assert.ok(col.includes('id="dungeon-action-input"'));
   assert.ok(col.includes('aria-label="Crônica da Mesa"'));
@@ -70,14 +71,17 @@ test("screen-camp: marcos do acampamento e escapeHtml em tableName", () => {
   assert.ok(html.includes("Detalhes Técnicos"));
 });
 
-test("screen-sheet: atalho Subir de Nível e escapeHtml no nome", () => {
+test("screen-sheet: atalho Subir de Nível, Assistente guiado e escapeHtml no nome", () => {
   const state = stateWith({
     sheet: { ...stateWith().sheet, name: `${INJECT}Lyra`, attributes_lww: { level: 2 } },
   });
   const html = renderSheetScreen(state);
-  assert.ok(html.includes('data-dungeon="level-up"') && html.includes("Subir de Nível"));
+  assert.ok(html.includes('data-dungeon="level-up-open"') && html.includes("Subir de Nível"));
   assert.ok(html.includes("Histórico da Mesa"));
   assert.ok(html.includes("&lt;b evil"));
+  const openHtml = renderSheetScreen({ ...state, levelUpOpen: true });
+  assert.ok(openHtml.includes('aria-label="Assistente de nível"'));
+  assert.ok(openHtml.includes('data-dungeon="level-up"'));
 });
 
 test("renderTableScreen jogador: drawer Z3 via renderDungeonView is-session-player", () => {

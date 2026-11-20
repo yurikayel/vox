@@ -268,11 +268,14 @@ class PeerRegistry:
                 self.dm_pubs[peer_id] = dm_pub
             return existing
 
-    def unregister(self, peer_id: str):
+    def unregister(self, peer_id: str, handler=None) -> bool:
         with self.lock:
-            self.peers.pop(peer_id, None)
+            if handler is not None and self.peers.get(peer_id) is not handler:
+                return False
+            removed = self.peers.pop(peer_id, None)
             self.addresses.pop(peer_id, None)
             self.dm_pubs.pop(peer_id, None)
+            return removed is not None
 
     def get(self, peer_id: str):
         with self.lock:
@@ -468,20 +471,26 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             self.send_json({"type": "pong"})
 
     def on_register(self, peer_id: str, address: str = "", dm_pub=None):
-        if not peer_id:
+        if not isinstance(peer_id, str):
             return
-        self.peer_id = peer_id
-        others = registry.register(peer_id, self, address=address, dm_pub=dm_pub)
-        addr_map = registry.get_address_map(exclude_peer=peer_id)
+        clean_id = peer_id.strip()
+        if not clean_id:
+            return
+        if self.peer_id and self.peer_id != clean_id:
+            if registry.unregister(self.peer_id, handler=self):
+                registry.broadcast_others(self.peer_id, {"type": "peer-left", "peerId": self.peer_id})
+        self.peer_id = clean_id
+        others = registry.register(clean_id, self, address=address, dm_pub=dm_pub)
+        addr_map = registry.get_address_map(exclude_peer=clean_id)
         self.send_json({
             "type": "registered",
-            "peerId": peer_id,
+            "peerId": clean_id,
             "peers": others,
             "addressMap": addr_map,
         })
-        registry.broadcast_others(peer_id, {
+        registry.broadcast_others(clean_id, {
             "type": "peer-joined",
-            "peerId": peer_id,
+            "peerId": clean_id,
             "address": address or "",
             "dmPub": dm_pub,
         })
@@ -507,8 +516,8 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
 
     def cleanup(self):
         if self.peer_id:
-            registry.unregister(self.peer_id)
-            registry.broadcast_others(self.peer_id, {"type": "peer-left", "peerId": self.peer_id})
+            if registry.unregister(self.peer_id, handler=self):
+                registry.broadcast_others(self.peer_id, {"type": "peer-left", "peerId": self.peer_id})
             self.peer_id = None
         self.closed = True
 

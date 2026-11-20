@@ -239,7 +239,7 @@ function resetMediaControlBars() {
   const tagsChips = document.getElementById("inline-composer-tags-chips");
   if (tagsChips) tagsChips.innerHTML = "";
   const badge = document.getElementById("lofi-weight-badge");
-  if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
+  if (badge) badge.textContent = "⚡ ~45 KB (mídia leve para a malha)";
 }
 
 function clearMedia(state) {
@@ -293,7 +293,7 @@ async function renderLofiPreview(state) {
     if (previewImg) previewImg.src = result.dataUrl;
     const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
     const qPct = Math.round((result.qualityUsed || 0.8) * 100);
-    if (badge) badge.textContent = `⚡ ~${kb} KB (${qPct}% qualidade · Permaweb Arweave)`;
+    if (badge) badge.textContent = `⚡ ~${kb} KB (${qPct}% qualidade · mídia leve para a malha)`;
   } else {
     share.showToast(result.message || "Erro no processamento da imagem", "error");
   }
@@ -319,7 +319,7 @@ function handleVoiceAudioReady(dataUrl, byteSize, state) {
   const tagBar = document.getElementById("composer-tag-bar");
   if (tagBar) tagBar.style.display = "none";
   const badge = document.getElementById("lofi-weight-badge");
-  if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
+  if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi 48k · malha)`;
   setPreviewVisible(previewWrap, true);
   state.cleanupRecordingState();
   syncInlineComposerUi();
@@ -430,7 +430,7 @@ function bindAudioFileInput(state) {
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
     setAttachmentMeta("audio", file.name, file.size);
-    updateComposerMediaPreview("audio", dataUrl, `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`);
+    updateComposerMediaPreview("audio", dataUrl, `⚡ ~${kb} KB (Áudio Lo-Fi 48k · malha)`);
   });
 }
 

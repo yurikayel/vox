@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { applySupporterMode, normalizeStorageCommitment, LIGHT_LIMITS, SUPPORTER_LIMITS } from "../client/js/supporter-mode.js";
-import { renderSupporterCardHtml } from "../client/js/render/network.js";
+import { renderSupporterCardHtml, renderNetworkSettings } from "../client/js/render/network.js";
 
 test("apoiador: ligar sobe tetos, força Wi-Fi e reativa o nó", () => {
   const next = applySupporterMode({ enabled: false, wifiOnly: false, dailyCapMb: 50, maxMb: 25, commOnly: true }, true);
@@ -44,4 +44,16 @@ test("apoiador: desligar volta aos tetos do nó leve", () => {
 test("apoiador: card mostra botão de opt-in ou de saída", () => {
   assert.match(renderSupporterCardHtml({}), /Seja um apoiador da rede/);
   assert.match(renderSupporterCardHtml({ supporter: true }), /Voltar ao nó leve/);
+});
+
+test("rede: gateway ok cita leitura vs Arweave", () => {
+  const main = { innerHTML: "" };
+  renderNetworkSettings(main, {
+    settings: {},
+    metrics: {},
+    rtcStatus: {},
+    gatewayHealth: { state: "all_ok" },
+  });
+  assert.match(main.innerHTML, /Leitura pública: normal neste aparelho \(gateways\)/);
+  assert.match(main.innerHTML, /Publicar no Arweave/);
 });

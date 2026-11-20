@@ -20,6 +20,7 @@ export const DEFAULT_MONTHS = Object.freeze([
 ]);
 
 const ROUND_SECONDS = 6;
+const MOON_PHASES = Object.freeze(["nova", "crescente", "cheia", "minguante"]);
 
 function normMonth(raw, idx) {
   const id = String(raw?.id || `m${idx + 1}`).slice(0, 16);
@@ -30,22 +31,24 @@ function normMonth(raw, idx) {
 
 /**
  * Cria o estado padrão do calendário de campanha.
- * @param {object} [init={}] Sobrescritas (`year`, `monthIndex`, `day`, `minuteOfDay`, `moonPhase`, `months`, `roundSeconds`).
+ * @param {object} [init={}] Sobrescritas (`year`, `monthIndex`, `day`, `minuteOfDay`, `secondInMinute`, `moonPhase`, `months`, `roundSeconds`).
  * @returns {object} Estado do calendário.
  */
 export function createDefaultCalendar(init = {}) {
   const months = Array.isArray(init.months) && init.months.length
     ? init.months.map(normMonth)
     : DEFAULT_MONTHS.map((m, i) => normMonth(m, i));
+  const rawMin = Number.isFinite(Number(init.minuteOfDay)) ? Number(init.minuteOfDay) : 8 * 60;
+  const wholeMin = Math.max(0, Math.min(24 * 60 - 1, Math.floor(rawMin)));
+  const fracSec = Math.round((rawMin - Math.floor(rawMin)) * 60);
+  const rawSec = Number.isFinite(Number(init.secondInMinute)) ? Math.trunc(Number(init.secondInMinute)) : fracSec;
   return {
     year: Math.max(1, Math.trunc(Number(init.year) || 1)),
     monthIndex: Math.max(0, Math.min(months.length - 1, Math.trunc(Number(init.monthIndex) || 0))),
     day: Math.max(1, Math.trunc(Number(init.day) || 1)),
-    minuteOfDay: Math.max(
-      0,
-      Math.min(24 * 60 - 1, Number.isFinite(Number(init.minuteOfDay)) ? Math.trunc(Number(init.minuteOfDay)) : 8 * 60),
-    ),
-    moonPhase: ["nova", "crescente", "cheia", "minguante"].includes(init.moonPhase) ? init.moonPhase : "crescente",
+    minuteOfDay: wholeMin,
+    secondInMinute: Math.max(0, Math.min(59, rawSec)),
+    moonPhase: MOON_PHASES.includes(init.moonPhase) ? init.moonPhase : "crescente",
     months,
     roundSeconds: Math.max(1, Math.trunc(Number(init.roundSeconds) || ROUND_SECONDS)),
     totalRounds: Math.max(0, Math.trunc(Number(init.totalRounds) || 0)),
@@ -55,6 +58,11 @@ export function createDefaultCalendar(init = {}) {
 function monthAt(cal, idx) {
   const i = ((idx % cal.months.length) + cal.months.length) % cal.months.length;
   return { month: cal.months[i], index: i };
+}
+
+function nextMoonPhase(current) {
+  const idx = MOON_PHASES.indexOf(current);
+  return MOON_PHASES[(idx + 1) % MOON_PHASES.length];
 }
 
 function bumpDay(cal) {
@@ -70,11 +78,12 @@ function bumpDay(cal) {
       year += 1;
     }
   }
-  return { ...cal, day, monthIndex, year };
+  const moonPhase = (day - 1) % 7 === 0 ? nextMoonPhase(cal.moonPhase) : cal.moonPhase;
+  return { ...cal, day, monthIndex, year, moonPhase };
 }
 
 function addMinutesOnce(cal, minutes) {
-  let minuteOfDay = cal.minuteOfDay + minutes;
+  let minuteOfDay = Math.trunc(cal.minuteOfDay) + Math.trunc(minutes);
   let next = { ...cal, minuteOfDay };
   while (minuteOfDay >= 24 * 60) {
     minuteOfDay -= 24 * 60;
@@ -93,8 +102,15 @@ export function advanceTime(calendar, delta) {
   const base = createDefaultCalendar(calendar);
   if (delta === "round") {
     const label = `+1 rodada (${base.roundSeconds}s)`;
-    const next = addMinutesOnce(base, base.roundSeconds / 60);
-    return { calendar: { ...next, totalRounds: base.totalRounds + 1 }, label, minutesAdded: base.roundSeconds / 60 };
+    const totalSec = base.secondInMinute + base.roundSeconds;
+    const carryMin = Math.floor(totalSec / 60);
+    const secondInMinute = totalSec % 60;
+    const next = carryMin ? addMinutesOnce(base, carryMin) : { ...base };
+    return {
+      calendar: { ...next, secondInMinute, totalRounds: base.totalRounds + 1 },
+      label,
+      minutesAdded: base.roundSeconds / 60,
+    };
   }
   const minutesMap = { minutes_10: 10, short_rest: 60, long_rest: 8 * 60 };
   const minutes = minutesMap[delta] ?? Math.trunc(Number(delta?.minutes) || 0);
@@ -113,6 +129,8 @@ export function formatInWorldDate(calendar) {
   const { month } = monthAt(cal, cal.monthIndex);
   const h = Math.floor(cal.minuteOfDay / 60);
   const m = cal.minuteOfDay % 60;
+  const s = cal.secondInMinute || 0;
   const pad = (n) => String(n).padStart(2, "0");
-  return `Ano ${cal.year}, ${cal.day} de ${month.name} — ${pad(h)}:${pad(m)} (lua ${cal.moonPhase})`;
+  const clock = s ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}`;
+  return `Ano ${cal.year}, ${cal.day} de ${month.name} — ${clock} (lua ${cal.moonPhase})`;
 }

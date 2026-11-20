@@ -32,6 +32,7 @@ import { buildOverhearingCoDmSuggestion } from "../rpg-maritaca-router.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
+import { applyInventoryMutation, listInventoryItems, totalCarriedWeight } from "./vtt-inventory.js";
 
 /** Selo do narrador na crônica: é roteiro fixo, não IA (ADR-033). */
 export const NARRATOR_BADGE = "Roteiro";
@@ -104,21 +105,32 @@ const INITIAL_LORE_NODES = [
   },
 ];
 
+const STARTER_GEAR = [
+  { itemId: "espada-ferro", label: "Espada de Ferro Limpo", qty: 1, weightLb: 1.5, equipped: true },
+  { itemId: "lanterna-oleo", label: "Lanterna de Óleo", qty: 1, weightLb: 1, equipped: false },
+  { itemId: "pocao-vigilia", label: "Poção de Vigília", qty: 1, weightLb: 0.5, equipped: false },
+  { itemId: "corda-canhamo", label: "Corda de Cânhamo (10m)", qty: 1, weightLb: 2, equipped: false },
+];
+
 function createSeedSheet() {
-  const doc = ensureSheetMeta(createCharacterSheetDoc({
+  let doc = ensureSheetMeta(createCharacterSheetDoc({
     character_id: "lyra",
     name: "Lyra, A Espada da Vila",
     class_name: "Paladina de Vigília · Vila Teste",
     abilities: { str: 16, dex: 12, con: 14, int: 11, wis: 14, cha: 15 },
     pools_base: { hp_max: 24, gold_initial: 50, spell_slots_max: { l1: 3, l2: 1, l3: 0 } },
   }));
+  for (const gear of STARTER_GEAR) doc = applyInventoryMutation(doc, "add", gear);
+  const invItems = listInventoryItems(doc.inventory_orset);
   return {
     ...doc,
     char_id: "lyra",
     name: "Lyra, A Espada da Vila",
     role_title: "Paladina de Vigília · Vila Teste",
     attributes: { vitalidade: 16, astucia: 12, sabedoria: 14 },
-    inventory: ["Espada de Ferro Limpo", "Lanterna de Óleo", "Poção de Vigília", "Corda de Cânhamo (10m)"],
+    inventory: invItems.map((it) => it.label),
+    inventoryItems: invItems,
+    carryWeight: totalCarriedWeight(doc.inventory_orset),
   };
 }
 
@@ -171,6 +183,9 @@ function createPersistenceDefaults() {
     camera: { panX: 0, panY: 0, zoom: 1 },
     selectedTokenId: "",
     inviteHref: "",
+    connectedPeersCount: 0,
+    levelUpOpen: false,
+    levelUpPreset: "d20_fantasy",
     mapNotice: "",
     rollMode: "normal",
     lastFormulaRoll: null,

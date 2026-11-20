@@ -467,9 +467,9 @@ function renderArweaveWalletBox(hasWallet, balance) {
 function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
   return `
     <details class="advanced-settings card" style="margin-top:0.75rem;">
-      <summary>Avançado — Arquivamento Permanente & Carteira</summary>
+      <summary>Avançado — Carteira Arweave (opcional)</summary>
       <div style="margin-top:0.75rem;">
-        <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero entre aparelhos. Se quiser arquivar publicações e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
+        <p class="desc">Hoje o Vox preserva posts pela <strong>malha</strong> e pelos seguidores — sem taxa e com <code>arweaveUpload: false</code> (nada vai ao Arweave por padrão). Use a carteira abaixo só para reivindicar @handle on-chain ou para quando o arquivamento no permaweb estiver ligado de propósito:</p>
         <form id="form-claim-handle" style="margin-top:0.75rem;">
           <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
           <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">

@@ -1,9 +1,16 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadDungeonPrefs, saveDungeonPrefs } from "../client/js/dungeon/dungeon-persistence.js";
+import { hasStoredDungeonPrefs, loadDungeonPrefs, saveDungeonPrefs } from "../client/js/dungeon/dungeon-persistence.js";
 import { createCharacterSheetDoc } from "../client/js/rpg-sheet-and-lore.js";
 import { applyInventoryMutation, listInventoryItems } from "../client/js/dungeon/vtt-inventory.js";
+
+test("dungeon-e4: hasStoredDungeonPrefs detecta ausência de chave", () => {
+  globalThis.localStorage?.clear();
+  assert.equal(hasStoredDungeonPrefs(), false);
+  saveDungeonPrefs({ viewerRole: "player" });
+  assert.equal(hasStoredDungeonPrefs(), true);
+});
 
 test("dungeon-e4: saveDungeonPrefs persiste toggle dice3d", () => {
   globalThis.localStorage?.clear();

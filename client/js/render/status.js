@@ -94,7 +94,7 @@ function renderNodeHealthHeadHtml() {
       <header class="agora-page-head agora-page-head--wide">
         <div class="agora-page-head-text">
           <h1 class="agora-page-title">Como está este aparelho na rede</h1>
-          <p class="agora-page-sub">Sem envio externo — só o que está guardado aqui e as tentativas de leitura deste aparelho.</p>
+          <p class="agora-page-sub">Sem telemetria para fora — contadores locais, malha e <strong>leitura</strong> via gateways. <strong>Gravação no Arweave</strong> desligada por padrão (<code>arweaveUpload: false</code>).</p>
         </div>
         <div class="agora-page-actions">
           <a class="agora-btn agora-btn--secondary" href="#/settings/network">Preferências de rede</a>

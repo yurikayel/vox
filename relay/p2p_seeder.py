@@ -63,7 +63,7 @@ class P2PSeederManager:
         if not SHA256_HEX_REGEX.match(clean_hash):
             raise ValueError(f"Hash SHA-256 invalido para seed: {clean_hash}")
 
-        if size_bytes <= 0:
+        if isinstance(size_bytes, bool) or not isinstance(size_bytes, int) or size_bytes <= 0:
             raise ValueError("Tamanho do blob deve ser maior que zero")
 
         with _LOCK:
@@ -160,7 +160,7 @@ class PeerDiscovery:
             raise ValueError(f"Protocolo incompativel: esperado VOX-PEER-v1, recebido {protocol}")
 
         http_port = peer_payload.get("httpPort")
-        if not isinstance(http_port, int) or not (1 <= http_port <= 65535):
+        if isinstance(http_port, bool) or not isinstance(http_port, int) or not (1 <= http_port <= 65535):
             raise ValueError("httpPort invalido (deve ser entre 1 e 65535)")
 
         capabilities = peer_payload.get("capabilities", [])
@@ -220,18 +220,33 @@ SEEDER_MANAGER = P2PSeederManager()
 PEER_DISCOVERY = PeerDiscovery()
 
 
+def _parse_seed_size(raw: Any) -> int:
+    if isinstance(raw, bool) or not isinstance(raw, (int, str)):
+        raise ValueError("sizeBytes deve ser inteiro positivo")
+    try:
+        return int(raw)
+    except ValueError as err:
+        raise ValueError("sizeBytes deve ser inteiro positivo") from err
+
+
 def register_seed_request(payload: Dict[str, Any], get_blob) -> Dict[str, Any]:
     """Pedido de semear um blob. O que já está na memória central é autorizado na hora; o resto precisa de
     autorização prévia (`authorize_hash`)."""
+    if not isinstance(payload, dict):
+        raise ValueError("Payload de seed deve ser um dicionario JSON")
     blob_hash = str(payload.get("hash") or "").strip().lower()
     blob_data = get_blob(blob_hash)
-    if blob_data:
+    if isinstance(blob_data, dict):
         SEEDER_MANAGER.authorize_hash(blob_hash)
-        size_bytes = blob_data.get("sizeBytes") or len(blob_data.get("base64Data", ""))
-        mime_type = blob_data.get("mimeType", "application/octet-stream")
-        return SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
-    size_bytes = int(payload.get("sizeBytes", 0))
-    mime_type = str(payload.get("mimeType", "application/octet-stream"))
+        size_bytes = (
+            blob_data.get("sizeBytes")
+            or blob_data.get("byteLength")
+            or len(blob_data.get("base64Data") or blob_data.get("data") or "")
+        )
+        mime_type = str(blob_data.get("mimeType") or blob_data.get("mime") or "application/octet-stream")
+        return SEEDER_MANAGER.register_blob_seed(blob_hash, _parse_seed_size(size_bytes), mime_type)
+    size_bytes = _parse_seed_size(payload.get("sizeBytes", 0))
+    mime_type = str(payload.get("mimeType") or "application/octet-stream")
     return SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
 
 
