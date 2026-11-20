@@ -95,7 +95,7 @@ function renderComposerPreviewWrap() {
         <p id="inline-topic-attach-meta" class="inline-composer-attach-meta hidden" hidden aria-live="polite"></p>
         <button type="button" class="composer-attach-remove inline-composer-remove-img" id="btn-inline-remove-img" aria-label="Remover anexo" title="Remover anexo">✕</button>
       </div>
-      <span class="lofi-weight-pill composer-attach-weight" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
+      <span class="lofi-weight-pill composer-attach-weight" id="lofi-weight-badge">⚡ ~45 KB (mídia leve para a malha)</span>
       <div class="composer-tag-bar composer-edit-row" id="composer-tag-bar" style="display:none;">
         <button type="button" class="composer-edit-btn" data-edit-panel="style" aria-expanded="false">🎨 Estilo</button>
         <button type="button" class="composer-edit-btn" data-edit-panel="aspect" aria-expanded="false">⬚ Proporção</button>
