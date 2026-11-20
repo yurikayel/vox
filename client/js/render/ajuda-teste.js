@@ -69,8 +69,8 @@ function renderAjudaFeedEPosse() {
         <p class="desc">
           Você não precisa abandonar seus grupos de WhatsApp nem convencer todo mundo a migrar de uma vez.
           O modelo do Vox é <strong>POSSE</strong> (<em>Publish on Own Site, Syndicate Elsewhere</em>):
-          você publica primeiro no Vox (onde o texto fica assinado no seu controle e no permaweb) e ecoa o link
-          ou resumo diretamente para o WhatsApp, Instagram ou X pelo botão de compartilhar.
+          você publica primeiro no Vox (texto assinado no seu controle e na malha de seguidores) e ecoa o link
+          ou resumo para WhatsApp, Instagram ou X — <strong>não</strong> publica sozinho nessas redes.
           O Vox é a fonte soberana; os grupos de mensagem continuam sendo o canal onde a conversa acontece.
         </p>
       </section>
@@ -125,7 +125,7 @@ function renderAjudaPrivacidadeESaida() {
         <h2 id="teste-privacidade-title">Privacidade (honesta)</h2>
         <ul class="voxpedia-steps">
           <li>Chaves e histórico ficam no <strong>IndexedDB</strong> deste navegador — sem conta central Vox.</li>
-          <li>Posts públicos e comunidades podem ser lidos via gateways (natureza do permaweb).</li>
+          <li>Posts públicos assinados circulam na malha; leitura via gateways GraphQL quando há registro on-chain. <strong>Gravação no Arweave está pausada</strong> por padrão (<code>arweaveUpload: false</code>).</li>
           <li>Mensagens privadas usam cifra para o destinatário; metadados locais somem se você limpar dados do site.</li>
         </ul>
         <p class="desc">Detalhes: <a href="#/voxpedia">Voxpedia</a> · <a href="./privacy.html" target="_blank" rel="noopener noreferrer">Política de privacidade</a></p>
@@ -135,7 +135,7 @@ function renderAjudaPrivacidadeESaida() {
         <h2 id="teste-sair-title">Como sair ou pausar</h2>
         <ol class="voxpedia-steps">
           <li><a href="#/settings/network">Sua rede</a> → <strong>Pausar ajuda à rede</strong> (para de repassar cache).</li>
-          <li>No navegador, limpe <strong>dados do site</strong> / cache do Vox (configuração do SO ou do browser) — apaga chaves e histórico local; transações já publicadas no permaweb permanecem indexáveis.</li>
+          <li>No navegador, limpe <strong>dados do site</strong> — apaga chaves e histórico local; cópias que outros aparelhos já guardaram na malha ou on-chain podem continuar fora deste navegador.</li>
         </ol>
       </section>`;
 }
@@ -143,11 +143,10 @@ function renderAjudaPrivacidadeESaida() {
 function renderAjudaCarteiraEFeira() {
   return `
       <section class="voxpedia-section card" id="teste-carteira" aria-labelledby="teste-carteira-title">
-        <h2 id="teste-carteira-title">Carteira Arweave (opcional no teste)</h2>
+        <h2 id="teste-carteira-title">Carteira Arweave (opcional)</h2>
         <p class="desc">
-          Postar na malha local e no tour demo funciona com a conta <code>vx_…</code>.
-          Para arquivar no permaweb permanente, gere ou importe uma carteira em
-          <a href="#/wallet">Carteira</a> (JWK só neste aparelho).
+          Postar na malha e no tour demo funciona com a conta <code>vx_…</code>.
+          A <a href="#/wallet">Carteira</a> guarda chaves e habilita leitura pública; envio ao Arweave só se a flag estiver ligada (hoje desligada por padrão).
         </p>
       </section>
 

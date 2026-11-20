@@ -1,11 +1,14 @@
 /**
- * Vox Civic Credential — Certificados Populares e Credenciais Cívicas de Formação.
- * Permite emissão e validação descentralizada de certificados para cursos, mutirões
- * e capacitações de movimentos populares (letramento digital, arquitetura aberta).
+ * @file Emissão, verificação e badge HTML de credenciais cívicas (laboratório).
+ * @module labs/parado/civic-credential
  */
 import { computeBlobHash } from "../../media-blob.js";
 import { escapeHtml } from "../../shared/html.js";
 
+/**
+ * Versão do esquema canônico da credencial.
+ * @type {string}
+ */
 export const CREDENTIAL_SCHEMA_VERSION = "vox-civic-cred-v1";
 
 function validateAndNormalizeCredentialInput(params = {}) {
@@ -40,6 +43,19 @@ function buildCredentialArweaveTags(id, hash, issuer, recipient) {
   ];
 }
 
+/**
+ * Gera credencial assinável com hash determinístico do payload canônico.
+ * @param {object} params Campos da formação.
+ * @param {string} params.issuerRouteId Rota do emissor.
+ * @param {string} params.recipientRouteId Rota do destinatário.
+ * @param {string} [params.courseTitle] Nome do curso.
+ * @param {string} [params.issuerName] Nome exibido do emissor.
+ * @param {string} [params.recipientName] Nome exibido do destinatário.
+ * @param {number} [params.workloadHours] Carga horária.
+ * @param {string[]} [params.skills] Competências listadas.
+ * @returns {Promise<object>} Objeto de credencial com `credentialHash` e tags Arweave.
+ * @throws {Error} Quando faltam emissor, destinatário ou título.
+ */
 export async function issueCivicCredential(params) {
   const norm = validateAndNormalizeCredentialInput(params);
   const issuedAt = Date.now();
@@ -70,6 +86,11 @@ export async function issueCivicCredential(params) {
   };
 }
 
+/**
+ * Recalcula o hash e confere integridade da credencial.
+ * @param {object|null|undefined} credential Credencial emitida.
+ * @returns {Promise<{isValid: boolean, reason: string, credentialId?: string, issuer?: object, recipient?: object, courseTitle?: string}>}
+ */
 export async function verifyCivicCredential(credential) {
   if (!credential || !credential.credentialHash || !credential.issuer?.routeId || !credential.recipient?.routeId) {
     return { isValid: false, reason: "Estrutura de credencial cívica inválida ou incompleta" };
@@ -98,6 +119,11 @@ export async function verifyCivicCredential(credential) {
   };
 }
 
+/**
+ * Card HTML para exibir credencial aprovada.
+ * @param {object|null|undefined} credential Credencial com hash e metadados.
+ * @returns {string} HTML ou string vazia se inválido.
+ */
 export function renderCivicCredentialBadgeHtml(credential) {
   if (!credential?.credentialHash) return "";
   const dateStr = credential.issuedAt

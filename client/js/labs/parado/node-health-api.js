@@ -1,6 +1,6 @@
 /**
- * Cliente de Ping e Telemetria de Nós (Fase Piloto 1-3-9 / A2 junior-api)
- * Realiza sondagens HTTP/WS leves para medir latência com abort de timeout.
+ * @file Ping HTTP leve e lote de sondagens de nós (laboratório).
+ * @module labs/parado/node-health-api
  */
 
 import { createNodeHealthRecord, NODE_STATUS } from "./node-health-model.js";
@@ -8,6 +8,13 @@ import { classifyNodeStatus } from "./node-health-evaluator.js";
 
 const DEFAULT_TIMEOUT_MS = 2500;
 
+/**
+ * Sonda um endpoint com `HEAD` e mede latência até o timeout.
+ * @param {string} url URL do nó.
+ * @param {number} [timeoutMs=2500] Prazo em ms antes de abortar.
+ * @param {typeof fetch|null} [fetchFn=null] `fetch` injetável para testes.
+ * @returns {Promise<ReturnType<typeof createNodeHealthRecord>>}
+ */
 export async function pingNodeEndpoint(url, timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = null) {
   const runner = fetchFn || (typeof fetch === "function" ? fetch : null);
   if (!runner || !url) {
@@ -34,6 +41,13 @@ export async function pingNodeEndpoint(url, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
   }
 }
 
+/**
+ * Sonda várias URLs em paralelo; falhas individuais viram registro offline.
+ * @param {string[]} [urls=[]] Lista de endpoints.
+ * @param {number} [timeoutMs=2500] Prazo por nó.
+ * @param {typeof fetch|null} [fetchFn=null] `fetch` injetável.
+ * @returns {Promise<Array<ReturnType<typeof createNodeHealthRecord>>>}
+ */
 export async function pingNodeList(urls = [], timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = null) {
   if (!Array.isArray(urls)) return [];
   const tasks = urls.map((u) => pingNodeEndpoint(u, timeoutMs, fetchFn));
