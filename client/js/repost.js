@@ -26,6 +26,11 @@ export {
   getVisibleCount,
 } from "./repost-index.js";
 
+/**
+ * Assina, grava localmente e propaga pela malha um rascunho de republicação.
+ * @param {object} draft Rascunho gerado por `buildRepostDraft`.
+ * @returns {Promise<object|null>} Republicação assinada ou `null` se o rascunho for inválido.
+ */
 export async function persistRepost(draft) {
   if (!draft?.originalId || draft.type !== "topic") return null;
   const signed = await localAccount.signPayload(draft);
@@ -39,6 +44,11 @@ export async function persistRepost(draft) {
   return signed;
 }
 
+/**
+ * Monta e persiste uma republicação local a partir do post original.
+ * @param {object} original Registro do post original.
+ * @returns {Promise<object|null>} Republicação assinada ou `null`.
+ */
 export async function republicarLocal(original) {
   const draft = buildRepostDraft(original);
   if (!draft) return null;
@@ -54,6 +64,11 @@ function fallbackOriginal(ctx, postId) {
   };
 }
 
+/**
+ * Republica um post a partir do contexto de UI (buscando no cache ou usando fallback mínimo).
+ * @param {{ postId?: string, title?: string, authorRoute?: string }} ctx Contexto do botão/card.
+ * @returns {Promise<object|null>} Republicação assinada ou `null`.
+ */
 export async function republicarFromContext(ctx) {
   const postId = String(ctx?.postId || "").trim();
   if (!postId) return null;
@@ -69,6 +84,11 @@ async function scanOwnRepost(originalId) {
   return found || null;
 }
 
+/**
+ * Localiza o registro local de republicação própria para o post original informado.
+ * @param {string} originalId ID do post original.
+ * @returns {Promise<object|null>} Registro da republicação ou `null`.
+ */
 export async function findOwnRepostRecord(originalId) {
   const id = String(originalId || "").trim();
   if (!id) return null;
@@ -80,6 +100,11 @@ export async function findOwnRepostRecord(originalId) {
   return scanOwnRepost(id);
 }
 
+/**
+ * Desfaz a republicação própria de um post removendo o registro local e atualizando o índice.
+ * @param {string} originalId ID do post original.
+ * @returns {Promise<{ undone: boolean, id?: string }>} Resultado da remoção.
+ */
 export async function undoOwnRepost(originalId) {
   const rec = await findOwnRepostRecord(originalId);
   if (!rec?.id) return { undone: false };
@@ -88,6 +113,11 @@ export async function undoOwnRepost(originalId) {
   return { undone: true, id: rec.id };
 }
 
+/**
+ * Alterna (cria ou desfaz) a republicação própria a partir do contexto de UI.
+ * @param {{ postId?: string, id?: string, title?: string, authorRoute?: string }} ctx Contexto do post.
+ * @returns {Promise<{ ok: boolean, kind?: "create"|"undo", signed?: object, undone?: boolean, id?: string }>} Resultado da alternância.
+ */
 export async function toggleFromContext(ctx) {
   const postId = String(ctx?.postId || ctx?.id || "").trim();
   if (!postId) return { ok: false };

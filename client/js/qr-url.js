@@ -25,6 +25,7 @@ import {
 
 export { isVoxShareUrl };
 
+/** Texto honesto exibido abaixo do QR explicando os requisitos de câmera e alcance do PWA. */
 export const QR_URL_HONEST_COPY =
   "O outro celular precisa de câmera e de alcançar o PWA (rede ou shell em cache). O navegador não faz Wi-Fi Direct. Mutirão offline não é panfleto mágico para qualquer transeunte.";
 
@@ -41,12 +42,22 @@ function encodeCodewords(url) {
   return { text, version, bits: blocksToBits(dataBlocks, eccBlocks) };
 }
 
+/**
+ * Codifica uma URL canônica de compartilhamento do Vox em matriz de módulos QR.
+ * @param {string} url URL canônica do Vox.
+ * @returns {{ url: string, version: number, mask: number, size: number, modules: boolean[][] }} Grade QR pronta.
+ */
 export function encodeVoxUrl(url) {
   const { text, version, bits } = encodeCodewords(url);
   const picked = pickMaskedGrid(buildFunctionGrid(version), bits);
   return { url: text, version, mask: picked.mask, size: picked.size, modules: picked.modules };
 }
 
+/**
+ * Decodifica uma matriz de módulos QR de volta para o texto original.
+ * @param {boolean[][]} modules Matriz quadrada de módulos QR.
+ * @returns {string} Conteúdo textual decodificado.
+ */
 export function decodeQrModules(modules) {
   const size = modules.length;
   const version = (size - 17) / 4;
@@ -60,6 +71,11 @@ export function decodeQrModules(modules) {
   return parseBytePayload(deinterleaveDataBits(bits, VERSIONS[version]), version);
 }
 
+/**
+ * Converte uma matriz de módulos QR em marcação SVG vetorial com quiet zone.
+ * @param {boolean[][]} modules Matriz quadrada de módulos QR.
+ * @returns {string} String SVG pronta para renderização.
+ */
 export function modulesToSvg(modules) {
   const n = modules.length;
   const q = 4;
@@ -110,11 +126,20 @@ function setQrSheetOpen(root, open) {
   root.setAttribute("aria-hidden", open ? "false" : "true");
 }
 
+/**
+ * Fecha o modal/sheet de exibição do QR Code, se presente no DOM.
+ * @returns {void}
+ */
 export function closeQrUrlSheet() {
   const root = document.getElementById(SHEET_ID);
   if (root) setQrSheetOpen(root, false);
 }
 
+/**
+ * Abre o sheet modal exibindo o QR Code da URL informada.
+ * @param {string} url URL canônica do Vox a exibir.
+ * @returns {void}
+ */
 export function openQrUrlSheet(url) {
   const encoded = encodeVoxUrl(url);
   const root = ensureQrSheet();
@@ -149,6 +174,10 @@ function onQrDocClick(e) {
 
 let wired = false;
 
+/**
+ * Registra delegação global de cliques e `Escape` para abrir/fechar o sheet de QR.
+ * @returns {void}
+ */
 export function attachQrUrlHandlers() {
   if (wired || typeof document === "undefined") return;
   wired = true;

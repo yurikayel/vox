@@ -9,6 +9,11 @@
  */
 import { isElectoralModeForced } from "./feature-flags.js";
 
+/**
+ * Indica se a data cai na janela eleitoral brasileira (16/08 a 31/10 de anos pares).
+ * @param {Date|number|string} [date=new Date()] Data a avaliar.
+ * @returns {boolean} `true` quando está dentro da janela eleitoral.
+ */
 export function isInElectoralWindow(date = new Date()) {
   const d = date instanceof Date ? date : new Date(date);
   const y = d.getFullYear();
@@ -18,6 +23,12 @@ export function isInElectoralWindow(date = new Date()) {
   return d >= start && d <= end;
 }
 
+/**
+ * Indica se o modo eleitoral está ativo (janela automática ou flag forçada).
+ * @param {Date|number|string} [date=new Date()] Data de referência.
+ * @param {{ forced?: boolean }} [options] Sobrescrita opcional para testes.
+ * @returns {boolean} `true` se o modo eleitoral estiver ativo.
+ */
 export function isElectoralModeActive(date = new Date(), { forced = isElectoralModeForced() } = {}) {
   return Boolean(forced) || isInElectoralWindow(date);
 }
