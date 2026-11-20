@@ -25,6 +25,7 @@ function parseDungeonRoute(parts) {
   if (parts[0] !== "dungeon") return null;
   const sub = (parts[1] || "").toLowerCase();
   const target = parts[2] ? decodeURIComponent(parts[2]) : "";
+  if (sub === "entrar") return { name: "dungeon", screen: "mesa", tableId: target, joinP2p: true };
   if (sub === "mesa") return { name: "dungeon", screen: "mesa", tableId: target || "vila-nova" };
   if (sub === "ficha") return { name: "dungeon", screen: "ficha", charId: target || "lyra" };
   if (sub === "mestre") return { name: "dungeon", screen: "mestre", tableId: target || "vila-nova" };
