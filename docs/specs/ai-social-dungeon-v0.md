@@ -5,7 +5,7 @@
 
 ## 0. O que existe hoje
 
-Posicionamento vs mesa hospedada A, mesa hospedada B e mesa hospedada D (referenciais de produto, road map E5): **[mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md)**.
+Posicionamento vs mesa hospedada C, mesa hospedada A, mesa hospedada B e mesa hospedada D (referenciais de produto, road map E5): **[mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md)** · anatomia de UI: **[mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md)**.
 
 | Parte | Estado |
 | :--- | :--- |
