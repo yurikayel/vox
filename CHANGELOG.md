@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: login e ROADMAP pós-#336
+- `docs/process/plano-testes-login.md`: LT-02/06/07 fechados (#322–#326); só **LT-09** adiado.
+- `docs/ROADMAP.md`: `main` `5d5f566` (#336), PM-01 passo 2, backlog login/DM/hardening.
+
 ### Code: Mesa E5 P0/P1 — join P2P jogador, handouts, Tormenta20
 - `dungeon-vtt-join.js`, `route-parse.js`, `dungeon-controller.js`: rota `#/dungeon/entrar/:id?gm=...#k=...` conecta jogador via `BroadcastChannel` + `createVttSyncPeer` (visão filtrada, sem clonar campanha GM).
 - `screen-notes.js`: `renderHandoutViewer` para handouts públicos; `vtt-levelup.js`: preset `tormenta20`.
