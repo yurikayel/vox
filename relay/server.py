@@ -676,11 +676,14 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         """Código OAuth -> @usuário (o token da rede é descartado; nada é salvo)."""
         content_length = self._get_content_length()
         if content_length <= 0 or content_length > 8192:
-            self._send_json({"error": "Payload inválido"}, 400)
+            status = 413 if content_length > 8192 else 400
+            self._send_json({"error": "Payload inválido"}, status)
             return
         try:
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             self._send_json(oauth_exchange.exchange(payload), 200)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            self._send_json({"error": "JSON inválido."}, 400)
         except oauth_exchange.OAuthError as err:
             self._send_json({"error": str(err)}, err.status)
         except Exception:
@@ -789,7 +792,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _handle_peer_beacon_post(self):
         content_length = self._get_content_length()
         if content_length <= 0 or content_length > 16 * 1024:
-            self._reply_not_found(b"Payload do beacon invalido", 400)
+            status = 413 if content_length > 16 * 1024 else 400
+            self._reply_not_found(b"Payload do beacon invalido", status)
             return
         try:
             body = self.rfile.read(content_length)
@@ -804,7 +808,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _handle_p2p_seed_post(self):
         content_length = self._get_content_length()
         if content_length <= 0 or content_length > 16 * 1024:
-            self._reply_not_found(b"Payload de seed invalido", 400)
+            status = 413 if content_length > 16 * 1024 else 400
+            self._reply_not_found(b"Payload de seed invalido", status)
             return
         try:
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
