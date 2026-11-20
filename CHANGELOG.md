@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor: fatiamento SLAP de `render/community.js` (Onda 3 PR2)
+- `client/js/render/community.js` (~1138 → ~45 linhas) virou fachada; extraídos `community-shared.js`, `community-home.js`, `community-topics.js`, `community-neighbors.js`, `community-page.js` e `community-governance.js`; API pública preservada para `render.js` e testes; `sw.js` inalterado (só `./js/render/community.js`); 0 ciclos (`audit:layers`).
+
 ### Refactor: fatiamento SLAP de `graphql.js` (Onda 3 PR1)
 - `client/js/graphql.js` (~820 → ~310 linhas) virou fachada; extraídos `graphql-queries.js` (strings GraphQL), `graphql-gateway.js` (transporte/config) e `graphql-mappers.js` (tagValue + mapeadores); imports externos permanecem em `graphql.js`; 0 ciclos (`audit:layers`).
 

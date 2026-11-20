@@ -22,13 +22,26 @@ import {
 } from "../shared/community-avatar-image.js";
 import { leaveComposeAfterPublish, renderIfPaused } from "./compose-shared.js";
 
-function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
+/** @param {HTMLElement | null} previewEl @param {string} src @param {string} [initial] */
+export function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   if (!previewEl) return;
+  previewEl.replaceChildren();
+  const fallbackStyle =
+    "background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;";
   if (src) {
-    previewEl.innerHTML = `<img class="community-avatar-img" src="${src}" alt="Preview" style="width:100%; height:100%; object-fit:cover; border-radius:14px;" />`;
-  } else {
-    previewEl.innerHTML = `<div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">${initial}</div>`;
+    const img = previewEl.ownerDocument.createElement("img");
+    img.className = "community-avatar-img";
+    img.src = src;
+    img.alt = "Preview";
+    img.style.cssText = "width:100%; height:100%; object-fit:cover; border-radius:14px;";
+    previewEl.appendChild(img);
+    return;
   }
+  const div = previewEl.ownerDocument.createElement("div");
+  div.className = "community-avatar-fallback";
+  div.style.cssText = fallbackStyle;
+  div.textContent = initial;
+  previewEl.appendChild(div);
 }
 
 function bindPhotoFileInput(fileInput, previewEl, state) {
