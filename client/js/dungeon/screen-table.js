@@ -127,7 +127,11 @@ export function renderTableScreen(state) {
   const sceneTitle = TABLE_SCENE_TITLES[state.tableId] || "Cripta das Águas Sussurrantes";
   const sessionMode = resolveSessionMode("mesa", state.viewerRole || "player");
   const playerLayout = sessionMode === SESSION_MODES.PLAYER_SESSION;
+  const sessionNotice = state.campaignNotice
+    ? `<p class="dungeon-inline-status dungeon-join-notice" role="status">${escapeHtml(state.campaignNotice)}</p>`
+    : "";
   return `
+    ${sessionNotice}
     ${renderPlayerStatusStrip(state, projected.pools)}
     <section class="dungeon-scene-vignette dungeon-scene-vignette--compact">
       ${renderCavernArchSvg()}
