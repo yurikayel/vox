@@ -1,6 +1,6 @@
 # Plano de testes do login — Vox
 
-> **Status:** canônico (rascunho vivo) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-19 (alinhado ao `develop` pós-S30: `tab-sync`, `onboarding-reload-keyboard`, `login-rede-ruim`)
+> **Status:** canônico (rascunho vivo) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-20 (alinhado a `main` pós-**#336** / onda #322–#326: LT-07d poll, LT-06a lock+quota, LT-02 `remote=0` e timeout cofre)
 > Evidência de testes: [qualidade-e-evidencia.md](./qualidade-e-evidencia.md) · Como rodar a suíte: [TESTES.md](../TESTES.md) · Ameaças: [THREAT-MODEL.md](../THREAT-MODEL.md) T20–T27
 > Decisões cobertas: [ADR-025](../adr/025-cofre-v2-so-a-senha-abre.md), [ADR-026](../adr/026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md), [ADR-037](../adr/037-cofre-na-malha.md).
 
@@ -54,7 +54,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Com e-mail e senha: cofre v2 gravado, endereço normalizado (maiúsculas, espaços) | ✅ `vault-v2.test.js`, `mesh-vault.test.js` | — |
 | Senha abaixo do mínimo (`VAULT_PASSPHRASE_MIN`) recusada com mensagem e foco no campo que errou | ✅ `vault-v2.test.js`, `onboarding-steps.test.js`, `email-kit.test.js` (#210) | — |
 | Conta nasce com saída (kit, frase ou cofre) e o aviso de saída some só depois | ✅ `account-exit.test.js`, `account-exit-banner.test.js` | — |
-| Duas abas criando ao mesmo tempo não geram duas contas | ◐ duas chamadas na mesma aba dão uma conta só (`local-account-race.test.js`, #209) | duas abas de verdade (LT-06) |
+| Duas abas criando ao mesmo tempo não geram duas contas | ✅ Web Lock `vox-local-account-create-v0` + corrida `createAccountUnlessWiped` (#209, #326; `login-storage-edge.test.js`) | E2E duas abas reais (opcional) |
 
 ### 3.2 Voltar com e-mail e senha (caminho principal, ADR-037 §3.4)
 
@@ -65,7 +65,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | "Não fui eu" bloqueia para sempre; decisão forjada é ignorada | ✅ `mesh-vault-flow.test.js` | — |
 | Senha errada: nenhum aviso chega à dona, nada é liberado | ✅ `mesh-vault-flow.test.js` | — |
 | Pedido expira em 72 h; quem guarda offline responde quando volta; relógio: pedido do futuro (folga de 5 min), 24 h e 72 h exatas, relógio de quem guarda voltando | ✅ `mesh-vault-flow.test.js`, `mesh-vault-clock.test.js` | — |
-| Recarregar a página no meio retoma o mesmo pedido | ◐ `startMeshRestore` retoma por endereço; a senha nunca é gravada, então após recarregar é digitada de novo | teste de tela com recarga (LT-07) |
+| Recarregar a página no meio retoma o mesmo pedido | ✅ `resumeMeshPollIfPending` + poll contínuo (#323; senha não persiste por segurança) | — |
 | Cofre chega de vários guardiões: abre uma vez, sem conta duplicada | ✅ `login-network-faults.test.js` (três guardiões no mesmo tick, resposta duplicada; #207) | — |
 | Senha trocada depois das cópias: cópia velha não abre com a senha nova e é substituída | ✅ `mesh-vault-flow.test.js`, `profile-vault-change.test.js` | — |
 
@@ -110,7 +110,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Chaves em repouso travam depois do backup e destravam com a senha | ✅ `key-lock.test.js` | — |
 | Trocar de conta na volta não mistura dados das duas | ✅ `restore-account-switch.test.js` | — |
 | Apagar o aparelho remove chaves, cofre, cópias guardadas e pedidos da malha | ✅ `local-account.test.js`, `mesh-vault-ui.test.js` (LT-01, achado deste plano) | — |
-| Storage cheio ou bloqueado (aba privada) avisa em vez de perder a conta | ✖ | LT-06 |
+| Storage cheio ou bloqueado (aba privada) avisa em vez de perder a conta | ✅ `getAccountStorageIssue` / `warnIfAccountNotPersisted` na criação (#326) | — |
 
 ## 4. Falhas de rede e de ambiente
 
@@ -129,12 +129,12 @@ guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba
 | ID | Item | Arquivo | Tamanho |
 |---|---|---|---|
 | LT-01 | ~~Wipe apaga também as quatro chaves `vox-cofre-malha-*`~~ **feito** (o wipe esquecia as cópias guardadas; corrigido com `forgetAllMesh`) | `tests/mesh-vault-ui.test.js` | P |
-| LT-02 | Relay falso com falhas programáveis (fora, lento, 5xx, JSON ruim, duplicado, fora de ordem) e vários guardiões respondendo juntos — **em parte** (#207 + `tests/login-rede-ruim.test.js`: fora do ar, 5xx, JSON ruim, duplicado, queda no meio e três guardiões no mesmo tick; faltam timeout em `probeVaultUrl` e `lockAfterPasswordBackup` com `remote=0` anotados em `test.todo`, além de fora de ordem/perda) | `tests/login-network-faults.test.js`, `tests/login-rede-ruim.test.js` | M |
+| LT-02 | Relay falso com falhas programáveis e vários guardiões — **feito** (#207, `login-network-faults.test.js`; timeout `probeVaultUrl` e `lockAfterPasswordBackup` com `remote=0` em `login-rede-ruim.test.js` #322/#324) | `tests/login-network-faults.test.js`, `tests/login-rede-ruim.test.js` | M |
 | LT-03 | ~~"Corrigir e-mail" revoga o endereço errado e o novo abre~~ **feito** (#190, `tests/email-kit-correct.test.js`; guarda em `email-kit.js`) | `tests/email-kit-correct.test.js` | P |
 | LT-04 | ~~Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage~~ **feito** (#208; exclusões de `holderTick` e `writeSeed` removidas do sorteio após blindagem de storage) | `tests/login-properties-phrase.test.js`, `tests/login-properties-files.test.js` | M |
 | LT-05 | ~~Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas~~ **feito** (nenhum defeito: a espera conta do relógio de quem guarda, então relógio para trás só atrasa a entrega) | `tests/mesh-vault-clock.test.js`, `tests/mesh-vault-flow.test.js` | P |
-| LT-06 | Duas abas e storage cheio ou bloqueado — **em parte** (#209: duas chamadas na mesma aba dão uma conta só; S30-S5 `identity/tab-sync.js` + `tests/tab-sync.test.js`; **LT-06a fechado:** Web Lock `vox-local-account-create-v0` + aviso em criação — `tests/login-storage-edge.test.js`; §5.1 LT-06b/c fechados) | `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js`, `tests/tab-sync.test.js` | M |
-| LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só — **em parte** (#210: foco no campo que errou; `tests/onboarding-reload-keyboard.test.js` cobre retomada de rascunho/espera da malha via `sessionStorage` após recarga e foco inicial na frase; faltam focus trap/Escape no modal e persistência do kit de e-mail em §5.1 LT-07b/c) | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js`, `tests/onboarding-reload-keyboard.test.js` | M |
+| LT-06 | Duas abas e storage cheio ou bloqueado — **feito** (#209, #326: Web Lock, quota, §5.1 LT-06a–c) | `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js`, `tests/tab-sync.test.js` | M |
+| LT-07 | Tela: foco, `aria-live`, recarga na espera da malha, teclado — **feito** (#210, #323; §5.1 LT-07a–d) | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js`, `tests/onboarding-reload-keyboard.test.js` | M |
 | LT-08 | ~~Navegador local: criar → kit → apagar → voltar por cada caminho, em Chrome headless, só loopback~~ **feito** (#198; um aparelho: só nome, e-mail+senha+frase; volta por link, código VOX1, arquivo e frase em aparelho novo; recusas; senha fora de rede e storage. Guardiões, QR e malha com dois aparelhos ficam nos testes de fluxo. Achado: após apagar, o app mostra o pacto, não a entrada) | `scripts/login-e2e.mjs` (manual do mantenedor até entrar no CI) | G |
 | LT-09 | Veto da dona no caminho dos guardiões (depende de decisão no ADR-037 §3.5) | `tests/guardian-return.test.js` | M |
 | LT-10 | ~~Matriz de ida e volta: para cada par (como criou × como volta), mesmo `routeId` e mesma assinatura~~ **feito** (#213: 20 pares; os pares sem caminho de volta estão listados no cabeçalho do arnês; cofre na malha × malha fica em `mesh-vault-flow.test.js`) | `tests/login-roundtrip-keys.test.js`, `tests/login-roundtrip-vault.test.js` (arnês `tests/login-roundtrip-harness.js`) | M |
@@ -144,8 +144,7 @@ hoje.
 
 ### 5.1 Sub-itens abertos de LT-06 e LT-07 (achados conferidos no código)
 
-Conferidos em `client/js` na base `8eee7e4`. Todos **abertos**: são o que o código faz hoje, sem promessa de correção;
-cada um vira teste (e, se o mantenedor decidir, correção) em PR próprio.
+Conferidos em `client/js` na base pós-**#336**. Itens **fechados** abaixo; só **LT-09** permanece adiado (§3.5).
 
 | Sub-item | Achado | Onde |
 |---|---|---|
@@ -155,7 +154,7 @@ cada um vira teste (e, se o mantenedor decidir, correção) em PR próprio.
 | LT-07a | **Fechado (`app/onboarding.js`, `tests/onboarding-reload-keyboard.test.js`):** `checkOAuthEnrichStep` retorna sem redesenhar quando `#oauth-enrich-overlay` já está no DOM, preservando o que a pessoa digitou em trocas de rota (`hashchange`). | `app/onboarding.js`; `tests/onboarding-reload-keyboard.test.js` |
 | LT-07b | **Fechado (`render/genesis-entry.js`, `render/focus-trap.js`, `tests/onboarding-reload-keyboard.test.js`):** `renderOAuthEnrich` ativa `createFocusTrap` (ignorando ancestrais `[hidden]`, tratando `Escape` para voltar da etapa `have` ou fechar no modo `import`), foca o primeiro campo ao abrir e `closeOAuthEnrich` desativa e devolve o foco a quem abriu. | `render/genesis-entry.js`, `render/focus-trap.js`; `tests/onboarding-reload-keyboard.test.js` |
 | LT-07c | **Fechado (`app/onboarding-email.js`, `tests/onboarding-reload-keyboard.test.js`):** `resumeGenesisEmailKit` reconstrói `to`, `subject`, `body` e `copyText` a partir do `mailtoUrl` já salvo em `sessionStorage`, mantendo os botões de copiar e baixar funcionais após recarga. | `app/onboarding-email.js`; `tests/onboarding-reload-keyboard.test.js` |
-| LT-07d | A espera da malha não retoma após recarga: o pedido persiste (`loadMeshPending`), mas o `poll` só nasce dentro de `startMeshRestore`, chamado pelo envio do formulário de volta, e para quando `#oauth-mesh-status` some. Depois da recarga o e-mail volta preenchido, mas a pessoa precisa digitar a senha de novo (por segurança ela não fica em storage; CodeQL 282) para voltar a olhar a resposta (aí o pedido é retomado pelo endereço). | `app/onboarding-email.js:147-165,175` |
+| LT-07d | **Fechado (#323):** `resumeMeshPollIfPending` reinicia `startMeshPollLoop` quando `loadMeshPending` existe após F5; e-mail volta do resume; senha continua só digitada (CodeQL 282). | `app/onboarding-email.js` (`resumeMeshPollIfPending`, `GENESIS_RESUME_KEY`); `tests/onboarding-reload-keyboard.test.js`, `tests/mesh-vault-ui.test.js` |
 
 Pendência de confirmação em LT-06b: não foi rastreado se algum caminho da aba velha regrava a conta sozinho; a leitura
 acima vale para o que o código permite, não para o que já foi observado em duas abas reais.
