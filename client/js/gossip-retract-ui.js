@@ -13,6 +13,10 @@ export function __setGossipRetractUiEnabledForTests(enabled) {
   testOverride = enabled;
 }
 
+/**
+ * Indica se a interface de retratação via gossip está habilitada.
+ * @returns {boolean} `true` quando habilitada.
+ */
 export function isGossipRetractUiEnabled() {
   if (testOverride !== null) return Boolean(testOverride);
   return GOSSIP_RETRACT_UI;
@@ -46,6 +50,10 @@ export function filterFeedTopicsForGossipRetract(topics = []) {
   return topics.filter((t) => !shouldHideGossipDeletedPost(t));
 }
 
+/**
+ * Renderiza o placeholder oculto de publicação removida pela rede.
+ * @returns {string} HTML do shell oculto.
+ */
 export function renderGossipDeletedTopicShellHtml() {
   return `<article class="post insta-post post-gossip-deleted card" hidden aria-hidden="true" data-gossip-deleted="1">
     <p class="post-gossip-deleted-msg">Esta publicação foi removida na rede.</p>

@@ -46,6 +46,10 @@ function resultBlock() {
     <pre class="mofn-json">${escapeHtml(json)}</pre>`;
 }
 
+/**
+ * Renderiza o HTML do laboratório interativo de assinatura coletiva M-de-N.
+ * @returns {string} Markup HTML do laboratório.
+ */
 export function renderMofnLab() {
   return `<div id="mofn-lab">
     <a class="back-link" href="#/">← Início</a>
@@ -139,6 +143,11 @@ async function handleMofnClick(root, action) {
   if (action === "verify") return verifyLab(root);
 }
 
+/**
+ * Liga os eventos de clique do laboratório M-de-N no container informado.
+ * @param {HTMLElement} root Elemento raiz onde o laboratório foi montado.
+ * @returns {void}
+ */
 export function wireMofnLab(root) {
   root.addEventListener("click", (ev) => {
     const btn = ev.target.closest("[data-mofn]");
