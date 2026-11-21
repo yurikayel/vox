@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { createScope } from "../client/js/shared/signals.js";
 import { createMachine } from "../client/js/shared/state-machine.js";
 import { getSignalingMachine, getSignalingState } from "../client/js/webrtc-peer-state.js";
+import { createVoiceRecordMachine } from "../client/js/app/inline-composer.js";
 
 test("state-machine — rejeita estado inicial fora do mapa", () => {
   assert.throws(() => createMachine({ initial: "missing", states: { idle: {} } }), /estado inicial/);
@@ -56,4 +57,19 @@ test("webrtc-peer-state — signalingMachine respeita ciclo idle → connecting 
   assert.equal(sm.send("OPEN").to, "open");
   assert.equal(sm.send("BACKOFF").to, "backoff");
   assert.equal(sm.send("STOP").to, "idle");
+});
+
+test("inline-composer — createVoiceRecordMachine bloqueia duplo REQUEST e trata cancelar/falhar", () => {
+  const vm = createVoiceRecordMachine();
+  assert.equal(vm.send("START").changed, false);
+  assert.equal(vm.send("REQUEST").changed, true);
+  assert.equal(vm.matches("requesting"), true);
+  assert.equal(vm.send("REQUEST").changed, false);
+  assert.equal(vm.send("CANCEL").to, "idle");
+  assert.equal(vm.send("REQUEST").to, "requesting");
+  assert.equal(vm.send("START").to, "recording");
+  assert.equal(vm.send("STOP").to, "stopping");
+  assert.equal(vm.send("DONE").to, "idle");
+  vm.send("REQUEST");
+  assert.equal(vm.send("FAIL").to, "idle");
 });
