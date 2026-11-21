@@ -1,4 +1,4 @@
-"""Varredura periódica de expirados e limites de `/tx` (lacunas 5 e 7 de docs/specs/relay-api.md §6)."""
+"""Varredura periódica de expirados e limites de `/tx` (docs/specs/relay-api.md §6)."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ def sched():
     module = getattr(server, "purge_schedule", None)
     assert module is not None, "server deve ligar a varredura periódica (purge_schedule)"
     return module
+
 
 TX_ID = "A" * 43
 
@@ -115,8 +116,10 @@ class TestTxCap(unittest.TestCase):
 
     def _get_tx(self, body: bytes, limit_mb: str):
         response = FakeResponse(body)
-        with mock.patch.dict(os.environ, {"VOX_RELAY_MAX_TX_MB": limit_mb}), \
-                mock.patch.object(server.urllib.request, "urlopen", return_value=response):
+        with (
+            mock.patch.dict(os.environ, {"VOX_RELAY_MAX_TX_MB": limit_mb}),
+            mock.patch.object(server.urllib.request, "urlopen", return_value=response),
+        ):
             conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
             conn.request("GET", f"/tx/{TX_ID}")
             reply = conn.getresponse()

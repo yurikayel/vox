@@ -39,7 +39,7 @@ def _is_stored_name(text: str) -> bool:
         return True
     if not (text.startswith(_ENVELOPE_PREFIX) and text.endswith(_ENVELOPE_SUFFIX)):
         return False
-    middle = text[len(_ENVELOPE_PREFIX):-len(_ENVELOPE_SUFFIX)]
+    middle = text[len(_ENVELOPE_PREFIX) : -len(_ENVELOPE_SUFFIX)]
     stamp, sep, digest = middle.partition("_")
     return bool(sep) and only_chars(stamp, _DIGITS, 1, 19) and only_chars(digest, _HEX, 20, 20)
 
@@ -55,7 +55,7 @@ def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
     return Path(__file__).resolve().parent / ".blind_relay"
 
 
-# Exceções de `store_snapshot` (RFC 0002), reexportadas: quem chama o relay cego não importa `snapshot_auth`.
+# Exceções de `store_snapshot` (RFC 0002): quem chama o relay cego não importa `snapshot_auth`.
 SnapshotConflict = snapshot_auth.SnapshotConflict
 SnapshotForbidden = snapshot_auth.SnapshotForbidden
 
@@ -85,7 +85,7 @@ def ensure_channel_dir(channel_id: str) -> Path:
 
 
 def _stored_file(chan_path: Path, name: str) -> Optional[Path]:
-    """Arquivo do canal só se o nome é um dos nossos (sem separador, sem `..` e sem symlink para fora)."""
+    """Arquivo do canal só se o nome é dos nossos (sem `..` e sem symlink externo)."""
     try:
         return child_of(chan_path, os.path.basename(name), _is_stored_name)
     except ValueError:
@@ -128,7 +128,9 @@ def _read_live_record(file_path: Path, now: int) -> Optional[Dict[str, Any]]:
     return None
 
 
-def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int = DEFAULT_TTL_SECONDS) -> Dict[str, Any]:
+def store_envelope(
+    channel_id: str, envelope: Dict[str, Any], ttl_seconds: int = DEFAULT_TTL_SECONDS
+) -> Dict[str, Any]:
     if not isinstance(envelope, dict):
         raise ValueError("Envelope deve ser um dicionário JSON")
     if not envelope.get("sender") or not envelope.get("sig"):
@@ -180,7 +182,9 @@ def _load_listable(file_path: Path, now: int) -> Optional[Tuple[Dict[str, Any], 
         return None
 
 
-def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+def list_envelopes(
+    channel_id: str, since_ts: int = 0, since_serial: int = 0, limit: int = 100
+) -> List[Dict[str, Any]]:
     """Envelopes do canal em ordem estável.
 
     Com `since_serial > 0` devolve `serial > since_serial` ordenados por serial:
@@ -233,7 +237,10 @@ def _assert_snapshot_advances(curr: Dict[str, Any], epoch: int, covered_serial: 
     curr_covered = _coerce_int(curr.get("coveredSerial"), "coveredSerial")
     if epoch <= curr_epoch:
         raise snapshot_auth.SnapshotConflict(
-            f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})",
+            (
+                f"Época do snapshot ({epoch}) deve ser estritamente maior que "
+                f"a época atual ({curr_epoch})"
+            ),
             curr_epoch,
             curr_covered,
         )
@@ -261,7 +268,9 @@ def _owner_numbers(record: Optional[Dict[str, Any]]) -> Optional[Tuple[int, int]
     """`(epoch, coveredSerial)` do registro do dono, ou None se o canal não tem dono."""
     if snapshot_auth.stored_owner(record) is None:
         return None
-    return _coerce_int(record.get("epoch"), "epoch"), _coerce_int(record.get("coveredSerial"), "coveredSerial")
+    return _coerce_int(record.get("epoch"), "epoch"), _coerce_int(
+        record.get("coveredSerial"), "coveredSerial"
+    )
 
 
 def _is_same_snapshot(record: Optional[Dict[str, Any]], epoch: int, digest: str) -> bool:
@@ -274,7 +283,10 @@ def _is_same_snapshot(record: Optional[Dict[str, Any]], epoch: int, digest: str)
 def _check_snapshot_rules(
     chan_path: Path, curr: Optional[Dict[str, Any]], authed: bool, epoch: int, covered_serial: int
 ) -> None:
-    """Regras de avanço. Autenticado ignora o registro sem dono (legado ou `auth: false`) e tem tetos de salto."""
+    """Regras de avanço do snapshot.
+
+    Autenticado ignora registro sem dono (legado ou `auth: false`) e tem tetos de salto.
+    """
     if not authed:
         if curr is not None:
             _assert_snapshot_advances(curr, epoch, covered_serial)
@@ -286,9 +298,15 @@ def _check_snapshot_rules(
 
 
 def _snapshot_record(
-    channel_id: str, snapshot_data: Dict[str, Any], numbers: Tuple[int, int, int], proof_hash: Optional[str]
+    channel_id: str,
+    snapshot_data: Dict[str, Any],
+    numbers: Tuple[int, int, int],
+    proof_hash: Optional[str],
 ) -> Dict[str, Any]:
-    """Registro de `latest_snapshot.json`; só o autenticado leva `ownerHash`, `auth: true` e o resumo."""
+    """Registro de `latest_snapshot.json`.
+
+    Só o autenticado leva `ownerHash`, `auth: true` e o resumo.
+    """
     epoch, timestamp, covered_serial = numbers
     record = {
         "channelId": channel_id,
@@ -320,14 +338,18 @@ def _snapshot_numbers(snapshot_data: Dict[str, Any]) -> Tuple[int, int, int]:
 
 
 def store_snapshot(
-    channel_id: str, snapshot_data: Dict[str, Any], prune_older: bool = True, proof: Optional[str] = None
+    channel_id: str,
+    snapshot_data: Dict[str, Any],
+    prune_older: bool = True,
+    proof: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Grava o snapshot do canal e devolve o registro público (nunca com `ownerHash`).
+    """Grava snapshot do canal e devolve registro público (nunca com `ownerHash`).
 
-    `proof` é o valor de `X-Vox-Snapshot-Proof` (None se o cabeçalho não veio). Autorizar, checar as regras e
-    gravar é uma só decisão sob `_RELAY_LOCK` (RFC 0002): a poda só roda para snapshot autenticado; reenvio
-    idêntico do dono devolve o registro com `idempotent: true` sem regravar nem podar. Levanta
-    `SnapshotForbidden` (403), `SnapshotConflict` (409, subclasse de `ValueError`) ou `ValueError` (400).
+    `proof` é o valor de `X-Vox-Snapshot-Proof` (None se ausente).
+    Autorizar, checar regras e gravar é uma só decisão sob `_RELAY_LOCK` (RFC 0002).
+    A poda só roda para snapshot autenticado; reenvio idêntico do dono devolve o
+    registro com `idempotent: true` sem regravar nem podar.
+    Levanta `SnapshotForbidden` (403), `SnapshotConflict` (409) ou `ValueError` (400).
     """
     numbers = _snapshot_numbers(snapshot_data)
     presented = snapshot_auth.proof_hash(proof)
@@ -338,7 +360,9 @@ def store_snapshot(
             raise ValueError("nome de snapshot inválido")
         curr = _read_current_snapshot(snap_path)
         authed = snapshot_auth.authorize(curr, presented)
-        if authed and _is_same_snapshot(curr, numbers[0], snapshot_auth.snapshot_digest(snapshot_data)):
+        if authed and _is_same_snapshot(
+            curr, numbers[0], snapshot_auth.snapshot_digest(snapshot_data)
+        ):
             return snapshot_auth.public_view(curr, idempotent=True)
         _check_snapshot_rules(chan_path, curr, authed, numbers[0], numbers[2])
         record = _snapshot_record(channel_id, snapshot_data, numbers, presented if authed else None)

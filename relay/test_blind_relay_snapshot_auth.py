@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-test_blind_relay_snapshot_auth.py — Snapshot autenticado do relay cego (RFC 0002, opção A).
+test_blind_relay_snapshot_auth.py — Snapshot autenticado do relay cego (RFC 0002).
 
-Cobre as regras de §3 (prova), §5 (tetos e repetição), §6 (ataques) e §7 (migração `compat`/`enforce`).
-A prova é calculada como o cliente a calcula (HMAC-SHA256 presa a host e canal); o relay só a trata como
-valor opaco, então "prova de outro host ou canal" é só outro valor que não confere com o dono guardado.
+Cobre §3 (prova), §5 (tetos/repetição), §6 (ataques) e §7 (`compat`/`enforce`).
+A prova é calculada como o cliente a calcula (HMAC-SHA256 presa a host e canal);
+o relay a trata como valor opaco: prova de outro host/canal não confere com o dono.
 """
 
 import hashlib
@@ -35,11 +35,22 @@ def prova(canal=CANAL, host=HOST, segredo=SEGREDO):
 
 
 def snap(epoch=2, covered=0, corpo="ESTADO"):
-    return {"snapshot": corpo, "epoch": epoch, "timestamp": 1_700_000_000_000, "coveredSerial": covered}
+    return {
+        "snapshot": corpo,
+        "epoch": epoch,
+        "timestamp": 1_700_000_000_000,
+        "coveredSerial": covered,
+    }
 
 
 def env(serial):
-    return {"sender": "a" * 64, "sig": "s" * 128, "serial": serial, "timestamp": 1_700_000_000_000 + serial, "nonce": f"n{serial}"}
+    return {
+        "sender": "a" * 64,
+        "sig": "s" * 128,
+        "serial": serial,
+        "timestamp": 1_700_000_000_000 + serial,
+        "nonce": f"n{serial}",
+    }
 
 
 def com_modo(valor):
@@ -54,7 +65,11 @@ class _Base(unittest.TestCase):
         patcher = mock.patch.dict(os.environ)
         patcher.start()
         self.addCleanup(patcher.stop)
-        for name in ("VOX_RELAY_SNAPSHOT_AUTH", "VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP", "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP"):
+        for name in (
+            "VOX_RELAY_SNAPSHOT_AUTH",
+            "VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP",
+            "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP",
+        ):
             os.environ.pop(name, None)
 
     def tearDown(self):
@@ -74,12 +89,24 @@ class _Base(unittest.TestCase):
 
 class TestFormatoDaProva(_Base):
     def test_prova_mal_formada_e_recusada_como_400_e_nada_e_gravado(self):
-        ruins = ("", "xyz", "a" * 63, "a" * 65, "g" * 64, " " * 64, ("ab" * 31) + "é!", "ab\n" * 21 + "a")
+        ruins = (
+            "",
+            "xyz",
+            "a" * 63,
+            "a" * 65,
+            "g" * 64,
+            " " * 64,
+            ("ab" * 31) + "é!",
+            "ab\n" * 21 + "a",
+        )
         for ruim in ruins:
             with self.subTest(prova=ruim):
                 with self.assertRaises(ValueError) as erro:
                     blind_relay.store_snapshot(CANAL, snap(), proof=ruim)
-                self.assertNotIsInstance(erro.exception, (snapshot_auth.SnapshotConflict, snapshot_auth.SnapshotForbidden))
+                self.assertNotIsInstance(
+                    erro.exception,
+                    (snapshot_auth.SnapshotConflict, snapshot_auth.SnapshotForbidden),
+                )
         self.assertFalse(self.arquivo().exists())
 
     def test_prova_em_maiusculas_vale_como_a_minuscula(self):
@@ -123,14 +150,20 @@ class TestDono(_Base):
         blind_relay.store_snapshot(CANAL, snap(2), proof=prova())
         antes = self.arquivo().read_bytes()
         with self.assertRaises(snapshot_auth.SnapshotForbidden):
-            blind_relay.store_snapshot(CANAL, snap(3, corpo="DO_INVASOR"), proof=prova(segredo=b"\x01" * 32))
+            blind_relay.store_snapshot(
+                CANAL, snap(3, corpo="DO_INVASOR"), proof=prova(segredo=b"\x01" * 32)
+            )
         self.assertEqual(self.arquivo().read_bytes(), antes)
 
     def test_sem_prova_em_canal_com_dono_e_recusado_nos_dois_modos(self):
         self.popular(5)
         blind_relay.store_snapshot(CANAL, snap(2, covered=1), proof=prova())
         for modo in ("compat", "enforce"):
-            with self.subTest(modo=modo), com_modo(modo), self.assertRaises(snapshot_auth.SnapshotForbidden):
+            with (
+                self.subTest(modo=modo),
+                com_modo(modo),
+                self.assertRaises(snapshot_auth.SnapshotForbidden),
+            ):
                 blind_relay.store_snapshot(CANAL, snap(3, covered=5, corpo="LEGADO"))
         self.assertEqual(self.seriais(), [2, 3, 4, 5])
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "ESTADO")
@@ -145,7 +178,9 @@ class TestDono(_Base):
             def gravar(minha, canal=canal, largada=largada, resultados=resultados):
                 largada.wait()
                 try:
-                    resultados.append(blind_relay.store_snapshot(canal, snap(2), proof=minha)["auth"])
+                    resultados.append(
+                        blind_relay.store_snapshot(canal, snap(2), proof=minha)["auth"]
+                    )
                 except snapshot_auth.SnapshotForbidden:
                     resultados.append("403")
 
@@ -156,7 +191,10 @@ class TestDono(_Base):
                 t.join(10)
             self.assertEqual(sorted(resultados), ["403", "owner"], f"rodada {rodada}")
             guardado = json.loads(self.arquivo(canal).read_text(encoding="utf-8"))
-            self.assertIn(guardado["ownerHash"], {hashlib.sha256(bytes.fromhex(p)).hexdigest() for p in provas})
+            self.assertIn(
+                guardado["ownerHash"],
+                {hashlib.sha256(bytes.fromhex(p)).hexdigest() for p in provas},
+            )
 
 
 class TestRepeticaoEConflito(_Base):
@@ -179,7 +217,9 @@ class TestRepeticaoEConflito(_Base):
         blind_relay.store_snapshot(CANAL, snap(2, covered=4, corpo="A"), proof=prova())
         with self.assertRaises(snapshot_auth.SnapshotConflict) as erro:
             blind_relay.store_snapshot(CANAL, snap(2, covered=4, corpo="B"), proof=prova())
-        self.assertEqual((erro.exception.current_epoch, erro.exception.current_covered_serial), (2, 4))
+        self.assertEqual(
+            (erro.exception.current_epoch, erro.exception.current_covered_serial), (2, 4)
+        )
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "A")
 
     def test_epoca_menor_e_409(self):
@@ -219,7 +259,10 @@ class TestTetosDeSalto(_Base):
 
     def test_variaveis_de_ambiente_sobrescrevem_os_padroes(self):
         self.popular(3)
-        with mock.patch.dict(os.environ, {"VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": "5", "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP": "2"}):
+        with mock.patch.dict(
+            os.environ,
+            {"VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": "5", "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP": "2"},
+        ):
             with self.assertRaises(ValueError):
                 blind_relay.store_snapshot(CANAL, snap(2, covered=9), proof=prova())
             with self.assertRaises(ValueError):
@@ -228,15 +271,27 @@ class TestTetosDeSalto(_Base):
 
     def test_valor_invalido_da_variavel_volta_ao_padrao(self):
         for ruim in ("", "abc", "-3", "0", "1.5", "9" * 40, "١٢"):
-            env_ruim = {"VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": ruim, "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP": ruim}
+            env_ruim = {
+                "VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": ruim,
+                "VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP": ruim,
+            }
             self.assertEqual(snapshot_auth.max_covered_jump(env_ruim), 1000, repr(ruim))
             self.assertEqual(snapshot_auth.max_epoch_jump(env_ruim), 16, repr(ruim))
-        self.assertEqual(snapshot_auth.max_covered_jump({"VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": " 7 "}), 7)
+        self.assertEqual(
+            snapshot_auth.max_covered_jump({"VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP": " 7 "}), 7
+        )
 
 
 class TestMigracao(_Base):
     def _grava_legado(self, **campos):
-        registro = {"channelId": CANAL, "epoch": 50, "coveredSerial": 10**6, "timestamp": 1, "storedAt": 1, "data": {"snapshot": "LEGADO"}}
+        registro = {
+            "channelId": CANAL,
+            "epoch": 50,
+            "coveredSerial": 10**6,
+            "timestamp": 1,
+            "storedAt": 1,
+            "data": {"snapshot": "LEGADO"},
+        }
         registro.update(campos)
         self.arquivo().write_text(json.dumps(registro), encoding="utf-8")
 
@@ -297,7 +352,9 @@ class TestMigracao(_Base):
 class TestSnapshotAuthHttp(_Base):
     def setUp(self):
         super().setUp()
-        limiter = rate_limit.RateLimiter({name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES})
+        limiter = rate_limit.RateLimiter(
+            {name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}
+        )
         patcher = mock.patch.object(rate_limit, "LIMITER", limiter)
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -318,7 +375,9 @@ class TestSnapshotAuthHttp(_Base):
             headers["Content-Type"] = "application/json"
         url = f"http://127.0.0.1:{self.httpd.server_address[1]}/relay/snapshot/{canal}"
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers, method=metodo), timeout=5) as resp:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, data=data, headers=headers, method=metodo), timeout=5
+            ) as resp:
                 return resp.status, resp.read().decode("utf-8"), resp.headers
         except urllib.error.HTTPError as err:
             return err.code, err.read().decode("utf-8"), err.headers

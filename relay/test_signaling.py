@@ -125,6 +125,7 @@ class TestSignalingIntegration(unittest.TestCase):
 
     def setUp(self):
         from relay.signaling import registry
+
         with registry.lock:
             registry.peers.clear()
             registry.addresses.clear()
@@ -159,6 +160,29 @@ class TestSignalingIntegration(unittest.TestCase):
         self.assertEqual(opcode, 1)
         return json.loads(payload.decode("utf-8"))
 
+    def _assert_sdp_exchange(self, s1, s2):
+        offer_sdp = {"type": "offer", "sdp": "v=0..."}
+        self._send_json(s1, {"type": "offer", "to": "peer_beta", "sdp": offer_sdp})
+        recvd_offer = self._recv_json(s2)
+        self.assertEqual(recvd_offer["type"], "offer")
+        self.assertEqual(recvd_offer["from"], "peer_alpha")
+        self.assertEqual(recvd_offer["sdp"], offer_sdp)
+
+        answer_sdp = {"type": "answer", "sdp": "v=0...answer"}
+        self._send_json(s2, {"type": "answer", "to": "peer_alpha", "sdp": answer_sdp})
+        recvd_answer = self._recv_json(s1)
+        self.assertEqual(recvd_answer["type"], "answer")
+        self.assertEqual(recvd_answer["from"], "peer_beta")
+        self.assertEqual(recvd_answer["sdp"], answer_sdp)
+
+    def _assert_ice_exchange(self, s1, s2):
+        ice_cand = {"candidate": "candidate:1 1 UDP ..."}
+        self._send_json(s1, {"type": "ice", "to": "peer_beta", "candidate": ice_cand})
+        recvd_ice = self._recv_json(s2)
+        self.assertEqual(recvd_ice["type"], "ice")
+        self.assertEqual(recvd_ice["from"], "peer_alpha")
+        self.assertEqual(recvd_ice["candidate"], ice_cand)
+
     def test_two_peers_signaling_exchange(self):
         s1 = self._connect_client()
         s2 = self._connect_client()
@@ -182,29 +206,11 @@ class TestSignalingIntegration(unittest.TestCase):
             self.assertEqual(joined["type"], "peer-joined")
             self.assertEqual(joined["peerId"], "peer_beta")
 
-            # Troca de oferta SDP (peer_alpha -> peer_beta)
-            offer_sdp = {"type": "offer", "sdp": "v=0..."}
-            self._send_json(s1, {"type": "offer", "to": "peer_beta", "sdp": offer_sdp})
-            recvd_offer = self._recv_json(s2)
-            self.assertEqual(recvd_offer["type"], "offer")
-            self.assertEqual(recvd_offer["from"], "peer_alpha")
-            self.assertEqual(recvd_offer["sdp"], offer_sdp)
-
-            # Troca de resposta SDP (peer_beta -> peer_alpha)
-            answer_sdp = {"type": "answer", "sdp": "v=0...answer"}
-            self._send_json(s2, {"type": "answer", "to": "peer_alpha", "sdp": answer_sdp})
-            recvd_answer = self._recv_json(s1)
-            self.assertEqual(recvd_answer["type"], "answer")
-            self.assertEqual(recvd_answer["from"], "peer_beta")
-            self.assertEqual(recvd_answer["sdp"], answer_sdp)
+            # Troca de oferta e resposta SDP
+            self._assert_sdp_exchange(s1, s2)
 
             # Troca de candidato ICE
-            ice_cand = {"candidate": "candidate:1 1 UDP ..."}
-            self._send_json(s1, {"type": "ice", "to": "peer_beta", "candidate": ice_cand})
-            recvd_ice = self._recv_json(s2)
-            self.assertEqual(recvd_ice["type"], "ice")
-            self.assertEqual(recvd_ice["from"], "peer_alpha")
-            self.assertEqual(recvd_ice["candidate"], ice_cand)
+            self._assert_ice_exchange(s1, s2)
         finally:
             s1.close()
             s2.close()
@@ -213,7 +219,9 @@ class TestSignalingIntegration(unittest.TestCase):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", self.port))
         try:
-            req = f"GET /health HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            req = (
+                f"GET /health HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            )
             s.sendall(req.encode("ascii"))
             resp = s.recv(4096).decode("utf-8")
             self.assertIn("HTTP/1.1 200 OK", resp)
@@ -243,7 +251,11 @@ class TestSignalingIntegration(unittest.TestCase):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", self.port))
         try:
-            req = f"GET /rota_inexistente HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            req = (
+                f"GET /rota_inexistente HTTP/1.1\r\n"
+                f"Host: 127.0.0.1:{self.port}\r\n"
+                f"Connection: close\r\n\r\n"
+            )
             s.sendall(req.encode("ascii"))
             resp = s.recv(1024).decode("utf-8")
             self.assertIn("HTTP/1.1 404 Not Found", resp)
@@ -258,6 +270,7 @@ class TestPortResolution(unittest.TestCase):
 
     def test_env_port(self):
         import os
+
         old = os.environ.get("PORT")
         try:
             os.environ["PORT"] = "7860"
@@ -270,6 +283,7 @@ class TestPortResolution(unittest.TestCase):
 
     def test_default_fallback(self):
         import os
+
         old = os.environ.get("PORT")
         try:
             os.environ.pop("PORT", None)

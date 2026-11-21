@@ -24,16 +24,34 @@ T_VALID = GENESIS_MS + 1000
 SPEC_PATH = pathlib.Path(__file__).resolve().parent.parent / "docs" / "specs" / "relay-api.md"
 
 DOCUMENTED_ROUTES = {
-    ("GET", "/health"), ("GET", "/tx/<txId>"), ("GET", "/vox/index/<commId>.json"),
-    ("POST", "/vox/mirror"), ("GET", "/inbox/<addr>"), ("POST", "/inbox/<addr>"),
-    ("DELETE", "/inbox/<addr>/<msgId>"), ("GET", "/relay/envelope/<canal>"),
-    ("POST", "/relay/envelope/<canal>"), ("GET", "/relay/snapshot/<canal>"),
-    ("POST", "/relay/snapshot/<canal>"), ("GET", "/memory"), ("GET", "/memory/status"),
-    ("GET", "/memory/state"), ("GET", "/memory/blob/<sha256>"), ("POST", "/memory/ingest"),
-    ("POST", "/memory/sync"), ("GET", "/memory/vault/<chave>"), ("POST", "/memory/vault/<chave>"),
-    ("GET", "/p2p/status"), ("GET", "/p2p/blobs"), ("GET", "/p2p/seed/<hash>"),
-    ("DELETE", "/p2p/seed/<hash>"), ("POST", "/p2p/seed"), ("GET", "/peer/beacon"),
-    ("GET", "/p2p/peers"), ("POST", "/peer/beacon"), ("POST", "/oauth/exchange"),
+    ("GET", "/health"),
+    ("GET", "/tx/<txId>"),
+    ("GET", "/vox/index/<commId>.json"),
+    ("POST", "/vox/mirror"),
+    ("GET", "/inbox/<addr>"),
+    ("POST", "/inbox/<addr>"),
+    ("DELETE", "/inbox/<addr>/<msgId>"),
+    ("GET", "/relay/envelope/<canal>"),
+    ("POST", "/relay/envelope/<canal>"),
+    ("GET", "/relay/snapshot/<canal>"),
+    ("POST", "/relay/snapshot/<canal>"),
+    ("GET", "/memory"),
+    ("GET", "/memory/status"),
+    ("GET", "/memory/state"),
+    ("GET", "/memory/blob/<sha256>"),
+    ("POST", "/memory/ingest"),
+    ("POST", "/memory/sync"),
+    ("GET", "/memory/vault/<chave>"),
+    ("POST", "/memory/vault/<chave>"),
+    ("GET", "/p2p/status"),
+    ("GET", "/p2p/blobs"),
+    ("GET", "/p2p/seed/<hash>"),
+    ("DELETE", "/p2p/seed/<hash>"),
+    ("POST", "/p2p/seed"),
+    ("GET", "/peer/beacon"),
+    ("GET", "/p2p/peers"),
+    ("POST", "/peer/beacon"),
+    ("POST", "/oauth/exchange"),
 }
 
 
@@ -60,7 +78,12 @@ class TestContractHttpApi(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         root = pathlib.Path(cls.tmp.name)
-        cls.orig_dirs = (server.CACHE_DIR, inbox.INBOX_DIR, blind_relay.RELAY_DIR, central_memory.MEMORY_DIR)
+        cls.orig_dirs = (
+            server.CACHE_DIR,
+            inbox.INBOX_DIR,
+            blind_relay.RELAY_DIR,
+            central_memory.MEMORY_DIR,
+        )
         server.set_cache_dir(root / "cache")
         server.ensure_cache_dir()
         inbox.set_inbox_dir(root / "inbox")
@@ -87,10 +110,16 @@ class TestContractHttpApi(unittest.TestCase):
         base_h = {"Host": f"127.0.0.1:{self.port}", "Origin": f"http://127.0.0.1:{self.port}"}
         if headers:
             base_h.update(headers)
-        data = body if isinstance(body, bytes) else (json.dumps(body).encode("utf-8") if body is not None else None)
+        data = (
+            body
+            if isinstance(body, bytes)
+            else (json.dumps(body).encode("utf-8") if body is not None else None)
+        )
         if method == "POST" and "Content-Type" not in base_h and body is not None:
             base_h["Content-Type"] = "application/json"
-        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=data, method=method, headers=base_h)
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}{path}", data=data, method=method, headers=base_h
+        )
         try:
             with urllib.request.urlopen(req, timeout=5) as resp:
                 raw = resp.read()
@@ -101,15 +130,21 @@ class TestContractHttpApi(unittest.TestCase):
     def test_cors_options_contract(self):
         status, _, headers = self._req("OPTIONS", "/health")
         self.assertEqual(status, 204)
-        self.assertEqual(headers.get("Access-Control-Allow-Origin"), f"http://127.0.0.1:{self.port}")
+        self.assertEqual(
+            headers.get("Access-Control-Allow-Origin"), f"http://127.0.0.1:{self.port}"
+        )
         self.assertIn("GET", headers.get("Access-Control-Allow-Methods", ""))
 
     def test_request_guard_contract(self):
         st421, _, _ = self._req("GET", "/health", headers={"Host": "evil-domain.com"})
         self.assertEqual(st421, 421)
-        st403, _, _ = self._req("POST", "/memory/sync", body={}, headers={"Origin": "https://malicious.org"})
+        st403, _, _ = self._req(
+            "POST", "/memory/sync", body={}, headers={"Origin": "https://malicious.org"}
+        )
         self.assertEqual(st403, 403)
-        st415, _, _ = self._req("POST", "/memory/sync", body=b"raw", headers={"Content-Type": "text/plain"})
+        st415, _, _ = self._req(
+            "POST", "/memory/sync", body=b"raw", headers={"Content-Type": "text/plain"}
+        )
         self.assertEqual(st415, 415)
 
     def test_health_and_tx_contract(self):
@@ -121,7 +156,7 @@ class TestContractHttpApi(unittest.TestCase):
 
         st_bad_tx, _, _ = self._req("GET", "/tx/short_bad_id")
         self.assertEqual(st_bad_tx, 400)
-        st_missing_tx, _, _ = self._req("GET", f"/tx/{'A'*43}")
+        st_missing_tx, _, _ = self._req("GET", f"/tx/{'A' * 43}")
         self.assertEqual(st_missing_tx, 404)
 
     def test_community_and_mirror_contract(self):
@@ -171,9 +206,13 @@ class TestContractHttpApi(unittest.TestCase):
         self.assertEqual(st_post, 200)
         msg_id = json.loads(p_body.decode("utf-8")).get("id")
 
-        st_del_403, _, _ = self._req("DELETE", f"/inbox/vx_alice/{msg_id}", headers={"X-Vox-Delete-Token": "bad"})
+        st_del_403, _, _ = self._req(
+            "DELETE", f"/inbox/vx_alice/{msg_id}", headers={"X-Vox-Delete-Token": "bad"}
+        )
         self.assertEqual(st_del_403, 403)
-        st_del_200, _, _ = self._req("DELETE", f"/inbox/vx_alice/{msg_id}", headers={"X-Vox-Delete-Token": del_token})
+        st_del_200, _, _ = self._req(
+            "DELETE", f"/inbox/vx_alice/{msg_id}", headers={"X-Vox-Delete-Token": del_token}
+        )
         self.assertEqual(st_del_200, 200)
         st_del_404, _, _ = self._req("DELETE", f"/inbox/vx_alice/{msg_id}")
         self.assertEqual(st_del_404, 404)
@@ -205,7 +244,9 @@ class TestContractHttpApi(unittest.TestCase):
 
         proof = "01" * 32
         snap = {"snapshot": {"items": [1]}, "epoch": 1, "coveredSerial": 5}
-        st201, _, _ = self._req("POST", "/relay/snapshot/ch_snap", body=snap, headers={"X-Vox-Snapshot-Proof": proof})
+        st201, _, _ = self._req(
+            "POST", "/relay/snapshot/ch_snap", body=snap, headers={"X-Vox-Snapshot-Proof": proof}
+        )
         self.assertEqual(st201, 201)
 
         st200_idem, b_idem, _ = self._req(
@@ -214,15 +255,27 @@ class TestContractHttpApi(unittest.TestCase):
         self.assertEqual(st200_idem, 200)
         self.assertTrue(json.loads(b_idem.decode("utf-8")).get("idempotent"))
 
-        st403, _, _ = self._req("POST", "/relay/snapshot/ch_snap", body={"snapshot": {"k": 1}, "epoch": 2})
+        st403, _, _ = self._req(
+            "POST", "/relay/snapshot/ch_snap", body={"snapshot": {"k": 1}, "epoch": 2}
+        )
         self.assertEqual(st403, 403)
 
         diff_snap = {"snapshot": {"items": [2]}, "epoch": 1, "coveredSerial": 5}
-        st409, _, _ = self._req("POST", "/relay/snapshot/ch_snap", body=diff_snap, headers={"X-Vox-Snapshot-Proof": proof})
+        st409, _, _ = self._req(
+            "POST",
+            "/relay/snapshot/ch_snap",
+            body=diff_snap,
+            headers={"X-Vox-Snapshot-Proof": proof},
+        )
         self.assertEqual(st409, 409)
 
         jump_snap = {"snapshot": {"items": [3]}, "epoch": 30, "coveredSerial": 5}
-        st400, _, _ = self._req("POST", "/relay/snapshot/ch_snap", body=jump_snap, headers={"X-Vox-Snapshot-Proof": proof})
+        st400, _, _ = self._req(
+            "POST",
+            "/relay/snapshot/ch_snap",
+            body=jump_snap,
+            headers={"X-Vox-Snapshot-Proof": proof},
+        )
         self.assertEqual(st400, 400)
 
         st_get, _, _ = self._req("GET", "/relay/snapshot/ch_snap")
@@ -241,7 +294,7 @@ class TestContractHttpApi(unittest.TestCase):
         self.assertEqual(st_state, 200)
         self.assertIn("revision", json.loads(b_state.decode("utf-8")))
 
-        st_blob404, _, _ = self._req("GET", f"/memory/blob/{'0'*64}")
+        st_blob404, _, _ = self._req("GET", f"/memory/blob/{'0' * 64}")
         self.assertEqual(st_blob404, 404)
 
     def test_central_memory_ingest_and_sync_contract(self):
@@ -266,16 +319,24 @@ class TestContractHttpApi(unittest.TestCase):
         st404, _, _ = self._req("GET", "/memory/vault/vx_missing_key")
         self.assertEqual(st404, 404)
 
-        v_bad_iter = {"record": {"v": 2, "salt": "01"*16, "iter": 500, "ciphertext": "aa"}}
+        v_bad_iter = {"record": {"v": 2, "salt": "01" * 16, "iter": 500, "ciphertext": "aa"}}
         st400, _, _ = self._req("POST", "/memory/vault/vx_test_key", body=v_bad_iter)
         self.assertEqual(st400, 400)
 
-        v_rec = {"v": 2, "salt": "01"*16, "iter": 100000, "iv": "02"*12, "ciphertext": "03"*32}
+        v_rec = {
+            "v": 2,
+            "salt": "01" * 16,
+            "iter": 100000,
+            "iv": "02" * 12,
+            "ciphertext": "03" * 32,
+        }
         st403_noprf, _, _ = self._req("POST", "/memory/vault/vx_test_key", body={"record": v_rec})
         self.assertEqual(st403_noprf, 403)
 
         prf = "f0" * 32
-        st200, b_saved, _ = self._req("POST", "/memory/vault/vx_test_key", body={"record": v_rec, "ownerToken": prf})
+        st200, b_saved, _ = self._req(
+            "POST", "/memory/vault/vx_test_key", body={"record": v_rec, "ownerToken": prf}
+        )
         self.assertEqual(st200, 200)
         self.assertEqual(json.loads(b_saved.decode("utf-8")).get("status"), "saved")
 
@@ -283,7 +344,11 @@ class TestContractHttpApi(unittest.TestCase):
         self.assertEqual(st_get200, 200)
         self.assertEqual(json.loads(b_got.decode("utf-8")).get("vaultKey"), "vx_test_key")
 
-        st403_wrong, _, _ = self._req("POST", "/memory/vault/vx_test_key", body={"record": v_rec, "ownerToken": "bad"*21 + "a"})
+        st403_wrong, _, _ = self._req(
+            "POST",
+            "/memory/vault/vx_test_key",
+            body={"record": v_rec, "ownerToken": "bad" * 21 + "a"},
+        )
         self.assertEqual(st403_wrong, 403)
 
     def test_p2p_seeder_contract(self):
@@ -293,10 +358,10 @@ class TestContractHttpApi(unittest.TestCase):
         st_blobs, _, _ = self._req("GET", "/p2p/blobs")
         self.assertEqual(st_blobs, 200)
 
-        st_s404, _, _ = self._req("GET", f"/p2p/seed/{'a'*64}")
+        st_s404, _, _ = self._req("GET", f"/p2p/seed/{'a' * 64}")
         self.assertEqual(st_s404, 404)
 
-        st_del404, _, _ = self._req("DELETE", f"/p2p/seed/{'a'*64}")
+        st_del404, _, _ = self._req("DELETE", f"/p2p/seed/{'a' * 64}")
         self.assertEqual(st_del404, 404)
 
         st_s400, _, _ = self._req("POST", "/p2p/seed", body={})
