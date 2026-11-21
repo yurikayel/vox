@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.154-peers-split";
+const CACHE_NAME = "vox-pwa-v7.155-onda3-profile-network";
 
 const SHELL_ASSETS = [
 
@@ -414,6 +414,12 @@ const SHELL_ASSETS = [
   "./js/render/vote.js",
 
   "./js/render/profile.js",
+  "./js/render/profile-compose-topic.js",
+  "./js/render/profile-compose-wizards.js",
+  "./js/render/profile-header.js",
+  "./js/render/profile-settings.js",
+  "./js/render/profile-tabs.js",
+  "./js/render/profile-wallet.js",
   "./js/render/profile-sovereignty.js",
 
   "./js/render/profile-voxels.js",
@@ -423,6 +429,10 @@ const SHELL_ASSETS = [
   "./js/render/oauth-import.js",
 
   "./js/render/network.js",
+  "./js/render/network-form.js",
+  "./js/render/network-participation.js",
+  "./js/render/network-sections.js",
+  "./js/render/network-steward.js",
 
   "./js/render/dm.js",
 
