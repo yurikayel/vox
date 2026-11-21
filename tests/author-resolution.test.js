@@ -7,7 +7,6 @@ const profileDirectory = await import("../client/js/profile-directory.js");
 const util = await import("../client/js/render/util.js");
 const feed = await import("../client/js/render/feed.js");
 const screensCompose = await import("../client/js/app/screens-compose.js");
-const cacheNode = await import("../client/js/cache-node.js");
 
 test("author-resolution - resolve display name da conta ativa sem exibir rota vx_* crua", async () => {
   const acc = await localAccount.ensureLocalAccount();

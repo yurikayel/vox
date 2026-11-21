@@ -21,18 +21,14 @@ function shuffleArray(arr, rng) {
   return result;
 }
 
-test("webxdc-crdt - convergência estrita entre réplicas sob entrega fora de ordem (harness aleatório)", () => {
-  const rng = createSeededRandom(20261105);
+function generateTestCrdtOperations() {
   const peers = ["alice", "bob", "carol", "dave"];
   const operations = [];
-
   const baseTs = 1730000000;
-  // Gera 60 operações distribuídas com empates intencionais e cenários de conflito
   for (let i = 0; i < 60; i++) {
     const itemId = `item_${(i % 12) + 1}`;
     const peer = peers[i % peers.length];
     const opType = i % 5 === 0 ? "remove" : "set";
-    // Timestamps com empates propositais para testar o tie-breaking lexicográfico de sender
     const ts = baseTs + Math.floor(i / 3) * 10;
 
     if (opType === "set") {
@@ -54,6 +50,28 @@ test("webxdc-crdt - convergência estrita entre réplicas sob entrega fora de or
       });
     }
   }
+  return operations;
+}
+
+function assertReplicasConverged(replicaA, replicaB, replicaC, replicaD) {
+  const itemsA = replicaA.getStateSnapshot().items;
+  assert.deepEqual(itemsA, replicaB.getStateSnapshot().items, "Réplica A e B divergiram!");
+  assert.deepEqual(itemsA, replicaC.getStateSnapshot().items, "Réplica A e C divergiram!");
+  assert.deepEqual(itemsA, replicaD.getStateSnapshot().items, "Réplica A e D divergiram!");
+
+  const tombstonesA = replicaA.getStateSnapshot().tombstones;
+  assert.deepEqual(tombstonesA, replicaB.getStateSnapshot().tombstones);
+  assert.deepEqual(tombstonesA, replicaC.getStateSnapshot().tombstones);
+  assert.deepEqual(tombstonesA, replicaD.getStateSnapshot().tombstones);
+
+  assert.deepEqual(replicaA.getItems(), replicaB.getItems());
+  assert.deepEqual(replicaA.getItems(), replicaC.getItems());
+  assert.deepEqual(replicaA.getItems(), replicaD.getItems());
+}
+
+test("webxdc-crdt - convergência estrita entre réplicas sob entrega fora de ordem (harness aleatório)", () => {
+  const rng = createSeededRandom(20261105);
+  const operations = generateTestCrdtOperations();
 
   // 1. Réplica A: ordem natural
   const replicaA = createIdLookupStore();
@@ -63,60 +81,26 @@ test("webxdc-crdt - convergência estrita entre réplicas sob entrega fora de or
 
   // 2. Réplica B: ordem estritamente invertida
   const replicaB = createIdLookupStore();
-  const reversedOps = [...operations].reverse();
-  for (const op of reversedOps) {
+  for (const op of [...operations].reverse()) {
     replicaB.applyRemoteUpdate(op);
   }
 
   // 3. Réplica C: permutação embaralhada aleatória
   const replicaC = createIdLookupStore();
-  const shuffledOps = shuffleArray(operations, rng);
-  for (const op of shuffledOps) {
+  for (const op of shuffleArray(operations, rng)) {
     replicaC.applyRemoteUpdate(op);
   }
 
   // 4. Réplica D: sincronização híbrida via snapshot + cauda delta
   const replicaD = createIdLookupStore();
-  const firstHalf = operations.slice(0, 30);
-  const secondHalf = operations.slice(30);
-
-  // Instância intermediária gera snapshot da 1ª metade
   const intermediate = createIdLookupStore();
-  for (const op of firstHalf) {
+  for (const op of operations.slice(0, 30)) {
     intermediate.applyRemoteUpdate(op);
   }
-  const snapshotHalf = intermediate.getStateSnapshot();
-
-  // D inicializa via mergeSnapshot e aplica a 2ª metade embaralhada
-  replicaD.mergeSnapshot(snapshotHalf);
-  const shuffledSecondHalf = shuffleArray(secondHalf, rng);
-  for (const op of shuffledSecondHalf) {
+  replicaD.mergeSnapshot(intermediate.getStateSnapshot());
+  for (const op of shuffleArray(operations.slice(30), rng)) {
     replicaD.applyRemoteUpdate(op);
   }
 
-  // Asserção matemática de convergência estrita:
-  // Todos os itens finais devem ser idênticos campo a campo
-  const itemsA = replicaA.getStateSnapshot().items;
-  const itemsB = replicaB.getStateSnapshot().items;
-  const itemsC = replicaC.getStateSnapshot().items;
-  const itemsD = replicaD.getStateSnapshot().items;
-
-  assert.deepEqual(itemsA, itemsB, "Réplica A e B divergiram!");
-  assert.deepEqual(itemsA, itemsC, "Réplica A e C divergiram!");
-  assert.deepEqual(itemsA, itemsD, "Réplica A e D divergiram!");
-
-  // Tombstones também devem convergir
-  const tombstonesA = replicaA.getStateSnapshot().tombstones;
-  const tombstonesB = replicaB.getStateSnapshot().tombstones;
-  const tombstonesC = replicaC.getStateSnapshot().tombstones;
-  const tombstonesD = replicaD.getStateSnapshot().tombstones;
-
-  assert.deepEqual(tombstonesA, tombstonesB);
-  assert.deepEqual(tombstonesA, tombstonesC);
-  assert.deepEqual(tombstonesA, tombstonesD);
-
-  // getItems() deve retornar exatamente a mesma lista
-  assert.deepEqual(replicaA.getItems(), replicaB.getItems());
-  assert.deepEqual(replicaA.getItems(), replicaC.getItems());
-  assert.deepEqual(replicaA.getItems(), replicaD.getItems());
+  assertReplicasConverged(replicaA, replicaB, replicaC, replicaD);
 });

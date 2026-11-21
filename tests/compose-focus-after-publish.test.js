@@ -5,25 +5,29 @@ import { renderStepNav, COMPOSE_TOPIC_STEPS } from "../client/js/render/compose-
 
 const PUBLISH_STATUS_ID = "vox-compose-publish-status";
 
+function createMockClassList(el) {
+  const set = new Set();
+  return {
+    _c: set,
+    add(...xs) {
+      xs.forEach((x) => set.add(x));
+      el.className = [...set].join(" ");
+    },
+    remove(...xs) {
+      xs.forEach((x) => set.delete(x));
+      el.className = [...set].join(" ");
+    },
+    contains(x) {
+      return set.has(x);
+    },
+  };
+}
+
 function mockEl(tag = "div") {
   const el = {
     tagName: tag.toUpperCase(),
     id: "",
     className: "",
-    classList: {
-      _c: new Set(),
-      add(...xs) {
-        xs.forEach((x) => el.classList._c.add(x));
-        el.className = [...el.classList._c].join(" ");
-      },
-      remove(...xs) {
-        xs.forEach((x) => el.classList._c.delete(x));
-        el.className = [...el.classList._c].join(" ");
-      },
-      contains(x) {
-        return el.classList._c.has(x);
-      },
-    },
     hidden: false,
     children: [],
     attributes: {},
@@ -40,10 +44,7 @@ function mockEl(tag = "div") {
       return child;
     },
     querySelector(sel) {
-      if (sel === ".inline-composer-collapsed") {
-        return el._collapsed || null;
-      }
-      return null;
+      return sel === ".inline-composer-collapsed" ? el._collapsed || null : null;
     },
     setAttribute(k, v) {
       el.attributes[k] = String(v);
@@ -52,6 +53,7 @@ function mockEl(tag = "div") {
       return el.attributes[k] ?? null;
     },
   };
+  el.classList = createMockClassList(el);
   return el;
 }
 
