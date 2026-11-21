@@ -130,3 +130,35 @@ Milhões de pessoas utilizam redes sociais para sustento familiar e comércio po
 3. **Sem Intermediação Financeira (Pix + DM Direto):** O Vox **não é instituição de pagamento (PSP)**, não processa pagamentos, não faz escrow e não cobra comissões nem taxas sobre vendas. O contato ocorre via DM e o pagamento via Pix direto para a chave informada pelo vendedor no card ou perfil.
 4. **Sem Impulsionamento Pago:** Não existem ferramentas de *boost*, alcance pago ou leilão de visibilidade. A feira comunitária é estritamente cronológica e baseada no território e nas regras decididas pela própria comunidade.
 
+---
+
+## Governança da Instância PWA Oficial (LAN-31)
+
+> **Escopo:** define quem responde pela instância pública hospedada pelo projeto (`vox-app` em GitHub Pages, espelho B oficial e futuro domínio próprio pós-`LAN-06`), em rascunho operacional sujeito à aprovação dos stewards ativos e à constituição institucional do `REV-18`.
+
+### 1. Protocolo aberto vs. Instância PWA oficial
+
+- **Protocolo e cliente open-source (AGPLv3):** o código-fonte em [github.com/yurikayel/vox](https://github.com/yurikayel/vox) é aberto. Qualquer pessoa, coletivo ou comunidade pode fazer fork do cliente, hospedar seu próprio PWA estático, operar seu próprio relay/espelho, definir políticas locais de filtragem ou ignorar a lista de ocultação da instância oficial. Nenhuma entidade controla a malha P2P nem apaga registros em dispositivos de terceiros ou on-chain.
+- **Instância PWA oficial (`vox-app`):** é o front-end estático publicado a partir do branch `main` (GitHub Pages e espelho B) sob responsabilidade do projeto e da futura entidade jurídica (`REV-18`). Por atuar como ponto de acesso público unificado, essa instância responde pelos deveres operacionais e legais descritos em [COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) e nesta seção.
+
+### 2. Autoridade por frente na instância oficial
+
+| Frente | Quem tem autoridade | Regra operacional e limites |
+|---|---|---|
+| **(a) Lista global de ocultação (`hide-list`, `LAN-13`)** | **Comitê / Plantão de Confiança e Moderação** (mínimo 2 pessoas em rodízio, `LAN-04`) | Atua estritamente na camada de renderização da instância oficial (exportável no formato dos gateways AR.IO), sem apagar dados na rede. Em conteúdo grave (abuso infantil, terrorismo, imagem íntima não consentida — SLA ≤ 2 h) ou ordem judicial específica, **1 plantonista** pode aplicar ocultação cautelar imediata, sujeita a confirmação por **2º revisor em até 24 h**. Toda inclusão exige motivo categorizado, data e assinatura verificável, alimentando o relatório anual de transparência (`REV-20`). |
+| **(b) Termos de Uso e Política de Privacidade (`LAN-02`, `LAN-03`)** | **Mantenedores / Stewards + validação jurídica humana (`REV-12` / `REV-18`)** | Alterações em `client/terms.html` (a publicar no `LAN-02`), [client/privacy.html](./client/privacy.html) e [client/data-deletion.html](./client/data-deletion.html) só entram em vigor na instância oficial após revisão jurídica humana (`REV-12`/`REV-18`) e PR aprovado em `main`. Mudanças materiais exigem aviso prévio de **≥ 15 dias** na instância oficial (via `notice` ou changelog), salvo cumprimento imediato de lei ou ordem judicial. |
+| **(c) Releases oficiais assinados (`main` / Pages / binários)** | **Mantenedores com revisão dupla** (`LAN-30`, `CODEOWNERS`) | Nenhum release vai para `main` sem CI verde (`npm run validate`), revisão independente de pelo menos **2 mantenedores** (após fechar `LAN-30`), atualização de manifesto/SW quando o shell mudar e geração de `SHA256SUMS` + atestação de proveniência nos binários de release. Em emergência ([runbook-incidentes.md](./docs/operations/runbook-incidentes.md)), qualquer plantonista de ops pode acionar o kill-switch em [client/config/flags.json](./client/config/flags.json) (`LAN-08`) ou executar rollback ([ops-pages-rollback.md](./docs/operations/ops-pages-rollback.md)), com pós-incidente em até 7 dias. |
+
+### 3. Mandatos, rotação e conflito de interesses
+
+- **Duração de mandato:** mantenedores de release e membros do plantão de moderação da instância oficial exercem mandato de **12 meses**, renovável por consenso documentado dos stewards ativos e, quando constituída, da entidade do `REV-18`.
+- **Rodízio de chaves e bus factor (`LAN-30`):** a instância oficial exige **≥ 2 titulares independentes** para organização GitHub, domínio (`LAN-06`), Render, Cloudflare e chaves de assinatura da `hide-list`. Chaves de assinatura da lista oficial passam por rotação anual ou imediata em caso de saída de membro, suspeita de comprometimento ou inatividade sem resposta por **> 60 dias**.
+- **Conflito de interesses:** nenhum mantenedor ou plantonista participa da decisão sobre inclusão ou manutenção na `hide-list` envolvendo conteúdo próprio, comunidade que administra diretamente ou disputa pessoal/financeira ligada à sua chave ou organização; nesses casos deve declarar impedimento, cabendo a análise aos demais revisores desimpedidos.
+
+### 4. Recurso público e revisão de ocultações globais
+
+1. **Canal de contestação (`REV-20`):** qualquer autor, moderador comunitário ou interessado pode contestar uma entrada da `hide-list` oficial pelo formulário público de revisão/recurso no repositório (ou canal privado quando envolver dados pessoais sensíveis).
+2. **Prazo e imparcialidade:** o pedido é analisado em até **7 dias úteis** por **≥ 2 revisores que não aplicaram a ocultação original**; casos decorrentes de ordem judicial ou dúvida regulatória são encaminhados à assessoria jurídica (`REV-12`/`REV-18`).
+3. **Desfecho auditável:** a decisão fundamentada (manutenção da ocultação ou reversão via `unhide`) é registrada no histórico versionado da lista oficial. Mesmo durante ou após indeferimento na instância oficial, qualquer comunidade mantém o direito técnico de operar ou adotar outro cliente/espelho que não siga a lista oficial (ver [Critérios de Go/No-Go LAN-28](./docs/strategy/criterios-go-beta-lan28.md)).
+
+
