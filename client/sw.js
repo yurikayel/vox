@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.153-runtime-primitives";
+const CACHE_NAME = "vox-pwa-v7.154-peers-split";
 
 const SHELL_ASSETS = [
 
@@ -294,6 +294,14 @@ const SHELL_ASSETS = [
   "./js/community-unread.js",
 
   "./js/peers.js",
+  "./js/peers-base.js",
+  "./js/peers-events.js",
+  "./js/peers-settings.js",
+  "./js/peers-relay.js",
+  "./js/peers-transport.js",
+  "./js/peers-transfer.js",
+  "./js/peers-gossip.js",
+  "./js/peers-channel.js",
   "./js/peer-sync.js",
   "./js/community-channel.js",
   "./js/render/channel-bar.js",
