@@ -32,19 +32,17 @@ const eslint = new ESLint({ cwd: ROOT });
 
 const RULES = ["complexity", "max-depth", "max-lines-per-function"];
 
-function messageKey(m) {
-  return `${m.ruleId}:${m.line}:${m.message}`;
-}
-
-async function main() {
+function getFilesToLint() {
   const files = collectJsFiles(CLIENT_JS);
   const swPath = path.join(ROOT, "client", "sw.js");
   if (fs.existsSync(swPath)) {
     files.push(swPath);
   }
-  const results = await eslint.lintFiles(files);
-  const violations = [];
+  return files;
+}
 
+function extractViolations(results) {
+  const violations = [];
   for (const r of results) {
     const rel = path.relative(ROOT, r.filePath).replace(/\\/g, "/");
     for (const m of r.messages) {
@@ -58,27 +56,12 @@ async function main() {
       });
     }
   }
+  return violations;
+}
 
-  violations.sort((a, b) => {
-    const rank = { complexity: 0, "max-lines-per-function": 1, "max-depth": 2 };
-    return (rank[a.rule] ?? 9) - (rank[b.rule] ?? 9) || a.file.localeCompare(b.file);
-  });
-
-  const date = new Date().toISOString().slice(0, 10);
-  fs.mkdirSync(METRICS_DIR, { recursive: true });
-  const jsonPath = path.join(METRICS_DIR, `baseline-${date}.json`);
-  const mdPath = path.join(METRICS_DIR, `baseline-${date}.md`);
-
-  const payload = {
-    generatedAt: new Date().toISOString(),
-    filesScanned: files.length,
-    violationCount: violations.length,
-    violations,
-  };
-  fs.writeFileSync(jsonPath, `${JSON.stringify(payload, null, 2)}\n`);
-
+function formatMarkdownReport(files, violations, date) {
   const top = violations.slice(0, 40);
-  const md = [
+  return [
     `# Complexity baseline — ${date}`,
     "",
     `Files scanned: **${files.length}** · Violations: **${violations.length}**`,
@@ -94,7 +77,36 @@ async function main() {
     `Full JSON: \`docs/metrics/baseline-${date}.json\``,
     "",
   ].join("\n");
-  fs.writeFileSync(mdPath, md);
+}
+
+function writeReports(files, violations, date) {
+  fs.mkdirSync(METRICS_DIR, { recursive: true });
+  const jsonPath = path.join(METRICS_DIR, `baseline-${date}.json`);
+  const mdPath = path.join(METRICS_DIR, `baseline-${date}.md`);
+
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    filesScanned: files.length,
+    violationCount: violations.length,
+    violations,
+  };
+  fs.writeFileSync(jsonPath, `${JSON.stringify(payload, null, 2)}\n`);
+  fs.writeFileSync(mdPath, formatMarkdownReport(files, violations, date));
+  return jsonPath;
+}
+
+async function main() {
+  const files = getFilesToLint();
+  const results = await eslint.lintFiles(files);
+  const violations = extractViolations(results);
+
+  violations.sort((a, b) => {
+    const rank = { complexity: 0, "max-lines-per-function": 1, "max-depth": 2 };
+    return (rank[a.rule] ?? 9) - (rank[b.rule] ?? 9) || a.file.localeCompare(b.file);
+  });
+
+  const date = new Date().toISOString().slice(0, 10);
+  const jsonPath = writeReports(files, violations, date);
 
   console.log(`Wrote ${path.relative(ROOT, jsonPath)} (${violations.length} violations)`);
   process.exit(0);
