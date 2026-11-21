@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Refactor / Fix / Hardening: Onda 3 (`render/profile` & `render/network`), 4ª varredura QA e PM-66
+- `client/js/render/profile.js` (1274 → 32 linhas) e `client/js/render/network.js` (561 → 51 linhas): fatiados em módulos SLAP (`profile-{compose-topic,compose-wizards,header,settings,tabs,wallet}.js` e `network-{form,participation,sections,steward}.js`), mantendo 100% da API pública.
+- `client/js/social-login.js` + `bsky-oauth.js`: limpeza cruzada de fluxos PKCE/Bluesky no início do login; preservação estrita da conferência RFC 9207 (`issRequired` / `iss`).
+- `client/js/app/screens-phrase.js`: descarta folha de impressão da frase de recuperação no `hashchange` e exporta `printCard`.
+- `client/js/labs/parado/webxdc-crdt.js`: LWW inteiro determinístico em `setItem`, isolamento de `data: null` (`hasOwnProperty`) e suporte a `pendingMoves` fora de ordem.
+- Hardening PM-66: zero erros/avisos Ruff (`F,C901,E,I,PLR0915`) em `relay/`, `scripts/` e `packaging/` e zero warnings ESLint em `scripts/*.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.155-onda3-profile-network` (+10 módulos no `SHELL_ASSETS`).
+
 ### Feat: primitivas de execução (`action-runner`, `async-dedupe`, `state-machine`, scroll restore)
 - `client/js/app/action-runner.js`: `runButtonAction` e `bindActionDelegate` (`disabled`/`aria-busy`, proteção contra reentrância, restauração em `finally` respeitando `isConnected`, e roteamento de erro); plugado em `app/init.js` (Open Frames e `.btn-repost`).
 - `client/js/app/route.js`: `rememberRouteScroll` e `restoreRouteScroll` preservam a rolagem por hash em retornos pelo histórico (`popstate`) e levam ao topo em rotas novas.
