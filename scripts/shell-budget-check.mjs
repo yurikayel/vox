@@ -144,6 +144,18 @@ function isExternalRef(ref) {
   return /^(?:https?:|\/\/|data:|blob:)/i.test(ref.trim());
 }
 
+/** Remove comentários HTML de forma iterativa sem regex multi-caractere. */
+function stripHtmlComments(html) {
+  let out = html;
+  let start = out.indexOf("<!--");
+  while (start !== -1) {
+    const end = out.indexOf("-->", start + 4);
+    out = end === -1 ? out.slice(0, start) : out.slice(0, start) + out.slice(end + 3);
+    start = out.indexOf("<!--");
+  }
+  return out;
+}
+
 /**
  * Extrai os assets críticos do boot inicial a partir de `index.html`:
  * `index.html`, `<link rel="stylesheet">` e `<script src="...">` locais.
@@ -151,7 +163,7 @@ function isExternalRef(ref) {
  * @returns {string[]} Lista única e ordenada de caminhos relativos ao cliente.
  */
 export function extractCriticalBootPaths(indexHtml) {
-  const html = indexHtml.replace(/<!--[\s\S]*?-->/g, "");
+  const html = stripHtmlComments(indexHtml);
   const refs = ["index.html"];
   for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
     const rel = readHtmlAttr(m[0], "rel").toLowerCase().split(/\s+/);
@@ -177,18 +189,24 @@ export function measureAsset(clientDir, relPath) {
   const category = classifyAssetCategory(relPath);
   const rootAbs = path.resolve(clientDir);
   const fullAbs = path.resolve(rootAbs, relPath);
-  const inside = fullAbs === rootAbs || fullAbs.startsWith(`${rootAbs}${path.sep}`);
-  if (!inside || !fs.existsSync(fullAbs) || !fs.statSync(fullAbs).isFile()) {
+  if (fullAbs !== rootAbs && !fullAbs.startsWith(`${rootAbs}${path.sep}`)) {
     return { path: relPath, category, rawBytes: 0, gzipBytes: 0, missing: true };
   }
-  const buf = fs.readFileSync(fullAbs);
-  return {
-    path: relPath,
-    category,
-    rawBytes: buf.length,
-    gzipBytes: zlib.gzipSync(buf).length,
-    missing: false,
-  };
+  try {
+    const buf = fs.readFileSync(fullAbs);
+    return {
+      path: relPath,
+      category,
+      rawBytes: buf.length,
+      gzipBytes: zlib.gzipSync(buf).length,
+      missing: false,
+    };
+  } catch (err) {
+    if (err?.code === "ENOENT" || err?.code === "EISDIR" || err?.code === "ENOTDIR") {
+      return { path: relPath, category, rawBytes: 0, gzipBytes: 0, missing: true };
+    }
+    throw err;
+  }
 }
 
 /**
