@@ -15,6 +15,7 @@ export const BSKY_ENTRYWAY = "https://bsky.social";
 /** Export `BSKY_SCOPE` do módulo. @type {string} */
 export const BSKY_SCOPE = "atproto transition:generic";
 const FLOW_KEY = "vox-bsky-oauth-flow";
+const SOCIAL_FLOW_KEY = "vox-social-oauth-flow";
 const SESSION_KEY = "vox-bsky-oauth-session";
 const enc = new TextEncoder();
 
@@ -141,6 +142,7 @@ function readFlow() {
 /** Inicia o login: PAR no servidor de autorização e redireciona para a tela do Bluesky. 
  * @param {object} [options] Opções do fluxo (ex.: `loginHint`).*/
 export async function startBskyLogin({ loginHint = "" } = {}) {
+  sessionStorage.removeItem(SOCIAL_FLOW_KEY);
   const meta = await authServerMetadata();
   const { clientId, redirectUri } = bskyClientConfig();
   const keys = await newDpopKey();

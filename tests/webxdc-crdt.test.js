@@ -194,3 +194,75 @@ test("webxdc-crdt - createEpochCompactor usa coveredSerial e assinatura", async 
   assert.equal(posted.coveredSerial, 50);
   assert.equal(posted.sig, "ed25519_sig_for_bairro_centro");
 });
+
+test("webxdc-crdt - setItem LWW substitui data determinístico e comuta no mesmo ts", () => {
+  const r1 = createIdLookupStore();
+  const r2 = createIdLookupStore();
+  const ts = 2000;
+  const opAlice = { type: "set", id: "k1", data: { text: "alice", extra: 1 }, ts, sender: "alice" };
+  const opBob = { type: "set", id: "k1", data: { text: "bob", diff: 2 }, ts, sender: "bob" };
+
+  r1.applyRemoteUpdate(opAlice);
+  r1.applyRemoteUpdate(opBob);
+  r2.applyRemoteUpdate(opBob);
+  r2.applyRemoteUpdate(opAlice);
+
+  assert.deepEqual(r1.getItem("k1"), r2.getItem("k1"));
+  assert.equal(r1.getItem("k1").text, "bob");
+  assert.equal(r1.getItem("k1").extra, undefined, "não vaza campo residual de update perdedor");
+  assert.equal(r1.getItem("k1").diff, 2);
+});
+
+test("webxdc-crdt - hydrateItems e upsertRemoteItemIfNewer não vazam envelope quando data é null", () => {
+  const store = createIdLookupStore({
+    items: {
+      item_null: { data: null, updatedAt: 1000, sender: "alice", orderRank: 50 },
+    },
+  });
+  const hydrated = store.getItem("item_null");
+  assert.deepEqual(hydrated.value, null);
+  assert.equal(hydrated.updatedAt, undefined, "não vaza updatedAt para dentro de data");
+  assert.equal(hydrated.sender, undefined, "não vaza sender para dentro de data");
+
+  store.mergeSnapshot({
+    items: {
+      remote_null: { data: null, updatedAt: 2000, sender: "bob", orderRank: 80 },
+    },
+    order: ["item_null", "remote_null"],
+    tombstones: {},
+    coveredSerial: 5,
+  });
+  const remote = store.getItem("remote_null");
+  assert.deepEqual(remote.value, null);
+  assert.equal(remote.updatedAt, undefined);
+  assert.equal(remote.sender, undefined);
+});
+
+test("webxdc-crdt - move antes de set guarda pendingMoves e converge fora de ordem", () => {
+  const r1 = createIdLookupStore();
+  const r2 = createIdLookupStore();
+  const opSet = { type: "set", id: "item_x", data: { title: "Item X" }, ts: 1000, sender: "alice" };
+  const opMove = { type: "move", id: "item_x", orderRank: 10, ts: 1050, sender: "alice" };
+
+  r1.applyRemoteUpdate(opSet);
+  r1.applyRemoteUpdate(opMove);
+  r2.applyRemoteUpdate(opMove);
+  r2.applyRemoteUpdate(opSet);
+
+  assert.deepEqual(r1.getItems(), r2.getItems());
+  assert.equal(r2.getItem("item_x")._orderRank, 10);
+  assert.deepEqual(r1.getOrder(), r2.getOrder());
+});
+
+test("webxdc-crdt - pendingMoves respeita tombstones mais novos e orderTs", () => {
+  const store = createIdLookupStore();
+  store.applyRemoteUpdate({ type: "move", id: "item_y", orderRank: 5, ts: 1000, sender: "alice" });
+  store.applyRemoteUpdate({ type: "remove", id: "item_y", ts: 2000, sender: "bob" });
+  store.applyRemoteUpdate({ type: "set", id: "item_y", data: { v: 1 }, ts: 900, sender: "alice" });
+  assert.equal(store.getItem("item_y"), null);
+
+  const store2 = createIdLookupStore();
+  store2.applyRemoteUpdate({ type: "move", id: "item_z", orderRank: 5, ts: 1000, sender: "alice" });
+  store2.applyRemoteUpdate({ type: "set", id: "item_z", data: { v: 2, orderRank: 99 }, ts: 2000, sender: "bob" });
+  assert.equal(store2.getItem("item_z")._orderRank, 99);
+});
