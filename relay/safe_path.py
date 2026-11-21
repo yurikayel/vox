@@ -14,7 +14,7 @@ import string
 from pathlib import Path
 from typing import Callable, Container, Union
 
-#: Teto do nome (igual ao limite de nome de arquivo da maioria dos sistemas), checado antes de qualquer validador.
+#: Teto do nome (limite de arquivo na maioria dos sistemas), checado antes de validador.
 MAX_NAME_LENGTH = 255
 
 #: Id curto padrão (canal, comunidade): letras ASCII, dígitos, `_` e `-`.
@@ -22,8 +22,10 @@ SAFE_CHARS = frozenset(string.ascii_letters + string.digits + "_-")
 MAX_ID_LENGTH = 128
 
 
-def only_chars(text: str, allowed: Container[str], min_length: int = 1, max_length: int = MAX_ID_LENGTH) -> bool:
-    """True se `text` é ASCII, tem entre `min_length` e `max_length` caracteres e só usa `allowed`."""
+def only_chars(
+    text: str, allowed: Container[str], min_length: int = 1, max_length: int = MAX_ID_LENGTH
+) -> bool:
+    """True se `text` é ASCII, tem entre min e max caracteres e só usa `allowed`."""
     return min_length <= len(text) <= max_length and text.isascii() and set(text) <= allowed
 
 

@@ -1,13 +1,14 @@
 """Cofres de recuperação na memória central (`/memory/vault/<endereço>`).
 
-O relay guarda o envelope cifrado e não consegue abri-lo. Desde o PM-90, só aceita e serve o formato v2
-(sal e iterações no envelope) ou a marca de revogado que o dono grava por cima de um cofre antigo.
-Registros em formato antigo continuam no disco, mas não saem mais daqui.
+O relay guarda o envelope cifrado e não consegue abri-lo. Desde o PM-90, só aceita
+e serve o formato v2 (sal e iterações no envelope) ou a marca de revogado que o dono
+grava por cima de um cofre antigo. Registros antigos continuam no disco, mas não saem.
 
-PM-94: cada cofre tem um dono. O aparelho manda uma prova do dono (`ownerToken`, 32 bytes em hex derivados da
-Senha Soberana por PBKDF2 com 600 mil iterações); o relay guarda só o SHA-256 dela (`ownerHash`). Depois disso,
-regravar o cofre exige a mesma prova. Cofre v2 novo sem prova é recusado. Registro antigo sem dono aceita a
-primeira gravação com prova, que passa a ser o dono.
+PM-94: cada cofre tem um dono. O aparelho manda uma prova do dono (`ownerToken`, 32 bytes
+em hex derivados da Senha Soberana por PBKDF2 com 600 mil iterações); o relay guarda
+só o SHA-256 dela (`ownerHash`). Depois disso, regravar o cofre exige a mesma prova.
+Cofre v2 novo sem prova é recusado. Registro antigo sem dono aceita a primeira
+gravação com prova, que passa a ser o dono.
 """
 
 import hashlib
@@ -46,7 +47,11 @@ def is_servable_vault(record: Any) -> bool:
 
 
 def _vault_json_name(name: str) -> bool:
-    return name.endswith(".json") and len(name) > 5 and central_memory._is_valid_id(name[: -len(".json")])
+    return (
+        name.endswith(".json")
+        and len(name) > 5
+        and central_memory._is_valid_id(name[: -len(".json")])
+    )
 
 
 def _vault_file(lookup_key: str):
@@ -94,7 +99,9 @@ def _split_payload(payload: Any) -> Tuple[Any, Any]:
     return payload, None
 
 
-def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: Any) -> Tuple[str, Optional[str]]:
+def _authorize(
+    stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: Any
+) -> Tuple[str, Optional[str]]:
     """Decide se a gravação entra e com qual dono fica."""
     current = (stored or {}).get(OWNER_FIELD)
     presented = owner_hash(token)
@@ -112,8 +119,8 @@ def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: 
 def save_vault(lookup_key: str, payload: Any) -> str:
     """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`.
 
-    Ler o dono, autorizar e gravar é uma só decisão: sob o lock da memória central, duas gravações simultâneas
-    num cofre sem dono não podem as duas virar o primeiro dono.
+    Ler o dono, autorizar e gravar é uma só decisão: sob lock da memória central, duas
+    gravações concorrentes sem dono não podem as duas virar o primeiro dono.
     """
     with central_memory._MEMORY_LOCK:
         return _save_vault_locked(lookup_key, payload)

@@ -32,7 +32,11 @@ _LOCK = threading.RLock()
 class P2PSeederManager:
     """Gerenciador de Seeding P2P para blobs com integridade verificável por SHA-256."""
 
-    def __init__(self, max_storage_bytes: int = DEFAULT_MAX_SEEDER_STORAGE_BYTES, max_seeds: int = DEFAULT_MAX_CONCURRENT_SEEDS):
+    def __init__(
+        self,
+        max_storage_bytes: int = DEFAULT_MAX_SEEDER_STORAGE_BYTES,
+        max_seeds: int = DEFAULT_MAX_CONCURRENT_SEEDS,
+    ):
         self.max_storage_bytes = max_storage_bytes
         self.max_seeds = max_seeds
         self.active_seeds: Dict[str, Dict[str, Any]] = {}
@@ -69,20 +73,29 @@ class P2PSeederManager:
         with _LOCK:
             # Verifica allowlist
             if clean_hash not in self.allowed_hashes:
-                raise PermissionError(f"Hash {clean_hash} nao esta na allowlist de blobs autorizados")
+                raise PermissionError(
+                    f"Hash {clean_hash} nao esta na allowlist de blobs autorizados"
+                )
 
             # Verifica limite de quantidade de seeds
             if clean_hash not in self.active_seeds and len(self.active_seeds) >= self.max_seeds:
                 raise OverflowError(f"Teto maximo de seeds simultaneos ({self.max_seeds}) atingido")
 
             # Calcula impacto no limite de bytes
-            current_bytes = sum(s["sizeBytes"] for s in self.active_seeds.values() if s["hash"] != clean_hash)
+            current_bytes = sum(
+                s["sizeBytes"] for s in self.active_seeds.values() if s["hash"] != clean_hash
+            )
             if current_bytes + size_bytes > self.max_storage_bytes:
-                raise OverflowError(f"Cota de armazenamento P2P ({self.max_storage_bytes} bytes) excedida")
+                raise OverflowError(
+                    f"Cota de armazenamento P2P ({self.max_storage_bytes} bytes) excedida"
+                )
 
             # Gera infohash determinístico para WebTorrent (SHA-1 do SHA-256)
             info_hash = hashlib.sha1(clean_hash.encode("ascii")).hexdigest()
-            magnet_uri = f"magnet:?xt=urn:btih:{info_hash}&dn=vox-blob-{clean_hash[:12]}&x.sha256={clean_hash}"
+            magnet_uri = (
+                f"magnet:?xt=urn:btih:{info_hash}&dn=vox-blob-{clean_hash[:12]}"
+                f"&x.sha256={clean_hash}"
+            )
 
             seed_record = {
                 "hash": clean_hash,
@@ -141,7 +154,9 @@ class P2PSeederManager:
 class PeerDiscovery:
     """Protocolo de descoberta e registro de pares (VOX-PEER-v1) sem portas abertas."""
 
-    def __init__(self, local_node_id: str = "node-zero-argon18", ttl_seconds: int = DEFAULT_PEER_TTL_SECONDS):
+    def __init__(
+        self, local_node_id: str = "node-zero-argon18", ttl_seconds: int = DEFAULT_PEER_TTL_SECONDS
+    ):
         self.local_node_id = local_node_id
         self.ttl_seconds = ttl_seconds
         self.known_peers: Dict[str, Dict[str, Any]] = {}
@@ -160,7 +175,11 @@ class PeerDiscovery:
             raise ValueError(f"Protocolo incompativel: esperado VOX-PEER-v1, recebido {protocol}")
 
         http_port = peer_payload.get("httpPort")
-        if isinstance(http_port, bool) or not isinstance(http_port, int) or not (1 <= http_port <= 65535):
+        if (
+            isinstance(http_port, bool)
+            or not isinstance(http_port, int)
+            or not (1 <= http_port <= 65535)
+        ):
             raise ValueError("httpPort invalido (deve ser entre 1 e 65535)")
 
         capabilities = peer_payload.get("capabilities", [])
@@ -230,8 +249,11 @@ def _parse_seed_size(raw: Any) -> int:
 
 
 def register_seed_request(payload: Dict[str, Any], get_blob) -> Dict[str, Any]:
-    """Pedido de semear um blob. O que já está na memória central é autorizado na hora; o resto precisa de
-    autorização prévia (`authorize_hash`)."""
+    """Pedido de semear blob.
+
+    O que já está na memória central é autorizado na hora; o resto precisa de
+    autorização prévia (`authorize_hash`).
+    """
     if not isinstance(payload, dict):
         raise ValueError("Payload de seed deve ser um dicionario JSON")
     blob_hash = str(payload.get("hash") or "").strip().lower()
@@ -243,7 +265,9 @@ def register_seed_request(payload: Dict[str, Any], get_blob) -> Dict[str, Any]:
             or blob_data.get("byteLength")
             or len(blob_data.get("base64Data") or blob_data.get("data") or "")
         )
-        mime_type = str(blob_data.get("mimeType") or blob_data.get("mime") or "application/octet-stream")
+        mime_type = str(
+            blob_data.get("mimeType") or blob_data.get("mime") or "application/octet-stream"
+        )
         return SEEDER_MANAGER.register_blob_seed(blob_hash, _parse_seed_size(size_bytes), mime_type)
     size_bytes = _parse_seed_size(payload.get("sizeBytes", 0))
     mime_type = str(payload.get("mimeType") or "application/octet-stream")

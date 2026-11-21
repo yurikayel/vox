@@ -5,17 +5,18 @@ Biblioteca padrão Python 3 (zero dependências pip).
 Protocolo WebSocket RFC 6455 para troca de ofertas SDP e candidatos ICE.
 """
 
-import os
-import sys
-import json
 import base64
 import hashlib
+import json
+import os
+import socketserver
 import struct
+import sys
 import threading
 import time
-import socketserver
 
-try:  # como pacote (testes, `python -m`) ou solto na mesma pasta (`python relay/signaling.py`, imagem Docker)
+# como pacote (testes, `python -m`) ou solto na mesma pasta (`python relay/signaling.py`):
+try:
     from relay import rate_limit, request_guard
 except ImportError:
     import rate_limit
@@ -82,7 +83,7 @@ def parse_frame_length(sock, second_byte: int):
 
 
 def read_frame_body(sock, second_byte: int):
-    """Lê comprimento, máscara e carga de um quadro cujo cabeçalho de 2 bytes já chegou; None se a conexão cair."""
+    """Lê comprimento, máscara e carga de um quadro; None se a conexão cair."""
     length = parse_frame_length(sock, second_byte)
     if length is None:
         return None
@@ -97,10 +98,11 @@ def read_frame_body(sock, second_byte: int):
 
 
 def read_ws_frame_parts(sock, frame_timeout=None):
-    """Lê um quadro e devolve `(fin, opcode, payload)`, ou `(None, None, None)` se a conexão cair.
+    """Lê um quadro e devolve `(fin, opcode, payload)`, ou `(None, None, None)` se cair.
 
-    Esperar o próximo quadro não tem prazo (um par registrado pode ficar quieto); com `frame_timeout`, depois que o
-    cabeçalho chega o resto do quadro precisa chegar nesse prazo, senão `socket.timeout` sobe para quem chamou.
+    Esperar o próximo quadro não tem prazo (par registrado pode ficar quieto).
+    Com `frame_timeout`, depois que o cabeçalho chega o resto do quadro precisa
+    chegar nesse prazo, senão `socket.timeout` sobe para quem chamou.
     """
     header = read_exact(sock, 2)
     if not header:
@@ -119,15 +121,17 @@ def read_ws_frame_parts(sock, frame_timeout=None):
 
 
 def read_ws_frame(sock):
-    """Lê um quadro e devolve `(opcode, payload)`, sem olhar o bit FIN; `(None, None)` se a conexão cair."""
+    """Lê um quadro e devolve `(opcode, payload)` sem olhar FIN; (None, None) se cair."""
     _fin, opcode, payload = read_ws_frame_parts(sock)
     return opcode, payload
 
 
 class MessageAssembler:
-    """Remonta mensagens fragmentadas (RFC 6455 §5.4): um quadro de texto ou binário com FIN=0 abre a mensagem,
-    quadros de continuação (opcode 0x0) a completam e o FIN=1 a fecha. Quadros de controle não passam por aqui.
-    Erro de protocolo ou mensagem acima do teto levanta `ValueError` (quem chama fecha a conexão).
+    """Remonta mensagens fragmentadas (RFC 6455 §5.4).
+
+    Quadro texto/binário com FIN=0 abre mensagem, continuação (opcode 0x0)
+    completa e FIN=1 fecha. Quadros de controle não passam por aqui.
+    Erro de protocolo ou mensagem acima do teto levanta `ValueError`.
     """
 
     def __init__(self, max_size: int = MAX_WS_MESSAGE_SIZE):
@@ -144,7 +148,7 @@ class MessageAssembler:
             self.opcode = opcode
 
     def feed(self, fin: bool, opcode: int, payload: bytes):
-        """Acrescenta um quadro de dados; devolve `(opcode, payload)` quando a mensagem fecha, senão None."""
+        """Acrescenta quadro; devolve `(opcode, payload)` se fechou, senão None."""
         self._open(opcode)
         if len(self.parts) + len(payload) > self.max_size:
             raise ValueError("mensagem acima do teto")
@@ -166,7 +170,10 @@ def _positive_int(raw, default: int) -> int:
 
 
 def resolve_max_connections(env=None) -> int:
-    """Conexões atendidas ao mesmo tempo (`VOX_SIGNAL_MAX_CONNECTIONS`); as demais são fechadas na hora."""
+    """Conexões atendidas ao mesmo tempo (`VOX_SIGNAL_MAX_CONNECTIONS`).
+
+    As demais são fechadas na hora.
+    """
     raw = (env if env is not None else os.environ).get("VOX_SIGNAL_MAX_CONNECTIONS")
     return _positive_int(raw, DEFAULT_MAX_CONNECTIONS)
 
@@ -184,7 +191,7 @@ def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
 
 
 def cors_headers(origin) -> tuple:
-    """Cabeçalhos `Access-Control-Allow-*` para a origem do pedido; vazio se ela não está na lista permitida."""
+    """Cabeçalhos CORS para a origem do pedido; vazio se não permitida."""
     allowed = request_guard.cors_allow_origin(origin)
     if allowed is None:
         return ()
@@ -203,8 +210,10 @@ def make_http_response(
     extra_headers: tuple = (),
     origin=None,
 ) -> bytes:
-    """Resposta HTTP da sinalização. CORS segue `request_guard.cors_allow_origin`: o valor vem da lista de origens
-    (nunca do cabeçalho recebido) e `Vary: Origin` sempre vai junto; origem fora da lista não recebe `Allow-*`."""
+    """Resposta HTTP da sinalização.
+
+    CORS segue `request_guard.cors_allow_origin`.
+    """
     lines = [
         f"HTTP/1.1 {status_code} {status_text}",
         f"Content-Type: {content_type}",
@@ -233,18 +242,24 @@ def handle_http_request(request_sock, request_line: str, peer_count: int = 0, or
     elif method in ("GET", "HEAD"):
         clean_path = path.split("?")[0]
         if clean_path in ("/", "/health", "/status", "/ping"):
-            payload = json.dumps({
-                "status": "ok",
-                "service": "vox-signaling",
-                "version": "1.0.0",
-                "peers": peer_count,
-            }).encode("utf-8")
+            payload = json.dumps(
+                {
+                    "status": "ok",
+                    "service": "vox-signaling",
+                    "version": "1.0.0",
+                    "peers": peer_count,
+                }
+            ).encode("utf-8")
             body = b"" if method == "HEAD" else payload
             resp = make_http_response(200, "OK", body=body, origin=origin)
         else:
-            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}', origin=origin)
+            resp = make_http_response(
+                404, "Not Found", body=b'{"error":"not_found"}', origin=origin
+            )
     else:
-        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}', origin=origin)
+        resp = make_http_response(
+            405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}', origin=origin
+        )
     try:
         request_sock.sendall(resp)
     except Exception:
@@ -334,7 +349,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return headers
 
     def read_handshake_request(self):
-        """Lê o pedido HTTP até a linha em branco, com prazo total `HANDSHAKE_TIMEOUT` (não por leitura)."""
+        """Lê pedido HTTP até linha em branco, com prazo total `HANDSHAKE_TIMEOUT`."""
         deadline = time.monotonic() + HANDSHAKE_TIMEOUT
         request_data = bytearray()
         while b"\r\n\r\n" not in request_data:
@@ -384,10 +399,9 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def reject_if_foreign_origin(self, origin) -> bool:
-        """Recusa com 403 o handshake vindo de página fora da lista de origens (`request_guard`).
+        """Recusa com 403 o handshake vindo de página fora da lista (`request_guard`).
 
-        Sem `Origin` (cliente nativo, nó Linux) passa: só navegador manda o cabeçalho, e é ele que carrega
-        cookies/rede local de terceiros para um WebSocket aberto por página alheia.
+        Sem `Origin` (cliente nativo, nó Linux) passa: só navegador manda o cabeçalho.
         """
         if not origin or request_guard.cors_allow_origin(origin) is not None:
             return False
@@ -399,7 +413,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def resolve_peer_ip(self, headers: dict):
-        """IP do cliente para o limite de taxa (respeita `VOX_RELAY_TRUST_PROXY_HOPS`); None sem endereço de rede."""
+        """IP do cliente para o rate limit (respeita `VOX_RELAY_TRUST_PROXY_HOPS`)."""
         address = getattr(self, "client_address", None)
         if not address:
             return None
@@ -411,7 +425,10 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         if not wait:
             return False
         resp = make_http_response(
-            429, "Too Many Requests", body=b'{"error":"rate_limited"}', extra_headers=(f"Retry-After: {wait}",)
+            429,
+            "Too Many Requests",
+            body=b'{"error":"rate_limited"}',
+            extra_headers=(f"Retry-After: {wait}",),
         )
         try:
             self.request.sendall(resp)
@@ -433,8 +450,10 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         finally:
             self.cleanup()
 
-    def handle_frame(self, assembler: MessageAssembler, fin: bool, opcode: int, payload: bytes) -> bool:
-        """Trata um quadro; False encerra a conexão (erro de protocolo). Mensagem inválida levanta `ValueError`."""
+    def handle_frame(
+        self, assembler: MessageAssembler, fin: bool, opcode: int, payload: bytes
+    ) -> bool:
+        """Trata um quadro; False encerra a conexão (erro de protocolo)."""
         if opcode in CONTROL_OPCODES:
             if not fin or len(payload) > MAX_CONTROL_PAYLOAD:
                 return False
@@ -478,22 +497,29 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             return
         if self.peer_id and self.peer_id != clean_id:
             if registry.unregister(self.peer_id, handler=self):
-                registry.broadcast_others(self.peer_id, {"type": "peer-left", "peerId": self.peer_id})
+                registry.broadcast_others(
+                    self.peer_id, {"type": "peer-left", "peerId": self.peer_id}
+                )
         self.peer_id = clean_id
         others = registry.register(clean_id, self, address=address, dm_pub=dm_pub)
         addr_map = registry.get_address_map(exclude_peer=clean_id)
-        self.send_json({
-            "type": "registered",
-            "peerId": clean_id,
-            "peers": others,
-            "addressMap": addr_map,
-        })
-        registry.broadcast_others(clean_id, {
-            "type": "peer-joined",
-            "peerId": clean_id,
-            "address": address or "",
-            "dmPub": dm_pub,
-        })
+        self.send_json(
+            {
+                "type": "registered",
+                "peerId": clean_id,
+                "peers": others,
+                "addressMap": addr_map,
+            }
+        )
+        registry.broadcast_others(
+            clean_id,
+            {
+                "type": "peer-joined",
+                "peerId": clean_id,
+                "address": address or "",
+                "dmPub": dm_pub,
+            },
+        )
 
     def forward_peer_message(self, msg: dict):
         to_peer = msg.get("to")
@@ -517,13 +543,15 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
     def cleanup(self):
         if self.peer_id:
             if registry.unregister(self.peer_id, handler=self):
-                registry.broadcast_others(self.peer_id, {"type": "peer-left", "peerId": self.peer_id})
+                registry.broadcast_others(
+                    self.peer_id, {"type": "peer-left", "peerId": self.peer_id}
+                )
             self.peer_id = None
         self.closed = True
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    """Uma thread por conexão (daemon), com teto de conexões simultâneas (mesmo padrão de `VoxRelayServer`)."""
+    """Uma thread por conexão (daemon), com teto de conexões simultâneas."""
 
     allow_reuse_address = True
     daemon_threads = True

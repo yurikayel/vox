@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Robustez do servidor de sinalização (signaling.py): prazo total do handshake, prazo para o resto de um quadro e
-mensagens fragmentadas (RFC 6455 §5.4) remontadas com teto. Os testes de servidor falham no código de antes.
+Robustez do servidor de sinalização (signaling.py): prazo do handshake,
+prazo para resto de um quadro e mensagens fragmentadas (RFC 6455 §5.4).
 """
 
 import base64
@@ -30,7 +30,9 @@ class TestMessageAssembler(unittest.TestCase):
         self.assertIsNone(a.feed(False, 0x1, b'{"a"'))
         self.assertIsNone(a.feed(False, 0x0, b":"))
         self.assertEqual(a.feed(True, 0x0, b"1}"), (0x1, b'{"a":1}'))
-        self.assertEqual(a.feed(True, 0x1, b"x"), (0x1, b"x"), "depois de fechar, aceita mensagem nova")
+        self.assertEqual(
+            a.feed(True, 0x1, b"x"), (0x1, b"x"), "depois de fechar, aceita mensagem nova"
+        )
 
     def test_erros_de_protocolo(self):
         with self.assertRaises(ValueError):
@@ -78,12 +80,17 @@ class TestSignalingRobustez(unittest.TestCase):
 
     def _upgrade(self, s):
         key = base64.b64encode(b"robustez-chave-1").decode("ascii")
-        s.sendall(
-            (
-                f"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
-                f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n"
-            ).encode("ascii")
-        )
+        req_lines = [
+            "GET / HTTP/1.1",
+            "Host: 127.0.0.1",
+            "Upgrade: websocket",
+            "Connection: Upgrade",
+            f"Sec-WebSocket-Key: {key}",
+            "Sec-WebSocket-Version: 13",
+            "",
+            "",
+        ]
+        s.sendall("\r\n".join(req_lines).encode("ascii"))
         self.assertIn("101 Switching Protocols", s.recv(1024).decode("latin1"))
 
     def assert_closed_by_server(self, s):
@@ -102,7 +109,7 @@ class TestSignalingRobustez(unittest.TestCase):
             s.close()
 
     def _drip_until_closed(self, s, limit: float):
-        """Manda um cabeçalho a cada 0,2 s (menos que o prazo por leitura) até o servidor fechar; devolve o tempo."""
+        """Manda cabeçalho a cada 0,2 s até o servidor fechar; devolve o tempo."""
         start = time.monotonic()
         s.settimeout(0.2)
         while time.monotonic() - start < limit:
@@ -133,9 +140,17 @@ class TestSignalingRobustez(unittest.TestCase):
             stalled.sendall(bytes([0x81, 0x80 | 100]) + MASK + b"so um pedaco")
             self.assert_closed_by_server(stalled)
             time.sleep(0.6)
-            quiet.sendall(masked_frame(json.dumps({"type": "register", "peerId": "peer_quieto"}).encode(), 0x1))
+            quiet.sendall(
+                masked_frame(
+                    json.dumps({"type": "register", "peerId": "peer_quieto"}).encode(), 0x1
+                )
+            )
             opcode, payload = read_ws_frame(quiet)
-            self.assertEqual(json.loads(payload)["type"], "registered", "par quieto além do prazo continua conectado")
+            self.assertEqual(
+                json.loads(payload)["type"],
+                "registered",
+                "par quieto além do prazo continua conectado",
+            )
         finally:
             quiet.close()
             stalled.close()

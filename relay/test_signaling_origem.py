@@ -1,4 +1,4 @@
-"""Sinalização: CORS por lista de origens e checagem de `Origin` no handshake do WebSocket (mesma política do `server.py`)."""
+"""Sinalização: CORS por origens e `Origin` no handshake WebSocket (`server.py`)."""
 
 from __future__ import annotations
 
@@ -27,7 +27,11 @@ class _Fixture(unittest.TestCase):
             lines.append(f"Origin: {origin}")
         if upgrade:
             key = base64.b64encode(b"0123456789abcdef").decode("ascii")
-            lines += ["Upgrade: websocket", f"Sec-WebSocket-Key: {key}", "Sec-WebSocket-Version: 13"]
+            lines += [
+                "Upgrade: websocket",
+                f"Sec-WebSocket-Key: {key}",
+                "Sec-WebSocket-Version: 13",
+            ]
         with socket.create_connection(("127.0.0.1", self.port), timeout=5) as sock:
             sock.sendall(("\r\n".join(lines) + "\r\n\r\n").encode("ascii"))
             return sock.recv(2048).decode("latin1")
@@ -35,10 +39,15 @@ class _Fixture(unittest.TestCase):
 
 class TestWebSocketOrigin(_Fixture):
     def test_foreign_origin_gets_403(self):
-        self.assertIn("403 Forbidden", self.ask("GET / HTTP/1.1", "https://evil.example", upgrade=True))
+        self.assertIn(
+            "403 Forbidden", self.ask("GET / HTTP/1.1", "https://evil.example", upgrade=True)
+        )
 
     def test_control_char_origin_gets_403(self):
-        self.assertIn("403 Forbidden", self.ask("GET / HTTP/1.1", "https://yurikayel.github.io\x01", upgrade=True))
+        self.assertIn(
+            "403 Forbidden",
+            self.ask("GET / HTTP/1.1", "https://yurikayel.github.io\x01", upgrade=True),
+        )
 
     def test_app_origin_is_accepted(self):
         self.assertIn("101 Switching Protocols", self.ask("GET / HTTP/1.1", APP, upgrade=True))
