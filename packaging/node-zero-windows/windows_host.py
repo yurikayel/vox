@@ -87,7 +87,10 @@ class WindowsHost:
 
     def _system_cpu(self) -> tuple[int, int] | None:
         idle, kernel, user = FILETIME(), FILETIME(), FILETIME()
-        if not self.kernel.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
+        ok = self.kernel.GetSystemTimes(
+            ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)
+        )
+        if not ok:
             return None
         return self._filetime_value(idle), self._filetime_value(kernel) + self._filetime_value(user)
 
@@ -174,8 +177,11 @@ class WindowsJobGovernor:
     def set_cpu_limit(self, percent: float) -> bool:
         if not self.handle:
             return False
-        info = CPU_RATE_INFO(self.CPU_ENABLE | self.CPU_HARD_CAP, int(max(1, min(100, percent)) * 100))
-        ok = self.kernel.SetInformationJobObject(self.handle, 15, ctypes.byref(info), ctypes.sizeof(info))
+        rate = int(max(1, min(100, percent)) * 100)
+        info = CPU_RATE_INFO(self.CPU_ENABLE | self.CPU_HARD_CAP, rate)
+        ok = self.kernel.SetInformationJobObject(
+            self.handle, 15, ctypes.byref(info), ctypes.sizeof(info)
+        )
         if not ok:
             self.error = ctypes.WinError(ctypes.get_last_error()).strerror
         return bool(ok)
@@ -186,7 +192,9 @@ class WindowsJobGovernor:
         info = EXTENDED_LIMIT_INFO()
         info.basic.limit_flags = self.JOB_MEMORY_LIMIT
         info.job_memory_limit = amount
-        ok = self.kernel.SetInformationJobObject(self.handle, 9, ctypes.byref(info), ctypes.sizeof(info))
+        ok = self.kernel.SetInformationJobObject(
+            self.handle, 9, ctypes.byref(info), ctypes.sizeof(info)
+        )
         if not ok:
             self.error = ctypes.WinError(ctypes.get_last_error()).strerror
         return bool(ok)

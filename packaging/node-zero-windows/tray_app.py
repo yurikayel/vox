@@ -14,7 +14,6 @@ from pathlib import Path
 
 import node_zero
 
-
 APP_TITLE = "VoxPopuli Node Zero — Community Node"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE = "VoxPopuliNodeZero"
@@ -315,11 +314,16 @@ class TrayApp:
             governor = resources.get("governor", {})
             cm = status.get("centralMemory", {})
             counts = cm.get("counts", {})
+            cm_counts = (
+                f"{counts.get('posts', 0)} posts | {counts.get('profiles', 0)} perfis | "
+                f"{counts.get('tombstones', 0)} tombstones | {counts.get('blobs', 0)} blobs "
+                f"(Rev #{cm.get('revision', 0)})"
+            )
+            state = status.get("state", "desconhecido")
             detail = (
-                f"Estado: {status.get('state', 'desconhecido')} (Zero-Central-Memory • Dev Alpha/Beta)\n"
+                f"Estado: {state} (Zero-Central-Memory • Dev Alpha/Beta)\n"
                 f"Relay/cache: {'ativo' if status.get('relay', {}).get('active') else 'pausado'}\n"
-                f"Memória Central: {counts.get('posts', 0)} posts | {counts.get('profiles', 0)} perfis | "
-                f"{counts.get('tombstones', 0)} tombstones | {counts.get('blobs', 0)} blobs (Rev #{cm.get('revision', 0)})\n"
+                f"Memória Central: {cm_counts}\n"
                 f"CPU: {governor.get('cpuBudgetPercent', '—')}% "
                 f"({'aplicado' if governor.get('cpuLimitApplied') else 'prioridade reduzida'})\n"
                 f"RAM: {governor.get('memoryBudgetMb', '—')} MB "
@@ -366,9 +370,13 @@ class TrayApp:
             entry = tk.Entry(window, textvariable=value, width=10)
             entry.grid(row=row, column=1, padx=12, pady=6, sticky="e")
             entries[key] = value
+        desc = (
+            "Limites são aplicados pelo governador local; "
+            "pressão do sistema reduz o uso automaticamente."
+        )
         tk.Label(
             window,
-            text="Limites são aplicados pelo governador local; pressão do sistema reduz o uso automaticamente.",
+            text=desc,
             wraplength=380,
             justify="left",
         ).grid(row=len(fields), column=0, columnspan=2, padx=12, pady=(8, 4), sticky="w")
@@ -378,7 +386,10 @@ class TrayApp:
         buttons = tk.Frame(window)
         buttons.grid(row=row + 1, column=0, columnspan=2, padx=12, pady=10, sticky="e")
         tk.Button(buttons, text="Cancelar", command=window.destroy).pack(side="right", padx=(8, 0))
-        save = lambda: self._save_settings(entries, window, messagebox, data_dir)
+
+        def save():
+            self._save_settings(entries, window, messagebox, data_dir)
+
         tk.Button(buttons, text="Salvar", command=save, default="active").pack(side="right")
         window.bind("<Return>", lambda _event: save())
 
@@ -435,7 +446,8 @@ class TrayApp:
         status = self._status()
         running = bool(status and status.get("relay", {}).get("active"))
         paused = bool(status and status.get("state") == "PAUSED")
-        self._append(menu, MF_STRING | MF_GRAYED, 0, f"Vox Populi — {status.get('state') if status else 'parado'}")
+        state_str = status.get("state") if status else "parado"
+        self._append(menu, MF_STRING | MF_GRAYED, 0, f"Vox Populi — {state_str}")
         self.user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
         self._append(menu, MF_STRING, ID_STATUS, "Ver status")
         self._append(menu, MF_STRING, ID_SETTINGS, "Preferências…")

@@ -38,7 +38,8 @@ def boost_dedicated_node() -> bool:
         token_path = Path(data_home) / "vox-populi" / "control.token"
         token = token_path.read_text(encoding="utf-8").strip() if token_path.exists() else ""
         headers = {"X-Vox-Node-Token": token} if token else {}
-        req = urllib.request.Request("http://127.0.0.1:3922/api/resume", data=b"", headers=headers, method="POST")
+        url = "http://127.0.0.1:3922/api/resume"
+        req = urllib.request.Request(url, data=b"", headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=0.8) as resp:
             return resp.status == 200
     except Exception:
