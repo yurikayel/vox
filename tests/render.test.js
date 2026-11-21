@@ -55,34 +55,31 @@ test("render - renderPactModal injeta o modal com termos e botoes", () => {
   assert.equal(container.innerHTML, "");
 });
 
-test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
-  const main = createContainer();
-  const settings = {
-    enabled: true,
-    maxMb: 25,
-    dailyCapMb: 50,
-    wifiOnly: true,
-    webrtcEnabled: true,
-  };
-  const metrics = { blobsServed: 10, blobsServedRtc: 4, bytesServed: 50000 };
-  const cacheStats = { count: 12, sizeKb: "120.5" };
-  const relayStatus = { online: true, data: { cachedCount: 5 } };
-  const dailyUsage = { bytesServedToday: 10 * 1024 * 1024 };
-  const rtcStatus = { remotePeersConnected: 3 };
-
-  render.renderNetworkSettings(main, {
-    settings,
-    metrics,
-    cacheStats,
-    relayStatus,
-    dailyUsage,
+function createNetworkSettingsTestData() {
+  return {
+    settings: {
+      enabled: true,
+      maxMb: 25,
+      dailyCapMb: 50,
+      wifiOnly: true,
+      webrtcEnabled: true,
+    },
+    metrics: { blobsServed: 10, blobsServedRtc: 4, bytesServed: 50000 },
+    cacheStats: { count: 12, sizeKb: "120.5" },
+    relayStatus: { online: true, data: { cachedCount: 5 } },
+    dailyUsage: { bytesServedToday: 10 * 1024 * 1024 },
     notifPermission: "granted",
-    rtcStatus,
+    rtcStatus: { remotePeersConnected: 3 },
     customSignalingUrl: "ws://192.168.1.100:3921",
     customRelayHttpUrl: "http://192.168.1.100:3920",
     relayHttpUrl: "http://192.168.1.100:3920",
     customTurn: { urls: "turn:turn.comunidade.org:3478", username: "vox_turn", credential: "123" },
-  });
+  };
+}
+
+test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
+  const main = createContainer();
+  render.renderNetworkSettings(main, createNetworkSettingsTestData());
 
   const html = main.innerHTML;
   assert.ok(html.includes("Sua rede"));
@@ -278,6 +275,22 @@ test("render - painel Sustentada por vizinhos e seed checklist", () => {
   assert.ok(!html.includes("leaderboard"));
 });
 
+function assertCommunityMembersTab() {
+  const mainMembers = createContainer();
+  render.renderCommunity(mainMembers, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
+    isMember: false,
+    activeTab: "members",
+    recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
+  });
+  const membersHtml = mainMembers.innerHTML;
+  assert.ok(membersHtml.includes("community-vox-members-panel"));
+  assert.ok(membersHtml.includes("Membros online"));
+  assert.ok(membersHtml.includes("community-vox-online-grid--tab"));
+  const onlineFaces = (membersHtml.match(/community-vox-online-face/g) || []).length;
+  assert.ok(onlineFaces >= 9, "members tab shows expanded online grid");
+  assert.ok(membersHtml.includes("27 membros") || membersHtml.includes("27&nbsp;membros"));
+}
+
 test("render - renderCommunity header compacto, Entrar e layout", (t) => {
   mock.setDemoMode(true); // persona fictícia exige modo demonstração (LAN-10)
   t.after(() => mock.setDemoMode(false));
@@ -309,19 +322,7 @@ test("render - renderCommunity header compacto, Entrar e layout", (t) => {
   assert.ok(html.includes('class="community-vox-aside"'));
   assert.ok(!html.includes("Membros online"));
 
-  const mainMembers = createContainer();
-  render.renderCommunity(mainMembers, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
-    isMember: false,
-    activeTab: "members",
-    recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
-  });
-  const membersHtml = mainMembers.innerHTML;
-  assert.ok(membersHtml.includes("community-vox-members-panel"));
-  assert.ok(membersHtml.includes("Membros online"));
-  assert.ok(membersHtml.includes("community-vox-online-grid--tab"));
-  const onlineFaces = (membersHtml.match(/community-vox-online-face/g) || []).length;
-  assert.ok(onlineFaces >= 9, "members tab shows expanded online grid");
-  assert.ok(membersHtml.includes("27 membros") || membersHtml.includes("27&nbsp;membros"));
+  assertCommunityMembersTab();
 
   const mainMember = createContainer();
   render.renderCommunity(mainMember, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
@@ -668,14 +669,9 @@ test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
   assert.ok(mainEmpty.innerHTML.includes("chave_desconhecida"));
 });
 
-test("render - renderCommunity tabs Posts e Classificados com feira ativada e desativada", () => {
-  // 1. Feira ativada (demo-feira-local) na aba Classificados
+function assertFeiraAtivadaTab(pixKey) {
   const mainFeira = createContainer();
-  const feiraMeta = {
-    id: "demo-feira-local",
-    title: "Feira do Bairro",
-    commercialEnabled: true,
-  };
+  const feiraMeta = { id: "demo-feira-local", title: "Feira do Bairro", commercialEnabled: true };
   const listings = [
     {
       id: "demo-listing-mg",
@@ -683,7 +679,7 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
       priceLabel: "R$ 28",
       locationLabel: "Vila Madalena, SP",
       author: "vx_demo_mg",
-      contactPix: mgPixKey,
+      contactPix: pixKey,
       image: "https://randomuser.me/api/portraits/med/women/12.jpg",
       listingStatus: "available",
       body: "Fornada fresca aos sábados.",
@@ -706,6 +702,10 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
   assert.ok(htmlFeira.includes("btn-zap-post"));
   assert.ok(htmlFeira.includes("Conversar no DM"));
   assert.ok(htmlFeira.includes("btn-share-listing"));
+}
+
+test("render - renderCommunity tabs Posts e Classificados com feira ativada e desativada", () => {
+  assertFeiraAtivadaTab(mgPixKey);
 
   // 2. Feira desativada (Aprenda o Vox) visitando aba Classificados
   const mainGov = createContainer();
@@ -888,8 +888,7 @@ test("render - renderCommunity tab Governança e renderProposalItem", () => {
   assert.ok(html.includes("Ver proposta & votos →"));
 });
 
-test("render - renderProposalDetail com diff, apuração e votos", () => {
-  const main = createContainer();
+function createProposalDetailTestData() {
   const proposal = {
     id: "prop_diff_test",
     communityId: "demo-aprenda-vox",
@@ -914,6 +913,12 @@ test("render - renderProposalDetail com diff, apuração e votos", () => {
       { author: "vx_demo_mateus", choice: "yes", eligible: false, reason: "adesão posterior ao marco de corte", ts: Date.now() },
     ],
   };
+  return { proposal, tally };
+}
+
+test("render - renderProposalDetail com diff, apuração e votos", () => {
+  const main = createContainer();
+  const { proposal, tally } = createProposalDetailTestData();
 
   render.renderProposalDetail(main, proposal, tally, {
     userVote: { choice: "yes" },

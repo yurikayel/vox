@@ -1,5 +1,5 @@
 import "./setup.js";
-import test, { mock } from "node:test";
+import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";

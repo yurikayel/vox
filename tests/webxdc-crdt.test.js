@@ -9,7 +9,6 @@ import {
   validateStoreId,
   validateTimestamp,
   MAX_CLOCK_DRIFT_MS,
-  MAX_SNAPSHOT_BYTES,
 } from "../client/js/labs/parado/webxdc-crdt.js";
 
 test("webxdc-crdt - isNewer implementa desempate determinístico (tie-breaking)", () => {

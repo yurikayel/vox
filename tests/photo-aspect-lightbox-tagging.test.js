@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import { renderPostItem } from "../client/js/render/feed.js";
 import { renderTopic } from "../client/js/render/topic.js";
-import { renderPhotoTagBarHtml, renderPhotoTagPinsHtml } from "../client/js/render/photo-tag-pins.js";
+import { renderPhotoTagBarHtml } from "../client/js/render/photo-tag-pins.js";
 import * as mediaLofi from "../client/js/media-lofi.js";
 import { readFeedRenderSource } from "./helpers/feed-render-source.mjs";
 
@@ -18,94 +18,35 @@ const composerJs = fs.readFileSync(path.join(root, "js/app/inline-composer.js"),
 const lightboxJs = fs.readFileSync(path.join(root, "js/app/post-media-lightbox.js"), "utf8");
 const tagUiJs = fs.readFileSync(path.join(root, "js/app/photo-tag-ui.js"), "utf8");
 
-test("photo aspect ratio - renders correct aspect class on feed post", () => {
-  const postOriginal = {
-    id: "top_aspect_orig",
+function checkAspectItem(aspectRatio, expectedClass) {
+  const post = {
+    id: `top_aspect_${aspectRatio || "none"}`,
     type: "topic",
-    title: "Card Magic",
-    body: "O Nove Dedos",
-    image: "https://example.com/magic.jpg",
-    aspectRatio: "original",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  const htmlOrig = renderPostItem(postOriginal);
-  assert.ok(htmlOrig.includes("post-aspect-original"), "original aspect ratio should render post-aspect-original class");
-  assert.ok(htmlOrig.includes('data-aspect="original"'));
-
-  const postDefault = {
-    id: "top_aspect_default",
-    type: "topic",
-    title: "Foto sem ratio explícito",
-    body: "Padrão",
+    title: `Post ${aspectRatio}`,
+    body: "",
     image: "https://example.com/photo.jpg",
     author: "vx_author_1",
     ts: Date.now(),
   };
-  const htmlDefault = renderPostItem(postDefault);
-  assert.ok(htmlDefault.includes("post-aspect-original"), "default aspect ratio should be original without pre-cropping");
+  if (aspectRatio !== undefined) post.aspectRatio = aspectRatio;
+  const html = renderPostItem(post);
+  assert.ok(html.includes(expectedClass), `esperado ${expectedClass} para ${aspectRatio}`);
+  return html;
+}
 
-  const postSquare = {
-    id: "top_aspect_sq",
-    type: "topic",
-    title: "Quadrado 1:1",
-    body: "",
-    image: "https://example.com/square.jpg",
-    aspectRatio: "1:1",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  const htmlSquare = renderPostItem(postSquare);
-  assert.ok(htmlSquare.includes("post-aspect-1-1"));
-  assert.ok(htmlSquare.includes('data-aspect="1:1"'));
+test("photo aspect ratio - renders correct aspect class on feed post", () => {
+  const htmlOrig = checkAspectItem("original", "post-aspect-original");
+  assert.ok(htmlOrig.includes('data-aspect="original"'));
 
-  const postClassic = {
-    id: "top_aspect_classic",
-    type: "topic",
-    title: "Clássico 4:3",
-    body: "",
-    image: "https://example.com/classic.jpg",
-    aspectRatio: "4:3",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  assert.ok(renderPostItem(postClassic).includes("post-aspect-4-3"));
+  checkAspectItem(undefined, "post-aspect-original");
 
-  const postWide = {
-    id: "top_aspect_wide",
-    type: "topic",
-    title: "Paisagem 16:9",
-    body: "",
-    image: "https://example.com/wide.jpg",
-    aspectRatio: "16:9",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  assert.ok(renderPostItem(postWide).includes("post-aspect-16-9"));
+  const htmlSq = checkAspectItem("1:1", "post-aspect-1-1");
+  assert.ok(htmlSq.includes('data-aspect="1:1"'));
 
-  const postStory = {
-    id: "top_aspect_story",
-    type: "topic",
-    title: "Vertical 9:16",
-    body: "",
-    image: "https://example.com/story.jpg",
-    aspectRatio: "9:16",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  assert.ok(renderPostItem(postStory).includes("post-aspect-9-16"));
-
-  const postPortrait = {
-    id: "top_aspect_portrait",
-    type: "topic",
-    title: "Retrato 3:4",
-    body: "",
-    image: "https://example.com/portrait.jpg",
-    aspectRatio: "3:4",
-    author: "vx_author_1",
-    ts: Date.now(),
-  };
-  assert.ok(renderPostItem(postPortrait).includes("post-aspect-3-4"));
+  checkAspectItem("4:3", "post-aspect-4-3");
+  checkAspectItem("16:9", "post-aspect-16-9");
+  checkAspectItem("9:16", "post-aspect-9-16");
+  checkAspectItem("3:4", "post-aspect-3-4");
 });
 
 test("photo aspect ratio - topic detail handles aspect ratio and lightbox", () => {
