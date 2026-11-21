@@ -186,16 +186,23 @@
     --sa-surface-highest: #dbd6cb;
     --sa-on-surface: #1a1c1f;
     --sa-on-surface-variant: #3e4948;
-    --sa-outline: #5f6b69;
+    --sa-outline: #566260;
     --sa-hairline: #d6d1c6;
     --sa-primary: #006a65;
     --sa-primary-container: #00504c;
     --sa-secondary: #7a5c00;
     --sa-tertiary: #006c4a;
+    --sa-tertiary-container: #006c4a;
     --sa-error: #ba1a1a;
     --sa-terracotta: #a3402c;
     --sa-on-primary-fixed: #ffffff;
     --sa-gradient-sovereign: linear-gradient(90deg, #006c4a 0%, #006a65 100%);
+    --muted: var(--sa-outline);
+    --text-muted: var(--sa-outline);
+    --text-secondary: var(--sa-on-surface-variant);
+    --danger: var(--sa-error);
+    --success: var(--sa-tertiary);
+    --warning: var(--sa-secondary);
     --accent: #006a65;
     --accent-hover: #00504c;
     --accent-soft: rgba(0, 106, 101, 0.1);
@@ -215,16 +222,23 @@
   --sa-surface-highest: #dbd6cb;
   --sa-on-surface: #1a1c1f;
   --sa-on-surface-variant: #3e4948;
-  --sa-outline: #5f6b69;
+  --sa-outline: #566260;
   --sa-hairline: #d6d1c6;
   --sa-primary: #006a65;
   --sa-primary-container: #00504c;
   --sa-secondary: #7a5c00;
   --sa-tertiary: #006c4a;
+  --sa-tertiary-container: #006c4a;
   --sa-error: #ba1a1a;
   --sa-terracotta: #a3402c;
   --sa-on-primary-fixed: #ffffff;
   --sa-gradient-sovereign: linear-gradient(90deg, #006c4a 0%, #006a65 100%);
+  --muted: var(--sa-outline);
+  --text-muted: var(--sa-outline);
+  --text-secondary: var(--sa-on-surface-variant);
+  --danger: var(--sa-error);
+  --success: var(--sa-tertiary);
+  --warning: var(--sa-secondary);
   --accent: #006a65;
   --accent-hover: #00504c;
   --accent-soft: rgba(0, 106, 101, 0.1);
@@ -234,7 +248,7 @@
   --on-accent: #ffffff;
 }
 
-/* ── 3. Base tipográfica ── */
+/* ── 3. Base tipográfica e acessibilidade ── */
 html,
 body {
   font-family: var(--font-telemetry);
@@ -246,6 +260,34 @@ body,
 #app-root,
 .app-layout {
   background: var(--bg);
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 2000;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--sa-primary);
+  color: var(--sa-on-primary-fixed);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--sa-on-surface);
+  outline-offset: 2px;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--sa-primary, #78d6cf);
+  outline-offset: 2px;
 }
 
 ::selection {
@@ -572,7 +614,8 @@ body,
     min-height: 44px;
   }
 
-  .agora-icon-btn {
+  .agora-icon-btn,
+  .agora-topbar-icon {
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -1974,6 +2017,7 @@ body,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .skip-link,
   .agora-btn,
   .agora-ui .tab-item,
   .agora-ui .feed-container > .post {
@@ -3990,6 +4034,7 @@ body,
 .agora-ui .agora-ballot .vote-btn-yes.selected { background: var(--sa-tertiary-container); color: var(--on-gradient); outline: none; }
 .agora-ui .agora-ballot .vote-btn-no.selected { background: var(--sa-terracotta); color: #1a1c1f; outline: none; }
 .agora-ui .agora-ballot .vote-btn-abstain.selected { background: var(--sa-surface-highest); color: var(--sa-on-surface); outline: none; }
+.agora-ui .agora-ballot .vote-btn.selected:focus-visible { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
 
 /* ── 37. Lote UI 1 (telas sem layout do Stitch): título da Voxpedia e guias com cartões de opção ── */
 /* Voxpedia: o título abre a página em toda a largura; índice e conteúdo vêm depois. */
