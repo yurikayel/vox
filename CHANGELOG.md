@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Feat: núcleo reativo fail-closed (`shared/signals`) + badge de DM
+- `client/js/shared/signals.js`: só `signal` / `batch` / `createScope` (sem `effect` solto); `scope.effect` pós-dispose = no-op; freeze raso + `update`; fila iterativa + `MAX_FLUSH` anti-ciclo (LAN-20, ADR-035 `base`).
+- `client/js/app/dm-badge-live.js` + `init.js`: consumidor real do badge de DMs; `render/shell` só HTML + `setAfterShellMount`.
+- `client/js/app/route.js`: `createScope` por rota + `getRouteScope()`.
+- `scripts/layers-lib.mjs`: `render/` não pode importar `shared/signals.js`.
+- `client/sw.js`: precache `signals.js` + `dm-badge-live.js`; `CACHE_NAME` `vox-pwa-v7.151-shared-signals`.
+- Testes: `tests/signals.test.js`, `tests/layers-audit.test.js`, `tests/dm-badge.test.js`.
+
 ### Refactor: fatiamento SLAP de `webrtc-peer.js` (Onda 3 PR4)
 - `client/js/webrtc-peer.js` (~1000 → ~45 linhas) virou fachada; extraídos `webrtc-peer-state.js`, `webrtc-signaling-config.js`, `webrtc-signaling-send.js`, `webrtc-signaling-ws.js`, `webrtc-connection.js` e `webrtc-messaging.js`; API pública preservada; `sw.js` inalterado no shell (só `./js/webrtc-peer.js`); `CACHE_NAME` `vox-pwa-v7.150-webrtc-split`; helper `tests/helpers/webrtc-peer-source.mjs` para asserções de string; 0 ciclos (`audit:layers`).
 

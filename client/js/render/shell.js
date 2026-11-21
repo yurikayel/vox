@@ -21,6 +21,18 @@ import * as localAccount from "../identity/index.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 import { renderToastLiveRegionsHtml } from "../honest-errors.js";
 
+/** @type {null | (() => void)} Callback da camada `app` após cada montagem da shell. */
+let afterShellMount = null;
+
+/**
+ * Registra callback pós-montagem da shell (ex.: badge de DM em `app/dm-badge-live`).
+ * @param {null | (() => void)} fn Função a chamar após o HTML da shell; `null` limpa.
+ * @returns {void}
+ */
+export function setAfterShellMount(fn) {
+  afterShellMount = typeof fn === "function" ? fn : null;
+}
+
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
 export const BRAND_MARK_SRC = "icons/logo-mark.png";
 
@@ -254,36 +266,6 @@ export function formatDmBadge(count) {
   const n = Number(count) || 0;
   if (n <= 0) return "";
   return n > 99 ? "99+" : String(n);
-}
-
-function applyDmBadge(count) {
-  const label = formatDmBadge(count);
-  document.querySelectorAll("[data-dm-badge]").forEach((el) => {
-    el.textContent = label;
-    el.hidden = !label;
-  });
-  document.querySelectorAll('a[href="#/dm"]').forEach((a) => {
-    const base = "Mensagens";
-    a.setAttribute("aria-label", label ? `${base} · ${count} não ${count === 1 ? "lida" : "lidas"}` : base);
-  });
-}
-
-async function refreshDmBadge() {
-  try {
-    const cacheNode = await import("../cache-node.js");
-    applyDmBadge(sumUnreadDms(await cacheNode.getDmConversations()));
-  } catch {
-    /* sem IndexedDB: contador fica oculto */
-  }
-}
-
-let dmBadgeListenerBound = false;
-
-function bindDmBadge() {
-  void refreshDmBadge();
-  if (dmBadgeListenerBound || typeof window?.addEventListener !== "function") return;
-  dmBadgeListenerBound = true;
-  window.addEventListener("vox:dm-changed", () => { void refreshDmBadge(); });
 }
 
 function renderSidebarNav(activeTab) {
@@ -584,7 +566,7 @@ export function renderShell({
 
   attachShellBehaviors();
   hydrateSidebarCircles();
-  bindDmBadge();
+  afterShellMount?.();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   if (mock.isDemoMode()) mountDemoModeBanner(main);

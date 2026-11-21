@@ -25,9 +25,15 @@ test("dm badge — formato do contador", () => {
 
 test("dm badge — contador no item Mensagens e no ícone móvel, atualizado por evento", () => {
   const shell = read("client/js/render/shell.js");
+  const live = read("client/js/app/dm-badge-live.js");
   assert.ok(shell.includes('item.tab === "dm" ? DM_BADGE_HTML : ""'));
   assert.ok(shell.includes('aria-label="Mensagens">${ICONS.dmTop}${DM_BADGE_HTML}</a>'));
-  assert.ok(shell.includes('addEventListener("vox:dm-changed"'));
+  assert.ok(shell.includes("setAfterShellMount"));
+  assert.ok(!shell.includes("shared/signals.js"), "render/shell não importa signals");
+  assert.ok(live.includes('from "../shared/signals.js"'));
+  assert.ok(live.includes('addEventListener("vox:dm-changed"'));
+  assert.ok(live.includes("wireDmBadgeLive"));
+  assert.ok(read("client/js/app/init.js").includes("wireDmBadgeLive"));
   assert.ok(read("client/js/cache-node.js").includes('new CustomEvent("vox:dm-changed")'));
   assert.ok(read("client/js/dm-messenger.js").includes('new CustomEvent("vox:dm-changed")'));
   assert.match(read("client/css/agora.css"), /\.agora-dm-badge \{[\s\S]*background: var\(--sa-secondary\)/);

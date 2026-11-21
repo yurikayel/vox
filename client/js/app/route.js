@@ -18,6 +18,18 @@ import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showNotFound } from "./screens-not-found.js";
+import { createScope } from "../shared/signals.js";
+
+/** Escopo reativo da rota atual; descartado antes de montar a próxima. */
+let currentRouteScope = null;
+
+/**
+ * Escopo reativo da rota (use `scope.effect` — seguro após `await` em telas async).
+ * @returns {{ effect: (fn: () => (void|(() => void))) => () => void, dispose: () => void }|null}
+ */
+export function getRouteScope() {
+  return currentRouteScope;
+}
 
 /** @type {Promise<typeof import("./screens-voxpedia.js")>|null} */
 let voxpediaRoute = null;
@@ -131,6 +143,8 @@ export function announceRoute(route, doc = globalThis.document) {
 export async function routeImpl() {
   closePostMoreMenu();
   checkCantinaGate();
+  currentRouteScope?.dispose();
+  currentRouteScope = createScope();
   const r = parseRoute();
   const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
   const result = await handler(r);
