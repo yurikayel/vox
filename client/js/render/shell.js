@@ -21,16 +21,18 @@ import * as localAccount from "../identity/index.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 import { renderToastLiveRegionsHtml } from "../honest-errors.js";
 
-/** @type {null | (() => void)} Callback da camada `app` após cada montagem da shell. */
-let afterShellMount = null;
+/** @type {Set<() => void>} Callbacks da camada `app` após cada montagem da shell. */
+const afterShellMountFns = new Set();
 
 /**
- * Registra callback pós-montagem da shell (ex.: badge de DM em `app/dm-badge-live`).
- * @param {null | (() => void)} fn Função a chamar após o HTML da shell; `null` limpa.
- * @returns {void}
+ * Registra callback pós-montagem da shell (badge DM, círculos, etc.). Idempotente por referência.
+ * @param {() => void} fn Função a chamar após o HTML da shell.
+ * @returns {() => void} Função que remove o registro.
  */
 export function setAfterShellMount(fn) {
-  afterShellMount = typeof fn === "function" ? fn : null;
+  if (typeof fn !== "function") return () => {};
+  afterShellMountFns.add(fn);
+  return () => afterShellMountFns.delete(fn);
 }
 
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
@@ -449,21 +451,6 @@ export function renderCirclesList(communities = []) {
       ${rows}`;
 }
 
-async function hydrateSidebarCircles() {
-  const slot = document.getElementById("agora-sidebar-circles");
-  if (!slot) return;
-  try {
-    const cacheNode = await import("../cache-node.js");
-    const list = await cacheNode.getLocalCommunities?.();
-    const html = renderCirclesList(Array.isArray(list) ? list : []);
-    if (!html || !document.body.contains(slot)) return;
-    slot.innerHTML = html;
-    slot.hidden = false;
-  } catch {
-    /* sem IndexedDB (modo privado/teste): a seção permanece oculta */
-  }
-}
-
 function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
   const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
@@ -565,8 +552,7 @@ export function renderShell({
   root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml });
 
   attachShellBehaviors();
-  hydrateSidebarCircles();
-  afterShellMount?.();
+  for (const fn of afterShellMountFns) fn();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   if (mock.isDemoMode()) mountDemoModeBanner(main);

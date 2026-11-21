@@ -2,17 +2,27 @@
  * @file Badge de DMs não lidas via signals (camada `app`; `render/shell` continua HTML puro).
  *
  * Escopo de app (não de rota): o chrome da shell sobrevive à troca de tela.
+ * Cache em `persistedSignal` mostra o último total conhecido antes do IndexedDB.
  *
  * @module app/dm-badge-live
  */
 
 import { signal, createScope } from "../shared/signals.js";
+import { persistedSignal } from "../shared/persisted-signal.js";
 import { sumUnreadDms, formatDmBadge, setAfterShellMount } from "../render/shell.js";
 
-const unreadDms = signal(0);
 const badgeScope = createScope();
+const cachedUnread = persistedSignal("vox-dm-unread-hint", 0, {
+  validate: (v) => Number.isInteger(v) && v >= 0,
+  scope: badgeScope
+});
+const unreadDms = signal(cachedUnread.peek());
 let listenerBound = false;
 let effectBound = false;
+/** Geração monotônica: descarta respostas async fora de ordem. */
+let refreshGen = 0;
+/** @type {null | (() => Promise<object[]>)} */
+let conversationsLoader = null;
 
 /**
  * Pinta badges e `aria-label` a partir do signal (peek: sem nova inscrição).
@@ -32,16 +42,42 @@ function paintDmBadge() {
 }
 
 /**
- * Recarrega a contagem a partir do cache de conversas.
+ * Carrega conversas (injetável nos testes).
+ * @returns {Promise<object[]>}
+ */
+async function loadConversations() {
+  if (conversationsLoader) return conversationsLoader();
+  const cacheNode = await import("../cache-node.js");
+  return cacheNode.getDmConversations();
+}
+
+/**
+ * Recarrega a contagem a partir do cache de conversas e persiste o hint.
  * @returns {Promise<void>}
  */
 async function refreshDmBadge() {
+  const gen = ++refreshGen;
   try {
-    const cacheNode = await import("../cache-node.js");
-    unreadDms.set(sumUnreadDms(await cacheNode.getDmConversations()));
+    const total = sumUnreadDms(await loadConversations());
+    if (gen !== refreshGen) return;
+    unreadDms.set(total);
+    try {
+      cachedUnread.set(total);
+    } catch {
+      /* validate/quota: hint opcional */
+    }
   } catch {
-    /* sem IndexedDB: contador fica oculto */
+    /* sem IndexedDB: mantém hint em memória */
   }
+}
+
+/**
+ * Injeta loader de conversas (só testes).
+ * @param {null | (() => Promise<object[]>)} fn Loader ou `null` para o padrão.
+ * @returns {void}
+ */
+export function setDmBadgeConversationsLoader(fn) {
+  conversationsLoader = typeof fn === "function" ? fn : null;
 }
 
 /**
@@ -58,9 +94,11 @@ export function wireDmBadgeLive() {
   }
   if (!listenerBound && typeof window?.addEventListener === "function") {
     listenerBound = true;
-    window.addEventListener("vox:dm-changed", () => {
+    const onChanged = () => {
       void refreshDmBadge();
-    });
+    };
+    window.addEventListener("vox:dm-changed", onChanged);
+    badgeScope.onCleanup(() => window.removeEventListener("vox:dm-changed", onChanged));
   }
   setAfterShellMount(() => {
     paintDmBadge();

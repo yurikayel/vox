@@ -24,8 +24,10 @@ import { createScope } from "../shared/signals.js";
 let currentRouteScope = null;
 
 /**
- * Escopo reativo da rota (use `scope.effect` — seguro após `await` em telas async).
- * @returns {{ effect: (fn: () => (void|(() => void))) => () => void, dispose: () => void }|null}
+ * Escopo da rota **atual** no momento da chamada.
+ * Em telas async, capture o 2º argumento do handler (`handler(route, scope)`) **antes** de qualquer
+ * `await` — não chame `getRouteScope()` depois do await (pode já ser a rota seguinte).
+ * @returns {ReturnType<typeof createScope>|null}
  */
 export function getRouteScope() {
   return currentRouteScope;
@@ -144,10 +146,11 @@ export async function routeImpl() {
   closePostMoreMenu();
   checkCantinaGate();
   currentRouteScope?.dispose();
-  currentRouteScope = createScope();
+  const scope = createScope();
+  currentRouteScope = scope;
   const r = parseRoute();
-  const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
-  const result = await handler(r);
+  const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
+  const result = await handler(r, scope);
   announceRoute(r);
   return result;
 }
