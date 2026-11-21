@@ -74,6 +74,7 @@ async function startPkceLogin(provider) {
   const { verifier, challenge } = await pkcePair();
   const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
   const redirectUri = oauthRedirectUri();
+  sessionStorage.removeItem(BSKY_FLOW_KEY);
   sessionStorage.setItem(FLOW_KEY, JSON.stringify({ provider, state, verifier, redirectUri }));
   location.assign(buildAuthorizeUrl(provider, { clientId, redirectUri, state, challenge }));
 }
