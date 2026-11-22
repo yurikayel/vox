@@ -17,6 +17,7 @@ import * as permanence from "../permanence-notice.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
 import { focusAfterComposePublish } from "../render/compose-chrome.js";
+import { createMachine } from "../shared/state-machine.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -325,6 +326,40 @@ function handleVoiceAudioReady(dataUrl, byteSize, state) {
   syncInlineComposerUi();
 }
 
+/**
+ * Máquina de estados finita da gravação de voz (`idle` → `requesting` → `recording` → `stopping`).
+ * @returns {ReturnType<typeof createMachine>} Máquina da gravação de voz.
+ */
+export function createVoiceRecordMachine() {
+  return createMachine({
+    initial: "idle",
+    states: {
+      idle: { on: { REQUEST: "requesting" } },
+      requesting: { on: { START: "recording", FAIL: "idle", CANCEL: "idle", STOP: "idle" } },
+      recording: { on: { STOP: "stopping", CANCEL: "idle" } },
+      stopping: { on: { DONE: "idle", CANCEL: "idle" } },
+    },
+  });
+}
+
+function beginRecorderWithStream(stream, state) {
+  if (!state.voiceMachine.matches("requesting")) {
+    stream.getTracks().forEach((t) => t.stop());
+    return;
+  }
+  state.activeStream = stream;
+  state.recordingChunks = [];
+  state.recordingSeconds = 0;
+  const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
+  const options = mime ? { mimeType: mime, audioBitsPerSecond: 48000 } : {};
+  const recorder = new MediaRecorder(stream, options);
+  state.activeRecorder = recorder;
+  setupVoiceRecorderCallbacks(recorder, state.recordingChunks, (url, sz) => handleVoiceAudioReady(url, sz, state));
+  state.voiceMachine.send("START");
+  recorder.start(500);
+  state.startTimer();
+}
+
 function startVoiceRecording(state) {
   if (state.isRecording) {
     state.stopVoiceRecording();
@@ -334,19 +369,12 @@ function startVoiceRecording(state) {
     share.showToast("Gravação de voz não suportada neste ambiente.", "error");
     return;
   }
+  if (!state.voiceMachine.send("REQUEST").changed) return;
   clearMedia(state);
   navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-    state.activeStream = stream;
-    state.recordingChunks = [];
-    state.recordingSeconds = 0;
-    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
-    const options = mime ? { mimeType: mime, audioBitsPerSecond: 48000 } : {};
-    const recorder = new MediaRecorder(stream, options);
-    state.activeRecorder = recorder;
-    setupVoiceRecorderCallbacks(recorder, state.recordingChunks, (url, sz) => handleVoiceAudioReady(url, sz, state));
-    recorder.start(500);
-    state.startTimer();
+    beginRecorderWithStream(stream, state);
   }).catch((err) => {
+    state.voiceMachine.send("FAIL");
     state.cleanupRecordingState();
     share.showToast(`Erro ao acessar microfone: ${err.message}`, "error");
   });
@@ -553,12 +581,11 @@ function cleanupRecordingState(state) {
   state.activeRecorder = null;
   state.recordingChunks = [];
   state.recordingSeconds = 0;
-  state.isRecording = false;
+  state.voiceMachine.reset();
   resetMicToggleUi();
 }
 
 function startRecordingTimer(state) {
-  state.isRecording = true;
   setMicRecordingUi();
   const timerEl = document.getElementById("inline-recording-timer");
   state.recordingTimer = setInterval(() => {
@@ -569,11 +596,13 @@ function startRecordingTimer(state) {
 }
 
 function stopVoiceRecording(state) {
+  state.voiceMachine.send("STOP");
   if (state.activeRecorder?.state === "recording") state.activeRecorder.stop();
   if (state.recordingTimer) { clearInterval(state.recordingTimer); state.recordingTimer = null; }
 }
 
 function cancelVoiceRecording(state) {
+  state.voiceMachine.send("CANCEL");
   if (state.activeRecorder?.state === "recording") {
     state.activeRecorder.ondataavailable = null;
     state.activeRecorder.onstop = null;
@@ -584,6 +613,7 @@ function cancelVoiceRecording(state) {
 }
 
 function createComposerControllerState() {
+  const voiceMachine = createVoiceRecordMachine();
   const state = {
     rawSourceFile: null,
     activeLofiFilter: "normal",
@@ -592,7 +622,8 @@ function createComposerControllerState() {
     recordingChunks: [],
     recordingTimer: null,
     recordingSeconds: 0,
-    isRecording: false,
+    voiceMachine,
+    get isRecording() { return voiceMachine.matches("recording"); },
     cleanupRecordingState: () => cleanupRecordingState(state),
     startTimer: () => startRecordingTimer(state),
     stopVoiceRecording: () => stopVoiceRecording(state),
