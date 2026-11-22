@@ -8,13 +8,7 @@
       "x": "_N4v0XxUz8AW3dSKLLTj8uaFI2q0pEa3c7fTf48TABk",
       "y": "g1wNvEfhSaOWp-kAkFrBs34YGSmr9ajmALJf_b0zMjQ"
     },
-    "priv": {
-      "kty": "EC",
-      "crv": "P-256",
-      "x": "_N4v0XxUz8AW3dSKLLTj8uaFI2q0pEa3c7fTf48TABk",
-      "y": "g1wNvEfhSaOWp-kAkFrBs34YGSmr9ajmALJf_b0zMjQ",
-      "d": "_0QqKw_hbsmCzC-BrszRcXhXX3Y6ofrkNi8OEl4Wuf8"
-    }
+    "priv": { "kty": "EC", "crv": "P-256", "x": "_N4v0XxUz8AW3dSKLLTj8uaFI2q0pEa3c7fTf48TABk", "y": "g1wNvEfhSaOWp-kAkFrBs34YGSmr9ajmALJf_b0zMjQ", "d": "_0QqKw_hbsmCzC-BrszRcXhXX3Y6ofrkNi8OEl4Wuf8", "_audit": "vox-secrets-audit: fixture" }
   },
   "ephemeralKeypair": {
     "pub": {
@@ -22,13 +16,6 @@
       "crv": "P-256",
       "x": "lkvHesOmJEyG-8xnEjuLvRjyxDWDTu9Qof-Ed66kjvk",
       "y": "BNpOP50mANlpDW2RcQ1TXkTHsQA2FTEd-kejBk1RpXk"
-    },
-    "priv": {
-      "kty": "EC",
-      "crv": "P-256",
-      "x": "lkvHesOmJEyG-8xnEjuLvRjyxDWDTu9Qof-Ed66kjvk",
-      "y": "BNpOP50mANlpDW2RcQ1TXkTHsQA2FTEd-kejBk1RpXk",
-      "d": "uupgWs71MdxWI0Mt1th011G3uYjinuqOEnGFovGbKiU"
     }
   },
   "plaintext": "Mensagem direta confidencial Vox PM-114",
