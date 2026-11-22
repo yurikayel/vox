@@ -1,7 +1,7 @@
 # Rotação e revogação de chaves sobre o ADR-034 (`key_rotation` / `subkey_revocation` v1) — PM-13
 
 > **Status:** rascunho (spec PM-13 sobre o ADR-034; **pré-requisito obrigatório de revisão externa de cripto `LAN-18` antes de qualquer código novo de criptografia**) · **Owner:** mantenedor / segurança · **Revisado:** 2026-11-22
-> **Relacionados:** [ROADMAP (PM-13, PM-101, REV-14, LAN-18)](../ROADMAP.md), [ADR-034 (raiz e subchaves por aparelho)](../adr/034-raiz-e-subchaves-por-aparelho.md), [lápide de conta (PM-101)](./lapide-conta-pm101.md), [ADR-037 (cofre na malha)](../adr/037-cofre-na-malha.md), [guardiões (v0)](./guardioes-v0.md), [integridade na entrada (ADR-021)](../adr/021-integridade-na-entrada-forma-assinada.md), [THREAT-MODEL (T24–T27)](../THREAT-MODEL.md).
+> **Relacionados:** [ROADMAP (PM-13, PM-101, REV-14, LAN-18)](../ROADMAP.md), [ADR-034 (raiz e subchaves por aparelho)](../adr/034-raiz-e-subchaves-por-aparelho.md), [lápide de conta (PM-101)](./lapide-conta-pm101.md), [ADR-037 (cofre na malha)](../adr/037-cofre-na-malha.md), [guardiões (v0)](./guardioes-v0.md), [integridade na entrada (ADR-021)](../adr/021-integridade-na-entrada-forma-assinada.md), [THREAT-MODEL (T24–T27; IDs conferidos contra o #395, que só altera o cabeçalho)](../THREAT-MODEL.md).
 
 ---
 
@@ -138,7 +138,7 @@ Usado quando o usuário substitui o aparelho ou faz rotação programada de subc
 
 Todo receptor (cliente PWA, `central_memory.py` e relay aplicável) executa os passos abaixo em ordem estrita; qualquer falha descarta a mensagem sem persistir nem retransmitir:
 
-1. **Tamanho e schema:** payload UTF-8 `<= MAX_GOSSIP_ITEM_BYTES` (na prática `< 3 KiB`); `type`, `version === 1`, `sigv === 2` estrito, `id` canônico coerente com `author` e `seq`, `reasonCode` dentro do enum do tipo e `newPubKey` coerente (`null` vs JWK P-256 distinta de `oldKeyId`).
+1. **Tamanho e schema:** payload UTF-8 `<= MAX_GOSSIP_ITEM_BYTES` (512 KiB, definido em `client/js/peers-gossip-profile.js`; a meta de projeto de uma declaração é `< 3 KiB`, bem abaixo do teto); `type`, `version === 1`, `sigv === 2` estrito, `id` canônico coerente com `author` e `seq`, `reasonCode` dentro do enum do tipo e `newPubKey` coerente (`null` vs JWK P-256 distinta de `oldKeyId`).
 2. **Checagem de lápide pré-existente (`PM-101`):** se já existir `account_tombstone` válido para `author`, **descartar imediatamente** (ver §5).
 3. **Verificação temporal:** `revokedAt` e `effectiveAfter` devem ser finitos, posteriores ao corte de gênese e não superiores a `now + MAX_CLOCK_SKEW_MS` (15 min). Para `device_lost` e `key_compromised`, exigir `effectiveAfter === revokedAt`.
 4. **Verificação criptográfica da raiz / cartão QR:**

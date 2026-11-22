@@ -32,7 +32,7 @@ Todos os lotes 5–10 nascem **atrás da flag `vox.lab.aviso`**, só recebem imp
 1. **Obrigatório `sigv: 2`:** todo objeto dos Lotes 5–10 deve ser assinado com `sigv: 2` (`sortDeep` recursivo de todas as chaves em qualquer profundidade, excluindo `sig` e `pubKey`, conforme [`sig-format.js`](../../client/js/sig-format.js)).
 2. **Rejeição de `sigv !== 2`:** ao contrário de `aviso` legado em convivência v1/v2, qualquer payload dos tipos dos Lotes 5–10 sem `sigv: 2` (ou com `sigv` desconhecido) **é recusado na entrada** por `verifyPayload` ([`signed-verify.js`](../../client/js/signed-verify.js)).
 3. **Campos obrigatórios base:** todo objeto assinado carrega `type`, `version: 1`, `id`, `communityId`, `ts` (UTC ms finito `> 0`, após o corte de gênese), `sigv: 2`, `author` (`vx_…`), `pubKey` (JWK P-256) e `sig` (`base64url` ECDSA P-256 SHA-256).
-4. **Higiene de tamanho:** `authorAvatar` não deve ir embutido (ou deve ser `""`) quando o objeto circular em links ou lotes compactos; payload UTF-8 total nunca passa de `MAX_GOSSIP_ITEM_BYTES` (na prática `<= 8 KiB` por registro).
+4. **Higiene de tamanho:** `authorAvatar` não deve ir embutido (ou deve ser `""`) quando o objeto circular em links ou lotes compactos; payload UTF-8 total nunca passa de `MAX_GOSSIP_ITEM_BYTES` (512 KiB, definido em `client/js/peers-gossip-profile.js`; a meta de projeto deste registro é `<= 8 KiB`, bem abaixo do teto).
 
 ### 2.2 Autoridade PM-09 e verificação na leitura (`ADR-021`)
 
