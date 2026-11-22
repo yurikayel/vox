@@ -2,6 +2,7 @@
 
 > **Status:** rascunho para o mantenedor revisar e publicar como issues · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-10
 > **Não substitui** o [ROADMAP.md](../ROADMAP.md). Nenhuma issue foi criada no GitHub: cada bloco abaixo está pronto para colar numa issue com o rótulo `boa primeira tarefa`.
+> **Extensão universitária (`PM-107`):** pacote semestral para turmas parceiras em [pacote-turma-extensao-pm107.md](./pacote-turma-extensao-pm107.md).
 
 ## Guia de uma página: sua primeira contribuição
 
