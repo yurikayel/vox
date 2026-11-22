@@ -3,8 +3,8 @@
   "description": "Manifesto de hashes SHA-256 dos vetores criptográficos congelados (PM-114)",
   "algorithm": "sha256",
   "files": {
-    "sig-vectors.json": "e95eec52ff3fcfe758af301455a30a2a91f4f0e48218b49b4fc424c383cdcdea",
+    "sig-vectors.json": "a412791116170fede9b3189a7c892cf6881498306b494934860228bfa1ea5595",
     "vault-vectors.json": "c688aded62eefc46acb271ad2ed2662665c6cb538dcea0b1df57beab3202d2c4",
-    "dm-vectors.json": "a65d2c0944e417444c530a1b28f8f20b0203436b85aec8026e64ed96ee500af6"
+    "dm-vectors.json": "36b4edc2a6a76302ff594dd90a3d840c4e49fa91ecf4a3b2de58275d60ef2cab"
   }
 }

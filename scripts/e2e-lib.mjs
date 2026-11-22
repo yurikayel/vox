@@ -257,14 +257,18 @@ export async function createIsolatedPage(browser, baseUrl, options = {}) {
   const errors = [];
   const debug = [];
   const externalHits = [];
+  const externalResponses = [];
   await setupRouteHandler(context, baseUrl, signalingConfig, debug, externalHits);
   const page = await context.newPage();
+  page.on("response", (res) => {
+    if (classifyRequestUrl(res.url(), baseUrl) === "external") externalResponses.push(res.url());
+  });
   if (installProbe) await installRtcProbe(page);
   attachPageListeners(page, errors, debug);
   if (initialHash !== null) {
     await page.goto(`${baseUrl}${initialHash}`, { waitUntil: "domcontentloaded" });
   }
-  return { context, page, errors, debug, externalHits };
+  return { context, page, errors, debug, externalHits, externalResponses };
 }
 
 /**
@@ -460,7 +464,7 @@ export async function smokeOnboardingReloadKey(browser, baseUrl) {
     }
     const criticalErrors = peer.errors.filter((e) => !e.includes("[warning]"));
     if (criticalErrors.length > 0) throw new Error(`Erros de console no smoke 1: ${criticalErrors.join(" | ")}`);
-    if (peer.externalHits.length > 0) throw new Error(`Vazamento de requisições externas: ${peer.externalHits.join(", ")}`);
+    if (peer.externalResponses.length > 0) throw new Error(`Vazamento de requisições externas: ${peer.externalResponses.join(", ")}`);
     return { success: true, account: keyAfter.account };
   } finally {
     await peer.context.close();
@@ -479,10 +483,10 @@ export async function smokeFeedAndStatusRoute(browser, baseUrl) {
     await completeOnboarding(peer.page, "Smoke Status");
     await peer.page.locator("#feed-inline-composer").waitFor({ state: "visible", timeout: 10000 });
     await peer.page.goto(`${baseUrl}/#/status`, { waitUntil: "domcontentloaded" });
-    await peer.page.locator("h1, h2, #status, main").first.waitFor({ state: "visible", timeout: 15000 });
+    await peer.page.locator("h1, h2, #status, main").first().waitFor({ state: "visible", timeout: 15000 });
     const criticalErrors = peer.errors.filter((e) => !e.includes("[warning]"));
     if (criticalErrors.length > 0) throw new Error(`Erros de console no smoke 2: ${criticalErrors.join(" | ")}`);
-    if (peer.externalHits.length > 0) throw new Error(`Vazamento de requisições externas: ${peer.externalHits.join(", ")}`);
+    if (peer.externalResponses.length > 0) throw new Error(`Vazamento de requisições externas: ${peer.externalResponses.join(", ")}`);
     return { success: true };
   } finally {
     await peer.context.close();

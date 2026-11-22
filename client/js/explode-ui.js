@@ -3,6 +3,7 @@
 import { escapeHtml } from "./shared/html.js";
 import { buildCanonicalTopicUrl } from "./posse-dispatch.js";
 import { loadLinkedAccounts } from "./linked-accounts.js";
+import { stripHtmlTags } from "./explode-intent.js";
 
 /** Identificador do elemento de folha modal no DOM. @type {string} */
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
@@ -127,7 +128,7 @@ function buildExplodeHeaderHtml() {
 
 function excerptForTarget(post) {
   const title = String(post?.title || "").trim();
-  const body = String(post?.body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const body = stripHtmlTags(post?.body || "");
   if (!body || body === title) return "";
   return body.length > 110 ? `${body.slice(0, 107)}…` : body;
 }

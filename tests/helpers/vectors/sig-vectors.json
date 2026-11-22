@@ -8,13 +8,6 @@
       "crv": "P-256",
       "x": "dfbvGFwm9rwj_dDDUvcwOLTkX23MfvqKVHaGxPe9xXs",
       "y": "CTgHMKbDhd0tACsK9-sSoKHgArI7Asub5mfuy_nuurg"
-    },
-    "priv": {
-      "kty": "EC",
-      "crv": "P-256",
-      "x": "dfbvGFwm9rwj_dDDUvcwOLTkX23MfvqKVHaGxPe9xXs",
-      "y": "CTgHMKbDhd0tACsK9-sSoKHgArI7Asub5mfuy_nuurg",
-      "d": "-AWBSql228eG8A5d-cLi98WCUIkuJCpCRMIpvm8oEx0"
     }
   },
   "routeId": "vx_yJK5pe6RXTuEp1fpn78q",

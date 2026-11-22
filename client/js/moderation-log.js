@@ -12,6 +12,7 @@ import { findReason } from "./report.js";
 function sanitizeCell(value) {
   return String(value ?? "")
     .replace(/[\r\n]+/g, " ")
+    .replace(/\\/g, "\\\\")
     .replace(/\|/g, "\\|")
     .trim();
 }

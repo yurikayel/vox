@@ -9,13 +9,30 @@ import {
 /** Constante de tags padrão para mobilização. @type {string[]} */
 export const DEFAULT_EXPLODE_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
 
+/** Remove marcações HTML de forma iterativa sem regex multi-caractere.
+ * @param {string} [text=""] Texto bruto.
+ * @returns {string} Texto limpo em linha única.
+ */
+export function stripHtmlTags(text = "") {
+  const src = String(text || "");
+  let out = "";
+  let inTag = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "<") inTag = true;
+    else if (ch === ">") inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
 /** Monta texto de mobilização com título, resumo, link e hashtags.
  * @param {object} [options={}] Texto e metadados do disparo.
  * @returns {string} Texto formatado para disparo.
  */
 export function buildExplodeText({ title = "", body = "", url = "", hashtags = [] } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
-  const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const cleanBody = stripHtmlTags(body);
   const excerpt = cleanBody.length > 140 ? `${cleanBody.slice(0, 137)}…` : cleanBody;
 
   const foundTags = cleanBody.match(/#[a-zA-Z0-9_À-ÿ]+/g) || [];
@@ -72,7 +89,7 @@ export function buildFacebookShareUrl(url, quote = "") {
  */
 export function buildTwitterExplodeText({ title = "", body = "" } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
-  const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const cleanBody = stripHtmlTags(body);
   const excerpt = cleanBody && cleanBody !== cleanTitle ? cleanBody : "";
   const maxExcerpt = 80;
   const shortExcerpt = excerpt.length > maxExcerpt ? `${excerpt.slice(0, 77)}…` : excerpt;
@@ -93,7 +110,7 @@ export function buildTwitterExplodeText({ title = "", body = "" } = {}) {
  */
 export function buildBlueskyExplodeText({ title = "", body = "", url = "" } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
-  const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const cleanBody = stripHtmlTags(body);
   const excerpt = cleanBody && cleanBody !== cleanTitle ? cleanBody : "";
   const maxExcerpt = 100;
   const shortExcerpt = excerpt.length > maxExcerpt ? `${excerpt.slice(0, 97)}…` : excerpt;
