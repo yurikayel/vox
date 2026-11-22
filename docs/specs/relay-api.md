@@ -2,6 +2,7 @@
 
 > **Status:** canônico · **Owner:** steward ops / mantenedor relay · **Revisado:** 2026-11-17
 > Fonte: `relay/server.py` (relay completo) e `relay/signaling.py` (sinalização). Python 3 stdlib, sem dependências.
+> **Evolução prevista (ADR-039 Fase 4):** [vox-node-rust-fase4.md](./vox-node-rust-fase4.md) (blueprint do binário unificado `rust/vox-node` com paridade 1-para-1 desta API).
 
 O Vox tem **dois processos** no diretório `relay/`. Eles são independentes:
 
