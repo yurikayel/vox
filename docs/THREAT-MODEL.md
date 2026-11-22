@@ -1,8 +1,8 @@
 # Modelo de ameaças — Vox
 
-> **Status:** rascunho para revisão (LAN-15) · **Owner:** revisor · **Revisado:** 2026-11-18 (T30–T34, ameaças abertas conferidas no código); 2026-11-17 (T29 do apagamento local; T28 do [ADR-038](./adr/038-subrede-malha-e-manifesto.md), proposto); 2026-11-15 (T26 da Emenda 1 do ADR-032); 2026-11-14 (T24–T25 do [ADR-032](./adr/032-login-perene-a-conta-nasce-com-saida.md)); 2026-11-10 (T20–T23 da [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md))
-> **Falta para fechar o LAN-15:** revisão por uma pessoa de segurança de fora do time (registrar nome/data aqui).
-> Relacionados: [SECURITY.md](../SECURITY.md) · [COMPLIANCE-BR](legal/COMPLIANCE-BR.md) · [backlog §4-E](./strategy/backlog-lancamento-publico-2026-11.md#e-segurança-e-privacidade) · [ADR-014 cofre](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)
+> **Status:** rascunho para revisão (LAN-15) · **Owner:** revisor · **Revisado:** 2026-11-22 (pacote de revisão externa LAN-15); 2026-11-18 (T30–T34, ameaças abertas conferidas no código); 2026-11-17 (T29 do apagamento local; T28 do [ADR-038](./adr/038-subrede-malha-e-manifesto.md), proposto); 2026-11-15 (T26 da Emenda 1 do ADR-032); 2026-11-14 (T24–T25 do [ADR-032](./adr/032-login-perene-a-conta-nasce-com-saida.md)); 2026-11-10 (T20–T23 da [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md))
+> **Falta para fechar o LAN-15:** revisão por uma pessoa de segurança de fora do time (registrar nome/data aqui e em [pacote-revisao-externa-lan15.md](./security/pacote-revisao-externa-lan15.md)).
+> Relacionados: [pacote LAN-15](./security/pacote-revisao-externa-lan15.md) · [SECURITY.md](../SECURITY.md) · [COMPLIANCE-BR](legal/COMPLIANCE-BR.md) · [backlog §4-E](./strategy/backlog-lancamento-publico-2026-11.md#e-segurança-e-privacidade) · [ADR-014 cofre](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)
 
 ## 1. O que protegemos (ativos)
 
