@@ -10,6 +10,7 @@ import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getLocalIdentityMeta, hasAnyIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 import { detectSocialAvatarType } from "./account-social-match.js";
+import { dedupeAsync } from "./shared/async-dedupe.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 const FORBIDDEN_CARD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
@@ -346,13 +347,7 @@ export function getAuthorAvatarSync(routeId) {
   return "";
 }
 
-/** Busca AndCacheOnChainProfile nos gateways configurados.
- * @param {*} [target] Parâmetro `target`.
- * @returns {*} Resultado da operação.
- */
-export async function fetchAndCacheOnChainProfile(target) {
-  const id = String(target || "").trim();
-  if (!id) return null;
+async function loadAndCacheOnChainProfile(id) {
   const isRoute = id.startsWith("vx_");
   const gql = await import("./graphql.js");
   const onChain = await gql.fetchProfileCardOnChain(isRoute ? { routeId: id } : { address: id });
@@ -370,8 +365,16 @@ export async function fetchAndCacheOnChainProfile(target) {
 
   const key = onChain.routeId || id;
   setProfileCard(key, cardData);
-  if (onChain.owner && onChain.routeId) {
-    setProfileCard(onChain.owner, cardData);
-  }
+  if (onChain.owner && onChain.routeId) setProfileCard(onChain.owner, cardData);
   return { routeId: key, ...cardData };
+}
+
+/** Busca AndCacheOnChainProfile nos gateways configurados (deduplicando chamadas concorrentes).
+ * @param {*} [target] Parâmetro `target`.
+ * @returns {*} Resultado da operação.
+ */
+export async function fetchAndCacheOnChainProfile(target) {
+  const id = String(target || "").trim();
+  if (!id) return null;
+  return dedupeAsync(`profile-onchain:${id}`, () => loadAndCacheOnChainProfile(id));
 }
