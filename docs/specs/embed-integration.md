@@ -18,3 +18,5 @@ Script estático: [`client/embed/vox-embed.js`](../../client/embed/vox-embed.js)
 Sem `data-topic`, abre compose com `?ref=`.
 
 Demo local: [`client/embed/demo.html`](../../client/embed/demo.html).
+
+Ver também: [Caminho de volta do POSSE (`PM-105`)](./caminho-volta-posse-pm105.md) — especificação da gramática canônica de links de retorno (`#/t/<topicId>` e `#/c/<communityId>/t/<topicId>`) sem rastreadores nem exigência de conta.
