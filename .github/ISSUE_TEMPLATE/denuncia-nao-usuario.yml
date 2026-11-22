@@ -1,0 +1,67 @@
+name: "[moderação] Denúncia de não usuário / Notificação de remoção"
+description: Canal para terceiros sem conta no Vox comunicarem conteúdo ilegal, violação grave, direitos autorais ou ordem judicial visando ocultação na instância PWA oficial (hide-list).
+title: "[denúncia-externa] "
+labels:
+  - moderacao
+  - denuncia-nao-usuario
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Aviso importante sobre privacidade e funcionamento do Vox
+
+        - **Issues do GitHub são públicas.** **NÃO cole aqui dados pessoais sensíveis** (como CPF, RG, endereço residencial, telefone pessoal, e-mail privado ou anexos com documentos pessoais).
+        - **Canal privado antes do lançamento público:** Um canal privado dedicado para denúncias com dados pessoais ou sensíveis será publicado antes da abertura ao público (`[PENDENTE G2/G3: e-mail/canal privado dedicado de abuso]`). Enquanto isso, para assuntos que exijam sigilo de segurança, consulte [SECURITY.md](https://github.com/yurikayel/vox/blob/main/SECURITY.md).
+        - **Escopo técnico (Local-First / P2P / Permaweb):** O Vox é um software local-first e ponto a ponto. Uma solicitação procedente neste canal resulta na **ocultação na lista oficial de ocultação (`hide-list`) da instância PWA oficial**, não removendo dados armazenados localmente em aparelhos de terceiros ou em nós externos da rede.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Categoria da solicitação
+      description: Selecione o enquadramento principal da notificação.
+      options:
+        - CSAM / violência extrema
+        - Doxxing / privacidade (LGPD)
+        - Ordem judicial / Marco Civil
+        - Fraude / phishing
+        - Outro (direitos autorais ou violação grave)
+    validations:
+      required: true
+
+  - type: input
+    id: target_ref
+    attributes:
+      label: URL, TX ID ou hash do conteúdo
+      description: Informe o link exato, identificador da transação (TX ID) ou hash do conteúdo apontado. Não inclua dados pessoais no campo.
+      placeholder: "https://... ou TX ID / hash SHA-256"
+    validations:
+      required: true
+
+  - type: textarea
+    id: factual_description
+    attributes:
+      label: Descrição factual
+      description: Descreva objetivamente o conteúdo apontado e o motivo da solicitação, sem expor dados pessoais de terceiros ou seus próprios documentos.
+      placeholder: Descreva o que foi identificado e onde aparece na instância oficial...
+    validations:
+      required: true
+
+  - type: textarea
+    id: legal_reference
+    attributes:
+      label: Referência legal ou documental (opcional)
+      description: Número de processo público, artigo legal aplicável (ex. Marco Civil art. 19/21, LGPD, Lei de Direitos Autorais) ou link público de despacho. NÃO anexe nem cole documentos com dados pessoais sensíveis em issue pública.
+      placeholder: "Ex.: Processo nº ... (apenas número público, sem anexar documentos pessoais)"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Declaração de ciência
+      description: Confirme antes de enviar a notificação.
+      options:
+        - label: Entendo que o Vox é um software local-first/P2P e que eventual remoção aplica-se ao índice/hide-list da instância PWA oficial, não apagando cópias em aparelhos de terceiros.
+          required: true
+        - label: Confirmo que não incluí dados pessoais sensíveis (CPF, RG, endereço, telefone ou documentos privados) nesta issue pública.
+          required: true
