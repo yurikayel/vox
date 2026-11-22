@@ -53,3 +53,13 @@ A replicação por grau já faz **os amigos guardarem e servirem a mídia inteir
 - **Quantizador do vídeo** equivalente a q60 e q80: medir.
 - **Seguidores em comunidade fechada:** seguir alguém não dá acesso a post de comunidade fechada; a Full desses posts segue as regras de membro.
 - **Expiração da Half de desconhecidos** no aparelho (proposta: 24 h ou dentro da cota), alinhada ao "esquecer por padrão".
+
+## 5. Ferramenta: validador de orçamento (PM-70/71/77)
+
+Nota de ferramenta; não altera nenhuma decisão acima. `scripts/media-v2-budget.mjs` confere offline, a partir de um JSON, se um item de mídia ou um carrossel respeita os limites desta ADR (`MEDIA_V2_LIMITS`):
+
+- **Item:** `kind` (foto, áudio ou vídeo), MIME permitido para o tipo, camada (`half` até 360p, `full` até 720p), duração (áudio até 60 s, vídeo até 10 s a 30 fps) e plano de pedaços de transporte de 96 KiB.
+- **Carrossel:** de 1 a 4 itens, todos do mesmo tipo, com duração somada limitada (áudio 240 s, vídeo 40 s).
+- **Exports:** `validateMediaItem`, `validateCarousel`, `planTransportChunks` e `runCli`.
+- **Uso:** `node scripts/media-v2-budget.mjs --input <bundle.json> [--json]`. Código de saída 0 se válido e 1 se houver violação. `runCli(argv, write)` aceita um escritor para os testes não escreverem no stdout.
+- **Testes:** `tests/media-v2-budget.test.js`. A estimativa de tempo em Slow 3G usa 750 kbps e serve só de referência, não de medição.

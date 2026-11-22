@@ -230,7 +230,10 @@ function parseCliArgs(argv) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") opts.help = true;
     else if (arg === "--json") opts.json = true;
-    else if (arg === "--input" || arg === "-i") opts.input = readNextArg(argv, i++, arg);
+    else if (arg === "--input" || arg === "-i") {
+      opts.input = readNextArg(argv, i, arg);
+      i += 1;
+    }
     else if (arg.startsWith("--input=")) opts.input = arg.slice(8);
     else throw new Error(`Argumento desconhecido: ${arg}`);
   }
@@ -271,22 +274,27 @@ function formatTextReport(mode, result) {
   return `${lines.join("\n")}\n`;
 }
 
+function writeStdout(text) {
+  process.stdout.write(text);
+}
+
 /**
  * Executa a CLI do validador de orçamento de Mídia v2 (`--input` e `--json`).
  * @param {string[]} [argv=process.argv.slice(2)] Argumentos de linha de comando.
+ * @param {(text: string) => void} [write] Escritor da saída (padrão: stdout); injetável para testes.
  * @returns {{ exitCode: number, ok: boolean, mode: string, result: object|null, output: string }} Resultado e saída gerada.
  */
-export function runCli(argv = process.argv.slice(2)) {
+export function runCli(argv = process.argv.slice(2), write = writeStdout) {
   const opts = parseCliArgs(argv);
   if (opts.help) {
     const usage = "Uso: node scripts/media-v2-budget.mjs --input <bundle.json> [--json]\n";
-    process.stdout.write(usage);
+    write(usage);
     return { exitCode: 0, ok: true, mode: "help", result: null, output: usage };
   }
   if (!opts.input) throw new Error("Parâmetro obrigatório ausente: --input <bundle.json>.");
   const { mode, result } = evaluateBundle(readJsonFile(opts.input));
   const output = opts.json ? `${JSON.stringify({ mode, ...result }, null, 2)}\n` : formatTextReport(mode, result);
-  process.stdout.write(output);
+  write(output);
   return { exitCode: result.ok ? 0 : 1, ok: result.ok, mode, result, output };
 }
 

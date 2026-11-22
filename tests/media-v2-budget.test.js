@@ -164,10 +164,15 @@ test("PM-70/71/77: CLI executa roundtrip (--input, --json) e retorna exit 0/1 co
     assert.equal(failPayload.ok, false);
     assert.ok(failPayload.errors.length > 0);
 
-    const directRes = runCli(["--input", validPath, "--json"]);
+    const written = [];
+    const directRes = runCli(["--input", validPath, "--json"], (text) => written.push(text));
     assert.equal(directRes.exitCode, 0);
     assert.equal(directRes.ok, true);
-    assert.throws(() => runCli(["--input", path.join(tmpDir, "missing.json")]), /Não foi possível ler/);
+    assert.deepEqual(written, [directRes.output]);
+    const helpRes = runCli(["--help"], (text) => written.push(text));
+    assert.equal(helpRes.mode, "help");
+    assert.equal(written.length, 2);
+    assert.throws(() => runCli(["--input", path.join(tmpDir, "missing.json")], () => {}), /Não foi possível ler/);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
