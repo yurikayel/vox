@@ -1,6 +1,6 @@
 # Infra e custos — mapa operacional
 
-> **Status:** canônico · **Owner:** mantenedor / steward ops · **Revisado:** 2026-11-13
+> **Status:** canônico · **Owner:** mantenedor / steward ops · **Revisado:** 2026-11-21
 > Não substitui os runbooks: [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md), [ops-pages-rollback.md](./operations/ops-pages-rollback.md), [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md), [steward-relay-kit.md](./operations/steward-relay-kit.md).
 
 **Resumo:** hoje o Vox custa **R$ 0/mês** em dinheiro. Ele depende de **free tiers de terceiros** e de um nó público de sinalização. **Pela diretriz vigente (13/11/2026), por enquanto nada deve ser salvo usando Arweave:** toda circulação e preservação passa pela **rede de seguidores** (você replica quem você segue via malha P2P / `replicacao-por-grau-v0`). O Arweave segue previsto apenas para alguns recursos futuros específicos e leitura pública (quando reativado, o upload grátis do Turbo tem cota vitalícia; não prometer ilimitado). Os limites de free tier abaixo são **aproximados**: confirme na fonte antes de decidir (ver Prompt 2 em [brainstorm-autossustento-10-features-2026-11.md](./brainstorms/brainstorm-autossustento-10-features-2026-11.md#prompt-2--viabilidade-a-custo-zero-limites-termos-de-uso-e-lei)).
@@ -74,3 +74,58 @@ Estão no repo para quem quiser subir **a sinalização** (`relay/Dockerfile` �
 | Relay completo público | Inbox/OAuth para todos | VPS pequena |
 
 Nada disso é pago hoje. Qualquer gasto futuro deve ser público e opt-in (ver [POSITIONING.md](product/POSITIONING.md): sem custódia, sem alcance pago).
+
+---
+
+## 6. Projeção orçamentária de 12 meses — 1.000 e 10.000 usuários ativos (LAN-32)
+
+> **Natureza dos números (estimativas de 2026-11-21):** projeção de planejamento para o portão **G3**, sujeita à validação de carga (`LAN-09`) e à decisão jurídica (`REV-12`/`REV-18`). **Não há garantia de infraestrutura "grátis para sempre"**: free tiers possuem cotas rígidas e risco de suspensão sem aviso ou sem cartão cadastrado ([pesquisa complementar §1-F/H](./research/pesquisa-complementar-2026-11.md)). Câmbio de referência ilustrativo: **US$ 1,00 = R$ 5,80** (variação cambial e IOF não travados).
+
+### 6.1 Premissas por componente
+
+1. **Domínio + DNS (`LAN-06`):** domínio `.org.br` (~R$ 40/ano) ou `.org` (~US$ 12–15/ano), DNS no Cloudflare Free (R$ 0) com ≥ 2 titulares ou titular PJ.
+2. **Sinalização e Relay (`REV-01` / `REV-04` / `INF-02`–`INF-03`):**
+   - *1.000 ativos/mês:* o Render Free (750 h/workspace + teto de banda desconhecido sem cartão) perde margem operacional para uso contínuo; modela 1 instância paga básica (Render Starter/VPS/Fly ~US$ 5–12/mês) + Workers Paid / Durable Objects (~US$ 5/mês) para failover sem cold start + relays Nostr públicos (R$ 0, sujeitos a risco de auth/PoW).
+   - *10.000 ativos/mês:* 2 nós de sinalização dedicados em provedores/regiões distintos + servidor para relay completo público (`server.py`, inbox DM/OAuth, `REV-04`), monitoramento e TLS.
+3. **Tráfego TURN Relay (`REV-10` / `INF-01`):**
+   - A cota grátis do Cloudflare Realtime TURN é **1.000 GB/mês** (compartilhada com SFU), com cobrança de **US$ 0,05/GB** (≈ R$ 0,29/GB) acima de 1.000 GB. O Worker `workers/turn` corta credenciais perto de ~800 GB/mês no modo gratuito.
+   - Em redes móveis com CGNAT simétrico ou uso ativo de "Esconder meu IP" (`LAN-19`), estimamos **15%–25% das sessões** caindo em TURN (~200–400 MB/ativo/mês em mídia/voz):
+     - *1.000 ativos:* **200–1.500 GB/mês** em picos → de R$ 0 (dentro dos 1.000 GB) até ~500 GB de excedente (**US$ 0–25/mês**).
+     - *10.000 ativos:* **2.500–4.000 GB/mês** → excedente de **1.500–3.000 GB/mês** acima da franquia grátis (**US$ 75–150/mês**, ou alternativa com VPS `coturn` dedicada de alta franquia de banda, ~US$ 60–120/mês para 2 nós + operação).
+4. **Cota Arweave / Turbo Upload (`REV-07` / `REV-11`):**
+   - A cota gratuita do Turbo (`upload.ardrive.io`) é **~10 MiB vitalícios por carteira e por IP/sub-rede** (nunca reseta). Enquanto `arweaveUpload: false` permanecer ativo, o gasto é **R$ 0**.
+   - Caso `REV-11` reative gravação seletiva apenas para âncoras cívicas/cartório (~1–2% das publicações, sem mídia de usuário), créditos Turbo pagos entram imediatamente ao esgotar os 10 MiB iniciais: estimativa de **R$ 0–60/mês** (1k) e **R$ 0–290/mês** (10k).
+5. **PJ Brasil, Contabilidade e Reserva Jurídica (`REV-18` / `REV-12`):**
+   - *Abertura única (Ano 1, estimativa a confirmar com contador local no `REV-18`):* estatuto, registro de associação em cartório, CNPJ e certificado e-CNPJ: **R$ 1.500–3.000** (cenário 1k) a **R$ 2.000–4.000** (cenário 10k).
+   - *Recorrente mensal:* contabilidade mensal de associação sem fins lucrativos + reserva para assessoria jurídica/LGPD/respostas a notificações e relatórios (`REV-20`). Se o parecer `REV-12` dispensar PJ formalmente, esta linha cai para R$ 0 (registrado na nota abaixo da tabela).
+6. **Contingência (20%):** aplicada sobre o subtotal recorrente mensal para absorver picos de TURN/banda, variação do dólar e incidentes operacionais.
+
+### 6.2 Tabela consolidada (mensal e 12 meses)
+
+| Linha de custo | 1.000 ativos (mês) | 1.000 ativos (12 meses) | 10.000 ativos (mês) | 10.000 ativos (12 meses) |
+|---|---|---|---|---|
+| **Domínio + DNS** (`LAN-06`) | R$ 4 – R$ 8 | R$ 48 – R$ 96 | R$ 4 – R$ 10 | R$ 48 – R$ 120 |
+| **Sinalização + Relay** (`REV-01` / `REV-04`) | R$ 60 – R$ 120 | R$ 720 – R$ 1.440 | R$ 220 – R$ 450 | R$ 2.640 – R$ 5.400 |
+| **TURN Relay** (> 1.000 GB/mês) (`REV-10`) | R$ 0 – R$ 145 | R$ 0 – R$ 1.740 | R$ 350 – R$ 870 | R$ 4.200 – R$ 10.440 |
+| **Créditos Turbo / Arweave** (se `REV-11` ativo) | R$ 0 – R$ 60 | R$ 0 – R$ 720 | R$ 0 – R$ 290 | R$ 0 – R$ 3.480 |
+| **PJ / Contabilidade / Jurídico** (`REV-18`) | R$ 400 – R$ 900 | R$ 4.800 – R$ 10.800 | R$ 1.000 – R$ 2.500 | R$ 12.000 – R$ 30.000 |
+| *Subtotal recorrente* | *R$ 464 – R$ 1.233* | *R$ 5.568 – R$ 14.796* | *R$ 1.574 – R$ 4.120* | *R$ 18.888 – R$ 49.440* |
+| **Contingência (20%)** | R$ 93 – R$ 247 | R$ 1.116 – R$ 2.964 | R$ 315 – R$ 824 | R$ 3.780 – R$ 9.888 |
+| **Total recorrente (BRL)** | **R$ 557 – R$ 1.480** | **R$ 6.684 – R$ 17.760** | **R$ 1.889 – R$ 4.944** | **R$ 22.668 – R$ 59.328** |
+| **Abertura única da PJ (Ano 1)** | — | R$ 1.500 – R$ 3.000 | — | R$ 2.000 – R$ 4.000 |
+| **Total Ano 1 com PJ (BRL)** | — | **R$ 8.184 – R$ 20.760** | — | **R$ 24.668 – R$ 63.328** |
+| **Total Ano 1 com PJ (USD, ~R$ 5,80)** | — | **US$ 1.411 – US$ 3.579** | — | **US$ 4.253 – US$ 10.919** |
+
+*Infraestrutura técnica pura (sem PJ/contabilidade, caso dispensada pelo `REV-12`):* **R$ 77 – R$ 400/mês** (**R$ 924 – R$ 4.800/ano**, ≈ US$ 159 – US$ 828) para 1.000 ativos; **R$ 689 – R$ 1.944/mês** (**R$ 8.268 – R$ 23.328/ano**, ≈ US$ 1.426 – US$ 4.022) para 10.000 ativos, já incluindo 20% de contingência.
+
+### 6.3 Gatilhos de sustentabilidade financeira e controle de escala
+
+Os gastos acima não são ativados antecipadamente; obedecem ao escalonamento de [gatilho-infra-50-ativos.md](./operations/gatilho-infra-50-ativos.md) e aos critérios do [plano-lancamento-ondas.md](./strategy/plano-lancamento-ondas.md):
+
+| Faixa / Sinal | Estado operacional | Gatilho financeiro e ação obrigatória |
+|---|---|---|
+| **0 – 50 ativos** (F0 / Piloto G1) | Custo **R$ 0/mês** (1× Render Free + keepalive; sem TURN; `arweaveUpload: false`) | **Bloqueado subir infra paga** antes do limiar de [gatilho-infra-50-ativos.md](./operations/gatilho-infra-50-ativos.md). |
+| **> 50 ativos** (Gatilho `INF-01..04`) | Ativa TURN Worker (`teto ~800 GB/mês`) + 2º nó de sinalização + monitoramento de banda (`REV-21`) | Confirmar se há cartão/orçamento de reserva antes de tirar o corte rígido de 800 GB/mês no `workers/turn`. |
+| **> 500 ativos ou > 70% da cota free (TURN/Render)** | Alerta amarelo antes de escalar para Onda 2/G3 | Exigir **cobertura confirmada para ≥ 6 meses** (GitHub Sponsors `REV-22`, editais `LAN-36`/NLnet/OTF, ou caixa da associação `REV-18`) antes de ampliar convites. |
+| **Portão G3 (Lançamento Público)** | Escala planejada para 1k–10k ativos | Exige **≥ 12 meses de cobertura confirmada** ([Critérios Go/No-Go LAN-28](./strategy/criterios-go-beta-lan28.md)); fontes sempre públicas e opt-in (sem custódia, sem venda de alcance). |
+| **Cobertura < 3 meses ou estouro de banda/TURN** | Alerta vermelho (`LAN-34`) | **Pausar convites**, manter `arweaveUpload: false`, manter teto estrito no Worker TURN e publicar aviso transparente antes de suspensão de free tier. |
