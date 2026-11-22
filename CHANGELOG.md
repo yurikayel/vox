@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Chore: alertas Dependabot (qs, minimatch)
+- `package.json`: `overrides` para `qs` (^6.16.2) e `minimatch` (^11.0.9) fecham 3 alertas médios (#1, #2, #5); `npm audit` restante: `glob`/`@stryker-mutator/tap-runner` sem correção upstream.
 ### Fix: simulador de cota (REV-11/PM-74)
 - `scripts/replication-quota-sim.mjs`: `ttlMs`/`defaultTtlMs` <= 0 são rejeitados; JSDoc e spec (`replicacao-por-grau-v0.md`) documentam que `pinned` não isenta de cota; teste novo e títulos alinhados.
 ### Fix: validador de retorno POSSE (PM-105)
