@@ -20,7 +20,8 @@ Hoje a infraestrutura de relay, sinalização e nó local do Vox está fragmenta
 
 ### 1.1 Reuso de `rust/vox-core` e fronteira intocada do cliente cidadão
 
-- **Reuso obrigatório de `rust/vox-core`:** O workspace [`rust/Cargo.toml`](../../rust/Cargo.toml) já entrega [`rust/vox-core`](../../rust/vox-core/Cargo.toml) (`#![no_std]`, `#![forbid(unsafe_code)]`, `#![deny(missing_docs)]`, zero dependências externas) com `genesis_data`, `genesis_guard`, `shamir_gf256` em tempo constante e `sig_format`. `rust/vox-node` deve consumir `vox_core::genesis_guard` diretamente para o corte da gênese em `/memory/ingest` e `/memory/sync`, e reutilizar os tipos canônicos adicionados em `vox-core` para cofre v2, envelopes e manifestos.
+- **Reuso obrigatório de `rust/vox-core`:** O workspace [`rust/Cargo.toml`](../../rust/Cargo.toml) já entrega [`rust/vox-core`](../../rust/vox-core/Cargo.toml) (`#![no_std]`, `#![forbid(unsafe_code)]`, `#![deny(missing_docs)]`, zero dependências externas) com `genesis_data`, `genesis_guard`, `shamir_gf256` em tempo constante e `sig_format`. `rust/vox-node` deve consumir `vox_core::genesis_guard` diretamente para o corte da gênese em `/memory/ingest` e `/memory/sync`, e reutilizar os tipos canônicos de `vox-core` para cofre v2, envelopes e manifestos.
+- **Dependência explícita do PR #399 (ADR-039 Fase 1b):** `vault_v2`, `dm_envelope_v1` e `community_manifest_v1` em `rust/vox-core` só existem após o merge do PR #399 (`feat/adr039-voxcore-phase1b`) em `develop`. Este plano (PR #402) é só documentação, mas a implementação de `rust/vox-node` (PR4.1+) **não pode começar** antes desse merge; o `Cargo.toml` de `vox-node` depende de `vox-core` por `path`.
 - **Cliente cidadão intocado (`client/` e `vox.apk`):** Conforme [ADR-039 §3.5](../adr/039-rust-por-fases.md#35-o-que-fica-de-fora), o PWA em `client/` continua em JavaScript vanilla e o micro-APK cidadão (`vox.apk`, pacote `org.vox.client` em [`android/build.ps1`](../../android/build.ps1)) **não recebe nenhuma biblioteca nativa `.so`**, preservando o orçamento abaixo de 100 KiB para o free tier do Turbo Arweave.
 - **Prontidão Fria (*Cold Readiness*):** Em modo local/desktop/Android (`relay`, `node-zero`), o bind padrão permanece estritamente em `127.0.0.1` (`3920`/`3921`/`3922`). Bind em `0.0.0.0` ocorre apenas no modo servidor (`--mode signaling` ou explícito por `HOST`/`--host`), sem abrir portas públicas, UPnP ou federação automática.
 
@@ -148,7 +149,7 @@ Para a fase de testes lado a lado, [`tools/signaling-load-bench.py`](../../tools
 
 | Métrica (`--peers 500 --rounds 3`, rate limit liberado p/ loopback) | Baseline Python (`relay/signaling.py`, `LAN-09`) | Meta de aceite `rust/vox-node` (PR4.1) |
 |---|---|---|
-| Conectados / Registrados (`concurrency=100`) | `492 / 500` (8 `ConnectionResetError`) | **`500 / 500`** (`0` falhas de conexão/registro) |
+| Conectados / Registrados (`concurrency=100`) | `492 / 500` (8 `ConnectionResetError`) | **`500 / 500`** (`0` falhas de conexão/registro), com `VOX_SIGNAL_MAX_CONNECTIONS=512` definido explicitamente no teste (o padrão `64` rejeitaria conexões acima do teto) |
 | Roundtrip `offer`→`answer` `p95` (`concurrency=25` e `100`) | `7.891,19 ms` – `9.375,09 ms` (7,9–9,4 s) | **`<= 100 ms`** |
 | Roundtrip `offer`→`answer` `p99` (`concurrency=25` e `100`) | `8.060,29 ms` – `9.474,19 ms` (8,1–9,5 s) | **`<= 250 ms`** |
 | `signal_errors` / `client_decode_errors` | `0` (nos 492 conectados) | **`0`** |
@@ -179,7 +180,7 @@ No Android, apenas o aplicativo de infraestrutura dedicada **`vox-populi.apk`** 
 
 ### 5.1 Isolamento de `unsafe` ([ADR-039](../adr/039-rust-por-fases.md) + `HARDENING`)
 
-- `rust/vox-core` e `rust/vox-node` mantêm `unsafe_code = "forbid"` herdado de [`rust/Cargo.toml`](../../rust/Cargo.toml).
+- `rust/Cargo.toml` define `unsafe_code = "forbid"` em `[workspace.lints.rust]`, mas lints de workspace só valem para os crates que optam com `[lints] workspace = true`. `rust/vox-core` e `rust/vox-node` optam (`forbid` herdado). `forbid` não pode ser relaxado por crate filho que herda o lint; por isso `rust/vox-node-ffi` **não** usa `[lints] workspace = true`: declara no próprio `Cargo.toml` `[lints.rust] unsafe_code = "deny"` e libera `#[allow(unsafe_code)]` apenas nos módulos de marshalling C-ABI/JNI, mantendo os demais lints do workspace replicados explicitamente.
 - O único crate autorizado a conter código `unsafe` (restrito estritamente ao marshalling de ponteiros C-ABI / `JNIEnv`) é o adaptador fino `rust/vox-node-ffi` (`crate-type = ["cdylib"]`), onde cada bloco `unsafe` exige comentário `// SAFETY:` auditável e verificação explícita de ponteiro nulo e UTF-8 válido antes de chamar o núcleo seguro de `vox-node`.
 
 ### 5.2 Assinatura C-ABI e mapeamento JNI exato
