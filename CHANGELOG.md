@@ -7,6 +7,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 - Relay: o arquivo de blob da memória central passa por `safe_path.child_of` (recusa symlink para fora de `blobs/`; alertas CodeQL `py/path-injection`); triagem do `py/partial-ssrf` em `docs/security/codeql-relay-python-triagem.md` (`relay/test_central_memory_blob_path.py`).
+
+### Chore: alertas Dependabot (qs, minimatch)
+- `package.json`: `overrides` para `qs` (^6.16.2) e `minimatch` (^11.0.9) fecham 3 alertas médios (#1, #2, #5); `npm audit` restante: `glob`/`@stryker-mutator/tap-runner` sem correção upstream.
+
 - Docs: `docs/ROADMAP.md` ganha as evidências dos PRs #394–#403 em `develop` (22/11/2026); nenhuma caixa `code` marcada antes do merge em `main`.
 
 - Persistência de credenciais endurecida: sessão do Bluesky e segredos de contas vinculadas só vão ao armazenamento cifrados pela chave do aparelho (sem ela ficam em memória); callback de login com `state` desconhecido não encerra fluxos pendentes (`tests/credential-persistence.test.js`).
