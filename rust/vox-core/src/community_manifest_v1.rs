@@ -1,7 +1,10 @@
 //! Closed domain reference types for Community Manifest v1 (ADR-038 / ADR-039 Phase 1b).
 //!
 //! Mirrors `docs/specs/community-manifest-v1.md` and `docs/specs/fork-comunidade-exp03.md`:
-//! - Enforces `v == 1`, `id` prefix `"cm_"`, `issued_at > 0`, and item size budget `<= 16_384` bytes.
+//! - Enforces `v == 1`, `id` prefix `"cm_"`, `issued_at > 0`.
+//! - Item size budget `<= 16_384` bytes is checked by the caller (this crate does not serialize):
+//!   [`CommunityManifestV1::validate`] covers the structured fields only, so callers must also run
+//!   [`CommunityManifestV1::validate_byte_len`] on the wire byte length.
 //! - Forbids `extensions` in v1 (`has_extensions` must be `false`).
 //! - Restricts `fork_of` to initial manifests where `prev.is_none()` and `fork_of.community_id != community_id`.
 //! - Restricts `about.links` to `https://`, `theme` to `#RRGGBB` hex tokens, and `modules` to the closed [`ModuleKind`] set.
