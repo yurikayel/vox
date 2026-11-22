@@ -1,7 +1,7 @@
 # Voluntariado no piloto: três trabalhos
 
 > **Status:** canônico (decisão do mantenedor) · **Owner:** mantenedor · **Revisado:** 2026-11-09
-> Relacionados: [ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md) (voluntários só em baixo risco), [replicação por grau](../specs/replicacao-por-grau-v0.md).
+> Relacionados: [ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md) (voluntários só em baixo risco), [replicação por grau](../specs/replicacao-por-grau-v0.md), [roteiro de 5 min (PM-73)](./roteiro-teste-celular-5min-pm73.md), [spec Guardião na Tomada (REV-15)](../specs/guardiao-na-tomada-rev15.md).
 
 Para começar, três trabalhos que qualquer pessoa entende em uma frase, faz sem treino, pode repetir muitas vezes e que **não precisam passar pelo mantenedor para valer**.
 
