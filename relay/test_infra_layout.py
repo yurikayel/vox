@@ -1,6 +1,8 @@
-"""Infra do relay: a imagem Docker leva todos os módulos que o server.py importa, e só o job de release escreve
-no repositório (PM-111: prova o defeito de `Dockerfile`/`release-binarios.yml`, que não têm teste de execução)."""
+"""Infra do relay: a imagem Docker leva todos os módulos que o server.py importa,
+e só o job de release escreve no repositório (PM-111).
+"""
 
+import ast
 import re
 import unittest
 from pathlib import Path
@@ -13,8 +15,13 @@ WORKFLOW = ROOT / ".github" / "workflows" / "release-binarios.yml"
 def modulos_importados_pelo_server():
     """Nomes de `from relay import a, b, ...` no server.py."""
     texto = (RELAY / "server.py").read_text(encoding="utf-8")
-    linha = re.search(r"^from relay import (.+)$", texto, re.MULTILINE)
-    return [nome.strip() for nome in linha.group(1).split(",")]
+    tree = ast.parse(texto)
+    modules = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "relay":
+            for alias in node.names:
+                modules.append(alias.name)
+    return modules
 
 
 def copias_do_dockerfile():
@@ -28,18 +35,20 @@ def copias_do_dockerfile():
 
 
 def blocos_de_job(texto):
-    """Mapa nome do job -> texto do bloco, lido da seção `jobs:` (jobs são as chaves com 2 espaços)."""
+    """Mapa nome do job -> texto do bloco, lido da seção `jobs:`."""
     corpo = texto.split("\njobs:\n", 1)[1]
     achados = list(re.finditer(r"^  ([\w-]+):\s*$", corpo, re.MULTILINE))
     fim = [m.start() for m in achados[1:]] + [len(corpo)]
-    return {m.group(1): corpo[m.end():f] for m, f in zip(achados, fim)}
+    return {m.group(1): corpo[m.end() : f] for m, f in zip(achados, fim)}
 
 
 class DockerfileDoRelay(unittest.TestCase):
     def test_copia_todos_os_modulos_que_o_server_importa(self):
         copiados = set()
         for origens, destino in copias_do_dockerfile():
-            self.assertTrue(destino.rstrip("/").endswith("relay"), f"destino {destino!r} fora do pacote relay/")
+            self.assertTrue(
+                destino.rstrip("/").endswith("relay"), f"destino {destino!r} fora do pacote relay/"
+            )
             for origem in origens:
                 copiados.update(p.name for p in RELAY.glob(origem))
         faltando = [m for m in modulos_importados_pelo_server() if f"{m}.py" not in copiados]
@@ -72,11 +81,15 @@ class SegurancaDoContainer(unittest.TestCase):
 
     def test_turnserver_nao_traz_senha_de_modelo(self):
         texto = (RELAY / "deploy" / "turnserver.conf").read_text(encoding="utf-8")
-        self.assertNotIn("troque-esta-senha-comunitaria", texto, "senha de modelo ainda no turnserver.conf")
+        self.assertNotIn(
+            "troque-esta-senha-comunitaria", texto, "senha de modelo ainda no turnserver.conf"
+        )
         credenciais = [linha for linha in texto.splitlines() if linha.startswith("user=")]
         self.assertTrue(credenciais, "turnserver.conf sem linha user=")
         for linha in credenciais:
-            self.assertRegex(linha, r"^user=[^:]+:__[A-Z_]+__$", "user= deve ser placeholder, não senha")
+            self.assertRegex(
+                linha, r"^user=[^:]+:__[A-Z_]+__$", "user= deve ser placeholder, não senha"
+            )
 
     def test_compose_publica_portas_do_relay_so_em_loopback_por_padrao(self):
         compose = (RELAY / "deploy" / "docker-compose.yml").read_text(encoding="utf-8")
@@ -95,7 +108,9 @@ class PermissoesDoReleaseBinarios(unittest.TestCase):
         com_escrita = [nome for nome, bloco in blocos.items() if "contents: write" in bloco]
         self.assertTrue(com_escrita, "nenhum job publica a Release")
         for nome in com_escrita:
-            condicao_do_job = re.search(r"^    if: .*github\.event_name != 'pull_request'", blocos[nome], re.MULTILINE)
+            condicao_do_job = re.search(
+                r"^    if: .*github\.event_name != 'pull_request'", blocos[nome], re.MULTILINE
+            )
             self.assertIsNotNone(condicao_do_job, f"job {nome} escreve e roda em pull_request")
 
 

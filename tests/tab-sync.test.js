@@ -58,7 +58,7 @@ test("tab-sync: reloadIdentityFromStorage não cria conta nova se o storage já 
 });
 
 test("tab-sync: outra aba trocou a conta ativa — cache em memória alinha ao storage", async () => {
-  const { readStoredRouteId, reloadIdentityFromStorage } = await tabSync();
+  const { reloadIdentityFromStorage } = await tabSync();
   localStorage.clear();
   keyLock.__resetKeyLockForTests();
   const first = await localAccount.ensureLocalAccount();

@@ -1,0 +1,200 @@
+/** @file Global delegated event listeners for social feedback and comment interactions. */
+import * as share from "../share.js";
+import * as render from "../render.js";
+import * as social from "../social.js";
+import { route } from "./navigation.js";
+import { openZapModal } from "./zap-modal.js";
+import {
+  togglePostComments,
+  toggleCommentReplyComposer,
+  onInlineReplySubmit,
+  onNestedCommentReplySubmit,
+} from "./screens-compose.js";
+import { handleRepostClick } from "./repost-ui.js";
+import { runButtonAction } from "./action-runner.js";
+import { openPostEditModal, handleDeletePost } from "./init-post-mutation.js";
+import { handleFrameActionClick } from "./init-frame-actions.js";
+
+function handleCommentReactClick(btn) {
+  const commentId = btn.dataset.id;
+  const baseCount = btn.dataset.count || 0;
+  const res = social.toggleCommentReact(commentId, baseCount);
+  btn.classList.toggle("active", res.reacted);
+  btn.setAttribute("aria-pressed", res.reacted ? "true" : "false");
+  const countEl = btn.querySelector(".count-comment-reacts");
+  if (countEl) {
+    if (res.count > 0) {
+      countEl.textContent = String(res.count);
+      countEl.hidden = false;
+    } else {
+      countEl.textContent = "";
+      countEl.hidden = true;
+    }
+  }
+}
+
+function handleCommentReplyClick(btn) {
+  const item = btn.closest(".post-comment-item");
+  const form = item?.querySelector(".post-comment-nested-reply");
+  const opening = form?.hidden !== false;
+  document.querySelectorAll(".post-comment-nested-reply:not([hidden])").forEach((f) => {
+    if (f !== form) toggleCommentReplyComposer(f.closest(".post-comment-item"), false);
+  });
+  toggleCommentReplyComposer(item, opening);
+}
+
+function handleLikeClick(btn) {
+  const postId = btn.dataset.id;
+  const baseCount = btn.dataset.count || 0;
+  const res = social.toggleLike(postId, baseCount);
+  btn.classList.toggle("active", res.liked);
+  const icon = btn.querySelector(".icon-heart");
+  if (icon) icon.setAttribute("fill", res.liked ? "currentColor" : "none");
+  const countLabel = btn.querySelector(".count-likes");
+  if (countLabel) countLabel.textContent = res.count > 0 ? res.count : "";
+}
+
+function handleStarClick(btn) {
+  const postId = btn.dataset.id;
+  const baseCount = btn.dataset.count || 0;
+  const res = social.toggleStar(postId, baseCount);
+  btn.classList.toggle("active", res.starred);
+  const icon = btn.querySelector(".icon-star");
+  if (icon) icon.setAttribute("fill", res.starred ? "currentColor" : "none");
+  const countLabel = btn.querySelector(".count-stars");
+  if (countLabel) countLabel.textContent = res.count > 0 ? res.count : "";
+  share.showToast(res.starred ? "Estrela adicionada ⭐ (nos seus Estrelados)!" : "Estrela removida.");
+}
+
+function handleSaveClick(btn) {
+  const postId = btn.dataset.id;
+  const saved = social.toggleSave(postId);
+  btn.classList.toggle("active", saved);
+  const icon = btn.querySelector(".icon-bookmark");
+  if (icon) icon.setAttribute("fill", saved ? "currentColor" : "none");
+  share.showToast(saved ? "Post salvo nos seus favoritos!" : "Post removido dos favoritos.");
+}
+
+function handleCopyMdClick(btn) {
+  const mdText = render.formatPostMarkdown({
+    id: btn.dataset.id,
+    title: btn.dataset.title || "",
+    body: btn.dataset.body || "",
+    authorDisplay: btn.dataset.author || "",
+    authorHandle: btn.dataset.handle || "",
+  });
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(mdText).then(() => {
+      share.showToast("Post copiado em Markdown! 📋");
+    }).catch(() => {
+      share.showToast("Erro ao copiar.", "error");
+    });
+  }
+}
+
+function handleWatchClick(btn) {
+  const routeId = btn.dataset.route;
+  const watching = social.toggleWatch(routeId);
+  if (btn.classList.contains("btn-overlay-follow")) {
+    btn.textContent = watching ? "Seguindo" : "Seguir";
+    btn.setAttribute("aria-pressed", watching ? "true" : "false");
+    btn.setAttribute("aria-label", watching ? "Deixar de seguir autor" : "Seguir autor");
+    btn.classList.toggle("is-following", watching);
+  } else {
+    btn.classList.toggle("btn-primary", !watching);
+    btn.classList.toggle("btn-outline", watching);
+    btn.textContent = watching ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)";
+  }
+  share.showToast(watching ? "Agora você acompanha este autor no feed Seguindo!" : "Deixou de acompanhar este autor.");
+}
+
+function dispatchPostActionClicks(e) {
+  const btnEdit = e.target.closest(".btn-post-edit");
+  if (btnEdit) { e.preventDefault(); openPostEditModal(btnEdit.dataset.id); return true; }
+
+  const btnDel = e.target.closest(".btn-post-delete");
+  if (btnDel) { e.preventDefault(); handleDeletePost(btnDel.dataset.id); return true; }
+
+  const btnFrame = e.target.closest(".btn-frame-action:not([disabled])");
+  if (btnFrame) { e.preventDefault(); handleFrameActionClick(btnFrame); return true; }
+
+  const btnComment = e.target.closest(".btn-comment");
+  if (btnComment) { e.preventDefault(); togglePostComments(btnComment); return true; }
+
+  const btnCommentReact = e.target.closest(".btn-comment-react");
+  if (btnCommentReact) { e.preventDefault(); handleCommentReactClick(btnCommentReact); return true; }
+
+  const btnCancel = e.target.closest(".btn-comment-reply-cancel");
+  if (btnCancel) {
+    e.preventDefault();
+    toggleCommentReplyComposer(btnCancel.closest(".post-comment-item"), false);
+    return true;
+  }
+
+  const btnReply = e.target.closest(".btn-comment-reply");
+  if (btnReply) { e.preventDefault(); handleCommentReplyClick(btnReply); return true; }
+
+  return false;
+}
+
+function dispatchSocialFeedbackClicks(e) {
+  const btnZap = e.target.closest(".btn-zap-post:not(.disabled), .btn-zap-profile");
+  if (btnZap) {
+    e.preventDefault();
+    openZapModal({ pixKey: btnZap.dataset.pix, authorName: btnZap.dataset.authorName || "Autor", title: btnZap.dataset.title || "" });
+    return true;
+  }
+
+  const btnRepost = e.target.closest(".btn-repost");
+  if (btnRepost) {
+    e.preventDefault();
+    void runButtonAction(btnRepost, async () => {
+      const res = await handleRepostClick(btnRepost);
+      if (res?.ok) void route();
+    });
+    return true;
+  }
+
+  const btnLike = e.target.closest(".btn-like");
+  if (btnLike) { e.preventDefault(); handleLikeClick(btnLike); return true; }
+
+  const btnStar = e.target.closest(".btn-star");
+  if (btnStar) { e.preventDefault(); handleStarClick(btnStar); return true; }
+
+  const btnSave = e.target.closest(".btn-save");
+  if (btnSave) { e.preventDefault(); handleSaveClick(btnSave); return true; }
+
+  const btnCopyMd = e.target.closest(".btn-copy-md");
+  if (btnCopyMd) { e.preventDefault(); handleCopyMdClick(btnCopyMd); return true; }
+
+  const btnWatch = e.target.closest(".btn-watch-profile");
+  if (btnWatch) { e.preventDefault(); handleWatchClick(btnWatch); return true; }
+
+  return false;
+}
+
+/**
+ * Liga cliques sociais globais (curtir, compartilhar, comentários inline, etc.).
+ *
+ * @returns {void}
+ */
+export function initSocialInteractions() {
+  document.addEventListener("click", (e) => {
+    if (dispatchPostActionClicks(e)) return;
+    dispatchSocialFeedbackClicks(e);
+  });
+
+  document.addEventListener("submit", (e) => {
+    const nestedForm = e.target.closest(".post-comment-nested-reply");
+    if (nestedForm) {
+      e.preventDefault();
+      onNestedCommentReplySubmit(nestedForm);
+      return;
+    }
+    const form = e.target.closest(".post-comment-composer");
+    if (form) {
+      e.preventDefault();
+      onInlineReplySubmit(form);
+    }
+  });
+}

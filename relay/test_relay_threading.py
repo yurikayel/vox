@@ -1,4 +1,4 @@
-"""Relay: um cliente lento não trava os outros, 413 chega legível e o estado compartilhado aguenta threads."""
+"""Relay: cliente lento não trava outros, 413 chega legível e estado aguenta threads."""
 
 from __future__ import annotations
 
@@ -13,14 +13,22 @@ import time
 import unittest
 from unittest import mock
 
-from relay import blind_relay, central_memory, inbox, mirror_validate, rate_limit, server, vault_store
+from relay import (
+    blind_relay,
+    central_memory,
+    inbox,
+    mirror_validate,
+    rate_limit,
+    server,
+    vault_store,
+)
 
 LOOPBACK = "127.0.0.1"
 JSON_HEADERS = {"Content-Type": "application/json"}
 
 
 class _RelayFixture(unittest.TestCase):
-    """Sobe o relay de produção (`VoxRelayServer`) em porta livre, com diretórios e limite de taxa isolados."""
+    """Sobe relay de produção (`VoxRelayServer`) em porta livre com diretórios isolados."""
 
     max_connections = None
 
@@ -29,7 +37,9 @@ class _RelayFixture(unittest.TestCase):
         root = pathlib.Path(tempfile.mkdtemp(prefix="vox_threading_"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         self._isolate_state(root)
-        self.httpd = server.VoxRelayServer((LOOPBACK, 0), server.VoxRelayHandler, max_connections=self.max_connections)
+        self.httpd = server.VoxRelayServer(
+            (LOOPBACK, 0), server.VoxRelayHandler, max_connections=self.max_connections
+        )
         self.port = self.httpd.server_address[1]
         thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         thread.start()
@@ -74,7 +84,12 @@ class SlowClientTest(_RelayFixture):
         self.assertEqual(self.health_status(), 200)
 
     def test_stalled_post_body_does_not_block_other_clients(self):
-        head = b"POST /inbox/abc HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: 500\r\n\r\n"
+        head = (
+            b"POST /inbox/abc HTTP/1.1\r\n"
+            b"Host: 127.0.0.1\r\n"
+            b"Content-Type: application/json\r\n"
+            b"Content-Length: 500\r\n\r\n"
+        )
         self.raw_socket().sendall(head + b"{")
         self.assertEqual(self.health_status(), 200)
 
@@ -174,7 +189,9 @@ class SharedStateUnderThreadsTest(unittest.TestCase):
 
         def claim(token):
             barrier.wait()
-            results.append(vault_store.save_vault("vaultkey1", {"record": record, "ownerToken": token}))
+            results.append(
+                vault_store.save_vault("vaultkey1", {"record": record, "ownerToken": token})
+            )
 
         with mock.patch.object(central_memory, "_atomic_write_bytes", slow_write):
             threads = [threading.Thread(target=claim, args=(char * 64,)) for char in "ab"]
@@ -220,7 +237,12 @@ class BlindRelayNonceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.addCleanup(blind_relay.set_relay_dir, blind_relay.RELAY_DIR)
             blind_relay.set_relay_dir(pathlib.Path(tmp))
-            envelope = {"sender": "a" * 64, "sig": "s" * 128, "timestamp": 1000, "nonce": "../../x\..\y"}
+            envelope = {
+                "sender": "a" * 64,
+                "sig": "s" * 128,
+                "timestamp": 1000,
+                "nonce": r"../../x\..\y",
+            }
             record = blind_relay.store_envelope("canal", envelope)
             channel_files = [path.name for path in (pathlib.Path(tmp) / "canal").iterdir()]
             self.assertEqual(channel_files, [record["id"] + ".json"])

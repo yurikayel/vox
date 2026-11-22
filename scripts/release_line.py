@@ -122,7 +122,10 @@ def patch_readme(meta: dict) -> bool:
             rf"\g<1>{sha}\2",
         ),
         (
-            re.compile(r"(\| \*\*Su.{1,3}te de Testes\*\* \| )\*\*\d+\*\* \(`\d+` JS \+ `\d+` Python\)( \|)"),
+            re.compile(
+                r"(\| \*\*Su.{1,3}te de Testes\*\* \| )"
+                r"\*\*\d+\*\* \(`\d+` JS \+ `\d+` Python\)( \|)"
+            ),
             rf"\g<1>**{total}** (`{js_n}` JS + `{py_n}` Python)\2",
         ),
         (
@@ -131,7 +134,8 @@ def patch_readme(meta: dict) -> bool:
         ),
         (
             re.compile(
-                r"(Executa \*\*)\d+ testes unit.{1,3}rios e de integra.{1,4}o(\*\* \()\d+( testes Node\.js nativos \+ )\d+( testes em Python stdlib\)\.)"
+                r"(Executa \*\*)\d+ testes unit.{1,3}rios e de integra.{1,4}o"
+                r"(\*\* \()\d+( testes Node\.js nativos \+ )\d+( testes em Python stdlib\)\.)"
             ),
             rf"\g<1>{total} testes unitários e de integração\g<2>{js_n}\g<3>{py_n}\g<4>",
         ),

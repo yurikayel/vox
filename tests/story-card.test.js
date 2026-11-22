@@ -24,8 +24,7 @@ test("story-card - dimensions are defined as 9:16 vertical standard", () => {
   assert.equal(storyCard.STORY_CARD_HEIGHT, 960);
 });
 
-test("story-card - renderStoryCardCanvas draws story card elements in DOM environment", () => {
-  const drawCalls = [];
+function createFakeStoryCanvasDoc(drawCalls) {
   const fakeCtx = {
     createLinearGradient: () => ({ addColorStop() {} }),
     fillRect: (...args) => drawCalls.push(["fillRect", ...args]),
@@ -38,8 +37,7 @@ test("story-card - renderStoryCardCanvas draws story card elements in DOM enviro
     measureText: (str) => ({ width: str.length * 8 }),
   };
 
-  const prevDoc = globalThis.document;
-  globalThis.document = {
+  return {
     createElement: (tag) => {
       if (tag === "canvas") {
         return {
@@ -54,6 +52,12 @@ test("story-card - renderStoryCardCanvas draws story card elements in DOM enviro
     },
     body: { appendChild() {}, removeChild() {} },
   };
+}
+
+test("story-card - renderStoryCardCanvas draws story card elements in DOM environment", () => {
+  const drawCalls = [];
+  const prevDoc = globalThis.document;
+  globalThis.document = createFakeStoryCanvasDoc(drawCalls);
 
   try {
     const canvas = storyCard.renderStoryCardCanvas({

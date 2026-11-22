@@ -1,49 +1,36 @@
-/** @file Profile, handle lookup, wallet, pix lookup. */
+/**
+ * @file Fachada de telas de perfil, busca de handle, carteira Arweave e consulta Pix.
+ * @module app/screens-profile
+ */
 
-import * as gql from "../graphql.js";
 import * as render from "../render.js";
-import * as mock from "../mock.js";
-import * as wallet from "../wallet.js";
-import * as upload from "../upload.js";
-import * as share from "../share.js";
-import { openQrUrlSheet } from "../qr-url.js";
-import { bindProfileVaultSync } from "./profile-vault-sync.js";
-import * as mod from "../moderation.js";
-import * as cacheNode from "../cache-node.js";
-import * as cryptoDm from "../crypto-dm.js";
-import * as handles from "../handles.js";
 import * as localAccount from "../identity/index.js";
-import * as social from "../social.js";
-import * as featureFlags from "../feature-flags.js";
-import * as pixKeyHelper from "../pix-key.js";
-import * as postOwnership from "../post-ownership.js";
-import * as profileDirectory from "../profile-directory.js";
-import * as welcomeProfile from "../vox-welcome-profile.js";
-import * as meshProfile from "../mesh-profile.js";
-import * as centralMemory from "../central-memory.js";
-import { getCachedBskyPosts } from "../bsky-feed.js";
-import { describeWipeOutcome, openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
-import { syncIdentity } from "./screens-network.js";
-import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../identity/index.js";
-import { isInboxBackupText, restoreInboxBackup } from "../identity/index.js";
-import * as voxels from "../voxels.js";
 import { bindIdentityMetaForm } from "./profile-identity-meta-ui.js";
-import { getLocalIdentityMeta, pickIdentityMeta } from "../profile-identity-meta.js";
-
-function collectByIds(posts, ids) {
-  const set = new Set(ids);
-  const out = [];
-  const seen = new Set();
-  for (const p of posts || []) {
-    if (!p?.id || !set.has(p.id) || seen.has(p.id)) continue;
-    seen.add(p.id);
-    out.push(p);
-  }
-  return out;
-}
-
-let activeProfileCache = null;
+import { invalidateProfileCache as clearProfileCache, loadProfileData } from "./profile-screen-data.js";
+import {
+  broadcastActiveIdentityChanges,
+  bindPixButtons,
+  bindGithubButtons,
+  bindReadmeButtons,
+  bindSharingAndClipboardButtons,
+  bindDisplayNameAndOAuthButtons,
+  bindBlockAndMuteButtons,
+  bindVoxelButtons,
+} from "./profile-screen-settings.js";
+import {
+  bindVaultAccountButtons,
+  bindSovereigntyBackup,
+  bindLocalWipe,
+} from "./profile-screen-account.js";
+import {
+  showWallet as renderWalletScreen,
+  bindWalletAndDmButtons,
+} from "./profile-screen-wallet.js";
+import {
+  showHandleLookup as renderHandleLookup,
+  showPixLookup as renderPixLookup,
+} from "./profile-screen-lookups.js";
 
 /**
  * Invalida cache de perfil no aparelho.
@@ -51,7 +38,7 @@ let activeProfileCache = null;
  * @returns {void}
  */
 export function invalidateProfileCache() {
-  activeProfileCache = null;
+  clearProfileCache();
 }
 
 function updateProfileTabIndicator(existingLayout, activeTab) {
@@ -67,173 +54,12 @@ function updateProfileTabIndicator(existingLayout, activeTab) {
   });
 }
 
-async function loadProfileMemberships(targetAddress) {
-  const memberships = await gql.fetchUserMemberships(targetAddress);
-  const localMems = await cacheNode.getLocalPosts({ type: "membership" });
-  for (const m of localMems) {
-    if (m.author === targetAddress && !memberships.some((x) => x.communityId === m.communityId)) {
-      memberships.push({ id: m.id, communityId: m.communityId });
-    }
-  }
-  return memberships;
-}
-
-async function loadProfileWalletAndDm(isSelf) {
-  let dmPub = null;
-  if (isSelf) {
-    dmPub = await cryptoDm.getPublicJwk();
-  }
-  let balance = "0.000";
-  if (wallet.hasWallet() && isSelf) {
-    try {
-      balance = await wallet.getBalance(await wallet.getAddress());
-    } catch {
-      balance = "0.000";
-    }
-  }
-  return { dmPub, balance };
-}
-
-async function fetchHandleWithConflict(targetAddress) {
-  const handle = await gql.fetchHandleForAddress(targetAddress);
-  if (!handle) return { handle: null, conflictInfo: null };
-  const hRes = await gql.fetchHandle(handle);
-  const conflictInfo = hRes && hRes.isConflict ? hRes : null;
-  return { handle, conflictInfo };
-}
-
-function resolveIdentityFields(targetAddress, isSelf, resolved, mockProf) {
-  if (welcomeProfile.isWelcomeRouteId(targetAddress)) {
-    return {
-      displayName: resolved.name || "Vox",
-      handleOverride: "vox",
-      profileBio: resolved.bio || "",
-    };
-  }
-  if (mockProf) {
-    return {
-      displayName: mockProf.name || resolved.name || "",
-      handleOverride: null,
-      profileBio: mockProf.bio || resolved.bio || "",
-    };
-  }
-  const selfName = isSelf ? localAccount.getDisplayName() : "";
-  return {
-    displayName: resolved.name || selfName,
-    handleOverride: null,
-    profileBio: resolved.bio || "",
-  };
-}
-
-async function loadProfileIdentity(targetAddress, isSelf) {
-  const { handle: fetchedHandle, conflictInfo } = await fetchHandleWithConflict(targetAddress);
-  const mockProf = mock.getMockProfile(targetAddress);
-  const resolved = await profileDirectory.resolveProfile(targetAddress);
-  const { displayName, handleOverride, profileBio } = resolveIdentityFields(targetAddress, isSelf, resolved, mockProf);
-  const handle = handleOverride || fetchedHandle;
-  const pixKey = isSelf ? pixKeyHelper.storedPixValue(localAccount.getPixKey()) : (mockProf?.pixKey || "");
-  const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
-  return { handle, conflictInfo, mockProf, resolved, displayName, profileBio, pixKey, pixKeyMasked };
-}
-
-async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
-  const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
-  let authorPosts = localPosts.filter((p) => (p.author || p.owner) === targetAddress);
-  if (isSelf) authorPosts = postOwnership.mapOwnLocalFlags(authorPosts, user);
-  if (!authorPosts.length && mockProf) {
-    authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
-  }
-  const allAvailable = [...localPosts, ...mock.MOCK_DEMO_TOPICS, ...getCachedBskyPosts()];
-  const starredPosts = collectByIds(allAvailable, social.getStarredPostIds());
-  const savedPosts = collectByIds(allAvailable, social.getSavedPostIds());
-  return { authorPosts, allAvailable, starredPosts, savedPosts };
-}
-
-function resolveProfileSocialFields(isSelf, targetAddress, mockProf, resolved) {
-  if (isSelf) {
-    const readme = social.getLocalReadme();
-    const enrich = localAccount.getProfileEnrichment();
-    return {
-      githubHandle: social.getLocalGithubHandle(),
-      readme,
-      finalReadme: readme,
-      pinnedPostId: social.getPinnedPostId(targetAddress),
-      oauthProvider: enrich ? enrich.oauthProvider || "" : "",
-      identityMeta: getLocalIdentityMeta(targetAddress),
-    };
-  }
-  const readme = mockProf ? mockProf.readme || "" : "";
-  return {
-    githubHandle: mockProf ? mockProf.githubHandle || "" : "",
-    readme,
-    finalReadme: readme,
-    pinnedPostId: mockProf ? mockProf.pinnedPostId || "" : "",
-    oauthProvider: "",
-    identityMeta: pickIdentityMeta(resolved, mockProf),
-  };
-}
-
-function buildProfileDataObject({
-  targetAddress, isSelf, ident, postsData, balance, memberships, dmPub, activeTab,
-}) {
-  const soc = resolveProfileSocialFields(isSelf, targetAddress, ident.mockProf, ident.resolved);
-  return {
-    address: targetAddress,
-    isCurrentWallet: isSelf,
-    handle: ident.handle || "",
-    isConflict: Boolean(ident.conflictInfo?.isConflict),
-    claimants: ident.conflictInfo?.claimants || [],
-    displayName: ident.displayName,
-    profileBio: ident.profileBio,
-    stats: ident.mockProf?.stats || null,
-    posts: postsData.authorPosts,
-    authorPostList: postsData.authorPosts,
-    allAvailablePosts: postsData.allAvailable,
-    starredPosts: postsData.starredPosts,
-    savedPosts: postsData.savedPosts,
-    hasWallet: wallet.hasWallet(),
-    balance,
-    pixKey: ident.pixKey,
-    pixKeyMasked: ident.pixKeyMasked,
-    ...soc,
-    isBlocked: mod.isUserBlocked(targetAddress),
-    isMuted: mod.isUserMuted(targetAddress),
-    meshDiscoverable: localAccount.getMeshDiscoverable(),
-    receipts: voxels.loadVoxelReceipts(targetAddress),
-    memberships, dmPub, activeTab,
-  };
-}
-
-async function loadProfileData(targetAddress, isSelf, user, activeTab = "posts") {
-  if (activeProfileCache && activeProfileCache.address === targetAddress) {
-    const all = activeProfileCache.allAvailablePosts || [];
-    activeProfileCache.starredPosts = collectByIds(all, social.getStarredPostIds());
-    activeProfileCache.savedPosts = collectByIds(all, social.getSavedPostIds());
-    activeProfileCache.activeTab = activeTab;
-    return activeProfileCache;
-  }
-
-  const memberships = await loadProfileMemberships(targetAddress);
-  const { dmPub, balance } = await loadProfileWalletAndDm(isSelf);
-  const ident = await loadProfileIdentity(targetAddress, isSelf);
-  if (ident.mockProf && !memberships.some((x) => x.communityId === "demo-aprenda-vox")) {
-    memberships.push({ id: `mem_${targetAddress}`, communityId: "demo-aprenda-vox" });
-  }
-  const postsData = await loadProfilePosts(targetAddress, isSelf, user, ident.mockProf);
-
-  const data = buildProfileDataObject({
-    targetAddress, isSelf, ident, postsData, balance, memberships, dmPub, activeTab,
-  });
-  activeProfileCache = data;
-  return data;
-}
-
 /**
  * Monta página de perfil.
  *
- * @param {string} address
- * @param {string} activeTab [optional]
- * @returns {void}
+ * @param {string} address Endereço ou rota do perfil a exibir.
+ * @param {string} [activeTab="posts"] Identificador da aba ativa.
+ * @returns {Promise<void>}
  */
 export async function showProfile(address, activeTab = "posts") {
   const user = await getActiveUser();
@@ -262,526 +88,25 @@ export async function showProfile(address, activeTab = "posts") {
   bindProfileButtons(user, targetAddress, isSelf, pData.dmPub, activeTab);
 }
 
-function readSovereigntyPassphrase() {
-  return document.getElementById("input-sovereignty-passphrase")?.value || "";
-}
-
-function downloadSovereigntyFile(jsonStr, routeId) {
-  share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${routeId || "identity"}.voxid`);
-}
-
-async function resolveImportPassphrase(text, fieldValue) {
-  if (peekBackupKind(text) !== KIND_WRAPPED) return fieldValue;
-  if (String(fieldValue || "").trim()) return fieldValue;
-  return window.prompt("Este .voxid está cifrado. Senha:") || "";
-}
-
-function bindSovereigntyExport() {
-  const btn = document.getElementById("btn-export-account");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    try {
-      const jsonStr = await exportAccountBundle(readSovereigntyPassphrase(), { asFile: true });
-      downloadSovereigntyFile(jsonStr, JSON.parse(jsonStr).routeId);
-      share.showToast("Arquivo de soberania exportado — guarde offline.");
-    } catch (err) {
-      share.showToast(`Erro ao exportar backup: ${err.message}`, "error");
-    }
-  });
-}
-
-// Backups do e-mail: vários de uma vez, do mais antigo ao mais novo, com a Senha pedida uma vez.
-async function restoreBackupFiles(files, activeTab) {
-  const texts = await Promise.all(files.map((f) => f.text()));
-  const backups = texts.filter(isInboxBackupText).length;
-  if (backups === 0 && files.length === 1) return restoreSovereigntyFile(files[0], activeTab);
-  if (backups !== files.length) throw new Error("Escolha um .voxid sozinho ou só backups do e-mail (.txt).");
-  const secret = readSovereigntyPassphrase() || window.prompt("Senha Soberana dos backups:") || "";
-  const ordered = texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to);
-  for (const text of ordered) await restoreInboxBackup(text, secret);
-  share.showToast(`Conta restaurada de ${ordered.length} backup(s) do e-mail.`);
-  showProfile(null, activeTab);
-}
-
-async function restoreSovereigntyFile(file, activeTab) {
-  const text = await file.text();
-  const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
-  const ok = await importAccountBundle(text, secret, { asFile: true });
-  if (!ok) {
-    share.showToast("Falha ao validar chaves do backup.", "error");
-    return;
-  }
-  share.showToast("Identidade restaurada com sucesso!");
-  showProfile(null, activeTab);
-}
-
-function bindSovereigntyImport(activeTab) {
-  const input = document.getElementById("file-import-account");
-  if (!input) return;
-  input.addEventListener("change", async () => {
-    const files = [...(input.files || [])];
-    if (!files.length) return;
-    try {
-      await restoreBackupFiles(files, activeTab);
-    } catch (err) {
-      share.showToast(`Erro ao importar: ${err.message}`, "error");
-    }
-  });
-}
-
-function bindSovereigntyBackup(isSelf, activeTab) {
-  if (!isSelf) return;
-  bindSovereigntyExport();
-  bindSovereigntyImport(activeTab);
-  bindProfileVaultSync();
-}
-
-function clearPassphraseField() {
-  const el = document.getElementById("input-sovereignty-passphrase");
-  if (el) el.value = "";
-}
-
-async function runLocalWipe(activeTab) {
-  if (!localAccount.confirmLocalWipe()) return;
-  clearPassphraseField();
-  const outcome = await wipeLocalDevice();
-  const { message, kind } = describeWipeOutcome(outcome);
-  share.showToast(message, kind);
-  await showProfile(null, activeTab);
-}
-
-function bindLocalWipe(isSelf, activeTab) {
-  const btn = document.getElementById("btn-wipe-local-account");
-  if (!isSelf || !btn) return;
-  btn.addEventListener("click", () => {
-    void runLocalWipe(activeTab);
-  });
-}
-
-function handlePixFormSubmit(rawVal, feedback, address, activeTab) {
-  if (!rawVal) {
-    invalidateProfileCache();
-    localAccount.clearPixKey();
-    share.showToast("Chave Pix removida do perfil.");
-    showProfile(address, activeTab);
-    return;
-  }
-  const validation = pixKeyHelper.validatePixKey(rawVal);
-  if (!validation.valid) {
-    if (feedback) feedback.innerHTML = `<span style="color:var(--danger);">${validation.error}</span>`;
-    return;
-  }
-  invalidateProfileCache();
-  localAccount.setPixKey(validation.normalized);
-  share.showToast("Chave Pix salva no seu perfil local!");
-  showProfile(address, activeTab);
-}
-
-function bindPixButtons(address, activeTab, isSelf) {
-  const formPixKey = document.getElementById("form-pix-key");
-  if (formPixKey && isSelf) {
-    formPixKey.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const rawVal = document.getElementById("input-pix-key")?.value.trim() || "";
-      const feedback = document.getElementById("pix-feedback");
-      handlePixFormSubmit(rawVal, feedback, address, activeTab);
-    });
-  }
-
-  const btnClearPix = document.getElementById("btn-clear-pix");
-  if (btnClearPix && isSelf) {
-    btnClearPix.addEventListener("click", () => {
-      invalidateProfileCache();
-      localAccount.clearPixKey();
-      share.showToast("Chave Pix removida.");
-      showProfile(address, activeTab);
-    });
-  }
-}
-
-function bindGithubButtons(address, activeTab, isSelf) {
-  const formGithub = document.getElementById("form-github-handle");
-  if (formGithub && isSelf) {
-    formGithub.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const val = document.getElementById("input-github-handle")?.value.trim() || "";
-      invalidateProfileCache();
-      social.setLocalGithubHandle(val);
-      share.showToast(val ? "Perfil do GitHub salvo!" : "GitHub removido.");
-      showProfile(address, activeTab);
-    });
-  }
-
-  const btnClearGithub = document.getElementById("btn-clear-github");
-  if (btnClearGithub && isSelf) {
-    btnClearGithub.addEventListener("click", () => {
-      invalidateProfileCache();
-      social.setLocalGithubHandle("");
-      share.showToast("GitHub removido.");
-      showProfile(address, activeTab);
-    });
-  }
-}
-
-function bindReadmeButtons(address, activeTab, isSelf) {
-  const btnToggleReadme = document.getElementById("btn-toggle-edit-readme");
-  const formReadme = document.getElementById("form-edit-readme");
-  const readmeView = document.getElementById("readme-view");
-  if (btnToggleReadme && formReadme) {
-    btnToggleReadme.addEventListener("click", () => {
-      const isHidden = formReadme.style.display === "none";
-      formReadme.style.display = isHidden ? "block" : "none";
-      if (readmeView) readmeView.style.display = isHidden ? "none" : "block";
-    });
-  }
-
-  const btnCancelReadme = document.getElementById("btn-cancel-readme");
-  if (btnCancelReadme && formReadme) {
-    btnCancelReadme.addEventListener("click", () => {
-      formReadme.style.display = "none";
-      if (readmeView) readmeView.style.display = "block";
-    });
-  }
-
-  if (formReadme && isSelf) {
-    formReadme.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const val = document.getElementById("input-profile-readme")?.value || "";
-      invalidateProfileCache();
-      social.setLocalReadme(val);
-      share.showToast("README.md atualizado!");
-      showProfile(address, activeTab);
-    });
-  }
-}
-
-function bindQrShareButtons(address) {
-  document.querySelectorAll("[data-qr-share='connect'], #btn-qr-connect-link").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const targetId = btn.dataset.qrId || address;
-      openQrUrlSheet(share.connectShareUrl(targetId));
-    });
-  });
-}
-
-function bindSharingAndClipboardButtons(address) {
-  const btnCopyRoute = document.getElementById("btn-copy-author-route");
-  if (btnCopyRoute) {
-    btnCopyRoute.addEventListener("click", (e) => {
-      const routeToCopy = e.currentTarget.dataset.route || address;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(routeToCopy);
-        share.showToast("ID de rota copiado!");
-      }
-    });
-  }
-
-  const btnCopyDmLink = document.getElementById("btn-copy-my-dm-link");
-  if (btnCopyDmLink) {
-    btnCopyDmLink.addEventListener("click", () => {
-      const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(address)}`;
-      navigator.clipboard.writeText(link);
-      share.showToast("Link copiado para a área de transferência!");
-    });
-  }
-
-  document.getElementById("btn-copy-connect-link")?.addEventListener("click", () => {
-    void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName(), invite: true });
-  });
-
-  bindQrShareButtons(address);
-}
-
-function broadcastActiveIdentityChanges() {
-  void syncIdentity();
-  void meshProfile.syncMeshProfileCard();
-  void centralMemory.syncWithCentralMemory();
-}
-
-function bindDisplayNameForm(address) {
-  document.getElementById("form-display-name")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const name = document.getElementById("input-display-name")?.value.trim();
-    invalidateProfileCache();
-    localAccount.setDisplayName(name);
-    share.showToast("Nome local atualizado!");
-    broadcastActiveIdentityChanges();
-    showProfile(address);
-  });
-}
-
-function bindDisplayNameAndOAuthButtons(address, activeTab) {
-  bindDisplayNameForm(address);
-  document.getElementById("profile-mesh-discoverable")?.addEventListener("change", (e) => {
-    localAccount.setMeshDiscoverable(Boolean(e.target.checked));
-    void meshProfile.syncMeshProfileCard().then(() => {
-      void centralMemory.syncWithCentralMemory();
-      share.showToast(e.target.checked ? "Cartão publicado na malha." : "Cartão revogado na malha.");
-      showProfile(address, activeTab);
-    });
-  });
-  document.getElementById("btn-open-oauth-modal")?.addEventListener("click", () => {
-    openOAuthEnrichModal({ mode: "import",
-      onComplete: () => {
-        broadcastActiveIdentityChanges();
-        showProfile(address, activeTab);
-      },
-    });
-  });
-  document.getElementById("btn-clear-oauth-enrich")?.addEventListener("click", () => {
-    localAccount.clearProfileEnrichment();
-    share.showToast("Nome/foto importados removidos.");
-    broadcastActiveIdentityChanges();
-    showProfile(address, activeTab);
-  });
-}
-
-function bindCreateVaultAccount(isSelf) {
-  const formCreateVault = document.getElementById("form-create-vault-account");
-  if (!formCreateVault || !isSelf) return;
-  formCreateVault.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("input-new-account-name")?.value.trim() || "";
-    if (!name) return;
-    try {
-      const newAcc = await localAccount.createAdditionalAccount({ displayName: name });
-      profileDirectory.setProfileCard(newAcc.routeId, { name, discoverable: true, updatedAt: Date.now() });
-      broadcastActiveIdentityChanges();
-      share.showToast(`Nova conta "${name}" criada e ativada!`);
-      await showProfile(newAcc.routeId, "about");
-    } catch (err) {
-      share.showToast(`Erro ao criar conta: ${err.message}`, "error");
-    }
-  });
-}
-
-function bindRemoveVaultAccount(address) {
-  document.querySelectorAll(".btn-remove-vault-account").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const targetRoute = btn.dataset.route;
-      if (!targetRoute) return;
-      if (confirm("Remover esta conta do cofre local deste aparelho?")) {
-        localAccount.removeVaultAccount(targetRoute);
-        share.showToast("Conta removida do cofre.");
-        showProfile(address, "about");
-      }
-    });
-  });
-}
-
-function bindSwitchAndRemoveVaultAccounts(address) {
-  document.querySelectorAll(".btn-switch-vault-account").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const targetRoute = btn.dataset.route;
-      if (!targetRoute) return;
-      try {
-        const ok = await localAccount.switchActiveAccount(targetRoute);
-        if (ok) {
-          invalidateProfileCache();
-          broadcastActiveIdentityChanges();
-          share.showToast("Identidade alternada com sucesso!");
-          await showProfile(targetRoute, "about");
-        } else {
-          share.showToast("Falha ao alternar conta.", "error");
-        }
-      } catch (err) {
-        share.showToast(`Erro ao alternar: ${err.message}`, "error");
-      }
-    });
-  });
-
-  bindRemoveVaultAccount(address);
-}
-
-function bindVaultAccountButtons(address, isSelf) {
-  bindCreateVaultAccount(isSelf);
-  bindSwitchAndRemoveVaultAccounts(address);
-}
-
-function bindWalletGenerateAndDisconnect(address) {
-  const btnGenWallet = document.getElementById("btn-generate-wallet");
-  if (btnGenWallet) {
-    btnGenWallet.addEventListener("click", async () => {
-      btnGenWallet.disabled = true;
-      btnGenWallet.textContent = "Gerando carteira…";
-      try {
-        await wallet.generateNewWallet();
-        await syncIdentity();
-        share.showToast("Carteira Arweave gerada com sucesso!");
-        showProfile(address);
-      } catch (err) {
-        share.showToast(`Erro: ${err.message}`, "error");
-        btnGenWallet.disabled = false;
-        btnGenWallet.textContent = "⚡ Gerar Carteira Arweave";
-      }
-    });
-  }
-
-  const btnDiscWallet = document.getElementById("btn-disconnect-wallet");
-  if (btnDiscWallet) {
-    btnDiscWallet.addEventListener("click", () => {
-      if (confirm("Desconectar carteira Arweave deste navegador?")) {
-        wallet.removeWallet();
-        share.showToast("Carteira desconectada.");
-        showProfile(address);
-      }
-    });
-  }
-}
-
-function bindWalletAndDmButtons(address, isSelf, dmPub, user) {
-  bindWalletGenerateAndDisconnect(address);
-
-  const btnCopy = document.getElementById("btn-copy-dmpub");
-  if (btnCopy && dmPub) {
-    btnCopy.addEventListener("click", () => {
-      navigator.clipboard.writeText(JSON.stringify(dmPub));
-      share.showToast("Chave pública Dm-Pub copiada!");
-    });
-  }
-
-  bindPublishDmPubButton(isSelf, dmPub);
-  bindClaimHandleButton(isSelf, user);
-}
-
-function requireArweaveUpload(missingWalletMsg) {
-  if (!featureFlags.isFeatureEnabled("arweaveUpload")) {
-    share.showToast(featureFlags.disabledMessage("arweaveUpload"), "error");
-    return false;
-  }
-  if (!wallet.hasWallet()) {
-    share.showToast(missingWalletMsg, "error");
-    return false;
-  }
-  return true;
-}
-
-function bindPublishDmPubButton(isSelf, dmPub) {
-  const btnPub = document.getElementById("btn-publish-dmpub");
-  if (!btnPub || !isSelf || !dmPub) return;
-  btnPub.addEventListener("click", async () => {
-    if (!requireArweaveUpload("Conecte uma carteira Arweave para anunciar on-chain.")) return;
-    btnPub.disabled = true;
-    btnPub.textContent = "Anunciando on-chain…";
-    try {
-      const pubStr = JSON.stringify(dmPub);
-      const tags = upload.buildTags("profile-key", { "Dm-Pub": pubStr });
-      await upload.postData({ type: "profile-key", dmPub: pubStr }, tags);
-      share.showToast("Chave pública anunciada com sucesso!");
-      btnPub.textContent = "✓ Anunciada";
-    } catch (err) {
-      share.showToast(`Erro ao anunciar: ${err.message}`, "error");
-      btnPub.disabled = false;
-      btnPub.textContent = "🌐 Publicar Chave on-chain";
-    }
-  });
-}
-
-async function executeClaimHandle(slug, user) {
-  const tags = upload.buildTags("handle", { Handle: slug, "Owner-Addr": user });
-  await upload.postData({ handle: slug, owner: user }, tags);
-  handles.cacheHandleMapping(slug, user);
-  share.showToast(`Handle @${slug} gravado com sucesso!`);
-  showProfile(user);
-}
-
-function bindClaimHandleButton(isSelf, user) {
-  const formClaim = document.getElementById("form-claim-handle");
-  if (!formClaim || !isSelf) return;
-  formClaim.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!requireArweaveUpload("Conecte uma carteira Arweave para reivindicar handle on-chain.")) return;
-    const raw = document.getElementById("input-handle-slug")?.value.trim();
-    const check = handles.validateSlug(raw);
-    if (!check.valid) {
-      share.showToast(check.error, "error");
-      return;
-    }
-    const btn = document.getElementById("btn-submit-handle");
-    btn.disabled = true;
-    btn.textContent = "Gravando handle…";
-    try {
-      await executeClaimHandle(check.slug, user);
-    } catch (err) {
-      share.showToast(`Erro ao gravar handle: ${err.message}`, "error");
-      btn.disabled = false;
-      btn.textContent = "Salvar @handle";
-    }
-  });
-}
-
-function bindBlockAndMuteButtons(address, activeTab, isSelf) {
-  const btnToggleBlock = document.getElementById("btn-toggle-block");
-  if (btnToggleBlock && !isSelf) {
-    btnToggleBlock.addEventListener("click", () => {
-      const route = btnToggleBlock.dataset.route || address;
-      if (mod.isUserBlocked(route)) {
-        mod.unblockUser(route);
-        share.showToast("Autor desbloqueado.");
-      } else {
-        mod.blockUser(route);
-        share.showToast("Autor bloqueado (posts ocultados e fofocas descartadas).");
-      }
-      showProfile(address, activeTab);
-    });
-  }
-
-  const btnToggleMute = document.getElementById("btn-toggle-mute");
-  if (btnToggleMute && !isSelf) {
-    btnToggleMute.addEventListener("click", () => {
-      const route = btnToggleMute.dataset.route || address;
-      if (mod.isUserMuted(route)) {
-        mod.unmuteUser(route);
-        share.showToast("Autor desilenciado.");
-      } else {
-        mod.muteUser(route);
-        share.showToast("Autor silenciado no feed.");
-      }
-      showProfile(address, activeTab);
-    });
-  }
-}
-
-function bindVoxelButtons(address, activeTab, isSelf) {
-  if (activeTab !== "voxels" || !isSelf) return;
-  const btn = document.getElementById("btn-export-voxel-passport");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    try {
-      const receipts = voxels.loadVoxelReceipts(address);
-      const out = await voxels.exportSignedVoxelPassport(address, receipts, [], localAccount.signPayload);
-      const blob = new Blob([JSON.stringify(out.signedPassport, null, 2)], { type: "application/json" });
-      share.downloadBlob(blob, out.filename);
-      share.showToast("Passaporte Cívico exportado com sucesso! Guarde seu arquivo.");
-    } catch (err) {
-      share.showToast(`Erro ao exportar passaporte: ${err.message}`, "error");
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
 /**
  * Liga botões da página de perfil.
  *
- * @param {string} user
- * @param {string} address
- * @param {unknown} isSelf
- * @param {unknown} dmPub
- * @param {string} activeTab [optional]
+ * @param {string} user Endereço da identidade ativa.
+ * @param {string} address Endereço do perfil visualizado.
+ * @param {boolean} isSelf Indica se é a própria conta do usuário.
+ * @param {unknown} dmPub Chave JWK pública para DM.
+ * @param {string} [activeTab="posts"] Aba ativa.
  * @returns {void}
  */
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
-  bindPixButtons(address, activeTab, isSelf);
-  bindGithubButtons(address, activeTab, isSelf);
-  bindReadmeButtons(address, activeTab, isSelf);
+  const refresh = (addr, tab) => {
+    void showProfile(addr || address, tab || activeTab);
+  };
+  bindPixButtons(address, activeTab, isSelf, refresh);
+  bindGithubButtons(address, activeTab, isSelf, refresh);
+  bindReadmeButtons(address, activeTab, isSelf, refresh);
   bindSharingAndClipboardButtons(address);
-  bindDisplayNameAndOAuthButtons(address, activeTab);
+  bindDisplayNameAndOAuthButtons(address, activeTab, refresh);
   bindIdentityMetaForm({
     address,
     activeTab,
@@ -792,170 +117,39 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
       showProfile(addr, tab);
     },
   });
-  bindVaultAccountButtons(address, isSelf);
-  bindWalletAndDmButtons(address, isSelf, dmPub, user);
-  bindSovereigntyBackup(isSelf, activeTab);
-  bindLocalWipe(isSelf, activeTab);
-  bindBlockAndMuteButtons(address, activeTab, isSelf);
+  bindVaultAccountButtons(address, isSelf, refresh);
+  bindWalletAndDmButtons(address, isSelf, dmPub, user, refresh);
+  bindSovereigntyBackup(isSelf, activeTab, refresh);
+  bindLocalWipe(isSelf, activeTab, refresh);
+  bindBlockAndMuteButtons(address, activeTab, isSelf, refresh);
   bindVoxelButtons(address, activeTab, isSelf);
-}
-
-function renderHandleLookupResult(main, slug, result) {
-  if (!result || !result.primaryOwner) {
-    if (/^vox-[a-z0-9]+$/i.test(slug)) {
-      location.hash = "#/";
-      return;
-    }
-    main.innerHTML = "";
-    render.renderProfileGridNotFound(main, {
-      handle: slug,
-      bodyHtml: `<div class="empty"><p>Nenhum endereço encontrado para o perfil <code>@${render.escapeHtml(slug)}</code>.</p></div>`,
-      actionsHtml: `<a class="btn btn-outline" href="#/">Voltar ao início</a>`,
-    });
-    return;
-  }
-  if (result.isConflict) {
-    main.innerHTML = "";
-    render.renderHandleConflict(main, slug, result.claimants);
-    return;
-  }
-  location.hash = `#/u/${encodeURIComponent(result.primaryOwner)}`;
 }
 
 /**
  * Busca perfil por handle.
  *
- * @param {unknown} rawSlug
- * @returns {void}
+ * @param {unknown} rawSlug Slug ou handle a ser consultado.
+ * @returns {Promise<void>}
  */
 export async function showHandleLookup(rawSlug) {
-  const user = await getActiveUser();
-  const slug = handles.normalizeSlug(rawSlug);
-  const main = render.renderShell(makeShellProps(user, "profile", `@${slug || "handle"}`));
-  render.renderLoading(main, `Buscando perfil de @${slug}…`);
-
-  const validation = handles.validateSlug(slug);
-  if (!validation.valid) {
-    main.innerHTML = "";
-    render.renderError(main, `Handle inválido: ${validation.error}`);
-    return;
-  }
-
-  const result = await gql.fetchHandle(slug);
-  renderHandleLookupResult(main, slug, result);
-}
-
-function bindWalletGenerateAction() {
-  const btnGen = document.getElementById("btn-generate-wallet");
-  if (!btnGen) return;
-  btnGen.addEventListener("click", async () => {
-    btnGen.disabled = true;
-    btnGen.textContent = "Gerando par de chaves Arweave…";
-    try {
-      await wallet.generateNewWallet();
-      await syncIdentity();
-      share.showToast("Carteira criada com sucesso!");
-      showWallet();
-    } catch (err) {
-      share.showToast(`Erro ao gerar: ${err.message}`, "error");
-      btnGen.disabled = false;
-      btnGen.textContent = "⚡ Gerar Nova Carteira";
-    }
-  });
-}
-
-function bindWalletImportAndDisconnect() {
-  const formImport = document.getElementById("form-import-wallet");
-  if (formImport) {
-    formImport.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const input = document.getElementById("wallet-jwk-input")?.value.trim();
-      try {
-        const jwk = JSON.parse(input);
-        await wallet.saveJwk(jwk);
-        await syncIdentity();
-        share.showToast("Carteira importada e salva localmente!");
-        showWallet();
-      } catch {
-        share.showToast("JSON JWK inválido. Verifique o formato.", "error");
-      }
-    });
-  }
-
-  const btnDisc = document.getElementById("btn-disconnect-wallet");
-  if (btnDisc) {
-    btnDisc.addEventListener("click", () => {
-      if (confirm("Remover a carteira deste navegador? Certifique-se de ter backup.")) {
-        wallet.removeWallet();
-        share.showToast("Carteira removida do navegador.");
-        showWallet();
-      }
-    });
-  }
+  await renderHandleLookup(rawSlug);
 }
 
 /**
  * Monta tela da carteira.
  *
- * @returns {void}
+ * @returns {Promise<void>}
  */
 export async function showWallet() {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "profile", "Carteira"));
-
-  let balance = "0.000";
-  if (user) {
-    try {
-      balance = await wallet.getBalance(user);
-    } catch {
-      balance = "Indisponível";
-    }
-  }
-
-  render.renderWallet(main, { address: user, balance, hasWallet: wallet.hasWallet() });
-  bindWalletGenerateAction();
-  bindWalletImportAndDisconnect();
-}
-
-function resolveProfileByPixKey(cleanQuery, myPix, myRouteId) {
-  if (myPix && (myPix.toLowerCase() === cleanQuery.toLowerCase() || pixKeyHelper.normalizePixKey(cleanQuery).normalized === myPix)) {
-    return {
-      routeId: myRouteId,
-      name: localAccount.getDisplayName() || "Você",
-      handle: "",
-      pixKey: myPix,
-      pixKeyMasked: pixKeyHelper.maskForDisplay(myPix),
-    };
-  }
-  const mockFound = mock.findMockByPixKey(cleanQuery);
-  if (mockFound) {
-    return {
-      routeId: mockFound.routeId,
-      name: mockFound.name,
-      handle: mockFound.handle,
-      pixKey: mockFound.pixKey,
-      pixKeyMasked: pixKeyHelper.maskForDisplay(mockFound.pixKey),
-    };
-  }
-  return null;
+  await renderWalletScreen();
 }
 
 /**
  * Consulta chave Pix no perfil.
  *
- * @param {unknown} query
- * @returns {void}
+ * @param {unknown} query Chave Pix a ser consultada.
+ * @returns {Promise<void>}
  */
 export async function showPixLookup(query) {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "profile", "Consulta Pix"));
-  render.renderLoading(main);
-
-  const cleanQuery = String(query || "").trim();
-  const myPix = pixKeyHelper.storedPixValue(localAccount.getPixKey());
-  const myRouteId = await localAccount.getRouteId();
-  const foundProfile = resolveProfileByPixKey(cleanQuery, myPix, myRouteId);
-
-  main.innerHTML = "";
-  render.renderPixLookup(main, query, foundProfile);
+  await renderPixLookup(query);
 }

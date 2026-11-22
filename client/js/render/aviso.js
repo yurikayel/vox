@@ -26,11 +26,13 @@ export const AVISO_SAFETY_HINT = "Não ponha telefone, CPF ou endereço de ningu
 
 const avisosHref = (communityId) => `#/c/${encodeURIComponent(communityId)}/avisos`;
 
-function whenLine(aviso) {
-  if (parseInstant(aviso.eventAt) == null) return "";
-  const when = formatPtBrDateTimeFull(aviso.eventAt);
+function whenLine(aviso, icsId = "") {
+  const eventAt = aviso?.eventAt;
+  if (parseInstant(eventAt) == null) return "";
+  const when = formatPtBrDateTimeFull(eventAt);
   const place = aviso.eventPlace ? ` · ${escapeHtml(aviso.eventPlace)}` : "";
-  return `<p class="aviso-when">Quando: ${escapeHtml(when)}${place}</p>`;
+  const btn = icsId ? ` <button type="button" class="btn btn-sm btn-outline btn-aviso-ics" data-id="${escapeHtml(icsId)}">📅 Agenda (.ics)</button>` : "";
+  return `<p class="aviso-when">Quando: ${escapeHtml(when)}${place}${btn}</p>`;
 }
 
 const hasCount = (counts, key) => Number(counts?.[key] || 0) > 0;
@@ -114,6 +116,13 @@ function cardActions(item, { isMod, canRespond, live }) {
   ].join("");
 }
 
+function resolveCardAviso(item) {
+  const aviso = item.aviso || item;
+  const eventAt = item.eventAt ?? aviso.eventAt;
+  const id = item.id || aviso.id || "";
+  return { aviso, icsId: eventAt ? id : "" };
+}
+
 /**
  * Monta o cartão de um aviso.
  *
@@ -133,14 +142,14 @@ function cardActions(item, { isMod, canRespond, live }) {
  * @returns {string} HTML do cartão (`<article>`).
  */
 export function renderAvisoCard(item, { isMod = false, canRespond = false } = {}) {
-  const { aviso } = item;
+  const { aviso, icsId } = resolveCardAviso(item);
   const state = STATE_LABEL[aviso.avisoState] || "";
   const live = aviso.avisoState === "ativo";
   return `<article class="card aviso-card${live ? "" : " is-closed"}" data-aviso-card="${escapeHtml(aviso.id)}">
     <p class="aviso-seal">📣 Aviso da coordenação · ${KIND_LABEL[aviso.avisoKind] || ""} · código <strong>${escapeHtml(item.code)}</strong>${state ? ` · <em>${state}</em>` : ""}</p>
     <h3 class="aviso-title">${escapeHtml(aviso.title)}</h3>
     ${aviso.body ? `<p class="aviso-body">${escapeHtml(aviso.body)}</p>` : ""}
-    ${whenLine(aviso)}
+    ${whenLine(aviso, icsId)}
     ${countsLine("No Vox", item.tally?.members)}
     ${countsLine("De fora do grupo", item.tally?.outsiders)}
     ${countsLine("Contado no WhatsApp", pastedCounts(item.count))}

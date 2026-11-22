@@ -5,6 +5,7 @@ test_p2p_seeder.py — Testes unitários do Seeder P2P e Descoberta Segura de Pe
 
 import hashlib
 import unittest
+
 from relay import p2p_seeder
 
 
@@ -14,7 +15,7 @@ class TestP2PSeeder(unittest.TestCase):
 
     def test_authorize_and_register_seed(self):
         valid_hash = hashlib.sha256(b"vox_test_payload_1").hexdigest()
-        
+
         # Sem autorização na allowlist deve falhar
         with self.assertRaises(PermissionError):
             self.seeder.register_blob_seed(valid_hash, 1024, "image/jpeg")
@@ -100,15 +101,21 @@ class TestPeerDiscovery(unittest.TestCase):
     def test_reject_incompatible_or_malformed_peer(self):
         # Protocolo errado
         with self.assertRaises(ValueError):
-            self.discovery.register_peer({"nodeId": "n1", "protocol": "BITTORRENT-v2", "httpPort": 3921})
+            self.discovery.register_peer(
+                {"nodeId": "n1", "protocol": "BITTORRENT-v2", "httpPort": 3921}
+            )
 
         # Porta inválida
         with self.assertRaises(ValueError):
-            self.discovery.register_peer({"nodeId": "n1", "protocol": "VOX-PEER-v1", "httpPort": 999999})
+            self.discovery.register_peer(
+                {"nodeId": "n1", "protocol": "VOX-PEER-v1", "httpPort": 999999}
+            )
 
         # Node ID vazio
         with self.assertRaises(ValueError):
-            self.discovery.register_peer({"nodeId": "", "protocol": "VOX-PEER-v1", "httpPort": 3921})
+            self.discovery.register_peer(
+                {"nodeId": "", "protocol": "VOX-PEER-v1", "httpPort": 3921}
+            )
 
     def test_peer_expiration_ttl(self):
         discovery_quick = p2p_seeder.PeerDiscovery(local_node_id="quick", ttl_seconds=1)

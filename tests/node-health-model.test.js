@@ -81,7 +81,7 @@ test("node-health-render - renderNodeHealthBadgeHtml e listagem visual", () => {
 test("node-health-state - reatividade e assinaturas em memória", () => {
   clearNodeHealthState();
   let calls = 0;
-  const unsub = subscribeNodeHealth((list) => {
+  const unsub = subscribeNodeHealth((_list) => {
     calls++;
   });
 

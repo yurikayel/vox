@@ -10,6 +10,7 @@ import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as render from "../render.js";
 import * as aviso from "../aviso.js";
+import { buildAvisoIcs, icsDownloadFilename } from "../aviso-ics.js";
 import * as roles from "../aviso-roles.js";
 import { myRoleFor, mySkills, receivedClaims, saveMySkills, sendRoleClaim } from "./aviso-roles-dm.js";
 import { countPastedReplies } from "../aviso-replies.js";
@@ -85,6 +86,8 @@ function myChoice(responses, avisoId, routeId) {
 async function buildItems(ctx, now = Date.now()) {
   const classified = aviso.classifyAvisos(ctx.topics, ctx.meta, now);
   return Promise.all(classified.map(async (a) => ({
+    id: a.id,
+    eventAt: a.eventAt,
     aviso: a,
     code: await aviso.avisoCode(a),
     tally: aviso.tallyAvisoResponses(ctx.responses, a.id, ctx.members),
@@ -319,8 +322,20 @@ function openRequestedShare(main, ctx, items) {
   if (item) ACTIONS.enviar(ctx, item, null, main);
 }
 
+function downloadAvisoIcs(button, items) {
+  const item = items.find((i) => (i.id || i.aviso?.id) === button.dataset.id);
+  if (!item) return;
+  const target = item.aviso || item;
+  const ics = buildAvisoIcs(target);
+  if (!ics) return;
+  share.downloadBlob(new Blob([ics], { type: "text/calendar;charset=utf-8" }), icsDownloadFilename(target));
+  share.showToast("Evento salvo em .ics para sua agenda!");
+}
+
 function bindAvisoActions(main, ctx, items) {
   main.addEventListener("click", (e) => {
+    const icsBtn = e.target.closest(".btn-aviso-ics");
+    if (icsBtn) return void downloadAvisoIcs(icsBtn, items);
     const button = e.target.closest("[data-aviso-action]");
     const item = button && items.find((i) => i.aviso.id === button.dataset.avisoId);
     const action = item && ACTIONS[button.dataset.avisoAction];

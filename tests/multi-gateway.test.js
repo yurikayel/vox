@@ -75,7 +75,7 @@ test("graphql - fetchRecentTopics com crossCheck consulta todos os gateways", as
   const originalFetch = globalThis.fetch;
   gql.__resetGatewayConfigForTests();
 
-  globalThis.fetch = async (url, opts) => {
+  globalThis.fetch = async (url, _opts) => {
     const s = String(url);
     if (s.includes("gateways.json")) {
       return {

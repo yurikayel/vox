@@ -37,6 +37,47 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(!shellOnly.includes("aviso-flow.js"), "PM-01 passo 2: aviso-flow fora do precache");
 });
 
+function walkJsFiles(dir) {
+  const res = [];
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, ent.name);
+    if (ent.isDirectory()) res.push(...walkJsFiles(full));
+    else if (ent.name.endsWith(".js")) res.push(full);
+  }
+  return res;
+}
+
+function getHtmlEntryPoints(baseRoot) {
+  const pages = fs.readdirSync(baseRoot).filter((f) => f.endsWith(".html")).map((f) => path.join(baseRoot, f));
+  for (const extra of ["download/index.html", "embed/demo.html", "embed/frame-demo.html"]) {
+    if (fs.existsSync(path.join(baseRoot, extra))) pages.push(path.join(baseRoot, extra));
+  }
+  const entries = [];
+  for (const page of pages) {
+    for (const m of fs.readFileSync(page, "utf8").matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) {
+      if (!/^https?:/.test(m[1])) entries.push(path.resolve(path.dirname(page), m[1]));
+    }
+  }
+  return entries;
+}
+
+function resolveReachableJs(baseRoot) {
+  const importRe = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|import\s*["']([^"']+)["']/g;
+  const toRel = (abs) => "./" + path.relative(baseRoot, abs).split(path.sep).join("/");
+  const live = new Set();
+  const stack = getHtmlEntryPoints(baseRoot);
+  while (stack.length) {
+    const file = stack.pop();
+    if (live.has(file) || !fs.existsSync(file)) continue;
+    live.add(file);
+    for (const m of fs.readFileSync(file, "utf8").matchAll(importRe)) {
+      const spec = m[1] || m[2] || m[3];
+      if (spec?.startsWith(".")) stack.push(path.resolve(path.dirname(file), spec));
+    }
+  }
+  return new Set([...live].map(toRel));
+}
+
 test("service worker - shell assets 100% complete and exist on disk", () => {
   const match = sw.match(/const SHELL_ASSETS = \[([\s\S]*?)\];/);
   assert.ok(match, "SHELL_ASSETS array must be defined");
@@ -46,53 +87,19 @@ test("service worker - shell assets 100% complete and exist on disk", () => {
     .filter((s) => s && !s.startsWith("//"));
 
   for (const a of assets) {
-    if (a === "./") continue;
-    const p = path.join(root, a);
-    assert.ok(fs.existsSync(p), `Asset ${a} in SHELL_ASSETS must exist on disk`);
+    if (a !== "./") {
+      assert.ok(fs.existsSync(path.join(root, a)), `Asset ${a} in SHELL_ASSETS must exist on disk`);
+    }
   }
 
-  function walk(dir) {
-    const res = [];
-    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, ent.name);
-      if (ent.isDirectory()) res.push(...walk(full));
-      else if (ent.name.endsWith(".js")) res.push(full);
-    }
-    return res;
-  }
   // PM-04: módulo que nenhum ponto de entrada carrega fica em UNPLUGGED_MODULES, fora do precache.
   const unpluggedMatch = sw.match(/const UNPLUGGED_MODULES = \[([\s\S]*?)\];/);
   const unplugged = unpluggedMatch
     ? unpluggedMatch[1].split("\n").map((s) => s.trim().replace(/^['"]|['"],?$/g, "")).filter(Boolean)
     : [];
-  const IMPORT_RE = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|import\s*["']([^"']+)["']/g;
-  const toRel = (abs) => "./" + path.relative(root, abs).split(path.sep).join("/");
-  function entryPoints() {
-    const pages = fs.readdirSync(root).filter((f) => f.endsWith(".html")).map((f) => path.join(root, f));
-    for (const extra of ["download/index.html", "embed/demo.html", "embed/frame-demo.html"]) {
-      if (fs.existsSync(path.join(root, extra))) pages.push(path.join(root, extra));
-    }
-    const entries = [];
-    for (const page of pages) {
-      for (const m of fs.readFileSync(page, "utf8").matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) {
-        if (!/^https?:/.test(m[1])) entries.push(path.resolve(path.dirname(page), m[1]));
-      }
-    }
-    return entries;
-  }
-  const live = new Set();
-  const stack = entryPoints();
-  while (stack.length) {
-    const file = stack.pop();
-    if (live.has(file) || !fs.existsSync(file)) continue;
-    live.add(file);
-    for (const m of fs.readFileSync(file, "utf8").matchAll(IMPORT_RE)) {
-      const spec = m[1] || m[2] || m[3];
-      if (spec?.startsWith(".")) stack.push(path.resolve(path.dirname(file), spec));
-    }
-  }
-  const reachableJs = new Set([...live].map(toRel));
-  const allJs = walk(path.join(root, "js"));
+
+  const reachableJs = resolveReachableJs(root);
+  const allJs = walkJsFiles(path.join(root, "js"));
   for (const js of allJs) {
     const rel = "./" + path.relative(root, js).replace(/\\/g, "/");
     const accounted = assets.includes(rel) || unplugged.includes(rel) || reachableJs.has(rel);
