@@ -2,6 +2,7 @@
 import { escapeHtml, shortId } from "./util.js";
 import { honestMessage } from "../honest-errors.js";
 import { renderNetworkChip, renderMeshStatusChip } from "./shell.js";
+import { getMonthlyUsage, isDataSaverActive } from "../peers-settings.js";
 
 function renderGatewayHealthBlock(gatewayHealth) {
   const state = gatewayHealth?.state || "all_ok";
@@ -87,39 +88,57 @@ function renderContributionAttestationCardHtml() {
     </div>`;
 }
 
+function renderUsageStatsCard(dailyUsage, settings, monthlyUsage) {
+  const capMb = settings?.dailyCapMb || 200;
+  const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
+  const cellularTodayMb = ((dailyUsage?.bytesCellularToday || 0) / (1024 * 1024)).toFixed(1);
+  const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
+  const servedMonthMb = ((monthlyUsage?.bytesServedMonth || 0) / (1024 * 1024)).toFixed(1);
+  const cellularMonthMb = ((monthlyUsage?.bytesCellularMonth || 0) / (1024 * 1024)).toFixed(1);
+  const saverNotice = isDataSaverActive()
+    ? `<div class="meta" style="margin-top:0.25rem; font-size:0.75rem; color:var(--amber, #b45309);">Economia de dados / 4G ativa</div>`
+    : "";
+
+  return `
+      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
+        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
+        <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
+        <div class="meta" style="margin-top:0.3rem;">Uso hoje (${pct}%) · 4G: ${cellularTodayMb} MB</div>
+        <div class="meta" style="margin-top:0.2rem; font-size:0.75rem;">No mês: ${servedMonthMb} MB · 4G: ${cellularMonthMb} MB</div>
+        ${saverNotice}
+      </div>`;
+}
+
 /**
  * Renderiza estatísticas de ajuda à rede e card de comprovante.
  * @param {object} metrics Métricas do nó.
  * @param {object} cacheStats Estatísticas do cache.
  * @param {object} dailyUsage Uso diário medido.
  * @param {object} settings Preferências com quotas.
+ * @param {object} [monthlyUsage] Uso mensal acumulado medido.
  * @returns {string}
  */
-export function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
-  const capMb = settings?.dailyCapMb || 200;
-  const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
-  const cellularTodayMb = ((dailyUsage?.bytesCellularToday || 0) / (1024 * 1024)).toFixed(1);
-  const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
+export function renderNetworkStats(metrics, cacheStats, dailyUsage, settings, monthlyUsage = getMonthlyUsage()) {
+  const blobs = metrics?.blobsServed || 0;
+  const kb = ((metrics?.bytesServed || 0) / 1024).toFixed(1);
+  const cCount = cacheStats?.count || 0;
+  const cKb = cacheStats?.sizeKb || "0";
 
   return `
     <div class="actions-bar" style="margin:1.25rem 0 0.75rem;"><span class="section-title">Estatísticas de Ajuda</span></div>
     <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.75rem; margin-bottom:1.1rem;">
       <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
-        <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
+        <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${blobs}</div>
         <div class="meta">Conteúdos entregues</div>
       </div>
       <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
-        <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
+        <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${kb} KB</div>
         <div class="meta">Dados compartilhados</div>
       </div>
+      ${renderUsageStatsCard(dailyUsage, settings, monthlyUsage)}
       <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
-        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
-        <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
-        <div class="meta" style="margin-top:0.3rem;">Uso hoje (${pct}%) · 4G: ${cellularTodayMb} MB</div>
-      </div>
-      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
-        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
-        <div class="meta">Em cache (${cacheStats?.sizeKb || "0"} KB)</div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cCount}</div>
+        <div class="meta">Em cache (${cKb} KB)</div>
       </div>
     </div>
     ${renderContributionAttestationCardHtml()}`;
