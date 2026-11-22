@@ -34,6 +34,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/labs/parado/webxdc-crdt.js`: LWW inteiro determinístico em `setItem`, isolamento de `data: null` (`hasOwnProperty`) e suporte a `pendingMoves` fora de ordem.
 - Hardening PM-66: zero erros/avisos Ruff (`F,C901,E,I,PLR0915`) em `relay/`, `scripts/` e `packaging/` e zero warnings ESLint em `scripts/*.mjs`.
 - `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.155-onda3-profile-network` (+10 módulos no `SHELL_ASSETS`).
+### Fix: simulador de cota (REV-11/PM-74)
+- `scripts/replication-quota-sim.mjs`: `ttlMs`/`defaultTtlMs` <= 0 são rejeitados; JSDoc e spec (`replicacao-por-grau-v0.md`) documentam que `pinned` não isenta de cota; teste novo e títulos alinhados.
+### Fix: validador de retorno POSSE (PM-105)
+- `scripts/posse-return-check.mjs`: `allowedHosts` vazio agora falha fechado (erro claro) em vez de aceitar qualquer host; `runCli` aceita `{ stdout }` injetável. Testes novos.
 
 ### Feat: primitivas de execução (`action-runner`, `async-dedupe`, `state-machine`, scroll restore)
 - `client/js/app/action-runner.js`: `runButtonAction` e `bindActionDelegate` (`disabled`/`aria-busy`, proteção contra reentrância, restauração em `finally` respeitando `isConnected`, e roteamento de erro); plugado em `app/init.js` (Open Frames e `.btn-repost`).
