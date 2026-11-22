@@ -7,20 +7,23 @@ import { honestMessage } from "./honest-errors.js";
 import { recordGatewayAttempt } from "./gateway-telemetry.js";
 import { filterGraphqlData } from "./genesis.js";
 import { QUERIES } from "./graphql-queries.js";
+import { clearInFlight, dedupeAsync } from "./shared/async-dedupe.js";
 
 const GATEWAY_TIMEOUT_MS = 8000;
 
 let gatewayConfig = null;
 
 /**
- * Carrega Config do armazenamento ou rede.
+ * Carrega Config do armazenamento ou rede (deduplicando chamadas concorrentes).
  * @returns {*} Resultado da operação.
  */
 export async function loadConfig() {
   if (gatewayConfig) return gatewayConfig;
-  const res = await fetchWithTimeout("./config/gateways.json");
-  gatewayConfig = await res.json();
-  return gatewayConfig;
+  return dedupeAsync("gateway:config", async () => {
+    const res = await fetchWithTimeout("./config/gateways.json");
+    gatewayConfig = await res.json();
+    return gatewayConfig;
+  });
 }
 
 /**
@@ -35,6 +38,7 @@ export function graphqlGateways(cfg) {
 /** Reset de estado interno para testes. */
 export function __resetGatewayConfigForTests() {
   gatewayConfig = null;
+  clearInFlight("gateway:");
 }
 
 /**

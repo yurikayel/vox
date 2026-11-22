@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Feat: primitivas de execução (`action-runner`, `async-dedupe`, `state-machine`, scroll restore)
+- `client/js/app/action-runner.js`: `runButtonAction` e `bindActionDelegate` (`disabled`/`aria-busy`, proteção contra reentrância, restauração em `finally` respeitando `isConnected`, e roteamento de erro); plugado em `app/init.js` (Open Frames e `.btn-repost`).
+- `client/js/app/route.js`: `rememberRouteScroll` e `restoreRouteScroll` preservam a rolagem por hash em retornos pelo histórico (`popstate`) e levam ao topo em rotas novas.
+- `client/js/shared/async-dedupe.js`: `dedupeAsync` / `createAsyncDeduper` / `clearInFlight`; plugado em `graphql-gateway.js` (`loadConfig`), `profile-directory.js` (`fetchAndCacheOnChainProfile`) e limpo em troca de identidade (`init.js`).
+- `client/js/shared/state-machine.js`: `createMachine` reativa sobre `signal` com `guard` e hooks; plugada no ciclo da sinalização WebRTC (`webrtc-peer-state.js` + `webrtc-signaling-ws.js`) e na gravação de voz (`app/inline-composer.js`, `createVoiceRecordMachine`).
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.153-runtime-primitives` (+3 módulos no `SHELL_ASSETS`).
+- Testes: `tests/action-runner.test.js`, `tests/async-dedupe.test.js`, `tests/route-scroll.test.js` e `tests/state-machine.test.js`.
+
 ### Feat: núcleo reativo fail-closed + frutos (`memo`/`resource`/`persisted`/`keyed-list`)
 - `client/js/shared/signals.js`: `signal` / `batch` / `createScope` (sem `effect` solto); `AbortSignal` + `onCleanup` + `memo` + `resource` + `onError`; freeze por cópia (incl. `Object.create(null)`); flush 1-a-1; dispose se 1ª execução lançar.
 - `client/js/shared/persisted-signal.js` + `keyed-list.js`: storage validado com sync entre abas; reconciliação DOM por chave.
