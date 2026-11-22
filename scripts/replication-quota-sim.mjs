@@ -69,13 +69,23 @@ function parseOptionalBoolean(raw, fieldName, fallback) {
   return raw;
 }
 
+function parsePositiveTtlMs(raw, fieldName) {
+  const value = parseNonNegativeNumber(raw, fieldName);
+  if (value === 0) {
+    throw new RangeError(`${fieldName} deve ser maior que zero (TTL 0 expiraria o item na hora).`);
+  }
+  return value;
+}
+
 function parseOptionalTtlMs(raw, fieldName) {
   if (raw === undefined || raw === null) return null;
-  return parseNonNegativeNumber(raw, fieldName);
+  return parsePositiveTtlMs(raw, fieldName);
 }
 
 /**
  * Valida e normaliza um item replicado sem reter arestas de grafo social de terceiros.
+ * `pinned` protege só contra expiração por TTL e contra `degree_exceeded`; NÃO isenta de despejo por cota
+ * (`video_quota`/`global_quota`), onde apenas rebaixa a prioridade de despejo. `ttlMs`, se informado, deve ser > 0.
  * @param {object} raw Registro bruto com `{ id, degree, mediaType, bytes, createdAt, pinned?, ttlMs? }`.
  * @returns {{ id: string, degree: number, mediaType: "text"|"image"|"audio"|"video", bytes: number, createdAt: number, pinned: boolean, ttlMs: number|null }} Item normalizado.
  */
@@ -103,7 +113,7 @@ function normalizePolicy(policy = {}) {
     maxBytes: policy.maxBytes === undefined ? DEFAULT_QUOTA_POLICY.maxBytes : parseNonNegativeNumber(policy.maxBytes, "policy.maxBytes"),
     videoMaxBytes: policy.videoMaxBytes === undefined ? DEFAULT_QUOTA_POLICY.videoMaxBytes : parseNonNegativeNumber(policy.videoMaxBytes, "policy.videoMaxBytes"),
     maxDegree: policy.maxDegree === undefined ? DEFAULT_QUOTA_POLICY.maxDegree : parseNonNegativeNumber(policy.maxDegree, "policy.maxDegree", true),
-    defaultTtlMs: policy.defaultTtlMs === undefined ? DEFAULT_QUOTA_POLICY.defaultTtlMs : parseNonNegativeNumber(policy.defaultTtlMs, "policy.defaultTtlMs"),
+    defaultTtlMs: policy.defaultTtlMs === undefined ? DEFAULT_QUOTA_POLICY.defaultTtlMs : parsePositiveTtlMs(policy.defaultTtlMs, "policy.defaultTtlMs"),
     now: policy.now === undefined ? Date.now() : parseTimestampMs(policy.now, "policy.now"),
   };
 }
@@ -210,6 +220,7 @@ function buildQuotaStats(kept, evicted, policy) {
 
 /**
  * Simula expiração efêmera (REV-11), filtro de grau e despejo por subcota de vídeo e cota global.
+ * Itens `pinned` escapam de expiração e de grau, mas podem ser despejados por cota se o teto exigir.
  * @param {Array<object>} items Lista de itens replicados locais.
  * @param {object} [policy={}] Política opcional (`maxBytes`, `videoMaxBytes`, `maxDegree`, `defaultTtlMs`, `now`).
  * @returns {{ ok: boolean, kept: Array<object>, evicted: Array<object>, stats: { totalBytes: number, videoBytes: number, keptCount: number, evictedCount: number, byDegree: object, utilizationPct: number, videoUtilizationPct: number } }} Resultado determinístico da simulação.
