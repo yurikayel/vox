@@ -76,7 +76,7 @@ test("REV-11: itens efêmeros expirados são podados, mas grau 0 e pinned perman
   assert.ok(res.evicted.every((i) => i.reason === "expired"));
 });
 
-test("REV-11/PM-74: rejeita grau > maxDegree, trata vazio sem NaN e remove arestas de grafo social", () => {
+test("REV-11/PM-74: despeja grau > maxDegree (exceto fixado), trata vazio sem NaN e remove arestas de grafo social", () => {
   const normalized = normalizeReplicaItem({
     id: "safe-1",
     degree: 1,
@@ -147,7 +147,7 @@ test("REV-11/PM-74: roundtrip CLI com --input, --max-bytes, --video-max-bytes, -
   }
 });
 
-test("REV-11/PM-74: protege posts próprios (grau 0) por último quando impossível caber no teto", () => {
+test("REV-11/PM-74: pinned não isenta de cota: grau 0 é protegido por último, fixado de grau 1 é despejado antes", () => {
   const items = [
     { id: "own-old", degree: 0, mediaType: "text", bytes: 400, createdAt: BASE_MS },
     { id: "own-new", degree: 0, mediaType: "text", bytes: 400, createdAt: BASE_MS + 1000 },
@@ -159,3 +159,11 @@ test("REV-11/PM-74: protege posts próprios (grau 0) por último quando impossí
   assert.deepEqual(res.evicted.map((i) => i.id), ["pinned-hop1", "own-old"]);
 });
 
+
+test("REV-11/PM-74: rejeita ttlMs <= 0 no item e defaultTtlMs <= 0 na política", () => {
+  const base = { id: "t", degree: 1, mediaType: "text", bytes: 1, createdAt: BASE_MS };
+  assert.throws(() => normalizeReplicaItem({ ...base, ttlMs: 0 }), RangeError);
+  assert.throws(() => normalizeReplicaItem({ ...base, ttlMs: -1 }), RangeError);
+  assert.equal(normalizeReplicaItem({ ...base, ttlMs: 1 }).ttlMs, 1);
+  assert.throws(() => simulateQuotaEviction([], { defaultTtlMs: 0, now: BASE_MS }), RangeError);
+});
