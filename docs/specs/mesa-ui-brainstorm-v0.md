@@ -1,7 +1,7 @@
 # Mesa Soberana — brainstorm de UI VTT (v0)
 
 > **Status:** canônico (produto) · **Owner:** mantenedor · **Revisado:** 2026-11-20
-> **Relacionados:** [mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · `client/js/dungeon/dungeon-ui-contract.js`
+> **Relacionados:** [mesa-referenciais-vtt-v0.md](./mesa-referenciais-vtt-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) · `client/js/dungeon/dungeon-ui-contract.js`
 
 Documento de **anatomia de interface** dos referenciais de mercado e do **modelo de zonas** da Mesa Soberana (E5.0 UI). Não substitui ADR-033 nem o roadmap de engenharia em `mesa-referenciais-vtt-v0.md` §5.
 
