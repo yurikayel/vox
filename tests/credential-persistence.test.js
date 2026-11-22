@@ -80,3 +80,21 @@ test("vínculo legado com App Password em claro é migrado: o storage deixa de t
   assert.ok(!localStorage.getItem("vox-linked-accounts-v1").includes("LEGADO-CLARO"));
   linked.removeLinkedAccount("bsky");
 });
+
+test("vínculo: campo fora da lista branca não chega ao storage", async () => {
+  localStorage.clear();
+  linked.saveLinkedAccount("bsky", { handle: "u.bsky.social", enabled: true, intruso: "CAMPO-EXTRA", token: "TOKEN-EXTRA" });
+  const stored = JSON.parse(localStorage.getItem("vox-linked-accounts-v1")).bsky;
+  assert.deepEqual(Object.keys(stored).sort(), ["accountId", "did", "displayName", "enabled", "handle", "linkedAt", "updatedAt", "verified", "via"]);
+  assert.ok(!dump().includes("EXTRA"));
+  linked.removeLinkedAccount("bsky");
+});
+
+test("sessão Bluesky já selada: regravar não deixa passar campo fora da lista branca", async () => {
+  localStorage.clear();
+  const sealed = await keystore.sealJsonStrict({ keys: {}, nonce: "", accessToken: "a", refreshToken: "" });
+  await saveBskySession({ did: "did:plc:x", handle: "x", sealed, intruso: "CAMPO-EXTRA" });
+  const stored = loadBskySession();
+  assert.deepEqual(Object.keys(stored).sort(), ["did", "handle", "sealed"]);
+  await assert.rejects(saveBskySession({ did: "d", sealed: { sealed: keystore.SEALED_TAG ?? "x", iv: "<script>", ct: "ab" } }));
+});
