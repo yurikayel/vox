@@ -1,10 +1,8 @@
-"""Endpoints GET sem cobertura: `/`, `/status`, `/ping` e `/peer/beacon`.
+"""Endpoints GET: `/`, `/status`, `/ping` e `/peer/beacon`.
 
-`/`, `/status` e `/ping` respondem o health check de `signaling.handle_http_request` (servidor de
-sinalização). `/peer/beacon` é servido por `server.VoxRelayHandler` a partir de
-`p2p_seeder.PEER_DISCOVERY`: cada teste troca esse registro por uma instância nova, para não depender
-do estado de outros testes. O relógio do TTL é controlado do mesmo jeito que em `test_p2p_seeder.py`
-(ajustando `lastSeenTs` sob `p2p_seeder._LOCK`).
+`/`, `/status` e `/ping` respondem o health check de `signaling.handle_http_request`.
+`/peer/beacon` é servido por `server.VoxRelayHandler` a partir de `p2p_seeder.PEER_DISCOVERY`.
+Cada teste troca esse registro por uma instância nova para isolamento.
 """
 
 import json
@@ -19,7 +17,17 @@ from relay import p2p_seeder, server
 from relay.signaling import ThreadedTCPServer, WebSocketHandler
 
 HEALTH_FIELDS = {"status", "service", "version", "peers"}
-BEACON_FIELDS = {"nodeId", "host", "httpPort", "controlPort", "protocol", "capabilities", "version", "lastSeenTs", "status"}
+BEACON_FIELDS = {
+    "nodeId",
+    "host",
+    "httpPort",
+    "controlPort",
+    "protocol",
+    "capabilities",
+    "version",
+    "lastSeenTs",
+    "status",
+}
 TTL_EXPIRED_MS = 120_000
 
 
@@ -29,7 +37,9 @@ def _call(port, method, path, body=None):
     headers = {"Origin": f"http://127.0.0.1:{port}"}
     if data is not None:
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=data, method=method, headers=headers)
+    req = urllib.request.Request(
+        f"http://127.0.0.1:{port}{path}", data=data, method=method, headers=headers
+    )
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
             return resp.status, resp.headers.get("Content-Type"), resp.read()
@@ -38,7 +48,7 @@ def _call(port, method, path, body=None):
 
 
 class SignalingHealthGetTest(unittest.TestCase):
-    """`GET /`, `/status` e `/ping` no servidor de sinalização (mesmo servidor dos testes de WebSocket)."""
+    """`GET /`, `/status` e `/ping` no servidor de sinalização (mesmo de WebSocket)."""
 
     @classmethod
     def setUpClass(cls):
@@ -107,7 +117,12 @@ class PeerBeaconGetTest(unittest.TestCase):
         return data["peers"]
 
     def _post_beacon(self, node_id):
-        payload = {"nodeId": node_id, "protocol": "VOX-PEER-v1", "httpPort": 8080, "capabilities": ["cache"]}
+        payload = {
+            "nodeId": node_id,
+            "protocol": "VOX-PEER-v1",
+            "httpPort": 8080,
+            "capabilities": ["cache"],
+        }
         return _call(self.port, "POST", "/peer/beacon", payload)
 
     def _age_peer(self, node_id, ms):

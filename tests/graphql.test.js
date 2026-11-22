@@ -63,43 +63,23 @@ test("graphql - fetchTransactionData consulta relay HTTP antes dos gateways", as
   }
 });
 
-test("graphql - fetchTransactionData faz fallback entre gateways raw", async () => {
-  localStorage.clear();
-  await cacheNode.clearCache();
-
-  const originalFetch = globalThis.fetch;
-  let rawCalls = 0;
-
-  globalThis.fetch = async (url, init) => {
+function createFallbackGatewaysFetch(onRawCall) {
+  const gateways = [
+    { id: "fail", label: "fail", graphql: "https://fail.example/graphql", raw: "https://fail.example/raw/{txId}" },
+    { id: "ok", label: "ok", graphql: "https://ok.example/graphql", raw: "https://ok.example/raw/{txId}" },
+  ];
+  return async (url, init) => {
     const s = String(url);
     if (s.includes("/config/gateways.json")) {
-      return {
-        ok: true,
-        json: async () => ({
-          gateways: [
-            {
-              id: "fail",
-              label: "fail",
-              graphql: "https://fail.example/graphql",
-              raw: "https://fail.example/raw/{txId}",
-            },
-            {
-              id: "ok",
-              label: "ok",
-              graphql: "https://ok.example/graphql",
-              raw: "https://ok.example/raw/{txId}",
-            },
-          ],
-        }),
-      };
+      return { ok: true, json: async () => ({ gateways }) };
     }
     if (init?.method === "POST") throw new Error("graphql skip");
     if (s.includes("fail.example/raw/")) {
-      rawCalls += 1;
+      onRawCall();
       return { ok: false, text: async () => "" };
     }
     if (s.includes("ok.example/raw/tx_gw_fb")) {
-      rawCalls += 1;
+      onRawCall();
       return {
         ok: true,
         text: async () => JSON.stringify({ body: "via segundo gateway", title: "Ok" }),
@@ -107,6 +87,17 @@ test("graphql - fetchTransactionData faz fallback entre gateways raw", async () 
     }
     throw new Error(`unexpected fetch ${s}`);
   };
+}
+
+test("graphql - fetchTransactionData faz fallback entre gateways raw", async () => {
+  localStorage.clear();
+  await cacheNode.clearCache();
+
+  const originalFetch = globalThis.fetch;
+  let rawCalls = 0;
+  globalThis.fetch = createFallbackGatewaysFetch(() => {
+    rawCalls += 1;
+  });
 
   try {
     gql.__resetGatewayConfigForTests();

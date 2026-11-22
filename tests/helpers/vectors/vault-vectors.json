@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "description": "Vetores determinísticos de cofre de recuperação v2 Vox com senha soberana de teste",
+  "passphrase": "senha-soberana-teste-pm114",
+  "derivedAddress": "ddf986f1ba1d831e2b474d7424fb8d7ec831a499ddcbc5b59dc27d9aedd8f693",
+  "derivedOwnerToken": "d94d2b23842cbc1cb31c3f486a48424f6b1a29e9ede0b27dc7707d74756cd34f",
+  "ownerHash": "cc074fd9282b9e4cef7149be639152881d8faca67f3d7a9ee17e7cab1dbdbda4",
+  "bundle": {
+    "routeId": "vx_vault_pm114_test",
+    "displayName": "Alice PM114",
+    "createdAt": 1700000000000,
+    "meta": {
+      "version": "2.0",
+      "flag": true
+    }
+  },
+  "record": {
+    "v": 2,
+    "kdf": "pbkdf2-sha256",
+    "iter": 100000,
+    "salt": "0102030405060708090a0b0c0d0e0f10",
+    "iv": "a1a2a3a4a5a6a7a8a9aaabac",
+    "ciphertext": "230c84a02dd0b9a5fb2a1191d9bbf2047dd7388c1b7327b547660fbdffc34e360ff07ee5b17c665770881fb7014d65efde4425cf119900fc734448c6dd7e23d3568bd5f8a3f3c24423b1a22fc6a1e249ef75b148707034ee22f978205b8727eef6adff28200ce13a6c7e0387aeb6c8b46511ffdadab77666944729896a9052234fd7fd0f2da44324a8d00f78",
+    "updatedAt": 1700000000000
+  }
+}

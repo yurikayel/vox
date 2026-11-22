@@ -40,7 +40,7 @@ describe("voxpedia route", () => {
   });
 });
 
-describe("renderVoxpedia", () => {
+describe("renderVoxpedia headings & structure", () => {
   const html = renderVoxpedia();
 
   it("includes hero and section headings", () => {
@@ -58,11 +58,6 @@ describe("renderVoxpedia", () => {
     assert.ok(layerCount >= 6, `expected multiple voxpedia-layer, got ${layerCount}`);
     assert.ok(html.includes("<details"), "missing details elements");
     assert.ok(html.includes("<summary"), "missing summary elements");
-    const firstDetails = html.indexOf("<details");
-    const nested = html.indexOf("<details", firstDetails + 1);
-    const between = html.slice(firstDetails, nested);
-    assert.ok(between.includes("</details>") || html.slice(nested).includes("<details"),
-      "expected nesting or sibling layers");
   });
 
   it("mentions key product summaries", () => {
@@ -70,6 +65,20 @@ describe("renderVoxpedia", () => {
     assert.match(html, /vx_/);
     assert.match(html, /IndexedDB/i);
   });
+
+  it("links to GitHub technical documentation", () => {
+    assert.match(html, /id="voxpedia-docs-github"/);
+    assert.match(html, /Documentação técnica \(GitHub\)/);
+    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.docsReadme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+    assert.match(html, /target="_blank"/);
+    assert.match(html, /rel="noopener noreferrer"/);
+    assert.match(html, /repositório é a fonte, não um helpdesk/);
+    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.devGuide.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  });
+});
+
+describe("renderVoxpedia core topics", () => {
+  const html = renderVoxpedia();
 
   it("covers feed transparency and POSSE copy", () => {
     assert.match(html, /sem ranking, sem boost/i);
@@ -109,15 +118,54 @@ describe("renderVoxpedia", () => {
     assert.doesNotMatch(html, /confiscar cada celular/i);
     assert.doesNotMatch(html, /confiscate cada celular/i);
   });
+});
 
-  it("links to GitHub technical documentation", () => {
-    assert.match(html, /id="voxpedia-docs-github"/);
-    assert.match(html, /Documentação técnica \(GitHub\)/);
-    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.docsReadme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
-    assert.match(html, /target="_blank"/);
-    assert.match(html, /rel="noopener noreferrer"/);
-    assert.match(html, /repositório é a fonte, não um helpdesk/);
-    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.devGuide.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+describe("renderVoxpedia nov/2026 features", () => {
+  const html = renderVoxpedia();
+
+  it("covers sovereign entry and exit (phrase, guardians, vaults)", () => {
+    assert.match(html, /Entrada e saída soberana/i);
+    assert.match(html, /Frase de recuperação 12\/24 palavras/i);
+    assert.match(html, /#\/frase/);
+    assert.match(html, /12 palavras para contas novas, 24 para legadas/);
+    assert.match(html, /cartão sem QR/);
+    assert.match(html, /Guardiões 3-de-5 e devolução/i);
+    assert.match(html, /#\/guardioes/);
+    assert.match(html, /#\/voltar/);
+    assert.match(html, /Shamir GF\(256\)/);
+    assert.match(html, /Cofre v2 por senha e cofre na malha/i);
+    assert.match(html, /#\/backup/);
+    assert.match(html, /#\/sync/);
+    assert.match(html, /anti-rollback/i);
+    assert.match(html, /ADR-037/);
+    assert.match(html, /pedido cego no relay/i);
+  });
+
+  it("covers channel mode and signed local open frames", () => {
+    assert.match(html, /Modo canal \(postingMode: &quot;mods&quot;\)|Modo canal \(postingMode: "mods"\)/);
+    assert.match(html, /postingMode:\s*"mods"/);
+    assert.match(html, /somente moderadores publicam tópicos no feed principal/i);
+    assert.match(html, /Open Frames locais assinados/i);
+    assert.match(html, /#\/labs\/frames/);
+    assert.match(html, /allowlist local/i);
+  });
+
+  it("covers hybrid signaling WebSocket + Nostr (REV-09)", () => {
+    assert.match(html, /Sinalização híbrida WebSocket \+ Nostr efêmero \(REV-09\)/i);
+    assert.match(html, /WebSocket/i);
+    assert.match(html, /Nostr efêmero/i);
+    assert.match(html, /25050/);
+    assert.match(html, /reconexão/i);
+  });
+
+  it("covers local protections (quarantine, 14-bit PoW, moderation, sigv: 2)", () => {
+    assert.match(html, /Quarentena de chave nova \(PoW 14 bits\)/i);
+    assert.match(html, /Proof-of-Work leve de 14 bits/i);
+    assert.match(html, /menos de 24h/i);
+    assert.match(html, /Moderação comunitária e denúncias/i);
+    assert.match(html, /mod-action/);
+    assert.match(html, /quarentena preventiva de 48h/i);
+    assert.match(html, /sigv:\s*2/);
   });
 });
 

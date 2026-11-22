@@ -1,17 +1,17 @@
 """PM-94 — quem pode falar com o relay (`server.py`).
 
 Regras, em ordem:
-1. **Host:** com o relay escutando só em loopback, o cabeçalho `Host` precisa ser um nome de loopback (ou um
-   nome liberado em `VOX_RELAY_ALLOWED_HOSTS`, como o endereço de um túnel). Isso barra páginas que trocam o
-   DNS do próprio domínio para 127.0.0.1.
-2. **Origin:** POST e DELETE vindos de navegador só são aceitos das origens do app (GitHub Pages, Cloudflare
-   Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`. Pedido sem `Origin` (ferramenta
-   de linha de comando, nó de steward) passa.
-   A mesma lista decide o CORS (`cors_allow_origin`): a origem só é refletida em `Access-Control-Allow-Origin`
-   se estiver nela, então página de outro site não lê a resposta de nenhuma rota.
-3. **Content-Type:** POST só com `application/json`, o que obriga o navegador a perguntar antes (preflight).
+1. **Host:** com o relay escutando só em loopback, o cabeçalho `Host` precisa ser um nome
+   de loopback (ou nome liberado em `VOX_RELAY_ALLOWED_HOSTS`, como endereço de túnel).
+   Isso barra páginas que trocam o DNS do próprio domínio para 127.0.0.1.
+2. **Origin:** POST e DELETE de navegador só são aceitos das origens do app (GitHub Pages,
+   Cloudflare Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`.
+   Pedido sem `Origin` (ferramenta de linha de comando, nó de steward) passa.
+   A mesma lista decide o CORS (`cors_allow_origin`): a origem só é refletida em
+   `Access-Control-Allow-Origin` se estiver nela (outros sites não leem respostas).
+3. **Content-Type:** POST só com `application/json`, o que obriga preflight no navegador.
 
-O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`, aplicado depois destas regras.
+O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`.
 """
 
 import os
@@ -66,10 +66,10 @@ def _has_control_chars(value):
 
 
 def _loopback_origin(text):
-    """Origem de loopback reconstruída só de constantes (esquema, nome) e da porta numérica, ou None.
+    """Origem de loopback reconstruída só de constantes (esquema, nome) e porta numérica.
 
-    Não devolve o texto recebido: esquema e nome saem de tuplas fixas, a porta passa por `int`. Origem com
-    caminho, usuário ou porta inválida não reconstrói igual ao original e é recusada.
+    Não devolve o texto recebido: esquema e nome saem de tuplas fixas, porta passa por int.
+    Origem com caminho, usuário ou porta inválida não reconstrói igual e é recusada.
     """
     try:
         parts = urlsplit(text)
@@ -80,18 +80,19 @@ def _loopback_origin(text):
     host = next((item for item in LOOPBACK_NAMES if item == (parts.hostname or "")), None)
     if scheme is None or host is None:
         return None
-    rebuilt = f"{scheme}://{'[::1]' if host == '::1' else host}" + (f":{int(port)}" if port is not None else "")
+    rebuilt = f"{scheme}://{'[::1]' if host == '::1' else host}" + (
+        f":{int(port)}" if port is not None else ""
+    )
     return rebuilt if rebuilt == text else None
 
 
 def cors_allow_origin(origin, env=None):
-    """Valor de `Access-Control-Allow-Origin` para o pedido, ou None se o navegador não deve ler a resposta.
+    """Valor de `Access-Control-Allow-Origin` para o pedido, ou None para não ler.
 
     O valor devolvido nunca é o texto recebido (evita divisão de resposta HTTP, CodeQL
-    `py/http-response-splitting`): é a entrada correspondente de `APP_ORIGINS`, de
-    `VOX_RELAY_ALLOWED_ORIGINS` ou a origem de loopback reconstruída. Origem com CR/LF ou outro caractere de
-    controle é recusada antes de qualquer comparação. Diferente de `origin_allowed`, sem `Origin` não há
-    leitura entre sites a liberar.
+    `py/http-response-splitting`): é a entrada de `APP_ORIGINS`, `VOX_RELAY_ALLOWED_ORIGINS`
+    ou loopback reconstruída. Origem com controle é recusada antes de qualquer comparação.
+    Diferente de `origin_allowed`, sem `Origin` não há leitura entre sites a liberar.
     """
     raw = str(origin or "")
     if not raw or _has_control_chars(raw):

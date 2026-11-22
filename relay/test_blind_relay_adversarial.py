@@ -62,7 +62,9 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
             blind_relay.store_envelope(CANAL, _env(serial, agora - 60_000 + serial))
 
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
+            CANAL,
+            {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 5},
+            proof=PROVA,
         )
 
         restantes = blind_relay.list_envelopes(CANAL, since_serial=5)
@@ -75,7 +77,12 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
 
         blind_relay.store_snapshot(
             CANAL,
-            {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora + 365 * 86_400_000, "coveredSerial": 1},
+            {
+                "snapshot": "ESTADO",
+                "epoch": 2,
+                "timestamp": agora + 365 * 86_400_000,
+                "coveredSerial": 1,
+            },
             proof=PROVA,
         )
 
@@ -85,7 +92,9 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         agora = int(time.time() * 1000)
         blind_relay.store_envelope(CANAL, _env(0, agora - 5000, nonce="legado"))
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 9}, proof=PROVA
+            CANAL,
+            {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 9},
+            proof=PROVA,
         )
         self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 1)
 
@@ -94,11 +103,15 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         for serial in range(1, 8):
             blind_relay.store_envelope(CANAL, _env(serial, agora + serial))
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
+            CANAL,
+            {"snapshot": "A", "epoch": 2, "timestamp": agora, "coveredSerial": 5},
+            proof=PROVA,
         )
         with self.assertRaises(ValueError):
             blind_relay.store_snapshot(
-                CANAL, {"snapshot": "B", "epoch": 3, "timestamp": agora, "coveredSerial": 2}, proof=PROVA
+                CANAL,
+                {"snapshot": "B", "epoch": 3, "timestamp": agora, "coveredSerial": 2},
+                proof=PROVA,
             )
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "A")
 
@@ -106,7 +119,9 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         agora = int(time.time() * 1000)
         for serial in range(1, 4):
             blind_relay.store_envelope(CANAL, _env(serial, agora - 1000 + serial))
-        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora}, proof=PROVA)
+        blind_relay.store_snapshot(
+            CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora}, proof=PROVA
+        )
         self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 3)
 
 
@@ -146,7 +161,9 @@ class TestListagemDeMaisDeCemItens(_RelayDirCase):
         self.assertEqual(len(pagina), 100)
         self.assertEqual(_serials(pagina), list(range(1, 101)))
 
-    @unittest.skip("contrato: o GET não avisa que cortou; precisa de campo/cabeçalho em server.py (relay-api.md §6)")
+    @unittest.skip(
+        "contrato: o GET não avisa que cortou; precisa de campo em server.py (relay-api.md §6)"
+    )
     def test_resposta_cortada_sinaliza_que_ha_mais(self):
         pass
 
@@ -199,26 +216,34 @@ class TestDadoEnvenenado(_RelayDirCase):
         pasta = blind_relay.ensure_channel_dir(CANAL)
         agora = int(time.time()) + 1000
         (pasta / "env_2_x.json").write_text(
-            json.dumps({"expiresAt": agora, "envelope": {"serial": "x", "timestamp": 1}}), encoding="utf-8"
+            json.dumps({"expiresAt": agora, "envelope": {"serial": "x", "timestamp": 1}}),
+            encoding="utf-8",
         )
         (pasta / "env_3_x.json").write_text(json.dumps([1, 2]), encoding="utf-8")
         (pasta / "env_4_x.json").write_text(
-            json.dumps({"expiresAt": agora, "envelope": {"serial": [1], "timestamp": None}}), encoding="utf-8"
+            json.dumps({"expiresAt": agora, "envelope": {"serial": [1], "timestamp": None}}),
+            encoding="utf-8",
         )
         self.assertEqual(_serials(blind_relay.list_envelopes(CANAL)), [1])
 
     def test_arquivo_ruim_no_disco_nao_derruba_a_limpeza_do_snapshot(self):
         blind_relay.store_envelope(CANAL, _env(1, 1000))
         pasta = blind_relay.ensure_channel_dir(CANAL)
-        (pasta / "env_9_x.json").write_text(json.dumps({"envelope": {"serial": "x"}}), encoding="utf-8")
-        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "coveredSerial": 1}, proof=PROVA)
+        (pasta / "env_9_x.json").write_text(
+            json.dumps({"envelope": {"serial": "x"}}), encoding="utf-8"
+        )
+        blind_relay.store_snapshot(
+            CANAL, {"snapshot": "A", "epoch": 2, "coveredSerial": 1}, proof=PROVA
+        )
         self.assertEqual(blind_relay.list_envelopes(CANAL, since_ts=0), [])
 
 
 class TestTetosDeTamanho(_RelayDirCase):
     def test_envelope_gigante_e_recusado_e_nada_e_gravado(self):
         with self.assertRaises(ValueError):
-            blind_relay.store_envelope(CANAL, _env(1, 1000, payload="x" * (blind_relay.MAX_ENVELOPE_SIZE + 1)))
+            blind_relay.store_envelope(
+                CANAL, _env(1, 1000, payload="x" * (blind_relay.MAX_ENVELOPE_SIZE + 1))
+            )
         self.assertEqual(blind_relay.list_envelopes(CANAL), [])
 
     def test_envelope_no_limite_exato_ainda_cabe(self):
@@ -272,14 +297,18 @@ class TestSnapshotSemAutenticacao(_RelayDirCase):
         agora = _canal_com_dez_envelopes()
         with self.assertRaises(ValueError):
             blind_relay.store_snapshot(
-                CANAL, {"snapshot": "X", "epoch": 2, "timestamp": agora, "coveredSerial": 10**9}, proof=PROVA
+                CANAL,
+                {"snapshot": "X", "epoch": 2, "timestamp": agora, "coveredSerial": 10**9},
+                proof=PROVA,
             )
         self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 10)
 
     def test_coveredserial_dentro_do_teto_com_prova_poda_so_o_coberto(self):
         agora = _canal_com_dez_envelopes()
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "OK", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
+            CANAL,
+            {"snapshot": "OK", "epoch": 2, "timestamp": agora, "coveredSerial": 5},
+            proof=PROVA,
         )
         self.assertEqual(_serials(blind_relay.list_envelopes(CANAL, since_ts=0)), [6, 7, 8, 9, 10])
 
@@ -302,6 +331,7 @@ class TestSnapshotSemAutenticacao(_RelayDirCase):
             blind_relay.store_snapshot(CANAL, {"snapshot": "X", "epoch": 2**62}, proof=PROVA)
         blind_relay.store_snapshot(CANAL, {"snapshot": "LEGIT", "epoch": 2}, proof=PROVA)
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["epoch"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

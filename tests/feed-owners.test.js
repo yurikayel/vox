@@ -10,14 +10,8 @@ test("graphql - fetchTopicsByOwners retorna vazio para lista nula ou vazia sem f
   assert.deepEqual(r2.items, []);
 });
 
-test("graphql - fetchTopicsByOwners envia lista de proprietários no GraphQL", async () => {
-  const originalFetch = globalThis.fetch;
-  gql.__resetGatewayConfigForTests();
-
-  let capturedQuery = null;
-  let capturedVariables = null;
-
-  globalThis.fetch = async (url, opts) => {
+function createOwnersGqlFetch(onCapture) {
+  return async (url, opts) => {
     const s = String(url);
     if (s.includes("gateways.json")) {
       return {
@@ -30,8 +24,7 @@ test("graphql - fetchTopicsByOwners envia lista de proprietários no GraphQL", a
       };
     }
     const body = opts?.body ? JSON.parse(opts.body) : {};
-    capturedQuery = body.query;
-    capturedVariables = body.variables;
+    onCapture(body);
 
     return {
       ok: true,
@@ -56,6 +49,18 @@ test("graphql - fetchTopicsByOwners envia lista de proprietários no GraphQL", a
       }),
     };
   };
+}
+
+test("graphql - fetchTopicsByOwners envia lista de proprietários no GraphQL", async () => {
+  const originalFetch = globalThis.fetch;
+  gql.__resetGatewayConfigForTests();
+
+  let capturedQuery = null;
+  let capturedVariables = null;
+  globalThis.fetch = createOwnersGqlFetch((body) => {
+    capturedQuery = body.query;
+    capturedVariables = body.variables;
+  });
 
   try {
     const res = await gql.fetchTopicsByOwners(["addr_alice", "addr_bob"]);
