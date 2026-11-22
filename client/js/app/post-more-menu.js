@@ -18,6 +18,7 @@ import {
   republicarFromMenu,
   apoiarFromMenu,
   marcarFromMenu,
+  ouvirFromMenu,
 } from "./post-more-actions.js";
 import { createFocusTrap } from "../render/focus-trap.js";
 
@@ -30,6 +31,7 @@ const SHEET_ITEMS_HTML = `
   <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
   <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
   <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
+  <button type="button" class="post-more-sheet-item" data-action="listen">Ouvir post</button>
   <button type="button" class="post-more-sheet-item" data-action="repost">Republicar</button>
   <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
   <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
@@ -129,6 +131,10 @@ async function shareSheetPost(ctx) {
 }
 
 async function onSocialSheetAction(action, ctx) {
+  if (action === "listen") {
+    ouvirFromMenu(ctx);
+    return true;
+  }
   if (action === "save") {
     toggleSaveFromMenu(ctx.postId);
     return true;
@@ -238,6 +244,15 @@ async function onSheetAction(action) {
   if (action === "embed") share.showToast("Incorporar — em breve.");
 }
 
+function extractPostText(openBtn) {
+  if (openBtn.dataset.body) return openBtn.dataset.body;
+  const card = openBtn.closest(".post");
+  const copyBtn = card?.querySelector(".btn-copy-md");
+  if (copyBtn?.dataset.body) return copyBtn.dataset.body;
+  const bodyEl = card?.querySelector(".post-body");
+  return bodyEl?.textContent?.trim() || "";
+}
+
 function handlePostMoreMenuTriggerClick(openBtn, e) {
   e.preventDefault();
   e.stopPropagation();
@@ -246,6 +261,7 @@ function handlePostMoreMenuTriggerClick(openBtn, e) {
       postId: openBtn.dataset.postId || "",
       authorRoute: openBtn.dataset.authorRoute || "",
       title: openBtn.dataset.title || "",
+      body: extractPostText(openBtn),
       isOwn: openBtn.dataset.isOwn === "1",
       hasImage: openBtn.dataset.hasImage === "1",
       pix: openBtn.dataset.pix || "",
