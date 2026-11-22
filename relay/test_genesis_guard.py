@@ -1,4 +1,4 @@
-"""Corte da gênese na memória central: conta de teste e post anterior à gênese não entram nem ficam."""
+"""Corte da gênese na memória central: conta de teste e post anterior não entram."""
 
 import json
 import tempfile
@@ -25,7 +25,9 @@ class TestGenesisGuardRules(unittest.TestCase):
         self.assertFalse(genesis_guard.is_test_route_id(None))
 
     def test_post_sem_data_de_criacao_fica(self):
-        self.assertFalse(genesis_guard.refuses_post({"id": "p", "author": REAL_ID, "updatedAt": BEFORE}))
+        self.assertFalse(
+            genesis_guard.refuses_post({"id": "p", "author": REAL_ID, "updatedAt": BEFORE})
+        )
         self.assertTrue(genesis_guard.refuses_post(post("p", REAL_ID, BEFORE)))
         self.assertTrue(genesis_guard.refuses_post({"id": "p", "owner": TEST_ID, "ts": AFTER}))
 
@@ -41,20 +43,32 @@ class TestCentralMemoryGenesisGuard(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_sync_recusa_teste_e_pre_genese_e_aceita_o_resto(self):
-        out = central_memory.sync_bundle({
-            "posts": [post("velho", REAL_ID, BEFORE), post("de-teste", TEST_ID, AFTER), post("novo", REAL_ID, AFTER)],
-            "profiles": [
-                {"routeId": TEST_ID, "name": "", "updatedAt": AFTER},
-                {"routeId": REAL_ID, "name": "Cidadã Nova", "updatedAt": AFTER},
-            ],
-        })
+        out = central_memory.sync_bundle(
+            {
+                "posts": [
+                    post("velho", REAL_ID, BEFORE),
+                    post("de-teste", TEST_ID, AFTER),
+                    post("novo", REAL_ID, AFTER),
+                ],
+                "profiles": [
+                    {"routeId": TEST_ID, "name": "", "updatedAt": AFTER},
+                    {"routeId": REAL_ID, "name": "Cidadã Nova", "updatedAt": AFTER},
+                ],
+            }
+        )
         self.assertEqual(out["ingestedCount"], 2)
         state = central_memory.load_state()
         self.assertEqual(sorted(state["posts"]), ["novo"])
         self.assertEqual(sorted(state["profiles"]), [REAL_ID])
 
     def test_ingest_de_cartao_assinado_de_conta_de_teste_e_recusado(self):
-        card = {"id": f"pc_{TEST_ID}", "type": "profile-card", "routeId": TEST_ID, "author": TEST_ID, "editedAt": AFTER}
+        card = {
+            "id": f"pc_{TEST_ID}",
+            "type": "profile-card",
+            "routeId": TEST_ID,
+            "author": TEST_ID,
+            "editedAt": AFTER,
+        }
         self.assertFalse(central_memory.ingest_event(card)["changed"])
 
     def test_estado_antigo_no_disco_e_limpo_ao_carregar(self):
@@ -62,14 +76,22 @@ class TestCentralMemoryGenesisGuard(unittest.TestCase):
         mem.mkdir(parents=True)
         old = {
             "revision": 7,
-            "posts": {"velho": post("velho", REAL_ID, BEFORE), "novo": post("novo", REAL_ID, AFTER)},
-            "profiles": {TEST_ID: {"routeId": TEST_ID}, "vx_voxbrasil_welcome": {"routeId": "vx_voxbrasil_welcome"}},
+            "posts": {
+                "velho": post("velho", REAL_ID, BEFORE),
+                "novo": post("novo", REAL_ID, AFTER),
+            },
+            "profiles": {
+                TEST_ID: {"routeId": TEST_ID},
+                "vx_voxbrasil_welcome": {"routeId": "vx_voxbrasil_welcome"},
+            },
         }
         (mem / "state.json").write_text(json.dumps(old), encoding="utf-8")
         state = central_memory.load_state(force_reload=True)
         self.assertEqual(sorted(state["posts"]), ["novo"])
         self.assertEqual(sorted(state["profiles"]), ["vx_voxbrasil_welcome"])
-        self.assertEqual(state["revision"], 8, "a limpeza conta como mudança, para os aparelhos buscarem de novo")
+        self.assertEqual(
+            state["revision"], 8, "a limpeza conta como mudança, para os aparelhos buscarem de novo"
+        )
 
 
 if __name__ == "__main__":

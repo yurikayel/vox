@@ -72,7 +72,9 @@ def validate_cache_manifest_body(body: dict[str, Any]) -> tuple[bool, str | None
     return True, None
 
 
-def validate_mirror_body(raw: bytes) -> tuple[bool, dict[str, Any] | None, dict[str, str] | None, int]:
+def validate_mirror_body(
+    raw: bytes,
+) -> tuple[bool, dict[str, Any] | None, dict[str, str] | None, int]:
     """
     Retorna (ok, payload, error_json, http_status).
     http_status só é relevante quando ok é False.

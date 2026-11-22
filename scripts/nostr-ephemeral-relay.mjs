@@ -135,6 +135,28 @@ function attachWsClient(socket, clients, stats) {
   socket.on("error", () => clients.delete(client));
 }
 
+function createRelayController(server, host, clients, stats) {
+  const addr = server.address();
+  return {
+    url: `ws://${host}:${addr.port}`,
+    port: addr.port,
+    getStats: () => ({ ...stats, connectedClients: clients.size }),
+    close: () => new Promise((done) => {
+      for (const c of clients) c.socket.destroy();
+      server.close(() => done());
+    }),
+  };
+}
+
+function handleUpgrade(req, socket, clients, stats) {
+  const key = String(req.headers["sec-websocket-key"] || "");
+  const accept = crypto.createHash("sha1").update(key + WS_MAGIC_GUID).digest("base64");
+  socket.write(
+    `HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`
+  );
+  attachWsClient(socket, clients, stats);
+}
+
 /** Sobe um relay Nostr efêmero local e devolve `{ url, port, getStats, close }`. */
 export function startEphemeralNostrRelay({ host = "127.0.0.1", port = 0 } = {}) {
   const clients = new Set();
@@ -143,27 +165,9 @@ export function startEphemeralNostrRelay({ host = "127.0.0.1", port = 0 } = {}) 
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ status: "ok", service: "vox-nostr-ephemeral-e2e" }));
   });
-  server.on("upgrade", (req, socket) => {
-    const key = String(req.headers["sec-websocket-key"] || "");
-    const accept = crypto.createHash("sha1").update(key + WS_MAGIC_GUID).digest("base64");
-    socket.write(
-      `HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`
-    );
-    attachWsClient(socket, clients, stats);
-  });
+  server.on("upgrade", (req, socket) => handleUpgrade(req, socket, clients, stats));
   return new Promise((resolve, reject) => {
     server.once("error", reject);
-    server.listen(port, host, () => {
-      const addr = server.address();
-      resolve({
-        url: `ws://${host}:${addr.port}`,
-        port: addr.port,
-        getStats: () => ({ ...stats, connectedClients: clients.size }),
-        close: () => new Promise((done) => {
-          for (const c of clients) c.socket.destroy();
-          server.close(() => done());
-        }),
-      });
-    });
+    server.listen(port, host, () => resolve(createRelayController(server, host, clients, stats)));
   });
 }

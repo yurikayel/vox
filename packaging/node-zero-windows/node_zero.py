@@ -21,7 +21,6 @@ from pathlib import Path
 
 from windows_host import WindowsHost, WindowsJobGovernor
 
-
 APP_NAME = "Vox Populi Node Zero"
 RELAY_HOST = "127.0.0.1"
 RELAY_PORT = 3921
@@ -467,7 +466,10 @@ class NodeZero:
             target=self.control.serve_forever, name="node-zero-control", daemon=True
         )
         self.control_thread.start()
-        print(f"{APP_NAME} ativo em {RELAY_HOST}:{RELAY_PORT} (controle {CONTROL_HOST}:{CONTROL_PORT})")
+        print(
+            f"{APP_NAME} ativo em {RELAY_HOST}:{RELAY_PORT} "
+            f"(controle {CONTROL_HOST}:{CONTROL_PORT})"
+        )
 
     def _poll_until_stopped(self) -> None:
         try:
@@ -594,7 +596,8 @@ def print_status(data_dir: Path) -> int:
     except (OSError, urllib.error.URLError):
         status_path = data_dir / "status.json"
         if status_path.exists():
-            print(json.dumps(json.loads(status_path.read_text(encoding="utf-8")), indent=2, ensure_ascii=False))
+            data = json.loads(status_path.read_text(encoding="utf-8"))
+            print(json.dumps(data, indent=2, ensure_ascii=False))
             print("Controle local indisponível; status acima é a última amostra salva.")
             return 1
         print("Nó Zero ainda não foi iniciado.")

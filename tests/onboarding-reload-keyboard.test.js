@@ -32,6 +32,39 @@ function fakeInput(id) {
   };
 }
 
+function createGenesisSteps(inputs) {
+  const steps = new Map();
+  for (const key of ["entry", "have", "pact"]) {
+    const section = {
+      dataset: { genesisStep: key },
+      hidden: key !== "entry",
+      querySelector(s) {
+        if (s === "input, button:not(.genesis-back)") {
+          return inputs.get(key === "have" ? "oauth-restore-email-input" : "oauth-custom-name-input");
+        }
+        return null;
+      },
+    };
+    steps.set(key, section);
+  }
+  return steps;
+}
+
+function createGenesisDoc(inputs, mk) {
+  return {
+    getElementById: (id) => {
+      if (inputs.has(id)) return inputs.get(id);
+      if (id === "oauth-enrich-error") return { textContent: "", hidden: true };
+      if (id === "oauth-mesh-status") return mk("oauth-mesh-status");
+      if (id === "form-oauth-custom-name") return { hidden: false, parentElement: { querySelector: () => ({ hidden: false }) } };
+      if (id === "oauth-email-kit-slot") return { innerHTML: "", hidden: true };
+      return null;
+    },
+    querySelector: () => null,
+    querySelectorAll: () => [],
+  };
+}
+
 function mountGenesisModal() {
   const inputs = new Map();
   const mk = (id) => {
@@ -62,26 +95,8 @@ function mountGenesisModal() {
   const c = { innerHTML: "" };
   render.renderOAuthEnrich(c);
   modal.innerHTML = c.innerHTML;
-  modal._steps = new Map();
-  for (const key of ["entry", "have", "pact"]) {
-    const section = { dataset: { genesisStep: key }, hidden: key !== "entry", querySelector(s) {
-      if (s === "input, button:not(.genesis-back)") return inputs.get(key === "have" ? "oauth-restore-email-input" : "oauth-custom-name-input");
-      return null;
-    } };
-    modal._steps.set(key, section);
-  }
-  const doc = {
-    getElementById: (id) => {
-      if (inputs.has(id)) return inputs.get(id);
-      if (id === "oauth-enrich-error") return { textContent: "", hidden: true };
-      if (id === "oauth-mesh-status") return mk("oauth-mesh-status");
-      if (id === "form-oauth-custom-name") return { hidden: false, parentElement: { querySelector: () => ({ hidden: false }) } };
-      if (id === "oauth-email-kit-slot") return { innerHTML: "", hidden: true };
-      return null;
-    },
-    querySelector: () => null,
-    querySelectorAll: () => [],
-  };
+  modal._steps = createGenesisSteps(inputs);
+  const doc = createGenesisDoc(inputs, mk);
   return { modal, doc, inputs, mk };
 }
 
@@ -277,25 +292,30 @@ test("LT-07a: checkOAuthEnrichStep não redesenha quando #oauth-enrich-overlay j
   }
 });
 
+function createFocusTrapTestFixture() {
+  const keyListeners = [];
+  const opener = { focused: false, focus() { this.focused = true; } };
+  const entryInput = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+  const hiddenHaveInput = { hidden: false, closest: (s) => (s === "[hidden]" ? {} : null), getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+  const entryBtn = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+  const haveSection = { dataset: { genesisStep: "have" }, hidden: true, querySelector: () => entryInput };
+  const entrySection = { dataset: { genesisStep: "entry" }, hidden: false, querySelector: () => entryInput };
+  const doc = {
+    activeElement: opener,
+    addEventListener: (ev, fn) => { if (ev === "keydown") keyListeners.push(fn); },
+    removeEventListener: (ev, fn) => {
+      const i = keyListeners.indexOf(fn);
+      if (ev === "keydown" && i >= 0) keyListeners.splice(i, 1);
+    },
+  };
+  return { keyListeners, opener, entryInput, hiddenHaveInput, entryBtn, haveSection, entrySection, doc };
+}
+
 test("LT-07b: renderOAuthEnrich ativa focus trap, ignora etapas ocultas, trata Escape e devolve foco ao fechar", () => {
   const prevDoc = globalThis.document;
   try {
-    const keyListeners = [];
-    const opener = { focused: false, focus() { this.focused = true; } };
-    const entryInput = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
-    const hiddenHaveInput = { hidden: false, closest: (s) => (s === "[hidden]" ? {} : null), getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
-    const entryBtn = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
-    const haveSection = { dataset: { genesisStep: "have" }, hidden: true, querySelector: () => entryInput };
-    const entrySection = { dataset: { genesisStep: "entry" }, hidden: false, querySelector: () => entryInput };
+    const { keyListeners, opener, entryInput, hiddenHaveInput, entryBtn, haveSection, entrySection, doc } = createFocusTrapTestFixture();
     let skipped = false;
-    const doc = {
-      activeElement: opener,
-      addEventListener: (ev, fn) => { if (ev === "keydown") keyListeners.push(fn); },
-      removeEventListener: (ev, fn) => {
-        const i = keyListeners.indexOf(fn);
-        if (ev === "keydown" && i >= 0) keyListeners.splice(i, 1);
-      },
-    };
     globalThis.document = doc;
     const container = {
       innerHTML: "",

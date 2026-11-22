@@ -54,7 +54,10 @@ def main():
 
     core_files = ["index.html", "sw.js"]
     core_raw = sum(a["size"] for a in assets if a["path"] in core_files)
-    print(f"    Core Shell (index + sw): {core_raw} bytes (Teto Turbo: {TURBO_FREE_TIER_CEILING_BYTES} bytes)")
+    print(
+        f"    Core Shell (index + sw): {core_raw} bytes "
+        f"(Teto Turbo: {TURBO_FREE_TIER_CEILING_BYTES} bytes)"
+    )
 
     manifest = build_permaweb_manifest(assets)
     manifest_path = CLIENT_DIR / "permaweb-manifest.json"

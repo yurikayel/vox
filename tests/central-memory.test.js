@@ -14,11 +14,7 @@ test("central-memory - getCentralMemoryUrls inclui endpoints locais 3920 e 3921"
   assert.ok(urls.includes("http://127.0.0.1:3921"));
 });
 
-test("central-memory - syncWithCentralMemory envia estado local e reidrata posts, tombstones e perfis", async () => {
-  localStorage.clear();
-  profileDirectory.__resetProfileCardsForTests();
-  mockStores.get("local-posts")?.map.clear();
-  const remote = await person();
+async function prepareRemoteTestData(remote) {
   const remotePost = await remote.sign({
     id: "top_remote_hydrated",
     type: "topic",
@@ -28,7 +24,6 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     ts: 1795000002000,
   });
   const remoteTomb = await remote.sign({ id: "top_deleted_remote", type: "tombstone", ts: 1795000003000, editedAt: 1795000003000 });
-  // Desde 17/11 o cartão de perfil só entra assinado pelo dono (`signedCard`); o cartão solto não é confiado.
   const remoteCard = await remote.sign({
     id: `pc_${remote.routeId}`,
     type: "profile-card",
@@ -39,6 +34,57 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     discoverable: true,
     editedAt: Date.now(),
   });
+  return { remotePost, remoteTomb, remoteCard };
+}
+
+function createSyncMockFetch({ remote, remotePost, remoteTomb, remoteCard, onCapture }) {
+  return async (url, options = {}) => {
+    if (String(url).endsWith("/memory/sync")) {
+      const capturedBody = JSON.parse(options.body);
+      onCapture(capturedBody);
+      const payload = {
+        status: "ok",
+        mode: "zero-central-memory",
+        revision: 5,
+        counts: { posts: 2, tombstones: 1, profiles: 1, manifests: 0, blobs: 0 },
+        posts: [...capturedBody.posts, remotePost],
+        tombstones: [remoteTomb],
+        profiles: [{ routeId: remote.routeId, name: "Peer Persistido", bio: "Bio reidratada", signedCard: remoteCard }],
+        manifests: [],
+        blobs: [],
+      };
+      const bodyText = JSON.stringify(payload);
+      return { ok: true, text: async () => bodyText, json: async () => payload };
+    }
+    return { ok: false, text: async () => "" };
+  };
+}
+
+async function assertHydratedState({ capturedBody, callbackPayload, remoteRouteId }) {
+  assert.ok(capturedBody);
+  assert.equal(capturedBody.posts.length, 1);
+  assert.equal(capturedBody.posts[0].id, "top_local_1");
+  assert.ok(callbackPayload);
+  assert.equal(callbackPayload.revision, 5);
+
+  const hydratedPost = await cacheNode.getLocalPost("top_remote_hydrated");
+  assert.ok(hydratedPost);
+  assert.equal(hydratedPost.title, "Post Reidratado do Nó Zero-Central-Memory");
+
+  const hydratedTomb = await cacheNode.getTombstone("top_deleted_remote");
+  assert.ok(hydratedTomb);
+
+  const hydratedProfile = profileDirectory.getProfileCard(remoteRouteId);
+  assert.ok(hydratedProfile);
+  assert.equal(hydratedProfile.name, "Peer Persistido");
+}
+
+test("central-memory - syncWithCentralMemory envia estado local e reidrata posts, tombstones e perfis", async () => {
+  localStorage.clear();
+  profileDirectory.__resetProfileCardsForTests();
+  mockStores.get("local-posts")?.map.clear();
+  const remote = await person();
+  const { remotePost, remoteTomb, remoteCard } = await prepareRemoteTestData(remote);
 
   await cacheNode.saveLocalPost({
     id: "top_local_1",
@@ -52,34 +98,15 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
 
   const originalFetch = globalThis.fetch;
   let capturedBody = null;
-  globalThis.fetch = async (url, options = {}) => {
-    if (String(url).endsWith("/memory/sync")) {
-      capturedBody = JSON.parse(options.body);
-      const payload = {
-        status: "ok",
-        mode: "zero-central-memory",
-        revision: 5,
-        counts: { posts: 2, tombstones: 1, profiles: 1, manifests: 0, blobs: 0 },
-        posts: [
-          ...capturedBody.posts,
-          remotePost,
-        ],
-        tombstones: [remoteTomb],
-        profiles: [
-          { routeId: remote.routeId, name: "Peer Persistido", bio: "Bio reidratada", signedCard: remoteCard },
-        ],
-        manifests: [],
-        blobs: [],
-      };
-      const bodyText = JSON.stringify(payload);
-      return {
-        ok: true,
-        text: async () => bodyText,
-        json: async () => payload,
-      };
-    }
-    return { ok: false, text: async () => "" };
-  };
+  globalThis.fetch = createSyncMockFetch({
+    remote,
+    remotePost,
+    remoteTomb,
+    remoteCard,
+    onCapture: (body) => {
+      capturedBody = body;
+    },
+  });
 
   try {
     let callbackPayload = null;
@@ -91,22 +118,7 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
 
     assert.equal(result.ok, true);
     assert.equal(result.hydratedCount, 3);
-    assert.ok(capturedBody);
-    assert.equal(capturedBody.posts.length, 1);
-    assert.equal(capturedBody.posts[0].id, "top_local_1");
-    assert.ok(callbackPayload);
-    assert.equal(callbackPayload.revision, 5);
-
-    const hydratedPost = await cacheNode.getLocalPost("top_remote_hydrated");
-    assert.ok(hydratedPost);
-    assert.equal(hydratedPost.title, "Post Reidratado do Nó Zero-Central-Memory");
-
-    const hydratedTomb = await cacheNode.getTombstone("top_deleted_remote");
-    assert.ok(hydratedTomb);
-
-    const hydratedProfile = profileDirectory.getProfileCard(remote.routeId);
-    assert.ok(hydratedProfile);
-    assert.equal(hydratedProfile.name, "Peer Persistido");
+    await assertHydratedState({ capturedBody, callbackPayload, remoteRouteId: remote.routeId });
   } finally {
     globalThis.fetch = originalFetch;
     centralMemory.setCentralMemoryAutoPush(false);

@@ -26,9 +26,18 @@ function screenEl() {
   return document.getElementById("phrase-screen");
 }
 
+/**
+ * Imprime o cartão da frase de recuperação.
+ * @param {object} [opts] Opções do documento/janela.
+ * @returns {boolean} Se o diálogo de impressão foi disparado.
+ */
+export function printCard(opts) {
+  return printPhraseCard(opts);
+}
+
 function showWords(phrase) {
   screenEl().innerHTML = renderPhraseWordsHtml(phrase);
-  document.getElementById("btn-phrase-print")?.addEventListener("click", () => printPhraseCard());
+  document.getElementById("btn-phrase-print")?.addEventListener("click", () => printCard());
   document.getElementById("btn-phrase-written")?.addEventListener("click", () => showConfirm(phrase));
 }
 
@@ -66,6 +75,8 @@ async function revealPhrase() {
 
 /** Abre a tela da frase de recuperação da conta ativa. */
 export async function showRecoveryPhrase() {
+  discardPhrasePrintCopy();
+  globalThis.addEventListener?.("hashchange", () => discardPhrasePrintCopy(), { once: true });
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Frase de recuperação"));
   main.innerHTML = renderPhraseIntroHtml({ needsPassphrase: await phraseNeedsPassphrase() });

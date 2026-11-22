@@ -59,6 +59,30 @@ test("local-account - assina e verifica payload canonicamente", async () => {
   assert.equal(await localAccount.verifyPayload(original), false);
 });
 
+async function verifyLocalListingStorage() {
+  const listing1 = {
+    id: "l_1",
+    type: "listing",
+    communityId: "tecnologia",
+    title: "Teclado Mecânico",
+    priceLabel: "R$ 250",
+    locationLabel: "Pinheiros, SP",
+    contactPix: "+5511999998888",
+    listingStatus: "available",
+    ts: 2500,
+  };
+  await cacheNode.saveLocalPost(listing1);
+  const fetchedListing = await cacheNode.getLocalPost("l_1");
+  assert.equal(fetchedListing?.priceLabel, "R$ 250");
+  assert.equal(fetchedListing?.locationLabel, "Pinheiros, SP");
+  assert.equal(fetchedListing?.contactPix, "+5511999998888");
+  assert.equal(fetchedListing?.listingStatus, "available");
+
+  const listings = await cacheNode.getLocalPosts({ type: "listing", communityId: "tecnologia" });
+  assert.equal(listings.length, 1);
+  assert.equal(listings[0].id, "l_1");
+}
+
 test("cache-node - armazena e consulta posts locais P2P (local-posts)", async () => {
   await cacheNode.clearLocalPosts();
 
@@ -104,28 +128,7 @@ test("cache-node - armazena e consulta posts locais P2P (local-posts)", async ()
   assert.equal(comms.length, 1);
   assert.equal(comms[0].communityId, "tecnologia");
 
-  // Testa persistência e busca de tipo listing
-  const listing1 = {
-    id: "l_1",
-    type: "listing",
-    communityId: "tecnologia",
-    title: "Teclado Mecânico",
-    priceLabel: "R$ 250",
-    locationLabel: "Pinheiros, SP",
-    contactPix: "+5511999998888",
-    listingStatus: "available",
-    ts: 2500,
-  };
-  await cacheNode.saveLocalPost(listing1);
-  const fetchedListing = await cacheNode.getLocalPost("l_1");
-  assert.equal(fetchedListing?.priceLabel, "R$ 250");
-  assert.equal(fetchedListing?.locationLabel, "Pinheiros, SP");
-  assert.equal(fetchedListing?.contactPix, "+5511999998888");
-  assert.equal(fetchedListing?.listingStatus, "available");
-
-  const listings = await cacheNode.getLocalPosts({ type: "listing", communityId: "tecnologia" });
-  assert.equal(listings.length, 1);
-  assert.equal(listings[0].id, "l_1");
+  await verifyLocalListingStorage();
 });
 
 test("local-account - gerencia chave Pix opcional localmente", () => {

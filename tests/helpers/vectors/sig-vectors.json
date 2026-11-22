@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "description": "Vetores determinísticos de assinatura Vox (v1 e v2) com chaves efêmeras de teste",
+  "keypair": {
+    "description": "Chaves de teste deterministicas para validacao de contrato de assinatura Vox v1/v2",
+    "pub": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "dfbvGFwm9rwj_dDDUvcwOLTkX23MfvqKVHaGxPe9xXs",
+      "y": "CTgHMKbDhd0tACsK9-sSoKHgArI7Asub5mfuy_nuurg"
+    }
+  },
+  "routeId": "vx_yJK5pe6RXTuEp1fpn78q",
+  "vectors": [
+    {
+      "version": 1,
+      "name": "assinatura_v1_topo_ordenado",
+      "input": {
+        "id": "post_vec_001",
+        "author": "vx_yJK5pe6RXTuEp1fpn78q",
+        "type": "post",
+        "text": "Vox v1 test vector",
+        "ts": 1700000000000,
+        "extra": {
+          "b": 2,
+          "a": 1
+        }
+      },
+      "canonicalString": "{\"author\":\"vx_yJK5pe6RXTuEp1fpn78q\",\"extra\":{},\"id\":\"post_vec_001\",\"text\":\"Vox v1 test vector\",\"ts\":1700000000000,\"type\":\"post\"}",
+      "signedPayload": {
+        "id": "post_vec_001",
+        "author": "vx_yJK5pe6RXTuEp1fpn78q",
+        "type": "post",
+        "text": "Vox v1 test vector",
+        "ts": 1700000000000,
+        "extra": {
+          "b": 2,
+          "a": 1
+        },
+        "pubKey": {
+          "kty": "EC",
+          "crv": "P-256",
+          "x": "dfbvGFwm9rwj_dDDUvcwOLTkX23MfvqKVHaGxPe9xXs",
+          "y": "CTgHMKbDhd0tACsK9-sSoKHgArI7Asub5mfuy_nuurg"
+        },
+        "sig": "ohlp5Z7HC2a-dVujUyxNgU_HKkTg3V4KpcRvc8JHVxPUyfVyj85-d4rucBrxjbZtaZCml15F2GYv_X9coWC0qA"
+      },
+      "sig": "ohlp5Z7HC2a-dVujUyxNgU_HKkTg3V4KpcRvc8JHVxPUyfVyj85-d4rucBrxjbZtaZCml15F2GYv_X9coWC0qA"
+    },
+    {
+      "version": 2,
+      "name": "assinatura_v2_deep_ordenado",
+      "input": {
+        "id": "post_vec_002",
+        "author": "vx_yJK5pe6RXTuEp1fpn78q",
+        "type": "post",
+        "text": "Vox v2 test vector",
+        "ts": 1700000001000,
+        "sigv": 2,
+        "tags": [
+          "vox",
+          "p2p"
+        ],
+        "nested": {
+          "z": 9,
+          "a": 1,
+          "m": {
+            "k2": "v2",
+            "k1": "v1"
+          }
+        }
+      },
+      "canonicalString": "{\"author\":\"vx_yJK5pe6RXTuEp1fpn78q\",\"id\":\"post_vec_002\",\"nested\":{\"a\":1,\"m\":{\"k1\":\"v1\",\"k2\":\"v2\"},\"z\":9},\"sigv\":2,\"tags\":[\"vox\",\"p2p\"],\"text\":\"Vox v2 test vector\",\"ts\":1700000001000,\"type\":\"post\"}",
+      "signedPayload": {
+        "id": "post_vec_002",
+        "author": "vx_yJK5pe6RXTuEp1fpn78q",
+        "type": "post",
+        "text": "Vox v2 test vector",
+        "ts": 1700000001000,
+        "sigv": 2,
+        "tags": [
+          "vox",
+          "p2p"
+        ],
+        "nested": {
+          "z": 9,
+          "a": 1,
+          "m": {
+            "k2": "v2",
+            "k1": "v1"
+          }
+        },
+        "pubKey": {
+          "kty": "EC",
+          "crv": "P-256",
+          "x": "dfbvGFwm9rwj_dDDUvcwOLTkX23MfvqKVHaGxPe9xXs",
+          "y": "CTgHMKbDhd0tACsK9-sSoKHgArI7Asub5mfuy_nuurg"
+        },
+        "sig": "TSPm7aB85Vfi3IoaKqLBVxSVi5PC0oqohIwxUccAtjN67qZ5rdZhKgkLrSfzaqf6EWRYs_qzkEvAJ1dk3A2stQ"
+      },
+      "sig": "TSPm7aB85Vfi3IoaKqLBVxSVi5PC0oqohIwxUccAtjN67qZ5rdZhKgkLrSfzaqf6EWRYs_qzkEvAJ1dk3A2stQ"
+    }
+  ]
+}

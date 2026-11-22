@@ -52,13 +52,23 @@ test("profile-onchain - publishProfileCardOnChain envia payload via uploadFn", a
   assert.equal(postedTags.find((t) => t.name === "Route-Id")?.value, "vx_author_xyz");
 });
 
-test("profile-onchain - fetchProfileCardOnChain e fetchAndCacheOnChainProfile", async () => {
-  const originalFetch = globalThis.fetch;
-  localStorage.clear();
-  profileDirectory.__resetProfileCardsForTests();
-  gql.__resetGatewayConfigForTests();
+const MOCK_PROFILE_NODE = {
+  id: "tx_card_onchain_111",
+  owner: { address: "arweave_address_alice_999" },
+  tags: [
+    { name: "App-Name", value: "vox-brasil" },
+    { name: "Type", value: "profile-card" },
+    { name: "Route-Id", value: "vx_alice_online" },
+    { name: "Display-Name", value: "Alice do Povo" },
+    { name: "Bio", value: "Soberania e Software Livre" },
+    { name: "Avatar-Url", value: "https://turbo-gateway.com/raw/tx_pic_222" },
+    { name: "Discoverable", value: "true" },
+    { name: "Timestamp", value: "1794500000000" },
+  ],
+};
 
-  globalThis.fetch = async (url, opts) => {
+function createProfileCardMockFetch(originalFetch) {
+  return async (url, opts) => {
     const s = String(url);
     if (s.includes("gateways.json")) {
       return {
@@ -82,24 +92,7 @@ test("profile-onchain - fetchProfileCardOnChain e fetchAndCacheOnChainProfile", 
         json: async () => ({
           data: {
             transactions: {
-              edges: [
-                {
-                  node: {
-                    id: "tx_card_onchain_111",
-                    owner: { address: "arweave_address_alice_999" },
-                    tags: [
-                      { name: "App-Name", value: "vox-brasil" },
-                      { name: "Type", value: "profile-card" },
-                      { name: "Route-Id", value: "vx_alice_online" },
-                      { name: "Display-Name", value: "Alice do Povo" },
-                      { name: "Bio", value: "Soberania e Software Livre" },
-                      { name: "Avatar-Url", value: "https://turbo-gateway.com/raw/tx_pic_222" },
-                      { name: "Discoverable", value: "true" },
-                      { name: "Timestamp", value: "1794500000000" },
-                    ],
-                  },
-                },
-              ],
+              edges: [{ node: MOCK_PROFILE_NODE }],
             },
           },
         }),
@@ -107,6 +100,14 @@ test("profile-onchain - fetchProfileCardOnChain e fetchAndCacheOnChainProfile", 
     }
     return originalFetch(url, opts);
   };
+}
+
+test("profile-onchain - fetchProfileCardOnChain e fetchAndCacheOnChainProfile", async () => {
+  const originalFetch = globalThis.fetch;
+  localStorage.clear();
+  profileDirectory.__resetProfileCardsForTests();
+  gql.__resetGatewayConfigForTests();
+  globalThis.fetch = createProfileCardMockFetch(originalFetch);
 
   try {
     const card = await gql.fetchProfileCardOnChain({ routeId: "vx_alice_online" });

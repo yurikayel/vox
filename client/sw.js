@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.153-runtime-primitives";
+const CACHE_NAME = "vox-pwa-v7.158-pm19-pm25-pm31-onda3";
 
 const SHELL_ASSETS = [
 
@@ -54,6 +54,10 @@ const SHELL_ASSETS = [
 
   "./js/app/inbox-backup-ui.js",
   "./js/app/init.js",
+  "./js/app/init-frame-actions.js",
+  "./js/app/init-network-sync.js",
+  "./js/app/init-post-mutation.js",
+  "./js/app/init-social-actions.js",
   "./js/app/frame-ui.js",
 
   "./js/app/post-media-lightbox.js",
@@ -96,6 +100,10 @@ const SHELL_ASSETS = [
   "./js/app/screens-home.js",
 
   "./js/app/screens-network.js",
+  "./js/app/network-screen-linked.js",
+  "./js/app/network-screen-moderation.js",
+  "./js/app/network-screen-settings.js",
+  "./js/app/network-screen-steward.js",
   "./js/app/own-posts-ui.js",
   "./js/own-posts.js",
   "./js/post-supersede.js",
@@ -103,6 +111,11 @@ const SHELL_ASSETS = [
   "./js/app/screens-people.js",
 
   "./js/app/screens-profile.js",
+  "./js/app/profile-screen-account.js",
+  "./js/app/profile-screen-data.js",
+  "./js/app/profile-screen-lookups.js",
+  "./js/app/profile-screen-settings.js",
+  "./js/app/profile-screen-wallet.js",
   "./js/app/profile-vault-sync.js",
 
   "./js/app/screens-not-found.js",
@@ -123,6 +136,14 @@ const SHELL_ASSETS = [
   "./js/brcode.js",
 
   "./js/cache-node.js",
+  "./js/cache-node-communities.js",
+  "./js/cache-node-db.js",
+  "./js/cache-node-dm.js",
+  "./js/cache-node-posts.js",
+  "./js/cache-node-sink.js",
+  "./js/cache-node-tags.js",
+  "./js/cache-node-tombstones.js",
+  "./js/cache-node-tx.js",
   "./js/post-wire.js",
 
   "./js/central-memory.js",
@@ -170,6 +191,11 @@ const SHELL_ASSETS = [
   "./js/i18n-pt-br.js",
 
   "./js/app/inline-composer.js",
+  "./js/app/inline-composer-media.js",
+  "./js/app/inline-composer-publish.js",
+  "./js/app/inline-composer-state.js",
+  "./js/app/inline-composer-tags.js",
+  "./js/app/inline-composer-voice.js",
   "./js/permanence-notice.js",
   "./js/topic-permaweb.js",
   "./js/report.js",
@@ -188,9 +214,18 @@ const SHELL_ASSETS = [
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
+  "./js/explode-crosspost.js",
+  "./js/explode-events.js",
+  "./js/explode-intent.js",
+  "./js/explode-ui.js",
   "./js/story-card.js",
   "./js/bsky-feed.js",
   "./js/linked-accounts.js",
+  "./js/linked-accounts-bsky.js",
+  "./js/linked-accounts-dispatch.js",
+  "./js/linked-accounts-format.js",
+  "./js/linked-accounts-store.js",
+  "./js/linked-accounts-verify.js",
   "./js/bsky-oauth.js",
   "./js/social-login.js",
   "./js/render/linked-accounts-ui.js",
@@ -214,6 +249,7 @@ const SHELL_ASSETS = [
   "./js/sig-format.js",
   "./js/signed-verify.js",
   "./js/aviso-roles.js",
+  "./js/aviso-ics.js",
   "./js/natural-mod.js",
 
   "./js/identity/account-backup-wrap.js",
@@ -286,6 +322,7 @@ const SHELL_ASSETS = [
   "./js/mock.js",
 
   "./js/moderation.js",
+  "./js/moderation-log.js",
 
   "./js/reply-thread.js",
 
@@ -294,6 +331,14 @@ const SHELL_ASSETS = [
   "./js/community-unread.js",
 
   "./js/peers.js",
+  "./js/peers-base.js",
+  "./js/peers-events.js",
+  "./js/peers-settings.js",
+  "./js/peers-relay.js",
+  "./js/peers-transport.js",
+  "./js/peers-transfer.js",
+  "./js/peers-gossip.js",
+  "./js/peers-channel.js",
   "./js/peer-sync.js",
   "./js/community-channel.js",
   "./js/render/channel-bar.js",
@@ -340,6 +385,7 @@ const SHELL_ASSETS = [
   "./js/shared/async-dedupe.js",
   "./js/shared/persisted-signal.js",
   "./js/shared/keyed-list.js",
+  "./js/shared/post-speech.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",
@@ -406,6 +452,12 @@ const SHELL_ASSETS = [
   "./js/render/vote.js",
 
   "./js/render/profile.js",
+  "./js/render/profile-compose-topic.js",
+  "./js/render/profile-compose-wizards.js",
+  "./js/render/profile-header.js",
+  "./js/render/profile-settings.js",
+  "./js/render/profile-tabs.js",
+  "./js/render/profile-wallet.js",
   "./js/render/profile-sovereignty.js",
 
   "./js/render/profile-voxels.js",
@@ -415,6 +467,10 @@ const SHELL_ASSETS = [
   "./js/render/oauth-import.js",
 
   "./js/render/network.js",
+  "./js/render/network-form.js",
+  "./js/render/network-participation.js",
+  "./js/render/network-sections.js",
+  "./js/render/network-steward.js",
 
   "./js/render/dm.js",
 

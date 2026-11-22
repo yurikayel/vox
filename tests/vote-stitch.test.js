@@ -19,7 +19,7 @@ function withLocation({ hash = "", search = "" }, fn) {
   }
 }
 
-describe("vote-stitch — Democracia Direta (pautas reais)", () => {
+describe("vote-stitch — rotas e painel de votação", () => {
   it("parseRoute resolves #/vote and #/votacao", () => {
     withLocation({ hash: "#/vote" }, () => {
       assert.deepEqual(parseRoute(), { name: "vote" });
@@ -40,6 +40,18 @@ describe("vote-stitch — Democracia Direta (pautas reais)", () => {
     }
   });
 
+  it("computeVoteStats e matchesVoteFilter agregam só dados recebidos", () => {
+    const stats = computeVoteStats([
+      { state: "open", communityId: "a", tally: { totalEligible: 2 } },
+      { state: "rejected", communityId: "b", tally: { totalEligible: 3 } },
+    ]);
+    assert.deepEqual(stats, { open: 1, merged: 0, votes: 5, communities: 2, total: 2 });
+    assert.ok(matchesVoteFilter({ state: "expired" }, "closed"));
+    assert.ok(!matchesVoteFilter({ state: "open" }, "closed"));
+  });
+});
+
+describe("vote-stitch — apuração e elegibilidade", () => {
   it("renderVoteDashboard renderiza apuração real e ações conforme elegibilidade", () => {
     const base = {
       communityId: "vox",
@@ -66,17 +78,9 @@ describe("vote-stitch — Democracia Direta (pautas reais)", () => {
     assert.ok(onlyMerged.includes('data-proposal-id="p3"'));
     assert.ok(!onlyMerged.includes('data-proposal-id="p1"'));
   });
+});
 
-  it("computeVoteStats e matchesVoteFilter agregam só dados recebidos", () => {
-    const stats = computeVoteStats([
-      { state: "open", communityId: "a", tally: { totalEligible: 2 } },
-      { state: "rejected", communityId: "b", tally: { totalEligible: 3 } },
-    ]);
-    assert.deepEqual(stats, { open: 1, merged: 0, votes: 5, communities: 2, total: 2 });
-    assert.ok(matchesVoteFilter({ state: "expired" }, "closed"));
-    assert.ok(!matchesVoteFilter({ state: "open" }, "closed"));
-  });
-
+describe("vote-stitch — perfis e navegação no shell", () => {
   it("perfil próprio mostra catálogo real de selos (bloqueados sem recibos)", () => {
     const dummyMain = { innerHTML: "" };
     renderProfile(dummyMain, "vx_test_user_123", [], true, {

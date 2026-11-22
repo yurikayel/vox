@@ -20,6 +20,69 @@ class MockMutationObserver {
 }
 globalThis.MutationObserver = MockMutationObserver;
 
+function makeFakeElement(tag = "div", notifyMo) {
+  const children = [];
+  const el = {
+    id: "",
+    tag,
+    hidden: false,
+    childNodes: children,
+    parent: null,
+    attributes: new Map(),
+    getAttribute(n) {
+      return this.attributes.get(n) ?? null;
+    },
+    hasAttribute(n) {
+      return this.attributes.has(n);
+    },
+    contains(node) {
+      if (node === el) return true;
+      return children.some((c) => c === node);
+    },
+    querySelectorAll(sel) {
+      if (!sel.includes("button")) return [];
+      const out = [];
+      const walk = (n) => {
+        if (n.tag === "button" && !n.hidden) out.push(n);
+        if (n.childNodes) n.childNodes.forEach(walk);
+      };
+      walk(el);
+      return out;
+    },
+    appendChild(child) {
+      children.push(child);
+      child.parent = el;
+      notifyMo?.(el);
+      return child;
+    },
+    set innerHTML(_v) {
+      children.length = 0;
+      notifyMo?.(el);
+    },
+  };
+  return el;
+}
+
+function makeFakeButton(id, onFocus) {
+  const b = {
+    id,
+    tag: "button",
+    hidden: false,
+    parent: null,
+    attributes: new Map(),
+    getAttribute(n) {
+      return b.attributes.get(n) ?? null;
+    },
+    hasAttribute(n) {
+      return b.attributes.has(n);
+    },
+    focus() {
+      onFocus(b, id);
+    },
+  };
+  return b;
+}
+
 /**
  * @returns {import("../client/js/render/modal-host.js") & {
  *   focusLog: string[],
@@ -31,53 +94,9 @@ function fakeDoc() {
   const focusLog = [];
   const keyListeners = [];
   let active = null;
-
   const notifyMo = (el) => el.__mo?.();
 
-  const makeEl = (tag = "div") => {
-    const children = [];
-    const el = {
-      id: "",
-      tag,
-      hidden: false,
-      childNodes: children,
-      parent: null,
-      attributes: new Map(),
-      getAttribute(n) {
-        return this.attributes.get(n) ?? null;
-      },
-      hasAttribute(n) {
-        return this.attributes.has(n);
-      },
-      contains(node) {
-        if (node === el) return true;
-        return children.some((c) => c === node);
-      },
-      querySelectorAll(sel) {
-        if (!sel.includes("button")) return [];
-        const out = [];
-        const walk = (n) => {
-          if (n.tag === "button" && !n.hidden) out.push(n);
-          if (n.childNodes) n.childNodes.forEach(walk);
-        };
-        walk(el);
-        return out;
-      },
-      appendChild(child) {
-        children.push(child);
-        child.parent = el;
-        notifyMo(el);
-        return child;
-      },
-      set innerHTML(_v) {
-        children.length = 0;
-        notifyMo(el);
-      },
-    };
-    return el;
-  };
-
-  const doc = {
+  return {
     focusLog,
     get activeElement() {
       return active;
@@ -85,16 +104,16 @@ function fakeDoc() {
     body: {
       appendChild(el) {
         byId.set(el.id, el);
-        el.parent = doc.body;
+        el.parent = this;
         notifyMo(el);
       },
     },
     getElementById: (id) => byId.get(id) || null,
-    createElement: (tag) => makeEl(tag),
+    createElement: (tag) => makeFakeElement(tag, notifyMo),
     addEventListener(type, fn, capture) {
       if (type === "keydown" && capture) keyListeners.push(fn);
     },
-    removeEventListener(type, fn, capture) {
+    removeEventListener(type, fn, _capture) {
       const i = keyListeners.findIndex((f) => f === fn);
       if (i >= 0) keyListeners.splice(i, 1);
     },
@@ -103,35 +122,13 @@ function fakeDoc() {
       keyListeners.forEach((fn) => fn(e));
       return e;
     },
-    _button: (id) => {
-      const b = button(id);
-      Object.assign(btn, b);
-      return b;
+    _button(id) {
+      return makeFakeButton(id, (b, btnId) => {
+        active = b;
+        focusLog.push(btnId);
+      });
     },
   };
-
-  doc._button = (id) => {
-    const b = {
-      id,
-      tag: "button",
-      hidden: false,
-      parent: null,
-      attributes: new Map(),
-      getAttribute(n) {
-        return b.attributes.get(n) ?? null;
-      },
-      hasAttribute(n) {
-        return b.attributes.has(n);
-      },
-      focus() {
-        active = b;
-        focusLog.push(id);
-      },
-    };
-    return b;
-  };
-
-  return doc;
 }
 
 test("modal-host: Tab no último botão volta ao primeiro", () => {

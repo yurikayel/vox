@@ -218,7 +218,12 @@ def save_state() -> Dict[str, Any]:
 def _item_timestamp(item: Dict[str, Any]) -> int:
     for field in ("editedAt", "ts", "timestamp", "createdAt"):
         val = item.get(field)
-        if isinstance(val, (int, float)) and not isinstance(val, bool) and math.isfinite(val) and val > 0:
+        if (
+            isinstance(val, (int, float))
+            and not isinstance(val, bool)
+            and math.isfinite(val)
+            and val > 0
+        ):
             return int(val)
     return 0
 
@@ -362,7 +367,8 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
     in_avatar = str(card.get("avatarUrl") or "")
     if "lh3.googleusercontent.com/a/" in in_avatar:
         dup_keys = [
-            k for k, v in state["profiles"].items()
+            k
+            for k, v in state["profiles"].items()
             if k != route_id and isinstance(v, dict) and v.get("avatarUrl") == in_avatar
         ]
         for k in dup_keys:
@@ -401,7 +407,9 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     if _blob_sha256(data) != blob_hash:
         return False
     try:
-        byte_length = _parse_nonneg_int(blob.get("byteLength"), "byteLength", len(data)) or len(data)
+        byte_length = _parse_nonneg_int(blob.get("byteLength"), "byteLength", len(data)) or len(
+            data
+        )
     except ValueError:
         return False
     mime = str(blob.get("mime") or "application/octet-stream")
@@ -523,7 +531,9 @@ def sync_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
             }
         include_blobs = bool(payload.get("includeBlobs", True))
         raw_known = payload.get("knownBlobs")
-        known_blobs = {str(h).strip().lower() for h in raw_known} if isinstance(raw_known, list) else set()
+        known_blobs = (
+            {str(h).strip().lower() for h in raw_known} if isinstance(raw_known, list) else set()
+        )
         exported = export_state(since=since, include_blobs=include_blobs, known_blobs=known_blobs)
         exported["ingestedCount"] = changes
         return exported

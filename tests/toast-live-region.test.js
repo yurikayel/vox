@@ -8,6 +8,34 @@ import * as share from "../client/js/share.js";
 const TOAST_STATUS_REGION_ID = "vox-toast-status";
 const TOAST_ALERT_REGION_ID = "vox-toast-alert";
 
+function createToastMockElement(tag, children, byId) {
+  const el = {
+    tagName: tag.toUpperCase(),
+    id: "",
+    className: "",
+    textContent: "",
+    style: { cssText: "" },
+    attrs: new Map(),
+    setAttribute(k, v) {
+      this.attrs.set(k, v);
+      if (k === "id") this.id = v;
+    },
+    getAttribute(k) {
+      return this.attrs.get(k);
+    },
+    hasAttribute(k) {
+      return this.attrs.has(k);
+    },
+    classList: { add() {}, remove() {} },
+    remove() {
+      const i = children.indexOf(el);
+      if (i >= 0) children.splice(i, 1);
+      if (el.id) byId.delete(el.id);
+    },
+  };
+  return el;
+}
+
 function buildToastDom() {
   const byId = new Map();
   const children = [];
@@ -27,33 +55,7 @@ function buildToastDom() {
       if (sel === ".vox-toast") return children.find((c) => c.className?.startsWith?.("vox-toast")) ?? null;
       return null;
     },
-    createElement: (tag) => {
-      const el = {
-        tagName: tag.toUpperCase(),
-        id: "",
-        className: "",
-        textContent: "",
-        style: { cssText: "" },
-        attrs: new Map(),
-        setAttribute(k, v) {
-          this.attrs.set(k, v);
-          if (k === "id") this.id = v;
-        },
-        getAttribute(k) {
-          return this.attrs.get(k);
-        },
-        hasAttribute(k) {
-          return this.attrs.has(k);
-        },
-        classList: { add() {}, remove() {} },
-        remove() {
-          const i = children.indexOf(el);
-          if (i >= 0) children.splice(i, 1);
-          if (el.id) byId.delete(el.id);
-        },
-      };
-      return el;
-    },
+    createElement: (tag) => createToastMockElement(tag, children, byId),
   };
   return { doc, children, focusEl };
 }

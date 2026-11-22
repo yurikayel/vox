@@ -17,7 +17,7 @@ if (!globalThis.sessionStorage) {
   };
 }
 
-const { completeSocialLogin } = await import("../client/js/social-login.js");
+const { completeSocialLogin, matchesPendingFlow } = await import("../client/js/social-login.js");
 const { completeBskyLogin } = await import("../client/js/bsky-oauth.js");
 
 const BSKY_FLOW = "vox-bsky-oauth-flow";
@@ -97,15 +97,18 @@ test("callback social - state do Bluesky vai para o Bluesky e encerra o fluxo PK
   assert.equal(sessionStorage.getItem(BSKY_FLOW), null);
 });
 
-test("callback social - state que não confere com nenhum fluxo é recusado e encerra os dois", async () => {
+test("callback social - state que não confere com nenhum fluxo é recusado e preserva os fluxos pendentes", async () => {
   const calls = [];
   globalThis.fetch = fakeFetch(calls);
   setFlows({ bsky: await bskyFlow("a"), pkce: { provider: "github", state: "b", verifier: "v", redirectUri: "r" } });
   await assert.rejects(completeSocialLogin({ code: "abc", state: "c" }), /Login expirou ou não confere/);
   await assert.rejects(completeSocialLogin({ code: "abc" }), /Login expirou ou não confere/);
   assert.deepEqual(calls, []);
-  assert.equal(sessionStorage.getItem(BSKY_FLOW), null);
-  assert.equal(sessionStorage.getItem(PKCE_FLOW), null);
+  assert.notEqual(sessionStorage.getItem(BSKY_FLOW), null);
+  assert.notEqual(sessionStorage.getItem(PKCE_FLOW), null);
+  assert.equal(matchesPendingFlow({ state: "b" }), true);
+  assert.equal(matchesPendingFlow({ state: "c" }), false);
+  assert.equal(matchesPendingFlow({}), false);
 });
 
 test("bluesky oauth - sem iss no callback é recusado quando o servidor anuncia o parâmetro (RFC 9207)", async () => {

@@ -7,6 +7,7 @@ Nada é persistido. Provedores sem credenciais configuradas respondem 501.
 Variáveis por provedor: VOX_OAUTH_<PROVEDOR>_CLIENT_ID e VOX_OAUTH_<PROVEDOR>_CLIENT_SECRET
 (PROVEDOR em: TWITTER, GITHUB, THREADS, TIKTOK, INSTAGRAM).
 """
+
 import json
 import os
 import urllib.parse
@@ -78,6 +79,7 @@ def _token_request(conf, cid, secret, payload):
     headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
     if conf["basic_auth"]:
         import base64
+
         token = base64.b64encode(f"{cid}:{secret}".encode()).decode()
         headers["Authorization"] = f"Basic {token}"
     else:
@@ -92,11 +94,23 @@ def parse_identity(provider, me):
         d = me.get("data") or {}
         return {"handle": d.get("username", ""), "id": d.get("id", ""), "name": d.get("name", "")}
     if provider == "github":
-        return {"handle": me.get("login", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
+        return {
+            "handle": me.get("login", ""),
+            "id": str(me.get("id", "")),
+            "name": me.get("name") or "",
+        }
     if provider == "tiktok":
         u = (me.get("data") or {}).get("user") or {}
-        return {"handle": u.get("username", ""), "id": u.get("open_id", ""), "name": u.get("display_name", "")}
-    return {"handle": me.get("username", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
+        return {
+            "handle": u.get("username", ""),
+            "id": u.get("open_id", ""),
+            "name": u.get("display_name", ""),
+        }
+    return {
+        "handle": me.get("username", ""),
+        "id": str(me.get("id", "")),
+        "name": me.get("name") or "",
+    }
 
 
 def _validate(payload):
@@ -121,8 +135,12 @@ def exchange(payload, env=None, opener=urllib.request.urlopen):
     tok = _http_json(_token_request(conf, cid, secret, payload), opener)
     access = tok.get("access_token") or (tok.get("data") or {}).get("access_token")
     if not access:
-        raise OAuthError(tok.get("error_description") or tok.get("error") or "A rede recusou o código.", 502)
-    me_req = urllib.request.Request(conf["me_url"], headers={"Authorization": f"Bearer {access}", "Accept": "application/json"})
+        raise OAuthError(
+            tok.get("error_description") or tok.get("error") or "A rede recusou o código.", 502
+        )
+    me_req = urllib.request.Request(
+        conf["me_url"], headers={"Authorization": f"Bearer {access}", "Accept": "application/json"}
+    )
     ident = parse_identity(provider, _http_json(me_req, opener))
     if not ident["handle"]:
         raise OAuthError("A rede não informou o @usuário.", 502)

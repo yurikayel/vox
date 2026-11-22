@@ -66,10 +66,8 @@ test("oauth-profile - signInWithGithub enriches profile from github api", async 
   }
 });
 
-test("oauth-profile - applyGoogleCredential switches to existing account if already in vault", async () => {
-  const origFetch = globalThis.fetch;
-  const mockVault = new Map();
-  globalThis.fetch = async (url, opts) => {
+function createMemoryVaultMockFetch(mockVault, origFetch) {
+  return async (url, opts) => {
     if (String(url).includes("/memory/vault/")) {
       const key = String(url).split("/memory/vault/")[1];
       if (opts?.method === "POST") {
@@ -84,6 +82,12 @@ test("oauth-profile - applyGoogleCredential switches to existing account if alre
     }
     return origFetch(url, opts);
   };
+}
+
+test("oauth-profile - applyGoogleCredential switches to existing account if already in vault", async () => {
+  const origFetch = globalThis.fetch;
+  const mockVault = new Map();
+  globalThis.fetch = createMemoryVaultMockFetch(mockVault, origFetch);
 
   try {
     localAccount.wipeLocalAccount();

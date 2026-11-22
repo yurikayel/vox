@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 
+
 def run_external_linter():
     # Python de produção, scripts e instaladores (regras em ruff.toml). flake8 é só plano B local.
     for cmd in [["ruff", "check", "relay/", "scripts/", "packaging/"], ["flake8", "relay/"]]:
