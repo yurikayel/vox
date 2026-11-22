@@ -2,7 +2,7 @@
 
 > **Status:** canônico (runbook) · **Owner:** mantenedor / steward ops · **Revisado:** 2026-10-25
 
-**Escopo:** espelho **A** (Pages). Espelho **B** segue a mesma regra de paridade de `CACHE_NAME`; chaveamento de tráfego: [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) + [`ops-dr-drill-checklist.md`](./ops-dr-drill-checklist.md).
+**Escopo:** espelho **A** (Pages). Espelho **B** segue a mesma regra de paridade de `CACHE_NAME`; chaveamento de tráfego: [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) + [`ops-dr-drill-checklist.md`](./ops-dr-drill-checklist.md); checklist de release `v1.0` e ensaio de rollback pré-release: [`checklist-release-v1-lan33.md`](./checklist-release-v1-lan33.md).
 
 ---
 
