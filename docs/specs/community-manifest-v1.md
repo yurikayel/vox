@@ -112,6 +112,8 @@ Reservado. Na v2: lista de cartuchos Webxdc (ADR-012) referenciados por `sha256:
 3. `forkOf` é só informação: a tela mostra "derivada de <nome>". Não dá direito nenhum sobre a original e não é conferido contra ela; a original não precisa existir no aparelho.
 4. Posts e membros não migram. Cada pessoa entra na nova se quiser.
 
+Especificação completa do fluxo, invariantes anti-impersonação e matriz de verificação: [fork-comunidade-exp03.md](./fork-comunidade-exp03.md).
+
 ## 8. Fora do escopo
 
 Cotas e capacidades por comunidade, cobrança, nota pública, imposição de relay, bloqueio de quem não aceita sugestões, passagem de dono, ponte com o Fediverso (fica na borda, ADR-028).

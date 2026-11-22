@@ -128,4 +128,6 @@ Use **um** caminho. Em ambos: faça checkout do **mesmo** `git_sha` da linha A; 
 
 Ver [`mirrors-registry.example.json`](./mirrors-registry.example.json) — copiar para registro do coletivo (não commitar URLs draft sem revisão).
 
+Para o registro e validação periódica de espelhos operados por comunidades (NET-05 — paridade CSP/`sw.js`, validação de índice e critérios de suspensão), ver [`registro-espelhos-comunidade-net05.md`](./registro-espelhos-comunidade-net05.md).
+
 *Playbook: T2 ops P0 · espelho B aguarda voluntário · rollback [#10](ops-pages-rollback.md).*
