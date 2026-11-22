@@ -135,7 +135,9 @@ test("PM-105: CLI executa roundtrip em os.tmpdir() e falha em entrada ausente ou
     assert.equal(parsed.allValid, true);
     assert.equal(parsed.validCount, 2);
 
-    const res = runCli(["--input", inputPath, "--json"]);
+    const captured = [];
+    const res = runCli(["--input", inputPath, "--json"], { stdout: { write: (t) => captured.push(t) } });
+    assert.equal(captured.join(""), res.output);
     assert.equal(res.report.total, 2);
     assert.throws(() => runCli(["--input", path.join(tmpDir, "missing.json")]), /Não foi possível ler/);
 
@@ -144,4 +146,19 @@ test("PM-105: CLI executa roundtrip em os.tmpdir() e falha em entrada ausente ou
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+test("PM-105: allowedHosts vazio falha fechado e omitido segue sem restrição", () => {
+  const url = "https://qualquer.example/#/t/top_ok1";
+  assert.throws(() => auditShareBatch([url], { allowedHosts: [] }), /allowedHosts vazio/);
+  assert.throws(() => validateReturnUrl(url, ["", "  "]), /allowedHosts vazio/);
+  assert.equal(validateReturnUrl(url).ok, true);
+  assert.equal(validateReturnUrl(url, ["outro.example"]).ok, false);
+});
+
+test("PM-105: runCli --help escreve no stdout injetado", () => {
+  const captured = [];
+  const res = runCli(["--help"], { stdout: { write: (t) => captured.push(t) } });
+  assert.equal(res.report, null);
+  assert.match(captured.join(""), /^Uso:/);
 });

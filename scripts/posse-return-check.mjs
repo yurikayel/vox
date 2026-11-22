@@ -61,9 +61,12 @@ function formatCanonicalBasePath(pathname) {
 }
 
 function normalizeAllowedHosts(allowedHosts) {
-  if (!allowedHosts) return null;
+  if (allowedHosts === undefined || allowedHosts === null) return null;
   const list = [...allowedHosts].map((h) => String(h || "").trim().toLowerCase()).filter(Boolean);
-  return list.length > 0 ? new Set(list) : null;
+  if (list.length === 0) {
+    throw new TypeError("allowedHosts vazio: informe ao menos um host ou omita a lista (falha fechada, não libera todos).");
+  }
+  return new Set(list);
 }
 
 function matchesAllowedHost(parsed, hostSet) {
@@ -164,7 +167,7 @@ function checkTrackingInUrl(parsed, hashQuery) {
 /**
  * Valida uma URL de retorno POSSE quanto a esquema, credenciais, host permitido, rastreadores e rota.
  * @param {string} rawUrl URL candidata para abertura direta no Vox.
- * @param {Iterable<string>} [allowedHosts] Lista opcional de hosts permitidos.
+ * @param {Iterable<string>} [allowedHosts] Lista opcional de hosts permitidos; omitida = sem restrição, vazia = erro.
  * @returns {{ ok: boolean, topicId?: string, communityId?: string, normalizedUrl?: string, reason?: string }} Resultado da validação.
  */
 export function validateReturnUrl(rawUrl, allowedHosts) {
@@ -207,7 +210,7 @@ export function auditShareBatch(urls, opts = {}) {
   if (!Array.isArray(urls)) {
     throw new TypeError("urls deve ser um array.");
   }
-  const allowedHosts = opts?.allowedHosts;
+  const allowedHosts = normalizeAllowedHosts(opts?.allowedHosts);
   const shouldStrip = Boolean(opts?.stripTracking);
   const results = urls.map((input) => {
     const candidate = shouldStrip ? tryStrip(input) : input;
@@ -284,13 +287,14 @@ function formatTextReport(report) {
 /**
  * Executa a CLI de auditoria de links de retorno POSSE sobre um arquivo JSON.
  * @param {string[]} [argv=process.argv.slice(2)] Argumentos da linha de comando.
+ * @param {{ stdout?: { write: (text: string) => unknown } }} [io={}] Escritor injetável (padrão `process.stdout`), para testes não poluírem o TAP.
  * @returns {{ report: object|null, output: string, outputPath: string|null }} Resultado da execução.
  */
-export function runCli(argv = process.argv.slice(2)) {
+export function runCli(argv = process.argv.slice(2), { stdout = process.stdout } = {}) {
   const opts = parseCliArgs(argv);
   if (opts.help) {
     const usage = "Uso: node scripts/posse-return-check.mjs --input <links.json> [--allowed-hosts h1,h2] [--strip-tracking] [--json] [--out <file>]\n";
-    process.stdout.write(usage);
+    stdout.write(usage);
     return { report: null, output: usage, outputPath: null };
   }
   if (!opts.input) {
@@ -305,7 +309,7 @@ export function runCli(argv = process.argv.slice(2)) {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, output, "utf8");
   } else {
-    process.stdout.write(output);
+    stdout.write(output);
   }
   return { report, output, outputPath };
 }
