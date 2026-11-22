@@ -58,13 +58,24 @@ export function bypassesDoor(fromRel, toRel) {
 }
 
 /**
+ * `render/*` monta HTML puro (ADR-035): não pode puxar estado reativo de `shared/signals.js`.
+ * @param {string} fromRel módulo que importa
+ * @param {string} toRel módulo importado
+ * @returns {boolean}
+ */
+export function isSignalsImportInRender(fromRel, toRel) {
+  return layerOf(fromRel) === "render" && toRel === "shared/signals.js";
+}
+
+/**
  * Este import é permitido pelas camadas? (`app` → qualquer; `render` → render/base; `base` → base;
- * `labs` → labs/base.)
+ * `labs` → labs/base.) `render` → `shared/signals.js` é sempre proibido (HTML puro).
  * @param {string} fromRel módulo que importa
  * @param {string} toRel módulo importado
  * @returns {boolean}
  */
 export function isAllowedImport(fromRel, toRel) {
+  if (isSignalsImportInRender(fromRel, toRel)) return false;
   return ALLOWED[layerOf(fromRel)].has(layerOf(toRel));
 }
 
