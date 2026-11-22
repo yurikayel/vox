@@ -6,10 +6,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { renderInlineComposer } from "../client/js/render/feed.js";
+import { readInlineComposerSource } from "./helpers/inline-composer-source.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
-const composerJs = fs.readFileSync(path.join(root, "js/app/inline-composer.js"), "utf8");
+const composerJs = readInlineComposerSource(root);
 
 test("voice record toggle - renderiza botão toggle integrado e sem barra antiga volumosa", () => {
   const html = renderInlineComposer({ userRouteId: "vx_test_user" });

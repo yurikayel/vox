@@ -10,11 +10,12 @@ import { renderTopic } from "../client/js/render/topic.js";
 import { renderPhotoTagBarHtml } from "../client/js/render/photo-tag-pins.js";
 import * as mediaLofi from "../client/js/media-lofi.js";
 import { readFeedRenderSource } from "./helpers/feed-render-source.mjs";
+import { readInlineComposerSource } from "./helpers/inline-composer-source.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const feedJs = readFeedRenderSource(root);
-const composerJs = fs.readFileSync(path.join(root, "js/app/inline-composer.js"), "utf8");
+const composerJs = readInlineComposerSource(root);
 const lightboxJs = fs.readFileSync(path.join(root, "js/app/post-media-lightbox.js"), "utf8");
 const tagUiJs = fs.readFileSync(path.join(root, "js/app/photo-tag-ui.js"), "utf8");
 
