@@ -5,6 +5,7 @@ Scripts de **manutenção do repositório** (desenvolvimento, CI e release). Nad
 | Script | Para quê | Como rodar |
 |---|---|---|
 | `release_line.py` | Gera `docs/release-metadata.json` (SHA, testes, `CACHE_NAME`) e atualiza a tabela do README | `npm run release-line` · `npm run release-metadata` |
+| `shell-budget-check.mjs` | Orçamento do shell PWA (`SHELL_ASSETS`, boot crítico, gzip e Slow 3G — LAN-23) | `node scripts/shell-budget-check.mjs` · `--json` |
 | `complexity-audit.mjs` | Mede LLOC, aninhamento e complexidade cognitiva; grava `docs/metrics/baseline-AAAA-MM-DD.*` | `npm run audit:complexity` |
 | `layers-audit.mjs` (+ `layers-lib.mjs`) | Confere as camadas do cliente pela árvore sintática: `base` não importa `render`/`app`/`labs`, `render` não importa `app`/`labs`, só `app` carrega o laboratório; dívida antiga em `layers-debt.json` (catraca). Decisão: `docs/adr/035-camadas-e-contextos.md` | `npm run audit:layers` · `npm run audit:layers -- --prune` |
 | `docs-audit.mjs` | Confere a documentação: cabeçalho e JSDoc nos exports, `@param`/`@returns`, links relativos e docs órfãos; dívida antiga em `docs-debt.json` (catraca). Norma: `docs/process/documentacao.md` | `npm run audit:docs` · `npm run audit:docs -- --prune` |
