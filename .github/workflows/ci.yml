@@ -99,6 +99,28 @@ jobs:
       - name: Ruff — dívida de estilo e de tamanho de função (só informa)
         run: ruff check relay scripts packaging --select E,I,PLR0915 --exit-zero --statistics
 
+  test-rust:
+    name: Rust Core (ADR-039)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: rust
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verificar formatação (rustfmt)
+        run: cargo fmt --all -- --check
+
+      - name: Clippy estrito (--all-targets -D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Executar testes do workspace Rust
+        run: cargo test --workspace
+
   security-audit:
     name: Auditoria de Segurança (Secrets / Chaves)
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 # ADR-039: Rust por fases — mais Rust com o tempo, a chave privada no navegador continua no WebCrypto
 
-**Status:** proposed (2026-11-17; só documentação, nenhum código Rust no repositório) · **Revisado:** 2026-11-17 · **Relacionados:** [ADR-010](./010-vox-contribution-engine-execute-e-ajude.md) (Iroh no laboratório), [ADR-012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (sandbox), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves não exportáveis), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md) (autorização no relay), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (subchaves por aparelho), [ADR-035](./035-camadas-e-contextos.md) (camadas), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (pós-quântico), [ADR-037](./037-cofre-na-malha.md) (cofre na malha), [THREAT-MODEL](../THREAT-MODEL.md) (T1, T21, T22, T23, T26, T27), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18, PM-70, PM-71)
+**Status:** accepted (2026-11-22; Fases 0 e 1 entregues em `rust/vox-core`) · **Revisado:** 2026-11-22 · **Relacionados:** [ADR-010](./010-vox-contribution-engine-execute-e-ajude.md) (Iroh no laboratório), [ADR-012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (sandbox), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves não exportáveis), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md) (autorização no relay), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (subchaves por aparelho), [ADR-035](./035-camadas-e-contextos.md) (camadas), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (pós-quântico), [ADR-037](./037-cofre-na-malha.md) (cofre na malha), [THREAT-MODEL](../THREAT-MODEL.md) (T1, T21, T22, T23, T26, T27), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18, PM-70, PM-71)
 
 ## 1. Contexto
 
@@ -97,7 +97,7 @@ Reescrever a interface em Rust; mover a chave P-256 do navegador para WebAssembl
 
 ## 5. Próximos passos
 
-1. Revisão e aceite deste ADR pelo mantenedor.
-2. Fase 0 num PR próprio (sem código no app).
+1. Revisão e aceite deste ADR pelo mantenedor (**concluído em 2026-11-22**, com entrega inicial da Fase 0 — workspace `rust/`, `Cargo.lock` e job `test-rust` no CI com `rust-version = "1.80"` sem `rust-toolchain.toml` para usar o toolchain pré-instalado — e Fase 1 — crate `#![no_std]` zero-dependências `rust/vox-core` para `genesis_data`, `genesis_guard`, `shamir_gf256` em tempo constante e `sig_format`, com paridade verificada por `tests/rust-genesis-parity.test.js`).
+2. Completar os demais formatos e ferramentas das Fases 0–1 (cofre v2, envelope de DM v1, manifesto v1, `cargo-deny`, `cargo-audit`, `rust-code-analysis`, `cargo-fuzz` e build `.wasm` reproduzível com hash).
 3. Medição do Argon2id em WebAssembly num celular barato (tempo com 64 MiB e 3 passadas, tamanho do `.wasm`), no formato da medição do PM-70, antes da fase 2.
 4. Confirmar, antes de citar no código, como cada navegador guarda a chave não exportável em disco e se o WebCrypto já ganhou ML-KEM, ML-DSA ou Argon2 nativos (há proposta no WICG).
