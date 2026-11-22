@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from relay import genesis_guard
+from relay.safe_path import child_of, only_chars
 
 HASH_HEX_REGEX = re.compile(r"^[0-9a-fA-F]{64}$")
 SAFE_ID_REGEX = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
@@ -56,6 +57,25 @@ def set_memory_dir(path: Path) -> Path:
         MEMORY_DIR = Path(path).resolve()
         _STATE_CACHE = None
         return MEMORY_DIR
+
+
+_HEX_CHARS = frozenset("0123456789abcdef")
+
+
+def _is_blob_hash(text: str) -> bool:
+    """True para 64 caracteres hexadecimais minúsculos (sha256), sem regex."""
+    return only_chars(text, _HEX_CHARS, 64, 64)
+
+
+def _is_blob_file_name(name: str) -> bool:
+    """True para `<sha256 hex>.json`."""
+    return name.endswith(".json") and _is_blob_hash(name[: -len(".json")])
+
+
+def _blob_path(blob_hash: str) -> Path:
+    """Arquivo do blob dentro de `blobs/`; `ValueError` se o hash não for sha256 hex."""
+    _, _, _, blobs_dir = _state_paths()
+    return child_of(blobs_dir, f"{blob_hash}.json", _is_blob_file_name)
 
 
 def _empty_state() -> Dict[str, Any]:
@@ -425,8 +445,10 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     if len(raw_bytes) > MAX_BLOB_BYTES:
         return False
 
-    _, _, _, blobs_dir = _state_paths()
-    blob_file = blobs_dir / f"{blob_hash}.json"
+    try:
+        blob_file = _blob_path(blob_hash)
+    except ValueError:
+        return False
     if blob_file.is_file() and blob_hash in state["blobs"]:
         return False
     _atomic_write_bytes(blob_file, raw_bytes)
@@ -445,8 +467,10 @@ def get_blob(blob_hash: str) -> Optional[Dict[str, Any]]:
     if not HASH_HEX_REGEX.match(clean):
         return None
     with _MEMORY_LOCK:
-        _, _, _, blobs_dir = _state_paths()
-        return _read_json_file(blobs_dir / f"{clean}.json")
+        try:
+            return _read_json_file(_blob_path(clean))
+        except ValueError:
+            return None
 
 
 def _apply_event_to_state(state: Dict[str, Any], payload: Dict[str, Any]) -> bool:

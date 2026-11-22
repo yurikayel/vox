@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Relay: o arquivo de blob da memória central passa por `safe_path.child_of` (recusa symlink para fora de `blobs/`; alertas CodeQL `py/path-injection`); triagem do `py/partial-ssrf` em `docs/security/codeql-relay-python-triagem.md` (`relay/test_central_memory_blob_path.py`).
 - Persistência de credenciais endurecida: sessão do Bluesky e segredos de contas vinculadas só vão ao armazenamento cifrados pela chave do aparelho (sem ela ficam em memória); callback de login com `state` desconhecido não encerra fluxos pendentes (`tests/credential-persistence.test.js`).
 ### Feat / Ops / Refactor: PM-19 (espelhos), PM-25 (`.ics`), PM-31 (transparência moderação), Onda 3 (`init` & `linked-accounts`)
 - `scripts/verify-mirrors.mjs` + `.github/workflows/mirror-verify.yml` (`PM-19`): compara `CACHE_NAME` do `sw.js` dos espelhos `live` com o repositório; CLI `--offline` e suíte `tests/mirror-verify.test.js`.
