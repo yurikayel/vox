@@ -8,6 +8,9 @@ const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
 const DAILY_USAGE_KEY = "vox-daily-usage";
 
+/** Chave de armazenamento do uso mensal no localStorage. */
+export const MONTHLY_USAGE_KEY = "vox-monthly-usage";
+
 const DEFAULT_PEER_SETTINGS = Object.freeze({
   enabled: true,
   maxMb: 100,
@@ -151,6 +154,28 @@ export function getDailyUsage() {
 }
 
 /**
+ * Uso de banda servida no mês (ano-mês UTC, formato YYYY-MM). Registro de outro mês não conta: o mês começa zerado.
+ * @param {string} [month] Mês de referência em formato YYYY-MM (padrão: mês corrente UTC).
+ * @returns {{month: string, bytesServedMonth: number, bytesCellularMonth: number}} Uso acumulado no mês.
+ */
+export function getMonthlyUsage(month = new Date().toISOString().slice(0, 7)) {
+  try {
+    const raw = localStorage.getItem(MONTHLY_USAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data && data.month === month) {
+        return {
+          month,
+          bytesServedMonth: Number(data.bytesServedMonth) || 0,
+          bytesCellularMonth: Number(data.bytesCellularMonth) || 0,
+        };
+      }
+    }
+  } catch {}
+  return { month, bytesServedMonth: 0, bytesCellularMonth: 0 };
+}
+
+/**
  * Palpite da conexão pela Network Information API: sem a API, conta como Wi-Fi; economia de dados ou tipo
  * `cellular` contam como 4G.
  * @returns {boolean} Verdadeiro para Wi-Fi ou conexão sem limite conhecido.
@@ -165,6 +190,14 @@ export function isWifiOrUnlimited() {
 }
 
 /**
+ * Indica se a economia de dados ou rede celular/móvel está ativa neste aparelho.
+ * @returns {boolean} Verdadeiro se a conexão atual tiver economia de dados ativa ou for celular.
+ */
+export function isDataSaverActive() {
+  return !isWifiOrUnlimited();
+}
+
+/**
  * Soma bytes servidos ao uso do dia (e ao uso no 4G, se for o caso).
  * @param {number} bytes Quantidade servida.
  * @param {boolean} [onCellular] Se foi no 4G (padrão: a conexão atual não é Wi-Fi nem ilimitada).
@@ -174,6 +207,11 @@ export function recordBytesServed(bytes, onCellular = !isWifiOrUnlimited()) {
   usage.bytesServedToday += bytes;
   if (onCellular) usage.bytesCellularToday = (usage.bytesCellularToday || 0) + bytes;
   localStorage.setItem(DAILY_USAGE_KEY, JSON.stringify(usage));
+
+  const monthly = getMonthlyUsage();
+  monthly.bytesServedMonth += bytes;
+  if (onCellular) monthly.bytesCellularMonth = (monthly.bytesCellularMonth || 0) + bytes;
+  localStorage.setItem(MONTHLY_USAGE_KEY, JSON.stringify(monthly));
 }
 
 /**
