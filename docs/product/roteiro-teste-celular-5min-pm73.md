@@ -26,6 +26,8 @@ Qualquer voluntário do piloto com um celular comum (especialmente Android de en
 
 Os relatos coletados no grupo do piloto podem ser reunidos num arquivo JSON e consolidados offline por `scripts/mobile-field-report.mjs` (sem telemetria central):
 
+> **O que sai da CLI:** só valores de lista fechada. `os` e `browser` viram "Família + versão principal" (ex.: `Android 12`, `Chrome 130`; família fora da lista vira `desconhecido`); `deviceModel` vira apenas a classe (`celular`, `tablet`, `desktop` ou `desconhecido`) e o modelo digitado é descartado; `id` de passo precisa ser um dos oito do roteiro (outros são ignorados); `networkType` fora da lista vira `unknown`. Texto livre digitado nunca chega ao JSON nem ao Markdown.
+
 ```json
 [
   {

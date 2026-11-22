@@ -15,6 +15,7 @@ import { SIGV2_FROM, isKnownSigv } from "../client/js/sig-format.js";
 import { TEST_ROUTE_IDS } from "../client/js/data/test-route-ids.js";
 
 const TEST_ID_SET = new Set(TEST_ROUTE_IDS);
+const IDENTITY_FIELDS = Object.freeze(["author", "owner", "routeId", "authorId", "ownerId", "from", "to", "peerId"]);
 const CREATED_FIELDS = Object.freeze(["ts", "timestamp", "createdAt"]);
 
 function extractCreatedMs(item) {
@@ -64,9 +65,9 @@ export function checkOutboundRehearsalLeak(item) {
   if (item.rehearsal === true) reasons.push("rehearsal_flag");
   if (item.mode === "rehearsal") reasons.push("rehearsal_mode");
   if (item.channel === "rehearsal") reasons.push("rehearsal_channel");
-  const author = String(item.author || item.owner || item.routeId || "").trim();
-  if (author && TEST_ID_SET.has(author)) reasons.push("test_route_id");
-  if (author.startsWith("rehearsal_")) reasons.push("rehearsal_author_prefix");
+  const ids = IDENTITY_FIELDS.map((f) => (typeof item[f] === "string" ? item[f].trim() : ""));
+  if (ids.some((id) => TEST_ID_SET.has(id))) reasons.push("test_route_id");
+  if (ids.some((id) => id.startsWith("rehearsal_"))) reasons.push("rehearsal_author_prefix");
   return { leaked: reasons.length > 0, reasons };
 }
 
@@ -142,7 +143,12 @@ export function runCli(argv) {
   } catch (err) {
     return { code: 1, output: `Falha ao ler entrada: ${err.message}` };
   }
-  const report = auditCutoverBatch(parsed, opts);
+  let report;
+  try {
+    report = auditCutoverBatch(parsed, opts);
+  } catch (err) {
+    return { code: 1, output: `Falha ao auditar itens: ${err.message}` };
+  }
   const output = opts.json
     ? `${JSON.stringify(report, null, 2)}\n`
     : `PM-102/PM-100: ${report.ok ? "PASS" : "FAIL"} | total=${report.total} v2=${report.summary.v2Valid} v1_legado=${report.summary.v1LegacyAllowed} rejeitados=${report.summary.rejected} vazamentos_ensaio=${report.summary.rehearsalLeaks}\n`;
