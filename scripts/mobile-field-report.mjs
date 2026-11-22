@@ -2,8 +2,10 @@
 /**
  * PM-73 + CODE-02 — Agregador local de testes de campo no celular (5 min) e origens de leitura (`read_origin`).
  *
- * Opera 100% offline sem telemetria central, descartando qualquer campo pessoal (zero PII)
- * e produzindo resumo em JSON ou Markdown para a retrospectiva do piloto/beta.
+ * Opera 100% offline sem telemetria central. Só valores de listas fechadas chegam à saída:
+ * SO/navegador viram "Família + versão principal", o aparelho vira classe (celular/tablet/desktop),
+ * ids de passo são os do roteiro e redes/origens são fixas; texto livre digitado nunca é emitido.
+ * Produz resumo em JSON ou Markdown para a retrospectiva do piloto/beta.
  *
  * Uso: node scripts/mobile-field-report.mjs --input <relatos.json> [--format md|json] [--out <arquivo>]
  */
@@ -12,6 +14,18 @@ import { pathToFileURL } from "node:url";
 
 const READ_ORIGIN_KEYS = Object.freeze(["cache", "p2p", "relay", "gateway", "unknown"]);
 const ALLOWED_NETWORKS = new Set(["wifi", "5g", "4g", "3g", "2g", "offline", "unknown"]);
+const KNOWN_STEP_IDS = new Set([
+  "open_pwa", "install_a2hs", "create_identity", "backup_check",
+  "publish_post", "offline_reload", "reconnect_status", "export_diag",
+]);
+const OS_FAMILIES = Object.freeze({
+  android: "Android", ipados: "iPadOS", ios: "iOS", windows: "Windows",
+  macos: "macOS", linux: "Linux", chromeos: "ChromeOS",
+});
+const BROWSER_FAMILIES = Object.freeze({
+  chrome: "Chrome", safari: "Safari", firefox: "Firefox", edge: "Edge",
+  opera: "Opera", samsung: "Samsung Internet",
+});
 
 function nonNegInt(value) {
   const n = Math.round(Number(value));
@@ -22,6 +36,27 @@ function cleanLabel(value, fallback = "desconhecido", maxLen = 48) {
   if (typeof value !== "string") return fallback;
   const trimmed = value.replace(/[\r\n\t]+/g, " ").trim().slice(0, maxLen);
   return trimmed || fallback;
+}
+
+/**
+ * Reduz texto livre a "Família Maior" de uma lista fechada; qualquer outro texto vira o fallback.
+ * Só a família conhecida e o número de versão principal sobrevivem (nunca o texto digitado).
+ */
+function normalizeFamily(value, families) {
+  const text = cleanLabel(value, "", 48).toLowerCase();
+  const key = Object.keys(families).find((name) => text.startsWith(name));
+  if (!key) return "desconhecido";
+  const major = /^\D*?(\d{1,3})/.exec(text.slice(key.length));
+  return major ? `${families[key]} ${major[1]}` : families[key];
+}
+
+/** Classifica o aparelho só por classe (celular/tablet/desktop); o modelo digitado é descartado. */
+function normalizeDeviceClass(value) {
+  const text = cleanLabel(value, "", 48).toLowerCase();
+  if (/^(tablet|ipad)\b/.test(text)) return "tablet";
+  if (/^(desktop|notebook|laptop)\b/.test(text)) return "desktop";
+  if (/^(phone|celular|smartphone|iphone)\b/.test(text)) return "celular";
+  return "desconhecido";
 }
 
 function median(values) {
@@ -44,7 +79,7 @@ function sanitizeSteps(rawSteps) {
   for (const step of rawSteps) {
     if (!step || typeof step !== "object") continue;
     const id = cleanLabel(step.id, "", 32);
-    if (!id) continue;
+    if (!KNOWN_STEP_IDS.has(id)) continue;
     const dur = step.durationMs === undefined || step.durationMs === null
       ? null
       : nonNegInt(step.durationMs);
@@ -87,9 +122,9 @@ export function sanitizeFieldReport(entry) {
   const networkType = ALLOWED_NETWORKS.has(rawNet) ? rawNet : "unknown";
   const ram = Number(entry.ramGb);
   return {
-    deviceModel: cleanLabel(entry.deviceModel),
-    os: cleanLabel(entry.os),
-    browser: cleanLabel(entry.browser),
+    deviceClass: normalizeDeviceClass(entry.deviceModel),
+    os: normalizeFamily(entry.os, OS_FAMILIES),
+    browser: normalizeFamily(entry.browser, BROWSER_FAMILIES),
     ramGb: Number.isFinite(ram) && ram > 0 ? Math.round(ram * 10) / 10 : null,
     networkType,
     steps: sanitizeSteps(entry.steps),
@@ -253,12 +288,16 @@ export function runCli(argv) {
   } catch (err) {
     return { code: 1, output: `Falha ao ler entrada: ${err.message}` };
   }
-  const summary = aggregateFieldReports(parsed);
-  const output = opts.format === "json"
-    ? `${JSON.stringify(summary, null, 2)}\n`
-    : renderFieldReportMarkdown(summary);
-  if (opts.out) writeFileSync(opts.out, output, "utf8");
-  return { code: 0, output, summary };
+  try {
+    const summary = aggregateFieldReports(parsed);
+    const output = opts.format === "json"
+      ? `${JSON.stringify(summary, null, 2)}\n`
+      : renderFieldReportMarkdown(summary);
+    if (opts.out) writeFileSync(opts.out, output, "utf8");
+    return { code: 0, output, summary };
+  } catch (err) {
+    return { code: 1, output: `Falha ao agregar relatos: ${err.message}` };
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -104,3 +104,46 @@ test("PM-73 + CODE-02: executa CLI ponta a ponta nos formatos md e json", () => 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("PM-73: texto livre em aparelho/SO/navegador/passo não chega ao JSON nem ao Markdown", () => {
+  const tainted = {
+    deviceModel: "Celular da Maria Silva IMEI 356938035643809",
+    os: "Android 12 do João (maria@example.org)",
+    browser: "Navegador-Secreto-Fulano 99",
+    networkType: "wifi da casa da Maria",
+    steps: [
+      { id: "open_pwa", ok: true },
+      { id: "senha_da_maria_123", ok: true },
+    ],
+  };
+  const summary = aggregateFieldReports([tainted, SAMPLE_REPORTS[0]]);
+  const combined = `${JSON.stringify(summary)}\n${renderFieldReportMarkdown(summary)}`;
+  for (const secret of ["Maria", "João", "IMEI", "356938", "example.org", "Secreto", "Fulano", "senha_da"]) {
+    assert.equal(combined.includes(secret), false, `texto livre vazou: ${secret}`);
+  }
+  assert.deepEqual(Object.keys(summary.byOs).sort(), ["Android 12"]);
+  assert.deepEqual(Object.keys(summary.byBrowser).sort(), ["Chrome 130", "desconhecido"]);
+  assert.deepEqual(summary.steps.map((s) => s.id), ["offline_reload", "open_pwa"]);
+});
+
+test("PM-73: aparelho vira só classe e SO/navegador só família + versão principal", () => {
+  const out = sanitizeFieldReport({ deviceModel: "iPhone SE", os: "iOS 17.2.1", browser: "Safari 17.1" });
+  assert.equal(out.deviceClass, "celular");
+  assert.equal(out.os, "iOS 17");
+  assert.equal(out.browser, "Safari 17");
+  assert.equal("deviceModel" in out, false);
+  assert.equal(sanitizeFieldReport({ deviceModel: "Moto G22" }).deviceClass, "desconhecido");
+});
+
+test("PM-73: item nulo na lista retorna code 1 em vez de lançar", () => {
+  const dir = mkdtempSync(join(tmpdir(), "vox-pm73-"));
+  try {
+    const inPath = join(dir, "nulo.json");
+    writeFileSync(inPath, JSON.stringify([null]), "utf8");
+    const res = runCli(["--input", inPath]);
+    assert.equal(res.code, 1);
+    assert.match(res.output, /inválido/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

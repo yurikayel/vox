@@ -85,3 +85,27 @@ test("PM-102 + PM-100: CLI retorna exit 0 para lote limpo e exit 1 quando há vi
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("PM-100: conta de ensaio é detectada em qualquer campo de identidade, mesmo com author limpo", () => {
+  const testId = TEST_ROUTE_IDS[0];
+  for (const field of ["owner", "routeId", "authorId", "ownerId", "from", "to", "peerId"]) {
+    const res = checkOutboundRehearsalLeak({ id: "x", author: "vx_cidadao_real", [field]: testId });
+    assert.ok(res.reasons.includes("test_route_id"), `campo ${field} ignorado`);
+  }
+  const prefixed = checkOutboundRehearsalLeak({ author: "vx_ok", routeId: "rehearsal_x" });
+  assert.ok(prefixed.reasons.includes("rehearsal_author_prefix"));
+  assert.equal(checkOutboundRehearsalLeak({ author: "vx_ok", owner: 42, from: null }).leaked, false);
+});
+
+test("PM-102: entrada que não é array retorna code 1 em vez de lançar", () => {
+  const dir = mkdtempSync(join(tmpdir(), "vox-pm102-"));
+  try {
+    const path = join(dir, "obj.json");
+    writeFileSync(path, "{}", "utf8");
+    const res = runCli(["--input", path]);
+    assert.equal(res.code, 1);
+    assert.match(res.output, /inválida/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
