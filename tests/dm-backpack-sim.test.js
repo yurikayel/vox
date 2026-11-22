@@ -10,6 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BACKPACK_LIMITS,
+  MAX_FUTURE_SKEW_MS,
   admitEnvelope,
   applyDeliveryReceipt,
   createBackpackState,
@@ -200,4 +201,45 @@ test("PM-79: CLI executa roundtrip (--input, --guardian, --now, --json) e falha 
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+test("PM-79: rejeita ts no futuro além da tolerância e aceita dentro dela", () => {
+  const state = createBackpackState();
+  assert.deepEqual(admitEnvelope(state, makeEnv("fut-ok", { ts: BASE_MS + MAX_FUTURE_SKEW_MS }), BASE_MS), {
+    accepted: true,
+  });
+  assert.deepEqual(admitEnvelope(state, makeEnv("fut-bad", { ts: BASE_MS + MAX_FUTURE_SKEW_MS + 1 }), BASE_MS), {
+    accepted: false,
+    reason: "future_ts",
+  });
+  assert.deepEqual(admitEnvelope(state, makeEnv("fut-far", { ts: BASE_MS + 365 * DAY_MS }), BASE_MS), {
+    accepted: false,
+    reason: "future_ts",
+  });
+  assert.equal(state.envelopes.has("fut-far"), false);
+});
+
+test("PM-79: evento sem nowMs/at e sem opts.nowMs falha em vez de cair em epoch 0", () => {
+  const events = [{ type: "admit", envelope: makeEnv("sem-relogio") }];
+  assert.throws(() => simulateBackpackEvents(events), /exige nowMs\/at/);
+  assert.throws(() => simulateBackpackEvents([{ type: "prune" }]), /exige nowMs\/at/);
+  const summary = simulateBackpackEvents(events, { nowMs: BASE_MS });
+  assert.equal(summary.carriedCount, 1);
+});
+
+test("PM-79: rejeita invalid_envelope e invalid_peer", () => {
+  const state = createBackpackState();
+  const invalid = { accepted: false, reason: "invalid_envelope" };
+  assert.deepEqual(admitEnvelope(state, null, BASE_MS), invalid);
+  assert.deepEqual(admitEnvelope(state, makeEnv("  "), BASE_MS), invalid);
+  assert.deepEqual(admitEnvelope(state, makeEnv("__proto__"), BASE_MS), invalid);
+  assert.deepEqual(admitEnvelope(state, makeEnv("b1", { bytes: -1 }), BASE_MS), invalid);
+  assert.deepEqual(admitEnvelope(state, makeEnv("c1", { copies: 1.5 }), BASE_MS), invalid);
+  assert.deepEqual(admitEnvelope(state, makeEnv("t1", { ts: "não-é-data" }), BASE_MS), invalid);
+  const noPeer = { accepted: false, reason: "invalid_peer" };
+  assert.deepEqual(admitEnvelope(state, makeEnv("p1", { carrierPeerId: "" }), BASE_MS), noPeer);
+  assert.deepEqual(admitEnvelope(state, makeEnv("p2", { carrierPeerId: "constructor" }), BASE_MS), noPeer);
+  assert.deepEqual(admitEnvelope(state, makeEnv("p3", { carrierPeerId: 7 }), BASE_MS), noPeer);
+  assert.equal(state.stats.rejectedByReason.invalid_envelope, 6);
+  assert.equal(state.stats.rejectedByReason.invalid_peer, 3);
 });

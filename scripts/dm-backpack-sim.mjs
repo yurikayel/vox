@@ -21,6 +21,9 @@ export const BACKPACK_LIMITS = Object.freeze({
   maxPerPeerPerDay: 20,
 });
 
+/** Tolerância declarada de relógio: `ts` além de `now + 5 min` é rejeitado como `future_ts`. */
+export const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -118,6 +121,7 @@ function checkAdmissionPolicy(state, parsed, nowMs, peerDayKey) {
   if (parsed.bytes > BACKPACK_LIMITS.maxBytes) return "oversize";
   if (parsed.copies >= BACKPACK_LIMITS.maxCopies) return "max_copies";
   if (nowMs - parsed.ts > BACKPACK_LIMITS.ttlMs) return "expired";
+  if (parsed.ts - nowMs > MAX_FUTURE_SKEW_MS) return "future_ts";
   const peerCount = state.peerDailyCounts.get(peerDayKey) ?? 0;
   if (peerCount >= BACKPACK_LIMITS.maxPerPeerPerDay) return "peer_daily_limit";
   return null;
@@ -221,8 +225,11 @@ function parseOptionalNow(raw) {
   return validateNowMs(raw);
 }
 
-function resolveEventNow(event, defaultNow) {
-  const raw = event.nowMs ?? event.at ?? defaultNow ?? 0;
+function resolveEventNow(event, defaultNow, index) {
+  const raw = event.nowMs ?? event.at ?? defaultNow;
+  if (raw === undefined) {
+    throw new RangeError(`events[${index}] exige nowMs/at ou opts.nowMs (sem relógio implícito).`);
+  }
   return validateNowMs(raw);
 }
 
@@ -232,7 +239,7 @@ function replaySingleEvent(state, event, index, defaultNow) {
   }
   if (event.type === "admit") {
     const envelope = isPlainObject(event.envelope) ? event.envelope : event;
-    admitEnvelope(state, envelope, resolveEventNow(event, defaultNow));
+    admitEnvelope(state, envelope, resolveEventNow(event, defaultNow, index));
     return;
   }
   if (event.type === "receipt") {
@@ -240,7 +247,7 @@ function replaySingleEvent(state, event, index, defaultNow) {
     return;
   }
   if (event.type === "prune") {
-    pruneExpired(state, resolveEventNow(event, defaultNow));
+    pruneExpired(state, resolveEventNow(event, defaultNow, index));
     return;
   }
   throw new TypeError(`Tipo de evento desconhecido em events[${index}]: ${String(event.type)}`);
