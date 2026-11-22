@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.156-pm96-pm30-onda3";
+const CACHE_NAME = "vox-pwa-v7.157-pm26-pm27-onda3";
 
 const SHELL_ASSETS = [
 
@@ -96,6 +96,10 @@ const SHELL_ASSETS = [
   "./js/app/screens-home.js",
 
   "./js/app/screens-network.js",
+  "./js/app/network-screen-linked.js",
+  "./js/app/network-screen-moderation.js",
+  "./js/app/network-screen-settings.js",
+  "./js/app/network-screen-steward.js",
   "./js/app/own-posts-ui.js",
   "./js/own-posts.js",
   "./js/post-supersede.js",
@@ -128,6 +132,14 @@ const SHELL_ASSETS = [
   "./js/brcode.js",
 
   "./js/cache-node.js",
+  "./js/cache-node-communities.js",
+  "./js/cache-node-db.js",
+  "./js/cache-node-dm.js",
+  "./js/cache-node-posts.js",
+  "./js/cache-node-sink.js",
+  "./js/cache-node-tags.js",
+  "./js/cache-node-tombstones.js",
+  "./js/cache-node-tx.js",
   "./js/post-wire.js",
 
   "./js/central-memory.js",
@@ -175,6 +187,11 @@ const SHELL_ASSETS = [
   "./js/i18n-pt-br.js",
 
   "./js/app/inline-composer.js",
+  "./js/app/inline-composer-media.js",
+  "./js/app/inline-composer-publish.js",
+  "./js/app/inline-composer-state.js",
+  "./js/app/inline-composer-tags.js",
+  "./js/app/inline-composer-voice.js",
   "./js/permanence-notice.js",
   "./js/topic-permaweb.js",
   "./js/report.js",
@@ -357,6 +374,7 @@ const SHELL_ASSETS = [
   "./js/shared/async-dedupe.js",
   "./js/shared/persisted-signal.js",
   "./js/shared/keyed-list.js",
+  "./js/shared/post-speech.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",

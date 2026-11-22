@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Feat / Refactor / A11y: PM-26 (contador mensal/economia de dados), PM-27 ("Ouvir post"), Onda 3 (`inline-composer`, `screens-network`, `cache-node`)
+- `client/js/peers-settings.js` + `render/network-sections.js` (`PM-26`): acumulado mensal UTC (`vox-monthly-usage`, `getMonthlyUsage`), detecção ativa de economia de dados/4G (`isDataSaverActive`) e indicador em `#/settings/network` + testes em `tests/pm26-data-saver.test.js`.
+- `client/js/shared/post-speech.js` + `app/post-more-{actions,menu}.js` (`PM-27` / `LAN-22`): ação **Ouvir post** via Web Speech API (`pt-BR`), parada automática em `hashchange` e fallback honesto + testes em `tests/post-speech.test.js`.
+- `client/js/app/inline-composer.js` (774 → 80 linhas), `client/js/cache-node.js` (794 → 57 linhas) e `client/js/app/screens-network.js` (659 → 35 linhas): fatiados em 17 submódulos SLAP mantendo 100% dos exports públicos, mais helper `tests/helpers/inline-composer-source.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.157-pm26-pm27-onda3` (+18 módulos no `SHELL_ASSETS`).
+
 ### Feat / Refactor / Hardening: PM-96 (Bluesky ADR-026), PM-30 (quarentena), PM-66 (`PLR0913`/`lint:all`), Onda 3 (`screens-profile` & `explode-dispatch`)
 - `client/js/bsky-oauth.js` + `identity/key-at-rest.js` (`PM-96` / ADR-026): sela chave DPoP (`keys`) e tokens OAuth do Bluesky com a chave do aparelho (`sealJson`/`openSealed`); migra sessões legadas em `startKeysAtRest()` mantendo `loadBskySession()` síncrono e testes em `tests/bsky-oauth-rest.test.js`.
 - `client/js/community-updates.js` + `render/community-page.js` + `app/community-controls.js` (`PM-30`): torna `newKeyQuarantine` editável por dono/moderador via `community_update` assinado, preservando estado anterior quando ausente e validando em `tests/community-quarantine-update.test.js`.
