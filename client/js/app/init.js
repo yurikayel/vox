@@ -36,6 +36,8 @@ import { markFrameChoice, refreshFrameContent, resolvePostForFrame } from "./fra
 import { syncIdentity } from "./screens-network.js";
 import { wireDmBadgeLive } from "./dm-badge-live.js";
 import { wireSidebarCirclesLive } from "./sidebar-circles-live.js";
+import { runButtonAction } from "./action-runner.js";
+import { clearInFlight } from "../shared/async-dedupe.js";
 
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
@@ -118,7 +120,10 @@ function wireTabSyncAtBoot() {
   void import("../identity/index.js").then((identity) => {
     identity.startTabSync({
       onReload: ({ reason }) => {
-        if (reason === "identity") void syncIdentity();
+        if (reason === "identity") {
+          clearInFlight("profile-onchain:");
+          void syncIdentity();
+        }
         void route();
       },
     });
@@ -203,19 +208,16 @@ export async function handleFrameActionClick(btn) {
   const post = await resolvePostForFrame(postId);
   if (!post?.frame) return;
 
-  btn.disabled = true;
-  const origText = btn.textContent;
-  btn.textContent = "Gravando…";
-  try {
+  await runButtonAction(btn, async () => {
     await executeFrameAction(post.frame, postId, index, label);
     markFrameChoice(btn, index);
-  } catch (err) {
-    console.warn("Frame action failed", err);
-    share.showToast("Falha ao executar ação no frame", "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = origText;
-  }
+  }, {
+    busyText: "Gravando…",
+    onError: (err) => {
+      console.warn("Frame action failed", err);
+      share.showToast("Falha ao executar ação no frame", "error");
+    },
+  });
 }
 
 function closePostEditModalUi() {
@@ -447,7 +449,10 @@ function dispatchSocialFeedbackClicks(e) {
   const btnRepost = e.target.closest(".btn-repost");
   if (btnRepost) {
     e.preventDefault();
-    handleRepostClick(btnRepost).then((res) => { if (res?.ok) route(); });
+    void runButtonAction(btnRepost, async () => {
+      const res = await handleRepostClick(btnRepost);
+      if (res?.ok) void route();
+    });
     return true;
   }
 

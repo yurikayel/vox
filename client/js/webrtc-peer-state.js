@@ -4,6 +4,7 @@
  */
 import { createSignalingHealth } from "./honest-errors.js";
 import { createTurnFallback } from "./turn-credentials.js";
+import { createMachine } from "./shared/state-machine.js";
 
 /** @type {WebSocket|null} */
 let signalingWs = null;
@@ -323,4 +324,30 @@ export function getActiveSignalingIndex() {
 /** @param {number} idx */
 export function setActiveSignalingIndex(idx) {
   activeSignalingIndex = idx;
+}
+
+const signalingMachine = createMachine({
+  initial: "idle",
+  states: {
+    idle: { on: { DIAL: "connecting", STOP: "idle" } },
+    connecting: { on: { OPEN: "open", BACKOFF: "backoff", STOP: "idle" } },
+    open: { on: { BACKOFF: "backoff", DIAL: "connecting", STOP: "idle" } },
+    backoff: { on: { DIAL: "connecting", OPEN: "open", STOP: "idle" } },
+  },
+});
+
+/**
+ * Máquina de estados da conexão WebSocket de sinalização (`idle`, `connecting`, `open`, `backoff`).
+ * @returns {ReturnType<typeof createMachine>} Máquina reativa de sinalização.
+ */
+export function getSignalingMachine() {
+  return signalingMachine;
+}
+
+/**
+ * Estado atual da sinalização WebSocket (`idle` | `connecting` | `open` | `backoff`).
+ * @returns {string} Nome do estado atual.
+ */
+export function getSignalingState() {
+  return signalingMachine.state.peek();
 }
