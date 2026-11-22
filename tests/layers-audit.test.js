@@ -30,6 +30,16 @@ test("camadas - só se importa para baixo; laboratório só é carregado por app
   assert.equal(isAllowedImport("dungeon/dungeon-controller.js", "app/context.js"), false);
 });
 
+test("camadas - render não importa shared/signals.js (HTML puro)", () => {
+  assert.equal(isAllowedImport("render/shell.js", "shared/signals.js"), false);
+  assert.equal(isAllowedImport("app/dm-badge-live.js", "shared/signals.js"), true);
+  assert.equal(isAllowedImport("shared/html.js", "shared/signals.js"), true);
+  assert.deepEqual(
+    layerViolations("render/shell.js", `import { signal } from "../shared/signals.js";`),
+    ["render/shell.js → shared/signals.js"],
+  );
+});
+
 test("camadas - lê import estático, reexportação e import() literal; ignora pacote e texto em comentário ou string", () => {
   const code = `
     import { a } from "./a.js";

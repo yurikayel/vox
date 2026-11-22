@@ -18,6 +18,20 @@ import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showNotFound } from "./screens-not-found.js";
+import { createScope } from "../shared/signals.js";
+
+/** Escopo reativo da rota atual; descartado antes de montar a próxima. */
+let currentRouteScope = null;
+
+/**
+ * Escopo da rota **atual** no momento da chamada.
+ * Em telas async, capture o 2º argumento do handler (`handler(route, scope)`) **antes** de qualquer
+ * `await` — não chame `getRouteScope()` depois do await (pode já ser a rota seguinte).
+ * @returns {ReturnType<typeof createScope>|null}
+ */
+export function getRouteScope() {
+  return currentRouteScope;
+}
 
 /** @type {Promise<typeof import("./screens-voxpedia.js")>|null} */
 let voxpediaRoute = null;
@@ -131,9 +145,12 @@ export function announceRoute(route, doc = globalThis.document) {
 export async function routeImpl() {
   closePostMoreMenu();
   checkCantinaGate();
+  currentRouteScope?.dispose();
+  const scope = createScope();
+  currentRouteScope = scope;
   const r = parseRoute();
-  const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
-  const result = await handler(r);
+  const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
+  const result = await handler(r, scope);
   announceRoute(r);
   return result;
 }
