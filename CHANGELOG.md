@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Feat / Refactor / Hardening: PM-96 (Bluesky ADR-026), PM-30 (quarentena), PM-66 (`PLR0913`/`lint:all`), Onda 3 (`screens-profile` & `explode-dispatch`)
+- `client/js/bsky-oauth.js` + `identity/key-at-rest.js` (`PM-96` / ADR-026): sela chave DPoP (`keys`) e tokens OAuth do Bluesky com a chave do aparelho (`sealJson`/`openSealed`); migra sessões legadas em `startKeysAtRest()` mantendo `loadBskySession()` síncrono e testes em `tests/bsky-oauth-rest.test.js`.
+- `client/js/community-updates.js` + `render/community-page.js` + `app/community-controls.js` (`PM-30`): torna `newKeyQuarantine` editável por dono/moderador via `community_update` assinado, preservando estado anterior quando ausente e validando em `tests/community-quarantine-update.test.js`.
+- `client/js/app/screens-profile.js` (962 → 141 linhas) e `client/js/explode-dispatch.js` (789 → 114 linhas): fatiados em submódulos SLAP (`profile-screen-*.js` e `explode-{crosspost,events,intent,ui}.js`), mantendo 100% da API pública.
+- Hardening (`PM-66` / `PM-115`): zero warnings ESLint em `tests/login-roundtrip-harness.js` (zerando `tests/`, `scripts/` e `tools/` no `lint:all`) e zero erros Ruff `PLR0913` (`>5` params) em `relay/signaling.py`, `scripts/generate_brand_icons.py` e `packaging/node-zero-windows/tray_app.py`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.156-pm96-pm30-onda3` (+9 módulos no `SHELL_ASSETS`).
+
 ### Refactor / Fix / Hardening: Onda 3 (`render/profile` & `render/network`), 4ª varredura QA e PM-66
 - `client/js/render/profile.js` (1274 → 32 linhas) e `client/js/render/network.js` (561 → 51 linhas): fatiados em módulos SLAP (`profile-{compose-topic,compose-wizards,header,settings,tabs,wallet}.js` e `network-{form,participation,sections,steward}.js`), mantendo 100% da API pública.
 - `client/js/social-login.js` + `bsky-oauth.js`: limpeza cruzada de fluxos PKCE/Bluesky no início do login; preservação estrita da conferência RFC 9207 (`issRequired` / `iss`).
