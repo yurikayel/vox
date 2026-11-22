@@ -10,7 +10,7 @@
  * Fluxo: startBskyLogin() → página do Bluesky → oauth-callback.html → completeBskyLogin().
  * A sessão (tokens + chave DPoP) fica só neste aparelho e permite postar direto.*/
 
-import { isSealed, openSealed, sealJson } from "./identity/keys.js";
+import { openSealed, sealJsonStrict } from "./identity/keys.js";
 
 /** URL ou endpoint público. @type {string} */
 export const BSKY_ENTRYWAY = "https://bsky.social";
@@ -202,8 +202,18 @@ export async function completeBskyLogin({ code, state, iss }) {
   return { handle: who.handle, did: tok.sub, pds: who.pds };
 }
 
+const SESSION_META_FIELDS = ["did", "handle", "pds", "issuer", "clientId", "tokenEndpoint", "expiresAt"];
+let memorySecrets = null;
+
+function pickSessionMeta(session) {
+  const meta = {};
+  for (const f of SESSION_META_FIELDS) if (session[f] !== undefined) meta[f] = session[f];
+  return meta;
+}
+
 /**
- * Salva a sessão do Bluesky no armazenamento local, selando segredos com a chave do aparelho se disponível.
+ * Salva a sessão do Bluesky. Os segredos (chave DPoP, nonce, tokens) só vão ao armazenamento cifrados com a chave do
+ * aparelho; sem ela ficam apenas em memória nesta sessão e o armazenamento recebe só metadados.
  * @param {object} session Objeto da sessão com metadados e segredos (keys, nonce, accessToken, refreshToken).
  * @returns {Promise<object>} Registro salvo no localStorage.
  */
@@ -219,15 +229,17 @@ export async function saveBskySession(session) {
     accessToken: session.accessToken || "",
     refreshToken: session.refreshToken || "",
   };
-  const sealed = await sealJson(secrets);
-  if (isSealed(sealed)) {
-    const { keys: _k, nonce: _n, accessToken: _a, refreshToken: _r, ...rest } = session;
-    const toStore = { ...rest, sealed };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(toStore));
-    return toStore;
+  const meta = pickSessionMeta(session);
+  let toStore;
+  try {
+    toStore = { ...meta, sealed: await sealJsonStrict(secrets) };
+    memorySecrets = null;
+  } catch {
+    memorySecrets = { did: session.did, ...secrets };
+    toStore = { ...meta, secretsInMemoryOnly: true };
   }
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  return session;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(toStore));
+  return toStore;
 }
 
 /** Carrega BskySession do armazenamento ou rede.
@@ -245,6 +257,7 @@ export function loadBskySession() {
 export async function openBskySession() {
   const session = loadBskySession();
   if (!session) return null;
+  if (session.secretsInMemoryOnly) return memorySecrets?.did === session.did ? { ...session, ...memorySecrets } : null;
   if (!session.sealed) return session;
   const secrets = await openSealed(session.sealed);
   return { ...session, ...secrets };
@@ -253,6 +266,7 @@ export async function openBskySession() {
 /** Limpa BskySession armazenados.
  */
 export function clearBskySession() {
+  memorySecrets = null;
   localStorage.removeItem(SESSION_KEY);
 }
 

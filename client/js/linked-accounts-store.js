@@ -9,6 +9,30 @@ import {
   validateHandle,
   getNetworkAuthUrl,
 } from "./linked-accounts-format.js";
+import { hydrateLinkedSecrets, recallSecrets, rememberSecrets, splitSecrets } from "./linked-accounts-secrets.js";
+
+/**
+ * Reabre os segredos das contas (App Password, webhook) cifrados neste aparelho.
+ * @returns {Promise<void>}
+ */
+export const hydrateLinkedAccounts = hydrateLinkedSecrets;
+
+/** Lê os vínculos como estão no storage, migrando segredos legados em claro para a memória cifrada. */
+function readStoredAccounts() {
+  const raw = localStorage.getItem(LINKED_ACCOUNTS_KEY);
+  const parsed = raw ? JSON.parse(raw) : {};
+  const clean = sanitizeLinkedAccounts(parsed);
+  let dirty = Object.keys(clean).length !== Object.keys(parsed).length;
+  for (const [netId, acc] of Object.entries(clean)) {
+    const { pub, secrets } = splitSecrets(acc);
+    if (Object.keys(secrets).length === 0 && !("appPassword" in acc) && !("webhook" in acc)) continue;
+    if (Object.keys(secrets).length) rememberSecrets(netId, { ...secrets, ...recallSecrets(netId) });
+    clean[netId] = pub;
+    dirty = true;
+  }
+  if (dirty) localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(clean));
+  return clean;
+}
 
 /**
  * Remove vínculos salvos com handle inválido ou de perfil oficial (ex.: @instagram inventado). Vínculo feito por
@@ -32,13 +56,8 @@ export function sanitizeLinkedAccounts(accounts) {
 export function loadLinkedAccounts() {
   if (typeof localStorage === "undefined") return {};
   try {
-    const raw = localStorage.getItem(LINKED_ACCOUNTS_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    const clean = sanitizeLinkedAccounts(parsed);
-    if (Object.keys(clean).length !== Object.keys(parsed).length) {
-      localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(clean));
-    }
-    return clean;
+    const stored = readStoredAccounts();
+    return Object.fromEntries(Object.entries(stored).map(([netId, acc]) => [netId, { ...acc, ...recallSecrets(netId) }]));
   } catch {
     return {};
   }
@@ -61,6 +80,17 @@ function identityFields(opts, prev, cleanHandle) {
     accountId: resolveField(opts.accountId, keep("accountId")),
     displayName: resolveField(opts.displayName, keep("displayName")),
   };
+}
+
+/** Grava os vínculos: metadados no storage, segredos só em memória/cifrados. */
+function persistAccounts(accounts) {
+  const stored = {};
+  for (const [netId, acc] of Object.entries(accounts)) {
+    const { pub, secrets } = splitSecrets(acc);
+    rememberSecrets(netId, secrets);
+    stored[netId] = pub;
+  }
+  localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(stored));
 }
 
 /**
@@ -90,7 +120,7 @@ export function saveLinkedAccount(netId, options) {
     updatedAt: new Date().toISOString(),
   };
 
-  localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(current));
+  persistAccounts(current);
   if (cleanId === "bsky" && cleanHandle) addBskySubscription(cleanHandle);
   return current;
 }
@@ -105,7 +135,8 @@ export function removeLinkedAccount(netId) {
   const current = loadLinkedAccounts();
   const cleanId = String(netId || "").trim().toLowerCase();
   delete current[cleanId];
-  localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(current));
+  rememberSecrets(cleanId, {});
+  persistAccounts(current);
   if (cleanId === "bsky") clearBskySession();
   return current;
 }
