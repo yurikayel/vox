@@ -137,12 +137,64 @@ export function announceRoute(route, doc = globalThis.document) {
   return true;
 }
 
+const MAX_SCROLL_HISTORY = 50;
+const scrollByHash = new Map();
+let lastRenderedHash = "";
+let pendingPopHash = null;
+
+function currentRouteHash(win = globalThis.window) {
+  return win?.location?.hash || "#/";
+}
+
 /**
- * Aplica a rota atual: fecha menus, checa portão e despacha para a tela.
+ * Guarda a posição de rolagem vertical da rota atual (para restauração ao voltar no histórico).
+ * @param {string} hash Hash da rota que está saindo da tela.
+ * @param {Window} [win=globalThis.window] Janela alvo (injetável nos testes).
+ * @returns {void}
+ */
+export function rememberRouteScroll(hash, win = globalThis.window) {
+  if (!hash || !win) return;
+  scrollByHash.delete(hash);
+  scrollByHash.set(hash, Number(win.scrollY) || 0);
+  if (scrollByHash.size > MAX_SCROLL_HISTORY) {
+    scrollByHash.delete(scrollByHash.keys().next().value);
+  }
+}
+
+/**
+ * Restaura o scroll salvo em retorno pelo histórico (`popstate`) ou sobe para o topo em rota nova.
+ * @param {string} hash Hash da rota recém-montada.
+ * @param {boolean} isBack `true` quando a navegação veio de `popstate`.
+ * @param {Window} [win=globalThis.window] Janela alvo (injetável nos testes).
+ * @returns {number} Posição vertical aplicada.
+ */
+export function restoreRouteScroll(hash, isBack, win = globalThis.window) {
+  const y = isBack && scrollByHash.has(hash) ? scrollByHash.get(hash) : 0;
+  win?.scrollTo?.(0, y);
+  return y;
+}
+
+/**
+ * Limpa a memória de rolagem entre rotas (uso em testes).
+ * @returns {void}
+ */
+export function __resetRouteScrollForTests() {
+  scrollByHash.clear();
+  lastRenderedHash = "";
+  pendingPopHash = null;
+}
+
+/**
+ * Aplica a rota atual: fecha menus, checa portão, despacha e restaura rolagem.
  *
  * @returns {Promise<void>}
  */
 export async function routeImpl() {
+  const nextHash = currentRouteHash();
+  if (lastRenderedHash && lastRenderedHash !== nextHash) rememberRouteScroll(lastRenderedHash);
+  const isBack = pendingPopHash !== null && pendingPopHash === nextHash;
+  pendingPopHash = null;
+
   closePostMoreMenu();
   checkCantinaGate();
   currentRouteScope?.dispose();
@@ -152,6 +204,8 @@ export async function routeImpl() {
   const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
   const result = await handler(r, scope);
   announceRoute(r);
+  lastRenderedHash = nextHash;
+  restoreRouteScroll(nextHash, isBack);
   return result;
 }
 
@@ -165,10 +219,13 @@ export function wireRoute() {
 }
 
 /**
- * Re-rota quando o hash da URL muda.
+ * Re-rota quando o hash da URL muda e marca retornos pelo histórico (`popstate`).
  *
  * @returns {void}
  */
 export function setupHashchangeListener() {
+  window.addEventListener("popstate", () => {
+    pendingPopHash = currentRouteHash();
+  });
   window.addEventListener("hashchange", () => routeImpl());
 }
