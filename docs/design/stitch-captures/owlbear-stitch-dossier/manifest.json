@@ -1,0 +1,67 @@
+[
+  {
+    "slug": "getting-started",
+    "url": "https://docs.owlbear.rodeo/docs/getting-started/",
+    "images": 21
+  },
+  {
+    "slug": "rooms",
+    "url": "https://docs.owlbear.rodeo/docs/rooms/",
+    "images": 6
+  },
+  {
+    "slug": "managing-assets",
+    "url": "https://docs.owlbear.rodeo/docs/managing-assets/",
+    "images": 15
+  },
+  {
+    "slug": "scenes",
+    "url": "https://docs.owlbear.rodeo/docs/scenes/",
+    "images": 22
+  },
+  {
+    "slug": "aligning-a-map",
+    "url": "https://docs.owlbear.rodeo/docs/aligning-a-map/",
+    "images": 14
+  },
+  {
+    "slug": "images",
+    "url": "https://docs.owlbear.rodeo/docs/images/",
+    "images": 9
+  },
+  {
+    "slug": "drawing",
+    "url": "https://docs.owlbear.rodeo/docs/drawing/",
+    "images": 6
+  },
+  {
+    "slug": "measure",
+    "url": "https://docs.owlbear.rodeo/docs/measure/",
+    "images": 4
+  },
+  {
+    "slug": "fog",
+    "url": "https://docs.owlbear.rodeo/docs/fog/",
+    "images": 25
+  },
+  {
+    "slug": "text",
+    "url": "https://docs.owlbear.rodeo/docs/text/",
+    "images": 4
+  },
+  {
+    "slug": "permissions",
+    "url": "https://docs.owlbear.rodeo/docs/permissions/",
+    "images": 4
+  },
+  {
+    "slug": "casting",
+    "url": "https://docs.owlbear.rodeo/docs/casting/",
+    "images": 9
+  },
+  {
+    "slug": "troubleshooting",
+    "url": "https://docs.owlbear.rodeo/docs/troubleshooting/",
+    "images": 0
+  }
+]

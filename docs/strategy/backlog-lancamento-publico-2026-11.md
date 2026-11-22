@@ -2,7 +2,7 @@
 
 > **Status:** brainstorm + backlog · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (`main` em `e7f1343`, pós-PR #35, SW v7.41)
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Aqui ficam o *porquê*, os portões e a ordem. As linhas com caixa `[ ]` estão no ROADMAP, seção [Rumo à rede pública](../ROADMAP.md#rumo-à-rede-pública-lan).
-> Insumos: [FEATURES.md](../FEATURES.md) · [INFRA-CUSTOS.md](../INFRA-CUSTOS.md) · [pesquisa-complementar-2026-11.md](../research/pesquisa-complementar-2026-11.md) · [COMPLIANCE-BR](../legal/COMPLIANCE-BR.md) · [piloto go/no-go](../pilot/piloto-comunidade-go-no-go.md)
+> Insumos: [FEATURES.md](../FEATURES.md) · [INFRA-CUSTOS.md](../INFRA-CUSTOS.md) · [pesquisa-complementar-2026-11.md](../research/pesquisa-complementar-2026-11.md) · [COMPLIANCE-BR](../legal/COMPLIANCE-BR.md) · [piloto go/no-go](../pilot/piloto-comunidade-go-no-go.md) · [critérios go/no-go beta → público (LAN-28)](./criterios-go-beta-lan28.md)
 
 ## 1. Onde estamos (2026-11-09 — pós-PR #35)
 
@@ -163,7 +163,7 @@ Já no ROADMAP: REV-14 (chave no iOS), REV-13.
 
 | ID | Item | Tipo | DoD | Depende | Esf. | Resp. | Portão |
 |---|---|---|---|---|---|---|---|
-| LAN-28 | **Critério de go para o beta,** escrito antes do piloto: retenção na semana 4, ≥1 steward que não seja o mantenedor, 0 incidente grave sem resposta em 24 h, taxa de conexão P2P, cota do Turbo por pessoa | doc | Critérios no go/no-go; medição via CODE-02 (métricas locais, sem telemetria central) | CODE-02 | P | revisor | G2 |
+| LAN-28 🚧 | **Critério de go para o beta e saída para o público,** escrito antes do piloto: retenção na semana 4, ≥1 steward que não seja o mantenedor, 0 incidente grave sem resposta em 24 h, taxa de conexão P2P, cota do Turbo por pessoa; critérios quantitativos beta → público (G3) em [criterios-go-beta-lan28.md](./criterios-go-beta-lan28.md) | doc | Critérios no go/no-go + [criterios-go-beta-lan28.md](./criterios-go-beta-lan28.md) validados; medição via CODE-02 (métricas locais, sem telemetria central) | CODE-02 | P | revisor | G2 |
 | LAN-29 | **Relatório do beta:** métricas do LAN-28 em 5–10 comunidades, incidentes, custo real, decisão de go público | doc | Relatório datado no repo | G2 | M | revisor | G3 |
 
 Já no ROADMAP: PIL-01 a PIL-05, CODE-02.
@@ -173,8 +173,8 @@ Já no ROADMAP: PIL-01 a PIL-05, CODE-02.
 | ID | Item | Tipo | DoD | Depende | Esf. | Resp. | Portão |
 |---|---|---|---|---|---|---|---|
 | LAN-30 | **Bus factor ≥2:** 2ª pessoa com acesso de admin a GitHub (organização, não usuário pessoal), Render, Cloudflare, domínio e secrets; cofre de credenciais compartilhado; procedimento de saída | ops-humano | Lista de contas × titulares em INFRA-CUSTOS (sem segredos) | — | M | mantenedor | G1 (parcial), G3 (completo) |
-| LAN-31 | **Governança do PWA oficial:** quem decide a lista de ocultação global, os Termos e os releases; mandato, rodízio e recurso. Atualizar o GOVERNANCE.md | doc | Texto aprovado pelos stewards; ligado ao REV-18 | REV-18 | M | mantenedor + stewards | G3 |
-| LAN-32 | **Orçamento de 12 meses:** custo projetado para 1k e 10k usuários (TURN acima de 1.000 GB, crédito Turbo, domínio, PJ) e fonte de cobertura (Sponsors, edital, associação) | doc | Planilha/tabela em INFRA-CUSTOS; cobertura ≥12 meses confirmada | LAN-09, REV-22 | M | mantenedor | G3 |
+| LAN-31 🚧 | **Governança do PWA oficial:** quem decide a lista de ocultação global, os Termos e os releases; mandato, rodízio e recurso. Seção adicionada em [GOVERNANCE.md](../../GOVERNANCE.md#governança-da-instância-pwa-oficial-lan-31) (aguardando aprovação dos stewards e `REV-18`) | doc | Texto aprovado pelos stewards; ligado ao REV-18 | REV-18 | M | mantenedor + stewards | G3 |
+| LAN-32 🚧 | **Orçamento de 12 meses:** custo projetado para 1k e 10k usuários (TURN acima de 1.000 GB, crédito Turbo, domínio, PJ) e fonte de cobertura (Sponsors, edital, associação). Projeção adicionada em [INFRA-CUSTOS §6](../INFRA-CUSTOS.md#6-projeção-orçamentária-de-12-meses--1000-e-10000-usuários-ativos-lan-32) (pendente `LAN-09` e confirmação de cobertura) | doc | Planilha/tabela em INFRA-CUSTOS; cobertura ≥12 meses confirmada | LAN-09, REV-22 | M | mantenedor | G3 |
 | LAN-36 | **Proposta ao NLnet Restack** até **03/01/2027**, usando este backlog como plano de trabalho (marcos = portões) | ops-humano | Proposta submetida; número citado | — | M | mantenedor | — (financia F1–F2) |
 
 Já no ROADMAP: REV-22 (Sponsors), REV-18, NET-04, REV-04.

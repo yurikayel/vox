@@ -21,6 +21,20 @@ import * as localAccount from "../identity/index.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 import { renderToastLiveRegionsHtml } from "../honest-errors.js";
 
+/** @type {Set<() => void>} Callbacks da camada `app` após cada montagem da shell. */
+const afterShellMountFns = new Set();
+
+/**
+ * Registra callback pós-montagem da shell (badge DM, círculos, etc.). Idempotente por referência.
+ * @param {() => void} fn Função a chamar após o HTML da shell.
+ * @returns {() => void} Função que remove o registro.
+ */
+export function setAfterShellMount(fn) {
+  if (typeof fn !== "function") return () => {};
+  afterShellMountFns.add(fn);
+  return () => afterShellMountFns.delete(fn);
+}
+
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
 export const BRAND_MARK_SRC = "icons/logo-mark.png";
 
@@ -256,36 +270,6 @@ export function formatDmBadge(count) {
   return n > 99 ? "99+" : String(n);
 }
 
-function applyDmBadge(count) {
-  const label = formatDmBadge(count);
-  document.querySelectorAll("[data-dm-badge]").forEach((el) => {
-    el.textContent = label;
-    el.hidden = !label;
-  });
-  document.querySelectorAll('a[href="#/dm"]').forEach((a) => {
-    const base = "Mensagens";
-    a.setAttribute("aria-label", label ? `${base} · ${count} não ${count === 1 ? "lida" : "lidas"}` : base);
-  });
-}
-
-async function refreshDmBadge() {
-  try {
-    const cacheNode = await import("../cache-node.js");
-    applyDmBadge(sumUnreadDms(await cacheNode.getDmConversations()));
-  } catch {
-    /* sem IndexedDB: contador fica oculto */
-  }
-}
-
-let dmBadgeListenerBound = false;
-
-function bindDmBadge() {
-  void refreshDmBadge();
-  if (dmBadgeListenerBound || typeof window?.addEventListener !== "function") return;
-  dmBadgeListenerBound = true;
-  window.addEventListener("vox:dm-changed", () => { void refreshDmBadge(); });
-}
-
 function renderSidebarNav(activeTab) {
   return NAV_ITEMS.map((item) => {
     const isActive = activeTab === item.tab || (item.alias || []).includes(activeTab);
@@ -467,21 +451,6 @@ export function renderCirclesList(communities = []) {
       ${rows}`;
 }
 
-async function hydrateSidebarCircles() {
-  const slot = document.getElementById("agora-sidebar-circles");
-  if (!slot) return;
-  try {
-    const cacheNode = await import("../cache-node.js");
-    const list = await cacheNode.getLocalCommunities?.();
-    const html = renderCirclesList(Array.isArray(list) ? list : []);
-    if (!html || !document.body.contains(slot)) return;
-    slot.innerHTML = html;
-    slot.hidden = false;
-  } catch {
-    /* sem IndexedDB (modo privado/teste): a seção permanece oculta */
-  }
-}
-
 function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
   const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
@@ -583,8 +552,7 @@ export function renderShell({
   root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml });
 
   attachShellBehaviors();
-  hydrateSidebarCircles();
-  bindDmBadge();
+  for (const fn of afterShellMountFns) fn();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   if (mock.isDemoMode()) mountDemoModeBanner(main);

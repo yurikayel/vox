@@ -30,3 +30,5 @@ Para cada item: captura sem segredos, comando executado, data e link para o PR q
 ## Relação com fraquezas #1–#3
 
 TURN (#1), relay 24/7 (#2) e rate limit / proxy trust (#3) dependem deste gatilho ou de decisão explícita do mantenedor **acima** do limiar. Sem isso, permanecem dormentes conforme Fase 0 (nov/2026).
+
+Referência de capacidade da sinalização em loopback (500 pares): [bench-sinalizacao-lan09.md](./bench-sinalizacao-lan09.md).
