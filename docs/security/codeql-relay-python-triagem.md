@@ -1,5 +1,7 @@
 # Triagem CodeQL Python — relay (alertas 10–14 e 287)
 
+> **Status:** canônico (triagem) · **Owner:** mantenedor · **Revisado:** 2026-11-22
+
 Triagem curta; sem detalhes de exploração (ADR-024). Nenhum alerta foi dispensado: a
 dispensa depende do OK do mantenedor.
 
