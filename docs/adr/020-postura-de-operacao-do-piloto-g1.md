@@ -1,6 +1,6 @@
 # ADR-020: Postura de operação do piloto G1
 
-**Status:** accepted · **Revisado:** 2026-11-10 · **Relacionados:** REV-12 (parecer), LAN-04 (conteúdo grave), LAN-12 (denúncia), LAN-30 (bus factor), REV-23 (menores), [voluntariado](../product/voluntariado-tres-trabalhos.md)
+**Status:** accepted · **Revisado:** 2026-11-10 · **Relacionados:** REV-12 (parecer), LAN-04 (conteúdo grave), LAN-12 (denúncia), LAN-30 (bus factor), [REV-23 (menores)](../specs/padroes-idade-sem-coleta-rev23.md), [voluntariado](../product/voluntariado-tres-trabalhos.md)
 
 ## 1. Contexto
 
