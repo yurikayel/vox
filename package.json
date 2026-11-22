@@ -35,5 +35,9 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "qs": "^6.16.2",
+    "minimatch": "^11.0.9"
   }
 }
