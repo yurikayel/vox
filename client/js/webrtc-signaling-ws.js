@@ -38,6 +38,7 @@ import {
   getSignalingHealth,
   getActiveSignalingIndex,
   getConfigCache,
+  getSignalingMachine,
 } from "./webrtc-peer-state.js";
 import { registerAddressMapping, isBeaconIdentity } from "./webrtc-messaging.js";
 import {
@@ -73,6 +74,7 @@ export async function initWebRtc(peerId, customUrl = null) {
 /** Desliga o WebRTC: fecha sinalização, conexões e zera o rodízio. */
 export function disconnectWebRtc() {
   setIsWebRtcEnabled(false);
+  getSignalingMachine().send("STOP");
   const timer = getReconnectTimer();
   if (timer) {
     clearTimeout(timer);
@@ -145,6 +147,7 @@ async function connectSignaling() {
   if (!getIsWebRtcEnabled() || !reuseOrReleaseSignalingSocket(url)) return;
 
   const startedAt = Date.now();
+  getSignalingMachine().send("DIAL");
   try {
     const ws = new WebSocket(url);
     setSignalingWs(ws);
@@ -186,6 +189,7 @@ function bindSignalingSocket(ws, config, startedAt = Date.now()) {
   let wasOpened = false;
   ws.onopen = () => {
     wasOpened = true;
+    getSignalingMachine().send("OPEN");
     setReconnectAttempts(0);
     recordSignalingDial("ws", { ok: true, durationMs: Date.now() - startedAt });
     getSignalingHealth().update({ wsOpen: true, wsGaveUp: false });
@@ -207,6 +211,7 @@ function bindSignalingSocket(ws, config, startedAt = Date.now()) {
 
 function scheduleReconnect(immediate = false) {
   if (!getIsWebRtcEnabled() || getReconnectTimer()) return;
+  getSignalingMachine().send("BACKOFF");
   const delay = immediate
     ? 300
     : Math.min(30000, 1000 * Math.pow(1.5, incrementReconnectAttempts()));
