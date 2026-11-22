@@ -4,21 +4,29 @@ import { openSealed, sealJsonStrict } from "./identity/keys.js";
 
 const SECRETS_KEY = "vox-linked-secrets";
 const SECRET_FIELDS = ["appPassword", "webhook"];
+const PUBLIC_FIELDS = ["handle", "enabled", "verified", "via", "did", "accountId", "displayName", "linkedAt", "updatedAt"];
 const memory = new Map();
 
 /**
- * Separa os campos secretos de um vínculo.
+ * Metadados de um vínculo, por lista branca: nunca carrega App Password, webhook nem campo desconhecido.
  * @param {object} acc Vínculo.
- * @returns {{ pub: object, secrets: {appPassword?: string, webhook?: string} }} Metadados e segredos.
+ * @returns {object} Só os campos públicos.
  */
-export function splitSecrets(acc) {
-  const pub = { ...acc };
+export function publicFields(acc) {
+  const pub = {};
+  for (const f of PUBLIC_FIELDS) if (acc?.[f] !== undefined) pub[f] = acc[f];
+  return pub;
+}
+
+/**
+ * Campos secretos de um vínculo.
+ * @param {object} acc Vínculo.
+ * @returns {{appPassword?: string, webhook?: string}} Segredos presentes.
+ */
+export function secretFields(acc) {
   const secrets = {};
-  for (const f of SECRET_FIELDS) {
-    if (pub[f]) secrets[f] = String(pub[f]);
-    delete pub[f];
-  }
-  return { pub, secrets };
+  for (const f of SECRET_FIELDS) if (acc?.[f]) secrets[f] = String(acc[f]);
+  return secrets;
 }
 
 /**

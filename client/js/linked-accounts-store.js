@@ -9,7 +9,7 @@ import {
   validateHandle,
   getNetworkAuthUrl,
 } from "./linked-accounts-format.js";
-import { hydrateLinkedSecrets, recallSecrets, rememberSecrets, splitSecrets } from "./linked-accounts-secrets.js";
+import { hydrateLinkedSecrets, publicFields, recallSecrets, rememberSecrets, secretFields } from "./linked-accounts-secrets.js";
 
 /**
  * Reabre os segredos das contas (App Password, webhook) cifrados neste aparelho.
@@ -24,10 +24,10 @@ function readStoredAccounts() {
   const clean = sanitizeLinkedAccounts(parsed);
   let dirty = Object.keys(clean).length !== Object.keys(parsed).length;
   for (const [netId, acc] of Object.entries(clean)) {
-    const { pub, secrets } = splitSecrets(acc);
-    if (Object.keys(secrets).length === 0 && !("appPassword" in acc) && !("webhook" in acc)) continue;
+    if (!("appPassword" in acc) && !("webhook" in acc)) continue;
+    const secrets = secretFields(acc);
     if (Object.keys(secrets).length) rememberSecrets(netId, { ...secrets, ...recallSecrets(netId) });
-    clean[netId] = pub;
+    clean[netId] = publicFields(acc);
     dirty = true;
   }
   if (dirty) localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(clean));
@@ -86,9 +86,8 @@ function identityFields(opts, prev, cleanHandle) {
 function persistAccounts(accounts) {
   const stored = {};
   for (const [netId, acc] of Object.entries(accounts)) {
-    const { pub, secrets } = splitSecrets(acc);
-    rememberSecrets(netId, secrets);
-    stored[netId] = pub;
+    rememberSecrets(netId, secretFields(acc));
+    stored[netId] = publicFields(acc);
   }
   localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(stored));
 }

@@ -10,7 +10,7 @@
  * Fluxo: startBskyLogin() → página do Bluesky → oauth-callback.html → completeBskyLogin().
  * A sessão (tokens + chave DPoP) fica só neste aparelho e permite postar direto.*/
 
-import { openSealed, sealJsonStrict } from "./identity/keys.js";
+import { isSealed, openSealed, sealJsonStrict } from "./identity/keys.js";
 
 /** URL ou endpoint público. @type {string} */
 export const BSKY_ENTRYWAY = "https://bsky.social";
@@ -205,6 +205,14 @@ export async function completeBskyLogin({ code, state, iss }) {
 const SESSION_META_FIELDS = ["did", "handle", "pds", "issuer", "clientId", "tokenEndpoint", "expiresAt"];
 let memorySecrets = null;
 
+const B64 = /^[A-Za-z0-9+/_=-]+$/;
+
+/** Reconstrói o envelope cifrado só com campos base64 validados; qualquer outra coisa é recusada. */
+function sealedEnvelope(env) {
+  if (!isSealed(env) || !B64.test(env.iv) || !B64.test(env.ct)) throw new Error("Envelope cifrado inválido.");
+  return { sealed: env.sealed, iv: env.iv, ct: env.ct };
+}
+
 function pickSessionMeta(session) {
   const meta = {};
   for (const f of SESSION_META_FIELDS) if (session[f] !== undefined) meta[f] = session[f];
@@ -220,8 +228,9 @@ function pickSessionMeta(session) {
 export async function saveBskySession(session) {
   if (!session || typeof session !== "object") throw new Error("Sessão inválida.");
   if (!session.keys && !session.accessToken && !session.refreshToken && session.sealed) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    return session;
+    const kept = { ...pickSessionMeta(session), sealed: sealedEnvelope(session.sealed) };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(kept));
+    return kept;
   }
   const secrets = {
     keys: session.keys,
@@ -232,7 +241,7 @@ export async function saveBskySession(session) {
   const meta = pickSessionMeta(session);
   let toStore;
   try {
-    toStore = { ...meta, sealed: await sealJsonStrict(secrets) };
+    toStore = { ...meta, sealed: sealedEnvelope(await sealJsonStrict(secrets)) };
     memorySecrets = null;
   } catch {
     memorySecrets = { did: session.did, ...secrets };
