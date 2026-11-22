@@ -10,11 +10,14 @@
  * Fluxo: startBskyLogin() → página do Bluesky → oauth-callback.html → completeBskyLogin().
  * A sessão (tokens + chave DPoP) fica só neste aparelho e permite postar direto.*/
 
+import { isSealed, openSealed, sealJsonStrict } from "./identity/keys.js";
+
 /** URL ou endpoint público. @type {string} */
 export const BSKY_ENTRYWAY = "https://bsky.social";
 /** Export `BSKY_SCOPE` do módulo. @type {string} */
 export const BSKY_SCOPE = "atproto transition:generic";
 const FLOW_KEY = "vox-bsky-oauth-flow";
+const SOCIAL_FLOW_KEY = "vox-social-oauth-flow";
 const SESSION_KEY = "vox-bsky-oauth-session";
 const enc = new TextEncoder();
 
@@ -141,6 +144,7 @@ function readFlow() {
 /** Inicia o login: PAR no servidor de autorização e redireciona para a tela do Bluesky. 
  * @param {object} [options] Opções do fluxo (ex.: `loginHint`).*/
 export async function startBskyLogin({ loginHint = "" } = {}) {
+  sessionStorage.removeItem(SOCIAL_FLOW_KEY);
   const meta = await authServerMetadata();
   const { clientId, redirectUri } = bskyClientConfig();
   const keys = await newDpopKey();
@@ -194,8 +198,66 @@ export async function completeBskyLogin({ code, state, iss }) {
     tokenEndpoint: flow.tokenEndpoint, accessToken: tok.access_token, refreshToken: tok.refresh_token || "",
     expiresAt: Date.now() + (Number(tok.expires_in) || 3600) * 1000,
   };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  await saveBskySession(session);
   return { handle: who.handle, did: tok.sub, pds: who.pds };
+}
+
+let memorySecrets = null;
+
+const B64 = /^[A-Za-z0-9+/_=-]+$/;
+
+/** Reconstrói o envelope cifrado só com campos base64 validados; qualquer outra coisa é recusada. */
+function sealedEnvelope(env) {
+  if (!isSealed(env) || !B64.test(env.iv) || !B64.test(env.ct)) throw new Error("Envelope cifrado inválido.");
+  return { sealed: env.sealed, iv: env.iv, ct: env.ct };
+}
+
+/** Metadados públicos da sessão, lidos um a um (nenhum segredo nem campo desconhecido atravessa). */
+function pickSessionMeta(src) {
+  return {
+    did: src.did, handle: src.handle, pds: src.pds, issuer: src.issuer, clientId: src.clientId,
+    tokenEndpoint: src.tokenEndpoint, expiresAt: src.expiresAt,
+  };
+}
+
+/** Sessão aberta: metadados da sessão guardada + segredos, montada campo a campo (sem espalhar um objeto no outro). */
+function buildOpenSession(meta, secrets) {
+  return {
+    ...pickSessionMeta(meta),
+    keys: secrets.keys, nonce: secrets.nonce, accessToken: secrets.accessToken, refreshToken: secrets.refreshToken,
+  };
+}
+
+/**
+ * Salva a sessão do Bluesky. Os segredos (chave DPoP, nonce, tokens) só vão ao armazenamento cifrados com a chave do
+ * aparelho; sem ela ficam apenas em memória nesta sessão e o armazenamento recebe só metadados.
+ * @param {object} session Objeto da sessão com metadados e segredos (keys, nonce, accessToken, refreshToken).
+ * @returns {Promise<object>} Registro salvo no localStorage.
+ */
+export async function saveBskySession(session) {
+  if (!session || typeof session !== "object") throw new Error("Sessão inválida.");
+  if (!session.keys && !session.accessToken && !session.refreshToken && session.sealed) {
+    const kept = { ...pickSessionMeta(session), sealed: sealedEnvelope(session.sealed) };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(kept));
+    return kept;
+  }
+  const secrets = {
+    keys: session.keys,
+    nonce: session.nonce || "",
+    accessToken: session.accessToken || "",
+    refreshToken: session.refreshToken || "",
+  };
+  const meta = pickSessionMeta(session);
+  let toStore;
+  try {
+    toStore = { ...meta, sealed: sealedEnvelope(await sealJsonStrict(secrets)) };
+    memorySecrets = null;
+  } catch {
+    memorySecrets = { did: session.did, ...secrets };
+    toStore = { ...meta, secretsInMemoryOnly: true };
+  }
+  localStorage.setItem(SESSION_KEY, JSON.stringify(toStore));
+  return toStore;
 }
 
 /** Carrega BskySession do armazenamento ou rede.
@@ -205,9 +267,23 @@ export function loadBskySession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
 }
 
+/**
+ * Abre a sessão do Bluesky guardada neste aparelho, decifrando segredos selados.
+ * Retorna a sessão legada em claro se não estiver selada, ou null se não houver sessão.
+ * @returns {Promise<object|null>} Sessão aberta com segredos e metadados, ou null.
+ */
+export async function openBskySession() {
+  const session = loadBskySession();
+  if (!session) return null;
+  if (session.secretsInMemoryOnly) return memorySecrets?.did === session.did ? buildOpenSession(session, memorySecrets) : null;
+  if (!session.sealed) return session;
+  return buildOpenSession(session, await openSealed(session.sealed));
+}
+
 /** Limpa BskySession armazenados.
  */
 export function clearBskySession() {
+  memorySecrets = null;
   localStorage.removeItem(SESSION_KEY);
 }
 
@@ -218,8 +294,10 @@ async function refreshSession(s) {
   const res = await dpopFetch(s.keys, s.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, dpop);
   const tok = await res.json().catch(() => ({}));
   if (!res.ok || !tok.access_token) throw new Error("Sessão do Bluesky expirada — conecte de novo.");
-  const next = { ...s, nonce: dpop.nonce, accessToken: tok.access_token, refreshToken: tok.refresh_token || s.refreshToken, expiresAt: Date.now() + (Number(tok.expires_in) || 3600) * 1000 };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+  const next = buildOpenSession({ ...pickSessionMeta(s), expiresAt: Date.now() + (Number(tok.expires_in) || 3600) * 1000 }, {
+    keys: s.keys, nonce: dpop.nonce, accessToken: tok.access_token, refreshToken: tok.refresh_token || s.refreshToken,
+  });
+  await saveBskySession(next);
   return next;
 }
 
@@ -227,13 +305,16 @@ async function refreshSession(s) {
  * @param {*} [text] Texto de entrada.
  * @returns {*} Resultado da operação.*/
 export async function postWithBskySession(text) {
-  let s = loadBskySession();
+  let s = await openBskySession();
   if (!s) return { ok: false, error: "Bluesky não conectado por login." };
   if (Date.now() > s.expiresAt - 60_000) s = await refreshSession(s);
   const url = `${s.pds.replace(/\/$/, "")}/xrpc/com.atproto.repo.createRecord`;
   const record = { $type: "app.bsky.feed.post", text: String(text).slice(0, 300), createdAt: new Date().toISOString() };
   const state = { nonce: s.nonce, accessToken: s.accessToken };
   const res = await dpopFetch(s.keys, url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repo: s.did, collection: "app.bsky.feed.post", record }) }, state);
-  if (state.nonce !== s.nonce) localStorage.setItem(SESSION_KEY, JSON.stringify({ ...s, nonce: state.nonce }));
+  if (state.nonce !== s.nonce) {
+    s.nonce = state.nonce;
+    await saveBskySession(s);
+  }
   return res.ok ? { ok: true } : { ok: false, error: `Bluesky respondeu ${res.status}` };
 }

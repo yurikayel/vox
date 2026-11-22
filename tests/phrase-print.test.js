@@ -97,3 +97,15 @@ test("impressão da frase - navegador sem print() não deixa cópia no body", ()
   assert.equal(copies(doc), 0);
   assert.equal(doc.body.classList.has("printing-phrase"), false);
 });
+
+test("impressão da frase - printCard em screens-phrase limpa cópia e classe no hashchange", async () => {
+  const doc = fakeDoc();
+  const win = fakeWin();
+  const { printCard } = await import("../client/js/app/screens-phrase.js");
+  assert.equal(printCard({ doc, win }), true);
+  assert.equal(copies(doc), 1);
+  assert.equal(doc.body.classList.has("printing-phrase"), true);
+  win.fire("hashchange");
+  assert.equal(copies(doc), 0);
+  assert.equal(doc.body.classList.has("printing-phrase"), false);
+});

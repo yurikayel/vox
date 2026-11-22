@@ -87,7 +87,9 @@ class ThreadedServers:
             return False
 
         try:
-            handler = lambda *a, **k: QuietClientHandler(*a, directory=str(client_dir), **k)
+            def handler(*a: Any, **k: Any) -> QuietClientHandler:
+                return QuietClientHandler(*a, directory=str(client_dir), **k)
+
             self.client_httpd = HTTPServer(("127.0.0.1", self.client_port), handler)
             t = threading.Thread(target=self.client_httpd.serve_forever, daemon=True)
             t.start()
@@ -147,12 +149,28 @@ def run_self_check(root: Path) -> int:
     return 0
 
 
+def _print_banner(client_port: int, relay_port: int, wizard_url: str) -> None:
+    print("======================================================")
+    print("  Vox Steward Kit — No Local & Cliente Ativos")
+    print(f"  PWA Client:  http://127.0.0.1:{client_port}")
+    print(f"  Relay HTTP:  http://127.0.0.1:{relay_port}")
+    print(f"  Healthcheck: http://127.0.0.1:{relay_port}/health")
+    print(f"  Wizard:      {wizard_url}")
+    print("======================================================")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Vox Steward Kit")
     parser.add_argument("--check", action="store_true", help="Executa autoteste e encerra")
-    parser.add_argument("--relay-port", type=int, default=DEFAULT_RELAY_PORT, help="Porta do relay")
-    parser.add_argument("--client-port", type=int, default=DEFAULT_CLIENT_PORT, help="Porta do cliente")
-    parser.add_argument("--no-browser", action="store_true", help="Nao abre o navegador automaticamente")
+    parser.add_argument(
+        "--relay-port", type=int, default=DEFAULT_RELAY_PORT, help="Porta do relay"
+    )
+    parser.add_argument(
+        "--client-port", type=int, default=DEFAULT_CLIENT_PORT, help="Porta do cliente"
+    )
+    parser.add_argument(
+        "--no-browser", action="store_true", help="Nao abre o navegador automaticamente"
+    )
     args = parser.parse_args()
 
     root = get_base_dir()
@@ -165,13 +183,7 @@ def main() -> int:
     servers.start_client()
 
     wizard_url = f"http://127.0.0.1:{args.client_port}/#/settings/network/steward"
-    print("======================================================")
-    print("  Vox Steward Kit — No Local & Cliente Ativos")
-    print(f"  PWA Client:  http://127.0.0.1:{args.client_port}")
-    print(f"  Relay HTTP:  http://127.0.0.1:{args.relay_port}")
-    print(f"  Healthcheck: http://127.0.0.1:{args.relay_port}/health")
-    print(f"  Wizard:      {wizard_url}")
-    print("======================================================")
+    _print_banner(args.client_port, args.relay_port, wizard_url)
 
     if not args.no_browser:
         print(f"Abrindo assistente em {wizard_url}...")

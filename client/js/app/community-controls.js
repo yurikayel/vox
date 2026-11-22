@@ -117,6 +117,70 @@ function bindCommunityPhotoInput(communityId, meta) {
   });
 }
 
+function paintCommunityQuarantineOnDom(nextState) {
+  if (typeof document === "undefined") return;
+  const on = Boolean(nextState);
+  const stateEl = document.querySelector(".community-quarantine-state");
+  if (stateEl) stateEl.textContent = on ? "Ligada" : "Desligada";
+  const btn = document.getElementById("btn-toggle-comm-quarantine");
+  if (btn) {
+    btn.dataset.next = on ? "false" : "true";
+    btn.textContent = on ? "Desligar" : "Ligar";
+    btn.title = on ? "Desligar quarentena de chaves novas" : "Ligar quarentena de chaves novas";
+  }
+}
+
+/**
+ * Alterna e propaga a configuração de quarentena de chave nova de uma comunidade.
+ * @param {string} communityId Id da comunidade.
+ * @param {object} meta Metadados da comunidade.
+ * @param {boolean} [explicitNext] Estado desejado (opcional; se omitido, inverte o atual).
+ * @returns {Promise<object|null>} Post de atualização assinado ou null se recusado.
+ */
+export async function toggleCommunityQuarantine(communityId, meta, explicitNext) {
+  const routeId = await localAccount.getRouteId();
+  if (!communityUpdates.canUpdateCommunity(meta, routeId)) {
+    share.showToast("Só o dono ou um moderador desta comunidade pode alterar a quarentena.", "error");
+    return null;
+  }
+  const nextState = typeof explicitNext === "boolean" ? explicitNext : !meta?.newKeyQuarantine;
+  const now = Date.now();
+  const payload = {
+    id: `comm_update_${communityId}_${now}`,
+    type: communityUpdates.COMMUNITY_UPDATE_TYPE,
+    communityId,
+    newKeyQuarantine: nextState,
+    newKeyQuarantineSince: String(now),
+    updatedAt: now,
+  };
+  const signed = await localAccount.signPayload(payload);
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+  if (meta) {
+    meta.newKeyQuarantine = nextState;
+    meta.newKeyQuarantineSince = String(now);
+  }
+  paintCommunityQuarantineOnDom(nextState);
+  share.showToast(nextState ? "Quarentena de chave nova ativada!" : "Quarentena de chave nova desativada!");
+  return signed;
+}
+
+function bindCommunityQuarantineToggle(communityId, meta) {
+  const btn = document.getElementById("btn-toggle-comm-quarantine");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      const next = btn.dataset.next === "true";
+      await toggleCommunityQuarantine(communityId, meta, next);
+    } catch (err) {
+      share.showToast(`Erro ao alterar quarentena: ${err.message}`, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 function bindCommunityModHideButtons(communityId) {
   document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
@@ -258,6 +322,7 @@ export function bindCommunityHeaderEvents({ main, communityId, meta, user, peerS
   bindGenesisExport(communityId, meta, filteredTopics);
   bindSeedAndNeighborControls(communityId, meta, peerSettings);
   bindCommunityPhotoInput(communityId, meta);
+  bindCommunityQuarantineToggle(communityId, meta);
   bindCommunityModHideButtons(communityId);
   bindCommunityTopicControls(main, communityId, filteredTopics);
 }

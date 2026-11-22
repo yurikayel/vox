@@ -32,7 +32,11 @@ async function loadSource() {
  */
 export function renderPython({ genesisMs, ids }) {
   const lines = ids.map((id) => `    "${id}",`).join("\n");
-  return `"""${NOTICE}"""\n\nGENESIS_MS = ${genesisMs}\n\nTEST_ROUTE_IDS = frozenset({\n${lines}\n})\n`;
+  const doc = [
+    "Gerado por scripts/gen-genesis-guard.mjs a partir de client/js/genesis.js",
+    "e client/js/data/test-route-ids.js. Não editar.",
+  ].join("\n");
+  return `"""${doc}"""\n\nGENESIS_MS = ${genesisMs}\n\nTEST_ROUTE_IDS = frozenset({\n${lines}\n})\n`;
 }
 
 /**

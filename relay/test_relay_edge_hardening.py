@@ -39,7 +39,12 @@ class _RelayHttpCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         root = pathlib.Path(self._tmp.name)
-        self._orig = (server.CACHE_DIR, inbox.INBOX_DIR, blind_relay.RELAY_DIR, central_memory.MEMORY_DIR)
+        self._orig = (
+            server.CACHE_DIR,
+            inbox.INBOX_DIR,
+            blind_relay.RELAY_DIR,
+            central_memory.MEMORY_DIR,
+        )
         server.set_cache_dir(root / "cache")
         inbox.set_inbox_dir(root / "inbox")
         blind_relay.set_relay_dir(root / "blind")
@@ -115,8 +120,14 @@ class TestOAuthAndPostSizeHardening(_RelayHttpCase):
             self.assertEqual(status, 400, f"esperado 400 para {body!r}, veio {status}")
 
     def test_http_post_acima_do_teto_retorna_413_em_oauth_beacon_e_seed(self):
-        for path, length in (("/oauth/exchange", "9000"), ("/peer/beacon", "20000"), ("/p2p/seed", "20000")):
-            status, _ = self._raw_request("POST", path, body=b"", headers={"Content-Length": length})
+        for path, length in (
+            ("/oauth/exchange", "9000"),
+            ("/peer/beacon", "20000"),
+            ("/p2p/seed", "20000"),
+        ):
+            status, _ = self._raw_request(
+                "POST", path, body=b"", headers={"Content-Length": length}
+            )
             self.assertEqual(status, 413, f"esperado 413 em {path}, veio {status}")
 
 
@@ -136,14 +147,20 @@ class TestP2PSeederAndBeaconHardening(_RelayHttpCase):
             self.assertEqual(status, 400, f"esperado 400 para {body!r}, veio {status}")
 
     def test_peer_beacon_recusa_httpport_booleano_com_400(self):
-        body = json.dumps({"nodeId": "n_bool", "protocol": "VOX-PEER-v1", "httpPort": True}).encode()
+        body = json.dumps(
+            {"nodeId": "n_bool", "protocol": "VOX-PEER-v1", "httpPort": True}
+        ).encode()
         status, _ = self._raw_request("POST", "/peer/beacon", body=body)
         self.assertEqual(status, 400)
 
     def test_register_seed_request_usa_metadados_da_memoria_central(self):
         blob = _blob_payload(b"conteudo-semeavel")
-        self.assertTrue(central_memory.ingest_event({"type": "MEDIA_BLOB", "blob": blob})["changed"])
-        status, raw = self._raw_request("POST", "/p2p/seed", body=json.dumps({"hash": blob["hash"]}).encode())
+        self.assertTrue(
+            central_memory.ingest_event({"type": "MEDIA_BLOB", "blob": blob})["changed"]
+        )
+        status, raw = self._raw_request(
+            "POST", "/p2p/seed", body=json.dumps({"hash": blob["hash"]}).encode()
+        )
         self.assertEqual(status, 201)
         record = json.loads(raw)
         self.assertEqual(record["sizeBytes"], len(b"conteudo-semeavel"))

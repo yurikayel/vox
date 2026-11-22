@@ -9,7 +9,17 @@ import { acceptCommunityAvatarDataUrl } from "./shared/community-avatar-image.js
 /** Valor de `type` em posts de atualização. @type {string} */
 export const COMMUNITY_UPDATE_TYPE = "community_update";
 /** Campos que um update pode alterar no registro canônico. @type {readonly string[]} */
-export const COMMUNITY_UPDATE_FIELDS = Object.freeze(["image", "avatar", "title", "description", "category", "postingMode", "postingModeSince"]);
+export const COMMUNITY_UPDATE_FIELDS = Object.freeze([
+  "image",
+  "avatar",
+  "title",
+  "description",
+  "category",
+  "postingMode",
+  "postingModeSince",
+  "newKeyQuarantine",
+  "newKeyQuarantineSince",
+]);
 
 /**
  * Id do post canônico que define dono e estado base da comunidade.
@@ -41,26 +51,68 @@ export function canUpdateCommunity(community, author) {
   return parseModerators(community.moderators).includes(author);
 }
 
+function pickQuarantineField(val) {
+  if (typeof val === "boolean") return val;
+  if (val === "true") return true;
+  if (val === "false") return false;
+  return undefined;
+}
+
+function pickQuarantineSince(val) {
+  if (typeof val === "number" && Number.isFinite(val)) return String(val);
+  if (typeof val === "string" && val.trim().length > 0) return val.trim();
+  return undefined;
+}
+
+function pickTextField(field, val) {
+  if (typeof val !== "string" || !val) return undefined;
+  if (field === "image" || field === "avatar") {
+    return acceptCommunityAvatarDataUrl(val) || undefined;
+  }
+  return val;
+}
+
+function pickFieldValue(field, update) {
+  if (field === "newKeyQuarantine") return pickQuarantineField(update.newKeyQuarantine);
+  if (field === "newKeyQuarantineSince") return pickQuarantineSince(update.newKeyQuarantineSince);
+  return pickTextField(field, update[field]);
+}
+
 /**
  * Extrai só campos de atualização permitidos e não vazios.
  * @param {object|null} update Payload `community_update`.
  * @returns {object}
  */
 export function pickCommunityUpdateFields(update) {
+  if (!update || typeof update !== "object") return {};
   const out = {};
   for (const field of COMMUNITY_UPDATE_FIELDS) {
-    const value = update?.[field];
-    if (typeof value !== "string" || !value) continue;
-    if (field === "image" || field === "avatar") {
-      const safe = acceptCommunityAvatarDataUrl(value);
-      if (safe) out[field] = safe;
-    } else {
-      out[field] = value;
-    }
+    const val = pickFieldValue(field, update);
+    if (val !== undefined) out[field] = val;
   }
   if (out.image && !out.avatar) out.avatar = out.image;
   if (out.avatar && !out.image) out.image = out.avatar;
   return out;
+}
+
+/**
+ * Constrói o payload de `community_update` para alternar quarentena de chaves novas.
+ * @param {string} communityId Id da comunidade.
+ * @param {boolean|string} enabled Estado desejado da quarentena.
+ * @param {number} [now=Date.now()] Instante em ms.
+ * @returns {object}
+ */
+export function buildQuarantineUpdate(communityId, enabled, now = Date.now()) {
+  if (!communityId) throw new Error("Comunidade sem id.");
+  const nextState = enabled === true || enabled === "true";
+  return {
+    id: `comm_update_${communityId}_${now}`,
+    type: COMMUNITY_UPDATE_TYPE,
+    communityId,
+    newKeyQuarantine: nextState,
+    newKeyQuarantineSince: String(now),
+    updatedAt: now,
+  };
 }
 
 function updateTime(update) {

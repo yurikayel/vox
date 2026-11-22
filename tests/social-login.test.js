@@ -1,9 +1,27 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bskyClientConfig, appBaseUrl, dpopProof, b64url, BSKY_SCOPE } from "../client/js/bsky-oauth.js";
-import { buildAuthorizeUrl, OAUTH_PROVIDERS } from "../client/js/social-login.js";
+import {
+  bskyClientConfig,
+  appBaseUrl,
+  dpopProof,
+  b64url,
+  BSKY_SCOPE,
+  startBskyLogin,
+  completeBskyLogin,
+} from "../client/js/bsky-oauth.js";
+import { buildAuthorizeUrl, OAUTH_PROVIDERS, startSocialLogin } from "../client/js/social-login.js";
 import { buildBskyClientMetadata, resolveSiteUrl } from "../scripts/write-oauth-deploy-config.mjs";
+
+if (!globalThis.sessionStorage) {
+  const store = new Map();
+  globalThis.sessionStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+    clear: () => store.clear(),
+  };
+}
 
 const linked = await import("../client/js/linked-accounts.js");
 const linkedUi = await import("../client/js/render/linked-accounts-ui.js");
@@ -67,4 +85,70 @@ test("login social — conta conectada por login (sem @ no Facebook) persiste e 
   assert.ok(html.includes("Yuri Kayel"));
   assert.ok(html.includes("@yurix"));
   assert.equal((html.match(/✓ verificado/g) || []).length, 2);
+});
+
+test("login social — início de PKCE limpa BSKY_FLOW_KEY e Bluesky limpa FLOW_KEY", async () => {
+  sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify({ provider: "bsky", state: "s1" }));
+  sessionStorage.setItem("vox-social-oauth-flow", JSON.stringify({ provider: "github", state: "s2" }));
+
+  const origFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("{}", { status: 400 });
+  try {
+    await startBskyLogin().catch(() => {});
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+  assert.equal(sessionStorage.getItem("vox-social-oauth-flow"), null);
+
+  sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify({ provider: "bsky", state: "s1" }));
+  await startSocialLogin("twitter").catch(() => {});
+  assert.equal(sessionStorage.getItem("vox-bsky-oauth-flow"), null);
+});
+
+test("bluesky oauth — completeBskyLogin confere iss (obrigatório se issRequired: true, tolerante se ausente)", async () => {
+  const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const keys = {
+    privateJwk: await crypto.subtle.exportKey("jwk", pair.privateKey),
+    publicJwk: await crypto.subtle.exportKey("jwk", pair.publicKey),
+  };
+  const baseFlow = {
+    provider: "bsky",
+    state: "valid-state",
+    verifier: "v",
+    keys,
+    issuer: "https://bsky.social",
+    tokenEndpoint: "https://bsky.social/oauth/token",
+    clientId: "http://localhost",
+    redirectUri: "http://127.0.0.1/oauth-callback.html",
+  };
+
+  sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify({ ...baseFlow, issRequired: true }));
+  await assert.rejects(
+    completeBskyLogin({ code: "abc", state: "valid-state" }),
+    /Emissor do login não confere/
+  );
+
+  sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify(baseFlow));
+  await assert.rejects(
+    completeBskyLogin({ code: "abc", state: "valid-state", iss: "https://atacante.example" }),
+    /Emissor do login não confere/
+  );
+
+  const origFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("{}", { status: 400 });
+  try {
+    sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify(baseFlow));
+    await assert.rejects(
+      completeBskyLogin({ code: "abc", state: "valid-state" }),
+      /Falha ao concluir o login no Bluesky/
+    );
+
+    sessionStorage.setItem("vox-bsky-oauth-flow", JSON.stringify(baseFlow));
+    await assert.rejects(
+      completeBskyLogin({ code: "abc", state: "valid-state", iss: "https://bsky.social" }),
+      /Falha ao concluir o login no Bluesky/
+    );
+  } finally {
+    globalThis.fetch = origFetch;
+  }
 });

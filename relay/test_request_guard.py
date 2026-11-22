@@ -1,5 +1,7 @@
-"""PM-94: quem pode escrever no relay — Host, Origin, Content-Type, limite por IP, dono do cofre e chave de
-apagar da caixa de DMs."""
+"""PM-94: quem pode escrever no relay.
+
+Host, Origin, Content-Type, limite por IP, dono do cofre e chave de apagar DMs.
+"""
 
 import hashlib
 import json
@@ -17,13 +19,32 @@ from relay import central_memory, inbox, rate_limit, request_guard, server
 
 TOKEN = "0f" * 16
 OWNER = "a1" * 32
-V2_RECORD = {"v": 2, "kdf": "pbkdf2-sha256", "iter": 600000, "salt": "ab" * 16, "iv": "cd" * 12, "ciphertext": "ef"}
+V2_RECORD = {
+    "v": 2,
+    "kdf": "pbkdf2-sha256",
+    "iter": 600000,
+    "salt": "ab" * 16,
+    "iv": "cd" * 12,
+    "ciphertext": "ef",
+}
 
 
 def envelope(msg_id, with_delete=True):
-    env = {"v": 1, "id": msg_id, "from": "a", "to": "b", "ephPub": {"kty": "EC"}, "iv": "i", "ct": "c"}
+    env = {
+        "v": 1,
+        "id": msg_id,
+        "from": "a",
+        "to": "b",
+        "ephPub": {"kty": "EC"},
+        "iv": "i",
+        "ct": "c",
+    }
     if with_delete:
-        env["del"] = {"iv": "x", "ct": "y", "hash": hashlib.sha256(bytes.fromhex(TOKEN)).hexdigest()}
+        env["del"] = {
+            "iv": "x",
+            "ct": "y",
+            "hash": hashlib.sha256(bytes.fromhex(TOKEN)).hexdigest(),
+        }
     return env
 
 
@@ -54,7 +75,9 @@ class TestGuardRules(unittest.TestCase):
 
     def test_reject_reason_order(self):
         json_headers = {"Host": "127.0.0.1:1", "Content-Type": "application/json"}
-        self.assertEqual(request_guard.reject_reason("GET", {"Host": "x.example"}, "127.0.0.1")[0], 421)
+        self.assertEqual(
+            request_guard.reject_reason("GET", {"Host": "x.example"}, "127.0.0.1")[0], 421
+        )
         self.assertIsNone(request_guard.reject_reason("GET", {"Host": "127.0.0.1:1"}, "127.0.0.1"))
         bad_origin = dict(json_headers, Origin="https://x.example")
         self.assertEqual(request_guard.reject_reason("POST", bad_origin, "127.0.0.1")[0], 403)
@@ -70,7 +93,13 @@ class TestRelayWritesOverHttp(unittest.TestCase):
         cls.previous = (inbox.INBOX_DIR, central_memory.MEMORY_DIR)
         inbox.INBOX_DIR = Path(cls.tmp) / "inbox"
         central_memory.set_memory_dir(Path(cls.tmp) / "mem")
-        cls.limiter = patch.object(rate_limit, "LIMITER", rate_limit.RateLimiter({name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}))
+        cls.limiter = patch.object(
+            rate_limit,
+            "LIMITER",
+            rate_limit.RateLimiter(
+                {name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}
+            ),
+        )
         cls.limiter.start()
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
@@ -88,7 +117,9 @@ class TestRelayWritesOverHttp(unittest.TestCase):
         data = json.dumps(body).encode("utf-8") if body is not None else None
         base = {"Content-Type": "application/json"} if data is not None else {}
         url = f"http://127.0.0.1:{self.httpd.server_address[1]}{path}"
-        req = urllib.request.Request(url, data=data, headers={**base, **(headers or {})}, method=method)
+        req = urllib.request.Request(
+            url, data=data, headers={**base, **(headers or {})}, method=method
+        )
         try:
             with urllib.request.urlopen(req, timeout=3) as resp:
                 return resp.status, json.loads(resp.read() or b"{}")
@@ -98,9 +129,14 @@ class TestRelayWritesOverHttp(unittest.TestCase):
     def test_inbox_delete_needs_the_recipient_token(self):
         self.assertEqual(self.call("POST", "/inbox/bob", envelope("dm_1"))[0], 200)
         self.assertEqual(self.call("DELETE", "/inbox/bob/dm_1")[0], 403)
-        self.assertEqual(self.call("DELETE", "/inbox/bob/dm_1", headers={"X-Vox-Delete-Token": "ab" * 16})[0], 403)
+        self.assertEqual(
+            self.call("DELETE", "/inbox/bob/dm_1", headers={"X-Vox-Delete-Token": "ab" * 16})[0],
+            403,
+        )
         self.assertEqual(len(self.call("GET", "/inbox/bob")[1]["envelopes"]), 1)
-        self.assertEqual(self.call("DELETE", "/inbox/bob/dm_1", headers={"X-Vox-Delete-Token": TOKEN})[0], 200)
+        self.assertEqual(
+            self.call("DELETE", "/inbox/bob/dm_1", headers={"X-Vox-Delete-Token": TOKEN})[0], 200
+        )
         self.assertEqual(self.call("GET", "/inbox/bob")[1]["envelopes"], [])
 
     def test_inbox_legacy_envelope_still_deletes_and_bad_delete_field_is_refused(self):
@@ -111,7 +147,12 @@ class TestRelayWritesOverHttp(unittest.TestCase):
 
     def test_vault_write_needs_the_owner_proof(self):
         self.assertEqual(self.call("POST", "/memory/vault/cofre1", {"record": V2_RECORD})[0], 403)
-        self.assertEqual(self.call("POST", "/memory/vault/cofre1", {"record": V2_RECORD, "ownerToken": OWNER})[0], 200)
+        self.assertEqual(
+            self.call("POST", "/memory/vault/cofre1", {"record": V2_RECORD, "ownerToken": OWNER})[
+                0
+            ],
+            200,
+        )
         other = {"record": dict(V2_RECORD, ciphertext="99"), "ownerToken": "b2" * 32}
         self.assertEqual(self.call("POST", "/memory/vault/cofre1", other)[0], 403)
         status, served = self.call("GET", "/memory/vault/cofre1")
@@ -121,12 +162,17 @@ class TestRelayWritesOverHttp(unittest.TestCase):
     def test_browser_writes_from_other_sites_and_text_plain_are_refused(self):
         evil = {"Origin": "https://site-qualquer.example"}
         self.assertEqual(self.call("POST", "/inbox/dave", envelope("dm_4"), evil)[0], 403)
-        self.assertEqual(self.call("POST", "/inbox/dave", envelope("dm_4"), {"Content-Type": "text/plain"})[0], 415)
+        self.assertEqual(
+            self.call("POST", "/inbox/dave", envelope("dm_4"), {"Content-Type": "text/plain"})[0],
+            415,
+        )
         app = {"Origin": "https://yurikayel.github.io"}
         self.assertEqual(self.call("POST", "/inbox/dave", envelope("dm_4"), app)[0], 200)
 
     def test_rebinding_host_is_refused(self):
-        self.assertEqual(self.call("GET", "/health", headers={"Host": "rebind.example:3920"})[0], 421)
+        self.assertEqual(
+            self.call("GET", "/health", headers={"Host": "rebind.example:3920"})[0], 421
+        )
         self.assertEqual(self.call("GET", "/health")[0], 200)
 
 

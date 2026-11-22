@@ -8,9 +8,9 @@ Nunca armazena nem inspeciona o texto claro (plaintext).
 import hashlib
 import hmac
 import json
+import os
 import threading
 import time
-import os
 from pathlib import Path
 
 from relay.safe_path import child_of
@@ -18,10 +18,10 @@ from relay.safe_path import child_of
 _MESSAGE_SUFFIX = ".json"
 
 DEFAULT_TTL_SECONDS = 72 * 3600  # 72 horas
-MAX_ENVELOPE_SIZE = 32 * 1024     # 32 KB por mensagem
+MAX_ENVELOPE_SIZE = 32 * 1024  # 32 KB por mensagem
 
-# O relay atende uma conexão por thread: escrever, ler, apagar e expurgar a mesma caixa não podem se misturar
-# (um leitor veria o JSON pela metade e apagaria a mensagem como se fosse lixo).
+# O relay atende uma conexão por thread: escrever, ler, apagar e expurgar a mesma caixa
+# não podem se misturar (um leitor veria JSON pela metade e apagaria como se fosse lixo).
 _INBOX_LOCK = threading.RLock()
 
 DELETED = "deleted"
@@ -30,12 +30,16 @@ FORBIDDEN = "forbidden"
 
 
 def _delete_hash(envelope: dict):
-    """PM-94: hash da chave de apagar que vai cifrada para o destinatário (`del`). None em envelope antigo."""
+    """PM-94: hash da chave de apagar cifrada para destinatário (`del`). None em antigo."""
     sealed = envelope.get("del")
     if sealed is None:
         return None
     digest = str(sealed.get("hash") or "").lower() if isinstance(sealed, dict) else ""
-    if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest) or not sealed.get("ct"):
+    if (
+        len(digest) != 64
+        or not all(c in "0123456789abcdef" for c in digest)
+        or not sealed.get("ct")
+    ):
         raise ValueError("Campo del inválido: precisa de hash SHA-256 em hex e ct")
     return digest
 
@@ -59,7 +63,6 @@ def set_inbox_dir(path):
     return INBOX_DIR
 
 
-
 def ensure_inbox_dir():
     INBOX_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -69,23 +72,27 @@ def sanitize_filename(name: str) -> str:
 
 
 def _is_word_name(text: str, allow_empty: bool = False) -> bool:
-    """True se `text` só tem letras/dígitos (Unicode, como `str.isalnum`), `-` e `_` (o que sobra de `sanitize_filename`)."""
+    """True se `text` só tem letras/dígitos, `-` e `_` (o que sobra de `sanitize_filename`)."""
     return (allow_empty or bool(text)) and all(c.isalnum() or c in "-_" for c in text)
 
 
 def _is_message_name(text: str) -> bool:
     """True para `<nome>.json`, com o nome (possivelmente vazio) já sanitizado."""
-    return text.endswith(_MESSAGE_SUFFIX) and _is_word_name(text[:-len(_MESSAGE_SUFFIX)], allow_empty=True)
+    return text.endswith(_MESSAGE_SUFFIX) and _is_word_name(
+        text[: -len(_MESSAGE_SUFFIX)], allow_empty=True
+    )
 
 
 def _addr_dir(to_address: str) -> Path:
-    """Pasta da caixa do endereço, dentro de INBOX_DIR; `ValueError` se o nome não der caminho seguro."""
+    """Pasta da caixa do endereço em INBOX_DIR; `ValueError` se não der caminho seguro."""
     return child_of(INBOX_DIR, sanitize_filename(to_address), _is_word_name)
 
 
 def _message_file(addr_dir: Path, message_id: str) -> Path:
-    """Arquivo da mensagem dentro da caixa; `ValueError` se o nome não der caminho seguro."""
-    return child_of(addr_dir, f"{sanitize_filename(message_id)}{_MESSAGE_SUFFIX}", _is_message_name)
+    """Arquivo da mensagem na caixa; `ValueError` se nome não der caminho seguro."""
+    return child_of(
+        addr_dir, f"{sanitize_filename(message_id)}{_MESSAGE_SUFFIX}", _is_message_name
+    )
 
 
 def store_envelope(to_address: str, envelope: dict, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict:
@@ -182,7 +189,7 @@ def _token_matches(token, expected_hash) -> bool:
 
 
 def delete_envelope(to_address: str, message_id: str, token: str = None) -> str:
-    """Apaga um envelope. Desde o PM-94, envelope com `delHash` só sai com a chave de apagar do destinatário."""
+    """Apaga envelope. Desde PM-94, com `delHash` só sai com chave do destinatário."""
     with _INBOX_LOCK:
         return _delete_envelope_locked(to_address, message_id, token)
 

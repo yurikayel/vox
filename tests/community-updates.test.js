@@ -165,3 +165,32 @@ test("PM-09: botão de trocar foto segue a mesma regra", () => {
   assert.ok(!renderHeaderHtml({ routeId: STRANGER, isMod: true }).includes("input-comm-photo-file"),
     "isMod calculado com a carteira não basta: quem assina é a chave local");
 });
+
+test("PM-30: pickCommunityUpdateFields aceita newKeyQuarantine e newKeyQuarantineSince", () => {
+  assert.deepEqual(cu.pickCommunityUpdateFields({ newKeyQuarantine: true, newKeyQuarantineSince: 1000 }), {
+    newKeyQuarantine: true,
+    newKeyQuarantineSince: "1000",
+  });
+  assert.deepEqual(cu.pickCommunityUpdateFields({ newKeyQuarantine: "false", newKeyQuarantineSince: "2000" }), {
+    newKeyQuarantine: false,
+    newKeyQuarantineSince: "2000",
+  });
+  assert.deepEqual(cu.pickCommunityUpdateFields({ newKeyQuarantine: "true" }), {
+    newKeyQuarantine: true,
+  });
+  assert.deepEqual(cu.pickCommunityUpdateFields({ newKeyQuarantine: "invalid" }), {});
+});
+
+test("PM-30: ausência de newKeyQuarantine não apaga flag anterior na comunidade", () => {
+  const commWithQuarantine = { ...BASE, newKeyQuarantine: true, newKeyQuarantineSince: "1000" };
+  const titleUpdate = update(OWNER, { title: "Cinema Novo" }, 2000);
+  const out = cu.applyCommunityUpdates(commWithQuarantine, [titleUpdate]);
+  assert.equal(out.title, "Cinema Novo");
+  assert.equal(out.newKeyQuarantine, true);
+  assert.equal(out.newKeyQuarantineSince, "1000");
+
+  const turnOffUpdate = update(OWNER, cu.buildQuarantineUpdate("cinema", false, 3000), 3000);
+  const outOff = cu.applyCommunityUpdates(commWithQuarantine, [titleUpdate, turnOffUpdate]);
+  assert.equal(outOff.newKeyQuarantine, false);
+  assert.equal(outOff.newKeyQuarantineSince, "3000");
+});

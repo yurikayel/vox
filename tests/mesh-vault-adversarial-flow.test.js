@@ -22,7 +22,7 @@ const H2 = "vx_h2";
 
 const sigOf = (author, body) => `ok:${author}:${JSON.stringify(body)}`;
 const signAs = (author, body) => ({ ...body, author, pubKey: "pk", sig: sigOf(author, body) });
-const verifySigned = ({ author, pubKey, sig, ...body }) => sig === sigOf(author, body);
+const verifySigned = ({ author, pubKey: _pubKey, sig, ...body }) => sig === sigOf(author, body);
 
 function makeWorld(...mutual) {
   return { now: Date.now(), relay: new Map(), dms: [], storage: new Map(), mutual: new Set(mutual), guardians: [], pool: [] };

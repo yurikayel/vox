@@ -13,6 +13,7 @@ const TARGETS = [
   { key: "vox-dm-keypair", seal: sealPrivateField },
   { key: "vox-accounts-vault-v1", seal: sealVaultMap },
   { key: "vox-wallet-jwk", seal: sealWalletJwk },
+  { key: "vox-bsky-oauth-session", seal: sealBskySession },
 ];
 
 async function sealPrivateField(record) {
@@ -43,6 +44,22 @@ async function sealVaultMap(map) {
 async function sealWalletJwk(jwk) {
   if (!jwk?.kty || jwk.kind || isSealed(jwk)) return null;
   return sealJson(jwk);
+}
+
+async function sealBskySession(record) {
+  if (!record || typeof record !== "object" || record.sealed) return null;
+  const hasSecrets = Boolean(record.keys || record.accessToken || record.refreshToken);
+  if (!hasSecrets) return null;
+  const secrets = {
+    keys: record.keys,
+    nonce: record.nonce || "",
+    accessToken: record.accessToken || "",
+    refreshToken: record.refreshToken || "",
+  };
+  const sealed = await sealJson(secrets);
+  if (!isSealed(sealed)) return null;
+  const { keys: _k, nonce: _n, accessToken: _a, refreshToken: _r, ...rest } = record;
+  return { ...rest, sealed };
 }
 
 async function migrateTarget(storage, { key, seal }) {

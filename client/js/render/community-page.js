@@ -43,7 +43,26 @@ function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   return `<div class="community-vox-avatar-wrap">${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}${photoBtn}</div>`;
 }
 
-function renderCommunityFichaOrkut(meta, ownerLabels, memberCount) {
+function renderCommunityQuarantineDetail(meta, communityId, canManage) {
+  if (!canManage) return "";
+  const on = Boolean(meta?.newKeyQuarantine);
+  const next = on ? "false" : "true";
+  const stateLabel = on ? "Ligada" : "Desligada";
+  const actionLabel = on ? "Desligar" : "Ligar";
+  const title = on ? "Desligar quarentena de chaves novas" : "Ligar quarentena de chaves novas";
+  return `
+        <div class="community-orkut-detail-item community-quarantine-control">
+          <span class="community-orkut-detail-label">Quarentena:</span>
+          <span class="community-orkut-detail-val">
+            <span class="community-quarantine-state">${stateLabel}</span>
+            <button type="button" class="btn btn-xs btn-outline btn-toggle-comm-quarantine" id="btn-toggle-comm-quarantine" data-comm="${escapeHtml(communityId)}" data-next="${next}" title="${title}">
+              ${actionLabel}
+            </button>
+          </span>
+        </div>`;
+}
+
+function renderCommunityFichaOrkut(meta, ownerLabels, memberCount, quarantineHtml = "") {
   const ownerItem = meta.owner && ownerLabels ? `
     <div class="community-orkut-detail-item">
       <span class="community-orkut-detail-label">Dono:</span>
@@ -66,6 +85,7 @@ function renderCommunityFichaOrkut(meta, ownerLabels, memberCount) {
         <div class="community-orkut-detail-item"><span class="community-orkut-detail-label">Idioma:</span><span class="community-orkut-detail-val">${escapeHtml(meta.language || "Português")}</span></div>
         ${memberCount != null ? `<div class="community-orkut-detail-item"><span class="community-orkut-detail-label">Membros:</span><span class="community-orkut-detail-val">${escapeHtml(formatCommunityMembers(memberCount))}</span></div>` : ""}
         ${meta.createdAt || meta.ts ? `<div class="community-orkut-detail-item"><span class="community-orkut-detail-label">Criada em:</span><span class="community-orkut-detail-val">${escapeHtml(formatAbsoluteDate(meta.createdAt || meta.ts))}</span></div>` : ""}
+        ${quarantineHtml}
       </div>
       ${meta.owner ? `<p class="community-vox-owner meta" style="display:none;">Criada por <a href="#/u/${encodeURIComponent(meta.owner)}">${escapeHtml(shortId(meta.owner))}</a></p>` : ""}
     </div>`;
@@ -76,11 +96,19 @@ function canChangeCommunityPhoto(meta, opts) {
   return communityUpdates.canUpdateCommunity(meta, opts.routeId || opts.walletAddress);
 }
 
+function canManageCommunityQuarantine(meta, opts = {}) {
+  const who = opts.routeId || opts.walletAddress;
+  if (who) return communityUpdates.canUpdateCommunity(meta, who);
+  return Boolean(opts.isMod);
+}
+
 function renderCommunityHeader(meta, communityId, opts = {}) {
   const commTitle = meta.title || communityId;
   const memberCount = resolveCommunityMemberCount(meta, communityId);
   const metaChips = renderCommunityMetaChips(meta, communityId, memberCount);
   const canChangePhoto = canChangeCommunityPhoto(meta, opts);
+  const canManageQuarantine = canManageCommunityQuarantine(meta, opts);
+  const quarantineHtml = renderCommunityQuarantineDetail(meta, communityId, canManageQuarantine);
   const tagline = meta.headerTagline || (communityId === mock.MOCK_DEMO_COMMUNITY.id ? mock.MOCK_DEMO_COMMUNITY.headerTagline : "");
   const kicker = tagline || (meta.category ? `Comunidade · ${meta.category}` : "Comunidade Vox");
   const ownerLabels = meta.owner ? resolvePostAuthorLabels(meta.owner) : null;
@@ -98,7 +126,7 @@ function renderCommunityHeader(meta, communityId, opts = {}) {
         </div>
         ${renderCommunityHeaderToolbar(communityId, commTitle, opts.isMember, showsComposeButton(meta, opts.isMod))}
       </div>
-      ${renderCommunityFichaOrkut(meta, ownerLabels, memberCount)}
+      ${renderCommunityFichaOrkut(meta, ownerLabels, memberCount, quarantineHtml)}
     </header>`;
 }
 

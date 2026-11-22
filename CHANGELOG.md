@@ -6,6 +6,34 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Persistência de credenciais endurecida: sessão do Bluesky e segredos de contas vinculadas só vão ao armazenamento cifrados pela chave do aparelho (sem ela ficam em memória); callback de login com `state` desconhecido não encerra fluxos pendentes (`tests/credential-persistence.test.js`).
+### Feat / Ops / Refactor: PM-19 (espelhos), PM-25 (`.ics`), PM-31 (transparência moderação), Onda 3 (`init` & `linked-accounts`)
+- `scripts/verify-mirrors.mjs` + `.github/workflows/mirror-verify.yml` (`PM-19`): compara `CACHE_NAME` do `sw.js` dos espelhos `live` com o repositório; CLI `--offline` e suíte `tests/mirror-verify.test.js`.
+- `client/js/aviso-ics.js` + `render/aviso.js` + `app/aviso-flow.js` (`PM-25`): exportação RFC 5545 `.ics` ("📅 Agenda (.ics)") para convocações com data e testes em `tests/aviso-ics.test.js`.
+- `client/js/moderation-log.js` + `render/network-sections.js` + `app/network-screen-moderation.js` (`PM-31`): resumo agregado e exportação em Markdown (`vox-transparencia-moderacao.md`) sem expor PII de denunciantes/listas pessoais + `tests/moderation-log.test.js`.
+- `client/js/app/init.js` (504 → 19 linhas) e `client/js/linked-accounts.js` (590 → 43 linhas): fatiados em 9 submódulos SLAP mantendo 100% dos exports públicos.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.158-pm19-pm25-pm31-onda3` (+11 módulos no `SHELL_ASSETS`).
+
+### Feat / Refactor / A11y: PM-26 (contador mensal/economia de dados), PM-27 ("Ouvir post"), Onda 3 (`inline-composer`, `screens-network`, `cache-node`)
+- `client/js/peers-settings.js` + `render/network-sections.js` (`PM-26`): acumulado mensal UTC (`vox-monthly-usage`, `getMonthlyUsage`), detecção ativa de economia de dados/4G (`isDataSaverActive`) e indicador em `#/settings/network` + testes em `tests/pm26-data-saver.test.js`.
+- `client/js/shared/post-speech.js` + `app/post-more-{actions,menu}.js` (`PM-27` / `LAN-22`): ação **Ouvir post** via Web Speech API (`pt-BR`), parada automática em `hashchange` e fallback honesto + testes em `tests/post-speech.test.js`.
+- `client/js/app/inline-composer.js` (774 → 80 linhas), `client/js/cache-node.js` (794 → 57 linhas) e `client/js/app/screens-network.js` (659 → 35 linhas): fatiados em 17 submódulos SLAP mantendo 100% dos exports públicos, mais helper `tests/helpers/inline-composer-source.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.157-pm26-pm27-onda3` (+18 módulos no `SHELL_ASSETS`).
+
+### Feat / Refactor / Hardening: PM-96 (Bluesky ADR-026), PM-30 (quarentena), PM-66 (`PLR0913`/`lint:all`), Onda 3 (`screens-profile` & `explode-dispatch`)
+- `client/js/bsky-oauth.js` + `identity/key-at-rest.js` (`PM-96` / ADR-026): sela chave DPoP (`keys`) e tokens OAuth do Bluesky com a chave do aparelho (`sealJson`/`openSealed`); migra sessões legadas em `startKeysAtRest()` mantendo `loadBskySession()` síncrono e testes em `tests/bsky-oauth-rest.test.js`.
+- `client/js/community-updates.js` + `render/community-page.js` + `app/community-controls.js` (`PM-30`): torna `newKeyQuarantine` editável por dono/moderador via `community_update` assinado, preservando estado anterior quando ausente e validando em `tests/community-quarantine-update.test.js`.
+- `client/js/app/screens-profile.js` (962 → 141 linhas) e `client/js/explode-dispatch.js` (789 → 114 linhas): fatiados em submódulos SLAP (`profile-screen-*.js` e `explode-{crosspost,events,intent,ui}.js`), mantendo 100% da API pública.
+- Hardening (`PM-66` / `PM-115`): zero warnings ESLint em `tests/login-roundtrip-harness.js` (zerando `tests/`, `scripts/` e `tools/` no `lint:all`) e zero erros Ruff `PLR0913` (`>5` params) em `relay/signaling.py`, `scripts/generate_brand_icons.py` e `packaging/node-zero-windows/tray_app.py`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.156-pm96-pm30-onda3` (+9 módulos no `SHELL_ASSETS`).
+
+### Refactor / Fix / Hardening: Onda 3 (`render/profile` & `render/network`), 4ª varredura QA e PM-66
+- `client/js/render/profile.js` (1274 → 32 linhas) e `client/js/render/network.js` (561 → 51 linhas): fatiados em módulos SLAP (`profile-{compose-topic,compose-wizards,header,settings,tabs,wallet}.js` e `network-{form,participation,sections,steward}.js`), mantendo 100% da API pública.
+- `client/js/social-login.js` + `bsky-oauth.js`: limpeza cruzada de fluxos PKCE/Bluesky no início do login; preservação estrita da conferência RFC 9207 (`issRequired` / `iss`).
+- `client/js/app/screens-phrase.js`: descarta folha de impressão da frase de recuperação no `hashchange` e exporta `printCard`.
+- `client/js/labs/parado/webxdc-crdt.js`: LWW inteiro determinístico em `setItem`, isolamento de `data: null` (`hasOwnProperty`) e suporte a `pendingMoves` fora de ordem.
+- Hardening PM-66: zero erros/avisos Ruff (`F,C901,E,I,PLR0915`) em `relay/`, `scripts/` e `packaging/` e zero warnings ESLint em `scripts/*.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.155-onda3-profile-network` (+10 módulos no `SHELL_ASSETS`).
 ### Fix: simulador de cota (REV-11/PM-74)
 - `scripts/replication-quota-sim.mjs`: `ttlMs`/`defaultTtlMs` <= 0 são rejeitados; JSDoc e spec (`replicacao-por-grau-v0.md`) documentam que `pinned` não isenta de cota; teste novo e títulos alinhados.
 ### Fix: validador de retorno POSSE (PM-105)

@@ -6,6 +6,7 @@ test_blind_relay.py — Testes unitários do Nó Compartilhado / Relay Cego
 import tempfile
 import unittest
 from pathlib import Path
+
 from relay import blind_relay
 
 
@@ -62,15 +63,18 @@ class TestBlindRelay(unittest.TestCase):
     def test_store_snapshot_and_prune_deltas(self):
         # Insere deltas anteriores
         for i in range(5):
-            blind_relay.store_envelope("comunidade_feira", {
-                "version": 1,
-                "sender": "vendedor" * 4,
-                "timestamp": 1000 + i * 100,
-                "serial": i + 1,
-                "nonce": f"nonce_{i}",
-                "sig": "assinatura" * 4,
-                "payload": f"item_{i}",
-            })
+            blind_relay.store_envelope(
+                "comunidade_feira",
+                {
+                    "version": 1,
+                    "sender": "vendedor" * 4,
+                    "timestamp": 1000 + i * 100,
+                    "serial": i + 1,
+                    "nonce": f"nonce_{i}",
+                    "sig": "assinatura" * 4,
+                    "payload": f"item_{i}",
+                },
+            )
 
         self.assertEqual(len(blind_relay.list_envelopes("comunidade_feira")), 5)
 

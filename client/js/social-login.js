@@ -74,6 +74,7 @@ async function startPkceLogin(provider) {
   const { verifier, challenge } = await pkcePair();
   const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
   const redirectUri = oauthRedirectUri();
+  sessionStorage.removeItem(BSKY_FLOW_KEY);
   sessionStorage.setItem(FLOW_KEY, JSON.stringify({ provider, state, verifier, redirectUri }));
   location.assign(buildAuthorizeUrl(provider, { clientId, redirectUri, state, challenge }));
 }
@@ -145,6 +146,16 @@ function readPendingFlow(key) {
 }
 
 /**
+ * O `state` do callback pertence a um fluxo que esta aba iniciou? Não consome nem encerra nada.
+ * @param {{ state?: string }} cb parâmetros guardados por `oauth-callback.html`
+ * @returns {boolean}
+ */
+export function matchesPendingFlow(cb) {
+  const state = cb?.state;
+  return typeof state === "string" && [BSKY_FLOW_KEY, FLOW_KEY].some((k) => readPendingFlow(k)?.state === state);
+}
+
+/**
  * Conclui um login que voltou pelo callback. O fluxo é escolhido pelo `state` do callback, não por qual fluxo ficou
  * guardado: um login do Bluesky abandonado não pode capturar o callback de outra rede. Qualquer callback encerra os
  * fluxos pendentes desta aba.
@@ -164,7 +175,7 @@ export async function completeSocialLogin(cb) {
     const r = await completeBskyLogin(cb);
     return { netId: "bsky", handle: r.handle, did: r.did };
   }
-  clearPendingFlows();
   if (!flow) throw new Error("Login expirou ou não confere. Tente de novo.");
+  clearPendingFlows();
   return exchangeViaRelay(flow, cb.code);
 }

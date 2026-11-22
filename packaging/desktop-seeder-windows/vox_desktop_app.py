@@ -74,7 +74,8 @@ def boost_dedicated_node(data_dir: Optional[Path] = None) -> bool:
         token_path = (data_dir or local_app) / "control.token"
         token = token_path.read_text(encoding="utf-8").strip() if token_path.exists() else ""
         headers = {"X-Vox-Node-Token": token} if token else {}
-        req = urllib.request.Request("http://127.0.0.1:3922/api/resume", data=b"", headers=headers, method="POST")
+        url = "http://127.0.0.1:3922/api/resume"
+        req = urllib.request.Request(url, data=b"", headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=0.8) as resp:
             return resp.status == 200
     except Exception:
@@ -101,7 +102,10 @@ def start_node_background(root: Path) -> bool:
     node_py = root / "packaging" / "node-zero-windows" / "node_zero.py"
     if node_py.exists():
         try:
-            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            flags = (
+                getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            )
             subprocess.Popen([sys.executable, str(node_py), "start"], creationflags=flags)
             return True
         except OSError:
@@ -133,7 +137,9 @@ class LocalClientServer:
 
         for candidate in range(self.port, self.port + 20):
             try:
-                handler = lambda *a, **k: QuietHandler(*a, directory=str(client_dir), **k)
+                def handler(*a: Any, **k: Any) -> QuietHandler:
+                    return QuietHandler(*a, directory=str(client_dir), **k)
+
                 self.httpd = socketserver.TCPServer(("127.0.0.1", candidate), handler)
                 self.port = candidate
                 break
@@ -269,7 +275,8 @@ class DesktopNodeTray:
         cms.Items.Add(header)
         cms.Items.Add(ToolStripSeparator())
 
-        node_lbl = "Nó Dedicado: Ativo (127.0.0.1:3921)" if self.node_active else "Nó Dedicado: Parado"
+        node_status = "Ativo (127.0.0.1:3921)" if self.node_active else "Parado"
+        node_lbl = f"Nó Dedicado: {node_status}"
         self._node_menu_item = ToolStripMenuItem(node_lbl)
         self._node_menu_item.Enabled = False
         cms.Items.Add(self._node_menu_item)
@@ -400,6 +407,19 @@ def run_self_check(root: Path) -> int:
     return 0
 
 
+def _print_startup_banner(target_url: str, is_remote: bool, local_port: int) -> None:
+    mode_str = "Remoto (Cloudflare)" if is_remote else "Espelho Local"
+    print("======================================================")
+    print("  Vox Desktop (Cliente) — Windows")
+    print(f"  URL Ativa:     {target_url}")
+    print(f"  Modo:          {mode_str}")
+    if local_port:
+        print(f"  Backup Local:  http://127.0.0.1:{local_port}")
+    print("  Nó Dedicado:   Vox Populi conectado em 127.0.0.1:3921")
+    print("  Seeder:        Não implementado")
+    print("======================================================")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Vox Desktop (Cliente)")
     parser.add_argument("--check", action="store_true", help="Executa autoteste e encerra")
@@ -417,16 +437,7 @@ def main() -> int:
 
     target_url, is_remote = resolve_startup_url(args.local, args.url, local_port)
     bridge = DesktopBridge(local_port, is_remote)
-
-    print("======================================================")
-    print("  Vox Desktop (Cliente) — Windows")
-    print(f"  URL Ativa:     {target_url}")
-    print(f"  Modo:          {'Remoto (Cloudflare)' if is_remote else 'Espelho Local'}")
-    if local_port:
-        print(f"  Backup Local:  http://127.0.0.1:{local_port}")
-    print("  Nó Dedicado:   Vox Populi conectado em 127.0.0.1:3921")
-    print("  Seeder:        Não implementado")
-    print("======================================================")
+    _print_startup_banner(target_url, is_remote, local_port)
 
     if webview is None:
         print("Erro: 'pywebview' nao esta instalado neste ambiente. Execute: pip install pywebview")
