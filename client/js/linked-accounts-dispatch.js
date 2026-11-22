@@ -2,7 +2,7 @@
 
 import { loadBskySession, postWithBskySession } from "./bsky-oauth.js";
 import { INTENT_NETWORK_META } from "./linked-accounts-format.js";
-import { loadLinkedAccounts, isAutoReplicationEnabled, getGeneralWebhookUrl } from "./linked-accounts-store.js";
+import { hydrateLinkedAccounts, loadLinkedAccounts, isAutoReplicationEnabled, getGeneralWebhookUrl } from "./linked-accounts-store.js";
 import { bskyPostText, postToBlueskyAtProto } from "./linked-accounts-bsky.js";
 
 /**
@@ -137,6 +137,7 @@ export async function dispatchAutoReplication(post, { force = false } = {}) {
     return { dispatched: false, reason: "auto_replication_disabled", count: 0 };
   }
 
+  await hydrateLinkedAccounts();
   const accounts = loadLinkedAccounts();
   const payload = buildReplicationPayload(post);
   const targets = collectWebhookTargets(accounts);

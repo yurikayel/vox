@@ -238,13 +238,16 @@ function bindLinkedAccountTestButtons() {
  * @returns {Promise<void>}
  */
 export async function showLinkedAccounts() {
+  await linkedAccounts.hydrateLinkedAccounts();
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Redes Vinculadas"));
   render.renderLinkedAccountsPage(main);
   bindLinkedAccountsUi(() => showLinkedAccounts());
   void revealSocialLoginButtons();
   const cb = socialLogin.takePendingCallback();
-  if (cb) void finishSocialLogin(() => socialLogin.completeSocialLogin(cb));
+  if (!cb) return;
+  if (cb.error || socialLogin.matchesPendingFlow(cb)) void finishSocialLogin(() => socialLogin.completeSocialLogin(cb));
+  else share.showToast("Login expirou ou não confere. Tente de novo.", "error");
 }
 
 /**

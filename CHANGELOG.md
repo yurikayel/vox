@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Persistência de credenciais endurecida: sessão do Bluesky e segredos de contas vinculadas só vão ao armazenamento cifrados pela chave do aparelho (sem ela ficam em memória); callback de login com `state` desconhecido não encerra fluxos pendentes (`tests/credential-persistence.test.js`).
 ### Feat / Ops / Refactor: PM-19 (espelhos), PM-25 (`.ics`), PM-31 (transparência moderação), Onda 3 (`init` & `linked-accounts`)
 - `scripts/verify-mirrors.mjs` + `.github/workflows/mirror-verify.yml` (`PM-19`): compara `CACHE_NAME` do `sw.js` dos espelhos `live` com o repositório; CLI `--offline` e suíte `tests/mirror-verify.test.js`.
 - `client/js/aviso-ics.js` + `render/aviso.js` + `app/aviso-flow.js` (`PM-25`): exportação RFC 5545 `.ics` ("📅 Agenda (.ics)") para convocações com data e testes em `tests/aviso-ics.test.js`.

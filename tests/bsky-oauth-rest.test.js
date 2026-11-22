@@ -167,13 +167,14 @@ test("PM-96 - postWithBskySession renova token expirado e persiste nova sessão 
   }
 });
 
-test("PM-96 - fallback seguro quando a chave do aparelho não está disponível", async () => {
+test("PM-96 - sem chave do aparelho, segredos não vão ao storage e valem só na sessão em memória", async () => {
   clearBskySession();
   const plain = await makePlainSession();
   await withoutKeystore(async () => {
     const saved = await saveBskySession(plain);
-    assert.equal(saved.accessToken, "secret-access-token-xyz");
-    assert.equal(loadBskySession().accessToken, "secret-access-token-xyz");
+    assert.equal(saved.accessToken, undefined);
+    assert.equal(loadBskySession().accessToken, undefined);
+    assert.ok(!localStorage.getItem(SESSION_KEY).includes("secret-access-token-xyz"));
     const opened = await openBskySession();
     assert.equal(opened.accessToken, "secret-access-token-xyz");
   });

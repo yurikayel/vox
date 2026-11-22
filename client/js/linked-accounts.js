@@ -17,6 +17,7 @@ export {
 export {
   sanitizeLinkedAccounts,
   loadLinkedAccounts,
+  hydrateLinkedAccounts,
   saveLinkedAccount,
   removeLinkedAccount,
   isAutoReplicationEnabled,
