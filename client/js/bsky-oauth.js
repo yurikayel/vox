@@ -202,7 +202,6 @@ export async function completeBskyLogin({ code, state, iss }) {
   return { handle: who.handle, did: tok.sub, pds: who.pds };
 }
 
-const SESSION_META_FIELDS = ["did", "handle", "pds", "issuer", "clientId", "tokenEndpoint", "expiresAt"];
 let memorySecrets = null;
 
 const B64 = /^[A-Za-z0-9+/_=-]+$/;
@@ -213,10 +212,20 @@ function sealedEnvelope(env) {
   return { sealed: env.sealed, iv: env.iv, ct: env.ct };
 }
 
-function pickSessionMeta(session) {
-  const meta = {};
-  for (const f of SESSION_META_FIELDS) if (session[f] !== undefined) meta[f] = session[f];
-  return meta;
+/** Metadados públicos da sessão, lidos um a um (nenhum segredo nem campo desconhecido atravessa). */
+function pickSessionMeta(src) {
+  return {
+    did: src.did, handle: src.handle, pds: src.pds, issuer: src.issuer, clientId: src.clientId,
+    tokenEndpoint: src.tokenEndpoint, expiresAt: src.expiresAt,
+  };
+}
+
+/** Sessão aberta: metadados da sessão guardada + segredos, montada campo a campo (sem espalhar um objeto no outro). */
+function buildOpenSession(meta, secrets) {
+  return {
+    ...pickSessionMeta(meta),
+    keys: secrets.keys, nonce: secrets.nonce, accessToken: secrets.accessToken, refreshToken: secrets.refreshToken,
+  };
 }
 
 /**
@@ -266,10 +275,9 @@ export function loadBskySession() {
 export async function openBskySession() {
   const session = loadBskySession();
   if (!session) return null;
-  if (session.secretsInMemoryOnly) return memorySecrets?.did === session.did ? { ...session, ...memorySecrets } : null;
+  if (session.secretsInMemoryOnly) return memorySecrets?.did === session.did ? buildOpenSession(session, memorySecrets) : null;
   if (!session.sealed) return session;
-  const secrets = await openSealed(session.sealed);
-  return { ...session, ...secrets };
+  return buildOpenSession(session, await openSealed(session.sealed));
 }
 
 /** Limpa BskySession armazenados.
@@ -286,7 +294,9 @@ async function refreshSession(s) {
   const res = await dpopFetch(s.keys, s.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, dpop);
   const tok = await res.json().catch(() => ({}));
   if (!res.ok || !tok.access_token) throw new Error("Sessão do Bluesky expirada — conecte de novo.");
-  const next = { ...s, nonce: dpop.nonce, accessToken: tok.access_token, refreshToken: tok.refresh_token || s.refreshToken, expiresAt: Date.now() + (Number(tok.expires_in) || 3600) * 1000 };
+  const next = buildOpenSession({ ...pickSessionMeta(s), expiresAt: Date.now() + (Number(tok.expires_in) || 3600) * 1000 }, {
+    keys: s.keys, nonce: dpop.nonce, accessToken: tok.access_token, refreshToken: tok.refresh_token || s.refreshToken,
+  });
   await saveBskySession(next);
   return next;
 }
