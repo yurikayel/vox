@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Feat / Ops / Refactor: PM-19 (espelhos), PM-25 (`.ics`), PM-31 (transparência moderação), Onda 3 (`init` & `linked-accounts`)
+- `scripts/verify-mirrors.mjs` + `.github/workflows/mirror-verify.yml` (`PM-19`): compara `CACHE_NAME` do `sw.js` dos espelhos `live` com o repositório; CLI `--offline` e suíte `tests/mirror-verify.test.js`.
+- `client/js/aviso-ics.js` + `render/aviso.js` + `app/aviso-flow.js` (`PM-25`): exportação RFC 5545 `.ics` ("📅 Agenda (.ics)") para convocações com data e testes em `tests/aviso-ics.test.js`.
+- `client/js/moderation-log.js` + `render/network-sections.js` + `app/network-screen-moderation.js` (`PM-31`): resumo agregado e exportação em Markdown (`vox-transparencia-moderacao.md`) sem expor PII de denunciantes/listas pessoais + `tests/moderation-log.test.js`.
+- `client/js/app/init.js` (504 → 19 linhas) e `client/js/linked-accounts.js` (590 → 43 linhas): fatiados em 9 submódulos SLAP mantendo 100% dos exports públicos.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.158-pm19-pm25-pm31-onda3` (+11 módulos no `SHELL_ASSETS`).
+
 ### Feat / Refactor / A11y: PM-26 (contador mensal/economia de dados), PM-27 ("Ouvir post"), Onda 3 (`inline-composer`, `screens-network`, `cache-node`)
 - `client/js/peers-settings.js` + `render/network-sections.js` (`PM-26`): acumulado mensal UTC (`vox-monthly-usage`, `getMonthlyUsage`), detecção ativa de economia de dados/4G (`isDataSaverActive`) e indicador em `#/settings/network` + testes em `tests/pm26-data-saver.test.js`.
 - `client/js/shared/post-speech.js` + `app/post-more-{actions,menu}.js` (`PM-27` / `LAN-22`): ação **Ouvir post** via Web Speech API (`pt-BR`), parada automática em `hashchange` e fallback honesto + testes em `tests/post-speech.test.js`.
