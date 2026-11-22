@@ -34,6 +34,8 @@ import {
 import { handleRepostClick } from "./repost-ui.js";
 import { markFrameChoice, refreshFrameContent, resolvePostForFrame } from "./frame-ui.js";
 import { syncIdentity } from "./screens-network.js";
+import { wireDmBadgeLive } from "./dm-badge-live.js";
+import { wireSidebarCirclesLive } from "./sidebar-circles-live.js";
 
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
@@ -130,6 +132,8 @@ function wireTabSyncAtBoot() {
  */
 export function initGossipListeners() {
   wireTabSyncAtBoot();
+  wireDmBadgeLive();
+  wireSidebarCirclesLive();
   peers.onGossipPost((item) => {
     const cur = parseRoute();
     if (item?.type === "reply" && item.replyTo) {
