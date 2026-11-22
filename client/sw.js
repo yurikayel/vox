@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.157-pm26-pm27-onda3";
+const CACHE_NAME = "vox-pwa-v7.158-pm19-pm25-pm31-onda3";
 
 const SHELL_ASSETS = [
 
@@ -54,6 +54,10 @@ const SHELL_ASSETS = [
 
   "./js/app/inbox-backup-ui.js",
   "./js/app/init.js",
+  "./js/app/init-frame-actions.js",
+  "./js/app/init-network-sync.js",
+  "./js/app/init-post-mutation.js",
+  "./js/app/init-social-actions.js",
   "./js/app/frame-ui.js",
 
   "./js/app/post-media-lightbox.js",
@@ -217,6 +221,11 @@ const SHELL_ASSETS = [
   "./js/story-card.js",
   "./js/bsky-feed.js",
   "./js/linked-accounts.js",
+  "./js/linked-accounts-bsky.js",
+  "./js/linked-accounts-dispatch.js",
+  "./js/linked-accounts-format.js",
+  "./js/linked-accounts-store.js",
+  "./js/linked-accounts-verify.js",
   "./js/bsky-oauth.js",
   "./js/social-login.js",
   "./js/render/linked-accounts-ui.js",
@@ -240,6 +249,7 @@ const SHELL_ASSETS = [
   "./js/sig-format.js",
   "./js/signed-verify.js",
   "./js/aviso-roles.js",
+  "./js/aviso-ics.js",
   "./js/natural-mod.js",
 
   "./js/identity/account-backup-wrap.js",
@@ -312,6 +322,7 @@ const SHELL_ASSETS = [
   "./js/mock.js",
 
   "./js/moderation.js",
+  "./js/moderation-log.js",
 
   "./js/reply-thread.js",
 
