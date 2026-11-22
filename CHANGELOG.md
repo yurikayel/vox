@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Relay: o arquivo de blob da memória central passa por `safe_path.child_of` (recusa symlink para fora de `blobs/`; alertas CodeQL `py/path-injection`); triagem do `py/partial-ssrf` em `docs/security/codeql-relay-python-triagem.md` (`relay/test_central_memory_blob_path.py`).
+
 ### Chore: alertas Dependabot (qs, minimatch)
 - `package.json`: `overrides` para `qs` (^6.16.2) e `minimatch` (^11.0.9) fecham 3 alertas médios (#1, #2, #5); `npm audit` restante: `glob`/`@stryker-mutator/tap-runner` sem correção upstream.
 
