@@ -3,6 +3,7 @@
 import * as mod from "../moderation.js";
 import * as share from "../share.js";
 import * as contributionAttestation from "../contribution-attestation.js";
+import { buildLocalModerationTransparencyExport, formatModerationLogMarkdown } from "../moderation-log.js";
 
 /**
  * Liga botões de desocultar e desilenciar autores na lista de moderação local.
@@ -34,8 +35,25 @@ export function bindModerationListButtons(onRefresh) {
   });
 }
 
+async function handleExportModLog() {
+  let localActions = [];
+  try {
+    const { getLocalPosts } = await import("../cache-node.js");
+    localActions = await getLocalPosts({ type: "mod-action" });
+  } catch {}
+  const exported = buildLocalModerationTransparencyExport({
+    localActions,
+    blockedUsers: mod.getBlockedUsers(),
+    mutedUsers: mod.getMutedUsers(),
+  });
+  const markdown = formatModerationLogMarkdown(exported, { generatedAt: exported.generatedAt });
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+  share.downloadBlob(blob, "vox-transparencia-moderacao.md");
+  share.showToast("Relatório de transparência exportado (.md).");
+}
+
 /**
- * Liga ações de exportação e importação de regras locais de moderação (arquivo JSON).
+ * Liga ações de exportação e importação de regras locais de moderação (arquivo JSON) e relatório de transparência.
  *
  * @param {Function} [onRefresh] Callback opcional para atualizar a tela após importação.
  * @returns {void}
@@ -46,6 +64,10 @@ export function bindModerationExportImport(onRefresh) {
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
     share.downloadBlob(blob, "vox-moderacao.json");
     share.showToast("Regras de moderação exportadas!");
+  });
+
+  document.getElementById("btn-export-mod-log")?.addEventListener("click", () => {
+    handleExportModLog();
   });
 
   const fileImportMod = document.getElementById("file-import-moderation");

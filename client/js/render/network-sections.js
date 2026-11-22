@@ -215,6 +215,7 @@ export function renderModerationSettingsSection(blockedUsers = [], mutedUsers = 
           📥 Importar Regras
           <input type="file" id="file-import-moderation" accept="application/json,.json" style="display:none;" />
         </label>
+        <button type="button" id="btn-export-mod-log" class="btn btn-sm btn-outline">📋 Relatório de Transparência (.md)</button>
       </div>
     </div>`;
 }
