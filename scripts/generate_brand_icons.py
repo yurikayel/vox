@@ -85,7 +85,9 @@ def clear_enclosed_background(
             r, g, b, a = px[x0, y0]
             if a == 0 or _color_dist((r, g, b), bg) > tolerance:
                 continue
-            component, touches_clear = _bg_component(px, (w, h), (x0, y0), bg, tolerance, visited)
+            component, touches_clear = _bg_component(
+                px, (w, h), (x0, y0), (bg, tolerance), visited
+            )
             if not touches_clear:
                 for x, y in component:
                     c = px[x, y]
@@ -93,13 +95,14 @@ def clear_enclosed_background(
     return out
 
 
-def _bg_component(px, size, start, bg, tolerance, visited):
+def _bg_component(px, size, start, bg_spec, visited):
     """Flood-fill da ilha de cor de fundo que começa em `start`.
 
     Retorna (pixels da ilha, se ela encosta na borda ou em área transparente).
     Uma ilha que não encosta em nada transparente está cercada pela marca (o miolo do O).
     """
     w, h = size
+    bg, tolerance = bg_spec
     q: deque[tuple[int, int]] = deque([start])
     component: list[tuple[int, int]] = []
     touches_clear = False

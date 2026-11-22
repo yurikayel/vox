@@ -206,7 +206,6 @@ def make_http_response(
     status_code: int,
     status_text: str,
     body: bytes = b"",
-    content_type: str = "application/json",
     extra_headers: tuple = (),
     origin=None,
 ) -> bytes:
@@ -214,9 +213,11 @@ def make_http_response(
 
     CORS segue `request_guard.cors_allow_origin`.
     """
+    has_custom_ct = any(h.lower().startswith("content-type:") for h in extra_headers)
+    ct_header = () if has_custom_ct else ("Content-Type: application/json",)
     lines = [
         f"HTTP/1.1 {status_code} {status_text}",
-        f"Content-Type: {content_type}",
+        *ct_header,
         f"Content-Length: {len(body)}",
         *extra_headers,
         "Vary: Origin",

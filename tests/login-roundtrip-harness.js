@@ -85,8 +85,8 @@ export async function assertRoundTrip(routeId, signed) {
   assert.equal(await localAccount.verifyPayload(resigned), true, "nova assinatura com a chave restaurada");
 }
 
-function buildReturns() {
-  const returns = {
+function buildKeyBackupReturns() {
+  return {
     phrase: async () => {
       const needs = await accountPhrase.phraseNeedsPassphrase();
       const { words } = await accountPhrase.getAccountPhrase(needs ? PASS : undefined);
@@ -103,6 +103,11 @@ function buildReturns() {
       await wipeAll();
       await importAccountBundle(bundle, PASS);
     },
+  };
+}
+
+function buildPassphraseVaultReturns() {
+  return {
     vault_local_pass: async () => {
       await wipeAccountKeys();
       const res = await restoreFromPassphraseVault(PASS);
@@ -117,79 +122,115 @@ function buildReturns() {
     },
     vault_sync: async (art) => {
       await wipeAll();
-      const res = await restoreFromPassphraseVault(PASS, null, vaultCrypto.decodeVaultBundleFromUrl(art.encoded), art.email || "");
+      const res = await restoreFromPassphraseVault(
+        PASS,
+        null,
+        vaultCrypto.decodeVaultBundleFromUrl(art.encoded),
+        art.email || "",
+      );
       assert.equal(res.ok, true);
       return res.routeId;
     },
+  };
+}
+
+function buildEmailKitReturns() {
+  return {
     vault_kit_url: async (art) => {
       await wipeAll();
-      const res = await emailKit.restoreAccountFromInputs({ email: art.email || EMAIL, pass: PASS, kitText: art.syncUrl });
+      const res = await emailKit.restoreAccountFromInputs({
+        email: art.email || EMAIL,
+        pass: PASS,
+        kitText: art.syncUrl,
+      });
       assert.equal(res.ok, true);
       return res.routeId;
     },
     vault_kit_code: async (art) => {
       await wipeAll();
-      const res = await emailKit.restoreAccountFromInputs({ email: art.email || EMAIL, pass: PASS, kitText: art.kitCode });
+      const res = await emailKit.restoreAccountFromInputs({
+        email: art.email || EMAIL,
+        pass: PASS,
+        kitText: art.kitCode,
+      });
       assert.equal(res.ok, true);
       return res.routeId;
     },
   };
+}
+
+function buildReturns() {
+  const returns = {
+    ...buildKeyBackupReturns(),
+    ...buildPassphraseVaultReturns(),
+    ...buildEmailKitReturns(),
+  };
   return guardiansTwoReturn(returns);
 }
 
-async function setupCreators() {
-  const creators = {};
-  creators.local_name = async () => {
-    await wipeAll();
+async function createVaultPassAccount() {
+  await wipeAll();
+  const restoreFetch = stubOfflineFetch();
+  try {
     await localAccount.ensureLocalAccount();
-    return {};
-  };
-  creators.vault_pass = async () => {
-    await wipeAll();
-    const restoreFetch = stubOfflineFetch();
-    try {
+    const saved = await savePassphraseVault(PASS);
+    assert.equal(saved.ok, true);
+    return { encoded: vaultCrypto.encodeVaultBundleForUrl(saved.bundle), saved };
+  } finally {
+    restoreFetch();
+  }
+}
+
+async function createVaultEmailAccount() {
+  await wipeAll();
+  const restoreFetch = stubOfflineFetch();
+  try {
+    await localAccount.ensureLocalAccount();
+    const saved = await savePassphraseVault(PASS, EMAIL);
+    assert.equal(saved.ok, true);
+    return {
+      encoded: vaultCrypto.encodeVaultBundleForUrl(saved.syncBundle || saved.bundle),
+      email: EMAIL,
+    };
+  } finally {
+    restoreFetch();
+  }
+}
+
+async function createEmailKitAccount() {
+  await wipeAll();
+  const restoreFetch = stubOfflineFetch();
+  try {
+    const created = await emailKit.createEmailAccountKit({
+      rawName: "Bia",
+      email: EMAIL,
+      pass: PASS,
+      includePhrase: false,
+      draftState: { email: "", pass: "" },
+    });
+    assert.equal(created.ok, true);
+    const b = decodeURIComponent(created.kit.syncUrl.split("#/sync?b=")[1]);
+    return {
+      email: EMAIL,
+      syncUrl: created.kit.syncUrl,
+      kitCode: created.kit.kitCode,
+      encoded: vaultCrypto.encodeVaultBundleForUrl(vaultCrypto.decodeVaultBundleFromUrl(b)),
+    };
+  } finally {
+    restoreFetch();
+  }
+}
+
+async function setupCreators() {
+  const creators = {
+    local_name: async () => {
+      await wipeAll();
       await localAccount.ensureLocalAccount();
-      const saved = await savePassphraseVault(PASS);
-      assert.equal(saved.ok, true);
-      return { encoded: vaultCrypto.encodeVaultBundleForUrl(saved.bundle), saved };
-    } finally {
-      restoreFetch();
-    }
-  };
-  creators.vault_email = async () => {
-    await wipeAll();
-    const restoreFetch = stubOfflineFetch();
-    try {
-      await localAccount.ensureLocalAccount();
-      const saved = await savePassphraseVault(PASS, EMAIL);
-      assert.equal(saved.ok, true);
-      return { encoded: vaultCrypto.encodeVaultBundleForUrl(saved.syncBundle || saved.bundle), email: EMAIL };
-    } finally {
-      restoreFetch();
-    }
-  };
-  creators.email_kit = async () => {
-    await wipeAll();
-    const restoreFetch = stubOfflineFetch();
-    try {
-      const created = await emailKit.createEmailAccountKit({
-        rawName: "Bia",
-        email: EMAIL,
-        pass: PASS,
-        includePhrase: false,
-        draftState: { email: "", pass: "" },
-      });
-      assert.equal(created.ok, true);
-      const b = decodeURIComponent(created.kit.syncUrl.split("#/sync?b=")[1]);
-      return {
-        email: EMAIL,
-        syncUrl: created.kit.syncUrl,
-        kitCode: created.kit.kitCode,
-        encoded: vaultCrypto.encodeVaultBundleForUrl(vaultCrypto.decodeVaultBundleFromUrl(b)),
-      };
-    } finally {
-      restoreFetch();
-    }
+      return {};
+    },
+    vault_pass: createVaultPassAccount,
+    vault_email: createVaultEmailAccount,
+    email_kit: createEmailKitAccount,
   };
   return extendMeshGuardCreators(creators, { wipeAll, ensureSessionStorage, PASS, EMAIL });
 }
