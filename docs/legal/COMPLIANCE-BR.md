@@ -1,8 +1,9 @@
 # Conformidade — Visão Geral Brasil
 
-> **Status:** canônico (informativo; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-11-13
+> **Status:** canônico (informativo; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-11-22  
+> **Pré-revisão jurídica (`REV-12` / `LAN-02` / `LAN-03`):** [rascunho de Termos de Uso](./rascunho-termos-de-uso-lan02.md) · [guia de revisão de `privacy.html` e `data-deletion.html`](./revisao-privacy-data-deletion-lan03.md) · [briefing G1](./briefing-parecer-g1.md)
 
-Documento informativo de alto nível. **Não é parecer jurídico.** Produtores de conteúdo e operadores de espelhos devem consultar advogados locais.
+Documento informativo de alto nível. **Não é parecer jurídico.** Produtores de conteúdo, operadores da instância oficial e operadores de espelhos devem aguardar o parecer humano (`REV-12`) e consultar advogados locais.
 
 ## LGPD (Lei 13.709/2018)
 
@@ -40,9 +41,9 @@ A arquitetura de DMs do Vox é orientada aos princípios de **minimização de d
 
 ## Marco Civil da Internet (Lei 12.965/2014) e Art. 19
 
-O regime de responsabilidade civil de intermediários no Brasil estabelece distinções fundamentais:
+O regime de responsabilidade civil de intermediários no Brasil estabelece distinções fundamentais, hoje moduladas pelos **Temas 987 e 533 do STF** (ver quadro na seção seguinte) e pendentes de parecer jurídico (`REV-12`) quanto ao alcance sobre software livre P2P e instância oficial:
 
-* **Código aberto sem operador central (Fases 1 e 2):** O repositório Vox disponibiliza código de cliente estático sem custodiar bancos de dados ou operar servidores centrais de aplicação.
+* **Repositório aberto vs. instância PWA oficial (`LAN-31`):** o repositório Vox publica código de cliente estático sem banco central de contas ou conteúdo; já a instância PWA oficial (`yurikayel.github.io/vox` e espelho oficial) possui operador identificado no piloto ([ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md)) e governança própria em [GOVERNANCE.md](../../GOVERNANCE.md#governança-da-instância-pwa-oficial-lan-31), cujo enquadramento como provedor de aplicação está submetido ao `REV-12`.
 * **Servidores de Sinalização WebRTC (`signaling.py` — Fase 3.2):** O servidor de sinalização atua como canal transitório e estritamente técnico para o handshake P2P (ofertas SDP e candidatos ICE). Ele não armazena registros de aplicação, não inspeciona payloads e não custodia dados das comunidades, operando sob o princípio da neutralidade de rede (Art. 9º do Marco Civil).
 * **Operadores de espelhos e front-ends curados:** Entidades ou indivíduos que hospedarem e disponibilizarem publicamente instâncias ou espelhos com filtros próprios, domínios comerciais ou seleção de conteúdo podem vir a ser enquadrados juridicamente como **provedores de aplicação de internet**.
 * **Responsabilidade por conteúdo de terceiros (Art. 19 / Jurisprudência STF):** Caso um operador de espelho receba ordem judicial específica (ou notificação qualificada conforme modulações do STF) para indisponibilizar conteúdo ilícito, a conformidade deve ser realizada na camada de renderização do front-end (suprimindo a exibição das transações em seus índices locais).
@@ -118,11 +119,27 @@ A implementação do gerador de Pix Copia e Cola offline (`brcode.js`) observa e
 
 ## Conteúdo Político e TSE
 
-A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)** (e normas correlatas) impõe deveres a **plataformas digitais** no contexto eleitoral brasileiro (transparência, procedimentos, etc.).
+A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)**, alterada pela **Resolução TSE 23.755/2026**, impõe deveres a **plataformas digitais** e participantes no contexto eleitoral brasileiro (rotulagem de conteúdo sintético/IA, vedação de ranqueamento/recomendação ou priorização de candidatos, campanhas ou partidos, e procedimentos de remoção).
 
-- O Vox **não** é, na Fase 1, uma plataforma operada por pessoa jurídica brasileira com moderação centralizada.
-- Usuários que divulgarem conteúdo eleitoral pagável ou propaganda política devem cumprir **legislação eleitoral** por conta própria.
+- **Postura honesta pendente de parecer (`REV-12`):** embora o projeto seja software livre sem servidor central de conteúdo nem moderação editorial centralizada, **não assumimos imunidade automática**; o eventual enquadramento da instância PWA oficial, de espelhos/relays ou do operador pessoa física ([ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md)) como "plataforma" ou "provedor de aplicação" aguarda parecer jurídico humano (`REV-12`).
+- **Mitigação técnica já ativa no cliente (`REV-24`):** o feed principal é estritamente cronológico e sem impulsionamento pago; além disso, `client/js/electoral-period.js` desativa sugestões automáticas de perfis/conteúdos na janela eleitoral brasileira (16/08 a 31/10 de anos pares) ou quando `electoralMode` estiver ativo.
+- Usuários que divulgarem conteúdo eleitoral pagável, propaganda política ou mídia sintética devem cumprir a **legislação eleitoral** por conta própria.
 - Espelhos, apps derivados ou integrações comerciais podem ser enquadrados como “plataforma” — avaliar caso a caso.
+
+## Quadro regulatório atualizado (pré-parecer `REV-12` / `LAN-03`)
+
+Síntese dos pontos que exigem adequação documental/técnica e validação jurídica humana no `REV-12` (detalhamento de fontes em [pesquisa-complementar-2026-11.md](../research/pesquisa-complementar-2026-11.md)):
+
+| Frente regulatória / técnica | Exigência ou fato relevante | Postura atual no Vox e pendência (`REV-12`) |
+|---|---|---|
+| **STF Temas 987 e 533 (itens 5–11 + embargos 17/06/2026)** | Item 5 e cláusula residual dos embargos mantêm Art. 19 apenas para serviços neutros "sem interferência no fluxo"; item 7 submete marketplaces ao **CDC**; itens 8–10 exigem autorregulação, canal para **não usuários**, devido processo e **relatório anual de transparência**; item 11 exige **sede e representante pessoa jurídica** no país. | Piloto G1 opera com escopo reduzido pelo [ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md) (operador PF, feed cronológico, sem Feira/Pix propostos). Abertura ao beta/público depende do `REV-12`, da decisão de associação/PJ (`REV-18`), do kit de autorregulação (`REV-20`) e da `hide-list` assinada (`LAN-13`). |
+| **Decretos 12.975/2026 e 12.976/2026** | Regulamentam o dever de cuidado para prevenção sistêmica de crimes graves, com fiscalização sistêmica pela **ANPD**. | Procedimento de conteúdo grave (`LAN-04`, meta ≤ 2 h para imagem íntima não consentida e categorias graves no PWA oficial) e denúncia no app (`LAN-12`) em preparação; alcance e prazos exatos submetidos ao `REV-12`. |
+| **ECA Digital (Lei 15.211/2025, Decreto 12.880/2026)** | Em vigor desde 17/03/2026; alcança serviços de "provável acesso" por crianças/adolescentes e exige **vínculo obrigatório de contas de menores de 16 anos a responsável legal**, além de fiscalização pela ANPD. | No piloto G1 vigora bloqueio autodeclarado **18+** (`client/js/age-gate.js`, sem coleta de data de nascimento/documento). Padrões seguros <18 e vínculo por chave de responsável (<16) previstos no `REV-23` após `REV-12`, antes de eventual abertura G3. |
+| **Resolução TSE 23.755/2026** | Proíbe plataformas de ranquear, recomendar ou priorizar candidatos, campanhas ou partidos no período eleitoral e reforça rotulagem de conteúdo gerado/alterado por IA. | Feed cronológico sem boost pago e modo eleitoral automático implementado (`REV-24` em `client/js/electoral-period.js`). Revisão jurídica de aplicabilidade incluída no `REV-12`. |
+| **Pix / DICT (Manual de Iniciação do Pix — BCB)** | O aplicativo bancário do pagador exibe obrigatoriamente o **nome civil do recebedor registrado no DICT** (e parte do CPF/CNPJ) com **qualquer tipo de chave, inclusive chave aleatória (EVP)**. | Aviso explícito na UI (`PIX_RECEIVER_NAME_NOTICE_PT` em `client/js/pix-key.js`). Recebimento sem exposição do nome civil pessoal exige conta de pessoa jurídica (`REV-18`). |
+| **Exposição de IP em WebRTC P2P e TURN (`LAN-19`)** | Conexões WebRTC diretas expõem o IP do dispositivo aos pares conectados (revelando cidade/operadora). Quando houver TURN ativo, o servidor TURN e os servidores de sinalização/relays também enxergam o IP na camada de transporte. | Aviso e toggle `"Esconder meu IP (só via servidor TURN)"` (`iceTransportPolicy: "relay"`) presentes em `#/settings/network` (`client/js/webrtc-signaling-config.js`); servidor TURN em produção (`workers/turn`) congelado até >50 ativos (`INF-01` / `REV-10`). |
+
+- **Pacote de revisão pré-parecer:** [rascunho de Termos de Uso (`LAN-02`)](./rascunho-termos-de-uso-lan02.md) e [guia de revisão de `privacy.html` e `data-deletion.html` (`LAN-03`)](./revisao-privacy-data-deletion-lan03.md). Os arquivos HTML em `client/` não são alterados até conclusão do `REV-12`.
 
 ## Moderação vs Lei
 
