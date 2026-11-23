@@ -212,15 +212,40 @@ export function inlineCartridgeAssets(html, entries) {
     return match;
   });
 
-  // Substituição de imagens por Data URLs
-  for (const [filename, data] of Object.entries(entries)) {
-    if (/\.(png|jpg|jpeg|svg|gif|webp)$/i.test(filename)) {
-      const mime = detectMimeType(filename);
-      const dataUrl = bufferToDataUrl(data, mime);
-      processed = processed.replaceAll(filename, dataUrl).replaceAll(`./${filename}`, dataUrl);
-    }
-  }
-  return processed;
+  return inlineImageRefs(processed, entries);
+}
+
+const IMAGE_FILE_RE = /\.(png|jpg|jpeg|svg|gif|webp)$/i;
+
+/**
+ * Data URL da imagem do cartucho referida por `ref` (com ou sem `./`), ou `null` se não for imagem do pacote.
+ * @param {string} ref Referência como escrita no HTML ou CSS.
+ * @param {Record<string, Uint8Array>} entries Arquivos do cartucho.
+ * @returns {string|null} Data URL ou `null`.
+ */
+function imageDataUrlFor(ref, entries) {
+  const clean = ref.replace(/^\.\//, "");
+  if (!IMAGE_FILE_RE.test(clean) || !entries[clean]) return null;
+  return bufferToDataUrl(entries[clean], detectMimeType(clean));
+}
+
+/**
+ * Troca por data URL só as referências exatas a imagens do cartucho: valor de `src`/`href` e `url(...)`.
+ * Texto comum e nomes que só contêm o de outra imagem (`ai.png` x `i.png`) ficam como estão.
+ * @param {string} html HTML já com CSS e JS embutidos.
+ * @param {Record<string, Uint8Array>} entries Arquivos do cartucho.
+ * @returns {string} HTML com as imagens embutidas.
+ */
+function inlineImageRefs(html, entries) {
+  return html
+    .replace(/(\s(?:src|href)=)(["'])([^"']+)\2/gi, (match, attr, quote, ref) => {
+      const dataUrl = imageDataUrlFor(ref, entries);
+      return dataUrl ? `${attr}${quote}${dataUrl}${quote}` : match;
+    })
+    .replace(/url\((["']?)([^"')]+)\1\)/gi, (match, quote, ref) => {
+      const dataUrl = imageDataUrlFor(ref, entries);
+      return dataUrl ? `url(${quote}${dataUrl}${quote})` : match;
+    });
 }
 
 /**
