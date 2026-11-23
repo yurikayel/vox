@@ -67,8 +67,21 @@ export function isValidAccountBundle(bundle) {
 
 const QR_NEEDS_SEED = "Esta conta é de antes da frase de 12 palavras e não cabe num QR. Use \"Sincronizar em outro aparelho\" e mande o link.";
 
+/**
+ * Escolhe o maior conteúdo opcional que cabe no orçamento de bytes do QR.
+ *
+ * @param {object} bundle
+ * @param {number} budget
+ * @returns {object}
+ */
 function pickQrPlain(bundle, budget) {
   const base = { routeId: bundle.routeId, seed: bundle.seed };
+  /**
+   * Diz se o objeto serializado cabe no orçamento de bytes.
+   *
+   * @param {object} obj
+   * @returns {boolean}
+   */
   const fits = (obj) => new TextEncoder().encode(JSON.stringify(obj)).length <= budget;
   if (bundle.displayName && fits({ ...base, displayName: bundle.displayName })) return { ...base, displayName: bundle.displayName };
   return fits(base) ? base : null;
@@ -94,6 +107,12 @@ export async function buildQrSyncRecord(passphrase, maxEncodedChars) {
 /** PM-92: o cofre por senha fica guardado fora do aparelho; senha curta cai por tentativa. */
 export const VAULT_PASSPHRASE_MIN = 12;
 
+/**
+ * Reduz o pacote ao mínimo (rota, semente e nome) para caber em QR ou link.
+ *
+ * @param {object} bundle
+ * @returns {object}
+ */
 function buildCompactVaultBundle(bundle) {
   if (typeof bundle?.seed !== "string") return bundle;
   const compact = { routeId: bundle.routeId, seed: bundle.seed };
@@ -104,6 +123,12 @@ function buildCompactVaultBundle(bundle) {
   return compact;
 }
 
+/**
+ * Normaliza o argumento de salvar (e-mail ou opções) em opções.
+ *
+ * @param {string|object} emailOrOpts
+ * @returns {object}
+ */
 function parseSaveVaultOpts(emailOrOpts) {
   if (typeof emailOrOpts === "string") {
     return { email: normalizeVaultEmail(emailOrOpts), hasPrev: false, prevEmail: "", prevPassphrase: "" };
@@ -116,6 +141,13 @@ function parseSaveVaultOpts(emailOrOpts) {
   return { email, hasPrev, prevEmail, prevPassphrase };
 }
 
+/**
+ * Deriva endereço e token de dono do cofre a partir da frase e do e-mail.
+ *
+ * @param {string} pass
+ * @param {string} email
+ * @returns {Promise<object>}
+ */
 async function vaultKeys(pass, email) {
   const [address, token] = await Promise.all([deriveVaultAddress(pass, email), deriveVaultOwnerToken(pass, email)]);
   return { address, token };
@@ -123,6 +155,14 @@ async function vaultKeys(pass, email) {
 
 // Cofres que esta gravação substitui: o anterior informado e, quando o novo leva e-mail, o só-senha da senha
 // anterior (ADR-032 §6.3). O só-senha entra só se existe, para não marcar endereço que nunca teve cofre.
+/**
+ * Lista os cofres antigos (frase ou e-mail anteriores) que o novo substitui.
+ *
+ * @param {object} opts
+ * @param {string} cleanPass
+ * @param {string} newAddress
+ * @returns {Promise<object[]>}
+ */
 async function supersededVaults(opts, cleanPass, newAddress) {
   const prevPass = opts.prevPassphrase || cleanPass;
   const out = opts.hasPrev ? [await vaultKeys(prevPass, opts.prevEmail)] : [];
@@ -135,6 +175,15 @@ async function supersededVaults(opts, cleanPass, newAddress) {
 }
 
 // Sem servidor que aceitou o cofre novo, o antigo lá fora continua sendo o único: sai só a cópia deste aparelho.
+/**
+ * Revoga no remoto (ou esquece no local) os cofres substituídos.
+ *
+ * @param {object} opts
+ * @param {string} cleanPass
+ * @param {string} newAddress
+ * @param {number} remote
+ * @returns {Promise<void>}
+ */
 async function retireSupersededVaults(opts, cleanPass, newAddress, remote) {
   for (const old of await supersededVaults(opts, cleanPass, newAddress)) {
     if (remote > 0) await revokeVaultAddress(old.address, old.token);
@@ -186,6 +235,14 @@ async function openBundleForVault(clean) {
   }
 }
 
+/**
+ * Tenta decifrar o registro com a frase; `null` se a frase não serve.
+ *
+ * @param {object} record
+ * @param {string} cleanPassphrase
+ * @param {string} [email=""]
+ * @returns {Promise<object|null>}
+ */
 async function tryDecryptPassphraseRecord(record, cleanPassphrase, email = "") {
   try {
     const bundle = await decryptVaultRecord(record, cleanPassphrase, email);
@@ -206,10 +263,25 @@ async function upgradeLegacyPassphraseVault(clean, legacyKey, normEmail = "") {
 }
 
 // Gravar com e-mail já revoga o cofre só-senha encontrado (`supersededVaults`).
+/**
+ * Regrava o cofre só-frase com o e-mail e diz se deu certo.
+ *
+ * @param {string} clean
+ * @param {string} normEmail
+ * @returns {Promise<boolean>}
+ */
 async function upgradePassphraseOnlyVault(clean, normEmail) {
   return (await savePassphraseVault(clean, normEmail)).ok;
 }
 
+/**
+ * Normaliza os argumentos de restauração (chave, registro direto, e-mail).
+ *
+ * @param {object|string|null} lookupKeyOverride
+ * @param {object|null} directRecord
+ * @param {string} email
+ * @returns {object}
+ */
 function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
   if (lookupKeyOverride && typeof lookupKeyOverride === "object") {
     return {
@@ -221,6 +293,14 @@ function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
   return { lookupKey: lookupKeyOverride || null, directRecord: directRecord || null, email: normalizeVaultEmail(email || "") };
 }
 
+/**
+ * Conclui a migração do cofre para o formato atual; `false` se não há o que migrar.
+ *
+ * @param {string} clean
+ * @param {object} located
+ * @param {string} normEmail
+ * @returns {Promise<boolean>}
+ */
 async function finalizeVaultUpgrade(clean, located, normEmail) {
   if (!isV2Record(located.record)) return upgradeLegacyPassphraseVault(clean, located.legacyKey, normEmail);
   if (located.legacyV2 && normEmail) return upgradePassphraseOnlyVault(clean, normEmail);

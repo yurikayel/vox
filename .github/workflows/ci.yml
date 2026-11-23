@@ -65,8 +65,13 @@ jobs:
         run: npm run lint
 
       - name: Executar testes unitários do cliente (node:test)
+        if: matrix.node-version != '24'
         run: |
           npm run test:client
+
+      - name: Testes do cliente com cobertura (catraca em scripts/coverage-floor.json)
+        if: matrix.node-version == '24'
+        run: npm run coverage:js
 
   test-relay:
     name: Relay & Signaling (Python ${{ matrix.python-version }})
@@ -90,14 +95,41 @@ jobs:
           python -m py_compile relay/*.py
 
       - name: Executar testes unitários do relay (unittest)
+        if: matrix.python-version != '3.12'
         run: |
           npm run test:relay
+
+      - name: Testes do relay com cobertura (catraca em scripts/coverage-floor.json)
+        if: matrix.python-version == '3.12'
+        run: npm run coverage:py
 
       - name: Ruff (pyflakes e complexidade > 15 bloqueiam)
         run: pip install ruff==0.17.4 && npm run lint:relay
 
       - name: Ruff — dívida de estilo e de tamanho de função (só informa)
         run: ruff check relay scripts packaging --select E,I,PLR0915 --exit-zero --statistics
+
+  test-rust:
+    name: Rust Core (ADR-039)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: rust
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verificar formatação (rustfmt)
+        run: cargo fmt --all -- --check
+
+      - name: Clippy estrito (--all-targets -D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Executar testes do workspace Rust
+        run: cargo test --workspace
 
   security-audit:
     name: Auditoria de Segurança (Secrets / Chaves)

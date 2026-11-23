@@ -7,7 +7,6 @@ import { renderInitiativePanel, renderTacticalToolbar } from "../client/js/dunge
 
 function minimalMesaState(overrides = {}) {
   const scene = createDefaultScene();
-  const floor = { ...scene.floors[0], fog: createFogState({ enabled: false }) };
   return {
     activeTool: "select",
     initiative: { active: false, round: 1, turnIndex: 0, entries: [] },

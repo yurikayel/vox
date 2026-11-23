@@ -36,6 +36,11 @@ export function sanitizeIceServers(list) {
   return out;
 }
 
+/**
+ * Calcula a espera até a nova tentativa a partir do cabeçalho `Retry-After`.
+ * @param {Response} res Resposta HTTP
+ * @returns {number} Espera em ms.
+ */
 function retryDelay(res) {
   const seconds = Number(res?.headers?.get?.("Retry-After"));
   if (!Number.isFinite(seconds) || seconds <= 0) return RETRY_AFTER_ERROR_MS;
@@ -75,8 +80,16 @@ export function createTurnCredentials({ url, fetchImpl = (...a) => globalThis.fe
   let waitUntil = 0;
   let inFlight = null;
 
+  /**
+   * Devolve as credenciais, ou lista vazia se vencerem em breve.
+   * @returns {object[]} Servidores ICE vigentes.
+   */
   const current = () => (now() < expiresAt - EXPIRY_MARGIN_MS ? servers : []);
 
+  /**
+   * Pede credenciais novas e guarda o prazo de validade.
+   * @returns {Promise<object[]>} Servidores ICE.
+   */
   async function request() {
     const got = await fetchCredentials(url, fetchImpl);
     if (!got.servers) {
@@ -88,6 +101,10 @@ export function createTurnCredentials({ url, fetchImpl = (...a) => globalThis.fe
     return servers;
   }
 
+  /**
+   * Devolve as credenciais vigentes, pedindo novas se preciso.
+   * @returns {Promise<object[]>} Servidores ICE.
+   */
   async function get() {
     if (current().length) return servers;
     if (now() < waitUntil) return [];
@@ -126,6 +143,10 @@ export async function retryOnceViaTurn(source, peerKey, { retried, hadTurn, reco
 export function createTurnFallback({ getUrl, reconnect, fetchImpl }) {
   let source = null;
   const retried = new Set();
+  /**
+   * Cria a fonte de credenciais na primeira vez que há uma URL `https`.
+   * @returns {object|null} Fonte de credenciais, ou `null`.
+   */
   const sourceFor = () => {
     const url = getUrl();
     if (!source && typeof url === "string" && url.startsWith("https://")) source = createTurnCredentials({ url, fetchImpl });

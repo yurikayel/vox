@@ -158,6 +158,42 @@ test("dm-messenger: buildListingDmHref, parseDmContextFromHash, and extractInlin
   assert.equal(inlineComm?.id, "horta-urbana");
 });
 
+function buildTestThreadMessages(peer, me) {
+  return [
+    {
+      id: "dm_msg_1",
+      peerAddress: peer,
+      from: peer,
+      to: me,
+      text: "Tenho 2 caixas disponíveis",
+      replyTo: { id: "dm_msg_0", author: "Você", snippet: "Ainda tem tomate?" },
+      contextCard: {
+        type: "listing",
+        id: "lst_1",
+        title: "Tomate Orgânico",
+        priceBrl: "R$ 15,00",
+        pixKey: "tomate@pix.br",
+        href: "#/c/horta?tab=listings",
+      },
+      reactions: { "❤️": [me], "🔥": [peer] },
+      ts: Date.now(),
+      status: "received",
+    },
+  ];
+}
+
+function assertDmThreadControls(html) {
+  assert.ok(html.includes("dm-quote-block"));
+  assert.ok(html.includes("Ainda tem tomate?"));
+  assert.ok(html.includes("dm-context-card"));
+  assert.ok(html.includes("Tomate Orgânico"));
+  assert.ok(html.includes('data-pix="tomate@pix.br"'));
+  assert.ok(html.includes("dm-reaction-pill"));
+  assert.ok(html.includes("btn-dm-reply-msg"));
+  assert.ok(html.includes('id="dm-context-draft-bar"'));
+  assert.ok(html.includes("Alface Crespa"));
+}
+
 test("dm-messenger: renderDmList and renderDmThread render DM v2 UI controls", () => {
   const main = createContainer();
   localStorage.clear();
@@ -182,27 +218,7 @@ test("dm-messenger: renderDmList and renderDmThread render DM v2 UI controls", (
   assert.ok(main.innerHTML.includes("dm-unread-badge"), "unread badge rendered");
   assert.ok(main.innerHTML.includes("btn-dm-pin active"), "active pin button rendered");
 
-  const threadMessages = [
-    {
-      id: "dm_msg_1",
-      peerAddress: peer,
-      from: peer,
-      to: me,
-      text: "Tenho 2 caixas disponíveis",
-      replyTo: { id: "dm_msg_0", author: "Você", snippet: "Ainda tem tomate?" },
-      contextCard: {
-        type: "listing",
-        id: "lst_1",
-        title: "Tomate Orgânico",
-        priceBrl: "R$ 15,00",
-        pixKey: "tomate@pix.br",
-        href: "#/c/horta?tab=listings",
-      },
-      reactions: { "❤️": [me], "🔥": [peer] },
-      ts: Date.now(),
-      status: "received",
-    },
-  ];
+  const threadMessages = buildTestThreadMessages(peer, me);
 
   render.renderDmThread(main, peer, threadMessages, me, {
     isRtcOnline: true,
@@ -215,15 +231,7 @@ test("dm-messenger: renderDmList and renderDmThread render DM v2 UI controls", (
     },
   });
 
-  assert.ok(main.innerHTML.includes("dm-quote-block"));
-  assert.ok(main.innerHTML.includes("Ainda tem tomate?"));
-  assert.ok(main.innerHTML.includes("dm-context-card"));
-  assert.ok(main.innerHTML.includes("Tomate Orgânico"));
-  assert.ok(main.innerHTML.includes('data-pix="tomate@pix.br"'));
-  assert.ok(main.innerHTML.includes("dm-reaction-pill"));
-  assert.ok(main.innerHTML.includes("btn-dm-reply-msg"));
-  assert.ok(main.innerHTML.includes('id="dm-context-draft-bar"'));
-  assert.ok(main.innerHTML.includes("Alface Crespa"));
+  assertDmThreadControls(main.innerHTML);
 });
 
 

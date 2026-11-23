@@ -57,6 +57,11 @@ export const DATA_CHANNELS = Object.freeze({
   maxBulkChunkBytes: 65536,
 });
 
+/**
+ * Valida e normaliza uma comunidade favorita do nó.
+ * @param {object} entry Entrada de favorita
+ * @returns {object|null} Entrada limpa, ou `null` se inválida.
+ */
 function sanitizeFavoriteEntry(entry) {
   const cid = String(entry?.communityId || "").trim();
   if (!COMMUNITY_ID_RE.test(cid)) return null;
@@ -65,6 +70,14 @@ function sanitizeFavoriteEntry(entry) {
   return { communityId: cid, weightPct };
 }
 
+/**
+ * Calcula a fatia de cota de disco e banda de uma comunidade.
+ * @param {object} entry Favorita com peso
+ * @param {number} scale Escala de normalização dos pesos
+ * @param {number} totalDiskMb Disco total (MB)
+ * @param {number} totalBandwidthMb Banda total (MB)
+ * @returns {object} Fatia alocada.
+ */
 function buildQuotaSlice(entry, scale, totalDiskMb, totalBandwidthMb) {
   const normalizedWeight = Number((entry.weightPct * scale).toFixed(4));
   const fraction = normalizedWeight / 100;
@@ -104,6 +117,12 @@ export function normalizeFavoriteAllocations(favorites = [], modeSettings = {}) 
   return valid.map((entry) => buildQuotaSlice(entry, scale, diskMb, bwMb));
 }
 
+/**
+ * Calcula as métricas de justiça (DRF) da alocação em relação ao uso.
+ * @param {object} alloc Alocação
+ * @param {object} usage Uso e capacidades
+ * @returns {object} Métricas.
+ */
 function computeDrfMetrics(alloc, usage) {
   const gpuCap = Math.max(1e-6, Number(usage?.capGpu) || 1);
   const ioCap = Math.max(1e-6, Number(usage?.capIo) || 1);
@@ -158,6 +177,11 @@ export function isPillarNodeEligible(nodeStatus = {}) {
   return { eligible: true, reason: "ready" };
 }
 
+/**
+ * Pontua a capacidade de um nó (velocidade e memória de vídeo).
+ * @param {object} manifest Manifesto do nó
+ * @returns {number} Pontuação.
+ */
 function capabilityScore(manifest) {
   const tps = Number(manifest.tokensPerSec) || 0;
   const vram = Number(manifest.vramMb) || 0;
@@ -165,11 +189,22 @@ function capabilityScore(manifest) {
   return vram + tps * 20;
 }
 
+/**
+ * Diz se o nó apoia a comunidade com peso maior que zero.
+ * @param {object} manifest Manifesto do nó
+ * @param {string} communityId Comunidade
+ * @returns {boolean} `true` se apoia.
+ */
 function supportsCommunity(manifest, communityId) {
   const favs = Array.isArray(manifest.favorites) ? manifest.favorites : [];
   return favs.some((f) => f?.communityId === communityId && Number(f?.weightPct) > 0);
 }
 
+/**
+ * Ordena os candidatos a narrador, do mais capaz ao menos.
+ * @param {object[]} candidates Manifestos
+ * @returns {object[]} Candidatos ordenados.
+ */
 function rankNarratorCandidates(candidates) {
   return [...candidates].sort((a, b) => {
     const scoreDiff = capabilityScore(b) - capabilityScore(a);
@@ -178,6 +213,11 @@ function rankNarratorCandidates(candidates) {
   });
 }
 
+/**
+ * Ordena os candidatos a trabalhador, com nós ociosos de fogueira primeiro.
+ * @param {object[]} candidates Manifestos
+ * @returns {object[]} Candidatos ordenados.
+ */
 function rankWorkerCandidates(candidates) {
   return [...candidates].sort((a, b) => {
     const campDiff = Number(Boolean(b.isIdleCampfireNode)) - Number(Boolean(a.isIdleCampfireNode));
@@ -186,6 +226,14 @@ function rankWorkerCandidates(candidates) {
   });
 }
 
+/**
+ * Monta o contrato de cessão de um papel a um nó.
+ * @param {object} peer Nó
+ * @param {string} role Papel
+ * @param {string} communityId Comunidade
+ * @param {number} nowMs Agora (ms)
+ * @returns {object} Contrato.
+ */
 function buildLease(peer, role, communityId, nowMs) {
   return {
     leaseId: `lease-${communityId}-${role}-${peer.peerId}-${nowMs}`,
@@ -247,12 +295,26 @@ export function checkMoaQueueStability(arrivalRateLambda, meanServiceTimeAlpha, 
   };
 }
 
+/**
+ * Escolhe o nó substituto para um papel.
+ * @param {string} role Papel a preencher
+ * @param {object} pools Listas de narradores e trabalhadores
+ * @param {number} idx Índice do papel
+ * @returns {object|null} Nó escolhido, ou `null`.
+ */
 function pickReplacementPeer(role, pools, idx) {
   if (role === "STAGE2_LEAD_NARRATOR") return pools.narratorPool[0] || pools.workerPool[0] || null;
   if (pools.workerPool.length > 0) return pools.workerPool[idx % pools.workerPool.length];
   return pools.narratorPool[0] || null;
 }
 
+/**
+ * Monta as listas de narradores e trabalhadores para substituir um nó que falhou.
+ * @param {object[]} manifests Manifestos dos nós
+ * @param {string} failedPeerId Nó que falhou
+ * @param {string} communityId Comunidade
+ * @returns {object} Listas de narradores e trabalhadores elegíveis.
+ */
 function buildReplacementPools(manifests, failedPeerId, communityId) {
   const eligible = (Array.isArray(manifests) ? manifests : []).filter(
     (m) => m?.peerId && m.peerId !== failedPeerId && supportsCommunity(m, communityId) && isPillarNodeEligible(m.status).eligible,

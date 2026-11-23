@@ -187,7 +187,7 @@ test("explode - style.css defines backdrop dismissibility and hidden states", ()
   assert.ok(!css.includes("Método Janones"));
 });
 
-test("explode - openExplodeSheet and closeExplodeSheet manage sheet lifecycle", () => {
+function createExplodeMockDoc() {
   const elements = new Map();
   const makeEl = (tag = "div") => ({
     tagName: tag.toUpperCase(),
@@ -206,17 +206,22 @@ test("explode - openExplodeSheet and closeExplodeSheet manage sheet lifecycle", 
     appendChild() {},
   });
 
-  const prevDoc = globalThis.document;
   const body = makeEl("body");
-  globalThis.document = {
-    body,
-    getElementById(id) { return elements.get(id) || null; },
-    createElement(tag) {
-      const el = makeEl(tag);
-      return el;
-    },
-  };
   body.appendChild = (el) => { if (el.id) elements.set(el.id, el); };
+  return {
+    document: {
+      body,
+      getElementById(id) { return elements.get(id) || null; },
+      createElement(tag) { return makeEl(tag); },
+    },
+    elements,
+  };
+}
+
+test("explode - openExplodeSheet and closeExplodeSheet manage sheet lifecycle", () => {
+  const { document: mockDoc } = createExplodeMockDoc();
+  const prevDoc = globalThis.document;
+  globalThis.document = mockDoc;
 
   try {
     explode.openExplodeSheet({
@@ -336,6 +341,49 @@ test("explode - sw.js caches explode-dispatch.js", () => {
   assert.ok(sw.includes('"./js/explode-dispatch.js"'));
 });
 
+function createFakeExplodeButtons() {
+  const fakeSpan1 = { textContent: "" };
+  const fakeSpanTopic = { textContent: "" };
+  const fakeBtn1 = {
+    id: "btn_1",
+    dataset: { id: "post_exp_dom_1" },
+    classList: { add: (c) => fakeBtn1.classes.add(c) },
+    classes: new Set(),
+    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpan1 : null),
+  };
+  const fakeBtnTopic = {
+    id: "btn-share-topic",
+    dataset: { id: "post_exp_dom_1" },
+    classList: { add: (c) => fakeBtnTopic.classes.add(c) },
+    classes: new Set(),
+    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpanTopic : null),
+  };
+  return { fakeBtn1, fakeSpan1, fakeBtnTopic, fakeSpanTopic };
+}
+
+function createBurstMockEnvironment(openedUrls) {
+  const elements = new Map();
+  const windowMock = {
+    open: (u) => {
+      openedUrls.push(u);
+      return {};
+    },
+  };
+  const documentMock = {
+    body: { appendChild: (el) => { if (el.id) elements.set(el.id, el); } },
+    getElementById: (id) => elements.get(id) || null,
+    createElement: () => ({
+      attributes: {},
+      innerHTML: "",
+      setAttribute(k, v) { this.attributes[k] = String(v); },
+      querySelector() { return { focus() {} }; },
+      remove() { elements.delete(this.id); },
+    }),
+    querySelectorAll: () => [],
+  };
+  return { windowMock, documentMock, elements };
+}
+
 test("explode - renderers display explode counter and updateExplodeButtonsUi updates DOM", () => {
   const mockPost = {
     id: "post_exp_dom_1",
@@ -346,44 +394,19 @@ test("explode - renderers display explode counter and updateExplodeButtonsUi upd
   };
 
   const feedHtml = feed.renderPostItem(mockPost, "0x123", "Helena", "@helena");
-  assert.ok(feedHtml.includes("count-explodes"));
-  assert.ok(feedHtml.includes("btn-share-post"));
-  assert.ok(feedHtml.includes(">7<"));
+  assert.ok(feedHtml.includes("count-explodes") && feedHtml.includes("btn-share-post") && feedHtml.includes(">7<"));
 
   const igHtml = igToolbar.renderIgToolbar(mockPost, "Helena");
-  assert.ok(igHtml.includes("count-explodes"));
-  assert.ok(igHtml.includes(">7<"));
+  assert.ok(igHtml.includes("count-explodes") && igHtml.includes(">7<"));
 
   const mainEl = { innerHTML: "" };
   topic.renderTopic(mainEl, "post_exp_dom_1", mockPost, []);
-  assert.ok(mainEl.innerHTML.includes("count-explodes"));
-  assert.ok(mainEl.innerHTML.includes(">7<"));
+  assert.ok(mainEl.innerHTML.includes("count-explodes") && mainEl.innerHTML.includes(">7<"));
 
-  // Test DOM update
-  const fakeBtn1 = {
-    id: "btn_1",
-    dataset: { id: "post_exp_dom_1" },
-    classList: { add: (c) => fakeBtn1.classes.add(c) },
-    classes: new Set(),
-    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpan1 : null),
-  };
-  const fakeSpan1 = { textContent: "" };
-
-  const fakeBtnTopic = {
-    id: "btn-share-topic",
-    dataset: { id: "post_exp_dom_1" },
-    classList: { add: (c) => fakeBtnTopic.classes.add(c) },
-    classes: new Set(),
-    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpanTopic : null),
-  };
-  const fakeSpanTopic = { textContent: "" };
-
+  const { fakeBtn1, fakeSpan1, fakeBtnTopic, fakeSpanTopic } = createFakeExplodeButtons();
   const prevDoc = globalThis.document;
   globalThis.document = {
-    querySelectorAll: (sel) => {
-      if (sel.includes('post_exp_dom_1')) return [fakeBtn1, fakeBtnTopic];
-      return [];
-    },
+    querySelectorAll: (sel) => (sel.includes("post_exp_dom_1") ? [fakeBtn1, fakeBtnTopic] : []),
   };
 
   try {
@@ -413,27 +436,11 @@ test("explode - executeExplodeBurst opens connected networks and mounts dynamic 
   linkedModule.saveLinkedAccount("threads", { handle: "yurithreads", enabled: true });
 
   const openedUrls = [];
-  const elements = new Map();
+  const { windowMock, documentMock, elements } = createBurstMockEnvironment(openedUrls);
   const prevWin = globalThis.window;
   const prevDoc = globalThis.document;
-  globalThis.window = {
-    open: (u) => {
-      openedUrls.push(u);
-      return {};
-    },
-  };
-  globalThis.document = {
-    body: { appendChild: (el) => { if (el.id) elements.set(el.id, el); } },
-    getElementById: (id) => elements.get(id) || null,
-    createElement: () => ({
-      attributes: {},
-      innerHTML: "",
-      setAttribute(k, v) { this.attributes[k] = String(v); },
-      querySelector() { return { focus() {} }; },
-      remove() { elements.delete(this.id); },
-    }),
-    querySelectorAll: () => [],
-  };
+  globalThis.window = windowMock;
+  globalThis.document = documentMock;
 
   try {
     const res = await explode.executeExplodeBurst({

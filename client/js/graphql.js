@@ -18,6 +18,7 @@ import {
   fetchRawFromGateways,
 } from "./graphql-gateway.js";
 import { tagValue, mapCommunity, mapTopic, mapReply, mapProfileCard } from "./graphql-mappers.js";
+import { isSafeKey } from "./shared/safe-key.js";
 
 export {
   loadConfig,
@@ -173,7 +174,7 @@ const KNOWN_DM_PUBS_KEY = "vox-known-dm-pubs";
  * @param {object|string} pubJwk
  */
 export function cacheUserDmPub(address, pubJwk) {
-  if (!address || !pubJwk) return;
+  if (!isSafeKey(address) || !pubJwk) return;
   try {
     const raw = localStorage.getItem(KNOWN_DM_PUBS_KEY);
     const map = raw ? JSON.parse(raw) : {};
@@ -309,6 +310,13 @@ export async function fetchModActions(communityId) {
   }
 }
 
+/**
+ * Guarda a transação no cache e registra a origem da leitura.
+ * @param {string} txId Id da transação
+ * @param {*} data Dados lidos
+ * @param {string} origin Origem da leitura
+ * @param {string} comm Comunidade
+ */
 function cacheAndRecordTx(txId, data, origin, comm) {
   recordReadOrigin(origin, comm);
   dataCache.set(txId, data);

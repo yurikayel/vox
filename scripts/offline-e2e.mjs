@@ -30,12 +30,20 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
+/**
+ * Carrega o Playwright (por `PLAYWRIGHT_CORE_PATH` ou pelos pacotes instalados).
+ * @returns {Promise<object>}
+ */
 async function loadPlaywright() {
   const explicit = process.env.PLAYWRIGHT_CORE_PATH;
   if (explicit) return import(pathToFileURL(explicit).href);
   try { return await import("playwright-core"); } catch { return import("playwright"); }
 }
 
+/**
+ * Sobe um servidor estático local que serve `client/`.
+ * @returns {Promise<{server: object, baseUrl: string}>}
+ */
 function startStaticServer() {
   const server = http.createServer((req, res) => {
     const rel = decodeURIComponent(String(req.url || "/").split("?")[0]).replace(/^\/+/, "") || "index.html";
@@ -53,6 +61,11 @@ function startStaticServer() {
   });
 }
 
+/**
+ * Falha o cenário com `FALHOU: msg` se a condição for falsa.
+ * @param {boolean} cond Condição esperada.
+ * @param {string} msg Mensagem do erro.
+ */
 function check(cond, msg) {
   if (!cond) throw new Error(`FALHOU: ${msg}`);
 }
@@ -78,6 +91,12 @@ async function newSession(browser, baseUrl) {
   return { context, page, seen, errors, baseUrl };
 }
 
+/**
+ * Abre o app com rede, espera o service worker assumir e deixa o shell no cache.
+ * @param {object} page Página do Playwright.
+ * @param {string} baseUrl URL base do servidor local.
+ * @returns {Promise<void>}
+ */
 async function installShellOnline(page, baseUrl) {
   await page.goto(`${baseUrl}/#/`, { waitUntil: "load" });
   await page.waitForFunction(() => "serviceWorker" in navigator, null, { timeout: 15000 });
@@ -93,6 +112,11 @@ async function installShellOnline(page, baseUrl) {
   check(cached >= 20, `precache insuficiente (${cached} entradas)`);
 }
 
+/**
+ * Garante que nenhum pedido externo teve sucesso.
+ * @param {object} session Sessão simulada com os pedidos vistos.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ */
 function checkNoExternalSuccess(session, label) {
   const leaked = session.seen.filter((r) => !r.allowed && !r.aborted);
   check(leaked.length === 0, `${label}: pedido externo não abortado: ${leaked[0]?.url || "?"}`);
@@ -100,6 +124,11 @@ function checkNoExternalSuccess(session, label) {
   check(externalOk.every((r) => r.aborted), `${label}: rede externa não foi bloqueada de forma honesta`);
 }
 
+/**
+ * Cenário: recarregar o app sem rede e conferir que o shell abre.
+ * @param {object} session Sessão do navegador.
+ * @returns {Promise<void>}
+ */
 async function scenarioOfflineReload(session) {
   const { page } = session;
   await installShellOnline(page, session.baseUrl);
@@ -119,6 +148,11 @@ async function scenarioOfflineReload(session) {
   console.log("PASS [offline reload] shell carregou só do cache do SW");
 }
 
+/**
+ * Aceita o pacto de convivência (maioridade e aceite).
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<void>}
+ */
 async function acceptPact(page) {
   await page.locator("#pact-age-18").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("#pact-age-18").check();
@@ -126,6 +160,11 @@ async function acceptPact(page) {
   await page.locator("#feed-inline-composer").waitFor({ state: "visible", timeout: 15000 });
 }
 
+/**
+ * Cenário: criar a conta sem rede.
+ * @param {object} session Sessão do navegador.
+ * @returns {Promise<void>}
+ */
 async function scenarioOfflineOnboarding(session) {
   const { page } = session;
   if (!page.url().includes("#")) await page.goto(`${session.baseUrl}/#/`, { waitUntil: "domcontentloaded" });
@@ -145,6 +184,10 @@ async function scenarioOfflineOnboarding(session) {
   console.log(`PASS [offline onboarding] routeId=${String(routeId).slice(0, 10)}… chip offline visível`);
 }
 
+/**
+ * Roda os cenários offline e sai com código 1 se algum falhar.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const { chromium } = await loadPlaywright();
   const srv = await startStaticServer();

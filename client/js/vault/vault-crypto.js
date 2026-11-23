@@ -62,12 +62,32 @@ export function hexToBytes(hex) {
   return bytes;
 }
 
+/**
+ * Codifica texto em bytes UTF-8.
+ *
+ * @param {*} text
+ * @returns {Uint8Array}
+ */
 const utf8 = (text) => new TextEncoder().encode(String(text));
 
+/**
+ * Importa o segredo como material-base de PBKDF2.
+ *
+ * @param {string} secret
+ * @returns {Promise<CryptoKey>}
+ */
 async function pbkdf2Base(secret) {
   return crypto.subtle.importKey("raw", utf8(secret), "PBKDF2", false, ["deriveBits", "deriveKey"]);
 }
 
+/**
+ * Deriva a chave AES-GCM do segredo com PBKDF2-SHA-256.
+ *
+ * @param {string} secret
+ * @param {Uint8Array} saltBytes
+ * @param {number} iterations
+ * @returns {Promise<CryptoKey>}
+ */
 async function deriveAesKey(secret, saltBytes, iterations) {
   return crypto.subtle.deriveKey(
     { name: "PBKDF2", salt: saltBytes, iterations, hash: "SHA-256" },
@@ -78,6 +98,13 @@ async function deriveAesKey(secret, saltBytes, iterations) {
   );
 }
 
+/**
+ * Deriva bytes (endereço ou token) da frase com o sal dado.
+ *
+ * @param {string} passphrase
+ * @param {string} salt
+ * @returns {Promise<Uint8Array>}
+ */
 async function deriveFromPassphrase(passphrase, salt) {
   const bits = await crypto.subtle.deriveBits(
     { name: "PBKDF2", salt: utf8(salt), iterations: VAULT_V2_ITERATIONS, hash: "SHA-256" },
@@ -135,6 +162,13 @@ export async function encryptVaultV2(bundle, passphrase, iterations = VAULT_V2_I
   };
 }
 
+/**
+ * Decifra o registro com a chave e devolve o JSON.
+ *
+ * @param {object} record
+ * @param {CryptoKey} key
+ * @returns {Promise<object>}
+ */
 async function decryptWithKey(record, key) {
   const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: hexToBytes(record.iv) }, key, hexToBytes(record.ciphertext));
   return JSON.parse(new TextDecoder().decode(plain));
@@ -159,6 +193,14 @@ export function isRevokedRecord(record) {
   return Boolean(record?.revoked);
 }
 
+/**
+ * Decifra um registro v2 usando frase e e-mail.
+ *
+ * @param {object} record
+ * @param {string} passphrase
+ * @param {string} email
+ * @returns {Promise<object>}
+ */
 async function decryptV2Record(record, passphrase, email) {
   const salt = hexToBytes(record.salt);
   const iter = Number(record.iter);
@@ -222,6 +264,12 @@ export async function decryptLegacyRecord(record, secret, provider) {
 
 // ---- Link e QR de sincronização (`#/sync?b=`) ----
 
+/**
+ * Codifica texto binário em base64url.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
 const toBase64Url = (text) => btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 // `v2.` + base64url de [versão 1][iter 4][len 1][sal 16][len 1][iv 12][cifra + etiqueta GCM 16].
@@ -236,6 +284,12 @@ export function compactV2PlainBudget(maxEncodedChars) {
   return Math.floor(((maxEncodedChars - 3) * 3) / 4) - COMPACT_V2_OVERHEAD;
 }
 
+/**
+ * Empacota o registro v2 no formato compacto (binário em base64url).
+ *
+ * @param {object} record
+ * @returns {string}
+ */
 function packCompactV2(record) {
   const salt = hexToBytes(record.salt);
   const iv = hexToBytes(record.iv);
@@ -251,6 +305,12 @@ function packCompactV2(record) {
   return `v2.${bytesToB64Url(out)}`;
 }
 
+/**
+ * Desempacota o formato compacto v2; `null` se inválido.
+ *
+ * @param {string} encoded
+ * @returns {object|null}
+ */
 function unpackCompactV2(encoded) {
   const bytes = b64UrlToBytes(encoded.slice(3));
   if (bytes.length < 20 || bytes[0] !== 2) return null;
@@ -282,6 +342,12 @@ export function encodeVaultBundleForUrl(record) {
   return toBase64Url([record.iv, record.ciphertext].join(":"));
 }
 
+/**
+ * Reconstrói o registro a partir das partes do fragmento de URL; `null` se inválido.
+ *
+ * @param {string[]} parts
+ * @returns {object|null}
+ */
 function recordFromUrlParts(parts) {
   if (parts.length === 2) return { iv: parts[0], ciphertext: parts[1] };
   if (parts.length !== 5 || parts[0] !== "2") return null;

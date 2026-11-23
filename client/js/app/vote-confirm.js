@@ -16,6 +16,13 @@ export function voteChoiceLabel(choice) {
   return CHOICE_LABELS[choice] || String(choice || "");
 }
 
+/**
+ * Corta o texto no tamanho máximo, com reticências.
+ *
+ * @param {string} text Texto de entrada.
+ * @param {number} [max=420] Tamanho máximo em caracteres.
+ * @returns {string}
+ */
 function excerpt(text, max = 420) {
   const t = String(text || "").trim();
   return t.length > max ? `${t.slice(0, max)}…` : t;
@@ -71,10 +78,20 @@ export function confirmGovernanceVote(proposal, choice) {
     host.innerHTML = renderVoteConfirmHtml(proposal, choice);
     const overlay = host.firstElementChild;
     document.body.appendChild(overlay);
+    /**
+     * Mostra uma etapa da confirmação e foca o botão principal.
+     *
+     * @param {string} key Etapa (`data-vote-step`).
+     */
     const show = (key) => {
       overlay.querySelectorAll("[data-vote-step]").forEach((s) => { s.hidden = s.dataset.voteStep !== key; });
       overlay.querySelector(`[data-vote-step="${key}"] .agora-btn--primary`)?.focus();
     };
+    /**
+     * Fecha a confirmação e entrega o resultado.
+     *
+     * @param {boolean} ok A pessoa confirmou.
+     */
     const done = (ok) => {
       overlay.remove();
       resolve(ok);

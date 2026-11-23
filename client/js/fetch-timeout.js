@@ -25,6 +25,9 @@ function linkSignal(external, controller) {
     controller.abort(external.reason);
     return () => {};
   }
+  /**
+   * Repassa o cancelamento externo ao controlador interno.
+   */
   const onAbort = () => controller.abort(external.reason);
   external.addEventListener("abort", onAbort, { once: true });
   return () => external.removeEventListener("abort", onAbort);

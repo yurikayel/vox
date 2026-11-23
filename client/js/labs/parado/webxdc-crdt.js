@@ -102,6 +102,7 @@ export class IdLookupStore {
     this.items = new Map();
     this.order = [];
     this.tombstones = new Map();
+    this.pendingMoves = new Map();
     this.listeners = new Set();
     this.coveredSerial = 0;
     hydrateInitialState(this.items, this.order, this.tombstones, initialState);
@@ -122,25 +123,31 @@ export class IdLookupStore {
     }
   }
 
+  resolveSetOrderMeta(id, meta, tomb) {
+    const pending = this.pendingMoves.get(id);
+    if (!pending) return meta;
+    this.pendingMoves.delete(id);
+    const tombOk = !tomb || isNewer(pending.ts, pending.sender, tomb.timestamp, tomb.sender);
+    const metaOk = isNewer(pending.ts, pending.sender, meta.orderTs, meta.orderSender);
+    if (tombOk && metaOk) {
+      return applyPendingMoveToMeta(pending, meta, this.order, this.items, id);
+    }
+    return meta;
+  }
+
   setItem(rawId, data, ts = Date.now(), sender = "", silent = false) {
     const id = validateStoreId(rawId);
     const timestamp = validateTimestamp(ts);
     const tomb = this.tombstones.get(id);
-
-    if (tomb && !isNewer(timestamp, sender, tomb.timestamp, tomb.sender)) {
-      return false;
-    }
+    if (tomb && !isNewer(timestamp, sender, tomb.timestamp, tomb.sender)) return false;
     const existing = this.items.get(id);
-    if (existing && !isNewer(timestamp, sender, existing.updatedAt, existing.sender)) {
-      return false;
-    }
+    if (existing && !isNewer(timestamp, sender, existing.updatedAt, existing.sender)) return false;
 
     this.tombstones.delete(id);
-    const merged = existing ? { ...existing.data, ...normalizeItemPayload(data) } : normalizeItemPayload(data);
-    const orderMeta = resolveItemOrderMeta(data, timestamp, sender, existing);
-
+    const baseMeta = resolveItemOrderMeta(data, timestamp, sender, existing);
+    const orderMeta = this.resolveSetOrderMeta(id, baseMeta, tomb);
     this.items.set(id, {
-      data: merged,
+      data: normalizeItemPayload(data),
       updatedAt: timestamp,
       sender: String(sender || ""),
       orderRank: orderMeta.orderRank,
@@ -148,10 +155,7 @@ export class IdLookupStore {
       orderSender: orderMeta.orderSender,
       isMoved: orderMeta.isMoved,
     });
-
-    if (!this.order.includes(id)) {
-      this.order.push(id);
-    }
+    if (!this.order.includes(id)) this.order.push(id);
     sortOrderDeterministically(this.order, this.items);
     if (!silent) this.notify();
     return true;
@@ -172,6 +176,7 @@ export class IdLookupStore {
 
     this.tombstones.set(id, { timestamp, sender: String(sender || "") });
     this.items.delete(id);
+    this.pendingMoves.delete(id);
     const idx = this.order.indexOf(id);
     if (idx !== -1) {
       this.order.splice(idx, 1);
@@ -278,16 +283,21 @@ export class IdLookupStore {
     return false;
   }
 
-  applyRemoteMove(update, silent) {
-    const id = validateStoreId(update.id);
-    if (!this.items.has(id)) return false;
-    const cur = this.items.get(id);
-    const ts = validateTimestamp(update.ts || Date.now());
-    const sender = String(update.sender || "");
+  recordPendingMove(id, update, ts, sender) {
+    const prev = this.pendingMoves.get(id);
+    if (prev && !isNewer(ts, sender, prev.ts, prev.sender)) return false;
+    this.pendingMoves.set(id, {
+      orderRank: update.orderRank !== undefined ? Number(update.orderRank) : undefined,
+      targetIndex: update.targetIndex !== undefined ? update.targetIndex : undefined,
+      ts,
+      sender,
+    });
+    return true;
+  }
 
-    if (cur.orderTs && !isNewer(ts, sender, cur.orderTs, cur.orderSender)) {
-      return false;
-    }
+  applyExistingItemMove(id, update, ts, sender, silent) {
+    const cur = this.items.get(id);
+    if (cur.orderTs && !isNewer(ts, sender, cur.orderTs, cur.orderSender)) return false;
     if (update.orderRank !== undefined) {
       cur.isMoved = true;
       cur.orderRank = Number(update.orderRank);
@@ -298,6 +308,18 @@ export class IdLookupStore {
       return true;
     }
     return this.moveItem(update.id, update.targetIndex, ts, sender, silent);
+  }
+
+  applyRemoteMove(update, silent) {
+    const id = validateStoreId(update.id);
+    const ts = validateTimestamp(update.ts || Date.now());
+    const sender = String(update.sender || "");
+    const tomb = this.tombstones.get(id);
+    if (tomb && !isNewer(ts, sender, tomb.timestamp, tomb.sender)) return false;
+    if (!this.items.has(id)) {
+      return this.recordPendingMove(id, update, ts, sender);
+    }
+    return this.applyExistingItemMove(id, update, ts, sender, silent);
   }
 
   applyBatchOperations(operations, depth, silent) {
@@ -369,6 +391,34 @@ function hydrateTombstones(tombstones, rawTombstones) {
   }
 }
 
+function extractItemPayload(raw) {
+  if (raw && typeof raw === "object" && Object.prototype.hasOwnProperty.call(raw, "data")) {
+    return raw.data;
+  }
+  return raw;
+}
+
+function applyPendingMoveToMeta(pending, currentMeta, order, items, id) {
+  if (pending.orderRank !== undefined) {
+    return {
+      orderRank: Number(pending.orderRank),
+      orderTs: pending.ts,
+      orderSender: pending.sender,
+      isMoved: true,
+    };
+  }
+  if (pending.targetIndex !== undefined) {
+    const rank = calculateNewRank(order, items, id, pending.targetIndex);
+    return {
+      orderRank: rank,
+      orderTs: pending.ts,
+      orderSender: pending.sender,
+      isMoved: true,
+    };
+  }
+  return currentMeta;
+}
+
 function resolveItemOrderMeta(data, timestamp, sender, existing) {
   if (data && data.orderRank !== undefined) {
     return {
@@ -399,7 +449,7 @@ function hydrateItems(items, rawItems) {
   for (const [id, val] of Object.entries(rawItems)) {
     if (FORBIDDEN_IDS.has(id)) continue;
     items.set(id, {
-      data: normalizeItemPayload(val.data || val),
+      data: normalizeItemPayload(extractItemPayload(val)),
       updatedAt: Number(val.updatedAt) || 0,
       sender: String(val.sender || ""),
       orderRank: Number(val.orderRank !== undefined ? val.orderRank : val.updatedAt) || 0,
@@ -487,7 +537,7 @@ function upsertRemoteItemIfNewer({ items, order, id, raw, rTs, rSender }) {
     const isRawMoved = Boolean(raw.isMoved || (raw.orderRank !== undefined && raw.orderRank !== rTs));
     const rank = Number(raw.orderRank !== undefined ? raw.orderRank : rTs) || 0;
     items.set(id, {
-      data: normalizeItemPayload(raw.data || raw),
+      data: normalizeItemPayload(extractItemPayload(raw)),
       updatedAt: rTs,
       sender: rSender,
       orderRank: rank,
@@ -629,6 +679,15 @@ export async function coldBootFetch({ channelId, relayUrl, fetchImpl = globalThi
   };
 }
 
+/**
+ * Busca o snapshot-base do canal no relay; 404 vira snapshot vazio.
+ *
+ * @param {string} baseUrl URL base do relay.
+ * @param {string} channelId ID do canal.
+ * @param {Function} fetchImpl Implementação de `fetch`.
+ * @returns {Promise<{snapshot: *, timestamp: number, epoch: number, coveredSerial: number}>}
+ * @throws {Error} Em falha de conexão ou resposta HTTP de erro.
+ */
 async function fetchBaseSnapshot(baseUrl, channelId, fetchImpl) {
   const target = `${baseUrl}/relay/snapshot/${encodeURIComponent(channelId)}`;
   let res;
@@ -649,6 +708,12 @@ async function fetchBaseSnapshot(baseUrl, channelId, fetchImpl) {
   return parseSnapshotResponse(data);
 }
 
+/**
+ * Normaliza a resposta do relay para o formato interno do snapshot.
+ *
+ * @param {object} data Corpo JSON da resposta.
+ * @returns {{snapshot: *, timestamp: number, epoch: number, coveredSerial: number}}
+ */
 function parseSnapshotResponse(data) {
   const d = data.data || data;
   return {
@@ -659,6 +724,17 @@ function parseSnapshotResponse(data) {
   };
 }
 
+/**
+ * Busca os envelopes posteriores ao snapshot (cauda incremental).
+ *
+ * @param {string} baseUrl URL base do relay.
+ * @param {string} channelId ID do canal.
+ * @param {number} sinceTs Marca de tempo mínima.
+ * @param {number} coveredSerial Serial coberto pelo snapshot; se maior que 0, tem precedência.
+ * @param {Function} fetchImpl Implementação de `fetch`.
+ * @returns {Promise<object[]>} Envelopes.
+ * @throws {Error} Em falha de conexão ou resposta HTTP de erro.
+ */
 async function fetchDeltaEnvelopes(baseUrl, channelId, sinceTs, coveredSerial, fetchImpl) {
   const query = coveredSerial > 0 ? `since_serial=${coveredSerial}` : `since=${sinceTs}`;
   const target = `${baseUrl}/relay/envelope/${encodeURIComponent(channelId)}?${query}`;

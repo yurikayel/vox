@@ -16,7 +16,7 @@ function withLocation({ hash = "", search = "" }, fn) {
   }
 }
 
-describe("route-parse", () => {
+describe("route-parse - navegação básica e composição", () => {
   it("home default and feed query", () => {
     withLocation({ hash: "#/" }, () => {
       assert.deepEqual(parseRoute(), { name: "home", feed: "for-you" });
@@ -46,7 +46,9 @@ describe("route-parse", () => {
       assert.deepEqual(parseRoute(), { name: "handle-lookup", slug: "helena" });
     });
   });
+});
 
+describe("route-parse - status, labs e wizards", () => {
   it("status and labs frames", () => {
     withLocation({ hash: "#/status" }, () => {
       assert.deepEqual(parseRoute(), { name: "status" });
@@ -79,7 +81,9 @@ describe("route-parse", () => {
       assert.deepEqual(parseRoute(), { name: "steward-wizard" });
     });
   });
+});
 
+describe("route-parse - download, connect, dm e fallbacks", () => {
   it("download and revolucao routes", () => {
     withLocation({ hash: "#/download" }, () => {
       assert.deepEqual(parseRoute(), { name: "download" });

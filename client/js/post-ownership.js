@@ -29,6 +29,11 @@ const BODY_CANDIDATE_KEYS = [
   "body", "content", "text", "message", "mensagem", "desc", "description"
 ];
 
+/**
+ * Procura o texto do corpo nas chaves candidatas do objeto.
+ * @param {object} obj Objeto
+ * @returns {string} Texto encontrado, ou vazio.
+ */
 function extractCandidateFromObject(obj) {
   if (!obj || typeof obj !== "object") return "";
   for (const key of BODY_CANDIDATE_KEYS) {
@@ -40,6 +45,11 @@ function extractCandidateFromObject(obj) {
   return "";
 }
 
+/**
+ * Tira a cerca de código ` ```json ` do texto.
+ * @param {string} text Texto
+ * @returns {string} Texto sem a cerca.
+ */
 function stripCodeFences(text) {
   if (text.startsWith("```json") && text.endsWith("```")) {
     return text.slice(7, -3).trim();
@@ -50,6 +60,11 @@ function stripCodeFences(text) {
   return text;
 }
 
+/**
+ * Tenta ler o texto como objeto ou lista JSON.
+ * @param {string} str Texto
+ * @returns {object|null} Valor lido, ou `null`.
+ */
 function tryParseJsonObject(str) {
   const isEnclosed = (str.startsWith("{") && str.endsWith("}")) || (str.startsWith("[") && str.endsWith("]"));
   if (!isEnclosed) return null;
@@ -81,12 +96,22 @@ export function sanitizeBodyString(rawBody) {
   return stripped;
 }
 
+/**
+ * Extrai o título de um texto que pode ser JSON.
+ * @param {string} title Título bruto
+ * @returns {string} Título limpo.
+ */
 function extractTitleFromPossibleJson(title) {
   const parsed = tryParseJsonObject(title);
   if (!parsed) return title;
   return String(parsed.title || parsed.caption || "").trim();
 }
 
+/**
+ * Diz se o título é genérico.
+ * @param {string} t Título
+ * @returns {boolean} `true` se for genérico.
+ */
 function isGenericTitle(t) {
   return t === "Tópico" || t === "Publicação" || t === "Sem título";
 }

@@ -9,6 +9,8 @@
  * - Cartões nativos de contexto (Oferta da Feira, Pix, Tópico)
  * - Estado local de não lidas (unread), conversas fixadas (pin) e busca instantânea*/
 
+import { isSafeKey } from "./shared/safe-key.js";
+
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const DM_READ_STORAGE_KEY = "vox-dm-read-ts-v1";
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
@@ -23,6 +25,12 @@ export const MAX_DM_TEXT_CHARS = 32_768;
 export const DM_REACTION_EMOJIS = ["👍", "❤️", "🔥", "🙏", "✅"];
 const DEFAULT_WELCOME_ID = "vx_voxbrasil_welcome";
 
+/**
+ * Compacta espaços e corta o texto, com reticências se passar do máximo.
+ * @param {string} str Texto
+ * @param {number} [max=90] Máximo de caracteres
+ * @returns {string} Texto cortado.
+ */
 function clip(str, max = 90) {
   const s = String(str || "").replace(/\s+/g, " ").trim();
   if (!s) return "";
@@ -60,6 +68,12 @@ export function normalizeReplyMeta(raw) {
   };
 }
 
+/**
+ * Devolve a primeira propriedade preenchida entre as chaves informadas.
+ * @param {object} obj Objeto
+ * @param {...string} keys Chaves, em ordem de preferência
+ * @returns {*} Valor encontrado, ou `undefined`.
+ */
 function fallbackProp(obj, ...keys) {
   for (const k of keys) {
     if (obj && obj[k] != null && obj[k] !== "") return obj[k];
@@ -67,6 +81,12 @@ function fallbackProp(obj, ...keys) {
   return "";
 }
 
+/**
+ * Devolve o primeiro parâmetro de URL preenchido entre as chaves informadas.
+ * @param {URLSearchParams} params Parâmetros
+ * @param {...string} keys Chaves, em ordem de preferência
+ * @returns {string|undefined} Valor encontrado.
+ */
 function getFirstParam(params, ...keys) {
   for (const k of keys) {
     const val = params.get(k);
@@ -199,6 +219,11 @@ export function serializeDmReadReceipt({ upToTs = Date.now() } = {}) {
   });
 }
 
+/**
+ * Lê o JSON de uma mensagem v2; devolve `null` se não for.
+ * @param {string} str Texto da mensagem
+ * @returns {object|null} Mensagem decodificada.
+ */
 function tryParseV2Json(str) {
   if (!str.startsWith('{"__vox_dm_v2":1')) return null;
   try {
@@ -260,6 +285,13 @@ export function toggleReactionMap(reactions = {}, emoji = "", actor = "") {
   return next;
 }
 
+/**
+ * Monta o link do contexto de uma DM (tópico ou anúncios da comunidade).
+ * @param {string} type Tipo do contexto
+ * @param {string} id Id do item
+ * @param {string} communityId Comunidade
+ * @returns {string} Link, ou texto vazio.
+ */
 function resolveDmContextUrl(type, id, communityId) {
   if (type === "topic" && id) return `#/t/${encodeURIComponent(id)}`;
   if (communityId) return `#/c/${encodeURIComponent(communityId)}?tab=listings`;
@@ -292,6 +324,12 @@ export function parseDmContextFromHash(hashStr = "") {
   });
 }
 
+/**
+ * Extrai autor, item e comunidade de um item de anúncio.
+ * @param {object} it Item
+ * @param {object|string} itemOrComm Item ou comunidade
+ * @returns {object} Argumentos normalizados.
+ */
 function extractItemListingArgs(it, itemOrComm) {
   return {
     author: fallbackProp(it, "author", "owner"),
@@ -302,6 +340,13 @@ function extractItemListingArgs(it, itemOrComm) {
   };
 }
 
+/**
+ * Normaliza os argumentos do link de anúncio (autor e item, ou só o item).
+ * @param {object|string} authorOrItem Autor ou item
+ * @param {object|string} itemOrComm Item ou comunidade
+ * @param {object} [opts={}] Opções
+ * @returns {object} Argumentos normalizados.
+ */
 function normalizeListingHrefArgs(authorOrItem, itemOrComm, opts = {}) {
   if (authorOrItem && typeof authorOrItem === "object") {
     return extractItemListingArgs(authorOrItem, itemOrComm);
@@ -370,6 +415,12 @@ export function extractInlineVoxCard(text = "") {
   return null;
 }
 
+/**
+ * Lê um JSON do `localStorage`; devolve o valor padrão se faltar ou falhar.
+ * @param {string} key Chave
+ * @param {*} fallback Valor padrão
+ * @returns {*} Valor lido ou o padrão.
+ */
 function readJsonStorage(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -394,7 +445,7 @@ export function getLastReadTs(peerAddress) {
  * @param {*} [ts] Parâmetro `ts`.
  */
 export function markThreadRead(peerAddress, ts = Date.now()) {
-  if (!peerAddress) return;
+  if (!isSafeKey(peerAddress)) return;
   const map = readJsonStorage(DM_READ_STORAGE_KEY, {});
   map[peerAddress] = Math.max(Number(map[peerAddress]) || 0, Number(ts) || Date.now());
   try {
@@ -460,14 +511,31 @@ export function togglePinPeer(peerAddress) {
   return { pinned: true, list };
 }
 
+/**
+ * Texto da última mensagem da conversa.
+ * @param {object} conv Conversa
+ * @returns {string} Texto.
+ */
 function getConvText(conv) {
   return String(conv.lastText || conv.lastMessage?.text || "");
 }
 
+/**
+ * Horário da última mensagem da conversa.
+ * @param {object} conv Conversa
+ * @returns {number} Horário em ms, ou 0.
+ */
 function getConvTs(conv) {
   return Number(conv.lastTs ?? conv.lastMessage?.ts) || 0;
 }
 
+/**
+ * Diz se a conversa combina com a busca (endereço, rótulo ou texto).
+ * @param {object} conv Conversa
+ * @param {string} q Busca
+ * @param {Function} [resolveLabel] Resolve o rótulo de um endereço
+ * @returns {boolean} `true` se combina.
+ */
 function conversationMatchesQuery(conv, q, resolveLabel) {
   if (!q) return true;
   const peer = String(conv.peerAddress || "").toLowerCase();

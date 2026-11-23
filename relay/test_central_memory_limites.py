@@ -102,8 +102,11 @@ class TestIntegridadeDoBlob(_MemoriaCase):
         self.assertEqual(central_memory.get_blob(verdadeiro["hash"])["data"], verdadeiro["data"])
 
     def test_data_url_com_base64_invalido_e_recusada(self):
-        quebrado = "data:image/png;base64,A"  # 1 caractere: base64 impossível (o atob do cliente também falha)
-        res = self._enviar({"hash": hashlib.sha256(quebrado.encode()).hexdigest(), "data": quebrado})
+        # 1 caractere: base64 impossível (o atob do cliente também falha)
+        quebrado = "data:image/png;base64,A"
+        res = self._enviar(
+            {"hash": hashlib.sha256(quebrado.encode()).hexdigest(), "data": quebrado}
+        )
         self.assertFalse(res["changed"])
 
     def test_texto_que_nao_e_data_url_usa_o_hash_do_utf8_como_no_cliente(self):

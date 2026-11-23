@@ -1,17 +1,17 @@
 """PM-94 — quem pode falar com o relay (`server.py`).
 
 Regras, em ordem:
-1. **Host:** com o relay escutando só em loopback, o cabeçalho `Host` precisa ser um nome de loopback (ou um
-   nome liberado em `VOX_RELAY_ALLOWED_HOSTS`, como o endereço de um túnel). Isso barra páginas que trocam o
-   DNS do próprio domínio para 127.0.0.1.
-2. **Origin:** POST e DELETE vindos de navegador só são aceitos das origens do app (GitHub Pages, Cloudflare
-   Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`. Pedido sem `Origin` (ferramenta
-   de linha de comando, nó de steward) passa.
-   A mesma lista decide o CORS (`cors_allow_origin`): a origem só é refletida em `Access-Control-Allow-Origin`
-   se estiver nela, então página de outro site não lê a resposta de nenhuma rota.
-3. **Content-Type:** POST só com `application/json`, o que obriga o navegador a perguntar antes (preflight).
+1. **Host:** com o relay escutando só em loopback, o cabeçalho `Host` precisa ser um nome
+   de loopback (ou nome liberado em `VOX_RELAY_ALLOWED_HOSTS`, como endereço de túnel).
+   Isso barra páginas que trocam o DNS do próprio domínio para 127.0.0.1.
+2. **Origin:** POST e DELETE de navegador só são aceitos das origens do app (GitHub Pages,
+   Cloudflare Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`.
+   Pedido sem `Origin` (ferramenta de linha de comando, nó de steward) passa.
+   A mesma lista decide o CORS (`cors_allow_origin`): a origem só é refletida em
+   `Access-Control-Allow-Origin` se estiver nela (outros sites não leem respostas).
+3. **Content-Type:** POST só com `application/json`, o que obriga preflight no navegador.
 
-O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`, aplicado depois destas regras.
+O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`.
 """
 
 import os
@@ -23,6 +23,7 @@ WRITE_METHODS = ("POST", "DELETE")
 
 
 def _env_list(name, env=None):
+    """Lê uma lista separada por vírgula do ambiente, em minúsculas e sem barra final."""
     raw = (env if env is not None else os.environ).get(name) or ""
     return [item.strip().lower().rstrip("/") for item in raw.split(",") if item.strip()]
 
@@ -41,10 +42,12 @@ def _hostname(value):
 
 
 def is_loopback(name):
+    """True se o nome (host ou origem) é loopback."""
     return _hostname(name) in LOOPBACK_NAMES
 
 
 def host_allowed(host_header, bound_host, env=None):
+    """True se o cabeçalho Host é aceito; só restringe quando o relay escuta em loopback."""
     if not is_loopback(bound_host):
         return True
     name = _hostname(host_header)
@@ -52,6 +55,7 @@ def host_allowed(host_header, bound_host, env=None):
 
 
 def origin_allowed(origin, env=None):
+    """True se a origem é vazia, loopback, do app ou está na lista do ambiente."""
     text = str(origin or "").strip().lower().rstrip("/")
     if not text:
         return True
@@ -66,10 +70,10 @@ def _has_control_chars(value):
 
 
 def _loopback_origin(text):
-    """Origem de loopback reconstruída só de constantes (esquema, nome) e da porta numérica, ou None.
+    """Origem de loopback reconstruída só de constantes (esquema, nome) e porta numérica.
 
-    Não devolve o texto recebido: esquema e nome saem de tuplas fixas, a porta passa por `int`. Origem com
-    caminho, usuário ou porta inválida não reconstrói igual ao original e é recusada.
+    Não devolve o texto recebido: esquema e nome saem de tuplas fixas, porta passa por int.
+    Origem com caminho, usuário ou porta inválida não reconstrói igual e é recusada.
     """
     try:
         parts = urlsplit(text)
@@ -80,18 +84,19 @@ def _loopback_origin(text):
     host = next((item for item in LOOPBACK_NAMES if item == (parts.hostname or "")), None)
     if scheme is None or host is None:
         return None
-    rebuilt = f"{scheme}://{'[::1]' if host == '::1' else host}" + (f":{int(port)}" if port is not None else "")
+    rebuilt = f"{scheme}://{'[::1]' if host == '::1' else host}" + (
+        f":{int(port)}" if port is not None else ""
+    )
     return rebuilt if rebuilt == text else None
 
 
 def cors_allow_origin(origin, env=None):
-    """Valor de `Access-Control-Allow-Origin` para o pedido, ou None se o navegador não deve ler a resposta.
+    """Valor de `Access-Control-Allow-Origin` para o pedido, ou None para não ler.
 
     O valor devolvido nunca é o texto recebido (evita divisão de resposta HTTP, CodeQL
-    `py/http-response-splitting`): é a entrada correspondente de `APP_ORIGINS`, de
-    `VOX_RELAY_ALLOWED_ORIGINS` ou a origem de loopback reconstruída. Origem com CR/LF ou outro caractere de
-    controle é recusada antes de qualquer comparação. Diferente de `origin_allowed`, sem `Origin` não há
-    leitura entre sites a liberar.
+    `py/http-response-splitting`): é a entrada de `APP_ORIGINS`, `VOX_RELAY_ALLOWED_ORIGINS`
+    ou loopback reconstruída. Origem com controle é recusada antes de qualquer comparação.
+    Diferente de `origin_allowed`, sem `Origin` não há leitura entre sites a liberar.
     """
     raw = str(origin or "")
     if not raw or _has_control_chars(raw):
@@ -102,6 +107,7 @@ def cors_allow_origin(origin, env=None):
 
 
 def is_json_content_type(value):
+    """True se o Content-Type é `application/json` (ignora parâmetros)."""
     return str(value or "").split(";")[0].strip().lower() == "application/json"
 
 

@@ -13,11 +13,17 @@ BRANDING = DOCS / "branding"
 ICONS = ROOT / "client" / "icons"
 
 TRANSPARENT_SRC = BRANDING / "vox-transparent.png"
-WHITE_SRC = (
-    BRANDING / "vox-white.png"
-    if (BRANDING / "vox-white.png").is_file()
-    else (BRANDING / "vox_logo_branco.jpg" if (BRANDING / "vox_logo_branco.jpg").is_file() else DOCS / "vox_logo_branco.jpg")
-)
+
+
+def _resolve_white_src() -> Path:
+    if (BRANDING / "vox-white.png").is_file():
+        return BRANDING / "vox-white.png"
+    if (BRANDING / "vox_logo_branco.jpg").is_file():
+        return BRANDING / "vox_logo_branco.jpg"
+    return DOCS / "vox_logo_branco.jpg"
+
+
+WHITE_SRC = _resolve_white_src()
 
 
 def _color_dist(a: tuple[int, ...], b: tuple[int, ...]) -> float:
@@ -35,7 +41,9 @@ def _border_seeds(w: int, h: int) -> list[tuple[int, int]]:
     return pts
 
 
-def _o_hole_seeds(px, w: int, h: int, bg: tuple[int, int, int], tolerance: float) -> list[tuple[int, int]]:
+def _o_hole_seeds(
+    px, w: int, h: int, bg: tuple[int, int, int], tolerance: float
+) -> list[tuple[int, int]]:
     """Seed flood at the interior of the yellow O when it still matches paper/navy."""
     sx = sy = n = 0
     for y in range(h):
@@ -77,7 +85,9 @@ def clear_enclosed_background(
             r, g, b, a = px[x0, y0]
             if a == 0 or _color_dist((r, g, b), bg) > tolerance:
                 continue
-            component, touches_clear = _bg_component(px, (w, h), (x0, y0), bg, tolerance, visited)
+            component, touches_clear = _bg_component(
+                px, (w, h), (x0, y0), (bg, tolerance), visited
+            )
             if not touches_clear:
                 for x, y in component:
                     c = px[x, y]
@@ -85,13 +95,14 @@ def clear_enclosed_background(
     return out
 
 
-def _bg_component(px, size, start, bg, tolerance, visited):
+def _bg_component(px, size, start, bg_spec, visited):
     """Flood-fill da ilha de cor de fundo que começa em `start`.
 
     Retorna (pixels da ilha, se ela encosta na borda ou em área transparente).
     Uma ilha que não encosta em nada transparente está cercada pela marca (o miolo do O).
     """
     w, h = size
+    bg, tolerance = bg_spec
     q: deque[tuple[int, int]] = deque([start])
     component: list[tuple[int, int]] = []
     touches_clear = False
@@ -228,7 +239,9 @@ def _is_mark_chroma(rgb: tuple[int, int, int]) -> bool:
     return max(r, g, b) - min(r, g, b) > 40
 
 
-def trim_bg_fringe(rgba: Image.Image, bg: tuple[int, int, int], max_dist: float = 42.0) -> Image.Image:
+def trim_bg_fringe(
+    rgba: Image.Image, bg: tuple[int, int, int], max_dist: float = 42.0
+) -> Image.Image:
     """Clear semi-transparent pixels adjacent to transparency that still read as background."""
     out = rgba.copy()
     px = out.load()
@@ -253,7 +266,9 @@ def trim_bg_fringe(rgba: Image.Image, bg: tuple[int, int, int], max_dist: float 
     return out
 
 
-def decontaminate_fringe(rgba: Image.Image, bg: tuple[int, int, int], strength: float = 0.85) -> Image.Image:
+def decontaminate_fringe(
+    rgba: Image.Image, bg: tuple[int, int, int], strength: float = 0.85
+) -> Image.Image:
     """Reduce light halos on semi-transparent edge pixels."""
     out = rgba.copy()
     px = out.load()
@@ -290,7 +305,12 @@ def crop_alpha_bbox(rgba: Image.Image) -> Image.Image:
     return rgba.crop(box)
 
 
-def fit_mark(rgba: Image.Image, size: int, pad_ratio: float = 0.06, bg: tuple[int, int, int, int] | None = None) -> Image.Image:
+def fit_mark(
+    rgba: Image.Image,
+    size: int,
+    pad_ratio: float = 0.06,
+    bg: tuple[int, int, int, int] | None = None,
+) -> Image.Image:
     mark = crop_alpha_bbox(rgba)
     mw, mh = mark.size
     side = max(mw, mh)
@@ -360,7 +380,13 @@ def _o_hole_center_alpha(rgba: Image.Image) -> tuple[int, int, int]:
 
 
 # UI uses opaque tiles in squircle; cutout marks are archive.
-def build_transparent_mark(im: Image.Image, bg: tuple[int, int, int], tolerance: float, *, white_paper: bool) -> Image.Image:
+def build_transparent_mark(
+    im: Image.Image,
+    bg: tuple[int, int, int],
+    tolerance: float,
+    *,
+    white_paper: bool,
+) -> Image.Image:
     rgba = flood_remove_bg(im, bg, tolerance)
     rgba = clear_enclosed_background(rgba, bg, tolerance + 4)
     rgba = decontaminate_fringe(rgba, bg, strength=1.0)
@@ -373,7 +399,12 @@ def build_transparent_mark(im: Image.Image, bg: tuple[int, int, int], tolerance:
     return rgba
 
 
-def make_white_squircle_icon(mark_rgba: Image.Image, size: int, corner_ratio: float = 0.22, pad_ratio: float = 0.10) -> Image.Image:
+def make_white_squircle_icon(
+    mark_rgba: Image.Image,
+    size: int,
+    corner_ratio: float = 0.22,
+    pad_ratio: float = 0.10,
+) -> Image.Image:
     mark = crop_alpha_bbox(mark_rgba)
     mw, mh = mark.size
     side = max(mw, mh)
@@ -404,7 +435,35 @@ def tint_mark(rgba: Image.Image, color: tuple[int, int, int]) -> Image.Image:
 
 def write_black_mark(mark_rgba: Image.Image, size: int = 128) -> None:
     """Black alpha mark for CTAs on bright fills (EXPLODE! amarelo)."""
-    write_png(ICONS / f"icon-mark-black-{size}.png", fit_mark(tint_mark(mark_rgba, (0, 0, 0)), size, pad_ratio=0.02))
+    tinted = tint_mark(mark_rgba, (0, 0, 0))
+    fitted = fit_mark(tinted, size, pad_ratio=0.02)
+    write_png(ICONS / f"icon-mark-black-{size}.png", fitted)
+
+
+def _generate_favicons(mark_white: Image.Image) -> None:
+    write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "favicon-32.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "favicon-16.png", fit_mark(mark_white, 16, pad_ratio=0.02, bg=(0, 0, 0, 0)))
+    write_png(
+        ICONS / "icon-mark-1024.png",
+        fit_mark(mark_white, 1024, pad_ratio=0.06, bg=(0, 0, 0, 0)),
+    )
+    write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.06, bg=(0, 0, 0, 0)))
+    write_black_mark(mark_white)
+
+
+def _generate_android_icons(mark_white: Image.Image) -> None:
+    android_res = ROOT / "android" / "res"
+    android_sizes = {
+        "mipmap-mdpi": 48,
+        "mipmap-hdpi": 72,
+        "mipmap-xhdpi": 96,
+        "mipmap-xxhdpi": 144,
+        "mipmap-xxxhdpi": 192,
+    }
+    for folder, sz in android_sizes.items():
+        icon_img = make_white_squircle_icon(mark_white, sz)
+        write_png(android_res / folder / "ic_launcher.png", icon_img)
 
 
 def main() -> None:
@@ -417,7 +476,9 @@ def main() -> None:
         write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
     else:
         white_im = Image.open(WHITE_SRC)
-        mark_white = build_transparent_mark(white_im, (255, 255, 255), tolerance=24, white_paper=True)
+        mark_white = build_transparent_mark(
+            white_im, (255, 255, 255), tolerance=24, white_paper=True
+        )
         write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
 
     if WHITE_SRC.is_file():
@@ -426,12 +487,7 @@ def main() -> None:
         white_im = fit_mark(mark_white, 2048, pad_ratio=0.10, bg=(255, 255, 255, 255))
 
     # 1. Favicons e Marcas: PNG sem fundo (100% transparente)
-    write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
-    write_png(ICONS / "favicon-32.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
-    write_png(ICONS / "favicon-16.png", fit_mark(mark_white, 16, pad_ratio=0.02, bg=(0, 0, 0, 0)))
-    write_png(ICONS / "icon-mark-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.06, bg=(0, 0, 0, 0)))
-    write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.06, bg=(0, 0, 0, 0)))
-    write_black_mark(mark_white)
+    _generate_favicons(mark_white)
 
     # 2. PWA e UI Web: Fundo branco normalizado
     write_png(ICONS / "icon-white-192.png", fit_opaque_square(white_im, 192))
@@ -447,17 +503,7 @@ def main() -> None:
     write_ico(ROOT / "tools" / "steward-kit-windows" / "vox.ico", ico_master)
 
     # 4. Android Launcher: Fundo branco normalizado
-    android_res = ROOT / "android" / "res"
-    android_sizes = {
-        "mipmap-mdpi": 48,
-        "mipmap-hdpi": 72,
-        "mipmap-xhdpi": 96,
-        "mipmap-xxhdpi": 144,
-        "mipmap-xxxhdpi": 192,
-    }
-    for folder, sz in android_sizes.items():
-        icon_img = make_white_squircle_icon(mark_white, sz)
-        write_png(android_res / folder / "ic_launcher.png", icon_img)
+    _generate_android_icons(mark_white)
 
     print("Wrote all normalized white-background brand icons + transparent favicons.")
 

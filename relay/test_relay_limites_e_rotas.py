@@ -1,8 +1,8 @@
 """Rotas HTTP, limites de tamanho, entradas ruins e quadros WebSocket do relay.
 
-Vindo da varredura de cobertura de 2026-11-16 (Antigravity), mantido só o que confere comportamento.
-Todas as pastas do relay (cache, inbox, relay cego, memória central) ficam num diretório temporário
-durante o módulo inteiro e voltam ao original no fim: o teste nunca escreve nos dados de um relay real.
+Vindo da varredura de cobertura de 2026-11-16 (Antigravity), mantido só o que confere.
+Todas as pastas do relay (cache, inbox, relay cego, memória central) ficam temporárias
+durante o módulo inteiro e voltam ao original: o teste nunca altera relay real.
 """
 
 import hashlib
@@ -29,14 +29,18 @@ from relay import (
     signaling,
 )
 
-
 _MODULE_TMP = None
 _ORIGINAL_DIRS = None
 
 
 def setUpModule():
     global _MODULE_TMP, _ORIGINAL_DIRS
-    _ORIGINAL_DIRS = (server.CACHE_DIR, inbox.INBOX_DIR, blind_relay.RELAY_DIR, central_memory.MEMORY_DIR)
+    _ORIGINAL_DIRS = (
+        server.CACHE_DIR,
+        inbox.INBOX_DIR,
+        blind_relay.RELAY_DIR,
+        central_memory.MEMORY_DIR,
+    )
     _MODULE_TMP = tempfile.TemporaryDirectory()
     root = pathlib.Path(_MODULE_TMP.name)
     server.set_cache_dir(root / "cache")
@@ -149,20 +153,41 @@ class RelayHttpEndpointsTest(unittest.TestCase):
         self.assertGreaterEqual(len(json.loads(raw)["envelopes"]), 1)
         self.assertEqual(self._req("/inbox/!/bad")[0], 200)
 
-        st, _ = self._req("/relay/envelope/ch1", method="POST", body={"sender": "vx_a", "sig": "sig1", "timestamp": 1, "nonce": "n1"})
+        st, _ = self._req(
+            "/relay/envelope/ch1",
+            method="POST",
+            body={"sender": "vx_a", "sig": "sig1", "timestamp": 1, "nonce": "n1"},
+        )
         self.assertEqual(st, 201)
         st, raw = self._req("/relay/envelope/ch1?since=0&since_serial=0")
         parsed = json.loads(raw)
         self.assertGreaterEqual(len(parsed["envelopes"] if isinstance(parsed, dict) else parsed), 1)
         self.assertEqual(self._req("/relay/snapshot/ch1")[0], 404)
-        st, _ = self._req("/relay/snapshot/ch1", method="POST", body={"snapshot": {"items": {"a": 1}}, "epoch": 1, "coveredSerial": 1})
+        st, _ = self._req(
+            "/relay/snapshot/ch1",
+            method="POST",
+            body={"snapshot": {"items": {"a": 1}}, "epoch": 1, "coveredSerial": 1},
+        )
         self.assertEqual(st, 201)
         self.assertEqual(self._req("/relay/snapshot/ch1")[0], 200)
 
-        st, _ = self._req("/memory/ingest", method="POST", body={"event": {"id": "e_cov", "type": "topic", "author": "vx_a", "ts": 9999999999999}})
+        st, _ = self._req(
+            "/memory/ingest",
+            method="POST",
+            body={"event": {"id": "e_cov", "type": "topic", "author": "vx_a", "ts": 9999999999999}},
+        )
         self.assertIn(st, (200, 201))
         blob_h = hashlib.sha256(b"AAAA").hexdigest()
-        st, _ = self._req("/memory/sync", method="POST", body={"items": [{"id": "e_s2", "type": "topic", "author": "vx_a", "ts": 9999999999999}], "blobs": [{"hash": blob_h, "data": "data:application/octet-stream;base64,QUFBQQ=="}]})
+        st, _ = self._req(
+            "/memory/sync",
+            method="POST",
+            body={
+                "items": [{"id": "e_s2", "type": "topic", "author": "vx_a", "ts": 9999999999999}],
+                "blobs": [
+                    {"hash": blob_h, "data": "data:application/octet-stream;base64,QUFBQQ=="}
+                ],
+            },
+        )
         self.assertEqual(st, 200)
         self.assertEqual(self._req("/memory/status")[0], 200)
         self.assertEqual(self._req("/memory/state?since=0&includeBlobs=1")[0], 200)
@@ -171,7 +196,16 @@ class RelayHttpEndpointsTest(unittest.TestCase):
         self.assertEqual(self._req("/memory/badroute")[0], 404)
 
     def test_p2p_mirror_and_vault_routes(self):
-        st, _ = self._req("/peer/beacon", method="POST", body={"nodeId": "node_cov_1", "protocol": "VOX-PEER-v1", "httpPort": 8080, "capabilities": ["cache"]})
+        st, _ = self._req(
+            "/peer/beacon",
+            method="POST",
+            body={
+                "nodeId": "node_cov_1",
+                "protocol": "VOX-PEER-v1",
+                "httpPort": 8080,
+                "capabilities": ["cache"],
+            },
+        )
         self.assertIn(st, (200, 201))
         self.assertEqual(self._req("/p2p/peers")[0], 200)
         sha = "b" * 64
@@ -186,12 +220,19 @@ class RelayHttpEndpointsTest(unittest.TestCase):
 
         self.assertEqual(self._req("/memory/vault/k_miss")[0], 404)
         self.assertEqual(self._req("/vox/index/missing.json")[0], 404)
-        st, _ = self._req("/vox/mirror", method="POST", body={"communityId": "c_mir", "title": "Vila", "topics": []})
+        st, _ = self._req(
+            "/vox/mirror",
+            method="POST",
+            body={"communityId": "c_mir", "title": "Vila", "topics": []},
+        )
         self.assertEqual(st, 200)
         self.assertEqual(self._req("/vox/index/c_mir.json")[0], 200)
-        # Sem corpo: rota POST desconhecida responde 404 sem ler o corpo; no Windows, corpo não lido faz o
-        # sistema resetar a conexão às vezes (comportamento do servidor, anotado no PR da triagem).
-        self.assertEqual(self._req("/bad/post", method="POST", headers={"Content-Type": "application/json"})[0], 404)
+        # Sem corpo: rota POST desconhecida responde 404 sem ler o corpo; no Windows, corpo
+        # não lido faz resetar a conexão às vezes (comportamento anotado no PR da triagem).
+        self.assertEqual(
+            self._req("/bad/post", method="POST", headers={"Content-Type": "application/json"})[0],
+            404,
+        )
         self.assertEqual(self._req("/bad/delete", method="DELETE")[0], 404)
 
 
@@ -223,15 +264,27 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
             root = pathlib.Path(tmp)
             central_memory.set_memory_dir(root / "mem")
             inbox.set_inbox_dir(root / "inb")
-            central_memory.ingest_event({"id": "t1", "type": "topic", "author": "vx_a", "ts": 9999999999999})
-            central_memory.ingest_event({"id": "pc1", "type": "profile-card", "routeId": "vx_1", "name": "Ana", "ts": 9999999999999})
+            central_memory.ingest_event(
+                {"id": "t1", "type": "topic", "author": "vx_a", "ts": 9999999999999}
+            )
+            central_memory.ingest_event(
+                {
+                    "id": "pc1",
+                    "type": "profile-card",
+                    "routeId": "vx_1",
+                    "name": "Ana",
+                    "ts": 9999999999999,
+                }
+            )
             central_memory.save_state()
             loaded = central_memory.load_state(force_reload=True)
             self.assertIn("posts", loaded)
             self.assertEqual(central_memory.get_blob("none"), None)
             self.assertRaises(ValueError, inbox.store_envelope, "", {})
             self.assertEqual(inbox.get_envelopes("bad/id!"), [])
-            ok = inbox.store_envelope("vx_alice", {"id": "e1", "v": 1, "ephPub": {"kty": "EC"}, "ct": "abc", "ts": 10})
+            ok = inbox.store_envelope(
+                "vx_alice", {"id": "e1", "v": 1, "ephPub": {"kty": "EC"}, "ct": "abc", "ts": 10}
+            )
             self.assertTrue(ok)
             self.assertEqual(inbox.delete_envelope("vx_alice", "e1"), "deleted")
             self.assertEqual(inbox.delete_envelope("vx_alice", "missing"), "not_found")
@@ -269,16 +322,28 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
 
     def test_mirror_validate_blind_and_p2p_edges(self):
         self.assertFalse(mirror_validate.validate_mirror_body(b"bad json")[0])
-        self.assertFalse(mirror_validate.validate_mirror_body(b'{"community":{},"topics":"bad"}')[0])
-        self.assertFalse(mirror_validate.validate_mirror_body(b'{"communityId":"bad/id!","topics":[]}')[0])
+        self.assertFalse(
+            mirror_validate.validate_mirror_body(b'{"community":{},"topics":"bad"}')[0]
+        )
+        self.assertFalse(
+            mirror_validate.validate_mirror_body(b'{"communityId":"bad/id!","topics":[]}')[0]
+        )
         self.assertRaises(ValueError, blind_relay.store_envelope, "ch1", {})
-        self.assertRaises(ValueError, blind_relay.store_envelope, "!!/!!", {"sender": "a", "sig": "b"})
+        self.assertRaises(
+            ValueError, blind_relay.store_envelope, "!!/!!", {"sender": "a", "sig": "b"}
+        )
         self.assertRaises(ValueError, blind_relay.store_snapshot, "ch1", "bad")
         self.assertRaises(ValueError, blind_relay.store_snapshot, "ch1", {})
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp)
-            self.assertEqual(blind_relay.resolve_relay_dir({"VOX_RELAY_BLIND_DIR": str(p / "b")}), (p / "b").resolve())
-            self.assertEqual(central_memory.resolve_memory_dir({"VOX_RELAY_CACHE_DIR": str(p)}), (p / "central_memory").resolve())
+            self.assertEqual(
+                blind_relay.resolve_relay_dir({"VOX_RELAY_BLIND_DIR": str(p / "b")}),
+                (p / "b").resolve(),
+            )
+            self.assertEqual(
+                central_memory.resolve_memory_dir({"VOX_RELAY_CACHE_DIR": str(p)}),
+                (p / "central_memory").resolve(),
+            )
             inbox.set_inbox_dir(p / "inb")
             inbox.ensure_inbox_dir()
             exp_dir = inbox.INBOX_DIR / "vx_exp"
@@ -289,13 +354,39 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
             central_memory.set_memory_dir(p / "cm")
             _, _, jpath, _ = central_memory._state_paths()
             jpath.parent.mkdir(parents=True, exist_ok=True)
-            ev = {"type": "GOSSIP", "item": {"id": "p_j1", "type": "topic", "author": "vx_j", "ts": 9999999999999}}
+            ev = {
+                "type": "GOSSIP",
+                "item": {"id": "p_j1", "type": "topic", "author": "vx_j", "ts": 9999999999999},
+            }
             jpath.write_text(f"\n{{bad_json\n{json.dumps(ev)}\n", encoding="utf-8")
             loaded = central_memory.load_state(force_reload=True)
             self.assertIn("p_j1", loaded["posts"])
         self.assertTrue(isinstance(p2p_seeder.get_p2p_summary(), dict))
         self.assertEqual(signaling.resolve_port("4000"), 4000)
         self.assertGreater(len(signaling.make_ws_frame(b"x" * 70000)), 70000)
+
+    def _test_signaling_registry_dispatch(self):
+        class _MockWs(signaling.WebSocketHandler):
+            def __init__(self):
+                self.peer_id = "p_sig1"
+                self.closed = False
+                self.sent = []
+
+            def send_json(self, obj):
+                self.sent.append(obj)
+
+        h1, h2 = _MockWs(), _MockWs()
+        signaling.registry.register("p_sig1", h1, address="vx_s1")
+        signaling.registry.register("p_sig2", h2, address="vx_s2")
+        try:
+            h1.dispatch_message({"type": "ping"})
+            self.assertEqual(h1.sent[-1]["type"], "pong")
+            h1.dispatch_message({"type": "offer", "to": "p_sig2", "sdp": "x"})
+            self.assertEqual(h2.sent[-1]["from"], "p_sig1")
+            h1.cleanup()
+        finally:
+            signaling.registry.unregister("p_sig1")
+            signaling.registry.unregister("p_sig2")
 
     def test_server_miss_fetch_and_signaling_dispatch(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -316,9 +407,16 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
                 fake_resp.status = 200
                 fake_resp.read.return_value = b'{"fromGw":1}'
                 with mock.patch("urllib.request.urlopen", return_value=fake_resp):
-                    with urllib.request.urlopen(f"http://127.0.0.1:{port}/tx/{'D'*43}", timeout=5) as r:
+                    with urllib.request.urlopen(
+                        f"http://127.0.0.1:{port}/tx/{'D' * 43}", timeout=5
+                    ) as r:
                         self.assertEqual(r.status, 200)
-                req400 = urllib.request.Request(f"http://127.0.0.1:{port}/relay/snapshot/chx", data=b"{}", method="POST", headers={"Content-Type": "application/json", "Content-Length": "2"})
+                req400 = urllib.request.Request(
+                    f"http://127.0.0.1:{port}/relay/snapshot/chx",
+                    data=b"{}",
+                    method="POST",
+                    headers={"Content-Type": "application/json", "Content-Length": "2"},
+                )
                 with self.assertRaises(urllib.error.HTTPError):
                     urllib.request.urlopen(req400, timeout=5)
             finally:
@@ -326,25 +424,7 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
                 httpd.server_close()
                 server.set_cache_dir(prev_cache)
 
-        class _MockWs(signaling.WebSocketHandler):
-            def __init__(self):
-                self.peer_id = "p_sig1"
-                self.closed = False
-                self.sent = []
-            def send_json(self, obj):
-                self.sent.append(obj)
-        h1, h2 = _MockWs(), _MockWs()
-        signaling.registry.register("p_sig1", h1, address="vx_s1")
-        signaling.registry.register("p_sig2", h2, address="vx_s2")
-        try:
-            h1.dispatch_message({"type": "ping"})
-            self.assertEqual(h1.sent[-1]["type"], "pong")
-            h1.dispatch_message({"type": "offer", "to": "p_sig2", "sdp": "x"})
-            self.assertEqual(h2.sent[-1]["from"], "p_sig1")
-            h1.cleanup()
-        finally:
-            signaling.registry.unregister("p_sig1")
-            signaling.registry.unregister("p_sig2")
+        self._test_signaling_registry_dispatch()
 
     def test_memoria_central_e_relay_cego_recusam_entradas_ruins(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -353,34 +433,155 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
             central_memory.set_memory_dir(root / "mem")
             inbox.set_inbox_dir(root / "inb")
             central_memory._STATE_CACHE = {
-                "version": 1, "mode": "zero-central-memory", "revision": 1, "updatedAt": 1,
-                "posts": {}, "tombstones": {}, "manifests": {}, "blobs": {},
+                "version": 1,
+                "mode": "zero-central-memory",
+                "revision": 1,
+                "updatedAt": 1,
+                "posts": {},
+                "tombstones": {},
+                "manifests": {},
+                "blobs": {},
                 "profiles": {
-                    "vx_g1": {"routeId": "vx_g1", "avatarUrl": "https://lh3.googleusercontent.com/a/same", "ts": 1},
-                    "vx_g2": {"routeId": "vx_g2", "avatarUrl": "https://lh3.googleusercontent.com/a/same", "ts": 2},
+                    "vx_g1": {
+                        "routeId": "vx_g1",
+                        "avatarUrl": "https://lh3.googleusercontent.com/a/same",
+                        "ts": 1,
+                    },
+                    "vx_g2": {
+                        "routeId": "vx_g2",
+                        "avatarUrl": "https://lh3.googleusercontent.com/a/same",
+                        "ts": 2,
+                    },
                 },
             }
             norm = central_memory._normalize_loaded_state(dict(central_memory._STATE_CACHE))
             self.assertEqual(len(norm["profiles"]), 1)
             for ev in [
                 {"type": "GOSSIP", "item": {"id": "gp1", "author": "vx_a", "ts": 9999999999990}},
-                {"type": "GOSSIP_UPDATE", "item": {"id": "gp1", "author": "vx_a", "ts": 9999999999999, "body": "v2"}},
-                {"type": "GOSSIP_DELETE", "tombstone": {"id": "gp1", "author": "vx_a", "editedAt": 9999999999999}},
-                {"type": "CACHE_MANIFEST", "item": {"communityId": "c1", "issuedAt": 9999999999999}},
-                {"type": "MEDIA_BLOB", "blob": {"hash": hashlib.sha256(b"AAAA").hexdigest(), "data": "data:application/octet-stream;base64,QUFBQQ=="}},
+                {
+                    "type": "GOSSIP_UPDATE",
+                    "item": {"id": "gp1", "author": "vx_a", "ts": 9999999999999, "body": "v2"},
+                },
+                {
+                    "type": "GOSSIP_DELETE",
+                    "tombstone": {"id": "gp1", "author": "vx_a", "editedAt": 9999999999999},
+                },
+                {
+                    "type": "CACHE_MANIFEST",
+                    "item": {"communityId": "c1", "issuedAt": 9999999999999},
+                },
+                {
+                    "type": "MEDIA_BLOB",
+                    "blob": {
+                        "hash": hashlib.sha256(b"AAAA").hexdigest(),
+                        "data": "data:application/octet-stream;base64,QUFBQQ==",
+                    },
+                },
             ]:
                 central_memory.ingest_event(ev)
             blobs = central_memory.export_state(since=0, include_blobs=True).get("blobs", [])
-            self.assertTrue(any(b.get("hash") == hashlib.sha256(b"AAAA").hexdigest() for b in blobs))
+            self.assertTrue(
+                any(b.get("hash") == hashlib.sha256(b"AAAA").hexdigest() for b in blobs)
+            )
             blind_relay.store_snapshot("ch_ep", {"snapshot": {"x": 1}, "epoch": 2})
-            self.assertRaises(ValueError, blind_relay.store_snapshot, "ch_ep", {"snapshot": {"x": 1}, "epoch": 1})
-            self.assertRaises(ValueError, blind_relay.store_envelope, "ch_ep", {"sender": "a", "sig": "b", "blob": "x" * 70000})
-            self.assertIsInstance(blind_relay.list_envelopes("ch_ep", since_ts=0, since_serial=5), list)
+            self.assertRaises(
+                ValueError, blind_relay.store_snapshot, "ch_ep", {"snapshot": {"x": 1}, "epoch": 1}
+            )
+            self.assertRaises(
+                ValueError,
+                blind_relay.store_envelope,
+                "ch_ep",
+                {"sender": "a", "sig": "b", "blob": "x" * 70000},
+            )
+            self.assertIsInstance(
+                blind_relay.list_envelopes("ch_ep", since_ts=0, since_serial=5), list
+            )
             self.assertFalse(mirror_validate.validate_mirror_body(b"x" * (300 * 1024))[0])
             big_frame = _masked_frame(b"z" * 130, opcode=2)
             op, data = signaling.read_ws_frame(_MemorySocket(big_frame))
             self.assertEqual((op, len(data)), (2, 130))
             self.assertEqual(signaling.read_ws_frame(_MemorySocket(b"")), (None, None))
+
+    def _assert_http_error_routes(self, base):
+        for path, method, body, exp in [
+            ("/memory/ingest", "POST", b"", 400),
+            ("/peer/beacon", "POST", b"", 400),
+            ("/p2p/seed", "POST", b"", 400),
+            ("/oauth/exchange", "POST", b"{}", 400),
+            ("/p2p/seed/missing", "DELETE", None, 404),
+            ("/inbox/vx_alice/missing", "DELETE", None, 404),
+            ("/vox/mirror", "POST", b'{"bad":1}', 400),
+            ("/memory/sync", "POST", b"badjson", 400),
+        ]:
+            req = urllib.request.Request(
+                base + path,
+                data=body,
+                method=method,
+                headers={"Origin": base, "Content-Type": "application/json"},
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx:
+                urllib.request.urlopen(req, timeout=5)
+            self.assertEqual(ctx.exception.code, exp)
+
+    def _assert_oversized_post_routes(self, base):
+        port = int(base.split(":")[-1])
+        with mock.patch("relay.oauth_exchange.exchange", return_value={"ok": True}):
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.request(
+                "POST",
+                "/oauth/exchange",
+                body=b'{"code":"c"}',
+                headers={"Origin": base, "Content-Type": "application/json"},
+            )
+            self.assertEqual(conn.getresponse().status, 200)
+            conn.close()
+        for path, cl in [
+            ("/inbox/bob", "33000"),
+            ("/relay/envelope/ch1", "66000"),
+            ("/relay/snapshot/ch1", "525000"),
+        ]:
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.request(
+                "POST",
+                path,
+                body=b"",
+                headers={
+                    "Origin": base,
+                    "Content-Type": "application/json",
+                    "Content-Length": cl,
+                },
+            )
+            self.assertEqual(conn.getresponse().status, 413)
+            conn.close()
+
+    def _test_websocket_handler_flow(self):
+        self.assertIsNone(server.read_verified_cache_entry(None))
+        hs = (
+            b"GET / HTTP/1.1\r\nHost: localhost\r\n"
+            b"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n"
+        )
+        f_reg = _masked_frame(
+            b'{"type":"register","peerId":"p_ws1","address":"vx_ws1","dmPub":{"k":1}}',
+            opcode=1,
+        )
+        f_ans = _masked_frame(b'{"type":"answer","to":"missing","sdp":"a"}', opcode=1)
+        f_ice = _masked_frame(b'{"type":"ice","to":"missing","candidate":"c"}', opcode=1)
+        frames = (
+            _masked_frame(b"", opcode=0x9)
+            + f_reg
+            + f_ans
+            + f_ice
+            + _masked_frame(b'{"type":"ping"}', opcode=1)
+            + _masked_frame(b"", opcode=0x8)
+        )
+        sock = _MemorySocket(hs + frames)
+        h = signaling.WebSocketHandler.__new__(signaling.WebSocketHandler)
+        h.request = sock
+        h.setup()
+        self.assertTrue(h.perform_handshake())
+        h.receive_loop()
+        h.cleanup()
+        self.assertIn(b"101 Switching Protocols", bytes(sock.sent))
 
     def test_rotas_recusam_corpo_ruim_ou_grande_demais(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -391,13 +592,15 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
             central_memory.set_memory_dir(root / "memory")
             inbox.set_inbox_dir(root / "inbox")
             blind_relay.set_relay_dir(root / "blind")
-            sync_res = central_memory.sync_bundle({
-                "since": 0,
-                "items": [{"id": "itm1", "author": "vx_a", "ts": 9999999999999}],
-                "tombstones": [{"id": "itm1", "author": "vx_a", "editedAt": 9999999999999}],
-                "profiles": [{"routeId": "vx_p", "name": "Ana", "ts": 9999999999999}],
-                "manifests": [{"communityId": "c_sync", "issuedAt": 9999999999999}],
-            })
+            sync_res = central_memory.sync_bundle(
+                {
+                    "since": 0,
+                    "items": [{"id": "itm1", "author": "vx_a", "ts": 9999999999999}],
+                    "tombstones": [{"id": "itm1", "author": "vx_a", "editedAt": 9999999999999}],
+                    "profiles": [{"routeId": "vx_p", "name": "Ana", "ts": 9999999999999}],
+                    "manifests": [{"communityId": "c_sync", "issuedAt": 9999999999999}],
+                }
+            )
             self.assertIn("revision", sync_res)
             self.assertIn("revision", central_memory.export_state(since=99999999999999))
             httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
@@ -406,52 +609,16 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
             t.start()
             try:
                 base = f"http://127.0.0.1:{port}"
-                for path, method, body, exp in [
-                    ("/memory/ingest", "POST", b"", 400),
-                    ("/peer/beacon", "POST", b"", 400),
-                    ("/p2p/seed", "POST", b"", 400),
-                    ("/oauth/exchange", "POST", b"{}", 400),
-                    ("/p2p/seed/missing", "DELETE", None, 404),
-                    ("/inbox/vx_alice/missing", "DELETE", None, 404),
-                    ("/vox/mirror", "POST", b'{"bad":1}', 400),
-                    ("/memory/sync", "POST", b"badjson", 400),
-                ]:
-                    req = urllib.request.Request(base + path, data=body, method=method, headers={"Origin": base, "Content-Type": "application/json"})
-                    with self.assertRaises(urllib.error.HTTPError) as ctx:
-                        urllib.request.urlopen(req, timeout=5)
-                    self.assertEqual(ctx.exception.code, exp)
-                with mock.patch("relay.oauth_exchange.exchange", return_value={"ok": True}):
-                    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
-                    conn.request("POST", "/oauth/exchange", body=b'{"code":"c"}', headers={"Origin": base, "Content-Type": "application/json"})
-                    self.assertEqual(conn.getresponse().status, 200)
-                    conn.close()
-                for path, cl in [("/inbox/bob", "33000"), ("/relay/envelope/ch1", "66000"), ("/relay/snapshot/ch1", "525000")]:
-                    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
-                    # Só os cabeçalhos: o relay recusa pelo tamanho declarado, sem ler o corpo.
-                    conn.request("POST", path, body=b"", headers={"Origin": base, "Content-Type": "application/json", "Content-Length": cl})
-                    self.assertEqual(conn.getresponse().status, 413)
-                    conn.close()
+                self._assert_http_error_routes(base)
+                self._assert_oversized_post_routes(base)
             finally:
                 httpd.shutdown()
                 httpd.server_close()
                 server.set_cache_dir(prev_cache)
 
-        self.assertIsNone(server.read_verified_cache_entry(None))
-        hs = b"GET / HTTP/1.1\r\nHost: localhost\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n"
-        f_reg = _masked_frame(b'{"type":"register","peerId":"p_ws1","address":"vx_ws1","dmPub":{"k":1}}', opcode=1)
-        f_ans = _masked_frame(b'{"type":"answer","to":"missing","sdp":"a"}', opcode=1)
-        f_ice = _masked_frame(b'{"type":"ice","to":"missing","candidate":"c"}', opcode=1)
-        frames = _masked_frame(b"", opcode=0x9) + f_reg + f_ans + f_ice + _masked_frame(b'{"type":"ping"}', opcode=1) + _masked_frame(b"", opcode=0x8)
-        sock = _MemorySocket(hs + frames)
-        h = signaling.WebSocketHandler.__new__(signaling.WebSocketHandler)
-        h.request = sock
-        h.setup()
-        self.assertTrue(h.perform_handshake())
-        h.receive_loop()
-        h.cleanup()
-        self.assertIn(b"101 Switching Protocols", bytes(sock.sent))
+        self._test_websocket_handler_flow()
 
-    def test_manifesto_quadro_websocket_e_cache_corrompido_sao_recusados(self):
+    def _test_manifesto_recusas(self):
         for bad_m in [
             {},
             {"communityId": "c1", "manifestVersion": "bad"},
@@ -465,16 +632,7 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
         ]:
             self.assertFalse(mirror_validate.validate_cache_manifest_body(bad_m)[0])
 
-        self.assertEqual(signaling.parse_frame_length(_MemorySocket(struct.pack(">Q", 65536)), 127), 65536)
-        self.assertIsNone(signaling.parse_frame_length(_MemorySocket(struct.pack(">Q", 2_000_000)), 127))
-        self.assertEqual(signaling.resolve_port("bad", default=3921), 3921)
-        http_req = _MemorySocket(b"GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n")
-        h_http = signaling.WebSocketHandler.__new__(signaling.WebSocketHandler)
-        h_http.request = http_req
-        h_http.setup()
-        self.assertFalse(h_http.perform_handshake())
-        self.assertIn(b"200 OK", bytes(http_req.sent))
-
+    def _test_cache_entry_corruption_checks(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp)
             prev_cache = server.CACHE_DIR
@@ -484,15 +642,45 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
                 self.assertFalse(server.remove_cache_entry(p / "outside"))
                 self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": "bad"}), 3920)
                 with mock.patch("relay.server.max_cache_bytes", return_value=1):
-                    self.assertFalse(server.store_cache_entry_with_quota(server.CACHE_DIR / ("E" * 43), b"1234567890"))
+                    self.assertFalse(
+                        server.store_cache_entry_with_quota(
+                            server.CACHE_DIR / ("E" * 43), b"1234567890"
+                        )
+                    )
                 bad_entry = server.CACHE_DIR / ("F" * 43)
                 bad_entry.write_bytes(b"corrupted")
                 server.cache_hash_path(bad_entry).write_text("badsha", encoding="utf-8")
                 self.assertIsNone(server.read_verified_cache_entry(bad_entry))
             finally:
                 server.set_cache_dir(prev_cache)
+
+    def test_manifesto_quadro_websocket_e_cache_corrompido_sao_recusados(self):
+        self._test_manifesto_recusas()
+
+        self.assertEqual(
+            signaling.parse_frame_length(_MemorySocket(struct.pack(">Q", 65536)), 127),
+            65536,
+        )
+        self.assertIsNone(
+            signaling.parse_frame_length(_MemorySocket(struct.pack(">Q", 2_000_000)), 127)
+        )
+        self.assertEqual(signaling.resolve_port("bad", default=3921), 3921)
+        http_req = _MemorySocket(b"GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        h_http = signaling.WebSocketHandler.__new__(signaling.WebSocketHandler)
+        h_http.request = http_req
+        h_http.setup()
+        self.assertFalse(h_http.perform_handshake())
+        self.assertIn(b"200 OK", bytes(http_req.sent))
+
+        self._test_cache_entry_corruption_checks()
+
         self.assertRaises(ValueError, inbox.store_envelope, "vx_a", "notdict")
-        self.assertRaises(ValueError, inbox.store_envelope, "vx_a", {"v": 1, "ephPub": {"k": 1}, "ct": "x" * 35000})
+        self.assertRaises(
+            ValueError,
+            inbox.store_envelope,
+            "vx_a",
+            {"v": 1, "ephPub": {"k": 1}, "ct": "x" * 35000},
+        )
         self.assertIsNone(signaling.parse_frame_length(_MemorySocket(b""), 126))
         self.assertEqual(signaling.read_exact(_MemorySocket(b"abc"), 5), None)
 

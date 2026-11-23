@@ -1,7 +1,7 @@
-"""Limite de taxa por IP do relay (`rate_limit.py`): token bucket, classes, IP atrás de proxy e limpeza.
+"""Limite de taxa por IP do relay (`rate_limit.py`): token bucket, classes e proxy.
 
-Os testes de unidade usam relógio controlado; os de integração sobem o `server.py` e a sinalização de verdade,
-com um limitador pequeno no lugar do global.
+Testes unitários usam relógio controlado; integração sobe `server.py` e sinalização,
+com limitador pequeno no lugar do global.
 """
 
 import base64
@@ -59,7 +59,9 @@ class TestTokenBucket(unittest.TestCase):
         for _ in range(4):
             self.limiter.check("mailbox", "1.2.3.4")
         self.clock.now += 0.5
-        self.assertGreater(self.limiter.check("mailbox", "1.2.3.4"), 0, "meia ficha ainda não basta")
+        self.assertGreater(
+            self.limiter.check("mailbox", "1.2.3.4"), 0, "meia ficha ainda não basta"
+        )
         self.clock.now += 0.6
         self.assertEqual(self.limiter.check("mailbox", "1.2.3.4"), 0)
 
@@ -107,7 +109,9 @@ class TestBucketCleanup(unittest.TestCase):
         self.clock.now += 0.5
         limiter.check("mailbox", "5.6.7.8")
         self.assertEqual(limiter.size("mailbox"), 2)
-        self.assertGreater(limiter.check("mailbox", "1.2.3.4"), 0, "o abusador não ganhou bucket novo")
+        self.assertGreater(
+            limiter.check("mailbox", "1.2.3.4"), 0, "o abusador não ganhou bucket novo"
+        )
 
     def test_map_size_is_capped(self):
         limiter = rate_limit.RateLimiter(
@@ -128,7 +132,9 @@ class TestPolicies(unittest.TestCase):
         env = {"VOX_RELAY_RATE_BEACON_PER_MIN": "10", "VOX_RELAY_RATE_BEACON_BURST": "4"}
         policies = rate_limit.policies_from_env(env)
         self.assertEqual(policies["beacon"], rate_limit.Policy(10, 4))
-        self.assertEqual(policies["mailbox"], rate_limit.Policy(120, 60), "as outras classes não mudam")
+        self.assertEqual(
+            policies["mailbox"], rate_limit.Policy(120, 60), "as outras classes não mudam"
+        )
 
     def test_invalid_or_zero_values_keep_the_default(self):
         env = {"VOX_RELAY_RATE_MAILBOX_PER_MIN": "zero", "VOX_RELAY_RATE_MAILBOX_BURST": "0"}
@@ -162,7 +168,13 @@ class TestRouteClasses(unittest.TestCase):
             self.assertEqual(rate_limit.write_class(method, path), expected, f"{method} {path}")
 
     def test_reads_and_health_are_exempt(self):
-        for method, path in (("GET", "/inbox/bob"), ("GET", "/ping"), ("GET", "/status"), ("HEAD", "/"), ("OPTIONS", "/inbox/x")):
+        for method, path in (
+            ("GET", "/inbox/bob"),
+            ("GET", "/ping"),
+            ("GET", "/status"),
+            ("HEAD", "/"),
+            ("OPTIONS", "/inbox/x"),
+        ):
             self.assertIsNone(rate_limit.write_class(method, path), f"{method} {path}")
 
     def test_query_string_does_not_change_the_class(self):
@@ -174,7 +186,10 @@ class TestRouteClasses(unittest.TestCase):
         status, message, retry = rate_limit.http_rejection("POST", "/inbox/a", "1.2.3.4", limiter)
         self.assertEqual((status, retry), (429, 1))
         self.assertTrue(message)
-        self.assertIsNone(rate_limit.http_rejection("GET", "/inbox/a", "1.2.3.4", limiter), "leitura não gasta ficha")
+        self.assertIsNone(
+            rate_limit.http_rejection("GET", "/inbox/a", "1.2.3.4", limiter),
+            "leitura não gasta ficha",
+        )
 
 
 class TestClientIp(unittest.TestCase):
@@ -195,7 +210,9 @@ class TestClientIp(unittest.TestCase):
     def test_missing_short_or_garbage_header_falls_back_to_the_socket_ip(self):
         for forwarded in (None, "", "lixo", "203.0.113.9"):
             hops = 2 if forwarded == "203.0.113.9" else 1
-            self.assertEqual(rate_limit.client_ip("10.0.0.1", forwarded, hops=hops), "10.0.0.1", forwarded)
+            self.assertEqual(
+                rate_limit.client_ip("10.0.0.1", forwarded, hops=hops), "10.0.0.1", forwarded
+            )
 
     def test_ipv6_is_bucketed_by_64_and_ipv4_mapped_unwrapped(self):
         a = rate_limit.client_ip("2001:db8:1:2:aaaa::1", None, hops=0)
@@ -232,7 +249,9 @@ class TestHttpRelayRateLimit(unittest.TestCase):
         policies = {name: rate_limit.Policy(60, 1000) for name in rate_limit.DEFAULT_POLICIES}
         policies["mailbox"] = rate_limit.Policy(60, 2)
         self.clock = FakeClock()
-        patcher = patch.object(rate_limit, "LIMITER", rate_limit.RateLimiter(policies, clock=self.clock))
+        patcher = patch.object(
+            rate_limit, "LIMITER", rate_limit.RateLimiter(policies, clock=self.clock)
+        )
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -240,7 +259,9 @@ class TestHttpRelayRateLimit(unittest.TestCase):
         body = json.dumps({"x": 1}).encode("utf-8") if method == "POST" else None
         base = {"Content-Type": "application/json"} if body else {}
         url = f"http://127.0.0.1:{self.httpd.server_address[1]}{path}"
-        request = urllib.request.Request(url, data=body, headers={**base, **(headers or {})}, method=method)
+        request = urllib.request.Request(
+            url, data=body, headers={**base, **(headers or {})}, method=method
+        )
         try:
             with urllib.request.urlopen(request, timeout=3) as response:
                 return response.status, response.headers
@@ -276,12 +297,16 @@ class TestHttpRelayRateLimit(unittest.TestCase):
         body = json.dumps({"pad": "x" * 8000}).encode("utf-8")
         statuses = []
         for _ in range(30):
-            request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+            request = urllib.request.Request(
+                url, data=body, headers={"Content-Type": "application/json"}
+            )
             try:
                 statuses.append(urllib.request.urlopen(request, timeout=3).status)
             except urllib.error.HTTPError as error:
                 statuses.append(error.code)
-        self.assertEqual(statuses.count(429), 28, "2 passam pela rajada e os outros 28 recebem o 429 inteiro")
+        self.assertEqual(
+            statuses.count(429), 28, "2 passam pela rajada e os outros 28 recebem o 429 inteiro"
+        )
 
     def test_forwarded_for_is_ignored_without_explicit_trust(self):
         for index in range(3):
@@ -292,8 +317,12 @@ class TestHttpRelayRateLimit(unittest.TestCase):
         with patch.object(rate_limit, "TRUSTED_HOPS", 1):
             for _ in range(3):
                 self.call("POST", "/inbox/bob", {"X-Forwarded-For": "203.0.113.1"})
-            self.assertEqual(self.call("POST", "/inbox/bob", {"X-Forwarded-For": "203.0.113.1"})[0], 429)
-            self.assertNotEqual(self.call("POST", "/inbox/bob", {"X-Forwarded-For": "203.0.113.2"})[0], 429)
+            self.assertEqual(
+                self.call("POST", "/inbox/bob", {"X-Forwarded-For": "203.0.113.1"})[0], 429
+            )
+            self.assertNotEqual(
+                self.call("POST", "/inbox/bob", {"X-Forwarded-For": "203.0.113.2"})[0], 429
+            )
 
 
 class TestSignalingRateLimit(unittest.TestCase):
@@ -312,7 +341,9 @@ class TestSignalingRateLimit(unittest.TestCase):
         policies = {name: rate_limit.Policy(60, 1000) for name in rate_limit.DEFAULT_POLICIES}
         policies["signal"] = rate_limit.Policy(60, 1)
         self.clock = FakeClock()
-        patcher = patch.object(rate_limit, "LIMITER", rate_limit.RateLimiter(policies, clock=self.clock))
+        patcher = patch.object(
+            rate_limit, "LIMITER", rate_limit.RateLimiter(policies, clock=self.clock)
+        )
         patcher.start()
         self.addCleanup(patcher.stop)
 

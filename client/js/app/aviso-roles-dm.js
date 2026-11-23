@@ -40,6 +40,14 @@ export const RECEIVED_KEY = "vox-aviso-papeis-v1";
 export const SKILLS_KEY = "vox-competencias-v1";
 const RECEIVED_MAX = 500;
 
+/**
+ * Lê JSON do armazenamento; ausência ou erro devolve o valor de reserva.
+ *
+ * @param {Storage|null} storage Armazenamento.
+ * @param {string} key
+ * @param {*} fallback Valor de reserva.
+ * @returns {*}
+ */
 function readJson(storage, key, fallback) {
   try {
     const parsed = JSON.parse(storage?.getItem(key) || "null");
@@ -49,6 +57,13 @@ function readJson(storage, key, fallback) {
   }
 }
 
+/**
+ * Grava JSON no armazenamento; falha de gravação é ignorada.
+ *
+ * @param {Storage|null} storage Armazenamento.
+ * @param {string} key
+ * @param {*} value Valor serializável.
+ */
 function writeJson(storage, key, value) {
   try {
     storage?.setItem(key, JSON.stringify(value));
@@ -66,6 +81,13 @@ export function myRoleFor(avisoId, storage = globalThis.localStorage) {
   return String(readJson(storage, MY_ROLE_KEY, {})[avisoId] || "");
 }
 
+/**
+ * Guarda o papel que a pessoa assumiu num aviso.
+ *
+ * @param {string} avisoId Aviso.
+ * @param {string} role Papel assumido ("" para desistir).
+ * @param {Storage|null} storage Armazenamento.
+ */
 function rememberMyRole(avisoId, role, storage) {
   const all = readJson(storage, MY_ROLE_KEY, {});
   all[avisoId] = role;
@@ -83,6 +105,11 @@ export function receivedClaims(avisoId, storage = globalThis.localStorage) {
   return readJson(storage, RECEIVED_KEY, []).filter((c) => c?.avisoId === avisoId);
 }
 
+/**
+ * Carrega as dependências reais do envio da resposta de papel.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, cacheNode, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
@@ -98,6 +125,13 @@ async function defaultSendDeps() {
   };
 }
 
+/**
+ * Texto da mensagem que declara o papel (ou a desistência).
+ *
+ * @param {string} role Papel ("" para desistir).
+ * @param {string} code Código do aviso.
+ * @returns {string}
+ */
 function claimText(role, code) {
   const which = code ? `o aviso ${code}` : "o aviso";
   return role ? `Assumo o papel "${roles.roleLabel(role)}" para ${which}.` : `Desisto do meu papel para ${which}.`;
@@ -130,6 +164,11 @@ export async function sendRoleClaim(user, aviso, opts = {}, deps = null) {
   return status;
 }
 
+/**
+ * Carrega as dependências reais do recebimento de respostas de papel.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultReceiveDeps() {
   const [cacheNode, localAccount, context] = await Promise.all([
     import("../cache-node.js"), import("../identity/index.js"), import("./context.js"),

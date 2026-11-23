@@ -7,6 +7,7 @@ Nada é persistido. Provedores sem credenciais configuradas respondem 501.
 Variáveis por provedor: VOX_OAUTH_<PROVEDOR>_CLIENT_ID e VOX_OAUTH_<PROVEDOR>_CLIENT_SECRET
 (PROVEDOR em: TWITTER, GITHUB, THREADS, TIKTOK, INSTAGRAM).
 """
+
 import json
 import os
 import urllib.parse
@@ -49,12 +50,15 @@ PROVIDERS = {
 
 
 class OAuthError(Exception):
+    """Erro da troca OAuth, com o status HTTP a devolver ao cliente."""
     def __init__(self, message, status=400):
+        """Guarda a mensagem e o status HTTP (400 por padrão)."""
         super().__init__(message)
         self.status = status
 
 
 def credentials(provider, env=None):
+    """Devolve `(client_id, client_secret)` do provedor, lidos do ambiente (vazios se ausentes)."""
     env = env if env is not None else os.environ
     key = provider.upper()
     cid = env.get(f"VOX_OAUTH_{key}_CLIENT_ID", "").strip()
@@ -63,11 +67,13 @@ def credentials(provider, env=None):
 
 
 def _http_json(req, opener):
+    """Faz o pedido HTTP e devolve o corpo decodificado como JSON."""
     with opener(req, timeout=TIMEOUT) as res:
         return json.loads(res.read().decode("utf-8") or "{}")
 
 
 def _token_request(conf, cid, secret, payload):
+    """Monta e envia ao provedor o pedido de troca do `code` OAuth pelo token."""
     form = {
         "grant_type": "authorization_code",
         "code": payload["code"],
@@ -78,6 +84,7 @@ def _token_request(conf, cid, secret, payload):
     headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
     if conf["basic_auth"]:
         import base64
+
         token = base64.b64encode(f"{cid}:{secret}".encode()).decode()
         headers["Authorization"] = f"Basic {token}"
     else:
@@ -92,14 +99,27 @@ def parse_identity(provider, me):
         d = me.get("data") or {}
         return {"handle": d.get("username", ""), "id": d.get("id", ""), "name": d.get("name", "")}
     if provider == "github":
-        return {"handle": me.get("login", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
+        return {
+            "handle": me.get("login", ""),
+            "id": str(me.get("id", "")),
+            "name": me.get("name") or "",
+        }
     if provider == "tiktok":
         u = (me.get("data") or {}).get("user") or {}
-        return {"handle": u.get("username", ""), "id": u.get("open_id", ""), "name": u.get("display_name", "")}
-    return {"handle": me.get("username", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
+        return {
+            "handle": u.get("username", ""),
+            "id": u.get("open_id", ""),
+            "name": u.get("display_name", ""),
+        }
+    return {
+        "handle": me.get("username", ""),
+        "id": str(me.get("id", "")),
+        "name": me.get("name") or "",
+    }
 
 
 def _validate(payload):
+    """Valida o payload da troca OAuth (provedor, code e redirect_uri).\n\n    Raises:\n        OAuthError: Se o payload for inválido."""
     if not isinstance(payload, dict):
         raise OAuthError("Payload deve ser um objeto JSON.")
     provider = str(payload.get("provider", "")).lower()
@@ -121,8 +141,12 @@ def exchange(payload, env=None, opener=urllib.request.urlopen):
     tok = _http_json(_token_request(conf, cid, secret, payload), opener)
     access = tok.get("access_token") or (tok.get("data") or {}).get("access_token")
     if not access:
-        raise OAuthError(tok.get("error_description") or tok.get("error") or "A rede recusou o código.", 502)
-    me_req = urllib.request.Request(conf["me_url"], headers={"Authorization": f"Bearer {access}", "Accept": "application/json"})
+        raise OAuthError(
+            tok.get("error_description") or tok.get("error") or "A rede recusou o código.", 502
+        )
+    me_req = urllib.request.Request(
+        conf["me_url"], headers={"Authorization": f"Bearer {access}", "Accept": "application/json"}
+    )
     ident = parse_identity(provider, _http_json(me_req, opener))
     if not ident["handle"]:
         raise OAuthError("A rede não informou o @usuário.", 502)

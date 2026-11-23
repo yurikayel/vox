@@ -1,0 +1,56 @@
+name: Verificação de espelhos — integridade do shell (PM-19)
+
+# Semanalmente lê o sw.js dos espelhos A e B e compara CACHE_NAME com o repositório.
+# Se algum espelho divergir ou falhar, grava relatório como artefato e abre issue de alerta.
+# Ver docs/operations/ops-shell-mirrors.md e docs/DEPENDENCIAS.md §5.
+
+on:
+  schedule:
+    - cron: "23 8 * * 2" # terças, 08:23 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: mirror-verify
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Conferir espelhos do shell
+        run: node scripts/verify-mirrors.mjs --json mirror-verify.json
+      - name: Guardar resultado
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mirror-verify-${{ github.run_id }}
+          path: mirror-verify.json
+          retention-days: 90
+
+      - name: Alerta vira issue (PM-61)
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Alerta: conferência de espelhos falhou (PM-19)"
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh label create alerta-automatico --repo "$repo" --color B60205 \
+            --description "Falha de rotina agendada ou de deploy (PM-61)" 2>/dev/null || true
+          existing=$(gh issue list --repo "$repo" --state open --label alerta-automatico \
+            --search "\"$ALERT_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Issue #$existing já aberta para este alerta; não abro outra."
+            exit 0
+          fi
+          gh issue create --repo "$repo" --label alerta-automatico --title "$ALERT_TITLE" \
+            --body "A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ). Algum espelho live divergiu de CACHE_NAME ou falhou HTTP. Feche esta issue quando resolver; enquanto ela estiver aberta, novas falhas não abrem outra. Runbook: docs/operations/ops-shell-mirrors.md"

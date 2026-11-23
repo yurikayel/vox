@@ -1,94 +1,35 @@
 #!/usr/bin/env node
 /**
- * @file PM-99 — teste E2E de dois navegadores Chromium reais na malha P2P.
- * Sobe um servidor estático local de `client/` e executa duas rodadas isoladas:
- *   1. Sinalização via WebSocket (`relay/signaling.py`);
- *   2. Sinalização via relay Nostr efêmero local (`scripts/nostr-ephemeral-relay.mjs`).
- * Em cada rodada, dois contextos Chromium isolados completam a entrada, abrem
- * WebRTC `vox-peer-v0` entre si e trocam um post assinado no feed.
+ * @file PM-99 / PM-113 — teste E2E de navegador Chromium real na malha P2P e smokes de integridade.
+ * Sobe servidor estático local de client/ e executa:
+ *   1. PM-113 Smoke 1: Entrada, recarga e mesma chave;
+ *   2. PM-113 Smoke 2: Feed e rota #/status sem erros com rede externa bloqueada;
+ *   3. PM-99 Rodada WebSocket de sinalização P2P (dois navegadores);
+ *   4. PM-99 Rodada Nostr de sinalização P2P (dois navegadores).
  */
-import http from "node:http";
-import fs from "node:fs";
 import path from "node:path";
-import net from "node:net";
 import { spawn } from "node:child_process";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { startEphemeralNostrRelay } from "./nostr-ephemeral-relay.mjs";
+import {
+  getFreePort,
+  waitHealth,
+  loadPlaywright,
+  startStaticClientServer,
+  createIsolatedPage,
+  completeOnboarding,
+  waitForMeshConnection,
+  publishAndVerifySignedPost,
+  smokeOnboardingReloadKey,
+  smokeFeedAndStatusRoute,
+} from "./e2e-lib.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const CLIENT_DIR = path.join(ROOT, "client");
-const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".mjs": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".webp": "image/webp",
-  ".avif": "image/avif",
-  ".woff2": "font/woff2",
-};
 
-async function loadPlaywright() {
-  const explicit = process.env.PLAYWRIGHT_CORE_PATH;
-  if (explicit) return import(pathToFileURL(explicit).href);
-  try { return await import("playwright-core"); } catch {}
-  return import("playwright");
-}
-
-function getFreePort() {
-  return new Promise((resolve, reject) => {
-    const srv = net.createServer();
-    srv.once("error", reject);
-    srv.listen(0, "127.0.0.1", () => {
-      const { port } = srv.address();
-      srv.close(() => resolve(port));
-    });
-  });
-}
-
-function resolveClientPath(reqUrl) {
-  const cleanPath = decodeURIComponent(String(reqUrl || "/").split("?")[0]);
-  const rel = cleanPath === "/" ? "index.html" : cleanPath.replace(/^\/+/, "");
-  const full = path.resolve(CLIENT_DIR, rel);
-  return full.startsWith(CLIENT_DIR) ? full : null;
-}
-
-function startStaticClientServer() {
-  const server = http.createServer((req, res) => {
-    const file = resolveClientPath(req.url);
-    if (!file || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-      res.writeHead(404).end("not found");
-      return;
-    }
-    const ext = path.extname(file).toLowerCase();
-    res.writeHead(200, { "content-type": MIME[ext] || "application/octet-stream" });
-    fs.createReadStream(file).pipe(res);
-  });
-  return new Promise((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const { port } = server.address();
-      resolve({ baseUrl: `http://127.0.0.1:${port}`, close: () => new Promise((done) => server.close(done)) });
-    });
-  });
-}
-
-async function waitHealth(url, timeoutMs = 10000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return;
-    } catch {}
-    await new Promise((r) => setTimeout(r, 150));
-  }
-  throw new Error(`Timeout aguardando ${url}`);
-}
-
+/**
+ * Sobe o servidor de sinalização WebSocket local do relay.
+ * @returns {Promise<{ url: string, close: () => Promise<void> }>}
+ */
 async function startWsSignalingServer() {
   const port = await getFreePort();
   const py = process.env.PYTHON_BIN || (process.platform === "win32" ? "python" : "python3");
@@ -108,163 +49,16 @@ async function startWsSignalingServer() {
   };
 }
 
-function installRtcProbe(page) {
-  return page.addInitScript(() => {
-    const NativePc = window.RTCPeerConnection;
-    if (!NativePc) return;
-    window.__voxRtc = { pcs: [], events: [] };
-    const log = (ev) => window.__voxRtc.events.push(`${Date.now() % 100000}:${ev}`);
-    const trackDc = (dc, tag) => {
-      dc.addEventListener("open", () => log(`${tag}:dc-open:${dc.label}`));
-      dc.addEventListener("close", () => log(`${tag}:dc-close:${dc.label}`));
-      dc.addEventListener("error", () => log(`${tag}:dc-err:${dc.label}`));
-      dc.addEventListener("message", (e) => {
-        if (String(dc.label) === "vox-peer-v0") {
-          try { log(`${tag}:dc-rx:${JSON.parse(e.data)?.type || "?"}`); } catch {}
-        }
-      });
-    };
-    window.RTCPeerConnection = function PatchedPc(...args) {
-      const pc = new NativePc(...args);
-      const id = window.__voxRtc.pcs.length;
-      const rec = { id, pc, dcs: [] };
-      window.__voxRtc.pcs.push(rec);
-      log(`pc${id}:new`);
-      pc.addEventListener("connectionstatechange", () => log(`pc${id}:conn=${pc.connectionState}`));
-      pc.addEventListener("signalingstatechange", () => log(`pc${id}:sig=${pc.signalingState}`));
-      pc.addEventListener("iceconnectionstatechange", () => log(`pc${id}:ice=${pc.iceConnectionState}`));
-      const origCreateDc = pc.createDataChannel.bind(pc);
-      pc.createDataChannel = (...dcArgs) => {
-        const dc = origCreateDc(...dcArgs);
-        rec.dcs.push(dc);
-        trackDc(dc, `pc${id}:out`);
-        return dc;
-      };
-      pc.addEventListener("datachannel", (ev) => {
-        rec.dcs.push(ev.channel);
-        trackDc(ev.channel, `pc${id}:in`);
-      });
-      return pc;
-    };
-    window.RTCPeerConnection.prototype = NativePc.prototype;
-  });
-}
-
-async function createPeerPage(browser, baseUrl, signalingConfig) {
-  const context = await browser.newContext({ serviceWorkers: "block" });
-  const errors = [];
-  const debug = [];
-  await context.route("**/*", (route) => {
-    const url = route.request().url();
-    if (url.endsWith("/config/signaling.json")) {
-      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(signalingConfig) });
-    }
-    if (url.endsWith("/config/oauth.json")) {
-      return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
-    }
-    if (url.startsWith(baseUrl)) return route.continue();
-    debug.push(`abort:${url}`);
-    return route.abort();
-  });
-  const page = await context.newPage();
-  await installRtcProbe(page);
-  page.on("pageerror", (err) => errors.push(String(err?.message || err)));
-  page.on("console", (msg) => {
-    if (msg.type() === "error" || msg.type() === "warning") debug.push(`[${msg.type()}] ${msg.text()}`);
-  });
-  await page.goto(`${baseUrl}/#/`, { waitUntil: "domcontentloaded" });
-  return { context, page, errors, debug };
-}
-
-async function completeOnboarding(page, displayName) {
-  await page.locator("#btn-read-first-enter").waitFor({ state: "visible", timeout: 15000 });
-  await page.locator("#btn-read-first-enter").click();
-  await page.locator("#oauth-custom-name-input").waitFor({ state: "visible", timeout: 15000 });
-  await page.locator("#oauth-custom-name-input").fill(displayName);
-  await page.locator("#btn-oauth-save-name").click();
-  await page.locator("#pact-age-18").waitFor({ state: "visible", timeout: 15000 });
-  await page.locator("#pact-age-18").check();
-  await page.locator("#btn-pact-accept").click();
-  await page.locator("#feed-inline-composer").waitFor({ state: "visible", timeout: 15000 });
-}
-
-async function waitForMeshConnection(peer, expectedPath, timeoutMs = 20000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const state = await peer.page.evaluate(() => ({
-      raw: localStorage.getItem("vox-signaling-telemetry-v1"),
-      hasOpenDc: Boolean(window.__voxRtc?.pcs?.some((r) => r.dcs.some((d) => d.label === "vox-peer-v0" && d.readyState === "open"))),
-    }));
-    const data = state.raw ? JSON.parse(state.raw) : null;
-    const chOk = Number(data?.channels?.[expectedPath]?.ok || 0);
-    const peerOk = Number(data?.peers?.[expectedPath]?.ok || 0);
-    if (chOk >= 1 && peerOk >= 1 && (data?.firstPeerSamplesMs?.length || 0) >= 1 && state.hasOpenDc) {
-      return data;
-    }
-    await new Promise((r) => setTimeout(r, 150));
-  }
-  const latest = await peer.page.evaluate(() => localStorage.getItem("vox-signaling-telemetry-v1"));
-  const snap = await snapshotPage(peer.page, peer.debug);
-  throw new Error(`Timeout aguardando WebRTC via ${expectedPath} (telemetry=${latest}, snap=${JSON.stringify(snap)})`);
-}
-
-function readLocalPostsFromPage(page) {
-  return page.evaluate(() => new Promise((resolve) => {
-    const req = indexedDB.open("vox-cache-db");
-    req.onsuccess = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains("local-posts")) return resolve({ count: -1, posts: [] });
-      const tx = db.transaction("local-posts", "readonly");
-      const getAll = tx.objectStore("local-posts").getAll();
-      getAll.onsuccess = () => {
-        const list = getAll.result || [];
-        resolve({ count: list.length, posts: list.map((p) => ({ id: p.id, type: p.type, body: (p.body || "").slice(0, 40) })) });
-      };
-      getAll.onerror = () => resolve({ count: -2, posts: [] });
-    };
-    req.onerror = () => resolve({ count: -3, posts: [] });
-  }));
-}
-
-async function snapshotPage(page, debug = []) {
-  const idb = await readLocalPostsFromPage(page);
-  const dom = await page.evaluate(() => ({
-    hash: location.hash,
-    hasWallet: Boolean(localStorage.getItem("vox-wallet-jwk")),
-    articles: [...document.querySelectorAll("article")].map((a) => a.innerText.slice(0, 60)),
-    rtc: window.__voxRtc ? {
-      pcs: window.__voxRtc.pcs.map((r) => ({
-        id: r.id,
-        conn: r.pc.connectionState,
-        sig: r.pc.signalingState,
-        ice: r.pc.iceConnectionState,
-        dcs: r.dcs.map((d) => `${d.label}:${d.readyState}`),
-      })),
-      events: window.__voxRtc.events.slice(-25),
-    } : null,
-  }));
-  return { ...dom, postCount: idb.count, posts: idb.posts, debug: debug.slice(-10) };
-}
-
-async function publishAndVerifySignedPost(peerA, peerB, marker) {
-  await peerA.page.locator("#feed-inline-composer .inline-composer-collapsed").click();
-  await peerA.page.locator("#inline-topic-body").fill(`Teste P2P ${marker} #e2e`);
-  await peerA.page.locator("#btn-inline-submit").click();
-  const meshOnlyBtn = peerA.page.locator("#btn-permanence-mesh");
-  await meshOnlyBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => meshOnlyBtn.click()).catch(() => {});
-  await peerA.page.locator("article", { hasText: marker }).waitFor({ state: "visible", timeout: 15000 }).catch(async (err) => {
-    throw new Error(`${err.message}\nPeerA snapshot: ${JSON.stringify(await snapshotPage(peerA.page, peerA.debug))}`);
-  });
-  await peerB.page.locator("article", { hasText: marker }).waitFor({ state: "visible", timeout: 20000 }).catch(async (err) => {
-    const snapA = await snapshotPage(peerA.page, peerA.debug);
-    const snapB = await snapshotPage(peerB.page, peerB.debug);
-    throw new Error(`${err.message}\nPeerA: ${JSON.stringify(snapA)}\nPeerB: ${JSON.stringify(snapB)}`);
-  });
-}
-
+/**
+ * Executa uma rodada de pareamento e troca de posts entre dois navegadores isolados.
+ * @param {any} browser Instância do Chromium.
+ * @param {string} baseUrl URL base do servidor estático.
+ * @param {object} spec Parâmetros da rodada ({ label, expectedPath, signalingConfig, forbiddenPath }).
+ * @returns {Promise<void>}
+ */
 async function runSignalingRound(browser, baseUrl, { label, expectedPath, signalingConfig, forbiddenPath }) {
-  const peerA = await createPeerPage(browser, baseUrl, signalingConfig);
-  const peerB = await createPeerPage(browser, baseUrl, signalingConfig);
+  const peerA = await createIsolatedPage(browser, baseUrl, { signalingConfig });
+  const peerB = await createIsolatedPage(browser, baseUrl, { signalingConfig });
   try {
     await completeOnboarding(peerA.page, `Alice ${label}`);
     await completeOnboarding(peerB.page, `Bruno ${label}`);
@@ -289,43 +83,89 @@ async function runSignalingRound(browser, baseUrl, { label, expectedPath, signal
   }
 }
 
+/**
+ * Constrói opções de inicialização do navegador headless.
+ * @returns {object}
+ */
+function buildLaunchOptions() {
+  const opts = {
+    headless: true,
+    args: ["--disable-features=WebRtcHideLocalIpsWithMdns", "--no-sandbox"],
+  };
+  if (process.env.CHROMIUM_EXECUTABLE_PATH) {
+    opts.executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
+  }
+  return opts;
+}
+
+/**
+ * Executa os smokes rápidos do PM-113 no Chromium.
+ * @param {any} browser Instância do Chromium.
+ * @param {string} baseUrl URL base local.
+ * @returns {Promise<void>}
+ */
+async function runPm113Smokes(browser, baseUrl) {
+  console.log("--- PM-113 Smoke 1: Entrada, recarga e mesma chave ---");
+  await smokeOnboardingReloadKey(browser, baseUrl);
+  console.log("PASS [smoke 1] Entrada e recarga mantendo mesma chave.");
+
+  console.log("--- PM-113 Smoke 2: Feed e #/status sem erros com rede externa bloqueada ---");
+  await smokeFeedAndStatusRoute(browser, baseUrl);
+  console.log("PASS [smoke 2] Feed e #/status sem erros com rede externa bloqueada.");
+}
+
+/**
+ * Executa as rodadas de sinalização P2P na malha WebRTC (PM-99).
+ * @param {any} browser Instância do Chromium.
+ * @param {string} baseUrl URL base local.
+ * @param {object} wsSrv Servidor WebSocket.
+ * @param {object} nostrSrv Relay Nostr efêmero.
+ * @returns {Promise<void>}
+ */
+async function runMeshRounds(browser, baseUrl, wsSrv, nostrSrv) {
+  console.log("--- PM-99 Malha P2P: Rodada WebSocket ---");
+  await runSignalingRound(browser, baseUrl, {
+    label: "WebSocket",
+    expectedPath: "ws",
+    forbiddenPath: "nostr",
+    signalingConfig: {
+      signalingUrls: [wsSrv.url],
+      nostrRelays: [],
+      nostrSignaling: { enabled: false },
+      stun: [],
+      turn: [],
+    },
+  });
+
+  console.log("--- PM-99 Malha P2P: Rodada Nostr ---");
+  await runSignalingRound(browser, baseUrl, {
+    label: "Nostr",
+    expectedPath: "nostr",
+    forbiddenPath: "ws",
+    signalingConfig: {
+      signalingUrls: ["ws://127.0.0.1:1"],
+      nostrRelays: [nostrSrv.url],
+      nostrSignaling: { enabled: true, room: "vox-ci-mesh-e2e" },
+      stun: [],
+      turn: [],
+    },
+  });
+}
+
+/**
+ * Ponto de entrada do executável E2E.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const { chromium } = await loadPlaywright();
   const staticSrv = await startStaticClientServer();
   const wsSrv = await startWsSignalingServer();
   const nostrSrv = await startEphemeralNostrRelay();
-  const launchOpts = {
-    headless: true,
-    args: ["--disable-features=WebRtcHideLocalIpsWithMdns", "--no-sandbox"],
-  };
-  if (process.env.CHROMIUM_EXECUTABLE_PATH) launchOpts.executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
-  const browser = await chromium.launch(launchOpts);
+  const browser = await chromium.launch(buildLaunchOptions());
   try {
-    await runSignalingRound(browser, staticSrv.baseUrl, {
-      label: "WebSocket",
-      expectedPath: "ws",
-      forbiddenPath: "nostr",
-      signalingConfig: {
-        signalingUrls: [wsSrv.url],
-        nostrRelays: [],
-        nostrSignaling: { enabled: false },
-        stun: [],
-        turn: [],
-      },
-    });
-    await runSignalingRound(browser, staticSrv.baseUrl, {
-      label: "Nostr",
-      expectedPath: "nostr",
-      forbiddenPath: "ws",
-      signalingConfig: {
-        signalingUrls: ["ws://127.0.0.1:1"],
-        nostrRelays: [nostrSrv.url],
-        nostrSignaling: { enabled: true, room: "vox-ci-mesh-e2e" },
-        stun: [],
-        turn: [],
-      },
-    });
-    console.log("PM-99 E2E: duas rodadas Chromium (WebSocket e Nostr) passaram.");
+    await runPm113Smokes(browser, staticSrv.baseUrl);
+    await runMeshRounds(browser, staticSrv.baseUrl, wsSrv, nostrSrv);
+    console.log("PM-99 + PM-113 E2E: smokes e duas rodadas Chromium passaram.");
   } finally {
     await browser.close();
     await Promise.allSettled([wsSrv.close(), nostrSrv.close(), staticSrv.close()]);

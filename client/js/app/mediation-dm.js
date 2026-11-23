@@ -6,11 +6,23 @@
 import { caseModerators } from "../natural-mod.js";
 import { serializeDmPayload } from "../dm-messenger.js";
 
+/**
+ * Carrega as dependências reais do envio de mensagens de mediação.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultDeps() {
   const [gql, peers, cryptoDm, cacheNode, wire, flow, aviso] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../cache-node.js"),
     import("./dm-wire.js"), import("./natural-mod-flow.js"), import("./aviso-flow.js"),
   ]);
+  /**
+   * Lê do aparelho os posts de um tipo na comunidade; falha vira lista vazia.
+   *
+   * @param {string} type Tipo do post.
+   * @param {string} communityId Comunidade.
+   * @returns {Promise<object[]>}
+   */
   const posts = (type, communityId) => cacheNode.getLocalPosts({ type, communityId }).catch(() => []);
   return {
     loadLinks: () => flow.loadLinks(),
@@ -42,6 +54,15 @@ export function mediationRecipients(links, { self, target, members = null }) {
   return out.filter((r) => r.route !== self);
 }
 
+/**
+ * Envia o texto de mediação a uma parte e devolve a parte com o status do envio.
+ *
+ * @param {string} self Rota de quem envia.
+ * @param {{route: string, side: string}} recipient Parte que recebe.
+ * @param {object} card Cartão de contexto do caso.
+ * @param {object} d Dependências.
+ * @returns {Promise<object>}
+ */
 async function sendOne(self, recipient, card, d) {
   const pub = await d.getDmPub(recipient.route).catch(() => null);
   if (!pub) return { ...recipient, status: "no-key" };

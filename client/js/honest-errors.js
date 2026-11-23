@@ -37,6 +37,12 @@ const MESSAGE_RULES = [
   [/timed? ?out|timeout/i, "timeout"],
 ];
 
+/**
+ * Extrai o código HTTP do erro ou da mensagem.
+ * @param {object} err Erro
+ * @param {string} msg Mensagem
+ * @returns {number} Código HTTP, ou 0.
+ */
 function statusOf(err, msg) {
   return Number(err?.status) || Number((msg.match(/HTTP (\d{3})/) || [])[1]) || 0;
 }
@@ -98,15 +104,26 @@ const SIGNALING_IDLE = Object.freeze({ wsOpen: false, wsGaveUp: false, nostrOpen
 function createGraceFlag(graceMs, onChange) {
   let value = false;
   let timer = null;
+  /**
+   * Cancela o aviso agendado.
+   */
   function cancel() {
     clearTimeout(timer);
     timer = null;
   }
+  /**
+   * Muda o valor da bandeira e avisa quem acompanha.
+   * @param {boolean} next Novo valor
+   */
   function settle(next) {
     if (next === value) return;
     value = next;
     onChange(next);
   }
+  /**
+   * Agenda a subida da bandeira se a condição continuar valendo.
+   * @param {Function} check Confere se a condição persiste
+   */
   function raiseLater(check) {
     if (value || timer) return;
     timer = setTimeout(() => {
@@ -138,11 +155,18 @@ function createGraceFlag(graceMs, onChange) {
 export function createSignalingHealth({ graceMs = SIGNALING_DOWN_GRACE_MS, onChange = () => {} } = {}) {
   const state = { ...SIGNALING_IDLE };
   const flag = createGraceFlag(graceMs, onChange);
+  /**
+   * Atualiza o estado do sinalizador e sobe ou desce a bandeira.
+   * @param {object} [patch={}] Campos novos
+   */
   function update(patch = {}) {
     Object.assign(state, patch);
     if (isSignalingDown(state)) flag.raiseLater(() => isSignalingDown(state));
     else flag.lower();
   }
+  /**
+   * Volta o sinalizador ao estado ocioso.
+   */
   function reset() {
     Object.assign(state, SIGNALING_IDLE);
     flag.reset();

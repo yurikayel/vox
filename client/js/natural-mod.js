@@ -28,7 +28,19 @@ export async function collectLinks(records = [], verify) {
   return [...out.values()];
 }
 
+/**
+ * Ordena vínculos do mais antigo ao mais novo.
+ * @param {object} a Primeiro vínculo
+ * @param {object} b Segundo vínculo
+ * @returns {number} Diferença de `since`.
+ */
 const bySince = (a, b) => a.since - b.since;
+/**
+ * Devolve a outra ponta do vínculo.
+ * @param {object} link Vínculo
+ * @param {string} person Uma das pontas
+ * @returns {string} A outra ponta.
+ */
 const otherSide = (link, person) => (link.inviter === person ? link.invitee : link.inviter);
 
 /** @type {number} Espera de 7 dias em ms para efetivar troca de padrinho. */
@@ -94,6 +106,11 @@ export function closestOf(links = [], person = "", { exclude = [], members = nul
     .filter((l) => !l.sponsor && (l.inviter === person || l.invitee === person))
     .map((l) => ({ route: otherSide(l, person), since: l.since }))
     .filter((c) => c.route !== person && !out.has(c.route));
+  /**
+   * Dá prioridade a quem já é membro (0) sobre quem não é (1).
+   * @param {object} c Candidato
+   * @returns {number} 0 se membro, 1 se não.
+   */
   const isMember = (c) => (members?.has(c.route) ? 0 : 1);
   candidates.sort((a, b) => isMember(a) - isMember(b) || a.since - b.since);
   return candidates[0]?.route || "";
@@ -213,6 +230,11 @@ export function buildNaturalHide({ communityId, postId, target, proofRecord }, n
   return { type: NATURAL_HIDE_TYPE, communityId, postId, target, proof: JSON.stringify(proofRecord), ts: now };
 }
 
+/**
+ * Lê um JSON; devolve `null` se o texto for inválido.
+ * @param {string} text Texto
+ * @returns {*|null} Valor lido, ou `null`.
+ */
 function parseJson(text) {
   try {
     return JSON.parse(text);

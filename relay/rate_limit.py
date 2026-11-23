@@ -1,25 +1,28 @@
 """Limite de taxa por IP para o relay (token bucket em memória, só biblioteca padrão).
 
-Cada classe de endpoint tem a sua política (`per_min` fichas por minuto, no máximo `burst` guardadas):
+Cada classe de endpoint tem a sua política (`per_min` fichas/min, máximo `burst` guardadas):
 
-| Classe       | O que limita                                              | Padrão (por min / rajada) |
-| ------------ | --------------------------------------------------------- | ------------------------- |
-| `mailbox`    | POST/DELETE em `/inbox`, `/memory/*`, `/relay/*`          | 120 / 60                  |
-| `beacon`     | POST em `/peer/beacon` e `/p2p/seed` (DELETE incluso)     | 60 / 30                   |
-| `write`      | demais POST/DELETE (espelho, OAuth, rota desconhecida)    | 60 / 30                   |
-| `signal`     | novas conexões WebSocket da sinalização                   | 30 / 15                   |
-| `signal_msg` | mensagens de uma conexão WebSocket já aberta              | 600 / 200                 |
+| Classe       | O que limita                                      | Padrão (min / rajada) |
+| ------------ | ------------------------------------------------- | --------------------- |
+| `mailbox`    | POST/DELETE em `/inbox`, `/memory/*`, `/relay/*`  | 120 / 60              |
+| `beacon`     | POST em `/peer/beacon` e `/p2p/seed`              | 60 / 30               |
+| `write`      | demais POST/DELETE (espelho, OAuth, etc.)         | 60 / 30               |
+| `signal`     | novas conexões WebSocket da sinalização           | 30 / 15               |
+| `signal_msg` | mensagens de WebSocket já aberto                  | 600 / 200             |
 
-Leituras (GET/HEAD/OPTIONS), `/ping` e `/status` ficam de fora. Cada valor muda por variável de ambiente
-`VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `VOX_RELAY_RATE_<CLASSE>_BURST` (ex.: `VOX_RELAY_RATE_MAILBOX_PER_MIN=300`).
-`VOX_RELAY_WRITE_LIMIT_PER_MIN` (do PM-94) continua valendo como `per_min` das três classes HTTP de escrita.
+Leituras (GET/HEAD/OPTIONS), `/ping` e `/status` ficam de fora. Cada valor muda por variável
+de ambiente `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `VOX_RELAY_RATE_<CLASSE>_BURST`
+(ex.: `VOX_RELAY_RATE_MAILBOX_PER_MIN=300`).
+`VOX_RELAY_WRITE_LIMIT_PER_MIN` (do PM-94) continua valendo como `per_min` das 3 classes HTTP.
 
-**IP atrás de proxy:** por padrão vale o IP do socket. `VOX_RELAY_TRUST_PROXY_HOPS=N` (N ≥ 1) manda confiar em
-`X-Forwarded-For` e usar a N-ésima entrada contando da direita (cada proxy confiável acrescenta o IP de quem falou
-com ele; o que o cliente mandou fica à esquerda e não conta). Valor que não é IP cai no IP do socket.
+**IP atrás de proxy:** por padrão vale o IP do socket. `VOX_RELAY_TRUST_PROXY_HOPS=N` (N ≥ 1)
+manda confiar em `X-Forwarded-For` e usar a N-ésima entrada contando da direita (cada proxy
+confiável acrescenta o IP de quem falou com ele; o que o cliente mandou fica à esquerda e
+não conta). Valor que não é IP cai no IP do socket.
 
-**Memória:** o mapa guarda um bucket por (classe, IP). Bucket já cheio equivale a bucket inexistente, então sai do
-mapa; há ainda um teto de `MAX_ENTRIES` por classe (descarta o mais antigo). IPv6 conta por /64.
+**Memória:** o mapa guarda um bucket por (classe, IP). Bucket já cheio equivale a bucket
+inexistente, então sai do mapa; há ainda um teto de `MAX_ENTRIES` por classe (descarta o mais
+antigo). IPv6 conta por /64.
 """
 
 import ipaddress
@@ -47,19 +50,25 @@ LIMITED_MESSAGE = "Muitas escritas deste endereço; tente de novo em instantes"
 
 
 def _positive_int(raw, fallback):
+    """Converte para inteiro positivo; usa `fallback` se não for."""
     text = str(raw or "").strip()
     return int(text) if text.isdigit() and int(text) > 0 else fallback
 
 
 def policies_from_env(env=None):
-    """Políticas padrão com as variáveis de ambiente por cima; valor inválido ou zero mantém o padrão."""
+    """Políticas padrão com as variáveis de ambiente por cima.
+
+    Valor inválido ou zero mantém o padrão.
+    """
     env = os.environ if env is None else env
     legacy = _positive_int(env.get("VOX_RELAY_WRITE_LIMIT_PER_MIN"), None)
     policies = {}
     for name, default in DEFAULT_POLICIES.items():
         base = legacy if (legacy and name in LEGACY_WRITE_CLASSES) else default.per_min
         per_min = _positive_int(env.get(f"VOX_RELAY_RATE_{name.upper()}_PER_MIN"), base)
-        burst = _positive_int(env.get(f"VOX_RELAY_RATE_{name.upper()}_BURST"), min(default.burst, per_min))
+        burst = _positive_int(
+            env.get(f"VOX_RELAY_RATE_{name.upper()}_BURST"), min(default.burst, per_min)
+        )
         policies[name] = Policy(per_min, burst)
     return policies
 
@@ -68,6 +77,7 @@ class _Buckets:
     """Buckets de uma classe, do menos para o mais recentemente usado (`OrderedDict`)."""
 
     def __init__(self, policy, clock, max_entries):
+        """Cria o conjunto de buckets de uma política, com relógio e limite de entradas."""
         self.rate = policy.per_min / 60.0
         self.burst = float(policy.burst)
         self.clock = clock
@@ -76,6 +86,7 @@ class _Buckets:
         self.lock = threading.Lock()
 
     def _refilled(self, tokens, stamp, now):
+        """Devolve os tokens após a recarga desde `stamp`, limitados ao burst."""
         return min(self.burst, tokens + (now - stamp) * self.rate)
 
     def _sweep(self, now):
@@ -87,7 +98,10 @@ class _Buckets:
             self.entries.popitem(last=False)
 
     def take(self, key):
-        """Gasta uma ficha. Devolve 0 se passou, ou os segundos (arredondados para cima) até ter uma."""
+        """Gasta uma ficha.
+
+        Devolve 0 se passou, ou os segundos (arredondados para cima) até ter uma.
+        """
         with self.lock:
             now = self.clock()
             self._sweep(now)
@@ -100,22 +114,31 @@ class _Buckets:
             return wait
 
     def size(self):
+        """Devolve quantos buckets estão guardados."""
         with self.lock:
             return len(self.entries)
 
 
 class RateLimiter:
-    """Um token bucket por (classe, IP). `check` devolve 0 (liberado) ou os segundos para o `Retry-After`."""
+    """Um token bucket por (classe, IP).
+
+    `check` devolve 0 (liberado) ou os segundos para o `Retry-After`.
+    """
 
     def __init__(self, policies=None, clock=time.monotonic, max_entries=MAX_ENTRIES):
+        """Cria um conjunto de buckets por classe; sem `policies`, usa as do ambiente."""
         chosen = policies if policies is not None else policies_from_env()
-        self.buckets = {name: _Buckets(policy, clock, max_entries) for name, policy in chosen.items()}
+        self.buckets = {
+            name: _Buckets(policy, clock, max_entries) for name, policy in chosen.items()
+        }
 
     def check(self, klass, ip):
+        """Consome um token da classe para o IP; devolve 0 se liberado, senão o tempo de espera. Classe desconhecida não limita."""
         buckets = self.buckets.get(klass)
         return buckets.take(ip) if buckets else 0
 
     def size(self, klass):
+        """Devolve quantos buckets a classe guarda."""
         return self.buckets[klass].size()
 
 
@@ -123,7 +146,10 @@ LIMITER = RateLimiter()
 
 
 def write_class(method, path):
-    """Classe de limite de um pedido HTTP, ou None para o que não é limitado (leituras, `/ping`, `/status`)."""
+    """Classe de limite de um pedido HTTP.
+
+    Devolve None para o que não é limitado (leituras, `/ping`, `/status`).
+    """
     if str(method).upper() not in WRITE_METHODS:
         return None
     route = str(path or "").split("?")[0]
@@ -133,7 +159,7 @@ def write_class(method, path):
 
 
 def http_rejection(method, path, ip, limiter=None):
-    """`(429, mensagem, retry_after)` se o IP estourou o limite da classe do pedido; None se pode seguir."""
+    """Retorna `(429, mensagem, retry_after)` se estourou o limite, ou None se pode seguir."""
     klass = write_class(method, path)
     if klass is None:
         return None
@@ -163,7 +189,7 @@ def _bucket_key(text):
 
 
 def client_ip(peer_ip, forwarded_for=None, hops=None):
-    """IP que identifica o cliente: o do socket, ou o da N-ésima entrada da direita de `X-Forwarded-For`."""
+    """IP que identifica o cliente: socket ou N-ésima entrada da direita em Forwarded-For."""
     hops = TRUSTED_HOPS if hops is None else hops
     entries = [part for part in str(forwarded_for or "").split(",") if part.strip()]
     if hops > 0 and len(entries) >= hops:

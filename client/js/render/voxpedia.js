@@ -10,6 +10,11 @@ export const VOX_GITHUB_DOCS = {
   devGuide: "https://github.com/yurikayel/vox/blob/main/client/DEV.md",
 };
 
+/**
+ * Lateral com links para a documentação no GitHub.
+ *
+ * @returns {string}
+ */
 function renderGithubDocsAside() {
   const { docsReadme, devGuide, docsIndex } = VOX_GITHUB_DOCS;
   return `
@@ -27,6 +32,14 @@ function renderGithubDocsAside() {
     </aside>`;
 }
 
+/**
+ * Camada expansível da Voxpédia.
+ *
+ * @param {string} summary
+ * @param {string} bodyHtml
+ * @param {string} [extraClass=""]
+ * @returns {string}
+ */
 function layer(summary, bodyHtml, extraClass = "") {
   const cls = extraClass ? `voxpedia-layer ${extraClass}` : "voxpedia-layer";
   return `<details class="${cls}"><summary>${escapeHtml(summary)}</summary><div class="voxpedia-layer-body">${bodyHtml}</div></details>`;
@@ -41,6 +54,15 @@ const SECTION_ORDER = [
   "voxpedia-tecnico",
 ];
 
+/**
+ * Seção numerada da Voxpédia com suas camadas.
+ *
+ * @param {string} id
+ * @param {string} title
+ * @param {string} lead
+ * @param {string} layersHtml
+ * @returns {string}
+ */
 function section(id, title, lead, layersHtml) {
   const n = String(SECTION_ORDER.indexOf(id) + 1).padStart(2, "0");
   return `
@@ -67,225 +89,273 @@ const PR_CIVICO_BODY = [
   "<p>O alvo é a <strong>regra daquela comunidade</strong> — não um programa municipal, não uma carta de federação, não quórum territorial de bairro até o país.</p>",
 ].join("");
 
+/**
+ * Camada sobre as três lógicas.
+ *
+ * @returns {string}
+ */
 function layerTresLogicas() {
   return layer("Três lógicas: fazenda, pensão, movimento", TRES_LOGICAS_BODY);
 }
 
+/**
+ * Camada sobre o pull request cívico.
+ *
+ * @returns {string}
+ */
 function layerPrCivico() {
   return layer("Pull request cívico (regras da comunidade)", PR_CIVICO_BODY);
 }
 
+/**
+ * Camada sobre conta e carteira.
+ *
+ * @returns {string}
+ */
 function layerContaCarteira() {
   return layer(
     "Conta, carteira e identidade",
-    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> nascido de uma semente no aparelho. Com e-mail e Senha Soberana, o cofre é endereçado por <code>e-mail:senha</code> (o e-mail não sai em claro) e o kit de volta (<code>#/sync?b=…</code> / <code>VOX1:…</code>) vai por <code>mailto:</code> para você mesmo; <a href="#/frase">frase de 12 palavras</a> e <a href="#/guardioes">guardiões</a> completam as saídas. A <a href="#/wallet">Carteira</a> guarda chaves e habilita <strong>leitura</strong> de registros públicos; <strong>gravação no Arweave está pausada</strong> por padrão (<code>arweaveUpload: false</code> — ver <a href="${VOX_GITHUB_DOCS.features}" target="_blank" rel="noopener noreferrer">FEATURES</a>).</p>
-    ${layer("Handles @nome", `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`)}
+    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> nascido de uma semente no aparelho. A <a href="#/wallet">Carteira</a> guarda chaves e habilita <strong>leitura</strong> de registros públicos; <strong>gravação no Arweave está pausada</strong> por padrão (<code>arweaveUpload: false</code> — ver <a href="${VOX_GITHUB_DOCS.features}" target="_blank" rel="noopener noreferrer">FEATURES</a>), com circulação pela rede de seguidores.</p>
+    ${layer("Handles @nome", `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — sem registro central.</p>`)}
     ${layer("Perfil e Pix", `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`)}`
   );
 }
 
+/**
+ * Camada sobre saída soberana e frase de recuperação.
+ *
+ * @returns {string}
+ */
+function layerSaidaSoberana() {
+  const frase = layer("Frase de recuperação 12/24 palavras", `<p>Em <a href="#/frase">#/frase</a> você acessa a semente BIP-39 em português (12 palavras para contas novas, 24 para legadas). Permite imprimir cartão sem QR, conferir 3 palavras e restaurar a conta sem rede ou servidor.</p>`);
+  const guardioes = layer("Guardiões 3-de-5 e devolução", `<p>Em <a href="#/guardioes">#/guardioes</a> você divide a semente com Shamir GF(256) entre 5 contatos mútuos. Para recuperar em <a href="#/voltar">#/voltar</a>, bastam 3 partes com código de 4 palavras conferido por voz ou pessoalmente; permite trocar ou remover guardiões.</p>`);
+  const cofre = layer("Cofre v2 por senha e cofre na malha", `<p>Cofre cifrado em <a href="#/backup">#/backup</a> e <a href="#/sync">#/sync</a> com kit enviado por <code>mailto:</code> ao próprio e-mail (que não sai em claro) e proteção anti-rollback. Com o cofre na malha (ADR-037), cópias cifradas ficam em laços mútuos com pedido cego no relay e espera de 24h ou aprovação 'Fui eu' / veto 'Não fui eu'.</p>`);
+  return layer("Entrada e saída soberana (frase, guardiões, cofre)", `<p>Sua identidade é sua: sem servidores corporativos, você escolhe como proteger e restaurar sua conta.</p>${frase}${guardioes}${cofre}`);
+}
+
+/**
+ * Camada sobre os feeds.
+ *
+ * @returns {string}
+ */
 function layerFeeds() {
   return layer(
     "Feeds Para você e Seguindo",
-    `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
-    ${layer("Transparência do feed (sem ranking, sem boost)", `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`)}
-    ${layer("POSSE: O Zap continua existindo", `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`)}
-    ${layer("Modo demonstração", `<p>O Vox <strong>nunca</strong> mostra conteúdo inventado quando a rede falha: sem gateway, cache ou par, a tela diz que está sem conexão. Para conhecer o app sem rede, ligue o <strong>modo demonstração</strong> em <em>Sua rede</em>: ele mostra <strong>27 perfis fictícios</strong> (um por UF), sempre com uma faixa "Modo demonstração" no topo.</p>`)}`
+    `<p>No menu lateral, alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores marcados; Para você traz descoberta recente sem leilão de ads.</p>
+    ${layer("Transparência do feed (sem ranking, sem boost)", `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura.</p>`)}
+    ${layer("POSSE: O Zap continua existindo", `<p>Publique no Vox como fonte soberana e compartilhe o resumo no WhatsApp ou redes (POSSE). O Vox guarda o original; o Zap continua seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`)}
+    ${layer("Modo demonstração", `<p>O Vox <strong>nunca</strong> inventa conteúdo quando a rede falha: sem conexão, exibe aviso honesto. Para conhecer o app sem rede, ligue o <strong>modo demonstração</strong> em <em>Sua rede</em> (27 perfis fictícios por UF, com faixa no topo).</p>`)}`
   );
 }
 
+/**
+ * Seção Começar.
+ *
+ * @returns {string}
+ */
 function renderComecar() {
   const stepsLayer = layer(
     "Primeiros passos no app",
     `<ol class="voxpedia-steps">
       <li>Abra o Vox no navegador (funciona como app instalável — PWA).</li>
-      <li>Na entrada, informe <strong>nome, e-mail e senha</strong> para já enviar seu kit de volta ao próprio e-mail (sem a senha), ou entre só com o nome.</li>
-      <li>Leia o <strong>Pacto Vox</strong>: por padrão você ajuda levemente a malha; pode pausar em <a href="#/settings/network">Sua rede</a>.</li>
-      <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar um tópico.</li>
+      <li>Na entrada, informe nome, e-mail e senha para gerar seu kit de volta ao próprio e-mail, ou entre só com nome.</li>
+      <li>Leia o <strong>Pacto Vox</strong>: por padrão você atua como nó leve; pode pausar em <a href="#/settings/network">Sua rede</a>.</li>
+      <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar.</li>
     </ol>`
   );
-
-  const layers = `${stepsLayer}\n${layerTresLogicas()}\n${layerContaCarteira()}\n${layerFeeds()}`;
+  const layers = `${stepsLayer}\n${layerTresLogicas()}\n${layerContaCarteira()}\n${layerSaidaSoberana()}\n${layerFeeds()}`;
   return section(
     "voxpedia-comecar",
     "Começar",
-    "Vox é uma rede comunitária aberta: você lê, posta e conversa sem depender de um único servidor de uma big tech. A longo prazo, queremos um lugar onde conversa pública e grupos façam sentido de novo — sem substituir da noite para o dia Instagram ou X, mas oferecendo outro caminho.",
+    "Vox é uma rede comunitária aberta: você lê, posta e conversa sem depender de servidores de big techs, com soberania de chaves no aparelho e preservação colaborativa.",
     layers
   );
 }
 
+/**
+ * Seção Mensagens.
+ *
+ * @returns {string}
+ */
 function renderMensagens() {
   const layers = `
-    ${layer(
-      "O que são mensagens no Vox",
-      `<p><a href="#/dm">Mensagens</a> são conversas privadas entre dois identificadores <code>vx_…</code>. O texto é cifrado para o destinatário; entrega pode usar malha P2P/WebRTC quando ambos estão online.</p>`
-    )}
-    ${layer(
-      "Como iniciar uma conversa",
-      `<ol class="voxpedia-steps">
-        <li>Abra o perfil da pessoa ou use <a href="#/people">Pessoas</a> / contatos.</li>
-        <li>Toque em <strong>Mensagem</strong> ou abra <code>#/dm/&lt;endereço&gt;</code>.</li>
-        <li>Compartilhe seu link de DM pelo botão de copiar link na lista de mensagens.</li>
-      </ol>
-      ${layer(
-        "Link de conexão #/connect",
-        `<p>Links <code>#/connect/vx_…</code> abrem uma prévia para adicionar alguém à sua lista antes de conversar — útil fora do app (WhatsApp, e-mail).</p>`
-      )}`
-    )}
-    ${layer(
-      "O que fica no aparelho",
-      `<p>Mensagens abertas e metadados ficam no <strong>IndexedDB</strong> deste navegador. Limpar dados do site apaga o histórico local; envelopes ainda podem existir no relay/inbox conforme configuração de rede.</p>`
-    )}`;
-
+    ${layer("O que são mensagens no Vox", `<p><a href="#/dm">Mensagens</a> são conversas privadas entre identificadores <code>vx_…</code> com criptografia ponta a ponta e entrega cooperativa P2P/WebRTC quando ambos estão online.</p>`)}
+    ${layer("Como iniciar uma conversa", `<ol class="voxpedia-steps">
+        <li>Abra o perfil da pessoa ou use <a href="#/people">Pessoas</a>.</li>
+        <li>Toque em <strong>Mensagem</strong> ou acesse <code>#/dm/&lt;endereço&gt;</code>.</li>
+        <li>Links <code>#/connect/vx_…</code> permitem prévia antes de adicionar aos contatos.</li>
+      </ol>`)}
+    ${layer("O que fica no aparelho", `<p>Mensagens e chaves ficam no <strong>IndexedDB</strong> deste navegador. A caixa de saída reenvia mensagens pendentes enquanto o app está aberto; limpar dados apaga o histórico local.</p>`)}`;
   return section(
     "voxpedia-mensagens",
     "Mensagens",
-    "Direct messages com honestidade: criptografia ponta a ponta no modelo do app, cache local e entrega cooperativa quando possível.",
+    "Direct messages honestas: criptografia ponta a ponta, armazenamento local e entrega direta cooperativa.",
     layers
   );
 }
 
+/**
+ * Camada sobre modo canal e quadros.
+ *
+ * @returns {string}
+ */
+function layerModoCanalEFrames() {
+  const canal = layer("Modo canal (postingMode: \"mods\")", `<p>Comunidades podem ativar o modo canal (<code>postingMode: "mods"</code>): somente moderadores publicam tópicos no feed principal, enquanto todos os membros comentam nas respostas. A regra é checada pelo cliente de cada participante.</p>`);
+  const frames = layer("Open Frames locais assinados", `<p>Em <code>#/labs/frames</code> e no feed, suporta mini-apps assinados (enquetes, petições e formulários) executados em sandbox com allowlist local estrita, sem executar código remoto arbitrário.</p>`);
+  return `${canal}${frames}`;
+}
+
+/**
+ * Camada sobre moderação e proteções.
+ *
+ * @returns {string}
+ */
+function layerModeracaoProtecoes() {
+  const mod = layer("Moderação comunitária e denúncias", `<p>Moderadores assinam ações <code>mod-action</code> (fixar, trancar, ocultar). Denúncias vão por DM cifrada à moderação com quarentena preventiva de 48h sem tribunal central; mediação disponível no menu do post.</p>`);
+  const quarentena = layer("Quarentena de chave nova (PoW 14 bits)", `<p>Comunidades podem exigir quarentena para novas identidades: publicações de chaves vistas há menos de 24h ficam recolhidas no feed até resolver um Proof-of-Work leve de 14 bits (~1s no aparelho) ou liberação pela moderação.</p>`);
+  return `${mod}${quarentena}`;
+}
+
+/**
+ * Seção Comunidades.
+ *
+ * @returns {string}
+ */
 function renderComunidades() {
   const layers = `
-    ${layer(
-      "Entrar e navegar",
-      `<p>Em <a href="#/communities">Comunidades</a> você vê espaços públicos indexados com tag <code>App-Name: vox-brasil</code>. Dentro de cada uma: abas <strong>Posts</strong>, <strong>Classificados</strong> e <strong>Governança</strong>.</p>`
-    )}
+    ${layer("Entrar e navegar", `<p>Em <a href="#/communities">Comunidades</a> você vê espaços públicos temáticos com abas <strong>Posts</strong>, <strong>Feira</strong> e <strong>Governança</strong>.</p>`)}
     ${layerPrCivico()}
-    ${layer(
-      "Publicar e responder",
-      `<ol class="voxpedia-steps">
-        <li>Crie comunidade em <code>#/compose/community</code> (índice local e malha; envio Arweave só com flag e carteira).</li>
-        <li>Novo tópico: <strong>Postar</strong> ou <code>#/compose/topic?c=…</code>.</li>
-        <li>Respostas inline no feed do tópico; compartilhar gera link <code>#/t/&lt;id&gt;</code>.</li>
-      </ol>`
-    )}
-    ${layer(
-      "Moderação e hashtags",
-      `<p>Moderadores da comunidade assinam ações <code>mod-action</code> (ocultar, silenciar). Seu cliente aplica filtros localmente — o restante da rede pode ainda ter a cópia assinada na malha; gravação automática no Arweave não está ativa por padrão.</p>
-      ${layer(
-        "Classificados e mini-apps",
-        `<p>A aba Classificados lista anúncios assinados; o feed suporta <strong>frames</strong> nativos (enquetes, petições) com allowlist local — não são apps arbitrários de terceiros.</p>`
-      )}`
-    )}`;
-
+    ${layer("Publicar e responder", `<ol class="voxpedia-steps">
+        <li>Crie comunidade em <code>#/compose/community</code> (índice local e malha).</li>
+        <li>Publique tópicos em <strong>Postar</strong> ou <code>#/compose/topic?c=…</code>.</li>
+        <li>Respostas inline no feed; compartilhar gera link <code>#/t/&lt;id&gt;</code>.</li>
+      </ol>`)}
+    ${layerModoCanalEFrames()}
+    ${layerModeracaoProtecoes()}`;
   return section(
     "voxpedia-comunidades",
     "Comunidades",
-    "Espaços temáticos estilo fórum/Orkut: posts públicos, feira local, propostas de governança e moderação transparente no cliente.",
+    "Espaços temáticos descentralizados: tópicos públicos, propostas de governança com diff, modo canal e moderação comunitária segura.",
     layers
   );
 }
 
+/**
+ * Camada sobre a sinalização híbrida.
+ *
+ * @returns {string}
+ */
+function layerSinalizacaoHibrida() {
+  return layer(
+    "Sinalização híbrida WebSocket + Nostr efêmero (REV-09)",
+    `<p>Para estabelecer conexões WebRTC sem servidor central único, o Vox usa sinalização híbrida combinando WebSocket (servidor de apoio ou steward) com relays Nostr efêmeros (eventos tipo 25050, cifrados e sem persistência). O app usa reconexão automática com espera progressiva e alterna relays do pool em falhas.</p>`
+  );
+}
+
+/**
+ * Seção Rede.
+ *
+ * @returns {string}
+ */
 function renderRede() {
   const layers = `
-    ${layer(
-      "Pacto e nó leve",
-      `<p>Ao concordar com o Pacto, por padrão você atua como <strong>nó leve</strong>: repassa trechos já em cache para outros aparelhos, com tetos de banda e disco. Pause em <a href="#/settings/network">Sua rede</a> para modo somente leitura.</p>`
-    )}
-    ${layer(
-      "Camadas Passivo → Steward",
-      `<p>Passivo: pausado. Ativo: padrão. Apoiador: nó pesado opcional pelo botão “Seja um apoiador da rede” (de 512 MB a 1 GB de disco e até o dobro por dia, só no Wi-Fi). Steward: relay desktop ou signaling customizado na LAN/VPS.</p>
-      ${layer(
-        "Relay desktop e signaling",
-        `<p>O relay Python (<code>vox/relay/server.py</code>) faz proxy HTTP para gateways; o signaling WebSocket ajuda WebRTC atrás de NAT. Botões “Verificar Relay Desktop” e URLs customizadas ficam em Sua rede.</p>
-        ${layer(
-          "Pacotes WANT / BLOB",
-          `<p>Pares trocam pedidos <code>WANT</code> e respostas <code>BLOB</code> no canal <code>vox-peer-v0</code> — primeiro cache local/P2P, depois gateways GraphQL.</p>`
-        )}`
-      )}`
-    )}
-    ${layer(
-      "Chip “Rede ativa” na barra lateral",
-      `<p>Mostra quantos aparelhos WebRTC estão conectados ou quantos itens você serviu — atalho para ajustes de rede.</p>`
-    )}`;
-
+    ${layer("Pacto e nó leve", `<p>Ao concordar com o Pacto, você atua como <strong>nó leve</strong>: repassa trechos em cache para vizinhos com tetos de banda e disco. Pause em <a href="#/settings/network">Sua rede</a> quando quiser.</p>`)}
+    ${layer("Camadas Passivo → Steward", `<p>Passivo: pausado. Ativo: padrão. Apoiador: nó com 512 MB a 1 GB de cache no Wi-Fi. Steward: relay desktop (<code>vox/relay/server.py</code>) ou sinalização customizada.</p>
+      ${layer("Pacotes WANT / BLOB", `<p>Pares trocam pedidos <code>WANT</code> e respostas <code>BLOB</code> no canal <code>vox-peer-v0</code>, priorizando cache local e malha P2P antes de gateways.</p>`)}`)}
+    ${layerSinalizacaoHibrida()}
+    ${layer("Chip “Rede ativa” na barra lateral", `<p>Indica nós WebRTC conectados e itens servidos, com atalho direto para os ajustes de rede.</p>`)}`;
   return section(
     "voxpedia-rede",
     "Rede cooperativa",
-    "Descentralização que você sente no bolso: seus dados são seus, e a malha ajuda quem está perto — com limites que você controla.",
+    "Descentralização real: dados guardados no aparelho, malha colaborativa entre pares e sinalização resiliente.",
     layers
   );
 }
 
+/**
+ * Seção Privacidade.
+ *
+ * @returns {string}
+ */
 function renderPrivacidade() {
   const layers = `
-    ${layer(
-      "O que é público",
-      `<p>Posts públicos assinados circulam na malha e podem ser lidos via gateways GraphQL quando existirem on-chain. Hoje a <strong>escrita</strong> no Arweave está pausada por padrão; não publique segredos em posts públicos.</p>`
-    )}
-    ${layer(
-      "O que fica local",
-      `<p>Chaves privadas (JWK), rascunhos, cache IndexedDB, listas de bloqueio/silêncio, handles locais e preferências de rede (<code>localStorage</code> / settings de peers).</p>`
-    )}
-    ${layer(
-      "Bloquear, silenciar e exportar",
-      `<p>Em Sua rede você exporta/importa bundle de moderação, desbloqueia autores e restaura tour demo. Entrada sem Google/Meta; importar nome/foto de redes é opcional no <a href="#/perfil">Perfil</a>. Política em <code>privacy.html</code> no site.</p>
-      ${layer(
-        "Exclusão de dados",
-        `<p>Página <code>data-deletion.html</code> descreve o que o operador do site pode remover vs. o que já está on-chain. Apagar cache local não apaga transações já propagadas.</p>`
-      )}`
-    )}`;
-
+    ${layer("O que é público", `<p>Posts públicos assinados circulam na malha e podem ser lidos via gateways. A gravação no Arweave está pausada por padrão (<code>arweaveUpload: false</code>); não publique segredos em posts abertos.</p>`)}
+    ${layer("O que fica local", `<p>Chaves privadas (JWK), rascunhos, cache IndexedDB, listas de bloqueio, handles locais e preferências de rede ficam exclusivamente neste aparelho.</p>`)}
+    ${layer("Assinaturas e integridade sigv: 2", `<p>Publicações, moderações e envelopes usam assinatura ECDSA P-256 com especificação estrita <code>sigv: 2</code>, impedindo manipulações e garantindo auditoria descentralizada.</p>`)}
+    ${layer("Bloquear, silenciar e exportar", `<p>Em Sua rede você exporta/importa listas de moderação e baixa seus posts em JSON. Exclusão de dados no site (<code>data-deletion.html</code>) limpa registros locais, mas não apaga mensagens já propagadas a terceiros.</p>`)}`;
   return section(
     "voxpedia-privacidade",
     "Privacidade & dados",
-    "Transparência técnica: separar o imutável on-chain do que só este aparelho guarda ou esconde.",
+    "Transparência técnica: soberania sobre dados locais, assinaturas criptográficas estritas e controle de exposição.",
     layers
   );
 }
 
+/**
+ * Camada sobre leitura e publicação.
+ *
+ * @returns {string}
+ */
 function layerLeituraPublicacao() {
   return layer(
     "Leitura e publicação",
-    `<p>Consultas GraphQL em <code>graphql.js</code> contra gateways em <code>config/gateways.json</code>. <code>upload.js</code> assina tags Vox, mas o envio Arweave respeita <code>arweaveUpload</code> (desligado por padrão). Cache: <code>cache-node.js</code>; malha: <code>peers.js</code>, <code>webrtc-peer.js</code>.</p>
-    ${layer(
-      "Gossip e retratação",
-      `<p>Ofertas assinadas e retratações (<code>GOSSIP_UPDATE</code> / <code>GOSSIP_DELETE</code>) atualizam status local; UI mostra badge <strong>Editado</strong> ou tombstone quando ativado.</p>`
-    )}`
+    `<p>Consultas GraphQL em <code>graphql.js</code> contra múltiplos gateways. Tags assinadas com <code>sigv: 2</code>; gravação Arweave pausada por padrão (<code>arweaveUpload: false</code>). Cache em <code>cache-node.js</code>; malha em <code>peers.js</code> e <code>webrtc-peer.js</code>.</p>
+    ${layer("Gossip e retratação", `<p>Ofertas e retratações assinadas (<code>GOSSIP_UPDATE</code> / <code>GOSSIP_DELETE</code>) atualizam status local com selo <strong>Editado</strong> ou tombstone.</p>`)}`
   );
 }
 
+/**
+ * Camada sobre testes e lançamento.
+ *
+ * @returns {string}
+ */
 function layerTestesRelease() {
   return layer(
     "Testes e release",
-    `<p>Na raiz do repo: <code>npm test</code> (JS + relay Python). Após merge em <code>main</code>, GitHub Pages publica; usuários precisam de hard refresh para novo <code>CACHE_NAME</code> do SW.</p>
-    ${layer(
-      "Docs no repositório",
-      `<ul class="voxpedia-steps">
-        <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
-        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/dungeon">Mesa TTRPG (lab)</a> · Cartuchos Webxdc: código em <code>labs/parado/</code>, fora do núcleo offline · <a href="#/status">Status da malha</a></li>
-        <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
+    `<p>Na raiz do repo: <code>npm test</code> (testes unitários e de integração). Após merge em <code>main</code>, deploy estático; novo <code>CACHE_NAME</code> atualiza o Service Worker.</p>
+    ${layer("Docs no repositório", `<ul class="voxpedia-steps">
+        <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — guia de desenvolvimento e fluxos</li>
+        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/dungeon">Mesa TTRPG (lab)</a> · <a href="#/status">Status da malha</a></li>
+        <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas de arquitetura</li>
         <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
       </ul>
-      <p class="desc">Ver também o bloco <a href="#voxpedia-docs-github">Docs técnicas</a> no topo desta página.</p>`
-    )}`
+      <p class="desc">Ver também o bloco <a href="#voxpedia-docs-github">Docs técnicas</a> no topo desta página.</p>`)}`
   );
 }
 
+/**
+ * Seção Técnico.
+ *
+ * @returns {string}
+ */
 function renderTecnico() {
   const stackLayer = layer(
     "Stack do cliente",
-    `<p>PWA vanilla ES modules — sem bundler. Entrada <code>client/js/app.js</code>; roteador hash em <code>route-parse.js</code>; render modular em <code>client/js/render/</code>; service worker <code>client/sw.js</code> para shell offline.</p>`
+    `<p>PWA vanilla em módulos ES sem bundler. Entrada em <code>client/js/app.js</code>; roteamento hash em <code>route-parse.js</code>; render modular em <code>client/js/render/</code>; service worker em <code>client/sw.js</code> para shell offline.</p>`
   );
   const layers = `${stackLayer}\n${layerLeituraPublicacao()}\n${layerTestesRelease()}`;
   return section(
     "voxpedia-tecnico",
     "Para curiosos (técnico)",
-    "Ponteiros para quem quer ler código e protocolo — sem prometer features que ainda não existem no build.",
+    "Ponteiros para ler código, protocolos e specs — sem promessas que não existam no código real.",
     layers
   );
 }
 
+/**
+ * Cabeçalho da Voxpédia.
+ *
+ * @returns {string}
+ */
 function renderVoxpediaHero() {
   return `<header class="voxpedia-hero agora-codex-hero">
     <h1>Voxpedia</h1>
     <p class="agora-codex-subtitle">Glossário cívico &amp; técnico</p>
     <p class="desc voxpedia-hero-lead">
-      <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades no permaweb,
+      <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades preservados pela rede de seguidores e leitura de registros públicos,
       mensagens privadas cifradas e uma malha que ajuda a carregar conteúdo entre aparelhos.
       <strong>Voxpedia</strong> explica como isso funciona — comece pelo resumo e abra as camadas quando quiser detalhe.
-      Testando o app? Siga o <a href="#/ajuda/teste">roteiro teste aberto (~15 min)</a>.
+      Testando o app? Siga o <a href="#/ajuda/teste">roteiro de teste (~15 min)</a>.
     </p>
   </header>`;
 }
@@ -297,9 +367,14 @@ const TOC_ITEMS = [
   ["#voxpedia-rede", "Rede cooperativa"],
   ["#voxpedia-privacidade", "Privacidade & dados"],
   ["#voxpedia-tecnico", "Para curiosos (técnico)"],
-  ["#/ajuda/teste", "Teste aberto (testadores)"],
+  ["#/ajuda/teste", "Roteiro de teste"],
 ];
 
+/**
+ * Índice da Voxpédia.
+ *
+ * @returns {string}
+ */
 function renderVoxpediaToc() {
   const items = TOC_ITEMS.map(([href, label]) => `
       <li><a href="${href}">${escapeHtml(label)}</a></li>`).join("");

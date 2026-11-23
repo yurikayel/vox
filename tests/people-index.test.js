@@ -203,11 +203,11 @@ test("people-index - deduplica múltiplas contas do cofre local com o mesmo disp
   contacts.__resetContactsForTests();
   profileDirectory.__resetProfileCardsForTests();
 
-  const primary = await localAccount.ensureLocalAccount();
+  await localAccount.ensureLocalAccount();
   localAccount.setDisplayName("Yuri Kayel");
 
   // Cria uma segunda conta com o mesmo nome (cenário de re-login ou múltiplos perfis locais)
-  const secondary = await localAccount.createAdditionalAccount({ displayName: "Yuri Kayel" });
+  await localAccount.createAdditionalAccount({ displayName: "Yuri Kayel" });
 
   const all = await peopleIndex.buildPeopleIndex();
   const yuriEntries = all.filter((p) => p.name === "Yuri Kayel");

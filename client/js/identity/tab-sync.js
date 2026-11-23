@@ -89,16 +89,32 @@ export async function reloadIdentityFromStorage(deps = {}) {
   return { adopted: true, routeId: localAccount.getCachedRouteIdSync() };
 }
 
+/**
+ * Gera o identificador desta aba.
+ *
+ * @returns {string}
+ */
 function randomTabId() {
   return `${Date.now().toString(36)}_${randomBase36(8)}`;
 }
 
+/**
+ * Avisa as outras abas da rota atual.
+ *
+ * @param {string} hash
+ */
 function postRoute(hash) {
   try {
     channel?.postMessage({ v: MSG_VERSION, kind: "route", tabId, hash });
   } catch {}
 }
 
+/**
+ * Navega esta aba para a rota anunciada por outra, se for diferente.
+ *
+ * @param {string} hash
+ * @param {Window} win
+ */
 function applyRemoteHash(hash, win) {
   const next = String(hash || "#/");
   const cur = win?.location?.hash || "#/";
@@ -113,6 +129,12 @@ function applyRemoteHash(hash, win) {
   }
 }
 
+/**
+ * Trata mensagem do canal entre abas (rota ou identidade).
+ *
+ * @param {object} data
+ * @returns {Promise<void>}
+ */
 async function onChannelMessage(data) {
   if (!data || data.v !== MSG_VERSION || data.tabId === tabId) return;
   if (data.kind === "route" && data.hash) {
@@ -126,6 +148,12 @@ async function onChannelMessage(data) {
   }
 }
 
+/**
+ * Recarrega a identidade quando outra aba muda uma chave de identidade.
+ *
+ * @param {StorageEvent} ev
+ * @param {Storage} storage
+ */
 function onStorageEvent(ev, storage) {
   if (ev.storageArea !== storage) return;
   if (ev.key && !IDENTITY_KEYS.has(ev.key)) return;

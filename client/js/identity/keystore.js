@@ -27,6 +27,9 @@ export const LOCKED_TAG = "vox-locked-v1";
 
 /** O navegador não conseguiu abrir as chaves guardadas (IndexedDB indisponível ou chave perdida). */
 export class KeystoreUnavailableError extends Error {
+  /**
+   * Erro de chaves guardadas indisponíveis (IndexedDB não abriu).
+   */
   constructor() {
     super("Não foi possível abrir as chaves guardadas neste aparelho. Recarregue a página e tente de novo.");
     this.name = "KeystoreUnavailableError";
@@ -35,6 +38,11 @@ export class KeystoreUnavailableError extends Error {
 
 /** A chave está travada: só sai do aparelho pela cópia cifrada com a Senha Soberana. */
 export class KeyLockedError extends Error {
+  /**
+   * Erro de conta travada pela Senha Soberana.
+   *
+   * @param {string} [message="Esta conta está travada pela Senha Soberana. Digite a senha para exportar o backup."]
+   */
   constructor(message = "Esta conta está travada pela Senha Soberana. Digite a senha para exportar o backup.") {
     super(message);
     this.name = "KeyLockedError";
@@ -43,9 +51,27 @@ export class KeyLockedError extends Error {
 
 let devicePromise = null;
 
+/**
+ * Codifica bytes em base64.
+ *
+ * @param {ArrayBuffer|Uint8Array} bytes
+ * @returns {string}
+ */
 const toB64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+/**
+ * Decodifica base64 para bytes.
+ *
+ * @param {string} text
+ * @returns {Uint8Array}
+ */
 const fromB64 = (text) => Uint8Array.from(atob(String(text)), (c) => c.charCodeAt(0));
 
+/**
+ * Converte um `IDBRequest` em promessa.
+ *
+ * @param {IDBRequest} req
+ * @returns {Promise<*>}
+ */
 function requestToPromise(req) {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -56,6 +82,11 @@ function requestToPromise(req) {
 /** Conexões abertas agora: "Apagar conta local" precisa fechá-las, senão o navegador segura a remoção do banco. */
 const openConnections = new Set();
 
+/**
+ * Fecha a conexão IndexedDB e a tira da lista de abertas.
+ *
+ * @param {IDBDatabase} db
+ */
 function releaseConnection(db) {
   openConnections.delete(db);
   try {
@@ -65,6 +96,11 @@ function releaseConnection(db) {
   }
 }
 
+/**
+ * Abre (ou cria) o banco de chaves; `null` se IndexedDB não existe.
+ *
+ * @returns {Promise<IDBDatabase|null>}
+ */
 async function openDb() {
   const idb = globalThis.indexedDB;
   if (!idb?.open) return null;
@@ -135,6 +171,11 @@ export async function removeKey(id) {
   await inStore("readwrite", (store) => requestToPromise(store.delete(id)));
 }
 
+/**
+ * Carrega a chave AES do aparelho, criando-a não extraível se ainda não existe.
+ *
+ * @returns {Promise<CryptoKey>}
+ */
 async function loadOrCreateDeviceKey() {
   const existing = await loadKey(DEVICE_KEY_ID);
   if (existing) return existing;

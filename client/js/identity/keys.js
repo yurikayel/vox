@@ -8,6 +8,6 @@
  */
 
 /** Chave do aparelho: selar e abrir JSON em repouso. */
-export { isSealed, openSealed, sealJson } from "./keystore.js";
+export { isSealed, openSealed, sealJson, sealJsonStrict } from "./keystore.js";
 /** Chave privada de DM, aberta pela chave do aparelho ou pela trava da Senha Soberana. */
 export { dmPrivateKey } from "./key-lock.js";

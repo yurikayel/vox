@@ -23,6 +23,10 @@ export const NOTE_TTL_MS = 24 * 60 * 60 * 1000;
 export const NOTE_HINT =
   "Nota neste aparelho / na malha se o cartão de perfil circular. Não é Stories do Instagram.";
 
+/**
+ * Lê do `localStorage` as notas de perfil.
+ * @returns {object} Notas por perfil, ou objeto vazio.
+ */
 function loadMap() {
   if (typeof window === "undefined" || !window.localStorage) return {};
   try {
@@ -33,6 +37,10 @@ function loadMap() {
   }
 }
 
+/**
+ * Grava no `localStorage` as notas de perfil.
+ * @param {object} map Notas por perfil
+ */
 function saveMap(map) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {

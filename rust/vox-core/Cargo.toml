@@ -1,0 +1,12 @@
+[package]
+name = "vox-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Zero-dependency no_std reference core for Vox canonical signing formats, GF(256) Shamir splitting, and genesis guards (ADR-039 Phase 1)."
+
+[dependencies]
+
+[lints]
+workspace = true

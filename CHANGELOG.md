@@ -6,6 +6,84 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Segurança (CodeQL, release #407): ids vindos de fora não mexem mais no protótipo dos mapas locais (novo `shared/safe-key.js`, usado em não lidas, DM, telemetria de gateway, chaves DM e handles); rota e aba só escolhem funções da própria tabela (`Object.hasOwn`); `vox-embed.js` aceita só `data-base` http(s); o SW confere a origem da mensagem; relatório de complexidade escapa a barra invertida.
+- Comunidade: sair da rota enquanto a comunidade ainda carrega não deixa mais a página atrasada desenhar por cima da tela nova (ex.: `#/c/…` → `#/voxpedia` mostrava a comunidade). O escopo da rota passa a morar em `app/navigation.js` (`setRouteScope`/`getRouteScope`, sem ciclo) e `showCommunity` confere se ele foi abortado antes de desenhar. E2E: `test_03` abre os `<details>` da Mesa (mini-grade e Auditoria Técnica) fechados desde o redesenho.
+- Testes: `cov-t4-compose-forms` "falha ao assinar" deixa de ser instável — a tentativa usa comunidade própria (um post de outro teste que chegue tarde ao cache não conta como gravado), a falha lista o que vazou e o `wipeLocalAccount` passa a ser aguardado.
+- Labs (Webxdc): `inlineCartridgeAssets` troca por data URL só a referência exata da imagem (valor de `src`/`href` e `url(...)`). Antes trocava por substring: `./i.png` virava `./data:…` (imagem quebrada), `ai.png` recebia a imagem de `i.png` e texto comum com o nome era alterado. Achado pelo lote de cobertura T7.
+
+- Refactor: `central-memory.js` (484 linhas) vira fachada de 140 linhas com a mesma API pública (ciclo de sincronização, envio automático e cursor), e as partes vão para `central-memory-urls.js` (endereços e transporte), `central-memory-bundle.js` (pacote local e cursor `syncCursor`), `central-memory-apply.js` (aplicar o pacote remoto e a trava de hidratação) e `central-memory-directory.js` (cartões do diretório). As 32 funções conferidas por AST como idênticas, salvo o prefixo `syncCursor.`; nenhum ciclo novo. SW `vox-pwa-v7.161-central-memory-split` com os quatro módulos no precache.
+
+- Refactor: `app/screens-dm.js` (475 linhas) vira fachada de 45 linhas com a mesma API pública (`pollInboxMessages`, `showDmList`, `showDmThread`, `handleSendDmSubmit`, `initDmListeners`), e as partes vão para `screens-dm-inbox.js` (caixa de entrada), `screens-dm-list.js` (lista de conversas), `screens-dm-thread.js` (conversa, envio, reações, painel dividido) e `screens-dm-draft.js` (rascunho: resposta, cartão de contexto, foto). As três variáveis de rascunho viram campos do objeto compartilhado `dmDraft`; nenhum ciclo novo. SW `vox-pwa-v7.160-dm-split` com os quatro módulos no precache.
+
+- Refactor: `render/shell.js` (818 linhas) vira fachada de 112 linhas com a mesma API pública, e as partes vão para `shell-nav.js` (navegação, ícones, badge de DM, círculos), `shell-chrome.js` (marca, barra superior, selos, tema), `shell-drawer.js` (barra lateral e gaveta de identidade) e `shell-layout.js` (avisos e peças de página). Sem ciclo entre os módulos; `attachTopBarBehavior` separa busca (`attachTopBarSearch`) e gaveta (`attachIdentityDrawerBehavior`). Testes de texto-fonte leem pelo `tests/helpers/shell-render-source.mjs`. SW `vox-pwa-v7.159-shell-split` com os quatro módulos no precache.
+
+- Perfil: salvar a chave Pix voltou a funcionar — o formulário lia `valid`/`error` em vez de `ok`/`errorPt` de `validatePixKey` (toda chave válida mostrava "undefined" e não era gravada) e passava o texto a `setPixKey` em vez do registro `{ normalized, type, masked }`. Achado pelo lote de cobertura T3 (`tests/perfil-pix-salvar.test.js`).
+
+- Testes: cobertura do cliente sobe de 78,8% para 95,3% (lotes T1–T7, `tests/cov-*`); relay em 91,9%. Pisos de `scripts/coverage-floor.json` sobem para esses valores (meta 90%).
+
+- Testes: `relay/test_contract_api.py` não sai mais para a internet — os gateways upstream ficam vazios durante o teste, e o `/tx/` ausente vira 404 local (antes o pedido ia a `arweave.net` com timeout de 8 s contra 5 s do cliente e falhava de forma intermitente no CI).
+
+- Testes: métrica de cobertura com catraca — `npm run coverage:js` (linhas de código do cliente, sem brancos/comentários; arquivo não carregado conta 0%) e `npm run coverage:py` (instruções do relay, stdlib); pisos em `scripts/coverage-floor.json` (base 22/11: 78,8% / 91,9%; meta 90%); CI roda no Node 24 e no Python 3.12 (`docs/TESTES.md` §3.2).
+
+- Relay: o arquivo de blob da memória central passa por `safe_path.child_of` (recusa symlink para fora de `blobs/`; alertas CodeQL `py/path-injection`); triagem do `py/partial-ssrf` em `docs/security/codeql-relay-python-triagem.md` (`relay/test_central_memory_blob_path.py`).
+
+### Chore: alertas Dependabot (qs, minimatch)
+- `package.json`: `overrides` para `qs` (^6.16.2) e `minimatch` (^11.0.9) fecham 3 alertas médios (#1, #2, #5); `npm audit` restante: `glob`/`@stryker-mutator/tap-runner` sem correção upstream.
+
+- Docs: `docs/ROADMAP.md` ganha as evidências dos PRs #394–#403 em `develop` (22/11/2026); nenhuma caixa `code` marcada antes do merge em `main`.
+
+- Persistência de credenciais endurecida: sessão do Bluesky e segredos de contas vinculadas só vão ao armazenamento cifrados pela chave do aparelho (sem ela ficam em memória); callback de login com `state` desconhecido não encerra fluxos pendentes (`tests/credential-persistence.test.js`).
+### Feat / Ops / Refactor: PM-19 (espelhos), PM-25 (`.ics`), PM-31 (transparência moderação), Onda 3 (`init` & `linked-accounts`)
+- `scripts/verify-mirrors.mjs` + `.github/workflows/mirror-verify.yml` (`PM-19`): compara `CACHE_NAME` do `sw.js` dos espelhos `live` com o repositório; CLI `--offline` e suíte `tests/mirror-verify.test.js`.
+- `client/js/aviso-ics.js` + `render/aviso.js` + `app/aviso-flow.js` (`PM-25`): exportação RFC 5545 `.ics` ("📅 Agenda (.ics)") para convocações com data e testes em `tests/aviso-ics.test.js`.
+- `client/js/moderation-log.js` + `render/network-sections.js` + `app/network-screen-moderation.js` (`PM-31`): resumo agregado e exportação em Markdown (`vox-transparencia-moderacao.md`) sem expor PII de denunciantes/listas pessoais + `tests/moderation-log.test.js`.
+- `client/js/app/init.js` (504 → 19 linhas) e `client/js/linked-accounts.js` (590 → 43 linhas): fatiados em 9 submódulos SLAP mantendo 100% dos exports públicos.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.158-pm19-pm25-pm31-onda3` (+11 módulos no `SHELL_ASSETS`).
+
+### Feat / Refactor / A11y: PM-26 (contador mensal/economia de dados), PM-27 ("Ouvir post"), Onda 3 (`inline-composer`, `screens-network`, `cache-node`)
+- `client/js/peers-settings.js` + `render/network-sections.js` (`PM-26`): acumulado mensal UTC (`vox-monthly-usage`, `getMonthlyUsage`), detecção ativa de economia de dados/4G (`isDataSaverActive`) e indicador em `#/settings/network` + testes em `tests/pm26-data-saver.test.js`.
+- `client/js/shared/post-speech.js` + `app/post-more-{actions,menu}.js` (`PM-27` / `LAN-22`): ação **Ouvir post** via Web Speech API (`pt-BR`), parada automática em `hashchange` e fallback honesto + testes em `tests/post-speech.test.js`.
+- `client/js/app/inline-composer.js` (774 → 80 linhas), `client/js/cache-node.js` (794 → 57 linhas) e `client/js/app/screens-network.js` (659 → 35 linhas): fatiados em 17 submódulos SLAP mantendo 100% dos exports públicos, mais helper `tests/helpers/inline-composer-source.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.157-pm26-pm27-onda3` (+18 módulos no `SHELL_ASSETS`).
+
+### Feat / Refactor / Hardening: PM-96 (Bluesky ADR-026), PM-30 (quarentena), PM-66 (`PLR0913`/`lint:all`), Onda 3 (`screens-profile` & `explode-dispatch`)
+- `client/js/bsky-oauth.js` + `identity/key-at-rest.js` (`PM-96` / ADR-026): sela chave DPoP (`keys`) e tokens OAuth do Bluesky com a chave do aparelho (`sealJson`/`openSealed`); migra sessões legadas em `startKeysAtRest()` mantendo `loadBskySession()` síncrono e testes em `tests/bsky-oauth-rest.test.js`.
+- `client/js/community-updates.js` + `render/community-page.js` + `app/community-controls.js` (`PM-30`): torna `newKeyQuarantine` editável por dono/moderador via `community_update` assinado, preservando estado anterior quando ausente e validando em `tests/community-quarantine-update.test.js`.
+- `client/js/app/screens-profile.js` (962 → 141 linhas) e `client/js/explode-dispatch.js` (789 → 114 linhas): fatiados em submódulos SLAP (`profile-screen-*.js` e `explode-{crosspost,events,intent,ui}.js`), mantendo 100% da API pública.
+- Hardening (`PM-66` / `PM-115`): zero warnings ESLint em `tests/login-roundtrip-harness.js` (zerando `tests/`, `scripts/` e `tools/` no `lint:all`) e zero erros Ruff `PLR0913` (`>5` params) em `relay/signaling.py`, `scripts/generate_brand_icons.py` e `packaging/node-zero-windows/tray_app.py`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.156-pm96-pm30-onda3` (+9 módulos no `SHELL_ASSETS`).
+
+### Refactor / Fix / Hardening: Onda 3 (`render/profile` & `render/network`), 4ª varredura QA e PM-66
+- `client/js/render/profile.js` (1274 → 32 linhas) e `client/js/render/network.js` (561 → 51 linhas): fatiados em módulos SLAP (`profile-{compose-topic,compose-wizards,header,settings,tabs,wallet}.js` e `network-{form,participation,sections,steward}.js`), mantendo 100% da API pública.
+- `client/js/social-login.js` + `bsky-oauth.js`: limpeza cruzada de fluxos PKCE/Bluesky no início do login; preservação estrita da conferência RFC 9207 (`issRequired` / `iss`).
+- `client/js/app/screens-phrase.js`: descarta folha de impressão da frase de recuperação no `hashchange` e exporta `printCard`.
+- `client/js/labs/parado/webxdc-crdt.js`: LWW inteiro determinístico em `setItem`, isolamento de `data: null` (`hasOwnProperty`) e suporte a `pendingMoves` fora de ordem.
+- Hardening PM-66: zero erros/avisos Ruff (`F,C901,E,I,PLR0915`) em `relay/`, `scripts/` e `packaging/` e zero warnings ESLint em `scripts/*.mjs`.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.155-onda3-profile-network` (+10 módulos no `SHELL_ASSETS`).
+### Fix: simulador de cota (REV-11/PM-74)
+- `scripts/replication-quota-sim.mjs`: `ttlMs`/`defaultTtlMs` <= 0 são rejeitados; JSDoc e spec (`replicacao-por-grau-v0.md`) documentam que `pinned` não isenta de cota; teste novo e títulos alinhados.
+### Fix: validador de retorno POSSE (PM-105)
+- `scripts/posse-return-check.mjs`: `allowedHosts` vazio agora falha fechado (erro claro) em vez de aceitar qualquer host; `runCli` aceita `{ stdout }` injetável. Testes novos.
+
+### Feat: primitivas de execução (`action-runner`, `async-dedupe`, `state-machine`, scroll restore)
+- `client/js/app/action-runner.js`: `runButtonAction` e `bindActionDelegate` (`disabled`/`aria-busy`, proteção contra reentrância, restauração em `finally` respeitando `isConnected`, e roteamento de erro); plugado em `app/init.js` (Open Frames e `.btn-repost`).
+- `client/js/app/route.js`: `rememberRouteScroll` e `restoreRouteScroll` preservam a rolagem por hash em retornos pelo histórico (`popstate`) e levam ao topo em rotas novas.
+- `client/js/shared/async-dedupe.js`: `dedupeAsync` / `createAsyncDeduper` / `clearInFlight`; plugado em `graphql-gateway.js` (`loadConfig`), `profile-directory.js` (`fetchAndCacheOnChainProfile`) e limpo em troca de identidade (`init.js`).
+- `client/js/shared/state-machine.js`: `createMachine` reativa sobre `signal` com `guard` e hooks; plugada no ciclo da sinalização WebRTC (`webrtc-peer-state.js` + `webrtc-signaling-ws.js`) e na gravação de voz (`app/inline-composer.js`, `createVoiceRecordMachine`).
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.153-runtime-primitives` (+3 módulos no `SHELL_ASSETS`).
+- Testes: `tests/action-runner.test.js`, `tests/async-dedupe.test.js`, `tests/route-scroll.test.js` e `tests/state-machine.test.js`.
+
+### Feat: núcleo reativo fail-closed + frutos (`memo`/`resource`/`persisted`/`keyed-list`)
+- `client/js/shared/signals.js`: `signal` / `batch` / `createScope` (sem `effect` solto); `AbortSignal` + `onCleanup` + `memo` + `resource` + `onError`; freeze por cópia (incl. `Object.create(null)`); flush 1-a-1; dispose se 1ª execução lançar.
+- `client/js/shared/persisted-signal.js` + `keyed-list.js`: storage validado com sync entre abas; reconciliação DOM por chave.
+- Consumidores: `app/dm-badge-live.js` (badge + hint + gen anti-corrida); `app/sidebar-circles-live.js` (keyed-list); `route.js` passa `scope` ao handler.
+- `scripts/layers-lib.mjs`: `render/` não importa `shared/signals.js`; shell `setAfterShellMount` multi-callback.
+- `client/sw.js`: `CACHE_NAME` `vox-pwa-v7.152-signals-fruits`.
+- Testes: signals (freeze/zumbi/flush), persisted, keyed-list, dm-badge comportamental.
+
+### Refactor: fatiamento SLAP de `webrtc-peer.js` (Onda 3 PR4)
+- `client/js/webrtc-peer.js` (~1000 → ~45 linhas) virou fachada; extraídos `webrtc-peer-state.js`, `webrtc-signaling-config.js`, `webrtc-signaling-send.js`, `webrtc-signaling-ws.js`, `webrtc-connection.js` e `webrtc-messaging.js`; API pública preservada; `sw.js` inalterado no shell (só `./js/webrtc-peer.js`); `CACHE_NAME` `vox-pwa-v7.150-webrtc-split`; helper `tests/helpers/webrtc-peer-source.mjs` para asserções de string; 0 ciclos (`audit:layers`).
+
 ### Refactor: fatiamento SLAP de `render/feed.js` (Onda 3 PR3)
 - `client/js/render/feed.js` (~1112 → ~14 linhas) virou fachada; extraídos `feed-composer.js`, `feed-comments.js`, `feed-post-toolbar.js`, `feed-post-media.js`, `feed-post-item.js` e `feed-chrome.js`; API pública preservada; `sw.js` inalterado no shell (só `./js/render/feed.js`); `CACHE_NAME` `vox-pwa-v7.149-feed-split`; helper `tests/helpers/feed-render-source.mjs` para asserções de string; 0 ciclos (`audit:layers`).
 

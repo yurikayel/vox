@@ -1,6 +1,7 @@
 /** @file Gestão de leitura e novidades por comunidade (anti-abandono do Orkut, sem ansiedade algorítmica). */
 import { resolveTopicLastActivityTs } from "./community-topic-order.js";
 import { escapeHtml } from "./shared/html.js";
+import { isSafeKey } from "./shared/safe-key.js";
 
 /**
  * Operação `LAST_SEEN_STORAGE_KEY` do módulo.
@@ -8,6 +9,10 @@ import { escapeHtml } from "./shared/html.js";
  */
 export const LAST_SEEN_STORAGE_KEY = "vox-community-last-seen-v1";
 
+/**
+ * Devolve o `localStorage` se disponível, ou `null`.
+ * @returns {Storage|null} Armazenamento.
+ */
 function getStorage() {
   try {
     return typeof globalThis.localStorage !== "undefined" ? globalThis.localStorage : null;
@@ -60,7 +65,7 @@ export function getCommunityLastSeenTs(communityId) {
  * @param {*} [ts] Parâmetro `ts`.
  */
 export function markCommunitySeen(communityId, ts = Date.now()) {
-  if (!communityId) return;
+  if (!isSafeKey(communityId)) return;
   const map = loadLastSeenMap();
   map[communityId] = Number(ts) || Date.now();
   saveLastSeenMap(map);

@@ -1,15 +1,15 @@
-"""Corte da gênese no servidor: a memória central recusa o que o cliente já não aceita.
+"""Corte da gênese no servidor: a memória central recusa o que o cliente não aceita.
 
-Os aparelhos (v7.82+) apagam e recusam as contas de teste e os posts anteriores à gênese, mas um
-aparelho ainda na versão antiga reenviava tudo na primeira sincronização. Por isso o servidor aplica
-a mesma regra na entrada e ao carregar o estado do disco.
+Os aparelhos (v7.82+) apagam e recusam contas de teste e posts anteriores à gênese.
+O servidor aplica a mesma regra na entrada e ao carregar o estado do disco.
 
-- Cartão de perfil: recusado se a chave está na lista de contas de teste. A data do cartão não serve:
-  cada aparelho regrava `updatedAt` com a hora em que o recebeu.
-- Post: recusado se o autor está na lista ou se a data de criação (`ts`, `timestamp` ou `createdAt`)
-  é anterior à gênese. Sem data de criação, fica (mesma regra de `isBeforeGenesisMs` no cliente).
+- Cartão de perfil: recusado se a chave está na lista de contas de teste.
+  A data do cartão não serve: cada aparelho regrava `updatedAt` ao receber.
+- Post: recusado se o autor está na lista ou se a data de criação (`ts`, `timestamp`
+  ou `createdAt`) é anterior à gênese. Sem data de criação, fica (regra de
+  `isBeforeGenesisMs` no cliente).
 
-A lista e a data vêm de `relay/genesis_data.py`, gerado de `client/js` por `scripts/gen-genesis-guard.mjs`.
+A lista e data vêm de `relay/genesis_data.py` (de `scripts/gen-genesis-guard.mjs`).
 """
 
 from __future__ import annotations
@@ -28,9 +28,15 @@ def is_test_route_id(route_id: Any) -> bool:
 
 
 def _created_ms(item: Dict[str, Any]) -> int:
+    """Devolve o primeiro campo de criação do item como milissegundos válidos, ou 0."""
     for field in _CREATED_FIELDS:
         val = item.get(field)
-        if isinstance(val, (int, float)) and not isinstance(val, bool) and math.isfinite(val) and val > 0:
+        if (
+            isinstance(val, (int, float))
+            and not isinstance(val, bool)
+            and math.isfinite(val)
+            and val > 0
+        ):
             return int(val)
     return 0
 

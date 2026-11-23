@@ -67,5 +67,6 @@ Escrito **antes** do piloto, para o resultado não ser interpretado de forma con
 ## Pós-piloto
 
 Retrospectiva 7–14 dias após go-live: [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md).
+Relatório consolidado do beta por convite e decisão G3 (LAN-29): [relatorio-beta-template-lan29.md](./relatorio-beta-template-lan29.md).
 
 **Versão:** 1.0

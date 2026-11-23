@@ -130,6 +130,12 @@ export function formatInWorldDate(calendar) {
   const h = Math.floor(cal.minuteOfDay / 60);
   const m = cal.minuteOfDay % 60;
   const s = cal.secondInMinute || 0;
+  /**
+   * Formata um número com dois dígitos, completando com zero à esquerda.
+   *
+   * @param {number} n Valor a formatar.
+   * @returns {string} Texto de dois dígitos.
+   */
   const pad = (n) => String(n).padStart(2, "0");
   const clock = s ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}`;
   return `Ano ${cal.year}, ${cal.day} de ${month.name} — ${clock} (lua ${cal.moonPhase})`;
