@@ -11,6 +11,13 @@ import * as localAccount from "../identity/index.js";
 import * as pixKeyHelper from "../pix-key.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+/**
+ * Mostra o resultado da busca por handle ou volta para a Ágora quando é um `vox-` sem dono.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} slug Handle buscado.
+ * @param {object|null} result Resultado da busca.
+ */
 function renderHandleLookupResult(main, slug, result) {
   if (!result || !result.primaryOwner) {
     if (/^vox-[a-z0-9]+$/i.test(slug)) {
@@ -56,6 +63,14 @@ export async function showHandleLookup(rawSlug) {
   renderHandleLookupResult(main, slug, result);
 }
 
+/**
+ * Procura o perfil dono de uma chave Pix, começando pela própria conta.
+ *
+ * @param {string} cleanQuery Chave buscada.
+ * @param {string} myPix Chave Pix da própria conta.
+ * @param {string} myRouteId Rota da própria conta.
+ * @returns {object|null}
+ */
 function resolveProfileByPixKey(cleanQuery, myPix, myRouteId) {
   if (myPix && (myPix.toLowerCase() === cleanQuery.toLowerCase() || pixKeyHelper.normalizePixKey(cleanQuery).normalized === myPix)) {
     return {

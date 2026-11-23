@@ -47,6 +47,11 @@ export function prefersDarkScheme(view = globalThis) {
   return Boolean(view.matchMedia?.("(prefers-color-scheme: dark)").matches);
 }
 
+/**
+ * Lê se o tema segue o relógio (ligado por padrão).
+ * @param {Storage|null} storage Armazenamento
+ * @returns {boolean} `true` se segue o relógio.
+ */
 function readFollowClock(storage) {
   if (!storage) return true;
   const raw = storage.getItem(SKY_FOLLOW_CLOCK_KEY);
@@ -54,6 +59,12 @@ function readFollowClock(storage) {
   return true;
 }
 
+/**
+ * Atualiza a cor do tema (`theme-color`) conforme o período e o modo escuro.
+ * @param {Document} doc Documento
+ * @param {string} period Período do dia
+ * @param {boolean} dark Se o modo é escuro
+ */
 function syncThemeColorMeta(doc, period, dark) {
   const color = THEME_COLOR[period]?.[dark ? "dark" : "light"];
   if (!color) return;
@@ -105,10 +116,16 @@ export function applySkyTheme(doc, hour = new Date().getHours(), opts = {}) {
 export function initSkyTheme(doc = document, hooks = {}) {
   const view = doc.defaultView ?? globalThis;
   const getHour = hooks.getHour ?? (() => new Date().getHours());
+  /**
+   * Reaplica o tema do céu à hora atual.
+   */
   const refresh = () => applySkyTheme(doc, getHour());
   refresh();
   const mq = view.matchMedia?.("(prefers-color-scheme: dark)");
   if (mq) {
+    /**
+     * Reaplica o tema quando o esquema de cores do sistema muda.
+     */
     const onScheme = () => refresh();
     if (typeof mq.addEventListener === "function") mq.addEventListener("change", onScheme);
     else mq.addListener(onScheme);

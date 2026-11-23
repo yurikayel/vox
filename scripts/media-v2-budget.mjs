@@ -35,14 +35,29 @@ export const MEDIA_V2_LIMITS = Object.freeze({
   }),
 });
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Diz se o valor é um número finito maior que zero.
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPositiveNumber(value) {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
 
+/**
+ * Normaliza um tipo MIME (sem parâmetros, em minúsculas).
+ * @param {unknown} raw Valor bruto.
+ * @returns {string}
+ */
 function normalizeMime(raw) {
   if (typeof raw !== "string") return "";
   return raw.split(";")[0].trim().toLowerCase();
@@ -72,6 +87,11 @@ export function planTransportChunks(totalBytes, chunkMaxBytes = MEDIA_V2_LIMITS.
   return { totalBytes, chunkMaxBytes, chunkCount, chunkSizes, slow3gKbps: SLOW_3G_KBPS, estimatedSlow3gSec };
 }
 
+/**
+ * Valida os campos comuns a todo item de mídia (tipo, camada, MIME, bytes).
+ * @param {object} item Item de mídia.
+ * @param {string[]} errors Lista de erros (é alterada).
+ */
 function validateCommonFields(item, errors) {
   const hasKind = typeof item.kind === "string" && VALID_KINDS.has(item.kind);
   if (!hasKind) errors.push(`kind inválido: ${String(item.kind)} (use photo, audio ou video).`);
@@ -88,6 +108,12 @@ function validateCommonFields(item, errors) {
   return { hasKind, hasLayer, chunkCount: validBytes ? planTransportChunks(item.bytes).chunkCount : 0 };
 }
 
+/**
+ * Valida largura e altura contra o limite da camada.
+ * @param {object} item Item de mídia.
+ * @param {boolean} hasLayer Se a camada informada é válida.
+ * @param {string[]} errors Lista de erros (é alterada).
+ */
 function validateVisualDimensions(item, hasLayer, errors) {
   if (!isPositiveNumber(item.width)) errors.push("width deve ser número positivo.");
   if (!isPositiveNumber(item.height)) {
@@ -102,6 +128,11 @@ function validateVisualDimensions(item, hasLayer, errors) {
   }
 }
 
+/**
+ * Valida os campos de um item de áudio (duração).
+ * @param {object} item Item de mídia.
+ * @param {string[]} errors Lista de erros (é alterada).
+ */
 function validateAudioFields(item, errors) {
   if (!isPositiveNumber(item.durationSec)) {
     errors.push("durationSec de áudio deve ser número positivo.");
@@ -112,6 +143,12 @@ function validateAudioFields(item, errors) {
   }
 }
 
+/**
+ * Valida os campos de um item de vídeo (dimensões e duração).
+ * @param {object} item Item de mídia.
+ * @param {boolean} hasLayer Se a camada informada é válida.
+ * @param {string[]} errors Lista de erros (é alterada).
+ */
 function validateVideoFields(item, hasLayer, errors) {
   validateVisualDimensions(item, hasLayer, errors);
   if (!isPositiveNumber(item.durationSec)) {
@@ -146,6 +183,11 @@ export function validateMediaItem(item) {
   return { ok: errors.length === 0, errors, chunkCount };
 }
 
+/**
+ * Monta o resultado de um carrossel inválido, só com os erros.
+ * @param {string[]} errors Erros encontrados.
+ * @returns {object}
+ */
 function emptyCarouselResult(errors) {
   return {
     ok: false,
@@ -160,6 +202,12 @@ function emptyCarouselResult(errors) {
   };
 }
 
+/**
+ * Valida a duração total de áudio ou vídeo do carrossel.
+ * @param {string} kind Tipo da mídia do carrossel.
+ * @param {number} totalDurationSec Duração total, em segundos.
+ * @param {string[]} errors Lista de erros (é alterada).
+ */
 function validateAggregateDuration(kind, totalDurationSec, errors) {
   if (kind === "audio" && totalDurationSec > MEDIA_V2_LIMITS.maxCarouselAudioSec) {
     errors.push(`Duração total de áudio (${totalDurationSec}s) excede limite do carrossel (${MEDIA_V2_LIMITS.maxCarouselAudioSec}s).`);
@@ -169,6 +217,12 @@ function validateAggregateDuration(kind, totalDurationSec, errors) {
   }
 }
 
+/**
+ * Valida cada item do carrossel e acumula bytes, duração e tipos.
+ * @param {object[]} items Itens do carrossel.
+ * @param {string[]} errors Lista de erros (é alterada).
+ * @returns {object}
+ */
 function accumulateCarouselItems(items, errors) {
   const kinds = new Set();
   const itemResults = [];
@@ -218,12 +272,24 @@ export function validateCarousel(items) {
   };
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || value.startsWith("-")) throw new Error(`Falta valor para ${flag}.`);
   return value;
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", json: false, help: false };
   for (let i = 0; i < argv.length; i++) {
@@ -240,6 +306,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta um arquivo JSON.
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonFile(filePath) {
   let rawText;
   try {
@@ -254,6 +325,11 @@ function readJsonFile(filePath) {
   }
 }
 
+/**
+ * Escolhe o modo (carrossel ou item único) conforme a forma do JSON e valida.
+ * @param {unknown} data JSON lido.
+ * @returns {{mode: string, result: object}}
+ */
 function evaluateBundle(data) {
   if (Array.isArray(data)) return { mode: "carousel", result: validateCarousel(data) };
   if (isPlainObject(data) && Array.isArray(data.items)) return { mode: "carousel", result: validateCarousel(data.items) };
@@ -262,6 +338,12 @@ function evaluateBundle(data) {
   return { mode: "unknown", result: { ok: false, errors: ["Bundle JSON inválido."], chunkCount: 0 } };
 }
 
+/**
+ * Formata o resultado da validação em texto (`PASS` ou `FAIL`).
+ * @param {string} mode Modo da validação.
+ * @param {object} result Resultado da validação.
+ * @returns {string}
+ */
 function formatTextReport(mode, result) {
   const status = result.ok ? "PASS" : "FAIL";
   const lines = [`[${status}] Mídia v2 (${mode})`];
@@ -274,6 +356,10 @@ function formatTextReport(mode, result) {
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * Escreve o texto na saída padrão.
+ * @param {string} text Texto a escrever.
+ */
 function writeStdout(text) {
   process.stdout.write(text);
 }
@@ -298,6 +384,10 @@ export function runCli(argv = process.argv.slice(2), write = writeStdout) {
   return { exitCode: result.ok ? 0 : 1, ok: result.ok, mode, result, output };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);

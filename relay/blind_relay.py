@@ -45,6 +45,7 @@ def _is_stored_name(text: str) -> bool:
 
 
 def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
+    """Resolve o diretório do relay cego: `VOX_RELAY_BLIND_DIR`, senão `<cache>/blind_relay`, senão o padrão local."""
     environ = env if env is not None else os.environ
     raw = str(environ.get("VOX_RELAY_BLIND_DIR") or "").strip()
     if raw:
@@ -63,6 +64,7 @@ RELAY_DIR = resolve_relay_dir()
 
 
 def set_relay_dir(path: Path) -> Path:
+    """Troca o diretório do relay cego em uso e devolve o caminho resolvido (usado nos testes)."""
     global RELAY_DIR
     RELAY_DIR = Path(path).resolve()
     return RELAY_DIR
@@ -79,6 +81,7 @@ def _channel_dir(channel_id: str) -> Path:
 
 
 def ensure_channel_dir(channel_id: str) -> Path:
+    """Cria (se preciso) e devolve o diretório de um canal validado."""
     chan_path = _channel_dir(channel_id)
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
@@ -131,6 +134,7 @@ def _read_live_record(file_path: Path, now: int) -> Optional[Dict[str, Any]]:
 def store_envelope(
     channel_id: str, envelope: Dict[str, Any], ttl_seconds: int = DEFAULT_TTL_SECONDS
 ) -> Dict[str, Any]:
+    """Valida e grava um envelope assinado no canal, respeitando tamanho, TTL e cotas.\n\n    Args:\n        channel_id: Identificador do canal.\n        envelope: Envelope JSON com ao menos `sender` e `sig`.\n        ttl_seconds: Validade do envelope, em segundos.\n\n    Returns:\n        Metadados do envelope gravado.\n\n    Raises:\n        ValueError: Se o envelope for inválido ou grande demais."""
     if not isinstance(envelope, dict):
         raise ValueError("Envelope deve ser um dicionário JSON")
     if not envelope.get("sender") or not envelope.get("sig"):
@@ -373,6 +377,7 @@ def store_snapshot(
 
 
 def get_latest_snapshot(channel_id: str) -> Optional[Dict[str, Any]]:
+    """Devolve o snapshot mais recente do canal, ou None se não houver (ou o canal for inválido)."""
     with _RELAY_LOCK:
         try:
             chan_path = _channel_dir(channel_id)

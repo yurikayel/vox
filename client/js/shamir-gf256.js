@@ -62,8 +62,18 @@ function evaluate(coeffs, x) {
   return acc;
 }
 
+/**
+ * Converte bytes em base64url sem preenchimento.
+ * @param {Uint8Array} bytes Bytes
+ * @returns {string} Texto em base64url.
+ */
 const toB64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
+/**
+ * Confere os parâmetros de divisão (mínimo e total de pedaços).
+ * @param {number} m Mínimo de pedaços para recuperar
+ * @param {number} n Total de pedaços
+ */
 function assertParams(m, n) {
   if (!Number.isInteger(m) || !Number.isInteger(n) || m < MIN_M || n > MAX_N || m > n) {
     throw new RangeError(`Escolha de ${MIN_M} a ${MAX_N} guardiões, com mínimo entre ${MIN_M} e o total.`);
@@ -92,6 +102,12 @@ export function splitSecret(secret, { m, n, splitId: givenId = "", random = (buf
   return { splitId, m, n, shares: ys.map((y, i) => ({ splitId, x: i + 1, y })) };
 }
 
+/**
+ * Confere os pedaços recebidos antes de recuperar.
+ * @param {object[]} shares Pedaços
+ * @param {number} m Mínimo de pedaços
+ * @returns {object[]} Os `m` primeiros pedaços válidos.
+ */
 function assertShares(shares, m) {
   if (!Number.isInteger(m) || m < MIN_M || m > MAX_N) throw new RangeError("Mínimo de pedaços fora da faixa.");
   if (!Array.isArray(shares) || shares.length < m) throw new RangeError(`São precisos ${m} pedaços; há ${shares?.length || 0}.`);

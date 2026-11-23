@@ -63,6 +63,11 @@ export const AVISO_BODY_MAX = 280;
 export const AVISO_PLACE_MAX = 80;
 
 
+/**
+ * Converte um valor em texto aparado.
+ * @param {*} v Valor
+ * @returns {string} Texto aparado.
+ */
 const text = (v) => String(v ?? "").trim();
 
 /**
@@ -92,6 +97,11 @@ export function validateAvisoDraft(draft = {}) {
   return [...problems, ...validateRoleFields(draft)];
 }
 
+/**
+ * Monta os campos opcionais do aviso que estão preenchidos no rascunho.
+ * @param {object} draft Rascunho
+ * @returns {object} Campos opcionais presentes.
+ */
 function optionalFields(draft) {
   const out = {};
   if (Number(draft.eventAt) > 0) out.eventAt = Number(draft.eventAt);
@@ -127,7 +137,18 @@ export function buildAviso(draft = {}, now = Date.now()) {
   };
 }
 
+/**
+ * Extrai o autor de um post (`author` ou `owner`).
+ * @param {object} post Post
+ * @returns {string} Endereço do autor.
+ */
 const authorOf = (post) => String(post?.author || post?.owner || "");
+/**
+ * Diz se o autor do post é moderação da comunidade.
+ * @param {object} post Post
+ * @param {object} meta Dono e moderadores da comunidade
+ * @returns {boolean} `true` se for moderação.
+ */
 const isModAuthor = (post, meta) => isModerator(authorOf(post), meta?.owner, meta?.moderators);
 
 /**
@@ -164,6 +185,11 @@ function cancelledIds(sealed) {
 export function classifyAvisos(posts = [], meta = {}, now = Date.now()) {
   const sealed = posts.filter((p) => hasAvisoSeal(p, meta));
   const cancelled = cancelledIds(sealed);
+  /**
+   * Resolve o estado de um aviso: cancelado, encerrado ou ativo.
+   * @param {object} p Aviso
+   * @returns {string} `cancelado`, `encerrado` ou `ativo`.
+   */
   const stateOf = (p) => {
     if (cancelled.has(p.id)) return "cancelado";
     return avisoExpiresAt(p) <= now ? "encerrado" : "ativo";
@@ -200,6 +226,12 @@ export function buildAvisoResponse(aviso, choice, now = Date.now()) {
   return { type: "aviso-resposta", communityId: aviso.communityId, avisoId: aviso.id, choice, ts: now };
 }
 
+/**
+ * Fica com a resposta mais recente de cada autor para um aviso.
+ * @param {object[]} responses Respostas assinadas
+ * @param {string} avisoId Aviso
+ * @returns {Map<string, object>} Última resposta por autor.
+ */
 function latestPerAuthor(responses, avisoId) {
   const latest = new Map();
   for (const r of responses) {
@@ -211,6 +243,10 @@ function latestPerAuthor(responses, avisoId) {
   return latest;
 }
 
+/**
+ * Cria uma contagem zerada para cada opção de resposta.
+ * @returns {Object<string, number>} Contagens zeradas.
+ */
 const emptyCounts = () => Object.fromEntries(AVISO_CHOICES.map((c) => [c, 0]));
 
 /**
@@ -235,6 +271,11 @@ export function tallyAvisoResponses(responses = [], avisoId = "", members = new 
   return result;
 }
 
+/**
+ * Converte um valor em contagem inteira não negativa.
+ * @param {*} n Valor
+ * @returns {number} Inteiro maior ou igual a zero.
+ */
 const toCount = (n) => Math.max(0, Math.floor(Number(n) || 0));
 
 /**
@@ -281,6 +322,11 @@ export function latestAvisoCount(items = [], avisoId = "", meta = {}) {
 }
 
 
+/**
+ * Formata a data do evento em pt-BR.
+ * @param {number} eventAt Início do evento (ms)
+ * @returns {string} Data e hora curtas.
+ */
 function formatWhen(eventAt) {
   return formatPtBrDateTimeShort(eventAt);
 }

@@ -42,6 +42,11 @@ export const COMPOSE_PUBLISH_STATUS_ID = "vox-compose-publish-status";
 const PUBLISH_STATUS_STYLE =
   "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0";
 
+/**
+ * Gatilho do compositor inline quando ele está recolhido; `null` se está aberto.
+ *
+ * @returns {HTMLElement|null}
+ */
 function inlineCollapsedTrigger() {
   const root = document.getElementById?.("feed-inline-composer");
   if (!root?.classList.contains("is-collapsed")) return null;

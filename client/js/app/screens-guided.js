@@ -57,6 +57,12 @@ function choiceValue(id) {
   return document.querySelector(`#${id} input[type="radio"]:checked`)?.value || "";
 }
 
+/**
+ * Escapa os caracteres especiais de expressão regular.
+ *
+ * @param {string} s Texto a escapar.
+ * @returns {string}
+ */
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -64,6 +70,9 @@ function escapeRegex(s) {
 /** As etapas de confirmação/teste só validam quando repetem exatamente a senha criada. */
 function bindPassphraseMatch() {
   const first = document.getElementById("bk-pass");
+  /**
+   * Atualiza o padrão das confirmações da senha para exigir a senha criada.
+   */
   const sync = () => {
     const pattern = first?.value ? escapeRegex(first.value) : "(?!)";
     ["bk-pass2", "bk-pass3"].forEach((id) => document.getElementById(id)?.setAttribute("pattern", pattern));
@@ -91,6 +100,11 @@ function reportVaultResult(out, res, pass) {
   document.getElementById("btn-backup-wizard-file")?.addEventListener("click", () => void downloadWrappedFile(pass));
 }
 
+/**
+ * Baixa o arquivo cifrado da conta com a senha dada.
+ *
+ * @param {string} pass Senha do arquivo.
+ */
 async function downloadWrappedFile(pass) {
   try {
     const { exportAccountBundle } = await import("../identity/index.js");
@@ -102,12 +116,20 @@ async function downloadWrappedFile(pass) {
   }
 }
 
+/**
+ * Lê e-mail e senha anterior do assistente de backup.
+ *
+ * @returns {string|{email: string, prevPassphrase: string}}
+ */
 function readBackupVaultOptions() {
   const email = document.getElementById("bk-email")?.value || "";
   const prevPassphrase = document.getElementById("bk-prev-pass")?.value || "";
   return prevPassphrase ? { email, prevPassphrase } : email;
 }
 
+/**
+ * Grava o cofre pelo assistente de backup e mostra o resultado.
+ */
 async function submitBackupWizard() {
   const btn = document.getElementById("btn-backup-wizard-save");
   const out = document.getElementById("bk-result");
@@ -144,17 +166,30 @@ export async function showBackupWizard() {
   });
 }
 
+/**
+ * Mostra só a dica da opção de carteira escolhida.
+ */
 function syncWalletHints() {
   const mode = choiceValue("wg-mode") || "gerar";
   document.querySelectorAll("[data-wg-hint]").forEach((el) => { el.hidden = el.dataset.wgHint !== mode; });
 }
 
+/**
+ * Aplica a opção de carteira do assistente (gerar, importar ou manter).
+ *
+ * @param {string} mode `gerar`, `importar` ou `manter`.
+ */
 async function applyWalletChoice(mode) {
   if (mode === "gerar") await wallet.generateNewWallet();
   if (mode === "importar") await wallet.saveJwk(JSON.parse(document.getElementById("wg-jwk")?.value.trim() || ""));
   if (mode !== "manter") await syncIdentity();
 }
 
+/**
+ * Valida e aplica a chave Pix do assistente; vazia é permitida.
+ *
+ * @returns {boolean}
+ */
 function applyPix() {
   const raw = document.getElementById("wg-pix")?.value.trim() || "";
   if (!raw) return true;

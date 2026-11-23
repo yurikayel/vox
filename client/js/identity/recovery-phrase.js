@@ -29,10 +29,34 @@ const ECDH = { name: "ECDH", namedCurve: "P-256" };
 const INDEX = new Map(BIP39_PT.map((w, i) => [w, i]));
 const BY_PREFIX = new Map(BIP39_PT.map((w, i) => [w.slice(0, 4), i]));
 const enc = new TextEncoder();
+/**
+ * Codifica bytes em base64url.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
 const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+/**
+ * Decodifica base64url para bytes.
+ *
+ * @param {string} s
+ * @returns {Uint8Array}
+ */
 const fromB64url = (s) => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+/**
+ * Representa os bytes como texto de bits (0 e 1).
+ *
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
 const toBits = (bytes) => [...bytes].map((b) => b.toString(2).padStart(8, "0")).join("");
 
+/**
+ * Bits de checksum BIP-39 (primeiros bits do SHA-256 da entropia).
+ *
+ * @param {Uint8Array} entropy
+ * @returns {Promise<string>}
+ */
 async function checksumBits(entropy) {
   const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", entropy));
   return toBits(hash).slice(0, (entropy.length * 8) / 32);
@@ -86,6 +110,13 @@ export async function wordsToEntropy(input) {
   return entropy;
 }
 
+/**
+ * Deriva 48 bytes com HKDF-SHA-256 a partir da semente e do rótulo.
+ *
+ * @param {Uint8Array} seed
+ * @param {string} info
+ * @returns {Promise<Uint8Array>}
+ */
 async function hkdf(seed, info) {
   const key = await crypto.subtle.importKey("raw", seed, "HKDF", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt: enc.encode(SALT), info: enc.encode(info) }, key, 384);

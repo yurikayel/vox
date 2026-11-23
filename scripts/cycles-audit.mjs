@@ -18,6 +18,11 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const JS_ROOT = path.join(ROOT, "client", "js");
 const DEBT_FILE = path.join(ROOT, "scripts", "cycles-debt.json");
 
+/**
+ * Lista recursivamente os módulos `.js` de um diretório.
+ * @param {string} dir Diretório raiz da busca.
+ * @returns {string[]}
+ */
 function listModules(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const full = path.join(dir, e.name);
@@ -26,6 +31,10 @@ function listModules(dir) {
   });
 }
 
+/**
+ * Lê o código de todos os módulos do cliente, indexado pelo caminho relativo.
+ * @returns {Object<string, string>}
+ */
 function loadSources() {
   const sources = {};
   for (const file of listModules(JS_ROOT)) {
@@ -34,10 +43,18 @@ function loadSources() {
   return sources;
 }
 
+/**
+ * Descreve um ciclo de imports em uma linha.
+ * @param {string[]} comp Módulos do componente fortemente conectado.
+ * @returns {string}
+ */
 function describe(comp) {
   return `${comp.length} módulos: ${comp.join(", ")}`;
 }
 
+/**
+ * Compara os ciclos atuais com a dívida registrada e reprova se surgir ciclo novo.
+ */
 function main() {
   const current = findCycles(buildGraph(loadSources()));
   if (process.argv.includes("--list")) {

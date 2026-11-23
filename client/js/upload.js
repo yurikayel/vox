@@ -17,10 +17,19 @@ export const TURBO_ENDPOINTS = Object.freeze([
 /** Teto seguro (99 KiB) dentro da faixa gratuita do Turbo (<= 100 KiB). */
 export const FREE_TIER_MAX_BYTES = 101376; // 99 KiB safe ceiling (Turbo free tier <= 100 KiB)
 
+/**
+ * Carrega a biblioteca Arweave.
+ * @returns {Promise<object>} Biblioteca carregada.
+ */
 function getArweave() {
   return loadArweave(30000);
 }
 
+/**
+ * Diz se o valor da tag está preenchido.
+ * @param {*} val Valor
+ * @returns {boolean} `true` se preenchido.
+ */
 const isFilledTag = (val) => val !== undefined && val !== null && String(val).trim() !== "";
 
 /**
@@ -89,6 +98,13 @@ export async function uploadToTurbo(itemBytes) {
   return { ok: false, error: lastErr };
 }
 
+/**
+ * Publica o dado pela camada 1 do Arweave.
+ * @param {string|Uint8Array} payload Dado
+ * @param {object[]} tags Tags
+ * @param {object} jwk Chave de assinatura
+ * @returns {Promise<object>} Resultado da publicação.
+ */
 async function postViaL1(payload, tags, jwk) {
   const arweave = await getArweave();
   const tx = await arweave.createTransaction({ data: payload }, jwk);

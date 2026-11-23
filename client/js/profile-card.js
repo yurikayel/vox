@@ -51,6 +51,12 @@ export function validateProfileCardItem(item) {
   return { ok: true };
 }
 
+/**
+ * Resolve o nome do cartão (informado, da conta ou do enriquecimento).
+ * @param {string} displayName Nome informado
+ * @param {object} enrich Enriquecimento do perfil
+ * @returns {string} Nome.
+ */
 function resolveCardDisplayName(displayName, enrich) {
   if (displayName) return displayName;
   const local = localAccount.getDisplayName();
@@ -58,16 +64,34 @@ function resolveCardDisplayName(displayName, enrich) {
   return (enrich && enrich.displayName) ? enrich.displayName : "";
 }
 
+/**
+ * Resolve o avatar do cartão.
+ * @param {string} avatarUrl Avatar informado
+ * @param {object} enrich Enriquecimento do perfil
+ * @returns {string} Avatar, ou texto vazio.
+ */
 function resolveCardAvatar(avatarUrl, enrich) {
   if (avatarUrl) return avatarUrl;
   return (enrich && enrich.avatarUrl) ? enrich.avatarUrl : "";
 }
 
+/**
+ * Resolve a bio do cartão.
+ * @param {string} bio Bio informada
+ * @param {object} enrich Enriquecimento do perfil
+ * @returns {string} Bio, ou texto vazio.
+ */
 function resolveCardBio(bio, enrich) {
   if (bio) return bio;
   return (enrich && enrich.bio) ? enrich.bio : "";
 }
 
+/**
+ * Resolve os metadados de identidade do cartão.
+ * @param {object} metaOverride Metadados informados
+ * @param {string} routeId Id de rota
+ * @returns {object} Metadados.
+ */
 function resolveCardIdentityMeta(metaOverride, routeId) {
   return pickIdentityMeta(metaOverride, getLocalIdentityMeta(routeId));
 }
@@ -123,6 +147,12 @@ export async function buildRevokeProfileCard() {
   return localAccount.signPayload(payload);
 }
 
+/**
+ * Aparia o valor e corta no tamanho máximo, se houver.
+ * @param {*} val Valor
+ * @param {number} maxLen Tamanho máximo
+ * @returns {string} Texto.
+ */
 function getCardTagValue(val, maxLen) {
   const str = String(val || "").trim();
   return maxLen ? str.slice(0, maxLen) : str;

@@ -17,6 +17,13 @@ for (const line of doc.split("\n")) {
   if (sri && url) pins.push({ url, sri });
 }
 
+/**
+ * Baixa um recurso de CDN e compara o hash SRI com o declarado.
+ * @param {object} options Recurso a verificar.
+ * @param {string} options.url URL do recurso.
+ * @param {string} options.sri Hash SRI declarado.
+ * @returns {Promise<{url: string, sri: string, got: string, ok: boolean}>}
+ */
 async function check({ url, sri }) {
   try {
     const res = await fetch(url, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(60000) });

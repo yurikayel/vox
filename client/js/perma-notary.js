@@ -21,6 +21,13 @@ export function canonicalizeDocumentText(text) {
     .trim();
 }
 
+/**
+ * Monta as tags do registro do cartório permanente.
+ * @param {string} documentHash Hash do documento
+ * @param {string} communityId Comunidade
+ * @param {number} timestamp Horário (ms)
+ * @returns {object[]} Tags.
+ */
 function buildNotaryArweaveTags(documentHash, communityId, timestamp) {
   return [
     { name: "App-Name", value: "vox-perma-notary" },
@@ -32,6 +39,11 @@ function buildNotaryArweaveTags(documentHash, communityId, timestamp) {
   ];
 }
 
+/**
+ * Limpa a lista de testemunhas: sem vazias nem repetidas.
+ * @param {string[]} witnesses Testemunhas
+ * @returns {string[]} Testemunhas limpas.
+ */
 function sanitizeWitnesses(witnesses) {
   if (!Array.isArray(witnesses)) return [];
   return [...new Set(witnesses.map((w) => String(w || "").trim()).filter(Boolean))];
@@ -118,6 +130,11 @@ export async function verifyCivicNotaryRecord(notaryRecord, currentText = "") {
   };
 }
 
+/**
+ * Formata a data do registro em pt-BR.
+ * @param {number} timestamp Horário (ms)
+ * @returns {string} Data formatada.
+ */
 function formatNotaryDate(timestamp) {
   if (!timestamp) return "Data registrada";
   return new Date(timestamp).toLocaleDateString("pt-BR", {

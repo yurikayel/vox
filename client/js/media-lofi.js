@@ -173,6 +173,13 @@ export function applyLofiFilter(ctx, width, height, filterName = "normal") {
   if (filterName === "vhs") return applyVhsCamcorder(ctx, width, height);
 }
 
+/**
+ * Testa a qualidade do WebP e diz se o resultado cabe no limite.
+ * @param {HTMLCanvasElement} canvas Tela
+ * @param {number} quality Qualidade de 0 a 1
+ * @param {number} maxBytes Limite em bytes
+ * @returns {object|null} Resultado se couber, ou `null`.
+ */
 function probeCanvasQuality(canvas, quality, maxBytes) {
   try {
     const dataUrl = canvas.toDataURL("image/webp", quality);
@@ -190,6 +197,12 @@ function probeCanvasQuality(canvas, quality, maxBytes) {
   return null;
 }
 
+/**
+ * Busca por bisseção a maior qualidade WebP que cabe no limite.
+ * @param {HTMLCanvasElement} canvas Tela
+ * @param {number} maxBytes Limite em bytes
+ * @returns {object|null} Melhor resultado, ou `null`.
+ */
 function binarySearchCanvasQuality(canvas, maxBytes) {
   let low = 0.15;
   let high = 0.95;
@@ -207,6 +220,12 @@ function binarySearchCanvasQuality(canvas, maxBytes) {
   return best;
 }
 
+/**
+ * Reduz a tela e tenta de novo a qualidade para caber no limite.
+ * @param {HTMLCanvasElement} canvas Tela
+ * @param {number} maxBytes Limite em bytes
+ * @returns {object|null} Resultado, ou `null`.
+ */
 function downscaleAndReoptimizeCanvas(canvas, maxBytes) {
   if (canvas.width <= 320 || canvas.height <= 320 || typeof document === "undefined" || !document.createElement) {
     return null;

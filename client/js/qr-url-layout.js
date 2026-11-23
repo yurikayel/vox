@@ -26,12 +26,24 @@ export function cloneModules(modules) {
   return modules.map((row) => row.slice());
 }
 
+/**
+ * Diz se a célula (relativa ao canto) faz parte do desenho do localizador.
+ * @param {number} dx Deslocamento X
+ * @param {number} dy Deslocamento Y
+ * @returns {boolean} `true` se a célula é escura.
+ */
 function inFinder(dx, dy) {
   if (dx < 0 || dy < 0 || dx > 6 || dy > 6) return false;
   return dx === 0 || dx === 6 || dy === 0 || dy === 6
     || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
 }
 
+/**
+ * Desenha um localizador (e seu separador) na grade.
+ * @param {object} grid Grade
+ * @param {number} x0 Coluna do canto
+ * @param {number} y0 Linha do canto
+ */
 function placeFinder(grid, x0, y0) {
   for (let dy = -1; dy <= 7; dy++) {
     for (let dx = -1; dx <= 7; dx++) {
@@ -44,6 +56,12 @@ function placeFinder(grid, x0, y0) {
   }
 }
 
+/**
+ * Desenha um padrão de alinhamento na grade.
+ * @param {object} grid Grade
+ * @param {number} cx Coluna do centro
+ * @param {number} cy Linha do centro
+ */
 function placeAlignment(grid, cx, cy) {
   for (let dy = -2; dy <= 2; dy++) {
     for (let dx = -2; dx <= 2; dx++) {
@@ -54,12 +72,33 @@ function placeAlignment(grid, cx, cy) {
   }
 }
 
+/**
+ * Diz se o centro do alinhamento cai sobre um localizador.
+ * @param {number} cx Coluna
+ * @param {number} cy Linha
+ * @param {number} size Tamanho da grade
+ * @returns {boolean} `true` se sobrepõe.
+ */
 function overlapsFinder(cx, cy, size) {
+  /**
+   * Diz se a coordenada é a do primeiro localizador.
+   * @param {number} v Coordenada
+   * @returns {boolean} `true` se for.
+   */
   const near = (v) => v === 6;
+  /**
+   * Diz se a coordenada é a do último localizador.
+   * @param {number} v Coordenada
+   * @returns {boolean} `true` se for.
+   */
   const far = (v) => v === size - 7;
   return (near(cx) && near(cy)) || (far(cx) && near(cy)) || (near(cx) && far(cy));
 }
 
+/**
+ * Desenha todos os padrões de alinhamento da versão.
+ * @param {object} grid Grade
+ */
 function placeAlignments(grid) {
   const centers = ALIGNMENT_CENTERS[grid.version] || [];
   for (const cy of centers) {
@@ -80,6 +119,10 @@ export function versionBits(version) {
   return (version << 12) | rem;
 }
 
+/**
+ * Desenha a informação de versão (versões 7 ou mais).
+ * @param {object} grid Grade
+ */
 function placeVersionInfo(grid) {
   if (grid.version < 7) return;
   const bits = versionBits(grid.version);
@@ -94,6 +137,10 @@ function placeVersionInfo(grid) {
   }
 }
 
+/**
+ * Desenha as linhas de sincronismo (timing).
+ * @param {object} grid Grade
+ */
 function placeTiming(grid) {
   for (let i = 8; i < grid.size - 8; i++) {
     grid.modules[6][i] = i % 2 === 0;
@@ -103,6 +150,10 @@ function placeTiming(grid) {
   }
 }
 
+/**
+ * Reserva as células da informação de formato.
+ * @param {object} grid Grade
+ */
 function reserveFormat(grid) {
   const n = grid.size;
   for (let i = 0; i <= 8; i++) {
@@ -137,6 +188,13 @@ export function buildFunctionGrid(version) {
   return grid;
 }
 
+/**
+ * Percorre as células livres de um par de colunas, em uma linha.
+ * @param {object} grid Grade
+ * @param {number} right Coluna da direita do par
+ * @param {number} y Linha
+ * @param {Function} onCell Chamada para cada célula livre
+ */
 function visitPair(grid, right, y, onCell) {
   for (let j = 0; j < 2; j++) {
     const x = right - j;
@@ -224,8 +282,19 @@ export function formatBits(mask) {
   return ((data << 10) | rem) ^ 0x5412;
 }
 
+/**
+ * Escreve uma cópia da informação de formato.
+ * @param {object} grid Grade
+ * @param {number} bits Bits de formato
+ */
 function writeFormatCopy(grid, bits) {
   const n = grid.size;
+  /**
+   * Escreve um bit de formato na célula.
+   * @param {number} x Coluna
+   * @param {number} y Linha
+   * @param {number} i Posição do bit
+   */
   const put = (x, y, i) => {
     grid.modules[y][x] = ((bits >>> i) & 1) === 1;
   };
@@ -255,6 +324,12 @@ export function writeFormat(grid, mask) {
  * @returns {number}
  */
 export function readFormatMask(modules) {
+  /**
+   * Lê o módulo como 0 ou 1.
+   * @param {number} x Coluna
+   * @param {number} y Linha
+   * @returns {number} 1 se escuro, 0 se claro.
+   */
   const g = (x, y) => (modules[y][x] ? 1 : 0);
   let bits = 0;
   for (let i = 0; i <= 5; i++) bits |= g(8, i) << i;
@@ -265,6 +340,11 @@ export function readFormatMask(modules) {
   return ((bits ^ 0x5412) >> 10) & 7;
 }
 
+/**
+ * Pontua as sequências repetidas de uma linha.
+ * @param {boolean[]} line Módulos da linha
+ * @returns {number} Pontuação.
+ */
 function scoreLine(line) {
   let score = 0;
   let run = 1;
@@ -279,6 +359,11 @@ function scoreLine(line) {
   return score;
 }
 
+/**
+ * Pontua as sequências repetidas nas linhas e colunas.
+ * @param {boolean[][]} modules Módulos
+ * @returns {number} Pontuação.
+ */
 function scoreRuns(modules) {
   let s = 0;
   for (let i = 0; i < modules.length; i++) {
@@ -288,6 +373,11 @@ function scoreRuns(modules) {
   return s;
 }
 
+/**
+ * Pontua os blocos 2x2 de mesma cor.
+ * @param {boolean[][]} modules Módulos
+ * @returns {number} Pontuação.
+ */
 function scoreBlocks(modules) {
   const n = modules.length;
   let s = 0;
