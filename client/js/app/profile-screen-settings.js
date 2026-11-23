@@ -9,6 +9,7 @@ import { openQrUrlSheet } from "../qr-url.js";
 import * as localAccount from "../identity/index.js";
 import * as social from "../social.js";
 import * as pixKeyHelper from "../pix-key.js";
+import { escapeHtml } from "../shared/html.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
@@ -44,13 +45,13 @@ function handlePixFormSubmit(rawVal, feedback, address, activeTab, onReload) {
     if (onReload) onReload(address, activeTab);
     return;
   }
-  const validation = pixKeyHelper.validatePixKey(rawVal);
-  if (!validation.valid) {
-    if (feedback) feedback.innerHTML = `<span style="color:var(--danger);">${validation.error}</span>`;
+  const { ok, type, normalized, errorPt } = pixKeyHelper.validatePixKey(rawVal);
+  if (!ok) {
+    if (feedback) feedback.innerHTML = `<span style="color:var(--danger);">${escapeHtml(errorPt)}</span>`;
     return;
   }
   invalidateProfileCache();
-  localAccount.setPixKey(validation.normalized);
+  localAccount.setPixKey({ normalized, type, masked: pixKeyHelper.maskForDisplay(normalized, type) });
   share.showToast("Chave Pix salva no seu perfil local!");
   if (onReload) onReload(address, activeTab);
 }
