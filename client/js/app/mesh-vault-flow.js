@@ -14,6 +14,11 @@
 
 import * as mesh from "../vault/index.js";
 
+/**
+ * Carrega as dependências reais do cofre em malha.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultDeps() {
   const [gql, peers, cryptoDm, account, wire, inbox, contacts, social, guardiansFlow, share] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../identity/index.js"),
@@ -41,8 +46,23 @@ async function defaultDeps() {
   };
 }
 
+/**
+ * Usa as dependências recebidas ou carrega as reais.
+ *
+ * @param {object|null} d Dependências injetadas.
+ * @returns {Promise<object>}
+ */
 const deps = async (d) => d || (await defaultDeps());
 
+/**
+ * Assina e envia uma mensagem do cofre em malha; devolve se chegou a despachar.
+ *
+ * @param {object} x Dependências.
+ * @param {string} me Rota de quem envia.
+ * @param {string} to Rota do destino.
+ * @param {object} body Corpo ainda sem assinatura.
+ * @returns {Promise<boolean>}
+ */
 async function sendSigned(x, me, to, body) {
   const key = await Promise.resolve(x.getDmPub(to)).catch(() => null);
   if (!key) return false;
@@ -54,6 +74,13 @@ async function sendSigned(x, me, to, body) {
 // ---- Dona: mandar o cofre ----
 
 // Guardiões primeiro, e só quem ainda é laço mútuo: quem não é recusaria a cópia e gastaria uma das 7 vagas.
+/**
+ * Candidatos a guardar o cofre: guardiões e conhecidos com vínculo mútuo.
+ *
+ * @param {object} x Dependências.
+ * @param {string} me Rota da dona do cofre.
+ * @returns {Promise<string[]>}
+ */
 async function holderCandidates(x, me) {
   const pool = [...new Set([...(x.guardiansOf(me) || []), ...(x.pool() || [])])].filter((id) => id && id !== me);
   const ties = new Set(await Promise.resolve(x.mutual(pool)).catch(() => []));
@@ -100,18 +127,35 @@ export async function releaseMyVault(d = null) {
 
 // ---- Recebendo DM ----
 
+/**
+ * Aceita o pedido de guarda de quem tem vínculo mútuo.
+ *
+ * @param {object} x Dependências.
+ * @param {object} p Pedido recebido.
+ */
 async function onGuard(x, p) {
   const ties = await Promise.resolve(x.mutual([p.author])).catch(() => []);
   if (!ties.includes(p.author)) return;
   mesh.acceptGuard(p);
 }
 
+/**
+ * Registra o aviso de abertura do cofre e alerta a pessoa.
+ *
+ * @param {object} x Dependências.
+ * @param {object} p Aviso recebido.
+ */
 function onNotice(x, p) {
   if (!mesh.addMeshNotice({ holder: p.author, requestId: String(p.requestId), firstSeen: Number(p.firstSeen) || x.now() })) return;
   x.alert("Alguém está abrindo sua conta em outro aparelho. Confira em Perfil → Segurança.");
   globalThis.dispatchEvent?.(new CustomEvent("vox-cofre-malha-aviso"));
 }
 
+/**
+ * Aplica a decisão de uma dona sobre um pedido guardado.
+ *
+ * @param {object} p Decisão recebida.
+ */
 function onDecision(p) {
   const held = mesh.loadHeld();
   const requests = held[p.author]?.requests;
@@ -147,6 +191,13 @@ export async function receiveMeshDm(env, rawText, d = null) {
 
 // ---- Quem guarda: olhar pedidos, avisar, entregar ----
 
+/**
+ * Abre os pedidos da caixa de entrada do cofre em malha.
+ *
+ * @param {object} x Dependências.
+ * @param {object} entry Entrada do cofre guardado.
+ * @returns {Promise<object[]>}
+ */
 async function openRequests(x, entry) {
   const box = await mesh.boxKeyPair(entry.address);
   const list = await Promise.resolve(x.pull(await mesh.boxMailbox(entry.address))).catch(() => []);
@@ -161,6 +212,13 @@ async function openRequests(x, entry) {
 
 const MAX_REQUESTS_PER_OWNER = 7;
 
+/**
+ * Conta os pedidos ainda sem decisão e dentro do prazo.
+ *
+ * @param {Object<string, object>} requests Pedidos por identificador.
+ * @param {number} now Instante de referência em ms.
+ * @returns {number}
+ */
 function undecidedRequestCount(requests, now) {
   let count = 0;
   for (const r of Object.values(requests)) {
@@ -169,6 +227,14 @@ function undecidedRequestCount(requests, now) {
   return count;
 }
 
+/**
+ * Registra pedidos novos e avisa a dona, respeitando o limite por dona.
+ *
+ * @param {object} x Dependências.
+ * @param {string} me Rota de quem guarda.
+ * @param {string} owner Rota da dona.
+ * @param {object} entry Entrada do cofre guardado.
+ */
 async function noteNewRequests(x, me, owner, entry) {
   for (const req of await openRequests(x, entry)) {
     if (entry.requests[req.id]) continue;
@@ -179,16 +245,41 @@ async function noteNewRequests(x, me, owner, entry) {
 }
 
 // Sem remetente: o relay não deve ligar quem guarda à caixa da resposta (ADR-037 §3.2).
+/**
+ * Entrega à origem do pedido o registro do cofre, cifrado para a chave temporária dela.
+ *
+ * @param {object} x Dependências.
+ * @param {object} entry Entrada do cofre guardado.
+ * @param {string} id Identificador do pedido.
+ * @param {object} req Pedido.
+ * @returns {Promise<boolean>}
+ */
 async function releaseTo(x, entry, id, req) {
   const mailbox = await mesh.replyMailbox(req.k);
   const envelope = await x.seal(mesh.decodeMeshTempPub(req.k), mesh.buildReplyText(entry.record, id), { from: "", to: mailbox });
   return Promise.resolve(x.push(mailbox, envelope)).then(() => true, () => false);
 }
 
+/**
+ * Como `releaseTo`, mas falha vira `false`.
+ *
+ * @param {object} x Dependências.
+ * @param {object} entry Entrada do cofre guardado.
+ * @param {string} id Identificador do pedido.
+ * @param {object} req Pedido.
+ * @returns {Promise<boolean>}
+ */
 async function safeReleaseTo(x, entry, id, req) {
   return releaseTo(x, entry, id, req).catch(() => false);
 }
 
+/**
+ * Decide cada pedido (liberar, esperar ou descartar) e devolve quantos foram liberados.
+ *
+ * @param {object} x Dependências.
+ * @param {object} entry Entrada do cofre guardado.
+ * @returns {Promise<number>}
+ */
 async function settleRequests(x, entry) {
   let released = 0;
   for (const [id, req] of Object.entries(entry.requests)) {
@@ -205,13 +296,31 @@ async function settleRequests(x, entry) {
   return released;
 }
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não lista).
+ *
+ * @param {*} v Valor a testar.
+ * @returns {boolean}
+ */
 const isPlainObject = (v) => Boolean(v) && typeof v === "object" && !Array.isArray(v);
 
 // Uma entrada ilegível (armazenamento corrompido) não pode travar a volta das outras donas.
+/**
+ * Diz se a entrada guardada é legível e tem endereço de cofre válido.
+ *
+ * @param {*} entry Entrada a testar.
+ * @returns {boolean}
+ */
 const isReadableEntry = (entry) => isPlainObject(entry) && mesh.isVaultAddress(entry.address);
 
 // Grava só os pedidos, sobre o que está guardado agora: a volta demora (rede) e um veto, uma troca de cofre ou um
 // "soltar" que chegaram no meio não podem ser desfeitos por uma cópia velha da guarda inteira.
+/**
+ * Grava só os pedidos de uma entrada, sobre o que está guardado agora.
+ *
+ * @param {string} owner Rota da dona.
+ * @param {object} entry Entrada do cofre guardado.
+ */
 function saveRequests(owner, entry) {
   const held = mesh.loadHeld();
   const cur = held[owner];

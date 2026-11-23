@@ -17,6 +17,13 @@ import { renderPageHead } from "./shell.js";
 
 export { renderOAuthEnrich, renderEmailKitCardHtml, showGenesisStep, closeOAuthEnrich } from "./genesis-entry.js";
 
+/**
+ * Selos da pessoa na busca (você, contato, oficial).
+ *
+ * @param {object} p
+ * @param {boolean} isSelf
+ * @returns {string}
+ */
 function resolvePersonStampsHtml(p, isSelf) {
   const stamps = [];
   if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
@@ -59,6 +66,13 @@ function renderPeopleResultRow(p) {
     </article>`;
 }
 
+/**
+ * Seção de resultados de pessoas com título.
+ *
+ * @param {string} title
+ * @param {object[]} people
+ * @returns {string}
+ */
 function renderPeopleSection(title, people) {
   if (!people?.length) return "";
   const rows = people.map((p) => renderPeopleResultRow(p)).join("");
@@ -105,6 +119,12 @@ export function resolvePeopleSearchBody(sections, results, query) {
   return results.map((p) => renderPeopleResultRow(p)).join("");
 }
 
+/**
+ * Linha de quem adicionou a conta atual.
+ *
+ * @param {object} n
+ * @returns {string}
+ */
 function renderAddedYouRow(n) {
   const label = n.name || shortId(n.routeId);
   const av = renderAvatarHtml(n.routeId, label, "", n.avatarUrl || "");
@@ -139,6 +159,14 @@ export function renderAddedYouSection(notices = []) {
     </section>`;
 }
 
+/**
+ * Seção de convite quando não há busca.
+ *
+ * @param {string} query
+ * @param {string} routeId
+ * @param {string} inviteLink
+ * @returns {string}
+ */
 function renderPeopleInviteSection(query, routeId, inviteLink) {
   if (query.trim() || !routeId) return "";
   return renderInviteFriendsCard({
@@ -241,6 +269,14 @@ export function closePactModal(container) {
   if (container) container.innerHTML = "";
 }
 
+/**
+ * Monta o código Pix inicial do valor; vazio se a chave é inválida.
+ *
+ * @param {string} pixKey
+ * @param {string} authorName
+ * @param {number} amount
+ * @returns {string}
+ */
 function buildInitialPixPayload(pixKey, authorName, amount) {
   try {
     return brcode.buildPixPayload({
@@ -254,6 +290,13 @@ function buildInitialPixPayload(pixKey, authorName, amount) {
   }
 }
 
+/**
+ * Cabeçalho do modal de Pix.
+ *
+ * @param {string} authorName
+ * @param {string} title
+ * @returns {string}
+ */
 function renderZapModalHeaderHtml(authorName, title) {
   const titleHtml = title
     ? `<p class="desc" style="font-size:0.82rem; margin:0 0 0.75rem; color:var(--muted);">${escapeHtml(title.slice(0, 60))}${title.length > 60 ? "…" : ""}</p>`
@@ -267,8 +310,21 @@ function renderZapModalHeaderHtml(authorName, title) {
   ${titleHtml}`;
 }
 
+/**
+ * Botões de valores do Pix, com o inicial em destaque.
+ *
+ * @param {number} initialAmount
+ * @returns {string}
+ */
 function renderZapAmountButtonsHtml(initialAmount) {
   const isCustom = ![2, 5, 10].includes(initialAmount);
+  /**
+   * Botão de valor do Pix.
+   *
+   * @param {number} val
+   * @param {string} label
+   * @returns {string}
+   */
   const btn = (val, label) =>
     `<button class="btn btn-sm btn-zap-val ${initialAmount === val ? "btn-primary" : "btn-outline"}" data-val="${val}">${label}</button>`;
   const customBtn = `<button class="btn btn-sm btn-zap-val ${isCustom ? "btn-primary" : "btn-outline"}" data-val="custom">Outro</button>`;

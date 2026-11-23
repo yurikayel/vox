@@ -86,6 +86,13 @@ export function renderPostToolbar(t, author, authorDisplay, authorHandle) {
     </div>`;
 }
 
+/**
+ * Botão de comentários do post com a contagem.
+ *
+ * @param {object} t
+ * @param {object} [options={}]
+ * @returns {string}
+ */
 function renderCommentButton(t, { overlay = false } = {}) {
   const n = Number(t.repliesCount) || 0;
   const panelId = commentsPanelId(t.id);
@@ -99,6 +106,14 @@ function renderCommentButton(t, { overlay = false } = {}) {
           </button>`;
 }
 
+/**
+ * Botão de Pix (zap) quando o autor tem chave.
+ *
+ * @param {object} t
+ * @param {string} author
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderZapToolbarBtn(t, author, authorDisplay) {
   const pix = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
   const icon = `<svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
@@ -108,6 +123,12 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
   return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
 }
 
+/**
+ * Menu de ações extras da barra do post.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseStars, starred, stars }) {
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
@@ -128,6 +149,13 @@ function renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseSta
   </details>`;
 }
 
+/**
+ * Botão de compartilhar com a contagem.
+ *
+ * @param {object} t
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderToolbarShareBtn(t, authorDisplay) {
   const baseExplodes = Number(t.explodesCount) || 0;
   const explodes = social.getExplodesCount(t.id, baseExplodes);
@@ -141,6 +169,16 @@ function renderToolbarShareBtn(t, authorDisplay) {
   </button>`;
 }
 
+/**
+ * Ações principais da barra do post (curtir, citar, comentar).
+ *
+ * @param {object} t
+ * @param {boolean} liked
+ * @param {number} baseLikes
+ * @param {number} likes
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay) {
   const quoteBtn = t.isExternal ? `
     <button class="action-btn btn-quote-external" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-handle="${escapeHtml(t.authorHandle || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 280))}" data-url="${escapeHtml(t.externalUrl || "")}" aria-label="Citar e debater no Vox" title="💬 Citar e debater no Vox">

@@ -124,6 +124,11 @@ let guardsInstalled = false;
 export function installReadFirstGuards({ doc = globalThis.document, hasEntered, openEntry }) {
   if (guardsInstalled || !doc?.addEventListener) return;
   guardsInstalled = true;
+  /**
+   * Bloqueia a interação e abre a tela de entrada.
+   *
+   * @param {Event} e Evento interceptado.
+   */
   const block = (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();

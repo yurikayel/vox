@@ -37,6 +37,10 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
+/**
+ * Carrega o Playwright (por `PLAYWRIGHT_CORE_PATH` ou pelos pacotes instalados).
+ * @returns {Promise<object>}
+ */
 async function loadPlaywright() {
   const explicit = process.env.PLAYWRIGHT_CORE_PATH;
   if (explicit) return import(pathToFileURL(explicit).href);
@@ -52,6 +56,10 @@ async function loadPlaywright() {
   }
 }
 
+/**
+ * Sobe um servidor estático local que serve `client/`.
+ * @returns {Promise<{server: object, baseUrl: string}>}
+ */
 function startStaticServer() {
   const server = http.createServer((req, res) => {
     const rel = decodeURIComponent(String(req.url || "/").split("?")[0]).replace(/^\/+/, "") || "index.html";
@@ -69,6 +77,11 @@ function startStaticServer() {
   });
 }
 
+/**
+ * Falha o cenário com `FALHOU: msg` se a condição for falsa.
+ * @param {boolean} cond Condição esperada.
+ * @param {string} msg Mensagem do erro.
+ */
 function check(cond, msg) {
   if (!cond) throw new Error(`FALHOU: ${msg}`);
 }
@@ -95,16 +108,31 @@ async function newDevice(browser, baseUrl) {
   return { context, page, seen, errors, baseUrl };
 }
 
+/**
+ * Lê o id de rota da conta ativa na página, ou `null`.
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<string|null>}
+ */
 function routeIdOf(page) {
   return page.evaluate(async () => (await import("/js/identity/index.js")).getCachedRouteIdSync() || null);
 }
 
+/**
+ * Abre a tela de entrada até o campo de nome.
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<void>}
+ */
 async function openEntry(page) {
   await page.locator("#btn-read-first-enter").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("#btn-read-first-enter").click();
   await page.locator("#oauth-custom-name-input").waitFor({ state: "visible", timeout: 15000 });
 }
 
+/**
+ * Aceita o pacto de convivência (maioridade e aceite).
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<void>}
+ */
 async function acceptPact(page) {
   await page.locator("#pact-age-18").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("#pact-age-18").check();
@@ -112,6 +140,12 @@ async function acceptPact(page) {
   await page.locator("#feed-inline-composer").waitFor({ state: "visible", timeout: 15000 });
 }
 
+/**
+ * Cria uma conta só com nome.
+ * @param {object} page Página do Playwright.
+ * @param {string} name Nome de exibição.
+ * @returns {Promise<void>}
+ */
 async function createNameOnly(page, name) {
   await openEntry(page);
   await page.locator("#oauth-custom-name-input").fill(name);
@@ -151,11 +185,27 @@ async function wipeDevice(page, baseUrl) {
   await page.reload({ waitUntil: "domcontentloaded" });
 }
 
+/**
+ * Abre a tela de quem já tem conta.
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<void>}
+ */
 async function openHave(page) {
   await page.locator('[data-genesis-go="have"]').click();
   await page.locator("#oauth-restore-email-input").waitFor({ state: "visible", timeout: 15000 });
 }
 
+/**
+ * Preenche os campos da tela de quem já tem conta.
+ * @param {object} page Página do Playwright.
+ * @param {object} options Campos a preencher.
+ * @param {string} [options.email=""] E-mail.
+ * @param {string} [options.pass=""] Senha.
+ * @param {string} [options.kit=""] Kit de recuperação.
+ * @param {string} [options.phrase=""] Frase de recuperação.
+ * @param {string} [options.file=""] Arquivo de backup.
+ * @returns {Promise<void>}
+ */
 async function fillHave(page, { email = "", pass = "", kit = "", phrase = "", file = "" }) {
   await page.locator("#oauth-restore-email-input").fill(email);
   await page.locator("#oauth-sovereign-passphrase-input").fill(pass);
@@ -197,10 +247,20 @@ function keyMaterial(page) {
   return page.evaluate(() => ["vox-identity-seed-v1", "vox-dm-keypair", "vox-local-account-v1", "vox-accounts-vault-v1"].map((k) => localStorage.getItem(k)).filter(Boolean));
 }
 
+/**
+ * Despeja `localStorage` e `sessionStorage` em texto, para procurar vazamento.
+ * @param {object} page Página do Playwright.
+ * @returns {Promise<string>}
+ */
 async function storageDump(page) {
   return page.evaluate(() => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }));
 }
 
+/**
+ * Garante que nenhuma senha (certa ou errada) apareceu em pedidos de rede.
+ * @param {object} device Aparelho simulado com os pedidos vistos.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ */
 function checkNoPasswordLeak(device, label) {
   for (const r of device.seen) {
     check(!r.url.includes(PASS) && !r.body.includes(PASS), `${label}: a senha apareceu num pedido`);
@@ -208,10 +268,21 @@ function checkNoPasswordLeak(device, label) {
   }
 }
 
+/**
+ * Garante que a página não registrou erros de JavaScript.
+ * @param {object} device Aparelho simulado com os erros vistos.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ */
 function checkNoPageErrors(device, label) {
   check(device.errors.length === 0, `${label}: erros JS na página: ${device.errors.join(" | ")}`);
 }
 
+/**
+ * Cenário: criar conta só com nome e conferir o resultado.
+ * @param {object} browser Navegador do Playwright.
+ * @param {string} baseUrl URL base do servidor local.
+ * @returns {Promise<void>}
+ */
 async function scenarioNameOnly(browser, baseUrl) {
   const dev = await newDevice(browser, baseUrl);
   try {
@@ -245,6 +316,13 @@ async function expectReturn(env, label, fields, routeId) {
   } finally { await dev.context.close(); }
 }
 
+/**
+ * Confere que o aparelho recusa a volta com os campos dados, sem mudar de conta.
+ * @param {object} env Ambiente do cenário (navegador e URL base).
+ * @param {string} label Rótulo usado na mensagem de erro.
+ * @param {object} fields Campos a preencher.
+ * @returns {Promise<void>}
+ */
 async function expectRefusal(env, label, fields) {
   const dev = await newDevice(env.browser, env.baseUrl);
   try {
@@ -253,6 +331,13 @@ async function expectRefusal(env, label, fields) {
   } finally { await dev.context.close(); }
 }
 
+/**
+ * Confere que a volta com os campos dados é recusada com mensagem e sem trocar a conta.
+ * @param {object} dev Aparelho simulado.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ * @param {object} fields Campos a preencher.
+ * @returns {Promise<void>}
+ */
 async function refuses(dev, label, fields) {
   const out = await comeBack(dev.page, fields);
   check(out.id === null && out.msg, `${label}: devia recusar com mensagem, deu id=${out.id} msg="${out.msg}"`);
@@ -262,11 +347,21 @@ async function refuses(dev, label, fields) {
   console.log(`PASS [recusa ${label}] "${out.msg.slice(0, 60)}"`);
 }
 
+/**
+ * Extrai a frase de recuperação do corpo do e-mail enviado.
+ * @param {string} body Corpo do e-mail.
+ * @returns {string}
+ */
 function phraseFromBody(body) {
   const m = body.match(/mesmo sem senha\):\s*\n([^\n]+)/);
   return m ? m[1].trim() : "";
 }
 
+/**
+ * Cenário: backup por e-mail e volta com e sem senha.
+ * @param {object} env Ambiente do cenário (navegador e URL base).
+ * @returns {Promise<void>}
+ */
 async function scenarioEmail(env) {
   const { browser, baseUrl } = env;
   const dev = await newDevice(browser, baseUrl);
@@ -298,6 +393,10 @@ async function scenarioEmail(env) {
   } finally { await dev.context.close(); }
 }
 
+/**
+ * Roda os cenários de login e sai com código 1 se algum falhar.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const { chromium } = await loadPlaywright();
   const srv = await startStaticServer();

@@ -5,6 +5,12 @@
 import { escapeHtml } from "./util.js";
 import { ACHIEVEMENT_CATALOG, computeVoxelBalance, evaluateAchievements } from "../voxels.js";
 
+/**
+ * Destaque com o saldo total de vóxels.
+ *
+ * @param {object} balance
+ * @returns {string}
+ */
 function renderVoxelBalanceHero(balance) {
   const total = balance?.total || 0;
   return `
@@ -22,6 +28,16 @@ function renderVoxelBalanceHero(balance) {
     </div>`;
 }
 
+/**
+ * Cartão de uma trilha de vóxels.
+ *
+ * @param {string} title
+ * @param {string} icon
+ * @param {number} amount
+ * @param {string} description
+ * @param {string} colorVar
+ * @returns {string}
+ */
 function renderTrackCard(title, icon, amount, description, colorVar) {
   return `
     <div class="card voxel-track-card" style="flex:1; min-width:180px; padding:0.9rem; border-top:3px solid ${colorVar}; background:var(--surface-soft);">
@@ -33,6 +49,12 @@ function renderTrackCard(title, icon, amount, description, colorVar) {
     </div>`;
 }
 
+/**
+ * Grade das trilhas de vóxels por categoria.
+ *
+ * @param {object} byCategory
+ * @returns {string}
+ */
 function renderVoxelTracksGrid(byCategory) {
   const c = byCategory || { forja: 0, agora: 0, cuidado: 0 };
   const forjaCard = renderTrackCard("Forja", "🔨", c.forja, "Nós Vox Populi, relays e cache público (com decaimento)", "var(--accent, #2b5fb8)");
@@ -47,6 +69,13 @@ function renderVoxelTracksGrid(byCategory) {
     </div>`;
 }
 
+/**
+ * Selo de uma conquista, travado ou desbloqueado.
+ *
+ * @param {object} achievement
+ * @param {boolean} isUnlocked
+ * @returns {string}
+ */
 function renderAchievementBadgeItem(achievement, isUnlocked) {
   const icon = achievement.icon || "🏅";
   const opacity = isUnlocked ? "1" : "0.55";
@@ -68,6 +97,12 @@ function renderAchievementBadgeItem(achievement, isUnlocked) {
     </div>`;
 }
 
+/**
+ * Seção de conquistas.
+ *
+ * @param {object[]} [unlockedList=[]]
+ * @returns {string}
+ */
 function renderAchievementsSection(unlockedList = []) {
   const unlockedMap = new Set(unlockedList.map((a) => a.id));
   const cardsHtml = ACHIEVEMENT_CATALOG.map((item) => renderAchievementBadgeItem(item, unlockedMap.has(item.id))).join("");
@@ -83,6 +118,13 @@ function renderAchievementsSection(unlockedList = []) {
     </div>`;
 }
 
+/**
+ * Exportação do passaporte de vóxels, só na própria conta.
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @returns {string}
+ */
 function renderVoxelPassportExport(address, isCurrentWallet) {
   if (!isCurrentWallet) return "";
   return `
