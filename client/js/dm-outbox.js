@@ -4,8 +4,14 @@
  * Lógica pura; o transporte e o fio de mensagens chegam por dependências.
  */
 
+import { createLeadTabSignal, withWebLock } from "./shared/lead-tab.js";
+
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const OUTBOX_KEY = "vox-dm-outbox-v1";
+/** Trava Web Lock para serializar o repasse da caixa de saída entre abas. @type {string} */
+export const OUTBOX_LOCK_NAME = "vox-dm-outbox-v0";
+/** Trava de eleição da aba líder para o poll periódico da caixa de saída. @type {string} */
+export const OUTBOX_LEAD_LOCK = "vox-dm-outbox-lead-v0";
 /** Limite ou intervalo em milissegundos. @type {*} */
 export const OUTBOX_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** Limite numérico do módulo. @type {number} */
@@ -157,12 +163,11 @@ async function markSafe(d, entry, status) {
 }
 
 /**
- * Uma passada pela caixa. `d`: { storage, now(), isConnected(addr), sendDirect(addr, env) → bool,
- * pushRelay(addr, env) → Promise, markStatus(addr, id, status) }.
- 
- * @param {*} [d] Parâmetro `d`.
- * @returns {*} Resultado da operação.*/
-export async function flushOutbox(d) {
+ * Executa uma passada pela caixa de saída sobre o armazenamento injetado.
+ * @param {object} d Dependências de armazenamento e transporte.
+ * @returns {Promise<{ sent: number, expired: number, waiting: number }>} Resumo da passada.
+ */
+async function runFlushOutbox(d) {
   const now = d.now();
   const plan = planOutbox(readList(d.storage), { isConnected: d.isConnected, now });
   const done = new Set();
@@ -185,4 +190,51 @@ export async function flushOutbox(d) {
     .map((e) => touched.get(e.envelope.id) || e);
   writeList(rest, d.storage);
   return { sent: done.size - expired, expired, waiting: rest.length };
+}
+
+/**
+ * Uma passada pela caixa, serializada entre abas via Web Locks quando disponível.
+ * `d`: `{ storage, now(), isConnected(addr), sendDirect(addr, env) → bool, pushRelay(addr, env) → Promise, markStatus(addr, id, status) }`.
+ *
+ * @param {object} d Dependências da caixa de saída.
+ * @returns {Promise<{ sent: number, expired: number, waiting: number }>} Resumo da passada.
+ */
+export function flushOutbox(d) {
+  return withWebLock(OUTBOX_LOCK_NAME, () => runFlushOutbox(d), { locks: d?.locks });
+}
+
+/**
+ * Inicia um agendador periódico da caixa de saída em que só a aba líder dispara o tick automático.
+ * Envios manuais (`flushNow`) e WebRTC continuam funcionando em qualquer aba.
+ *
+ * @param {() => (void|Promise<unknown>)} tickFn Rotina de repasse executada nos ticks da aba líder.
+ * @param {object} [opts={}] Opções do agendador.
+ * @param {number} [opts.intervalMs=20000] Intervalo do tick automático em ms.
+ * @param {Window|typeof globalThis} [opts.win=globalThis] Alvo com `setInterval`/`clearInterval`.
+ * @param {string} [opts.lockName=OUTBOX_LEAD_LOCK] Nome da trava de liderança.
+ * @param {object} [opts.locks] `LockManager` injetável para testes.
+ * @param {typeof BroadcastChannel} [opts.BroadcastChannel] Construtor `BroadcastChannel` injetável.
+ * @returns {{ isLead: { get: () => boolean, peek: () => boolean }, flushNow: () => (void|Promise<unknown>), stop: () => void }} Controlador do agendador.
+ */
+export function createOutboxLeadPoll(tickFn, opts = {}) {
+  if (typeof tickFn !== "function") throw new TypeError("dm-outbox: tickFn obrigatória");
+  const win = opts.win !== undefined ? opts.win : globalThis;
+  const intervalMs = Number(opts.intervalMs) > 0 ? Number(opts.intervalMs) : 20_000;
+  const lead = createLeadTabSignal({
+    lockName: opts.lockName || OUTBOX_LEAD_LOCK,
+    locks: opts.locks,
+    BroadcastChannel: opts.BroadcastChannel,
+    channelName: opts.channelName,
+    scope: opts.scope,
+  });
+  const timerId = typeof win?.setInterval === "function"
+    ? win.setInterval(() => {
+      if (lead.isLead.peek()) void tickFn();
+    }, intervalMs)
+    : null;
+  const stop = () => {
+    if (timerId !== null) win?.clearInterval?.(timerId);
+    lead.stop();
+  };
+  return { isLead: lead.isLead, flushNow: () => tickFn(), stop };
 }
