@@ -97,6 +97,12 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
 
 const USER_ICON_SVG = `<svg class="badge-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
+/**
+ * Selo da carteira no rodapé, com estado vazio quando não há.
+ *
+ * @param {string} walletAddress
+ * @returns {string}
+ */
 function renderWalletBadge(walletAddress) {
   if (!walletAddress) {
     return `<a class="wallet-badge account-access" href="#/perfil" aria-label="Abrir perfil">${USER_ICON_SVG}<span class="wallet-badge-label">Perfil</span></a>`;
@@ -143,6 +149,13 @@ export function renderFeedNav(activeFeed = "for-you") {
     </nav>`;
 }
 
+/**
+ * Espaço da navegação do feed, vazio fora das telas de feed.
+ *
+ * @param {boolean} showFeedNav
+ * @param {string} activeFeed
+ * @returns {string}
+ */
 function renderFeedNavSlot(showFeedNav, activeFeed) {
   const inner = showFeedNav ? renderFeedNav(activeFeed) : "";
   const hidden = showFeedNav ? "" : ' hidden aria-hidden="true"';
@@ -157,6 +170,12 @@ const THEME_ICONS = {
   dark: `<svg class="theme-mode-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
 };
 
+/**
+ * Botão de alternar tema (automático, claro, escuro).
+ *
+ * @param {string} mode
+ * @returns {string}
+ */
 function renderThemeModeToggle(mode) {
   const m = mode === "light" || mode === "dark" ? mode : "auto";
   const label = colorModeLabel(m);
@@ -166,6 +185,12 @@ function renderThemeModeToggle(mode) {
         </button>`;
 }
 
+/**
+ * Atualiza rótulo e estado do botão de tema.
+ *
+ * @param {HTMLElement} btn
+ * @param {string} mode
+ */
 function syncThemeModeToggleUi(btn, mode) {
   const m = mode === "light" || mode === "dark" ? mode : "auto";
   btn.setAttribute("aria-label", colorModeToggleHint(m));
@@ -175,6 +200,9 @@ function syncThemeModeToggleUi(btn, mode) {
   if (label) label.textContent = colorModeLabel(m);
 }
 
+/**
+ * Liga o botão de tema, que gira entre os modos e guarda a escolha.
+ */
 function attachThemeModeToggle() {
   const btn = document.getElementById("theme-mode-toggle");
   if (!btn || btn.dataset.bound === "1") return;
@@ -189,6 +217,13 @@ function attachThemeModeToggle() {
   });
 }
 
+/**
+ * Rodapé da barra lateral (tema, rede e carteira).
+ *
+ * @param {string} chipHtml
+ * @param {string} walletBadge
+ * @returns {string}
+ */
 function renderSidebarFooter(chipHtml, walletBadge) {
   const themeToggle = renderThemeModeToggle(readColorMode(typeof localStorage !== "undefined" ? localStorage : null));
   return `
@@ -202,6 +237,9 @@ function renderSidebarFooter(chipHtml, walletBadge) {
         </div>`;
 }
 
+/**
+ * Liga o comportamento da barra lateral (recolher e abrir).
+ */
 function attachSidebarBehavior() {
   const layout = document.querySelector(".app-layout");
   const btn = document.getElementById("sidebar-collapse-btn");
@@ -270,6 +308,12 @@ export function formatDmBadge(count) {
   return n > 99 ? "99+" : String(n);
 }
 
+/**
+ * Itens de navegação da barra lateral, marcando a aba ativa.
+ *
+ * @param {string} activeTab
+ * @returns {string}
+ */
 function renderSidebarNav(activeTab) {
   return NAV_ITEMS.map((item) => {
     const isActive = activeTab === item.tab || (item.alias || []).includes(activeTab);
@@ -280,6 +324,11 @@ function renderSidebarNav(activeTab) {
   }).join("\n    ");
 }
 
+/**
+ * Marca Vox e Ágora no topo.
+ *
+ * @returns {string}
+ */
 function renderAgoraWordmark() {
   return `<a href="#/" class="agora-wordmark" aria-label="Vox — Ágora">
       <img class="agora-wordmark-mark" src="${BRAND_MARK_SRC}" width="28" height="28" alt="" decoding="async" />
@@ -287,6 +336,12 @@ function renderAgoraWordmark() {
     </a>`;
 }
 
+/**
+ * Resumo da identidade (nome, avatar e endereço) para o cabeçalho.
+ *
+ * @param {string} walletAddress
+ * @returns {object}
+ */
 function readIdentitySummary(walletAddress) {
   const enrichment = localAccount.getProfileEnrichment?.() || {};
   const displayName = localAccount.getDisplayName?.() || enrichment.displayName || (walletAddress ? mock.getAuthorDisplay(walletAddress) : "") || "";
@@ -297,6 +352,13 @@ function readIdentitySummary(walletAddress) {
   };
 }
 
+/**
+ * Botão da identidade na barra superior.
+ *
+ * @param {object} identity
+ * @param {string} chipText
+ * @returns {string}
+ */
 function renderIdentityChip(identity, chipText) {
   const avatar = identity.address
     ? renderAvatarHtml(identity.address, identity.displayName, "agora-topbar-avatar", identity.avatarUrl)
@@ -309,6 +371,12 @@ function renderIdentityChip(identity, chipText) {
     </button>`;
 }
 
+/**
+ * Classe e rótulo do estado da malha a partir do selo de rede.
+ *
+ * @param {string} chipHtml
+ * @returns {object}
+ */
 function meshChipState(chipHtml) {
   if (chipHtml.includes("network-chip offline")) return { cls: "is-offline", label: "Offline" };
   if (chipHtml.includes("network-chip paused")) return { cls: "is-paused", label: "Só leitura" };
@@ -326,6 +394,13 @@ export function renderMeshStatusChip(chipHtml) {
   return `<a href="#/status" class="agora-mesh-chip ${mesh.cls}" title="${escapeHtml(networkChipText(chipHtml))}"><span class="agora-presence-dot" aria-hidden="true"></span><span>${escapeHtml(mesh.label)}</span></a>`;
 }
 
+/**
+ * Barra superior com busca, rede e identidade.
+ *
+ * @param {object} identity
+ * @param {string} chipText
+ * @returns {string}
+ */
 function renderTopBar(identity, chipText) {
   return `
     <header class="agora-topbar" role="banner">
@@ -343,12 +418,25 @@ function renderTopBar(identity, chipText) {
     </header>`;
 }
 
+/**
+ * Linha da chave de identidade na gaveta.
+ *
+ * @param {object} identity
+ * @returns {string}
+ */
 function renderDrawerKeyRow(identity) {
   return identity.address
     ? `<div class="agora-drawer-key"><span class="agora-label">ID na rede</span><code class="agora-mono">${escapeHtml(identity.address)}</code><button type="button" class="agora-link-btn" id="agora-copy-id">Copiar</button></div>`
     : `<p class="agora-muted">Você ainda não criou uma identidade neste aparelho.</p>`;
 }
 
+/**
+ * Gaveta de identidade com chave, rede e atalhos.
+ *
+ * @param {object} identity
+ * @param {string} chipHtml
+ * @returns {string}
+ */
 function renderIdentityDrawer(identity, chipHtml) {
   const keyRow = renderDrawerKeyRow(identity);
   return `
@@ -379,6 +467,9 @@ function renderIdentityDrawer(identity, chipHtml) {
     </aside>`;
 }
 
+/**
+ * Liga o formulário de busca da barra superior.
+ */
 function attachTopBarSearch() {
   const form = document.getElementById("agora-search-form");
   if (!form || form.dataset.bound === "1") return;
@@ -390,6 +481,11 @@ function attachTopBarSearch() {
   });
 }
 
+/**
+ * Liga o botão de copiar o identificador, com aviso de resultado.
+ *
+ * @param {HTMLElement} drawer
+ */
 function attachCopyIdentityButton(drawer) {
   document.getElementById("agora-copy-id")?.addEventListener("click", async (e) => {
     const code = drawer.querySelector(".agora-drawer-key code")?.textContent || "";
@@ -402,6 +498,9 @@ function attachCopyIdentityButton(drawer) {
   });
 }
 
+/**
+ * Liga busca, gaveta de identidade e copiar.
+ */
 function attachTopBarBehavior() {
   attachTopBarSearch();
   const toggle = document.getElementById("agora-identity-toggle");
@@ -409,6 +508,11 @@ function attachTopBarBehavior() {
   const backdrop = document.getElementById("agora-drawer-backdrop");
   if (!toggle || !drawer || toggle.dataset.bound === "1") return;
   toggle.dataset.bound = "1";
+  /**
+   * Abre ou fecha a gaveta de identidade.
+   *
+   * @param {boolean} open
+   */
   const setOpen = (open) => {
     drawer.hidden = !open;
     if (backdrop) backdrop.hidden = !open;
@@ -423,6 +527,12 @@ function attachTopBarBehavior() {
   attachCopyIdentityButton(drawer);
 }
 
+/**
+ * Texto visível do selo de rede.
+ *
+ * @param {string} chipHtml
+ * @returns {string}
+ */
 function networkChipText(chipHtml) {
   const m = chipHtml.match(/<span>([^<]*)<\/span><\/a>$/);
   return m ? m[1] : "Rede";
@@ -451,6 +561,13 @@ export function renderCirclesList(communities = []) {
       ${rows}`;
 }
 
+/**
+ * Barra lateral completa.
+ *
+ * @param {string} activeTab
+ * @param {object} options
+ * @returns {string}
+ */
 function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
   const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
@@ -497,6 +614,12 @@ export function updateTopBarSync(active, detail = "") {
   }
 }
 
+/**
+ * Estrutura do app (barra lateral, barra superior e conteúdo).
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
   return `
     <div class="app-layout agora-ui" data-active-tab="${escapeHtml(activeTab)}">
@@ -512,6 +635,9 @@ function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
   `;
 }
 
+/**
+ * Liga todos os comportamentos do shell após desenhá-lo.
+ */
 function attachShellBehaviors() {
   attachSidebarBehavior();
   attachThemeModeToggle();
@@ -570,6 +696,11 @@ export function renderOpsNotice(notice) {
   return `<div class="ops-notice-banner" role="status">${escapeHtml(notice)}</div>`;
 }
 
+/**
+ * Insere no topo do conteúdo o aviso operacional, se houver.
+ *
+ * @param {HTMLElement|null} main
+ */
 function mountOpsNotice(main) {
   const html = renderOpsNotice(getFlags().notice);
   if (html && main?.insertAdjacentHTML) main.insertAdjacentHTML("beforebegin", html);
@@ -587,6 +718,11 @@ export function renderDemoModeBanner() {
     </div>`;
 }
 
+/**
+ * Insere a faixa de modo de demonstração no conteúdo.
+ *
+ * @param {HTMLElement|null} main
+ */
 function mountDemoModeBanner(main) {
   if (!main?.insertAdjacentHTML) return;
   // Antes do #app-main: as telas reescrevem o innerHTML do main e apagariam a faixa.

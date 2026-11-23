@@ -49,6 +49,7 @@ class SnapshotConflict(ValueError):
     """
 
     def __init__(self, message: str, current_epoch: int, current_covered_serial: int):
+        """Guarda a mensagem e a época e o serial coberto atuais do canal."""
         super().__init__(message)
         self.current_epoch = current_epoch
         self.current_covered_serial = current_covered_serial

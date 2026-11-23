@@ -18,6 +18,14 @@ import { parseRoute } from "./route-parse.js";
 import { route } from "./navigation.js";
 import { dispatchCommunityModAction } from "./community-metadata.js";
 
+/**
+ * Monta o arquivo de gênesis da comunidade exportado pela moderação.
+ *
+ * @param {string} communityId Comunidade.
+ * @param {object} meta Metadados.
+ * @param {object[]} topics Tópicos visíveis.
+ * @returns {object}
+ */
 function buildCommunityGenesisPayload(communityId, meta, topics) {
   return {
     type: "vox-community-genesis",
@@ -32,6 +40,13 @@ function buildCommunityGenesisPayload(communityId, meta, topics) {
   };
 }
 
+/**
+ * Liga o botão que exporta o gênesis da comunidade.
+ *
+ * @param {string} communityId
+ * @param {object} meta
+ * @param {object[]} filteredTopics Tópicos incluídos no arquivo.
+ */
 function bindGenesisExport(communityId, meta, filteredTopics) {
   const btn = document.getElementById("btn-export-comm-genesis");
   if (!btn) return;
@@ -43,6 +58,13 @@ function bindGenesisExport(communityId, meta, filteredTopics) {
   });
 }
 
+/**
+ * Liga os botões de semente e de modo apoiador da vizinhança.
+ *
+ * @param {string} communityId
+ * @param {object} meta Metadados.
+ * @param {object} peerSettings Ajustes atuais de vizinhos.
+ */
 function bindSeedAndNeighborControls(communityId, meta, peerSettings) {
   document.getElementById("btn-neighbor-comm-only")?.addEventListener("click", () => {
     peers.savePeerSettings({ ...peerSettings, commOnly: true, enabled: true });
@@ -63,6 +85,13 @@ function bindSeedAndNeighborControls(communityId, meta, peerSettings) {
   });
 }
 
+/**
+ * Mostra a nova foto da comunidade na tela sem recarregar.
+ *
+ * @param {string} safeSrc URL já validada da imagem.
+ * @param {object} meta Metadados.
+ * @param {string} communityId
+ */
 function paintCommunityPhotoOnDom(safeSrc, meta, communityId) {
   const img = document.querySelector(".community-avatar-img");
   if (img) {
@@ -78,6 +107,13 @@ function paintCommunityPhotoOnDom(safeSrc, meta, communityId) {
   if (fb) fb.style.display = "none";
 }
 
+/**
+ * Valida e publica a foto da comunidade; só dono ou moderador pode trocar.
+ *
+ * @param {File} file Imagem escolhida.
+ * @param {string} communityId
+ * @param {object} meta Metadados.
+ */
 async function uploadCommunityPhoto(file, communityId, meta) {
   if (!communityUpdates.canUpdateCommunity(meta, await localAccount.getRouteId())) {
     share.showToast("Só o dono ou um moderador desta comunidade pode trocar a foto.", "error");
@@ -103,6 +139,12 @@ async function uploadCommunityPhoto(file, communityId, meta) {
   share.showToast("Foto da comunidade atualizada!");
 }
 
+/**
+ * Liga o campo de arquivo da foto da comunidade.
+ *
+ * @param {string} communityId
+ * @param {object} meta Metadados.
+ */
 function bindCommunityPhotoInput(communityId, meta) {
   const input = document.getElementById("input-comm-photo-file");
   if (!input) return;
@@ -117,6 +159,11 @@ function bindCommunityPhotoInput(communityId, meta) {
   });
 }
 
+/**
+ * Reflete na tela o estado da quarentena da comunidade.
+ *
+ * @param {boolean} nextState Quarentena ligada.
+ */
 function paintCommunityQuarantineOnDom(nextState) {
   if (typeof document === "undefined") return;
   const on = Boolean(nextState);
@@ -165,6 +212,12 @@ export async function toggleCommunityQuarantine(communityId, meta, explicitNext)
   return signed;
 }
 
+/**
+ * Liga o botão que liga e desliga a quarentena da comunidade.
+ *
+ * @param {string} communityId
+ * @param {object} meta Metadados.
+ */
 function bindCommunityQuarantineToggle(communityId, meta) {
   const btn = document.getElementById("btn-toggle-comm-quarantine");
   if (!btn) return;
@@ -181,6 +234,11 @@ function bindCommunityQuarantineToggle(communityId, meta) {
   });
 }
 
+/**
+ * Liga os botões de ocultar item da moderação.
+ *
+ * @param {string} communityId
+ */
 function bindCommunityModHideButtons(communityId) {
   document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
@@ -199,10 +257,23 @@ function bindCommunityModHideButtons(communityId) {
   });
 }
 
+/**
+ * Normaliza texto para busca: sem acento, minúsculo e sem espaços nas pontas.
+ *
+ * @param {string} str Texto de entrada.
+ * @returns {string}
+ */
 function normalizeSearchText(str) {
   return String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
+/**
+ * Mostra só as linhas de tópico que casam com a busca e o aviso de lista vazia.
+ *
+ * @param {NodeList|HTMLElement[]} rows Linhas de tópico.
+ * @param {string} q Termo digitado.
+ * @param {HTMLElement} main Raiz da tela.
+ */
 function filterTopicRows(rows, q, main) {
   let visibleCount = 0;
   const normQ = normalizeSearchText(q);
@@ -225,6 +296,12 @@ function filterTopicRows(rows, q, main) {
   }
 }
 
+/**
+ * Liga o campo de busca de tópicos.
+ *
+ * @param {HTMLElement} main
+ * @returns {HTMLInputElement|null}
+ */
 function bindCommunityTopicSearch(main) {
   const searchInput = main.querySelector("#input-comm-topic-search");
   if (!searchInput) return null;
@@ -234,6 +311,14 @@ function bindCommunityTopicSearch(main) {
   return searchInput;
 }
 
+/**
+ * Mostra, atualiza ou remove o botão de carregar tópicos anteriores.
+ *
+ * @param {HTMLElement} main
+ * @param {number} totalCount Total de tópicos.
+ * @param {number} currentLimit Quantidade exibida.
+ * @param {Function|null} onMore Chamado ao pedir mais.
+ */
 function updatePaginationControl(main, totalCount, currentLimit, onMore) {
   let paginationEl = main.querySelector(".community-topic-pagination");
   if (totalCount <= currentLimit) {
@@ -252,6 +337,15 @@ function updatePaginationControl(main, totalCount, currentLimit, onMore) {
   paginationEl.querySelector(".btn-load-more-topics")?.addEventListener("click", onMore);
 }
 
+/**
+ * Redesenha a lista de tópicos conforme ordem, limite e busca.
+ *
+ * @param {HTMLElement} main
+ * @param {string} communityId
+ * @param {object[]} filteredTopics Tópicos da comunidade.
+ * @param {{sort: string, limit: number}} state Ordem e limite atuais.
+ * @param {HTMLInputElement|null} searchInput Campo de busca.
+ */
 function refreshCommunityTopicList(main, communityId, filteredTopics, state, searchInput) {
   const listEl = main.querySelector(".community-vox-topic-list");
   if (!listEl) return;
@@ -269,6 +363,12 @@ function refreshCommunityTopicList(main, communityId, filteredTopics, state, sea
   if (searchInput?.value.trim()) filterTopicRows(main.querySelectorAll(".community-topic-row"), searchInput.value, main);
 }
 
+/**
+ * Liga os botões de ordenar tópicos.
+ *
+ * @param {HTMLElement} main
+ * @param {Function} onSortChange Chamado com o novo modo.
+ */
 function bindCommunityTopicSort(main, onSortChange) {
   main.querySelectorAll(".btn-sort-topic").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -284,6 +384,13 @@ function bindCommunityTopicSort(main, onSortChange) {
   });
 }
 
+/**
+ * Liga busca, ordem e paginação da lista de tópicos.
+ *
+ * @param {HTMLElement} main
+ * @param {string} communityId
+ * @param {object[]} filteredTopics Tópicos da comunidade.
+ */
 function bindCommunityTopicControls(main, communityId, filteredTopics) {
   const state = { sort: "active", limit: TOPICS_PAGE_SIZE };
   const searchInput = bindCommunityTopicSearch(main);

@@ -48,6 +48,14 @@ export async function pollInboxMessages(user) {
   }
 }
 
+/**
+ * Desenha a lista de conversas e liga os controles.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object[]} convs Conversas.
+ * @param {string} user Rota de quem vê.
+ * @param {string} [searchQuery=""] Busca atual.
+ */
 function renderAndBindDmList(main, convs, user, searchQuery = "") {
   render.renderDmList(main, convs, user, {
     contactList: contacts.listContacts(),
@@ -56,6 +64,13 @@ function renderAndBindDmList(main, convs, user, searchQuery = "") {
   bindDmListControls(main, convs, user);
 }
 
+/**
+ * Liga os controles da lista de conversas.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object[]} convs Conversas.
+ * @param {string} user Rota de quem vê.
+ */
 function bindDmListControls(main, convs, user) {
   document.getElementById("btn-copy-my-dm-link")?.addEventListener("click", () => {
     const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(user)}`;
@@ -79,6 +94,13 @@ function bindDmListControls(main, convs, user) {
   bindDmListSearchAndPins(main, convs, user);
 }
 
+/**
+ * Liga a busca e os fixados da lista de conversas.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object[]} convs Conversas.
+ * @param {string} user Rota de quem vê.
+ */
 function bindDmListSearchAndPins(main, convs, user) {
   const searchInput = document.getElementById("dm-search-input");
   searchInput?.addEventListener("input", () => {
@@ -124,6 +146,15 @@ export async function showDmList() {
   renderAndBindDmList(main, convs, user, "");
 }
 
+/**
+ * Cifra a mensagem para o par e guarda no aparelho.
+ *
+ * @param {string} user Rota de quem envia.
+ * @param {string} peerAddress Endereço do par.
+ * @param {object|null} peerDmPub Chave pública do par.
+ * @param {string} text Texto.
+ * @returns {Promise<object>}
+ */
 async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
   const wirePayload = dmMsg.serializeDmPayload({
     text,
@@ -180,6 +211,15 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   }
 }
 
+/**
+ * Alterna a reação a uma mensagem e avisa o par, se há chave dele.
+ *
+ * @param {string} user Rota de quem reage.
+ * @param {string} peerAddress Endereço do par.
+ * @param {object|null} peerDmPub Chave pública do par.
+ * @param {string} msgId Mensagem.
+ * @param {string} emoji Emoji.
+ */
 async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, emoji) {
   if (!msgId || !emoji) return;
   await applyBubbleReaction(peerAddress, user, msgId, emoji);
@@ -195,10 +235,19 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
   showDmThread(peerAddress);
 }
 
+/**
+ * Comprime a imagem da conversa para JPEG pequeno.
+ *
+ * @param {File} file Imagem escolhida.
+ * @returns {Promise<string>}
+ */
 function compressDmImageFile(file) {
   return compressRasterFileToJpegDataUrl(file, { maxEdge: 380, quality: 0.56 });
 }
 
+/**
+ * Liga o campo de anexar imagem à conversa.
+ */
 function bindDmMediaAttachmentEvents() {
   const fileInput = document.getElementById("dm-media-input");
   fileInput?.addEventListener("change", async () => {
@@ -221,6 +270,11 @@ function bindDmMediaAttachmentEvents() {
   });
 }
 
+/**
+ * Liga rascunho de resposta e cartões de contexto da conversa.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ */
 function bindDmThreadDraftAndCardActions(main) {
   main.querySelectorAll(".btn-dm-reply-msg").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -244,6 +298,14 @@ function bindDmThreadDraftAndCardActions(main) {
   bindDmMediaAttachmentEvents();
 }
 
+/**
+ * Liga as ações das bolhas da conversa (copiar Pix, reagir e afins).
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} user Rota de quem vê.
+ * @param {string} peerAddress Endereço do par.
+ * @param {object|null} peerDmPub Chave pública do par.
+ */
 function bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub) {
   main.querySelectorAll(".btn-dm-copy-pix").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -261,6 +323,11 @@ function bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub) {
   });
 }
 
+/**
+ * Consome do hash o cartão de contexto e limpa a URL.
+ *
+ * @param {string} peerAddress Endereço do par.
+ */
 function consumeHashContextForThread(peerAddress) {
   const fromHash = dmMsg.parseDmContextFromHash(location.hash);
   if (!fromHash) return;
@@ -270,6 +337,14 @@ function consumeHashContextForThread(peerAddress) {
   }
 }
 
+/**
+ * Liga o formulário da conversa (enviar, chave manual).
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} user Rota de quem vê.
+ * @param {string} peerAddress Endereço do par.
+ * @param {object|null} peerDmPub Chave pública do par.
+ */
 function bindDmThreadFormEvents(main, user, peerAddress, peerDmPub) {
   document.getElementById("btn-save-manual-dmpub")?.addEventListener("click", () => {
     try {
@@ -298,6 +373,15 @@ function isDmSplitViewport() {
   return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 1100px)").matches;
 }
 
+/**
+ * Desenha a lista compacta de conversas ao lado da conversa aberta.
+ *
+ * @param {HTMLElement} pane Painel da lista.
+ * @param {object[]} convs Conversas.
+ * @param {string} user Rota de quem vê.
+ * @param {string} peerAddress Par da conversa aberta.
+ * @param {string} [searchQuery=""] Busca atual.
+ */
 function renderCompactDmList(pane, convs, user, peerAddress, searchQuery = "") {
   render.renderDmList(pane, convs, user, { compact: true, activePeer: peerAddress, searchQuery });
   const input = pane.querySelector("#dm-search-input");
@@ -310,6 +394,14 @@ function renderCompactDmList(pane, convs, user, peerAddress, searchQuery = "") {
   });
 }
 
+/**
+ * Em tela larga divide a tela em lista e conversa; devolve onde desenhar a conversa.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} user Rota de quem vê.
+ * @param {string} peerAddress Par da conversa aberta.
+ * @returns {Promise<HTMLElement>}
+ */
 async function mountDmSplitIfWide(main, user, peerAddress) {
   if (!isDmSplitViewport()) return main;
   main.innerHTML = `<div class="agora-dm-split"><aside class="agora-dm-list-pane" id="dm-list-pane" aria-label="Conversas"></aside><section class="agora-dm-thread-pane" id="dm-thread-pane"></section></div>`;

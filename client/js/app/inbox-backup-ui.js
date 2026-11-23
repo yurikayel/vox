@@ -5,6 +5,12 @@ import * as share from "../share.js";
 import { escapeHtml } from "../render/util.js";
 
 const LABEL = { semana: "da semana", mes: "do mês", completo: "completo" };
+/**
+ * Formata um instante como data em pt-BR, ou `nunca`.
+ *
+ * @param {number} ms Instante em ms (0 ou vazio vira `nunca`).
+ * @returns {string}
+ */
 const fmt = (ms) => (ms ? new Date(ms).toLocaleDateString("pt-BR") : "nunca");
 
 /**
@@ -24,6 +30,11 @@ export function renderInboxBackupSection() {
   return `<div class="card inbox-backup-settings" style="margin-top:1.25rem;"><h3>Backup no seu e-mail</h3>${intro}${body}</div>`;
 }
 
+/**
+ * Entrega o arquivo de backup: compartilha pelo sistema quando possível, senão baixa.
+ *
+ * @param {{name: string, text: string}} options Nome e conteúdo do arquivo.
+ */
 async function sendFile({ name, text }) {
   const file = new File([text], name, { type: "text/plain" });
   if (navigator.canShare?.({ files: [file] })) {

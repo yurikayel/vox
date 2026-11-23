@@ -19,6 +19,10 @@ const PY_OUT = path.join(ROOT, "relay", "genesis_data.py");
 const CS_OUT = path.join(ROOT, "packaging", "zero-central-memory-windows", "src", "GenesisData.cs");
 const NOTICE = "Gerado por scripts/gen-genesis-guard.mjs a partir de client/js/genesis.js e client/js/data/test-route-ids.js. Não editar.";
 
+/**
+ * Carrega o instante de gênese e os ids de rota de teste do cliente.
+ * @returns {Promise<{genesisMs: number, ids: string[]}>}
+ */
 async function loadSource() {
   const genesis = await import(pathToFileURL(path.join(ROOT, "client", "js", "genesis.js")).href);
   const data = await import(pathToFileURL(path.join(ROOT, "client", "js", "data", "test-route-ids.js")).href);

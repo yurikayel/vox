@@ -15,6 +15,12 @@ import { bumpReplyCount, appendInlineReply } from "./screens-compose.js";
 import { syncIdentity } from "./screens-network.js";
 import { clearInFlight } from "../shared/async-dedupe.js";
 
+/**
+ * Reflete uma resposta recebida pela rede: contador, painel aberto e rota atual.
+ *
+ * @param {object} item Resposta recebida.
+ * @param {object} cur Rota atual.
+ */
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
   if (topicArticle) {
@@ -30,6 +36,12 @@ function handleGossipReply(item, cur) {
   share.showToast(`Nova resposta na publicação: ${(item.body || "").slice(0, 24)}…`);
 }
 
+/**
+ * Redesenha a rota atual quando chega um post pela rede.
+ *
+ * @param {object} cur Rota atual.
+ * @param {object} item Post recebido.
+ */
 function refreshRouteForGossip(cur, item) {
   if (cur.name === "home") {
     showHome(cur.feed);
@@ -51,6 +63,11 @@ const GOSSIP_TOAST_MAP = {
   "frame-action": () => "Nova interação no mini-app do post!",
 };
 
+/**
+ * Mostra o aviso de que chegou um post ou atualização pela rede.
+ *
+ * @param {object} item Post recebido.
+ */
 function showGossipToast(item) {
   if (!item?.type) return;
   if (item.type === "topic") {
@@ -62,6 +79,12 @@ function showGossipToast(item) {
   if (msgFn) share.showToast(msgFn(item));
 }
 
+/**
+ * Reflete na rota atual a remoção de um post (tumba) recebida pela rede.
+ *
+ * @param {object} tombstone Marca de remoção.
+ * @param {object} cur Rota atual.
+ */
 function handleGossipTombstone(tombstone, cur) {
   if (cur.name === "home") {
     showHome(cur.feed);
@@ -74,6 +97,9 @@ function handleGossipTombstone(tombstone, cur) {
   }
 }
 
+/**
+ * Redesenha a rota atual depois da sincronização com a memória central.
+ */
 function refreshAfterCentralMemorySync() {
   const cur = parseRoute();
   if (cur.name === "home") {

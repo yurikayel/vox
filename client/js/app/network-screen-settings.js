@@ -24,22 +24,48 @@ import {
   bindContributionAttestationButton,
 } from "./network-screen-moderation.js";
 
+/**
+ * Lê uma caixa de seleção pelo identificador do elemento.
+ *
+ * @param {string} id Identificador do elemento.
+ * @param {boolean} [defaultValue=false] Valor se o elemento não existe.
+ * @returns {boolean}
+ */
 function getChecked(id, defaultValue = false) {
   const el = document.getElementById(id);
   return el ? el.checked : defaultValue;
 }
 
+/**
+ * Lê o texto aparado de um campo pelo identificador do elemento.
+ *
+ * @param {string} id Identificador do elemento.
+ * @param {string} [defaultValue=""] Valor se o elemento não existe.
+ * @returns {string}
+ */
 function getValue(id, defaultValue = "") {
   const el = document.getElementById(id);
   return el ? el.value.trim() : defaultValue;
 }
 
+/**
+ * Lê um campo numérico; valor inválido ou não positivo volta ao padrão.
+ *
+ * @param {string} id Identificador do elemento.
+ * @param {number} [defaultValue=0] Valor padrão.
+ * @returns {number}
+ */
 function getNumberValue(id, defaultValue = 0) {
   const el = document.getElementById(id);
   const n = el ? Number(el.value) : defaultValue;
   return Number.isNaN(n) || n <= 0 ? defaultValue : n;
 }
 
+/**
+ * Lê os ajustes de rede do formulário.
+ *
+ * @returns {object}
+ */
 function readNetworkFormValues() {
   const paused = getChecked("net-pause");
   return {
@@ -125,6 +151,9 @@ export function bindNetworkSettingsForm() {
   });
 }
 
+/**
+ * Liga os botões de verificar o relay local e de notificações.
+ */
 function bindRelayAndNotifButtons() {
   const btnCheckRelay = document.getElementById("btn-check-relay");
   btnCheckRelay?.addEventListener("click", async () => {
@@ -188,6 +217,12 @@ export function bindNetworkSettingsButtons() {
   });
 }
 
+/**
+ * Reúne os dados que a tela de ajustes de rede exibe.
+ *
+ * @param {string} user Rota de quem vê.
+ * @returns {Promise<object>}
+ */
 async function buildNetworkSettingsProps(user) {
   return {
     routeId: user,

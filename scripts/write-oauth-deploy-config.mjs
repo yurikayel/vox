@@ -7,7 +7,17 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Lê uma variável de ambiente como texto sem espaços nas pontas.
+ * @param {string} k Nome da variável.
+ * @returns {string}
+ */
 const env = (k) => String(process.env[k] || "").trim();
+/**
+ * Diz se o valor foi preenchido e não é um marcador `YOUR_...`.
+ * @param {string} v Valor lido.
+ * @returns {boolean}
+ */
 const isSet = (v) => Boolean(v) && !v.includes("YOUR_");
 
 const ids = {
@@ -52,6 +62,11 @@ export function buildBskyClientMetadata(siteUrl) {
   };
 }
 
+/**
+ * Grava o JSON em `_site/<rel>`, criando as pastas que faltam.
+ * @param {string} rel Caminho relativo dentro de `_site`.
+ * @param {unknown} data Dados a gravar.
+ */
 function writeJson(rel, data) {
   const file = path.join(process.cwd(), "_site", rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });

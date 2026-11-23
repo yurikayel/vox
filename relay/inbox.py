@@ -45,6 +45,7 @@ def _delete_hash(envelope: dict):
 
 
 def resolve_inbox_dir(env=None):
+    """Resolve o diretório da caixa de entrada: `VOX_RELAY_INBOX_DIR`, senão `<cache>/inbox`, senão o padrão local."""
     raw = str((env if env is not None else os.environ).get("VOX_RELAY_INBOX_DIR") or "").strip()
     if raw:
         return Path(raw).resolve()
@@ -58,16 +59,19 @@ INBOX_DIR = resolve_inbox_dir()
 
 
 def set_inbox_dir(path):
+    """Troca o diretório da caixa de entrada e devolve o caminho resolvido (usado nos testes)."""
     global INBOX_DIR
     INBOX_DIR = Path(path).resolve()
     return INBOX_DIR
 
 
 def ensure_inbox_dir():
+    """Cria o diretório da caixa de entrada se não existir."""
     INBOX_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def sanitize_filename(name: str) -> str:
+    """Mantém só letras, dígitos, `-` e `_` do nome, para uso seguro como nome de arquivo."""
     return "".join(c for c in str(name) if c.isalnum() or c in ("-", "_"))
 
 
@@ -96,11 +100,13 @@ def _message_file(addr_dir: Path, message_id: str) -> Path:
 
 
 def store_envelope(to_address: str, envelope: dict, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict:
+    """Guarda um envelope cifrado na caixa do endereço, com TTL, sob o lock da caixa."""
     with _INBOX_LOCK:
         return _store_envelope_locked(to_address, envelope, ttl_seconds)
 
 
 def _store_envelope_locked(to_address: str, envelope: dict, ttl_seconds: int) -> dict:
+    """Valida e grava o envelope do endereço; exige o lock da caixa já tomado.\n\n    Raises:\n        ValueError: Se endereço ou envelope forem inválidos."""
     if not to_address or not isinstance(to_address, str):
         raise ValueError("Endereço de destino inválido")
     if not envelope or not isinstance(envelope, dict):
@@ -150,11 +156,13 @@ def _store_envelope_locked(to_address: str, envelope: dict, ttl_seconds: int) ->
 
 
 def get_envelopes(to_address: str) -> list:
+    """Lista os envelopes do endereço, sob o lock da caixa."""
     with _INBOX_LOCK:
         return _get_envelopes_locked(to_address)
 
 
 def _get_envelopes_locked(to_address: str) -> list:
+    """Lê os envelopes do endereço; exige o lock tomado."""
     if not to_address:
         return []
     try:
@@ -181,6 +189,7 @@ def _get_envelopes_locked(to_address: str) -> list:
 
 
 def _token_matches(token, expected_hash) -> bool:
+    """True se o token apresentado (hex) tem o SHA-256 igual ao hash esperado, em tempo constante."""
     try:
         presented = hashlib.sha256(bytes.fromhex(str(token or ""))).hexdigest()
     except ValueError:
@@ -195,6 +204,7 @@ def delete_envelope(to_address: str, message_id: str, token: str = None) -> str:
 
 
 def _delete_envelope_locked(to_address: str, message_id: str, token) -> str:
+    """Apaga um envelope se o token confere; devolve o status do resultado. Exige o lock tomado."""
     if not to_address or not message_id:
         return NOT_FOUND
     try:
@@ -214,11 +224,13 @@ def _delete_envelope_locked(to_address: str, message_id: str, token) -> str:
 
 
 def purge_all_expired():
+    """Apaga os envelopes expirados de todos os endereços e devolve quantos saíram."""
     with _INBOX_LOCK:
         return _purge_all_expired_locked()
 
 
 def _purge_all_expired_locked():
+    """Varre a caixa inteira apagando expirados; exige o lock tomado."""
     if not INBOX_DIR.is_dir():
         return 0
     now = time.time()

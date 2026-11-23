@@ -4,6 +4,13 @@ import { escapeHtml } from "./util.js";
 
 const PRIVACY_NOTE = "O vínculo fica visível para os aparelhos da rede e para a memória central (não vai para o Arweave). Quem é seu padrinho pode revisar denúncias contra posts seus.";
 
+/**
+ * Caixa de opção de apadrinhar quem entra pelo link.
+ *
+ * @param {string} name
+ * @param {boolean} checked
+ * @returns {string}
+ */
 function renderSponsorBoxHtml(name, checked) {
   return `<label class="vox-link-sponsor">
       <input type="checkbox" id="vox-link-sponsor" ${checked ? "checked" : ""} />

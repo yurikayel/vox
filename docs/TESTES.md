@@ -50,9 +50,15 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 Chromium real contra um servidor estático em loopback, com toda rede de fora abortada e toda tentativa anotada. Cria só com nome e apaga; cria com e-mail + senha + frase, confere o kit (link, código `VOX1:`, arquivo `.txt`), apaga e volta **num aparelho novo** por link, código, arquivo e frase; recusa senha errada, texto sem kit, frase com palavra trocada e e-mail + senha sem cofre (cai na malha: aviso, sem conta). A senha não pode aparecer em nenhuma tentativa de rede nem no storage. Manual do mantenedor (não roda no CI): `npm install --no-save playwright-core` e depois `node scripts/login-e2e.mjs` (`CHROMIUM_EXECUTABLE_PATH` aponta para um Chrome já instalado). Guardiões, QR e malha com dois aparelhos ficam nos testes de fluxo; ver [plano-testes-login.md](./process/plano-testes-login.md) §5.
 
-### 3.2 Cobertura não é meta
+### 3.2 Cobertura: métrica com catraca
 
-Não há gate de cobertura. Teste novo entra porque confere um comportamento (com o nome do comportamento), não para tocar linhas. A varredura de cobertura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais que ela achou viraram correções com teste próprio (`tests/achados-cobertura.test.js`), e os arquivos de varredura não entraram.
+Desde 22/11/2026 (decisão do mantenedor) a cobertura é medida e tem piso que só sobe; a meta é **90%** no cliente e no relay.
+
+- `npm run coverage:js` (`scripts/coverage.mjs`): roda `node:test` com `--experimental-test-coverage` e conta só **linhas de código** de `client/js` e `client/aviso` (linhas em branco e de comentário ficam fora, medidas pelos tokens do espree; JSDoc novo não infla o número). Arquivo de produção que nenhum teste carrega entra com 0%. `--lcov <arquivo>` reaproveita um lcov pronto.
+- `npm run coverage:py` (`scripts/py_coverage.py`, Python 3.12+, só biblioteca padrão): roda a descoberta do `test:relay` com `sys.monitoring` e conta instruções do AST (docstrings fora) em `relay/*.py`.
+- Pisos em `scripts/coverage-floor.json`; `--raise` sobe o piso para o valor medido e nunca desce. Linha de base em 22/11: cliente 78,8%, relay 91,9%.
+
+A métrica não muda a regra do teste: todo teste confere algo observável (retorno, DOM, chamada, estado). Proibido teste vazio, excluir arquivo da medição ou comentário `c8 ignore`/`istanbul ignore` para subir o número. A varredura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais viraram correções com teste próprio (`tests/achados-cobertura.test.js`).
 
 ### 3.3 Tier A: o que exige mais prova
 
@@ -73,8 +79,8 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 
 | Job | O que faz | Bloqueia merge? |
 |---|---|---|
-| `test-client` (Node 22, 24) | `npm audit --audit-level=high` (LAN-20) · `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · `npm run audit:docs` e `npm run audit:layers` (catracas) · `npm run lint` (ESLint em `client/js`, `sw.js` e `workers/`; **não** cobre `tests/`) · `npm run test:client` | Sim |
-| `test-relay` (Python 3.11, 3.12, 3.15) | `py_compile` · `npm run test:relay` · `lint:relay` (ruff: pyflakes e complexidade acima de 15) · ruff de estilo e tamanho de função | Sim, exceto o ruff de estilo (só informa) |
+| `test-client` (Node 22, 24) | `npm audit --audit-level=high` (LAN-20) · `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · `npm run audit:docs` e `npm run audit:layers` (catracas) · `npm run lint` (ESLint em `client/js`, `sw.js` e `workers/`; **não** cobre `tests/`) · `npm run test:client` (Node 22) ou `npm run coverage:js` (Node 24, com catraca de cobertura, §3.2) | Sim |
+| `test-relay` (Python 3.11, 3.12, 3.15) | `py_compile` · `npm run test:relay` (3.11 e 3.15) ou `npm run coverage:py` (3.12, com catraca, §3.2) · `lint:relay` (ruff: pyflakes e complexidade acima de 15) · ruff de estilo e tamanho de função | Sim, exceto o ruff de estilo (só informa) |
 | `e2e-mesh` (PM-99) | Dois Chromium sem tela (`playwright-core` instalado sem `package.json`) trocam um post assinado por WebSocket e por Nostr (`scripts/mesh-e2e.mjs`); limite de 10 min | Sim |
 | `red-on-base` (só PR, PM-111) | Roda os testes novos ou alterados contra o código da base (§3.4); resultado no resumo do job | Sim em PR `fix:` (salvo rótulo `red-on-base:skip`); nos outros só informa |
 | `security-audit` | Grep por chaves privadas (`BEGIN … PRIVATE KEY`) | Sim |

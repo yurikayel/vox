@@ -5,6 +5,11 @@ import {
   setLocalIdentityMeta,
 } from "../profile-identity-meta.js";
 
+/**
+ * Marca o botão de pronome que corresponde ao valor digitado.
+ *
+ * @param {string} val Valor atual do campo.
+ */
 function syncChipPressedState(val) {
   const norm = String(val || "").trim().toLowerCase();
   document.querySelectorAll("[data-pronoun-preset]").forEach((btn) => {
@@ -14,6 +19,11 @@ function syncChipPressedState(val) {
   });
 }
 
+/**
+ * Liga os botões de pronome predefinido ao campo de texto.
+ *
+ * @param {HTMLInputElement|null} inputEl Campo de pronomes.
+ */
 function bindPronounPresetChips(inputEl) {
   document.querySelectorAll("[data-pronoun-preset]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -28,6 +38,11 @@ function bindPronounPresetChips(inputEl) {
   inputEl?.addEventListener("input", () => syncChipPressedState(inputEl.value));
 }
 
+/**
+ * Lê pronomes, gênero e orientação do formulário.
+ *
+ * @returns {{pronouns: string, gender: string, orientation: string}}
+ */
 function readFormMetaValues() {
   return {
     pronouns: document.getElementById("input-profile-pronouns")?.value || "",
