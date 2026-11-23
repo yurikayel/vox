@@ -1,6 +1,6 @@
 # Método — mutex de agentes e modo revisor
 
-> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17
+> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-23
 
 Operacional (repo `vox`). Tese longa: [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md).
 
@@ -32,6 +32,16 @@ O mantenedor delega cada tarefa a uma sessão com modelo e esforço escolhidos p
 
 No máximo 3 palavras (ex.: `testes-relay`, `apagar-tudo-local`).
 
+## Orçamento de orquestração (fonte única)
+
+Para gastar menos contexto e evitar conflito de arquivo, toda orquestração com agentes segue:
+
+1. **Um executor por padrão.** Paralelo só com até **2** executores e mutex disjunto (nenhum arquivo em comum).
+2. **Brief curto:** critério de aceite, **no máximo 8 caminhos** e **um** comando de teste. Proibido colar lobby, ADR inteiro ou árvore de pastas no brief.
+3. **Leitura mínima:** o executor lê só os arquivos do mutex, a porta de entrada do contexto (fachada ou índice do módulo) e o teste irmão.
+4. **Modelo:** auditoria e leitura em Haiku Low; Opus só para cripto, ADR ou identidade crítica (tabela acima).
+5. **Sem ondas automáticas** (lote 1 → 3 → 9) e **sem polling de CI** feito por agente: o próximo lote abre depois de o anterior entrar, com decisão explícita.
+
 ## Mantenedor → revisor (o que muda na prática)
 
 ### Mantenedor **faz**
@@ -55,4 +65,4 @@ Conta como revisor-mode se, na semana civil:
 
 Fora do modo revisor: ok feature branch + PR normal — desde que não viole freeze de piloto (CODE-01).
 
-**Versão:** 1.0
+**Versão:** 1.1
