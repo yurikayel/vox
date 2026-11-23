@@ -52,7 +52,7 @@ export function printCard(opts) {
  */
 function showWords(phrase) {
   screenEl().innerHTML = renderPhraseWordsHtml(phrase);
-  document.getElementById("btn-phrase-print")?.addEventListener("click", () => printCard());
+  document.getElementById("btn-phrase-print")?.addEventListener("click", () => printCard({ words: phrase.words }));
   document.getElementById("btn-phrase-written")?.addEventListener("click", () => showConfirm(phrase));
 }
 
