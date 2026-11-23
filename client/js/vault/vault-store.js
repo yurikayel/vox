@@ -15,8 +15,21 @@ import { LEGACY_VAULT_PREFIX } from "./vault-legacy.js";
 export const VAULT_STORAGE_PREFIX = "vox-vault-v2:";
 const REMOTE_FETCH_TIMEOUT_MS = 4000;
 
+/**
+ * Diz se o valor é um objeto simples (não nulo, não array).
+ *
+ * @param {*} v
+ * @returns {boolean}
+ */
 const isPlainRecord = (v) => Boolean(v) && typeof v === "object" && !Array.isArray(v);
 
+/**
+ * Consulta um servidor sobre o registro do cofre; diz se respondeu e o que trouxe.
+ *
+ * @param {string} baseUrl
+ * @param {string} lookupKey
+ * @returns {Promise<object>}
+ */
 async function probeVaultUrl(baseUrl, lookupKey) {
   let res;
   try {
@@ -34,6 +47,12 @@ async function probeVaultUrl(baseUrl, lookupKey) {
   }
 }
 
+/**
+ * Consulta todos os servidores centrais e consolida registros e alcance.
+ *
+ * @param {string} lookupKey
+ * @returns {Promise<object>}
+ */
 async function fetchRemoteVaultStatus(lookupKey) {
   const settled = await Promise.all(getCentralMemoryUrls().map((u) => probeVaultUrl(u, lookupKey)));
   const reachable = settled.filter((r) => r.reachable).length;
@@ -54,6 +73,14 @@ export async function fetchRemoteVaultRecord(lookupKey) {
 
 const REMOTE_SAVE_TIMEOUT_MS = 4000;
 
+/**
+ * Publica o registro do cofre num servidor.
+ *
+ * @param {string} baseUrl
+ * @param {string} lookupKey
+ * @param {object} body
+ * @returns {Promise<*>}
+ */
 async function postVaultRecord(baseUrl, lookupKey, body) {
   try {
     const res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
@@ -82,6 +109,13 @@ export async function saveRemoteVaultRecord(lookupKey, record, ownerToken = null
 }
 
 
+/**
+ * Lê o registro do cofre guardado localmente, com marca de revogado.
+ *
+ * @param {string} lookupKey
+ * @param {string} prefix
+ * @returns {object}
+ */
 function readLocalVaultRecord(lookupKey, prefix) {
   try {
     const rawLocal = localStorage.getItem(prefix + lookupKey);

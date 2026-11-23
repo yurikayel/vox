@@ -79,10 +79,21 @@ export function isAllowedImport(fromRel, toRel) {
   return ALLOWED[layerOf(fromRel)].has(layerOf(toRel));
 }
 
+/**
+ * Devolve o texto de um nó literal string, ou `null`.
+ * @param {object|undefined} node Nó da árvore sintática.
+ * @returns {string|null}
+ */
 function literalSource(node) {
   return node?.type === "Literal" && typeof node.value === "string" ? node.value : null;
 }
 
+/**
+ * Obtém o módulo importado por um nó (import, export-from ou import dinâmico).
+ * @param {object} node Nó da árvore sintática.
+ * @param {boolean} withDynamic Se import dinâmico conta.
+ * @returns {string|null}
+ */
 function sourceOf(node, withDynamic) {
   if (node.type === "ImportDeclaration" || node.type === "ExportAllDeclaration") return literalSource(node.source);
   if (node.type === "ExportNamedDeclaration") return node.source ? literalSource(node.source) : null;
@@ -90,6 +101,11 @@ function sourceOf(node, withDynamic) {
   return null;
 }
 
+/**
+ * Percorre a árvore sintática chamando `visit` em cada nó.
+ * @param {object} node Nó inicial.
+ * @param {Function} visit Função chamada com cada nó.
+ */
 function walk(node, visit) {
   if (!node || typeof node.type !== "string") return;
   visit(node);

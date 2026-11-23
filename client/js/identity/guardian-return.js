@@ -38,6 +38,12 @@ const ROUTE_ID_RE = /^vx_[A-Za-z0-9_-]{20}$/;
 const NONCE_RE = /^[A-Za-z0-9_-]{8,32}$/;
 const MAX_ENVELOPES = 14;
 
+/**
+ * Resumo SHA-256 do texto em UTF-8.
+ *
+ * @param {string} text
+ * @returns {Promise<Uint8Array>}
+ */
 async function sha256(text) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
 }

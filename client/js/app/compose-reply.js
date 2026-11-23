@@ -21,6 +21,14 @@ import { resolveCommunityMetadata } from "./community-metadata.js";
 import { resolveTopicContent } from "./community-topic-screen.js";
 import { leaveComposeAfterPublish } from "./compose-shared.js";
 
+/**
+ * Diz se o tópico está trancado pela moderação.
+ *
+ * @param {string} topicId Tópico.
+ * @param {string} communityId Comunidade.
+ * @param {string} user Rota de quem vê.
+ * @returns {Promise<boolean>}
+ */
 async function resolveTopicLockState(topicId, communityId, user) {
   if (!topicId) return false;
   try {
@@ -35,6 +43,13 @@ async function resolveTopicLockState(topicId, communityId, user) {
   }
 }
 
+/**
+ * Acha autor e trecho da resposta pai para citar.
+ *
+ * @param {string} parentId Resposta pai (vazia se não há).
+ * @param {string} communityId Comunidade.
+ * @returns {Promise<{parentAuthor: string, parentExcerpt: string}>}
+ */
 async function resolveParentReplyContext(parentId, communityId) {
   if (!parentId) return { parentAuthor: "", parentExcerpt: "" };
   try {
@@ -49,6 +64,14 @@ async function resolveParentReplyContext(parentId, communityId) {
   }
 }
 
+/**
+ * Liga o envio do formulário de resposta.
+ *
+ * @param {HTMLFormElement} form Formulário.
+ * @param {string} topicId Tópico.
+ * @param {string} communityId Comunidade.
+ * @param {string} parentId Resposta pai (vazia se não há).
+ */
 function bindComposeReplySubmit(form, topicId, communityId, parentId) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -71,6 +94,13 @@ function bindComposeReplySubmit(form, topicId, communityId, parentId) {
   });
 }
 
+/**
+ * Mostra o aviso de tópico trancado no lugar do formulário.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} topicId Tópico.
+ * @param {string} communityId Comunidade.
+ */
 function renderLockedTopicNotice(main, topicId, communityId) {
   main.innerHTML = `
     <div class="card compose-card" style="text-align:center; padding: 2rem 1rem;">
@@ -80,6 +110,15 @@ function renderLockedTopicNotice(main, topicId, communityId) {
     </div>`;
 }
 
+/**
+ * Envia a resposta para a Permaweb se houver carteira e a pessoa confirmar.
+ *
+ * @param {string} topicId Tópico.
+ * @param {string} communityId Comunidade.
+ * @param {string} body Texto da resposta.
+ * @param {string} replyId Identificador da resposta.
+ * @param {string} authorDisplay Nome exibido do autor.
+ */
 async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, authorDisplay) {
   if (!featureFlags.isFeatureEnabled("arweaveUpload") || !wallet.hasWallet()) return;
   if (!(await permanence.confirmPermanentPublish())) return;

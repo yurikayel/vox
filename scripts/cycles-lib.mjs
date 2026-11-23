@@ -24,6 +24,12 @@ export function buildGraph(sources) {
   return graph;
 }
 
+/**
+ * Visita iterativamente o grafo a partir de `root` (algoritmo de Tarjan) e coleta os componentes fortemente conectados.
+ * @param {string} root Nó inicial.
+ * @param {Map<string, string[]>} graph Grafo de imports.
+ * @param {object} state Estado compartilhado do algoritmo (índices, pilha e componentes).
+ */
 function strongConnect(root, graph, state) {
   const work = [[root, 0]];
   while (work.length) {
@@ -47,6 +53,12 @@ function strongConnect(root, graph, state) {
   }
 }
 
+/**
+ * Fecha um nó na busca de Tarjan: propaga o `low` ao pai e, se o nó é raiz de componente, empilha o componente.
+ * @param {string} v Nó concluído.
+ * @param {Array} work Pilha de trabalho da busca.
+ * @param {object} state Estado compartilhado do algoritmo.
+ */
 function closeNode(v, work, state) {
   if (work.length) {
     const parent = work[work.length - 1][0];
@@ -83,8 +95,19 @@ export function findCycles(graph) {
  * @returns {{fresh: string[][], paid: string[][]}} `fresh` reprova; `paid` são componentes do baseline que encolheram ou sumiram
  */
 export function compareCycles(current, baseline) {
+  /**
+   * Diz se o ciclo já está coberto por algum ciclo da dívida.
+   * @param {string[]} comp Módulos do ciclo.
+   * @returns {boolean}
+   */
   const fits = (comp) => baseline.some((b) => comp.every((m) => b.includes(m)));
   const fresh = current.filter((c) => !fits(c));
+  /**
+   * Diz se dois ciclos têm exatamente os mesmos módulos, na mesma ordem.
+   * @param {string[]} a Primeiro ciclo.
+   * @param {string[]} b Segundo ciclo.
+   * @returns {boolean}
+   */
   const same = (a, b) => a.length === b.length && a.every((m, i) => m === b[i]);
   const paid = baseline.filter((b) => !current.some((c) => same(c, b)));
   return { fresh, paid };

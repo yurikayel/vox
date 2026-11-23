@@ -32,6 +32,12 @@ import { flattenReplyThread } from "../reply-thread.js";
 import { renderReviewBannerHtml, renderArchivedTopicShellHtml } from "./review-banner.js";
 import { renderChannelHiddenTopicShellHtml } from "./channel-bar.js";
 
+/**
+ * Rótulo acessível do botão de compartilhar conforme o post pode ser ecoado.
+ *
+ * @param {string} topicId
+ * @returns {string}
+ */
 function shareTopicAria(topicId) {
   if (mod.canEchoPost(topicId)) return "Compartilhar post";
   return `Compartilhar desativado. ${mod.QUARANTINE_HINT}`;
@@ -56,14 +62,34 @@ export function renderTopicDetailText(topicId, title, bodyText, notaryRecord = n
   return `<div class="post-body post-body-md post-topic-detail">${titleHtml}${bodyHtml}${notaryHtml}</div>`;
 }
 
+/**
+ * Player de vídeo do tópico.
+ *
+ * @param {string} v
+ * @returns {string}
+ */
 function renderTopicVideoHtml(v) {
   return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; margin-bottom:12px;"><video class="post-media-video" src="${escapeHtml(v)}" controls playsinline style="width:100%; max-height:480px; display:block;"></video></div>`;
 }
 
+/**
+ * Cartão de áudio do tópico.
+ *
+ * @param {string} a
+ * @returns {string}
+ */
 function renderTopicAudioHtml(a) {
   return `<div class="post-media-audio-card" style="margin:10px 0 14px; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><span style="font-size:1.1rem;">🎙️</span><strong style="font-size:0.85rem;">Recado de Voz</strong> <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px;">Lo-Fi 48k</span></div><audio class="post-media-audio" src="${escapeHtml(a)}" controls style="width:100%;"></audio></div>`;
 }
 
+/**
+ * Imagem do tópico com texto alternativo.
+ *
+ * @param {string} img
+ * @param {object} topic
+ * @param {object} topicData
+ * @returns {string}
+ */
 function renderTopicImageHtml(img, topic, topicData) {
   const imgAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
   const aspect = normalizePostAspect(topic?.aspectRatio);
@@ -72,6 +98,13 @@ function renderTopicImageHtml(img, topic, topicData) {
   return `<div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}"><button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${escapeHtml(img)}" data-media-alt="${escapeHtml(imgAlt)}"><img class="post-media post-media-hero-img" src="${escapeHtml(img)}" alt="${escapeHtml(imgAlt)}" /></button>${pinsHtml}</div>`;
 }
 
+/**
+ * Mídia em destaque do tópico (vídeo, áudio ou imagem).
+ *
+ * @param {object} topic
+ * @param {object} topicData
+ * @returns {string}
+ */
 function renderTopicMediaHero(topic, topicData) {
   const v = topic?.video || topicData?.video;
   if (v) return renderTopicVideoVideo(v);
@@ -82,10 +115,25 @@ function renderTopicMediaHero(topic, topicData) {
   return "";
 }
 
+/**
+ * Alias de `renderTopicVideoHtml`.
+ *
+ * @param {string} v
+ * @returns {string}
+ */
 function renderTopicVideoVideo(v) {
   return renderTopicVideoHtml(v);
 }
 
+/**
+ * Botão de Pix (zap) do tópico quando o autor tem chave.
+ *
+ * @param {string} topicId
+ * @param {object} topic
+ * @param {string} author
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderTopicZapButton(topicId, topic, author, authorDisplay) {
   const pix = topic?.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
   if (pix) {
@@ -99,6 +147,13 @@ function renderTopicZapButton(topicId, topic, author, authorDisplay) {
   </button>`;
 }
 
+/**
+ * Botão de curtir com a contagem.
+ *
+ * @param {string} topicId
+ * @param {object} topic
+ * @returns {string}
+ */
 function renderTopicLikeButton(topicId, topic) {
   const baseLikes = Number(topic?.likesCount) || 0;
   const liked = social.isLiked(topicId);
@@ -109,6 +164,13 @@ function renderTopicLikeButton(topicId, topic) {
   </button>`;
 }
 
+/**
+ * Botão de favoritar com a contagem.
+ *
+ * @param {string} topicId
+ * @param {object} topic
+ * @returns {string}
+ */
 function renderTopicStarButton(topicId, topic) {
   const baseStars = Number(topic?.starsCount) || 0;
   const starred = social.isStarred(topicId);
@@ -119,6 +181,14 @@ function renderTopicStarButton(topicId, topic) {
   </button>`;
 }
 
+/**
+ * Ações de curtir, favoritar e reagir.
+ *
+ * @param {string} topicId
+ * @param {object} topic
+ * @param {string} author
+ * @returns {string}
+ */
 function renderTopicFeedbackActions(topicId, topic, author) {
   const likeBtn = renderTopicLikeButton(topicId, topic);
   const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" data-focus-target="#compose-reply, .thread-reply-input, .post-comment-input" data-focus-fallback="#/compose/reply?t=${encodeURIComponent(topicId)}&amp;c=${encodeURIComponent(topic?.communityId || "")}">
@@ -128,6 +198,14 @@ function renderTopicFeedbackActions(topicId, topic, author) {
   return `${likeBtn}${commentBtn}${repostBtn}`;
 }
 
+/**
+ * Ações de moderação do tópico, vazias para quem não modera.
+ *
+ * @param {boolean} isMod
+ * @param {string} topicId
+ * @param {object} topic
+ * @returns {string}
+ */
 function renderTopicModActions(isMod, topicId, topic) {
   if (!isMod) return "";
   const isPinned = Boolean(topic?.isPinned);
@@ -154,6 +232,12 @@ function renderTopicModActions(isMod, topicId, topic) {
   return `${pinBtn}${lockBtn}${hideBtn}`;
 }
 
+/**
+ * Menu de ações extras do tópico.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderTopicOverflowMenu({ topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod }) {
   const zapBtn = renderTopicZapButton(topicId, topic, author, authorDisplay);
   const starBtn = renderTopicStarButton(topicId, topic);
@@ -177,6 +261,15 @@ function renderTopicOverflowMenu({ topicId, topic, author, authorDisplay, author
   </details>`;
 }
 
+/**
+ * Ações de distribuir (salvar, compartilhar, ecoar).
+ *
+ * @param {string} topicId
+ * @param {object} topic
+ * @param {string} authorDisplay
+ * @param {string} commId
+ * @returns {string}
+ */
 function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   const saved = social.isSaved(topicId);
   const baseExpl = Number(topic?.explodesCount) || 0;
@@ -196,6 +289,12 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   return `${shareBtn}${saveBtn}`;
 }
 
+/**
+ * Barra de ações do tópico.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderTopicToolbar({ topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod }) {
   const fb = renderTopicFeedbackActions(topicId, topic, author);
   const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, commId);
@@ -207,6 +306,15 @@ function renderTopicToolbar({ topicId, topic, author, authorDisplay, authorHandl
   </div>`;
 }
 
+/**
+ * Cabeçalho do tópico com autor, selos e hora.
+ *
+ * @param {string} author
+ * @param {object} labels
+ * @param {object} topic
+ * @param {number} topicTs
+ * @returns {string}
+ */
 function renderTopicHeader(author, labels, topic, topicTs) {
   const { authorDisplay } = labels;
   const originBadge = topic?.isLocalP2p
@@ -229,6 +337,14 @@ function renderTopicHeader(author, labels, topic, topicTs) {
     </div>`;
 }
 
+/**
+ * Linha de uma resposta, com recuo pela profundidade.
+ *
+ * @param {object} r
+ * @param {boolean} isMod
+ * @param {object} [options={}]
+ * @returns {string}
+ */
 function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", isLocked = false } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, { authorDisplay: r.authorDisplay, isOwnLocalPost: r.isOwnLocalPost });
@@ -260,6 +376,16 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", i
     </div>`;
 }
 
+/**
+ * Bloco de respostas com o formulário de resposta.
+ *
+ * @param {string} topicId
+ * @param {string} commId
+ * @param {object[]} replies
+ * @param {boolean} isMod
+ * @param {boolean} [isLocked=false]
+ * @returns {string}
+ */
 function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = false) {
   const replyAction = isLocked
     ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada">🔒 Encerrado</span>`
@@ -314,6 +440,14 @@ function renderTopicReplyDockHtml(topicId, commId, isLocked) {
     </a>`;
 }
 
+/**
+ * Reúne autor, textos e mídia usados na tela do tópico.
+ *
+ * @param {object} topic
+ * @param {object} topicData
+ * @param {string} communityId
+ * @returns {object}
+ */
 function extractTopicViewContext(topic, topicData, communityId) {
   const t = topic || {};
   const d = topicData || {};

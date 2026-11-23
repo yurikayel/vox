@@ -23,6 +23,12 @@ export function iconCycle(checked, size = 18) {
   return `<svg class="action-icon icon-repost" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ARROWS}${mark}</svg>`;
 }
 
+/**
+ * Contador de republicações, vazio quando é zero.
+ *
+ * @param {number} n
+ * @returns {string}
+ */
 function countSpan(n) {
   if (n <= 0) return `<span class="action-count count-reposts"></span>`;
   return `<span class="overlay-action-count action-count count-reposts">${n}</span>`;

@@ -6,6 +6,12 @@
  * @module shared/async-dedupe
  */
 
+/**
+ * Executa `fn` e converte exceção síncrona em rejeição, para o chamador tratar tudo como promessa.
+ *
+ * @param {Function} fn
+ * @returns {Promise<*>}
+ */
 function callAsyncSafely(fn) {
   try {
     return Promise.resolve(fn());
@@ -14,6 +20,12 @@ function callAsyncSafely(fn) {
   }
 }
 
+/**
+ * Remove do mapa as chaves que começam com `prefix`; sem prefixo, esvazia o mapa.
+ *
+ * @param {Map<string,Promise<*>>} inFlight
+ * @param {string} prefix
+ */
 function clearMapByPrefix(inFlight, prefix) {
   if (!prefix) {
     inFlight.clear();
@@ -31,6 +43,13 @@ function clearMapByPrefix(inFlight, prefix) {
 export function createAsyncDeduper() {
   const inFlight = new Map();
 
+  /**
+   * Roda `fn` sob a chave dada; chamadas concorrentes com a mesma chave compartilham a mesma promessa em voo.
+   *
+   * @param {string} key
+   * @param {Function} fn
+   * @returns {Promise<*>}
+   */
   function run(key, fn) {
     if (typeof fn !== "function") return Promise.reject(new TypeError("async-dedupe: fn obrigatória"));
     const cleanKey = String(key || "");

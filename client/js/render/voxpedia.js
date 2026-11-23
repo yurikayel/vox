@@ -10,6 +10,11 @@ export const VOX_GITHUB_DOCS = {
   devGuide: "https://github.com/yurikayel/vox/blob/main/client/DEV.md",
 };
 
+/**
+ * Lateral com links para a documentação no GitHub.
+ *
+ * @returns {string}
+ */
 function renderGithubDocsAside() {
   const { docsReadme, devGuide, docsIndex } = VOX_GITHUB_DOCS;
   return `
@@ -27,6 +32,14 @@ function renderGithubDocsAside() {
     </aside>`;
 }
 
+/**
+ * Camada expansível da Voxpédia.
+ *
+ * @param {string} summary
+ * @param {string} bodyHtml
+ * @param {string} [extraClass=""]
+ * @returns {string}
+ */
 function layer(summary, bodyHtml, extraClass = "") {
   const cls = extraClass ? `voxpedia-layer ${extraClass}` : "voxpedia-layer";
   return `<details class="${cls}"><summary>${escapeHtml(summary)}</summary><div class="voxpedia-layer-body">${bodyHtml}</div></details>`;
@@ -41,6 +54,15 @@ const SECTION_ORDER = [
   "voxpedia-tecnico",
 ];
 
+/**
+ * Seção numerada da Voxpédia com suas camadas.
+ *
+ * @param {string} id
+ * @param {string} title
+ * @param {string} lead
+ * @param {string} layersHtml
+ * @returns {string}
+ */
 function section(id, title, lead, layersHtml) {
   const n = String(SECTION_ORDER.indexOf(id) + 1).padStart(2, "0");
   return `
@@ -67,14 +89,29 @@ const PR_CIVICO_BODY = [
   "<p>O alvo é a <strong>regra daquela comunidade</strong> — não um programa municipal, não uma carta de federação, não quórum territorial de bairro até o país.</p>",
 ].join("");
 
+/**
+ * Camada sobre as três lógicas.
+ *
+ * @returns {string}
+ */
 function layerTresLogicas() {
   return layer("Três lógicas: fazenda, pensão, movimento", TRES_LOGICAS_BODY);
 }
 
+/**
+ * Camada sobre o pull request cívico.
+ *
+ * @returns {string}
+ */
 function layerPrCivico() {
   return layer("Pull request cívico (regras da comunidade)", PR_CIVICO_BODY);
 }
 
+/**
+ * Camada sobre conta e carteira.
+ *
+ * @returns {string}
+ */
 function layerContaCarteira() {
   return layer(
     "Conta, carteira e identidade",
@@ -84,6 +121,11 @@ function layerContaCarteira() {
   );
 }
 
+/**
+ * Camada sobre saída soberana e frase de recuperação.
+ *
+ * @returns {string}
+ */
 function layerSaidaSoberana() {
   const frase = layer("Frase de recuperação 12/24 palavras", `<p>Em <a href="#/frase">#/frase</a> você acessa a semente BIP-39 em português (12 palavras para contas novas, 24 para legadas). Permite imprimir cartão sem QR, conferir 3 palavras e restaurar a conta sem rede ou servidor.</p>`);
   const guardioes = layer("Guardiões 3-de-5 e devolução", `<p>Em <a href="#/guardioes">#/guardioes</a> você divide a semente com Shamir GF(256) entre 5 contatos mútuos. Para recuperar em <a href="#/voltar">#/voltar</a>, bastam 3 partes com código de 4 palavras conferido por voz ou pessoalmente; permite trocar ou remover guardiões.</p>`);
@@ -91,6 +133,11 @@ function layerSaidaSoberana() {
   return layer("Entrada e saída soberana (frase, guardiões, cofre)", `<p>Sua identidade é sua: sem servidores corporativos, você escolhe como proteger e restaurar sua conta.</p>${frase}${guardioes}${cofre}`);
 }
 
+/**
+ * Camada sobre os feeds.
+ *
+ * @returns {string}
+ */
 function layerFeeds() {
   return layer(
     "Feeds Para você e Seguindo",
@@ -101,6 +148,11 @@ function layerFeeds() {
   );
 }
 
+/**
+ * Seção Começar.
+ *
+ * @returns {string}
+ */
 function renderComecar() {
   const stepsLayer = layer(
     "Primeiros passos no app",
@@ -120,6 +172,11 @@ function renderComecar() {
   );
 }
 
+/**
+ * Seção Mensagens.
+ *
+ * @returns {string}
+ */
 function renderMensagens() {
   const layers = `
     ${layer("O que são mensagens no Vox", `<p><a href="#/dm">Mensagens</a> são conversas privadas entre identificadores <code>vx_…</code> com criptografia ponta a ponta e entrega cooperativa P2P/WebRTC quando ambos estão online.</p>`)}
@@ -137,18 +194,33 @@ function renderMensagens() {
   );
 }
 
+/**
+ * Camada sobre modo canal e quadros.
+ *
+ * @returns {string}
+ */
 function layerModoCanalEFrames() {
   const canal = layer("Modo canal (postingMode: \"mods\")", `<p>Comunidades podem ativar o modo canal (<code>postingMode: "mods"</code>): somente moderadores publicam tópicos no feed principal, enquanto todos os membros comentam nas respostas. A regra é checada pelo cliente de cada participante.</p>`);
   const frames = layer("Open Frames locais assinados", `<p>Em <code>#/labs/frames</code> e no feed, suporta mini-apps assinados (enquetes, petições e formulários) executados em sandbox com allowlist local estrita, sem executar código remoto arbitrário.</p>`);
   return `${canal}${frames}`;
 }
 
+/**
+ * Camada sobre moderação e proteções.
+ *
+ * @returns {string}
+ */
 function layerModeracaoProtecoes() {
   const mod = layer("Moderação comunitária e denúncias", `<p>Moderadores assinam ações <code>mod-action</code> (fixar, trancar, ocultar). Denúncias vão por DM cifrada à moderação com quarentena preventiva de 48h sem tribunal central; mediação disponível no menu do post.</p>`);
   const quarentena = layer("Quarentena de chave nova (PoW 14 bits)", `<p>Comunidades podem exigir quarentena para novas identidades: publicações de chaves vistas há menos de 24h ficam recolhidas no feed até resolver um Proof-of-Work leve de 14 bits (~1s no aparelho) ou liberação pela moderação.</p>`);
   return `${mod}${quarentena}`;
 }
 
+/**
+ * Seção Comunidades.
+ *
+ * @returns {string}
+ */
 function renderComunidades() {
   const layers = `
     ${layer("Entrar e navegar", `<p>Em <a href="#/communities">Comunidades</a> você vê espaços públicos temáticos com abas <strong>Posts</strong>, <strong>Feira</strong> e <strong>Governança</strong>.</p>`)}
@@ -168,6 +240,11 @@ function renderComunidades() {
   );
 }
 
+/**
+ * Camada sobre a sinalização híbrida.
+ *
+ * @returns {string}
+ */
 function layerSinalizacaoHibrida() {
   return layer(
     "Sinalização híbrida WebSocket + Nostr efêmero (REV-09)",
@@ -175,6 +252,11 @@ function layerSinalizacaoHibrida() {
   );
 }
 
+/**
+ * Seção Rede.
+ *
+ * @returns {string}
+ */
 function renderRede() {
   const layers = `
     ${layer("Pacto e nó leve", `<p>Ao concordar com o Pacto, você atua como <strong>nó leve</strong>: repassa trechos em cache para vizinhos com tetos de banda e disco. Pause em <a href="#/settings/network">Sua rede</a> quando quiser.</p>`)}
@@ -190,6 +272,11 @@ function renderRede() {
   );
 }
 
+/**
+ * Seção Privacidade.
+ *
+ * @returns {string}
+ */
 function renderPrivacidade() {
   const layers = `
     ${layer("O que é público", `<p>Posts públicos assinados circulam na malha e podem ser lidos via gateways. A gravação no Arweave está pausada por padrão (<code>arweaveUpload: false</code>); não publique segredos em posts abertos.</p>`)}
@@ -204,6 +291,11 @@ function renderPrivacidade() {
   );
 }
 
+/**
+ * Camada sobre leitura e publicação.
+ *
+ * @returns {string}
+ */
 function layerLeituraPublicacao() {
   return layer(
     "Leitura e publicação",
@@ -212,6 +304,11 @@ function layerLeituraPublicacao() {
   );
 }
 
+/**
+ * Camada sobre testes e lançamento.
+ *
+ * @returns {string}
+ */
 function layerTestesRelease() {
   return layer(
     "Testes e release",
@@ -226,6 +323,11 @@ function layerTestesRelease() {
   );
 }
 
+/**
+ * Seção Técnico.
+ *
+ * @returns {string}
+ */
 function renderTecnico() {
   const stackLayer = layer(
     "Stack do cliente",
@@ -240,6 +342,11 @@ function renderTecnico() {
   );
 }
 
+/**
+ * Cabeçalho da Voxpédia.
+ *
+ * @returns {string}
+ */
 function renderVoxpediaHero() {
   return `<header class="voxpedia-hero agora-codex-hero">
     <h1>Voxpedia</h1>
@@ -263,6 +370,11 @@ const TOC_ITEMS = [
   ["#/ajuda/teste", "Roteiro de teste"],
 ];
 
+/**
+ * Índice da Voxpédia.
+ *
+ * @returns {string}
+ */
 function renderVoxpediaToc() {
   const items = TOC_ITEMS.map(([href, label]) => `
       <li><a href="${href}">${escapeHtml(label)}</a></li>`).join("");

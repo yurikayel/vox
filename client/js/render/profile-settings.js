@@ -13,6 +13,12 @@ import { escapeHtml, shortId } from "./util.js";
 import { renderIdentityMetaForm } from "./profile-identity-meta.js";
 import { renderSovereigntyCard } from "./profile-sovereignty.js";
 
+/**
+ * Formulário da chave Pix.
+ *
+ * @param {string} currentPixKey
+ * @returns {string}
+ */
 function renderPixForm(currentPixKey) {
   return `
     <div class="pix-section">
@@ -28,6 +34,12 @@ function renderPixForm(currentPixKey) {
     </div>`;
 }
 
+/**
+ * Formulário do usuário do GitHub.
+ *
+ * @param {string} currentGithub
+ * @returns {string}
+ */
 function renderGithubForm(currentGithub) {
   return `
     <div class="github-section" style="margin-top:0.75rem; border-top:1px solid var(--border-subtle); padding-top:0.75rem;">
@@ -42,6 +54,12 @@ function renderGithubForm(currentGithub) {
     </div>`;
 }
 
+/**
+ * Bloco para completar o perfil com um provedor de login.
+ *
+ * @param {string} [oauthProvider=""]
+ * @returns {string}
+ */
 function renderOAuthEnrichmentBlock(oauthProvider = "") {
   const label = oauthProvider === "google" ? "Google" : oauthProvider === "facebook" ? "Meta" : oauthProvider === "github" ? "GitHub" : oauthProvider;
   const statusLine = oauthProvider
@@ -58,6 +76,11 @@ function renderOAuthEnrichmentBlock(oauthProvider = "") {
     </div>`;
 }
 
+/**
+ * Cartão de apagar tudo neste aparelho.
+ *
+ * @returns {string}
+ */
 function renderLocalWipeCard() {
   return `
       <div class="card profile-local-wipe" style="margin-top:0.75rem;">
@@ -67,6 +90,12 @@ function renderLocalWipeCard() {
       </div>`;
 }
 
+/**
+ * Cartão de configurações de identidade do perfil.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderProfileIdentitySettingsCard({ displayName, oauthProvider, currentPixKey, currentGithub, identityMeta }) {
   return `
     <div class="card profile-grid-settings-card" style="margin-top:0.75rem;">
@@ -82,6 +111,12 @@ function renderProfileIdentitySettingsCard({ displayName, oauthProvider, current
     </div>`;
 }
 
+/**
+ * Cartão de ser descoberto na malha.
+ *
+ * @param {boolean} meshDiscoverable
+ * @returns {string}
+ */
 function renderProfileMeshDiscoverableCard(meshDiscoverable) {
   return `
     <div class="card" style="margin-top:0.75rem;">
@@ -96,6 +131,13 @@ function renderProfileMeshDiscoverableCard(meshDiscoverable) {
     </div>`;
 }
 
+/**
+ * Caixa da carteira Arweave, com saldo quando existe.
+ *
+ * @param {boolean} hasWallet
+ * @param {string} balance
+ * @returns {string}
+ */
 function renderArweaveWalletBox(hasWallet, balance) {
   if (hasWallet) {
     return `
@@ -110,6 +152,14 @@ function renderArweaveWalletBox(hasWallet, balance) {
     </div>`;
 }
 
+/**
+ * Seção avançada das configurações do perfil.
+ *
+ * @param {string} handle
+ * @param {boolean} hasWallet
+ * @param {string} balance
+ * @returns {string}
+ */
 function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
   return `
     <details class="advanced-settings card" style="margin-top:0.75rem;">
@@ -135,6 +185,14 @@ function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
     </details>`;
 }
 
+/**
+ * Linha de conta do cofre local, com ações.
+ *
+ * @param {object} acc
+ * @param {string} currentAddress
+ * @param {number} totalAccounts
+ * @returns {string}
+ */
 function renderVaultAccountRow(acc, currentAddress, totalAccounts) {
   const isCurrent = acc.routeId === currentAddress;
   const name = acc.displayName || shortId(acc.routeId);
@@ -161,6 +219,12 @@ function renderVaultAccountRow(acc, currentAddress, totalAccounts) {
     </div>`;
 }
 
+/**
+ * Cartão de várias contas neste aparelho.
+ *
+ * @param {string} currentAddress
+ * @returns {string}
+ */
 function renderMultiAccountCard(currentAddress) {
   const accounts = localAccount.listVaultAccountsSync();
   const itemsHtml = accounts.map((acc) => renderVaultAccountRow(acc, currentAddress, accounts.length)).join("");

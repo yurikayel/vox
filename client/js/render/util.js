@@ -46,6 +46,12 @@ export function renderAgoraBreadcrumbHtml(items) {
   return `<nav class="agora-breadcrumb" aria-label="Você está em">${parts.join(sep)}</nav>`;
 }
 
+/**
+ * Normaliza um nome para comparação (minúsculas, sem acento).
+ *
+ * @param {string} s
+ * @returns {string}
+ */
 function normAuthorToken(s) {
   return String(s || "")
     .trim()
@@ -53,11 +59,24 @@ function normAuthorToken(s) {
     .replace(/^@/, "");
 }
 
+/**
+ * Diz se o texto é só um endereço bruto, e não um nome.
+ *
+ * @param {string} str
+ * @returns {boolean}
+ */
 function isRawAddressToken(str) {
   if (!str || typeof str !== "string") return true;
   return str.startsWith("vx_") || str.startsWith("0x") || str.startsWith("did:") || (str.length >= 20 && !str.includes(" "));
 }
 
+/**
+ * Nome da própria conta quando o autor é ela.
+ *
+ * @param {string} routeId
+ * @param {boolean} isOwnLocalPost
+ * @returns {string}
+ */
 function resolveSelfName(routeId, isOwnLocalPost) {
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(isOwnLocalPost) || (Boolean(routeId) && Boolean(myId) && routeId === myId);
@@ -65,6 +84,12 @@ function resolveSelfName(routeId, isOwnLocalPost) {
   return localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
 }
 
+/**
+ * Nome do diretório de perfis ou do cofre local para a rota.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 function resolveDirectoryOrVaultName(routeId) {
   if (!routeId) return "";
   const dirName = profileDirectory.getAuthorDisplaySync(routeId);
@@ -77,6 +102,14 @@ function resolveDirectoryOrVaultName(routeId) {
   return mock.getAuthorDisplay(routeId) || (!isRawAddressToken(routeId) ? routeId : "");
 }
 
+/**
+ * Nome completo do autor, preferindo o informado pelo post.
+ *
+ * @param {string} routeId
+ * @param {string} override
+ * @param {boolean} isOwnLocalPost
+ * @returns {string}
+ */
 function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
   const rawOverride = String(override || "").trim();
   if (rawOverride && !isRawAddressToken(rawOverride)) {
@@ -87,6 +120,12 @@ function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
   return resolveDirectoryOrVaultName(routeId);
 }
 
+/**
+ * Handle do autor a partir do diretório de perfis.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 function resolveAuthorHandle(routeId) {
   if (!routeId) return "";
   const card = profileDirectory.getProfileCard(routeId);
@@ -94,6 +133,15 @@ function resolveAuthorHandle(routeId) {
   return mock.getAuthorHandle(routeId) || "";
 }
 
+/**
+ * Handle secundário a exibir ao lado do nome.
+ *
+ * @param {string} routeId
+ * @param {string} displayName
+ * @param {string} shortRoute
+ * @param {string} profileHandle
+ * @returns {string}
+ */
 function resolveSecondaryHandle(routeId, displayName, shortRoute, profileHandle) {
   if (profileHandle) {
     return profileHandle.replace(/^@/, "");
@@ -104,12 +152,28 @@ function resolveSecondaryHandle(routeId, displayName, shortRoute, profileHandle)
   return "";
 }
 
+/**
+ * Diz se o handle secundário repete o nome e deve sumir.
+ *
+ * @param {string} primary
+ * @param {string} secondaryHandle
+ * @param {string} shortRoute
+ * @returns {boolean}
+ */
 function shouldClearSecondaryHandle(primary, secondaryHandle, shortRoute) {
   if (!secondaryHandle) return false;
   const normShort = normAuthorToken(shortRoute);
   return normAuthorToken(primary) === normShort && normAuthorToken(secondaryHandle) === normShort;
 }
 
+/**
+ * Monta o resultado final de rótulos do autor.
+ *
+ * @param {string} routeId
+ * @param {string} fullName
+ * @param {string} profileHandle
+ * @returns {object}
+ */
 function formatAuthorResult(routeId, fullName, profileHandle) {
   const shortRoute = routeId ? shortId(routeId) : "";
   const displayName = String(fullName || "").trim();
@@ -280,6 +344,12 @@ export function formatTimeAgo(ts) {
   const years = Math.floor(months / 12);
   return `${years} ${years === 1 ? "ano" : "anos"}`;
 }
+/**
+ * Converte Markdown simples em linha (negrito, itálico, código) para HTML.
+ *
+ * @param {string} str
+ * @returns {string}
+ */
 function formatInlineMd(str) {
   return str
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -287,6 +357,12 @@ function formatInlineMd(str) {
     .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
+/**
+ * Converte uma linha em título ou parágrafo HTML.
+ *
+ * @param {string} trimmed
+ * @returns {string}
+ */
 function formatHeadingOrParagraph(trimmed) {
   if (trimmed.startsWith("### ")) return `<h4>${trimmed.slice(4)}</h4>`;
   if (trimmed.startsWith("## ")) return `<h3>${trimmed.slice(3)}</h3>`;

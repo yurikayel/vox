@@ -8,6 +8,12 @@
 import * as localAccount from "../identity/index.js";
 import { escapeHtml, shortId } from "./util.js";
 
+/**
+ * Cartão do perfil encontrado pela chave Pix.
+ *
+ * @param {object} profile
+ * @returns {string}
+ */
 function renderPixFoundCard(profile) {
   const profName = profile.name || shortId(profile.routeId);
   const profHandle = profile.handle ? `@${profile.handle}` : "";
@@ -31,6 +37,12 @@ function renderPixFoundCard(profile) {
     </div>`;
 }
 
+/**
+ * Cartão de chave Pix não encontrada.
+ *
+ * @param {string} queryStr
+ * @returns {string}
+ */
 function renderPixNotFoundCard(queryStr) {
   return `
     <div class="card pix-lookup-card empty">
@@ -90,6 +102,11 @@ export function renderHandleConflict(main, slug, claimants = []) {
   `;
 }
 
+/**
+ * Linha da chave Pix na carteira.
+ *
+ * @returns {string}
+ */
 function renderWalletPixRow() {
   const pix = localAccount.getPixKey?.();
   if (!pix?.normalized) {
@@ -107,6 +124,14 @@ function renderWalletPixRow() {
       </div>`;
 }
 
+/**
+ * Caixa do estado da carteira (conectada ou não).
+ *
+ * @param {boolean} hasWallet
+ * @param {string} address
+ * @param {string} balance
+ * @returns {string}
+ */
 function renderWalletStatusBox(hasWallet, address, balance) {
   if (hasWallet && address) {
     return `
@@ -133,6 +158,11 @@ function renderWalletStatusBox(hasWallet, address, balance) {
     </section>`;
 }
 
+/**
+ * Formulário de importar carteira.
+ *
+ * @returns {string}
+ */
 function renderWalletImportHtml() {
   return `
           <section class="card wallet-import agora-tablet">
@@ -145,6 +175,11 @@ function renderWalletImportHtml() {
           </section>`;
 }
 
+/**
+ * Texto lateral explicativo da carteira.
+ *
+ * @returns {string}
+ */
 function renderWalletAsideHtml() {
   return `
         <aside class="agora-split-aside">

@@ -7,6 +7,11 @@ import * as communityMirror from "../community-mirror.js";
 import * as signalingTelemetry from "../signaling-telemetry.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+/**
+ * Liga os botões de copiar e zerar o relatório de sinalização.
+ *
+ * @param {Function} swVersionProvider Devolve a versão do Service Worker.
+ */
 function bindSignalingReportActions(swVersionProvider) {
   const copyBtn = document.getElementById("status-copy-signaling-btn");
   const resetBtn = document.getElementById("status-reset-signaling-btn");

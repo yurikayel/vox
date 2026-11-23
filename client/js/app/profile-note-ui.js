@@ -11,6 +11,11 @@ import { noteEditorSheetMarkup } from "../render/profile-note-bubble.js";
 const SHEET_ID = "profile-note-sheet";
 let wired = false;
 
+/**
+ * Cria a folha da nota de perfil se ainda não existe e devolve a raiz.
+ *
+ * @returns {HTMLElement}
+ */
 function ensureSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -26,17 +31,34 @@ function ensureSheet() {
   return root;
 }
 
+/**
+ * Abre ou fecha a folha da nota.
+ *
+ * @param {HTMLElement} sheet Raiz da folha.
+ * @param {boolean} open Aberta.
+ */
 function setOpen(sheet, open) {
   sheet.hidden = !open;
   sheet.classList.toggle("is-open", open);
 }
 
+/**
+ * Preenche o campo com a nota guardada para a pessoa.
+ *
+ * @param {string} routeId Rota da pessoa.
+ */
 function fillInput(routeId) {
   const rec = profileNote.getNote(routeId);
   const input = document.getElementById("profile-note-input");
   if (input) input.value = rec?.text || "";
 }
 
+/**
+ * Grava a nota, atualiza o cartão da malha se a pessoa é descobrível e fecha a folha.
+ *
+ * @param {string} routeId Rota da pessoa.
+ * @param {string} text Texto da nota.
+ */
 async function persistAndClose(routeId, text) {
   profileNote.setNote(routeId, text);
   if (localAccount.getMeshDiscoverable()) {
@@ -54,6 +76,12 @@ async function persistAndClose(routeId, text) {
   bubble?.classList.toggle("profile-note-bubble--empty", !text);
 }
 
+/**
+ * Trata o botão da folha: cancelar ou salvar a nota.
+ *
+ * @param {string} action Ação escolhida.
+ * @param {string} routeId Rota da pessoa.
+ */
 async function onAction(action, routeId) {
   if (action === "cancel") {
     setOpen(document.getElementById(SHEET_ID), false);

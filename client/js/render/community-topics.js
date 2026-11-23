@@ -21,12 +21,25 @@ import {
   renderCommunityOnlineGrid,
 } from "./community-shared.js";
 
+/**
+ * Miniatura do tópico na lista, vazia se a mídia é inválida ou o post foi retirado.
+ *
+ * @param {object} topic
+ * @param {string} topicHref
+ * @returns {string}
+ */
 function renderTopicRowThumb(topic, topicHref) {
   const thumb = sanitizeMediaUrl(topic.image);
   if (!thumb || gossipRetract.shouldHideGossipDeletedPost(topic)) return "";
   return `<a class="community-topic-row-thumb" href="${topicHref}" aria-hidden="true"><img src="${escapeHtml(thumb)}" alt="" width="48" height="48" loading="lazy" /></a>`;
 }
 
+/**
+ * Rótulos e avatar do autor do tópico.
+ *
+ * @param {object} topic
+ * @returns {object}
+ */
 function resolveTopicAuthorMeta(topic) {
   const author = topic.author || topic.owner || "";
   const authorLabels = resolvePostAuthorLabels(author, {
@@ -54,6 +67,12 @@ export function renderNewKeyHeldNoticeHtml(count) {
     <button type="button" class="btn btn-outline btn-sm btn-reveal-new-keys">Ver mesmo assim</button></p>`;
 }
 
+/**
+ * Trecho com a última resposta, vazio se não há resposta nova.
+ *
+ * @param {object} topic
+ * @returns {string}
+ */
 function resolveTopicBumpSpan(topic) {
   if (Number(topic.lastReplyTs) <= Number(topic.ts)) return "";
   const rel = formatTimeAgo(topic.lastReplyTs);
@@ -61,6 +80,12 @@ function resolveTopicBumpSpan(topic) {
   return `<span class="community-topic-bump" title="Atividade recente no tópico"> · ${escapeHtml(phrase)}</span>`;
 }
 
+/**
+ * Título do tópico sem a etiqueta cívica, com reserva se não há.
+ *
+ * @param {object} topic
+ * @returns {string}
+ */
 function resolveTopicCleanTitle(topic) {
   let title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
   const civicTag = extractTopicCivicTag(topic);
@@ -70,6 +95,12 @@ function resolveTopicCleanTitle(topic) {
   return title;
 }
 
+/**
+ * Linha de metadados do tópico na lista.
+ *
+ * @param {object} topic
+ * @returns {string}
+ */
 function renderTopicRowMeta(topic) {
   const { author, authorHandle, authorAvatar } = resolveTopicAuthorMeta(topic);
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
@@ -137,6 +168,13 @@ export function renderCommunityMembersTab(meta, communityId, recentPeople = [], 
     </div>`;
 }
 
+/**
+ * Botão para mostrar mais tópicos, vazio se já aparecem todos.
+ *
+ * @param {number} totalCount
+ * @param {number} visibleCount
+ * @returns {string}
+ */
 function renderTopicPaginationButton(totalCount, visibleCount) {
   if (totalCount <= visibleCount) return "";
   const remaining = totalCount - visibleCount;

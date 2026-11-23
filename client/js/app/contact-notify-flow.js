@@ -9,6 +9,11 @@ import * as contacts from "../contacts.js";
 import * as contactNotify from "../contact-notify.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 
+/**
+ * Carrega as dependências reais do envio do aviso de contato.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
@@ -65,6 +70,12 @@ export function addContactAndNotify(routeId, label = "", deps = null) {
   return ok;
 }
 
+/**
+ * Avisa a pessoa de que foi adicionada aos contatos (aviso na tela e notificação do sistema).
+ *
+ * @param {object} _entry Entrada recebida (não usada).
+ * @param {string} label Nome de quem adicionou.
+ */
 function defaultAlertUser(_entry, label) {
   void import("../share.js").then((s) => s.showToast(`${label} adicionou você aos contatos.`)).catch(() => {});
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
@@ -75,12 +86,20 @@ function defaultAlertUser(_entry, label) {
   notifyListChanged();
 }
 
+/**
+ * Sinaliza ao documento que a lista de contatos mudou.
+ */
 function notifyListChanged() {
   if (typeof document !== "undefined" && typeof CustomEvent === "function") {
     document.dispatchEvent(new CustomEvent("vox:contact-added-received"));
   }
 }
 
+/**
+ * Carrega as dependências reais do recebimento do aviso de contato.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultReceiveDeps() {
   const [localAccount, profileDirectory, context, util] = await Promise.all([
     import("../identity/index.js"), import("../profile-directory.js"), import("./context.js"), import("../short-id.js"),

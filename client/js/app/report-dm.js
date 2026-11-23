@@ -7,6 +7,11 @@ import * as review from "../report-review.js";
 import { isModerator } from "../moderation.js";
 import { normalizeContextCard } from "../dm-messenger.js";
 
+/**
+ * Carrega as dependências reais do envio da denúncia.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, cacheNode, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
@@ -51,6 +56,11 @@ export async function sendReportToModerator(user, moderator, rec, deps = null) {
   return status;
 }
 
+/**
+ * Carrega as dependências reais do recebimento da denúncia.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultReceiveDeps() {
   const [community, cacheNode, localAccount, context, share] = await Promise.all([
     import("./screens-community.js"), import("../cache-node.js"), import("../identity/index.js"),
@@ -85,6 +95,13 @@ export function describeReceivedCase(kase) {
   return `Denúncia recebida e não arquivou sozinha${why ? `: ${why}` : ""}. Revise pela conversa.`;
 }
 
+/**
+ * Monta o contexto da denúncia para quem modera; sem moderação ou sem comunidade devolve null.
+ *
+ * @param {object} signed Denúncia assinada.
+ * @param {object} d Dependências.
+ * @returns {Promise<object|null>}
+ */
 async function loadReportContext(signed, d) {
   const meta = await d.getCommunity(signed.communityId).catch(() => null);
   const selves = await d.getSelves().catch(() => []);

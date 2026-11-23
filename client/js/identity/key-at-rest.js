@@ -16,11 +16,23 @@ const TARGETS = [
   { key: "vox-bsky-oauth-session", seal: sealBskySession },
 ];
 
+/**
+ * Sela a chave privada de um registro; `null` se não há nada a selar.
+ *
+ * @param {object} record
+ * @returns {Promise<object|null>}
+ */
 async function sealPrivateField(record) {
   if (!record?.privateJwk || isSealed(record.privateJwk) || isLocked(record.privateJwk)) return null;
   return { ...record, privateJwk: await sealJson(record.privateJwk) };
 }
 
+/**
+ * Sela as chaves de assinatura e de DM de uma entrada do cofre; `null` se nada mudou.
+ *
+ * @param {object} entry
+ * @returns {Promise<object|null>}
+ */
 async function sealVaultEntry(entry) {
   const withKey = (await sealPrivateField(entry)) || entry;
   const dm = await sealPrivateField(entry?.dmKeypair);
@@ -28,6 +40,12 @@ async function sealVaultEntry(entry) {
   return dm ? { ...withKey, dmKeypair: dm } : withKey;
 }
 
+/**
+ * Sela todas as entradas do mapa do cofre; `null` se nada mudou.
+ *
+ * @param {object} map
+ * @returns {Promise<object|null>}
+ */
 async function sealVaultMap(map) {
   if (!map || typeof map !== "object") return null;
   let changed = false;
@@ -46,6 +64,12 @@ async function sealWalletJwk(jwk) {
   return sealJson(jwk);
 }
 
+/**
+ * Sela os segredos da sessão Bluesky guardada; `null` se não há o que selar.
+ *
+ * @param {object} record
+ * @returns {Promise<object|null>}
+ */
 async function sealBskySession(record) {
   if (!record || typeof record !== "object" || record.sealed) return null;
   const hasSecrets = Boolean(record.keys || record.accessToken || record.refreshToken);
@@ -62,6 +86,13 @@ async function sealBskySession(record) {
   return { ...rest, sealed };
 }
 
+/**
+ * Migra um item do armazenamento para o formato selado e diz se houve mudança.
+ *
+ * @param {Storage} storage
+ * @param {object} options
+ * @returns {Promise<boolean>}
+ */
 async function migrateTarget(storage, { key, seal }) {
   const before = storage.getItem(key);
   if (!before) return false;

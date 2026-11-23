@@ -14,6 +14,11 @@
 
 import * as ret from "../identity/index.js";
 
+/**
+ * Carrega as dependências reais do fluxo de devolução.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultDeps() {
   const [cryptoDm, inbox, keystore, guardians, localAccount, phrase] = await Promise.all([
     import("../crypto-dm.js"), import("../inbox.js"), import("../identity/index.js"), import("../identity/index.js"),
@@ -35,6 +40,12 @@ async function defaultDeps() {
   };
 }
 
+/**
+ * Usa as dependências recebidas ou carrega as reais.
+ *
+ * @param {object|null} d Dependências injetadas.
+ * @returns {Promise<object>}
+ */
 const deps = async (d) => d || (await defaultDeps());
 
 // ---- Guardião ----
@@ -90,6 +101,12 @@ export function parseOwnerInput(text) {
   return match ? match[0] : "";
 }
 
+/**
+ * Resume um pedido pendente para a tela: pedido, link, código curto e pedaços recebidos.
+ *
+ * @param {{request: object, envelopes: object[]}} pending Pedido pendente.
+ * @returns {Promise<{request: object, link: string, code: string, received: number}>}
+ */
 async function describe(pending) {
   const { request } = pending;
   return { request, link: ret.requestLink(request, globalThis.location?.href || ""), code: await ret.shortCode(request), received: pending.envelopes.length };
