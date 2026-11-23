@@ -16,10 +16,12 @@ PIN_ROLES = frozenset({"community", "topic", "reply", "post", "blob", "index"})
 
 
 def _err(code: str, message: str) -> dict[str, str]:
+    """Monta o corpo de erro `{code, error}` devolvido ao cliente."""
     return {"code": code, "error": message}
 
 
 def _validate_pin_entry(raw: dict[str, Any]) -> tuple[bool, str | None]:
+    """Valida uma entrada de pin do espelho; devolve `(True, None)` ou `(False, motivo)`."""
     tx_id = str(raw.get("txId") or raw.get("id") or "").strip()
     if not TX_ID_RE.match(tx_id):
         return False, "txId inválido (43 caracteres base64url)."
