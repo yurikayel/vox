@@ -18,7 +18,7 @@ import {
   fetchRawFromGateways,
 } from "./graphql-gateway.js";
 import { tagValue, mapCommunity, mapTopic, mapReply, mapProfileCard } from "./graphql-mappers.js";
-import { isSafeKey } from "./shared/safe-key.js";
+import { isSafeKey, withEntry } from "./shared/safe-key.js";
 
 export {
   loadConfig,
@@ -177,8 +177,7 @@ export function cacheUserDmPub(address, pubJwk) {
   if (!isSafeKey(address) || !pubJwk) return;
   try {
     const raw = localStorage.getItem(KNOWN_DM_PUBS_KEY);
-    const map = raw ? JSON.parse(raw) : {};
-    map[address] = typeof pubJwk === "string" ? JSON.parse(pubJwk) : pubJwk;
+    const map = withEntry(raw ? JSON.parse(raw) : {}, address, typeof pubJwk === "string" ? JSON.parse(pubJwk) : pubJwk);
     localStorage.setItem(KNOWN_DM_PUBS_KEY, JSON.stringify(map));
   } catch {
     /* storage */
