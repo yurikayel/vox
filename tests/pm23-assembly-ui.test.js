@@ -24,7 +24,10 @@ import {
 import { renderAssemblyEntrySlot, renderAssemblyPanel } from "../client/js/render/assembly-panel.js";
 import { renderCommunityGovernanceTab } from "../client/js/render/community-governance.js";
 import {
+  bindAssemblyPanelHost,
   exportAssemblyMinutes,
+  loadAssemblyContext,
+  mountAssemblyPanel,
   publishAssemblyConvocacao,
   submitAssemblyRsvp,
   updateAssemblyDecisionStatus,
@@ -182,4 +185,90 @@ test("PM-23 UI: renderização da aba governança e painel de assembleia escapa 
   assert.ok(panelHtml.includes("Todo mês · Próximo: 15/12"));
   assert.ok(panelHtml.includes("Exportar ata (.md)"));
   assert.ok(panelHtml.includes("Exportar ata (.json)"));
+});
+
+function makeHostStub() {
+  const listeners = {};
+  const slot = { dataset: {}, innerHTML: "" };
+  const main = {
+    dataset: {},
+    querySelector: (sel) => (sel === "[data-assembly-slot]" ? slot : null),
+    addEventListener: (ev, fn) => { listeners[ev] = fn; },
+  };
+  const makeBtn = (dataset) => ({
+    dataset,
+    disabled: false,
+    closest: (sel) => (sel === "[data-assembly-action]" ? btnRef : sel === "[data-assembly-slot]" ? slot : null),
+  });
+  let btnRef = null;
+  const click = async (dataset) => {
+    btnRef = makeBtn(dataset);
+    listeners.click({ target: btnRef });
+    await new Promise((r) => setTimeout(r, 25));
+  };
+  return { main, slot, listeners, click };
+}
+
+test("PM-23 UI: loadAssemblyContext, mountAssemblyPanel e cliques delegados", async () => {
+  await localAccount.ensureLocalAccount();
+  const routeId = await localAccount.getRouteId();
+  const communityId = "vila-host-test";
+  const meta = { owner: routeId, moderators: [] };
+  const conv = await publishAssemblyConvocacao({
+    communityId,
+    title: "Assembleia do Host",
+    assemblyAgenda: "1. Pauta A",
+    eventAt: T0,
+    eventPlace: "Praça",
+  });
+  await submitAssemblyRsvp(conv, "vou");
+  await updateAssemblyDecisionStatus({ communityId, assemblyId: conv.id, decisionStatus: "em_andamento" });
+
+  const ctx = await loadAssemblyContext(communityId, meta);
+  assert.equal(ctx.isMod, true);
+  assert.ok(ctx.items.some((i) => i.convocacao.id === conv.id && i.myChoice === "vou" && i.decisionStatus === "em_andamento"));
+
+  const { main, slot, click } = makeHostStub();
+  await mountAssemblyPanel(slot, { communityId, meta });
+  assert.equal(slot.dataset.assemblyMounted, "1");
+  assert.ok(slot.innerHTML.includes("Assembleia do Host"));
+
+  bindAssemblyPanelHost(main, { communityId, meta });
+  bindAssemblyPanelHost(main, { communityId, meta });
+  await click({ assemblyAction: "open" });
+  await click({ assemblyAction: "rsvp", assemblyId: conv.id, choice: "ciente" });
+  await click({ assemblyAction: "status", assemblyId: conv.id, status: "cumprida" });
+  await click({ assemblyAction: "export-md", assemblyId: conv.id });
+  await click({ assemblyAction: "export-json", assemblyId: conv.id });
+  await click({ assemblyAction: "rsvp", assemblyId: "inexistente", choice: "vou" });
+});
+
+test("PM-23 UI: bindAssemblyPanelHost trata submit inválido e válido do formulário de convocação", async () => {
+  await localAccount.ensureLocalAccount();
+  const routeId = await localAccount.getRouteId();
+  const communityId = "vila-submit-test";
+  const meta = { owner: routeId, moderators: [] };
+  const { main, slot, listeners } = makeHostStub();
+  bindAssemblyPanelHost(main, { communityId, meta });
+
+  const errorEl = { textContent: "", hidden: true };
+  const origFormData = globalThis.FormData;
+  const formStub = {
+    querySelector: () => errorEl,
+    closest: (sel) => (sel === '[data-assembly-form="publish"]' ? formStub : sel === "[data-assembly-slot]" ? slot : null),
+  };
+  try {
+    let fields = { title: "", assemblyAgenda: "" };
+    globalThis.FormData = class { get(k) { return fields[k] ?? ""; } };
+    listeners.submit({ target: formStub, preventDefault() {} });
+    await new Promise((r) => setTimeout(r, 25));
+    assert.equal(errorEl.hidden, false);
+
+    fields = { title: "Nova Convocação", assemblyAgenda: "1. Item único", eventAt: "2026-12-01T10:00", eventPlace: "Sede", quorumMin: "5", ritualRule: "monthly" };
+    listeners.submit({ target: formStub, preventDefault() {} });
+    await new Promise((r) => setTimeout(r, 40));
+    assert.ok(slot.innerHTML.includes("Nova Convocação"));
+  } finally {
+    globalThis.FormData = origFormData;
+  }
 });
