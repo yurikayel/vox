@@ -21,6 +21,13 @@ const KTY_WINDOW = 2000;
 const ALLOW_MARKER = "vox-secrets-audit: fixture";
 const BINARY = /\.(?:png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|mp3|mp4|webm|ogg|wav|wasm|zip|gz|exe|dll|pdf)$/i;
 
+/**
+ * Diz qual tipo de segredo uma linha parece conter, ou `null`.
+ * @param {string} text Texto completo do arquivo.
+ * @param {string} line Linha a examinar.
+ * @param {number} offset Posição da linha no texto.
+ * @returns {string|null}
+ */
 function lineFinding(text, line, offset) {
   if (line.includes(ALLOW_MARKER)) return null;
   if (PEM_PRIVATE.test(line)) return "pem-private-key";
@@ -56,6 +63,10 @@ export function auditFiles(files, read = (file) => fs.readFileSync(file, "utf8")
   return all;
 }
 
+/**
+ * Lista os arquivos versionados no git.
+ * @returns {string[]}
+ */
 function trackedFiles() {
   return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
     .split("\0")

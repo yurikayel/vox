@@ -65,8 +65,13 @@ jobs:
         run: npm run lint
 
       - name: Executar testes unitários do cliente (node:test)
+        if: matrix.node-version != '24'
         run: |
           npm run test:client
+
+      - name: Testes do cliente com cobertura (catraca em scripts/coverage-floor.json)
+        if: matrix.node-version == '24'
+        run: npm run coverage:js
 
   test-relay:
     name: Relay & Signaling (Python ${{ matrix.python-version }})
@@ -90,8 +95,13 @@ jobs:
           python -m py_compile relay/*.py
 
       - name: Executar testes unitários do relay (unittest)
+        if: matrix.python-version != '3.12'
         run: |
           npm run test:relay
+
+      - name: Testes do relay com cobertura (catraca em scripts/coverage-floor.json)
+        if: matrix.python-version == '3.12'
+        run: npm run coverage:py
 
       - name: Ruff (pyflakes e complexidade > 15 bloqueiam)
         run: pip install ruff==0.17.4 && npm run lint:relay
