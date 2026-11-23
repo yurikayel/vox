@@ -8,6 +8,7 @@
  */
 
 import { signal } from "./signals.js";
+import { randomBase36 } from "./html.js";
 
 const DEFAULT_LOCK_NAME = "vox-lead-tab-v0";
 const MSG_VERSION = 1;
@@ -47,7 +48,7 @@ export async function withWebLock(name, fn, opts = {}) {
  * @returns {string} Identificador único local.
  */
 function makeTabId() {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  return `${Date.now().toString(36)}_${randomBase36(8)}`;
 }
 
 /**
