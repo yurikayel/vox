@@ -6,7 +6,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { makeEl, installDom, settle, unrefLongTimers } from "./helpers/cov-t5-dom.mjs";
+import { makeEl, installDom, settle, unrefLongTimers, waitFor } from "./helpers/cov-t5-dom.mjs";
 
 unrefLongTimers();
 let relay = { online: false };
@@ -140,8 +140,8 @@ test("pedir notificação: sem suporte do navegador a tela é redesenhada sem qu
   const doc = installDom({ ids: { "btn-request-notif": btn } });
   settings.bindNetworkSettingsButtons();
   await btn.fire("click");
-  await settle();
-  assert.ok(doc.main.innerHTML.length > 0, "a tela de rede foi redesenhada");
+  // O redesenho é assíncrono (importa a tela): espera a condição em vez de um número fixo de voltas.
+  assert.ok(await waitFor(() => doc.main.innerHTML.length > 0, 5000), "a tela de rede foi redesenhada");
 });
 
 test("compartilhar convite: sem rota não faz nada; com rota abre o compartilhamento", async () => {
