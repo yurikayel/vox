@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Testes: cobertura do cliente sobe de 78,8% para 95,3% (lotes T1–T7, `tests/cov-*`); relay em 91,9%. Pisos de `scripts/coverage-floor.json` sobem para esses valores (meta 90%).
+
 - Testes: `relay/test_contract_api.py` não sai mais para a internet — os gateways upstream ficam vazios durante o teste, e o `/tx/` ausente vira 404 local (antes o pedido ia a `arweave.net` com timeout de 8 s contra 5 s do cliente e falhava de forma intermitente no CI).
 
 - Testes: métrica de cobertura com catraca — `npm run coverage:js` (linhas de código do cliente, sem brancos/comentários; arquivo não carregado conta 0%) e `npm run coverage:py` (instruções do relay, stdlib); pisos em `scripts/coverage-floor.json` (base 22/11: 78,8% / 91,9%; meta 90%); CI roda no Node 24 e no Python 3.12 (`docs/TESTES.md` §3.2).
