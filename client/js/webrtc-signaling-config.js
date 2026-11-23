@@ -209,6 +209,11 @@ export function rotateSignalingUrl(config) {
  */
 const isTurnUrl = (u) => /^turns?:/i.test(String(u));
 
+/**
+ * Reúne os servidores ICE (STUN e, se houver, TURN) da configuração.
+ * @param {object} config Configuração de sinalização
+ * @returns {object[]} Servidores ICE.
+ */
 function collectIceServers(config) {
   const stunList = config?.stun || ["stun:stun.l.google.com:19302"];
   const iceServers = stunList.map((url) => ({ urls: url }));

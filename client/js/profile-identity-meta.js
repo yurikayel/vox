@@ -50,15 +50,30 @@ export const ORIENTATION_SUGGESTIONS = Object.freeze([
   "Prefiro não dizer",
 ]);
 
+/**
+ * Diz se o id de rota pode ser chave (não é nome perigoso).
+ * @param {string} routeId Id de rota
+ * @returns {boolean} `true` se for seguro.
+ */
 function isSafeRouteKey(routeId) {
   const id = String(routeId || "").trim();
   return Boolean(id) && !FORBIDDEN_KEYS.has(id);
 }
 
+/**
+ * Limpa o campo: espaços únicos, aparado e cortado.
+ * @param {*} val Valor
+ * @param {number} maxLen Tamanho máximo
+ * @returns {string} Texto limpo.
+ */
 function cleanField(val, maxLen) {
   return String(val || "").replace(/\s+/g, " ").trim().slice(0, maxLen);
 }
 
+/**
+ * Lê do `localStorage` os metadados de identidade.
+ * @returns {Map<string, object>} Metadados por id de rota.
+ */
 function readMetaStore() {
   if (typeof window === "undefined" || !window.localStorage) return new Map();
   try {
@@ -72,6 +87,11 @@ function readMetaStore() {
   }
 }
 
+/**
+ * Grava no `localStorage` os metadados de identidade.
+ * @param {Map<string, object>} map Metadados por id de rota
+ * @returns {boolean} `true` se gravou.
+ */
 function writeMetaStore(map) {
   if (typeof window === "undefined" || !window.localStorage) return false;
   try {

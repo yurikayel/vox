@@ -39,6 +39,12 @@ export function wrapTextLines(ctx, text, maxWidth, maxLines = 4) {
   return lines;
 }
 
+/**
+ * Desenha o fundo do cartão.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {number} w Largura
+ * @param {number} h Altura
+ */
 function drawCardBackground(ctx, w, h) {
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, "#1c1917");
@@ -55,6 +61,11 @@ function drawCardBackground(ctx, w, h) {
   ctx.fillRect(16, 16, w - 32, 8);
 }
 
+/**
+ * Desenha o cabeçalho do cartão.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {number} w Largura
+ */
 function drawCardHeader(ctx, w) {
   ctx.fillStyle = "#f59e0b";
   ctx.font = "bold 16px sans-serif";
@@ -69,6 +80,15 @@ function drawCardHeader(ctx, w) {
   ctx.stroke();
 }
 
+/**
+ * Desenha a caixa de citação com o corpo do post.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {string} body Corpo do post
+ * @param {string} title Título
+ * @param {number} w Largura
+ * @param {number} startY Posição vertical inicial
+ * @returns {number} Posição vertical depois da caixa.
+ */
 function drawQuoteBox(ctx, body, title, w, startY) {
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
   if (!cleanBody || cleanBody === title) return startY;
@@ -91,6 +111,14 @@ function drawQuoteBox(ctx, body, title, w, startY) {
   return y + 180;
 }
 
+/**
+ * Desenha o título, o corpo e o autor.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {string} title Título
+ * @param {string} body Corpo
+ * @param {string} author Autor
+ * @param {number} w Largura
+ */
 function drawCardContent(ctx, title, body, author, w) {
   ctx.textAlign = "left";
   ctx.fillStyle = "#ffffff";
@@ -111,6 +139,14 @@ function drawCardContent(ctx, title, body, author, w) {
   return y;
 }
 
+/**
+ * Desenha os módulos do QR code.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {boolean[][]} modules Módulos do QR
+ * @param {number} startX Posição X inicial
+ * @param {number} startY Posição Y inicial
+ * @param {number} pxSize Tamanho de cada módulo em pixels
+ */
 function drawQrModules(ctx, modules, startX, startY, pxSize) {
   const modCount = modules.length;
   const qrDim = modCount * pxSize;
@@ -126,6 +162,13 @@ function drawQrModules(ctx, modules, startX, startY, pxSize) {
   }
 }
 
+/**
+ * Desenha a seção do QR code com o link do post.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {string} url Link do post
+ * @param {number} w Largura
+ * @param {number} h Altura
+ */
 function drawQrCodeSection(ctx, url, w, h) {
   try {
     const encoded = encodeVoxUrl(url);
@@ -147,6 +190,12 @@ function drawQrCodeSection(ctx, url, w, h) {
   } catch {}
 }
 
+/**
+ * Desenha o rodapé do cartão.
+ * @param {CanvasRenderingContext2D} ctx Contexto de desenho
+ * @param {number} w Largura
+ * @param {number} h Altura
+ */
 function drawCardFooter(ctx, w, h) {
   ctx.textAlign = "center";
   ctx.fillStyle = "rgba(255, 255, 255, 0.45)";

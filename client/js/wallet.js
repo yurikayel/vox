@@ -14,12 +14,22 @@ const KDF_ITERATIONS = 100000;
 let arweaveInstance = null;
 let sessionJwk = null;
 
+/**
+ * Carrega a biblioteca Arweave uma única vez.
+ * @returns {Promise<object>} Biblioteca carregada.
+ */
 async function getArweave() {
   if (arweaveInstance) return arweaveInstance;
   arweaveInstance = await loadArweave(20000);
   return arweaveInstance;
 }
 
+/**
+ * Deriva a chave AES da senha e do sal.
+ * @param {string} passphrase Senha
+ * @param {Uint8Array} salt Sal
+ * @returns {Promise<CryptoKey>} Chave AES.
+ */
 async function deriveAesKey(passphrase, salt) {
   const enc = new TextEncoder();
   const material = await crypto.subtle.importKey(
@@ -119,6 +129,10 @@ export function __resetSessionForTests() {
   sessionJwk = null;
 }
 
+/**
+ * Lê a carteira guardada no `localStorage`.
+ * @returns {object|null} Carteira, ou `null`.
+ */
 function readStoredWallet() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

@@ -309,6 +309,13 @@ export async function fetchModActions(communityId) {
   }
 }
 
+/**
+ * Guarda a transação no cache e registra a origem da leitura.
+ * @param {string} txId Id da transação
+ * @param {*} data Dados lidos
+ * @param {string} origin Origem da leitura
+ * @param {string} comm Comunidade
+ */
 function cacheAndRecordTx(txId, data, origin, comm) {
   recordReadOrigin(origin, comm);
   dataCache.set(txId, data);

@@ -25,6 +25,11 @@ export async function sendWebhookPost(url, payload) {
   }
 }
 
+/**
+ * Reúne os endereços de webhook das contas ligadas.
+ * @param {object} accounts Contas ligadas
+ * @returns {string[]} Endereços.
+ */
 function collectWebhookTargets(accounts) {
   const targets = [];
   const generalUrl = getGeneralWebhookUrl();
@@ -37,6 +42,12 @@ function collectWebhookTargets(accounts) {
   return targets;
 }
 
+/**
+ * Diz se a conta ainda precisa abrir a janela de intenção para publicar.
+ * @param {string} netId Rede
+ * @param {object} acc Conta
+ * @returns {boolean} `true` se precisa.
+ */
 function isAccountNeedingIntent(netId, acc) {
   if (!acc || acc.enabled === false || !acc.handle) return false;
   if (acc.webhook) return false;

@@ -30,11 +30,36 @@ const hashCache = new Map();
 
 /** Só texto passa: o regex coagiria número ou lista aninhada para texto e aceitaria. */
 const isHash = (h) => typeof h === "string" && HASH_RE.test(h);
+/**
+ * Diz se o valor tem a forma de um nonce.
+ * @param {*} n Valor
+ * @returns {boolean} `true` se for.
+ */
 const isNonce = (n) => typeof n === "string" && NONCE_RE.test(n);
+/**
+ * Diz se o item tem assinatura e chave pública.
+ * @param {object} x Item
+ * @returns {boolean} `true` se assinado.
+ */
 const isSigned = (x) => Boolean(x?.sig && x?.pubKey);
+/**
+ * Versão do item (edição ou criação).
+ * @param {object} x Item
+ * @returns {number} Horário em ms, ou 0.
+ */
 const itemVersion = (x) => Number(x?.editedAt || x?.ts || 0);
+/**
+ * Serializa os campos do cartão de perfil que contam para a comparação.
+ * @param {object} c Cartão
+ * @returns {string} Texto JSON.
+ */
 const cardContent = (c) => JSON.stringify([c.name || "", c.avatarUrl || "", c.bio || "", c.handle || "", c.discoverable !== false]);
 
+/**
+ * Converte bytes em base64url sem preenchimento.
+ * @param {Uint8Array} bytes Bytes
+ * @returns {string} Texto em base64url.
+ */
 function toB64Url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
@@ -69,6 +94,13 @@ export function selectShared({ posts = [], tombstones = [], cards = [] }) {
   };
 }
 
+/**
+ * Indexa itens pelo hash curto da chave, guardando o item e sua versão.
+ * @param {object[]} items Itens
+ * @param {Function} keyOf Devolve a chave do item
+ * @param {Function} versionOf Devolve a versão do item
+ * @returns {Promise<Map<string, {item: object, ver: *}>>} Índice por hash.
+ */
 async function indexBy(items, keyOf, versionOf) {
   const index = new Map();
   for (const item of items) {
@@ -90,6 +122,11 @@ export async function buildInventory({ posts = [], dels = [], cards = [] }) {
   };
 }
 
+/**
+ * Lista os pares `[hash, versão]` de um índice.
+ * @param {Map<string, object>} index Índice
+ * @returns {Array[]} Pares.
+ */
 const entries = (index) => [...index].map(([hash, { ver }]) => [hash, ver]);
 
 /**
@@ -103,8 +140,19 @@ export function inventoryMessage(inv, nonce, fromPeer) {
   return { type: SYNC_INV, v: 1, nonce, posts: entries(inv.posts), dels: entries(inv.dels), cards: entries(inv.cards), fromPeer };
 }
 
+/**
+ * Diz se a versão é um número não negativo ou um hash válido.
+ * @param {*} v Versão
+ * @returns {boolean} `true` se válida.
+ */
 const validVersion = (v) => (typeof v === "number" && Number.isFinite(v) && v >= 0) || (typeof v === "string" && HASH_RE.test(v));
 
+/**
+ * Valida a lista de pares do inventário (formato e tamanho máximo).
+ * @param {*} list Lista recebida
+ * @param {number} max Tamanho máximo
+ * @returns {Array[]|null} A lista, ou `null` se inválida.
+ */
 function parseEntries(list, max) {
   if (!Array.isArray(list) || list.length > max) return null;
   const ok = list.every((e) => Array.isArray(e) && e.length === 2 && isHash(e[0]) && validVersion(e[1]));
@@ -131,6 +179,13 @@ export function parseInventory(msg) {
  * @returns {{posts: string[], dels: string[], cards: string[]}} Hashes a pedir, por tipo.
  */
 export function computeWants(remote, local) {
+  /**
+   * Diz se o índice local não tem o hash naquela versão ou em uma mais nova.
+   * @param {Map<string, object>} index Índice local
+   * @param {string} hash Hash
+   * @param {number} ver Versão
+   * @returns {boolean} `true` se falta.
+   */
   const lacks = (index, hash, ver) => !(Number(index.get(hash)?.ver) >= ver);
   return {
     posts: remote.posts.filter(([h, v]) => lacks(local.posts, h, v) && lacks(local.dels, h, v)).map(([h]) => h),
@@ -139,6 +194,12 @@ export function computeWants(remote, local) {
   };
 }
 
+/**
+ * Valida a lista de hashes pedidos (formato e tamanho máximo).
+ * @param {*} list Lista recebida
+ * @param {number} max Tamanho máximo
+ * @returns {string[]|null} A lista, ou `null` se inválida.
+ */
 function parseHashes(list, max) {
   return Array.isArray(list) && list.length <= max && list.every(isHash) ? list : null;
 }
@@ -162,6 +223,12 @@ export function parseWant(msg) {
  * @returns {object[]} Mensagens `GOSSIP_DELETE`, `GOSSIP` e `PROFILE_CARD`, remoções primeiro.
  */
 export function messagesForWant(want, inv) {
+  /**
+   * Escolhe os itens do índice pelos hashes pedidos.
+   * @param {Map<string, object>} index Índice
+   * @param {string[]} hashes Hashes pedidos
+   * @returns {object[]} Itens encontrados.
+   */
   const pick = (index, hashes) => hashes.map((h) => index.get(h)?.item).filter(Boolean);
   return [
     ...pick(inv.dels, want.dels).map((t) => ({ type: "GOSSIP_DELETE", item: t, tombstone: t })),
@@ -170,6 +237,10 @@ export function messagesForWant(want, inv) {
   ];
 }
 
+/**
+ * Leitor de blob que não encontra nada (padrão sem cache de mídia).
+ * @returns {Promise<null>} Sempre `null`.
+ */
 const noBlob = async () => null;
 /** Bytes do blob pelo que de fato viaja (`data`), não pelo `byteLength` declarado. */
 const blobBytes = (blob) => Math.ceil(String(blob?.data || "").length * 0.75);
@@ -219,6 +290,10 @@ export async function sendFullState(sendFn, shared, fromPeer, loadBlob = noBlob)
   for (const m of posts) sendFn({ ...m, fromPeer });
 }
 
+/**
+ * Gera um nonce aleatório em base64url.
+ * @returns {string} Nonce.
+ */
 const newNonce = () => toB64Url(crypto.getRandomValues(new Uint8Array(9)));
 
 /** Passo 1: arma o prazo do envio completo e manda o inventário desta conexão. */
@@ -273,6 +348,10 @@ export function createPeerSync(deps) {
   };
 }
 
+/**
+ * Carrega o estado local a sincronizar (posts, lápides e cartões).
+ * @returns {Promise<object>} Posts, lápides e cartões compartilháveis.
+ */
 async function loadState() {
   const [tombstones, posts] = await Promise.all([cacheNode.getAllTombstones(), cacheNode.getWirePosts()]);
   return { posts, tombstones, cards: profileDirectory.listShareableProfileCards() };

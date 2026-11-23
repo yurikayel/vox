@@ -61,6 +61,11 @@ export function dataUrlToUint8Array(dataUrl) {
   return base64ToUint8Array(parsed.base64);
 }
 
+/**
+ * Converte um buffer em texto hexadecimal.
+ * @param {ArrayBuffer} buffer Bytes
+ * @returns {string} Texto hexadecimal.
+ */
 function bufferToHex(buffer) {
   const bytes = new Uint8Array(buffer);
   let hex = "";
@@ -221,11 +226,20 @@ export function registerBlobMemorySink(fn) {
 
 // Armazenamento em memória / LRU leve
 class BlobStorage {
+  /**
+   * Cria o cache com limite de itens.
+   * @param {number} [maxItems=100] Máximo de itens
+   */
   constructor(maxItems = 100) {
     this.maxItems = maxItems;
     this.map = new Map();
   }
 
+  /**
+   * Guarda um blob verificado; o mais antigo sai se passar do limite.
+   * @param {object} blob Blob com hash
+   * @returns {Promise<void>} Conclui quando guardado.
+   */
   async put(blob) {
     if (!blob || !blob.hash) throw new Error("Blob inválido");
     const valid = await verifyMediaBlob(blob);
@@ -242,6 +256,11 @@ class BlobStorage {
     return true;
   }
 
+  /**
+   * Busca um blob pelo hash e o marca como o mais recente.
+   * @param {string} hash Hash do blob
+   * @returns {object|null} Blob, ou `null`.
+   */
   get(hash) {
     const item = this.map.get(hash);
     if (!item) return null;
@@ -250,18 +269,35 @@ class BlobStorage {
     return item;
   }
 
+  /**
+   * Diz se o hash está no cache.
+   * @param {string} hash Hash do blob
+   * @returns {boolean} `true` se estiver.
+   */
   has(hash) {
     return this.map.has(hash);
   }
 
+  /**
+   * Remove um blob do cache.
+   * @param {string} hash Hash do blob
+   * @returns {boolean} `true` se existia.
+   */
   delete(hash) {
     return this.map.delete(hash);
   }
 
+  /**
+   * Esvazia o cache.
+   */
   clear() {
     this.map.clear();
   }
 
+  /**
+   * Quantidade de blobs no cache.
+   * @returns {number} Quantidade.
+   */
   size() {
     return this.map.size;
   }
