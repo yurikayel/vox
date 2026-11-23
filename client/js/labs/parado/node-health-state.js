@@ -60,6 +60,11 @@ export function clearNodeHealthState() {
   notifyListeners();
 }
 
+/**
+ * Avisa os ouvintes com o estado atual; falha de um ouvinte não afeta os demais.
+ *
+ * @returns {void}
+ */
 function notifyListeners() {
   const current = getNodeHealthState();
   state.listeners.forEach((fn) => {
