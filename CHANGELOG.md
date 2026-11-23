@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Refactor: `app/screens-dm.js` (475 linhas) vira fachada de 45 linhas com a mesma API pública (`pollInboxMessages`, `showDmList`, `showDmThread`, `handleSendDmSubmit`, `initDmListeners`), e as partes vão para `screens-dm-inbox.js` (caixa de entrada), `screens-dm-list.js` (lista de conversas), `screens-dm-thread.js` (conversa, envio, reações, painel dividido) e `screens-dm-draft.js` (rascunho: resposta, cartão de contexto, foto). As três variáveis de rascunho viram campos do objeto compartilhado `dmDraft`; nenhum ciclo novo. SW `vox-pwa-v7.160-dm-split` com os quatro módulos no precache.
+
 - Refactor: `render/shell.js` (818 linhas) vira fachada de 112 linhas com a mesma API pública, e as partes vão para `shell-nav.js` (navegação, ícones, badge de DM, círculos), `shell-chrome.js` (marca, barra superior, selos, tema), `shell-drawer.js` (barra lateral e gaveta de identidade) e `shell-layout.js` (avisos e peças de página). Sem ciclo entre os módulos; `attachTopBarBehavior` separa busca (`attachTopBarSearch`) e gaveta (`attachIdentityDrawerBehavior`). Testes de texto-fonte leem pelo `tests/helpers/shell-render-source.mjs`. SW `vox-pwa-v7.159-shell-split` com os quatro módulos no precache.
 
 - Perfil: salvar a chave Pix voltou a funcionar — o formulário lia `valid`/`error` em vez de `ok`/`errorPt` de `validatePixKey` (toda chave válida mostrava "undefined" e não era gravada) e passava o texto a `setPixKey` em vez do registro `{ normalized, type, masked }`. Achado pelo lote de cobertura T3 (`tests/perfil-pix-salvar.test.js`).
