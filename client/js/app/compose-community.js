@@ -44,6 +44,13 @@ export function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   previewEl.appendChild(div);
 }
 
+/**
+ * Liga o campo de arquivo da foto da comunidade e mostra a prévia.
+ *
+ * @param {HTMLInputElement|null} fileInput Campo de arquivo.
+ * @param {HTMLElement} previewEl Elemento da prévia.
+ * @param {object} state Estado do formulário.
+ */
 function bindPhotoFileInput(fileInput, previewEl, state) {
   fileInput?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
@@ -64,6 +71,11 @@ function bindPhotoFileInput(fileInput, previewEl, state) {
   });
 }
 
+/**
+ * Liga os campos de foto (arquivo e endereço) do formulário de nova comunidade.
+ *
+ * @param {object} state Estado do formulário.
+ */
 function bindCommunityPhotoInputs(state) {
   const fileInput = document.getElementById("comm-photo-file");
   const urlInput = document.getElementById("comm-photo-url");
@@ -90,6 +102,11 @@ function bindCommunityPhotoInputs(state) {
   });
 }
 
+/**
+ * Envia a comunidade para a Permaweb quando o envio está ligado e há carteira.
+ *
+ * @param {object} communityRecord Registro da comunidade.
+ */
 async function uploadCommunityToPermaweb(communityRecord) {
   if (!featureFlags.isFeatureEnabled("arweaveUpload") || !wallet.hasWallet()) return;
   try {
@@ -105,6 +122,12 @@ async function uploadCommunityToPermaweb(communityRecord) {
   } catch {}
 }
 
+/**
+ * Lê os campos do formulário de nova comunidade.
+ *
+ * @param {object} state Estado do formulário.
+ * @returns {object}
+ */
 function readCommunityInputs(state) {
   return {
     id: document.getElementById("comm-id")?.value.trim().toLowerCase(),
@@ -119,6 +142,11 @@ function readCommunityInputs(state) {
   };
 }
 
+/**
+ * Assina o registro da comunidade, guarda no aparelho e espalha pela rede.
+ *
+ * @param {object} data Campos lidos do formulário.
+ */
 async function signAndBroadcastCommunity(data) {
   const signed = await localAccount.signPayload({
     id: "c_" + data.id,
@@ -138,6 +166,12 @@ async function signAndBroadcastCommunity(data) {
   peers.broadcastGossip(signed);
 }
 
+/**
+ * Valida e cria a comunidade a partir do formulário.
+ *
+ * @param {object} state Estado do formulário.
+ * @param {Event} e Evento `submit`.
+ */
 async function handleCommunityCreate(state, e) {
   e.preventDefault();
   const btn = document.getElementById("btn-submit-comm");

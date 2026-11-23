@@ -23,6 +23,7 @@ WRITE_METHODS = ("POST", "DELETE")
 
 
 def _env_list(name, env=None):
+    """Lê uma lista separada por vírgula do ambiente, em minúsculas e sem barra final."""
     raw = (env if env is not None else os.environ).get(name) or ""
     return [item.strip().lower().rstrip("/") for item in raw.split(",") if item.strip()]
 
@@ -41,10 +42,12 @@ def _hostname(value):
 
 
 def is_loopback(name):
+    """True se o nome (host ou origem) é loopback."""
     return _hostname(name) in LOOPBACK_NAMES
 
 
 def host_allowed(host_header, bound_host, env=None):
+    """True se o cabeçalho Host é aceito; só restringe quando o relay escuta em loopback."""
     if not is_loopback(bound_host):
         return True
     name = _hostname(host_header)
@@ -52,6 +55,7 @@ def host_allowed(host_header, bound_host, env=None):
 
 
 def origin_allowed(origin, env=None):
+    """True se a origem é vazia, loopback, do app ou está na lista do ambiente."""
     text = str(origin or "").strip().lower().rstrip("/")
     if not text:
         return True
@@ -103,6 +107,7 @@ def cors_allow_origin(origin, env=None):
 
 
 def is_json_content_type(value):
+    """True se o Content-Type é `application/json` (ignora parâmetros)."""
     return str(value or "").split(";")[0].strip().lower() == "application/json"
 
 

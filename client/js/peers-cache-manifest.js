@@ -8,6 +8,10 @@ import {
 
 const STORAGE_KEY = "vox-cache-manifest-by-comm";
 
+/**
+ * Lê do `localStorage` os manifestos de cache guardados.
+ * @returns {object} Manifestos por comunidade, ou objeto vazio.
+ */
 function readStore() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -19,6 +23,10 @@ function readStore() {
   }
 }
 
+/**
+ * Grava no `localStorage` os manifestos de cache.
+ * @param {object} map Manifestos por comunidade
+ */
 function writeStore(map) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
 }
@@ -67,6 +75,11 @@ export function isManifestPriorityTx(txId) {
   return collectPriorityPinTxIds().has(txId);
 }
 
+/**
+ * Valida o formato do item de manifesto (id, tipo e comunidade).
+ * @param {object} item Item
+ * @returns {{ok: boolean, reason?: string}} Resultado da validação.
+ */
 function validateItemShape(item) {
   if (!item?.id || item.type !== CACHE_MANIFEST_TYPE || !item.communityId) {
     return { ok: false, reason: "formato" };
@@ -74,6 +87,11 @@ function validateItemShape(item) {
   return { ok: true };
 }
 
+/**
+ * Valida o conteúdo do manifesto do item.
+ * @param {object} item Item
+ * @returns {{ok: boolean, reason?: string}} Resultado da validação.
+ */
 function validateManifestPayload(item) {
   const check = validateManifestBody(item.manifest || {});
   if (!check.valid) {
@@ -85,6 +103,13 @@ function validateManifestPayload(item) {
   return { ok: true, manifest: check.manifest };
 }
 
+/**
+ * Diz se já temos manifesto mais novo que o recebido.
+ * @param {object|undefined} prev Manifesto guardado
+ * @param {object} item Item recebido
+ * @param {object} manifest Corpo do manifesto recebido
+ * @returns {boolean} `true` se o recebido é mais antigo.
+ */
 function isOutdatedManifest(prev, item, manifest) {
   if (!prev) return false;
   const incomingAt = Number(manifest.issuedAt || item.ts || 0);

@@ -5,6 +5,11 @@
 import * as communityUpdates from "./community-updates.js";
 import { getLocalPost, getLocalPosts } from "./cache-node-posts.js";
 
+/**
+ * Monta o registro local de uma comunidade.
+ * @param {object} c Comunidade
+ * @returns {object} Registro local.
+ */
 function buildLocalCommunityRecord(c) {
   const cid = c.communityId || c.id;
   return {

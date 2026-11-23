@@ -5,6 +5,13 @@
  * Avatares: randomuser.me (gender=male|female); fallback de iniciais no onerror do <img>.
  */
 
+/**
+ * Monta a URL de retrato de demonstração a partir do gênero e de um índice.
+ *
+ * @param {"m"|"f"} gender
+ * @param {number} n
+ * @returns {string}
+ */
 const PORTRAIT = (gender, n) =>
   `https://randomuser.me/api/portraits/med/${gender === "m" ? "men" : "women"}/${n % 100}.jpg`;
 
@@ -49,6 +56,12 @@ export const BRAZIL_COMMON_GIVEN_NAMES = [
   { displayName: "Alice", gender: "f" },
 ];
 
+/**
+ * PRNG determinístico (mulberry32), para embaralhar sem variar entre execuções.
+ *
+ * @param {number} seed
+ * @returns {function():number}
+ */
 function mulberry32(seed) {
   let a = seed >>> 0;
   return () => {
@@ -60,6 +73,13 @@ function mulberry32(seed) {
   };
 }
 
+/**
+ * Devolve cópia embaralhada de `items`, estável para a mesma semente.
+ *
+ * @param {Array<*>} items
+ * @param {number} seed
+ * @returns {Array<*>}
+ */
 function shuffleWithSeed(items, seed) {
   const arr = items.slice();
   const rand = mulberry32(seed);
@@ -70,6 +90,13 @@ function shuffleWithSeed(items, seed) {
   return arr;
 }
 
+/**
+ * Gera o handle `nome-uf`, sem acentos e em minúsculas.
+ *
+ * @param {string} displayName
+ * @param {string} uf
+ * @returns {string}
+ */
 function handleFromNameAndUf(displayName, uf) {
   const slug = displayName
     .normalize("NFD")
@@ -108,6 +135,13 @@ const UF_REGION_META = [
   { uf: "TO", stateName: "Tocantins", regional: "tocantinense", emoji: "🌅", tagline: "Cerrado novo, raiz forte — demo.", vibe: "Pequi, pôr do sol no Jalapão e comunidade jovem.", hashtag: "tocantins" },
 ];
 
+/**
+ * Escolhe o epíteto regional (por gênero) e acrescenta o emoji da UF.
+ *
+ * @param {object} meta
+ * @param {"m"|"f"} gender
+ * @returns {string}
+ */
 function regionalEpithet(meta, gender) {
   const key = gender === "m" ? "m" : "f";
   const word =
@@ -115,6 +149,11 @@ function regionalEpithet(meta, gender) {
   return `${word} ${meta.emoji}`;
 }
 
+/**
+ * Monta as sementes de perfil-estereótipo, uma por UF.
+ *
+ * @returns {Array<object>}
+ */
 function buildUfStereotypeSeeds() {
   const names = shuffleWithSeed(BRAZIL_COMMON_GIVEN_NAMES, UF_NAME_SHUFFLE_SEED);
   return UF_REGION_META.map((meta, i) => {
@@ -148,6 +187,12 @@ export const MOCK_DEMO_TOPIC_COUNT = MOCK_DEMO_UF_COUNT * MOCK_DEMO_POSTS_PER_UF
 /** Lista de `routeId` sintéticos dos perfis demo por UF. */
 export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLowerCase()}`);
 
+/**
+ * Gera o texto de apresentação (Markdown) do perfil de demonstração.
+ *
+ * @param {object} seed
+ * @returns {string}
+ */
 function readmeFor(seed) {
   return (
     `### ${seed.displayName} — ${seed.stereotypeTitle}\n\n` +
@@ -159,10 +204,23 @@ function readmeFor(seed) {
   );
 }
 
+/**
+ * Deriva o endereço Pix fictício a partir do handle.
+ *
+ * @param {object} seed
+ * @returns {string}
+ */
 function pixFor(seed) {
   return `${seed.handle.replace("-", ".")}@voxbrasil.org`;
 }
 
+/**
+ * Monta o perfil de demonstração completo de uma UF.
+ *
+ * @param {object} seed
+ * @param {number} i
+ * @returns {object}
+ */
 function buildSingleUfDemoProfile(seed, i) {
   const routeId = `vx_demo_${seed.uf.toLowerCase()}`;
   const avatarUrl = PORTRAIT(seed.gender, 10 + i);

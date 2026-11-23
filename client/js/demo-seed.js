@@ -12,6 +12,9 @@ import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 const SEED_KEY = "vox-demo-seeded-v12-uf27-common-names";
 const PURGE_KEY = "vox-mock-purged-v1";
 
+/**
+ * Marca no `localStorage` que a demonstração foi limpa.
+ */
 function markDemoPurgedInStorage() {
   try {
     window.localStorage.removeItem(SEED_KEY);
@@ -19,6 +22,11 @@ function markDemoPurgedInStorage() {
   } catch {}
 }
 
+/**
+ * Diz se o post é antigo ou de demonstração.
+ * @param {object} p Post
+ * @returns {boolean} `true` se deve ser limpo.
+ */
 function isOldOrMockPost(p) {
   if (!p) return false;
   const id = String(p.id || "");
@@ -32,6 +40,11 @@ function isOldOrMockPost(p) {
   return isBeforeGenesisMs(ts);
 }
 
+/**
+ * Diz se o id de rota é de conta de teste.
+ * @param {string} routeId Id de rota
+ * @returns {boolean} `true` se for de teste.
+ */
 function isTestAccount(routeId) {
   return routeId === "vx_WAqxgW" || isTestRouteId(routeId);
 }
@@ -51,6 +64,10 @@ function purgeTestContacts() {
   }
 }
 
+/**
+ * Apaga do cache local os posts de demonstração.
+ * @returns {Promise<number>} Quantidade apagada.
+ */
 async function purgeMockPosts() {
   let count = 0;
   try {
@@ -65,6 +82,10 @@ async function purgeMockPosts() {
   return count;
 }
 
+/**
+ * Apaga do cache local as comunidades de demonstração.
+ * @returns {Promise<number>} Quantidade apagada.
+ */
 async function purgeMockCommunities() {
   let count = 0;
   try {

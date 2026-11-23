@@ -73,6 +73,10 @@ export async function getDmMessages(peerAddress) {
   return (await getAllDmMessages()).filter((m) => m.peerAddress === peerAddress).sort((a, b) => (a.ts || 0) - (b.ts || 0));
 }
 
+/**
+ * Lê os horários de leitura de DM do `localStorage`.
+ * @returns {Object<string, number>} Horário de leitura por contato.
+ */
 function readDmReadTimestamps() {
   try {
     return JSON.parse(localStorage.getItem("vox-dm-read-ts-v1") || "{}") || {};
@@ -81,6 +85,11 @@ function readDmReadTimestamps() {
   }
 }
 
+/**
+ * Preenche o mapa com a última mensagem de cada conversa.
+ * @param {object[]} all Mensagens
+ * @param {Map<string, object>} map Conversas por contato
+ */
 function populateLatestMessages(all, map) {
   for (const m of all) {
     const existing = map.get(m.peerAddress);
@@ -96,6 +105,11 @@ function populateLatestMessages(all, map) {
   }
 }
 
+/**
+ * Conta as mensagens não lidas de cada conversa.
+ * @param {object[]} all Mensagens
+ * @param {Map<string, object>} map Conversas por contato
+ */
 function countUnreadDmMessages(all, map) {
   const readMap = readDmReadTimestamps();
   for (const m of all) {
@@ -107,6 +121,11 @@ function countUnreadDmMessages(all, map) {
   }
 }
 
+/**
+ * Agrega as mensagens em conversas, com última mensagem e não lidas.
+ * @param {object[]} all Mensagens
+ * @returns {object[]} Conversas.
+ */
 function aggregateDmConversations(all) {
   const map = new Map();
   populateLatestMessages(all, map);

@@ -41,6 +41,12 @@ export {
   resolveTopicContent,
 };
 
+/**
+ * Marca a aba ativa na navegação da comunidade.
+ *
+ * @param {HTMLElement} commEl Raiz da comunidade.
+ * @param {string} tab Aba ativa.
+ */
 function updateCommunityTabIndicator(commEl, tab) {
   const nav = commEl.querySelector(".community-vox-nav");
   if (!nav) return;
@@ -50,6 +56,14 @@ function updateCommunityTabIndicator(commEl, tab) {
   });
 }
 
+/**
+ * Mostra o aviso de chaves novas retidas e liga o botão de revelar.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} communityId Comunidade.
+ * @param {number} count Quantidade retida.
+ * @param {string} tab Aba ativa.
+ */
 function renderNewKeyHeldNotice(main, communityId, count, tab) {
   if (!count || tab !== "posts") return;
   main.insertAdjacentHTML("beforeend", render.renderNewKeyHeldNoticeHtml(count));
@@ -61,6 +75,13 @@ function renderNewKeyHeldNotice(main, communityId, count, tab) {
   });
 }
 
+/**
+ * Grava a entrada da pessoa na comunidade.
+ *
+ * @param {string} communityId Comunidade.
+ * @param {string} user Rota de quem entra.
+ * @param {HTMLElement} btn Botão de entrar.
+ */
 async function submitCommunityJoin(communityId, user, btn) {
   btn.disabled = true;
   btn.textContent = "Gravando…";
@@ -81,6 +102,13 @@ async function submitCommunityJoin(communityId, user, btn) {
   }
 }
 
+/**
+ * Grava a saída da pessoa da comunidade.
+ *
+ * @param {string} communityId Comunidade.
+ * @param {string} user Rota de quem sai.
+ * @param {HTMLElement} btn Botão de sair.
+ */
 async function submitCommunityLeave(communityId, user, btn) {
   btn.disabled = true;
   btn.textContent = "Gravando…";
@@ -100,6 +128,13 @@ async function submitCommunityLeave(communityId, user, btn) {
   }
 }
 
+/**
+ * Liga os botões de entrar e sair da comunidade.
+ *
+ * @param {string} communityId Comunidade.
+ * @param {string} user Rota de quem vê.
+ * @param {boolean} isMember Já é membro.
+ */
 function bindCommunityMembershipToggle(communityId, user, isMember) {
   const btnJoin = document.getElementById("btn-join-comm");
   if (btnJoin && !isMember) btnJoin.addEventListener("click", () => void submitCommunityJoin(communityId, user, btnJoin));
@@ -107,6 +142,13 @@ function bindCommunityMembershipToggle(communityId, user, isMember) {
   if (btnLeave && isMember) btnLeave.addEventListener("click", () => void submitCommunityLeave(communityId, user, btnLeave));
 }
 
+/**
+ * Mostra os avisos de demonstração ou de gateway da comunidade.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object} base Dados base da comunidade.
+ * @param {string} tab Aba ativa.
+ */
 function renderCommunityBanners(main, base, tab) {
   if (base.demo && !base.localTopics.length && tab !== "listings" && tab !== "governance") {
     render.renderDemoBanner(main);
@@ -115,6 +157,11 @@ function renderCommunityBanners(main, base, tab) {
   }
 }
 
+/**
+ * Monta a página completa da comunidade.
+ *
+ * @param {{communityId: string, tab: string, user: string, base: object, specifics: object, meta: object, isMember: boolean, recentPeople: object[], memberCount: number}} options Dados já carregados da comunidade.
+ */
 async function mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount }) {
   const routeId = await localAccount.getRouteId();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
@@ -144,6 +191,12 @@ async function mountFullCommunityPage({ communityId, tab, user, base, specifics,
   if (tab === "posts") void import("./community-termo-flow.js").then((m) => m.mountCommunityTermo(main, { communityId, meta, isMember, isMod: base.isUserMod })).catch(() => {});
 }
 
+/**
+ * Monta as propriedades das abas da comunidade.
+ *
+ * @param {{communityId: string, meta: object, base: object, specifics: object, recentPeople: object[], isMember: boolean, memberCount: number}} options Dados já carregados da comunidade.
+ * @returns {object}
+ */
 function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount }) {
   return {
     communityId, commTitle: meta.title || communityId, meta, topics: base.filteredTopics,

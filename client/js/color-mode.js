@@ -109,6 +109,9 @@ export function initColorMode(doc = document, hooks = {}) {
   const view = doc.defaultView ?? globalThis;
   const storage = view.localStorage;
 
+  /**
+   * Aplica o modo de cor salvo ao documento e avisa o gancho `onApply`.
+   */
   const apply = () => {
     applyColorModeToRoot(doc.documentElement, readColorMode(storage));
     hooks.onApply?.();
@@ -118,6 +121,9 @@ export function initColorMode(doc = document, hooks = {}) {
 
   const mq = view.matchMedia?.("(prefers-color-scheme: dark)");
   if (mq) {
+    /**
+     * Reaplica quando o esquema do sistema muda, se o modo for automático.
+     */
     const onScheme = () => {
       if (readColorMode(storage) === "auto") hooks.onApply?.();
     };

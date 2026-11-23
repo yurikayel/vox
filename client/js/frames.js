@@ -11,6 +11,11 @@ export const ALLOWED_FRAME_KINDS = ["poll", "petition", "clt"];
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const FRAME_STORAGE_KEY = "vox-frame-actions";
 
+/**
+ * Valida os campos básicos da definição de frame.
+ * @param {object} raw Definição bruta
+ * @returns {string|null} Mensagem de erro, ou `null` se válida.
+ */
 function validateFrameBasics(raw) {
   if (!raw || typeof raw !== "object") return "Definição de frame ausente ou inválida.";
   if (!raw["of:accepts:vox"] && !raw.acceptsVox) return "Frame não suporta Vox (requer 'of:accepts:vox').";
@@ -141,6 +146,13 @@ function applyActionsToLatestMap(actions) {
   return new Map([...newest].map(([author, v]) => [author, v.index]));
 }
 
+/**
+ * Soma os votos de um frame, incluindo a ação local.
+ * @param {object} frame Frame
+ * @param {object[]} [actions=[]] Ações registradas
+ * @param {object|null} [localAction=null] Ação feita neste aparelho
+ * @returns {object} Contagem por botão.
+ */
 function tallyVotes(frame, actions = [], localAction = null) {
   const counts = {};
   for (const b of frame.buttons) {

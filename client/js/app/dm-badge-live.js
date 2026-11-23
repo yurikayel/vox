@@ -94,6 +94,9 @@ export function wireDmBadgeLive() {
   }
   if (!listenerBound && typeof window?.addEventListener === "function") {
     listenerBound = true;
+    /**
+     * Atualiza o selo de mensagens quando a lista de conversas muda.
+     */
     const onChanged = () => {
       void refreshDmBadge();
     };

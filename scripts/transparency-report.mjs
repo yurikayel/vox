@@ -17,6 +17,12 @@ const VALID_APPEAL_OUTCOMES = new Set(["overturned", "upheld", "pending"]);
 const CATEGORY_SLUG_RE = /^[a-z0-9][a-z0-9_-]{0,31}$/i;
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/;
 
+/**
+ * Extrai o ano de uma data `AAAA-MM-DD`.
+ * @param {unknown} rawDate Data bruta.
+ * @param {number} index Posição do registro, usada nas mensagens.
+ * @returns {number}
+ */
 function parseYearFromDate(rawDate, index) {
   if (typeof rawDate !== "string") {
     throw new TypeError(`Registro[${index}]: 'date' deve ser string ISO YYYY-MM-DD.`);
@@ -33,6 +39,14 @@ function parseYearFromDate(rawDate, index) {
   return y;
 }
 
+/**
+ * Valida que o valor pertence ao conjunto permitido.
+ * @param {unknown} value Valor bruto.
+ * @param {Set<string>} allowed Valores permitidos.
+ * @param {string} field Nome do campo.
+ * @param {number} index Posição do registro, usada nas mensagens.
+ * @returns {string}
+ */
 function validateEnum(value, allowed, field, index) {
   if (typeof value !== "string" || !allowed.has(value)) {
     throw new RangeError(`Registro[${index}]: '${field}' inválido.`);
@@ -40,6 +54,12 @@ function validateEnum(value, allowed, field, index) {
   return value;
 }
 
+/**
+ * Valida a categoria (slug ASCII seguro).
+ * @param {unknown} rawCategory Valor bruto.
+ * @param {number} index Posição do registro, usada nas mensagens.
+ * @returns {string}
+ */
 function validateCategory(rawCategory, index) {
   if (typeof rawCategory !== "string" || !CATEGORY_SLUG_RE.test(rawCategory.trim())) {
     throw new RangeError(`Registro[${index}]: 'category' inválido (use slug ASCII seguro).`);
@@ -47,6 +67,12 @@ function validateCategory(rawCategory, index) {
   return rawCategory.trim().toLowerCase();
 }
 
+/**
+ * Valida os campos de recurso (`appealed`, `appealOutcome`) do registro.
+ * @param {object} raw Registro bruto.
+ * @param {number} index Posição do registro, usada nas mensagens.
+ * @returns {object}
+ */
 function validateAppeal(raw, index) {
   const appealed = raw.appealed === undefined ? false : raw.appealed;
   if (typeof appealed !== "boolean") {
@@ -62,6 +88,12 @@ function validateAppeal(raw, index) {
   return { appealed: true, appealOutcome: validateEnum(outcome, VALID_APPEAL_OUTCOMES, "appealOutcome", index) };
 }
 
+/**
+ * Valida o tempo de resposta em horas, ou `null` se ausente.
+ * @param {unknown} value Valor bruto.
+ * @param {number} index Posição do registro, usada nas mensagens.
+ * @returns {number|null}
+ */
 function validateResponseHours(value, index) {
   if (value == null) return null;
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
@@ -95,6 +127,10 @@ export function sanitizeEntry(raw, index) {
   };
 }
 
+/**
+ * Exige ano inteiro entre 1970 e 2100.
+ * @param {number} year Ano a validar.
+ */
 function assertValidYear(year) {
   if (!Number.isInteger(year) || year < 1970 || year > 2100) {
     throw new RangeError(`Ano inválido: ${year}. Esperado inteiro entre 1970 e 2100.`);
@@ -102,6 +138,11 @@ function assertValidYear(year) {
   return year;
 }
 
+/**
+ * Calcula amostras, mediana e percentil 95 dos tempos de resposta.
+ * @param {number[]} hoursList Tempos de resposta, em horas.
+ * @returns {{sampleSize: number, median: number|null, p95: number|null}}
+ */
 function computeLatencyStats(hoursList) {
   if (hoursList.length === 0) return { sampleSize: 0, median: null, p95: null };
   const sorted = [...hoursList].sort((a, b) => a - b);
@@ -112,10 +153,20 @@ function computeLatencyStats(hoursList) {
   return { sampleSize: n, median, p95: sorted[p95Index] };
 }
 
+/**
+ * Cria um objeto com todas as chaves zeradas.
+ * @param {Iterable<string>} keys Chaves.
+ * @returns {Object<string, number>}
+ */
 function initCounts(keys) {
   return Object.fromEntries([...keys].map((k) => [k, 0]));
 }
 
+/**
+ * Acumula no total de recursos o resultado de um registro.
+ * @param {object} appeals Totais de recursos (é alterado).
+ * @param {object} entry Registro validado.
+ */
 function accumulateAppeals(appeals, entry) {
   if (!entry.appealed) return;
   appeals.total += 1;
@@ -125,6 +176,11 @@ function accumulateAppeals(appeals, entry) {
   }
 }
 
+/**
+ * Copia o objeto com as chaves em ordem alfabética.
+ * @param {object} obj Objeto a ordenar.
+ * @returns {object}
+ */
 function sortObjectKeys(obj) {
   return Object.fromEntries(Object.keys(obj).sort().map((k) => [k, obj[k]]));
 }
@@ -168,21 +224,44 @@ export function aggregateModerationLog(entries, year) {
   };
 }
 
+/**
+ * Formata uma tabela Markdown de duas colunas.
+ * @param {string} headerLeft Título da coluna esquerda.
+ * @param {string} headerRight Título da coluna direita.
+ * @param {Array<[string, string]>} rows Linhas (rótulo e valor).
+ * @returns {string}
+ */
 function formatTable(headerLeft, headerRight, rows) {
   const lines = [`| ${headerLeft} | ${headerRight} |`, "|---|---|"];
   for (const [label, value] of rows) lines.push(`| ${label} | ${value} |`);
   return lines.join("\n");
 }
 
+/**
+ * Formata horas com duas casas, ou `N/A` quando nulo.
+ * @param {number|null} value Horas.
+ * @returns {string}
+ */
 function formatHours(value) {
   return value === null ? "N/A" : `${value.toFixed(2)} h`;
 }
 
+/**
+ * Formata uma taxa como percentual, ou `N/A` sem recursos resolvidos.
+ * @param {number|null} rate Taxa de 0 a 1.
+ * @param {number} resolved Total de recursos resolvidos.
+ * @returns {string}
+ */
 function formatRate(rate, resolved) {
   if (rate === null || resolved === 0) return "N/A";
   return `${(rate * 100).toFixed(1)}%`;
 }
 
+/**
+ * Renderiza a seção de recursos do relatório.
+ * @param {object} a Totais de recursos.
+ * @returns {string}
+ */
 function formatAppealsSection(a) {
   return formatTable("Indicador", "Valor", [
     ["Total de recursos", String(a.total)],
@@ -193,6 +272,11 @@ function formatAppealsSection(a) {
   ]);
 }
 
+/**
+ * Renderiza a seção de tempo de resposta do relatório.
+ * @param {object} rt Estatísticas de latência.
+ * @returns {string}
+ */
 function formatLatencySection(rt) {
   return formatTable("Métrica", "Valor", [
     ["Amostras válidas", String(rt.sampleSize)],
@@ -201,6 +285,10 @@ function formatLatencySection(rt) {
   ]);
 }
 
+/**
+ * Renderiza o texto fixo de metodologia (zero PII e agregação).
+ * @returns {string}
+ */
 function formatMethodologySection() {
   return [
     "- **Zero PII:** Todos os identificadores (`id`), dados de denunciantes/autores, endereços IP e notas textuais livres são descartados antes da agregação.",
@@ -244,6 +332,13 @@ export function generateTransparencyReport(entries, year) {
   return { summary, markdown: formatTransparencyMarkdown(summary) };
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || value.startsWith("--")) {

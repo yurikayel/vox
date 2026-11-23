@@ -29,6 +29,11 @@ export function bytesToB64Url(bytes) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Concatena vetores de bytes em um só.
+ * @param {Uint8Array[]} parts Pedaços, na ordem
+ * @returns {Uint8Array} Bytes concatenados.
+ */
 function concat(parts) {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let off = 0;
@@ -39,6 +44,12 @@ function concat(parts) {
   return out;
 }
 
+/**
+ * Calcula o resumo de bytes com o algoritmo informado.
+ * @param {string} algo Algoritmo do WebCrypto (ex.: `SHA-256`)
+ * @param {Uint8Array} bytes Bytes de entrada
+ * @returns {Promise<Uint8Array>} Resumo.
+ */
 async function sha(algo, bytes) {
   return new Uint8Array(await crypto.subtle.digest(algo, bytes));
 }
@@ -58,6 +69,11 @@ export async function deepHash(data) {
   return sha("SHA-384", concat([tag, await sha("SHA-384", data)]));
 }
 
+/**
+ * Codifica um inteiro como `long` do Avro (zigzag + varint).
+ * @param {number} n Inteiro a codificar
+ * @returns {Uint8Array} Bytes codificados.
+ */
 function avroLong(n) {
   let z = n >= 0 ? n * 2 : -n * 2 - 1;
   const out = [];
@@ -70,6 +86,11 @@ function avroLong(n) {
   return Uint8Array.from(out);
 }
 
+/**
+ * Codifica uma string como `string` do Avro (tamanho + UTF-8).
+ * @param {string} s Texto
+ * @returns {Uint8Array} Bytes codificados.
+ */
 function avroString(s) {
   const bytes = enc.encode(s);
   return concat([avroLong(bytes.length), bytes]);
@@ -86,12 +107,22 @@ export function serializeTags(tags = []) {
   return concat(parts);
 }
 
+/**
+ * Codifica um inteiro como 8 bytes little-endian.
+ * @param {number|bigint} n Inteiro sem sinal
+ * @returns {Uint8Array} Oito bytes.
+ */
 function u64le(n) {
   const out = new Uint8Array(8);
   new DataView(out.buffer).setBigUint64(0, BigInt(n), true);
   return out;
 }
 
+/**
+ * Importa a chave RSA privada (JWK) para assinar no WebCrypto.
+ * @param {object} jwk Chave privada em JWK
+ * @returns {Promise<CryptoKey>} Chave de assinatura.
+ */
 async function importSigningKey(jwk) {
   const { kty, n, e, d, p, q, dp, dq, qi } = jwk;
   return crypto.subtle.importKey(
@@ -103,6 +134,11 @@ async function importSigningKey(jwk) {
   );
 }
 
+/**
+ * Monta os bytes do item ANS-104 a partir das partes já calculadas.
+ * @param {object} parts Partes do item (`signature`, `owner`, `anchor`, `tagBytes`, `tagCount`, `data`)
+ * @returns {Uint8Array} Item completo.
+ */
 function assembleItem({ signature, owner, anchor, tagBytes, tagCount, data }) {
   const sigType = new Uint8Array(2);
   new DataView(sigType.buffer).setUint16(0, SIG_TYPE_ARWEAVE, true);
@@ -179,6 +215,12 @@ function parseDataHeaders(bytes, view) {
   };
 }
 
+/**
+ * Lê um campo opcional de 32 bytes precedido de um byte de presença.
+ * @param {Uint8Array} bytes Item serializado
+ * @param {number} offset Posição de leitura
+ * @returns {{value: Uint8Array, offset: number}} Valor lido e a próxima posição.
+ */
 function readFlagged32(bytes, offset) {
   const exists = bytes[offset++] === 1;
   const value = exists ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
@@ -217,6 +259,11 @@ export function parseBinaryDataItem(bytes) {
   };
 }
 
+/**
+ * Calcula o deep hash que a assinatura do item cobre.
+ * @param {object} parsed Item já decomposto
+ * @returns {Promise<Uint8Array>} Deep hash.
+ */
 async function buildDataItemDeepHash(parsed) {
   return deepHash([
     enc.encode("dataitem"),
@@ -230,6 +277,13 @@ async function buildDataItemDeepHash(parsed) {
   ]);
 }
 
+/**
+ * Verifica uma assinatura RSA-PSS (SHA-256) do dono do item.
+ * @param {Uint8Array} ownerBytes Chave pública (módulo RSA)
+ * @param {Uint8Array} signature Assinatura
+ * @param {Uint8Array} message Mensagem assinada
+ * @returns {Promise<boolean>} `true` se a assinatura é válida.
+ */
 async function verifyRsaPssSignature(ownerBytes, signature, message) {
   const pubKey = await crypto.subtle.importKey(
     "jwk",

@@ -56,6 +56,10 @@ export function getWelcomeDmText() {
   );
 }
 
+/**
+ * Diz se a pessoa já viu a introdução de boas-vindas.
+ * @returns {boolean} `true` se já viu.
+ */
 function readWelcomeIntroSeen() {
   try {
     if (localStorage.getItem(WELCOME_DM_INTRO_SEEN_KEY) === "1") return true;
@@ -184,6 +188,10 @@ export const OFFICIAL_WELCOME_POST_BODY =
 /** Export `OFFICIAL_WELCOME_TOPIC_ID` do módulo. @type {string} */
 export const OFFICIAL_WELCOME_TOPIC_ID = "vox-official-manifesto-welcome";
 
+/**
+ * Devolve o horário fixo do post de boas-vindas, criando-o na primeira vez.
+ * @returns {number} Horário em ms.
+ */
 function getOrCreateWelcomeTimestamp() {
   let created = Date.now();
   try {
