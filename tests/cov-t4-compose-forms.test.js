@@ -75,7 +75,7 @@ test("compose-proposal — enviar valida, assina, guarda e navega para a propost
   } finally {
     toasts.stop();
     dom.restore();
-    localAccount.wipeLocalAccount();
+    await localAccount.wipeLocalAccount();
   }
 });
 
@@ -183,7 +183,7 @@ test("compose-listing — enviar oferta assina, guarda, normaliza o Pix e vai pa
   } finally {
     toasts.stop();
     dom.restore();
-    localAccount.wipeLocalAccount();
+    await localAccount.wipeLocalAccount();
   }
 });
 
@@ -213,15 +213,17 @@ test("compose-listing — falha ao assinar avisa o erro, não grava e devolve o 
   const realSign = subtle.sign;
   subtle.sign = async () => { throw new Error("sem chave"); };
   try {
-    await listing.handleComposeListingSubmit("vx_me", "feira");
+    // Comunidade só desta tentativa: um post de outro teste que chegue tarde ao cache não se passa por gravado aqui.
+    await listing.handleComposeListingSubmit("vx_me", "feira-sem-chave");
     assert.deepEqual(toasts.list().at(-1), { text: "Erro ao publicar oferta: sem chave", type: "error" });
     assert.equal(els["btn-submit-listing"].disabled, false);
     assert.equal(els["btn-submit-listing"].textContent, "Publicar na Feira");
-    assert.equal((await cacheNode.getLocalPosts({ type: "listing" })).length, 0, "nada gravado");
+    const saved = await cacheNode.getLocalPosts({ type: "listing", communityId: "feira-sem-chave" });
+    assert.equal(saved.length, 0, `nada gravado: ${JSON.stringify(saved.map((p) => [p.id, p.title, p.communityId]))}`);
   } finally {
     subtle.sign = realSign;
     toasts.stop();
     dom.restore();
-    localAccount.wipeLocalAccount();
+    await localAccount.wipeLocalAccount();
   }
 });
