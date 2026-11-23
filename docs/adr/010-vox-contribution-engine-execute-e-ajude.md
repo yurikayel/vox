@@ -51,7 +51,7 @@ Adota-se a iniciativa **Vox Contribution Engine (Motor de Contribuição Vox)**,
 
 ## 3. Especificação dos Módulos Principais
 
-### 3.1. Windows atual: VoxPopuli Node Zero (`VoxPopuli.exe`)
+### 3.1. Windows atual: Vox Populi (`VoxPopuli.exe`)
 O executável oferece gerenciamento pela bandeja para um relay/cache HTTP local. Ele não semeia via WebTorrent e não descobre peers. A inicialização com Windows é opcional e vem desligada; não há modo de seeding ocioso implementado. Os perfis de recursos e o cache local são controláveis pelo menu.
 
 ### 3.2. Android: wrapper atual e proposta futura

@@ -120,7 +120,7 @@
 | Transferência em blocos | — | `labs/parado/chunked-transfer.js` | **escrito, não plugado** | `chunked-transfer` |
 | Configurações de rede, assistente, steward | `#/settings/network[/guia\|/steward]` | `app/screens-network.js`, `steward-wizard.js` | no ar | `steward-wizard`, `status-render` |
 | Espelho de comunidade no relay | comunidade | `community-mirror.js` | no ar, depende de relay | `community-mirror` |
-| Memória central (Modo 3) | — | `central-memory.js` + `relay/central_memory.py` | depende de Node Zero / relay | `central-memory` |
+| Memória central (Modo 3) | — | `central-memory.js` + `relay/central_memory.py` | depende de Vox Populi / Vox Memoria / relay | `central-memory` |
 | Atestação de contribuição (ADR-001) | `#/settings/network` | `contribution-attestation.js` | no ar (opt-in, export local) | `contribution-attestation` |
 | Saúde do nó | `#/status` (telemetria); cadeia `node-health-*` sem UI | `labs/parado/node-health-*.js` (todos fora do precache); `#/status` usa `render/status.js` + `signaling-telemetry.js` | **escrito, não plugado** (`node-health-*` em `UNPLUGGED_MODULES`); `#/status` **no ar** | `node-health-*`, `status-render` |
 | Nó dedicado Vox Populi | — | `android/`, `vox-populi/`, `tools/*` | no ar (loopback; seeder `not_implemented`) | `vox-populi` |

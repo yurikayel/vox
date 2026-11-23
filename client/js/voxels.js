@@ -447,14 +447,14 @@ export async function verifySignedVoxelPassport(passport, verifyFn = null) {
   return { isValid: true, isSigned: false, reason: "Passaporte íntegro em formato padrão (sem assinatura)" };
 }
 
-/** Operação `checkAndRecordNodeZeroReward` do módulo.
+/** Operação `checkAndRecordLocalNodeReward` do módulo.
  * @param {*} [routeId] Parâmetro `routeId`.
  * @param {*} [isNodeOnline] Parâmetro `isNodeOnline`.
  * @param {*} [now] Instante de referência, em ms.
  * @param {*} [storage] Armazenamento injetável.
  * @returns {*} Resultado da operação.
  */
-export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = Date.now(), storage = globalThis.localStorage) {
+export async function checkAndRecordLocalNodeReward(routeId, isNodeOnline, now = Date.now(), storage = globalThis.localStorage) {
   if (!isNodeOnline || !storage) return { rewarded: false, reason: "node-offline" };
   const lastTs = Number(storage.getItem(LAST_NODE_REWARD_KEY) || 0);
   if (now - lastTs < COOLDOWN_NODE_REWARD_MS) {
@@ -467,7 +467,7 @@ export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = 
     action: "relay_cache_uptime",
     amount: DEFAULT_ACTION_REWARDS.relay_cache_uptime,
     timestamp: now,
-    metadata: { uptimeHours: 1, source: "node_zero_loopback" },
+    metadata: { uptimeHours: 1, source: "local_node_loopback" },
   }, storage);
 
   storage.setItem(LAST_NODE_REWARD_KEY, String(now));
@@ -516,7 +516,7 @@ export async function triggerLocalNodeBoostReward({
   const isOnline = await probeRelayOnline(checkRelayFn);
   if (!isOnline) return { ok: false, reason: "node-offline" };
 
-  const rewardRes = await checkAndRecordNodeZeroReward(targetRoute, true, now, storage);
+  const rewardRes = await checkAndRecordLocalNodeReward(targetRoute, true, now, storage);
   if (rewardRes.rewarded) {
     if (typeof toastFn === "function") {
       toastFn(`⚡ Nó Vox Populi ativo: +${rewardRes.amount} Voxels creditados na Forja!`, "info");

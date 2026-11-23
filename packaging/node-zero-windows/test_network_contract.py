@@ -1,4 +1,4 @@
-"""Regression tests for the Windows Node Zero loopback-only contract."""
+"""Regression tests for the Vox Populi (Windows) loopback-only contract."""
 
 from __future__ import annotations
 

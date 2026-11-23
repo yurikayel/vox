@@ -13,11 +13,11 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('040904B0', [
         StringStruct('CompanyName', 'Vox Populi'),
-        StringStruct('FileDescription', 'VoxPopuli Node Zero - Community Node'),
+        StringStruct('FileDescription', 'Vox Populi - Local Support Node'),
         StringStruct('FileVersion', '1.0.0.0'),
         StringStruct('InternalName', 'VoxPopuli'),
         StringStruct('OriginalFilename', 'VoxPopuli.exe'),
-        StringStruct('ProductName', 'VoxPopuli Node Zero - Community Node'),
+        StringStruct('ProductName', 'Vox Populi'),
         StringStruct('ProductVersion', '1.0.0.0')
       ])
     ]),

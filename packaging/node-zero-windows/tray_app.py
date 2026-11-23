@@ -1,4 +1,4 @@
-"""Quiet Windows system-tray launcher for Vox Populi Node Zero."""
+"""Quiet Windows system-tray launcher for Vox Populi."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import node_zero
 
-APP_TITLE = "VoxPopuli Node Zero — Community Node"
+APP_TITLE = "Vox Populi — Nó de Apoio"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE = "VoxPopuliNodeZero"
 WM_APP = 0x8000
