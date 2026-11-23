@@ -2,7 +2,7 @@
  * Telemetria local de gateways e origem de leitura (V-P02 / T5) — sem phone-home.
  */
 
-import { isSafeKey } from "./shared/safe-key.js";
+import { isSafeKey, withEntry } from "./shared/safe-key.js";
 const STORAGE_KEY = "vox-gateway-health";
 const READ_ORIGIN_KEY = "vox-read-origin";
 const READ_ORIGIN_MAX = 50;
@@ -95,7 +95,7 @@ export function recordGatewayAttempt(label, ok) {
   const prev = state.gateways[label] || { ok: 0, fail: 0 };
   if (ok) prev.ok += 1;
   else prev.fail += 1;
-  state.gateways[label] = prev;
+  state.gateways = withEntry(state.gateways, label, prev);
   if (!ok) state.lastReserveAt = Date.now();
   saveState(state);
 }
@@ -111,7 +111,7 @@ export function recordReadOrigin(origin, communityId = "") {
   const state = loadReadOriginState();
   const prev = Array.isArray(state.communities[comm]) ? state.communities[comm] : [];
   const now = Date.now();
-  state.communities[comm] = pruneReadSamples([...prev, { origin, at: now }], now);
+  state.communities = withEntry(state.communities, comm, pruneReadSamples([...prev, { origin, at: now }], now));
   saveReadOriginState(state);
 }
 
