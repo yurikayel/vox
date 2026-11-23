@@ -16,6 +16,12 @@ import { bytesToB64Url, computeRouteId } from "../signed-verify.js";
 /** Chave do `localStorage` com as sementes deste aparelho (entra na limpeza local). */
 export const SEED_STORAGE = "vox-identity-seed-v1";
 
+/**
+ * Decodifica base64url para bytes.
+ *
+ * @param {string} s
+ * @returns {Uint8Array}
+ */
 const fromB64url = (s) => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
 /** Mapa plano no `localStorage`; array, primitivo ou null contam como vazio. */
@@ -23,6 +29,12 @@ function readSeeds() {
   return readStoredRecord(SEED_STORAGE);
 }
 
+/**
+ * Grava (ou remove, se nulo) a semente de uma conta no mapa guardado.
+ *
+ * @param {string} routeId
+ * @param {string|null} value
+ */
 function writeSeed(routeId, value) {
   const map = readSeeds();
   if (value == null) delete map[routeId];

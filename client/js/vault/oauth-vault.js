@@ -55,6 +55,12 @@ export async function startVaultMigration(toast = share.showToast) {
   if (consumeLegacyRevokedNotice()) toast(LEGACY_VAULT_NOTICE, "info");
 }
 
+/**
+ * Monta o pacote canônico da conta local a partir da entrada do cofre, ou `null`.
+ *
+ * @param {object} matched
+ * @returns {object|null}
+ */
 function resolveCanonicalLocalBundle(matched) {
   if (matched?.routeId && matched?.publicJwk && matched?.privateJwk) {
     return {
@@ -71,6 +77,12 @@ function resolveCanonicalLocalBundle(matched) {
   return null;
 }
 
+/**
+ * Grava no perfil local os dados do provedor de login (exceto frase-senha).
+ *
+ * @param {string} provider
+ * @param {object} options
+ */
 function enrichAccountFromProfile(provider, { name, picture, sub, email }) {
   if (provider === "passphrase") return;
   localAccount.setProfileEnrichment({

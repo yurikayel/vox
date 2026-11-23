@@ -43,6 +43,13 @@ export function inferParticipationLayer(settings = {}, { customSignalingUrl = ""
   return "active";
 }
 
+/**
+ * Camadas de participação na rede, destacando a atual.
+ *
+ * @param {object} settings
+ * @param {string} customSignalingUrl
+ * @returns {string}
+ */
 function renderParticipationLayers(settings, customSignalingUrl) {
   const current = inferParticipationLayer(settings, { customSignalingUrl });
   const cards = PARTICIPATION_LAYERS.map((layer) => {
@@ -71,6 +78,13 @@ function renderParticipationLayers(settings, customSignalingUrl) {
     </details>`;
 }
 
+/**
+ * Controles de pausar a rede e de ser descoberto na malha.
+ *
+ * @param {boolean} isEnabled
+ * @param {boolean} meshDiscoverable
+ * @returns {string}
+ */
 function renderPauseAndDiscoverableHtml(isEnabled, meshDiscoverable) {
   return `
     <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
@@ -98,6 +112,12 @@ function renderDiskFieldHtml(settings) {
       <input type="number" id="net-max-mb" class="form-control" min="512" max="1024" value="${settings.maxMb || 1024}" />`;
 }
 
+/**
+ * Campos de cota e limite de armazenamento.
+ *
+ * @param {object} settings
+ * @returns {string}
+ */
 function renderQuotaAndLimitFieldsHtml(settings) {
   const diskMb = settings?.supporter ? settings.maxMb || 1024 : 100;
   return `

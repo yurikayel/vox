@@ -19,11 +19,24 @@ const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card
  */
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
 
+/**
+ * Diz se o nome é só o id de rota ou vazio.
+ * @param {string} name Nome
+ * @param {string} routeId Id de rota
+ * @returns {boolean} `true` se for nome de reserva.
+ */
 function isFallbackRouteName(name, routeId) {
   if (!name) return true;
   return name === routeId || name === String(routeId || "").slice(0, 14) || name === String(routeId || "").slice(0, 12);
 }
 
+/**
+ * Escolhe o melhor nome entre o existente e o recebido.
+ * @param {string} existingName Nome atual
+ * @param {string} incomingName Nome recebido
+ * @param {string} routeId Id de rota
+ * @returns {string} Nome escolhido.
+ */
 function chooseBestName(existingName, incomingName, routeId) {
   if (!isFallbackRouteName(incomingName, routeId) && isFallbackRouteName(existingName, routeId)) {
     return incomingName;
@@ -32,6 +45,11 @@ function chooseBestName(existingName, incomingName, routeId) {
 }
 
 // O host vem do parser de URL, nunca de busca por trecho: "https://x.example/?a=googleusercontent.com/" não é Google.
+/**
+ * Diz se o avatar é de um domínio do Google.
+ * @param {string} avatarUrl Endereço do avatar
+ * @returns {boolean} `true` se for.
+ */
 function isGoogleAvatar(avatarUrl) {
   try {
     const url = new URL(avatarUrl);
@@ -41,20 +59,45 @@ function isGoogleAvatar(avatarUrl) {
   }
 }
 
+/**
+ * Diz se os dois avatares são do Google e da mesma conta.
+ * @param {string} avA Primeiro avatar
+ * @param {string} avB Segundo avatar
+ * @returns {boolean} `true` se forem o mesmo.
+ */
 function isSameGoogleAvatar(avA, avB) {
   return isGoogleAvatar(avA) && isGoogleAvatar(avB) && avA.split("=")[0] === avB.split("=")[0];
 }
 
 // Nome igual só une contas que moram neste aparelho (a sua e as do seu cofre). Uma chave de fora
 // com o mesmo nome é outra pessoa (homônimo) e tem de aparecer no diretório, não sumir dentro de "Você".
+/**
+ * Diz se as duas entradas são a mesma identidade local com nome escolhido.
+ * @param {object} entryA Primeira entrada
+ * @param {object} entryB Segunda entrada
+ * @param {string} nameA Nome da primeira
+ * @param {string} nameB Nome da segunda
+ * @returns {boolean} `true` se forem a mesma.
+ */
 function isSameNamedLocalIdentity(entryA, entryB, nameA, nameB) {
   const isNamedA = !isFallbackRouteName(nameA, entryA.routeId);
   const isNamedB = !isFallbackRouteName(nameB, entryB.routeId);
   if (!isNamedA || !isNamedB || nameA !== nameB) return false;
+  /**
+   * Diz se a entrada vem do próprio aparelho (conta ativa ou cofre).
+   * @param {object} e Entrada
+   * @returns {boolean} `true` se for local.
+   */
   const isLocal = (e) => e.source === "self" || e.source === "vault";
   return isLocal(entryA) && isLocal(entryB);
 }
 
+/**
+ * Diz se as duas entradas são a mesma conta social (mesmo avatar).
+ * @param {object} entryA Primeira entrada
+ * @param {object} entryB Segunda entrada
+ * @returns {boolean} `true` se forem a mesma.
+ */
 function isSameSocialIdentity(entryA, entryB) {
   const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
   const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
@@ -69,7 +112,19 @@ function isSameSocialIdentity(entryA, entryB) {
  */
 export const isSameGoogleIdentity = isSameSocialIdentity;
 
+/**
+ * Remove duplicatas sociais do mapa, ficando com a fonte preferida.
+ * @param {Map<string, object>} map Mapa de pessoas
+ * @param {object} entry Entrada nova
+ * @param {string[]} preferSources Fontes em ordem de preferência
+ * @returns {boolean} `true` se a entrada nova deve ser descartada.
+ */
 function pruneSocialDuplicates(map, entry, preferSources) {
+  /**
+   * Posição da fonte na ordem de preferência (desconhecida vai por último).
+   * @param {string} s Fonte
+   * @returns {number} Posição.
+   */
   const rank = (s) => {
     const i = preferSources.indexOf(s);
     return i >= 0 ? i : 99;
@@ -94,6 +149,12 @@ function pruneSocialDuplicates(map, entry, preferSources) {
   return shouldDropIncoming;
 }
 
+/**
+ * Insere ou mescla uma pessoa no mapa, respeitando a fonte preferida.
+ * @param {Map<string, object>} map Mapa de pessoas
+ * @param {object} entry Entrada
+ * @param {string[]} [preferSources=DEFAULT_PREFER_SOURCES] Fontes em ordem de preferência
+ */
 function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
   const shouldDrop = pruneSocialDuplicates(map, entry, preferSources);
   if (shouldDrop) return;
@@ -103,6 +164,11 @@ function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
     map.set(entry.routeId, entry);
     return;
   }
+  /**
+   * Posição da fonte na ordem de preferência (desconhecida vai por último).
+   * @param {string} s Fonte
+   * @returns {number} Posição.
+   */
   const rank = (s) => {
     const i = preferSources.indexOf(s);
     return i >= 0 ? i : 99;
@@ -117,6 +183,11 @@ function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
   }
 }
 
+/**
+ * Monta a entrada de pessoa a partir do autor de um post.
+ * @param {object} post Post
+ * @returns {object|null} Entrada, ou `null` se não houver autor.
+ */
 function resolveMeshAuthorEntry(post) {
   if (!post) return null;
   const author = post.author ? post.author : post.owner;
@@ -128,6 +199,10 @@ function resolveMeshAuthorEntry(post) {
   return { routeId: author, name, handle, avatarUrl, source: "mesh-author" };
 }
 
+/**
+ * Indexa os pares conhecidos pelo sinalizador.
+ * @param {Map<string, object>} map Mapa de pessoas
+ */
 function indexSignalingPeers(map) {
   if (typeof webrtcPeer.listKnownPeerAddresses !== "function") return;
   for (const addr of webrtcPeer.listKnownPeerAddresses()) {
@@ -140,6 +215,11 @@ function indexSignalingPeers(map) {
   }
 }
 
+/**
+ * Indexa os autores dos posts guardados no aparelho.
+ * @param {Map<string, object>} map Mapa de pessoas
+ * @returns {Promise<void>} Conclui quando indexado.
+ */
 async function indexMeshAuthors(map) {
   const posts = typeof cacheNode.getAllLocalPosts === "function"
     ? await cacheNode.getAllLocalPosts()
@@ -151,6 +231,10 @@ async function indexMeshAuthors(map) {
   indexSignalingPeers(map);
 }
 
+/**
+ * Indexa os cartões de perfil descobríveis.
+ * @param {Map<string, object>} map Mapa de pessoas
+ */
 function indexMeshCards(map) {
   for (const card of profileDirectory.listDiscoverableProfileCards()) {
     const routeId = card.routeId;
@@ -165,6 +249,10 @@ function indexMeshCards(map) {
   }
 }
 
+/**
+ * Indexa a conta ativa do aparelho.
+ * @param {Map<string, object>} map Mapa de pessoas
+ */
 function indexSelfAccount(map) {
   const myId = localAccount.getCachedRouteIdSync();
   if (!myId) return;
@@ -183,6 +271,10 @@ function indexSelfAccount(map) {
   });
 }
 
+/**
+ * Indexa as contas do cofre local.
+ * @param {Map<string, object>} map Mapa de pessoas
+ */
 function indexVaultAccounts(map) {
   if (typeof localAccount.listVaultAccountsSync !== "function") return;
   for (const v of localAccount.listVaultAccountsSync()) {
@@ -197,11 +289,21 @@ function indexVaultAccounts(map) {
   }
 }
 
+/**
+ * Indexa a conta ativa e as do cofre.
+ * @param {Map<string, object>} map Mapa de pessoas
+ */
 function indexLocalAndVaultAccounts(map) {
   indexSelfAccount(map);
   indexVaultAccounts(map);
 }
 
+/**
+ * Compara duas pessoas para ordenar a lista (boas-vindas primeiro, nome real antes de reserva).
+ * @param {object} a Primeira entrada
+ * @param {object} b Segunda entrada
+ * @returns {number} Resultado da comparação.
+ */
 function comparePeopleEntries(a, b) {
   if (a.routeId === WELCOME_ROUTE_ID) return -1;
   if (b.routeId === WELCOME_ROUTE_ID) return 1;
@@ -296,6 +398,12 @@ export function recordPeopleSearchOk() {
   }
 }
 
+/**
+ * Trata a busca por id de rota (`vx_...`) direto, mesmo sem a pessoa na lista.
+ * @param {string} cleanQ Busca limpa
+ * @param {object[]} all Pessoas conhecidas
+ * @returns {object|null} Entrada direta, ou `null`.
+ */
 function resolveDirectRouteQuery(cleanQ, all) {
   const cleanQl = cleanQ.toLowerCase();
   if (cleanQl.startsWith("vx_") && cleanQl.length >= 6) {
@@ -312,16 +420,38 @@ function resolveDirectRouteQuery(cleanQ, all) {
   }
 }
 
+/**
+ * Diz se o texto contém a busca.
+ * @param {string} text Texto em minúsculas
+ * @param {string} ql Busca em minúsculas
+ * @param {string} cleanQl Busca limpa em minúsculas
+ * @returns {boolean} `true` se contém.
+ */
 function matchesTextQuery(text, ql, cleanQl) {
   if (!text) return false;
   return text.includes(ql) || Boolean(cleanQl && text.includes(cleanQl));
 }
 
+/**
+ * Diz se o id de rota, inteiro ou curto, contém a busca.
+ * @param {string} pRoute Id de rota
+ * @param {string} pShort Id curto
+ * @param {string} cleanQl Busca limpa
+ * @returns {boolean} `true` se contém.
+ */
 function matchesRouteId(pRoute, pShort, cleanQl) {
   if (!cleanQl) return false;
   return pRoute.includes(cleanQl) || pShort.includes(cleanQl);
 }
 
+/**
+ * Diz se a pessoa combina com a busca.
+ * @param {object} p Pessoa
+ * @param {string} ql Busca em minúsculas
+ * @param {string} cleanQl Busca limpa
+ * @param {string} handleRoute Rota resolvida por handle
+ * @returns {boolean} `true` se combina.
+ */
 function matchesPerson(p, ql, cleanQl, handleRoute) {
   if (handleRoute && p.routeId === handleRoute) return true;
   const pRoute = (p.routeId || "").toLowerCase();
@@ -364,6 +494,11 @@ export async function searchPeople(query) {
 
   const ql = q.toLowerCase();
   const cleanQl = cleanQ.toLowerCase();
+  /**
+   * Diz se o id de rota é exatamente a busca.
+   * @param {object} p Pessoa
+   * @returns {boolean} `true` se for.
+   */
   const isExactKey = (p) => String(p.routeId || "").toLowerCase() === cleanQl;
   const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute) && (isListedPerson(p) || isExactKey(p)));
 

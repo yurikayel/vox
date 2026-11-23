@@ -19,10 +19,21 @@ const MS_PER_HOUR = 3_600_000;
 const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const VALID_FORMATS = new Set(["md", "json"]);
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Converte número ou data ISO em timestamp em milissegundos, rejeitando valores inválidos.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number}
+ */
 function parseTimestampMs(raw, fieldName) {
   if (typeof raw === "number") {
     if (!Number.isFinite(raw) || raw < 0) {
@@ -37,6 +48,12 @@ function parseTimestampMs(raw, fieldName) {
   throw new TypeError(`${fieldName} deve ser timestamp em ms ou string ISO válida.`);
 }
 
+/**
+ * Exige id de texto não vazio que não seja chave reservada.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {string}
+ */
 function requireNonEmptyId(raw, fieldName) {
   if (typeof raw !== "string" || !raw.trim()) {
     throw new TypeError(`${fieldName} deve ser string não vazia.`);
@@ -48,6 +65,13 @@ function requireNonEmptyId(raw, fieldName) {
   return clean;
 }
 
+/**
+ * Valida uma publicação e registra seu id para detectar duplicatas.
+ * @param {unknown} raw Publicação bruta.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @param {Set<string>} seenIds Ids já vistos (é alterado).
+ * @returns {object}
+ */
 function validatePost(raw, index, seenIds) {
   if (!isPlainObject(raw)) {
     throw new TypeError(`posts[${index}] deve ser um objeto.`);
@@ -61,6 +85,13 @@ function validatePost(raw, index, seenIds) {
   return { id, authorOfflineAt };
 }
 
+/**
+ * Valida a contagem de réplicas de uma sondagem; sem o campo, assume 1 se disponível e 0 se não.
+ * @param {unknown} raw Valor bruto.
+ * @param {boolean} available Se a publicação estava disponível.
+ * @param {number} index Posição da sondagem, usada nas mensagens.
+ * @returns {number}
+ */
 function validateReplicaCount(raw, available, index) {
   if (raw === undefined) return available ? 1 : 0;
   if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0) {
@@ -69,6 +100,12 @@ function validateReplicaCount(raw, available, index) {
   return raw;
 }
 
+/**
+ * Valida uma sondagem de disponibilidade.
+ * @param {unknown} raw Sondagem bruta.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @returns {object}
+ */
 function validateProbe(raw, index) {
   if (!isPlainObject(raw)) {
     throw new TypeError(`probes[${index}] deve ser um objeto.`);
@@ -103,6 +140,11 @@ export function validateAvailabilityInput(data) {
   return { posts, probes };
 }
 
+/**
+ * Valida as janelas de avaliação em horas.
+ * @param {unknown} windowsHours Lista bruta de janelas.
+ * @returns {number[]}
+ */
 function normalizeWindows(windowsHours) {
   if (!Array.isArray(windowsHours) || windowsHours.length === 0) {
     throw new TypeError("windowsHours deve ser um array não vazio de horas positivas.");
@@ -115,6 +157,12 @@ function normalizeWindows(windowsHours) {
   });
 }
 
+/**
+ * Agrupa as sondagens por publicação e conta as que não casam com nenhuma.
+ * @param {object[]} posts Publicações validadas.
+ * @param {object[]} probes Sondagens validadas.
+ * @returns {{byPost: Map<string, object[]>, unmatchedProbes: number}}
+ */
 function groupProbesByPost(posts, probes) {
   const knownIds = new Set(posts.map((p) => p.id));
   const byPost = new Map(posts.map((p) => [p.id, []]));
@@ -132,10 +180,22 @@ function groupProbesByPost(posts, probes) {
   return { byPost, unmatchedProbes };
 }
 
+/**
+ * Arredonda para duas casas decimais.
+ * @param {number} value Valor a arredondar.
+ * @returns {number}
+ */
 function roundTwoDecimals(value) {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Mede a disponibilidade das publicações elegíveis em uma janela de tempo.
+ * @param {object[]} posts Publicações validadas.
+ * @param {Map<string, object[]>} byPost Sondagens por publicação.
+ * @param {number} windowHours Tamanho da janela em horas.
+ * @returns {object}
+ */
 function evaluateWindow(posts, byPost, windowHours) {
   const thresholdMs = windowHours * MS_PER_HOUR;
   let eligiblePosts = 0;
@@ -162,6 +222,14 @@ function evaluateWindow(posts, byPost, windowHours) {
   };
 }
 
+/**
+ * Consolida o resumo geral a partir das janelas avaliadas.
+ * @param {number} totalPosts Total de publicações.
+ * @param {number} totalProbes Total de sondagens.
+ * @param {number} unmatchedProbes Sondagens sem publicação correspondente.
+ * @param {object[]} rawWindows Janelas avaliadas.
+ * @returns {object}
+ */
 function buildSummary(totalPosts, totalProbes, unmatchedProbes, rawWindows) {
   let totalEligibleEvaluations = 0;
   let totalAvailableEvaluations = 0;
@@ -209,10 +277,20 @@ export function computeAvailabilityMetrics(data, windowsHours = DEFAULT_WINDOWS_
   };
 }
 
+/**
+ * Formata percentual com duas casas, ou `N/A` quando nulo.
+ * @param {number|null} value Percentual.
+ * @returns {string}
+ */
 function formatNullablePct(value) {
   return value === null ? "N/A" : `${value.toFixed(2)}%`;
 }
 
+/**
+ * Formata número com duas casas, ou `N/A` quando nulo.
+ * @param {number|null} value Valor.
+ * @returns {string}
+ */
 function formatNullableNum(value) {
   return value === null ? "N/A" : value.toFixed(2);
 }
@@ -251,6 +329,13 @@ export function formatAvailabilityMarkdown(report) {
   ].join("\n");
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || value.startsWith("-")) {
@@ -259,6 +344,11 @@ function readNextArg(argv, index, flag) {
   return value;
 }
 
+/**
+ * Valida o formato de saída pedido (`md` ou `json`).
+ * @param {unknown} raw Valor bruto.
+ * @returns {string}
+ */
 function parseFormat(raw) {
   const fmt = String(raw || "").trim().toLowerCase();
   if (!VALID_FORMATS.has(fmt)) {
@@ -267,6 +357,11 @@ function parseFormat(raw) {
   return fmt;
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {{input: string, format: string, out: string, help: boolean}}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", format: "md", out: "", help: false };
   for (let i = 0; i < argv.length; i++) {
@@ -283,6 +378,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta um arquivo JSON (aceita BOM).
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonFile(filePath) {
   let rawText;
   try {
@@ -324,6 +424,10 @@ export function runCli(argv = process.argv.slice(2)) {
   return { report, output, format: opts.format, outputPath };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);

@@ -15,9 +15,28 @@ import { isModerator } from "../moderation.js";
 /** @type {string} Chave em `localStorage` para segredos temporários de sorteios. */
 export const SECRETS_KEY = "vox-sorteio-segredos-v1";
 
+/**
+ * Lê do aparelho os posts de um tipo na comunidade; falha vira lista vazia.
+ *
+ * @param {string} type Tipo do post.
+ * @param {string} communityId Comunidade.
+ * @returns {Promise<object[]>}
+ */
 const localOf = (type, communityId) => cacheNode.getLocalPosts({ type, communityId }).catch(() => []);
+/**
+ * Abrevia a rota para exibição.
+ *
+ * @param {string} route Rota da pessoa.
+ * @returns {string}
+ */
 const short = (route) => `${String(route).slice(0, 12)}…`;
 
+/**
+ * Lê os segredos de sorteio guardados no aparelho; erro devolve objeto vazio.
+ *
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {Object<string, string>}
+ */
 function readSecrets(storage = globalThis.localStorage) {
   try {
     return JSON.parse(storage?.getItem(SECRETS_KEY) || "{}") || {};
@@ -26,12 +45,25 @@ function readSecrets(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Guarda o segredo da testemunha de um sorteio; falha de gravação é ignorada.
+ *
+ * @param {string} sorteioId Sorteio.
+ * @param {string} secret Segredo.
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento.
+ */
 function keepSecret(sorteioId, secret, storage = globalThis.localStorage) {
   try {
     storage?.setItem(SECRETS_KEY, JSON.stringify({ ...readSecrets(storage), [sorteioId]: secret }));
   } catch {}
 }
 
+/**
+ * Assina o payload, guarda no aparelho e espalha pela rede de vizinhos.
+ *
+ * @param {object} payload Conteúdo ainda sem assinatura.
+ * @returns {Promise<object>}
+ */
 async function publish(payload) {
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
@@ -39,8 +71,19 @@ async function publish(payload) {
   return signed;
 }
 
+/**
+ * Gera um identificador local de sorteio.
+ *
+ * @returns {string}
+ */
 const newId = () => `srt_${randomBase36(8)}`;
 
+/**
+ * Carrega os sorteios oficiais da comunidade com seu estado.
+ *
+ * @param {object} ctx Contexto da tela.
+ * @returns {Promise<object[]>}
+ */
 async function loadSorteios(ctx) {
   const types = [sorteio.SORTEIO_TYPE, sorteio.COMMIT_TYPE, sorteio.CLOSE_TYPE, sorteio.REVEAL_TYPE, sorteio.TALLY_TYPE];
   const [draws, commits, closes, reveals, tallies] = await Promise.all(types.map((t) => localOf(t, ctx.communityId)));
@@ -54,6 +97,13 @@ async function loadSorteios(ctx) {
   }));
 }
 
+/**
+ * Diz se o autor é dono ou moderador da comunidade.
+ *
+ * @param {string} author Rota do autor.
+ * @param {object} meta Metadados da comunidade.
+ * @returns {boolean}
+ */
 const isMod = (author, meta) => isModerator(String(author || ""), meta?.owner, meta?.moderators);
 
 const PHASE = {
@@ -63,12 +113,24 @@ const PHASE = {
   sorteado: "Sorteado",
 };
 
+/**
+ * HTML do resultado do sorteio, ou vazio se ainda não foi sorteado.
+ *
+ * @param {object} state Estado do sorteio.
+ * @returns {string}
+ */
 function resultHtml(state) {
   if (state.phase !== "sorteado") return "";
   const names = state.winners.map((w) => `<li><code>${escapeHtml(short(w))}</code></li>`).join("");
   return `<ol class="sorteio-winners">${names}</ol><p class="hint">Semente <code>${escapeHtml(state.seed.slice(0, 16))}</code>: qualquer aparelho recalcula o mesmo resultado.</p>`;
 }
 
+/**
+ * HTML dos avisos do sorteio (quem não revelou e revelações deixadas de fora).
+ *
+ * @param {object} state Estado do sorteio.
+ * @returns {string}
+ */
 function warningsHtml(state) {
   const missing = state.missing?.length ? `<p class="hint">Não revelaram: ${state.missing.map((m) => escapeHtml(short(m))).join(", ")}.</p>` : "";
   const ignored = state.ignored?.length
@@ -76,6 +138,15 @@ function warningsHtml(state) {
   return missing + ignored;
 }
 
+/**
+ * Monta o HTML de um botão de ação do sorteio.
+ *
+ * @param {string} action Ação (`data-sorteio-action`).
+ * @param {string} id Sorteio.
+ * @param {string} text Rótulo.
+ * @param {boolean} [primary=false] Estilo principal.
+ * @returns {string}
+ */
 function actionButton(action, id, text, primary = false) {
   return `<button type="button" class="btn ${primary ? "btn-primary" : "btn-outline"} btn-sm" data-sorteio-action="${action}" data-sorteio-id="${escapeHtml(id)}">${text}</button>`;
 }
@@ -115,6 +186,11 @@ export function renderSorteioCard(item, viewer) {
   </article>`;
 }
 
+/**
+ * HTML do formulário de novo sorteio.
+ *
+ * @returns {string}
+ */
 function formHtml() {
   return `<details class="card sorteio-new"><summary>Novo sorteio</summary>
     <form id="form-sorteio">
@@ -165,6 +241,12 @@ const ACTIONS = {
   },
 };
 
+/**
+ * Valida o formulário e publica o novo sorteio.
+ *
+ * @param {HTMLFormElement} form Formulário preenchido.
+ * @param {object} ctx Contexto da tela.
+ */
 async function createSorteio(form, ctx) {
   const data = new FormData(form);
   const draft = {
@@ -174,6 +256,14 @@ async function createSorteio(form, ctx) {
   await publish({ ...(await sorteio.buildSorteio(draft)), id: newId() });
 }
 
+/**
+ * Liga os cliques da seção de sorteios às ações.
+ *
+ * @param {HTMLElement} section Seção de sorteios.
+ * @param {object} ctx Contexto da tela.
+ * @param {object[]} items Sorteios montados.
+ * @param {Function} rerender Redesenha a tela.
+ */
 function bindSorteios(section, ctx, items, rerender) {
   section.addEventListener("click", (e) => {
     const button = e.target.closest("[data-sorteio-action]");

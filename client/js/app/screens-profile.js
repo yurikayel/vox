@@ -41,6 +41,12 @@ export function invalidateProfileCache() {
   clearProfileCache();
 }
 
+/**
+ * Marca a aba ativa na navegação do perfil.
+ *
+ * @param {HTMLElement} existingLayout Raiz do perfil.
+ * @param {string} activeTab Aba ativa.
+ */
 function updateProfileTabIndicator(existingLayout, activeTab) {
   const nav = existingLayout.querySelector(".profile-grid-tabs");
   if (!nav) return;
@@ -99,6 +105,12 @@ export async function showProfile(address, activeTab = "posts") {
  * @returns {void}
  */
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
+  /**
+   * Recarrega o perfil na rota e aba dadas (ou nas atuais).
+   *
+   * @param {string} addr Rota do perfil.
+   * @param {string} tab Aba.
+   */
   const refresh = (addr, tab) => {
     void showProfile(addr || address, tab || activeTab);
   };

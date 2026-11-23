@@ -31,6 +31,11 @@ export const QR_URL_HONEST_COPY =
 
 const SHEET_ID = "qr-url-sheet";
 
+/**
+ * Codifica a URL em palavras-código do QR (dado e correção de erro).
+ * @param {string} url Endereço do Vox
+ * @returns {object} Versão e palavras-código.
+ */
 function encodeCodewords(url) {
   const text = assertVoxShareUrl(url);
   const bytes = urlToBytes(text);
@@ -93,6 +98,10 @@ export function modulesToSvg(modules) {
   return parts.join("");
 }
 
+/**
+ * Devolve o HTML do painel do QR.
+ * @returns {string} HTML.
+ */
 function qrSheetTemplate() {
   return `
     <div class="qr-url-panel" role="document">
@@ -104,6 +113,10 @@ function qrSheetTemplate() {
     </div>`;
 }
 
+/**
+ * Garante que o painel do QR existe no documento.
+ * @returns {HTMLElement} Painel.
+ */
 function ensureQrSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -120,6 +133,11 @@ function ensureQrSheet() {
   return root;
 }
 
+/**
+ * Abre ou fecha o painel do QR.
+ * @param {HTMLElement} root Painel
+ * @param {boolean} open `true` para abrir
+ */
 function setQrSheetOpen(root, open) {
   root.hidden = !open;
   root.classList.toggle("is-open", open);
@@ -149,6 +167,11 @@ export function openQrUrlSheet(url) {
   setQrSheetOpen(root, true);
 }
 
+/**
+ * Lê a URL a compartilhar do botão.
+ * @param {HTMLElement} btn Botão
+ * @returns {string} Endereço.
+ */
 function urlFromButton(btn) {
   if (btn.dataset.qrUrl) return btn.dataset.qrUrl;
   const kind = btn.dataset.qrShare;
@@ -159,6 +182,10 @@ function urlFromButton(btn) {
   return "";
 }
 
+/**
+ * Trata cliques no documento: fecha o painel do QR ou aciona seus botões.
+ * @param {MouseEvent} e Evento de clique
+ */
 function onQrDocClick(e) {
   if (e.target.id === SHEET_ID || e.target.closest("[data-qr-url-close]")) {
     closeQrUrlSheet();

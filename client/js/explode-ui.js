@@ -119,6 +119,10 @@ export function updateExplodeButtonsUi(postId, count) {
   });
 }
 
+/**
+ * Monta o HTML do cabeçalho do painel de divulgação.
+ * @returns {string} HTML.
+ */
 function buildExplodeHeaderHtml() {
   return `<div class="explode-header">
     <h3 class="explode-title">📢 Espalhe esta pauta</h3>
@@ -126,6 +130,11 @@ function buildExplodeHeaderHtml() {
   </div>`;
 }
 
+/**
+ * Monta o trecho do corpo que acompanha o título, sem repetir o título.
+ * @param {object} post Post
+ * @returns {string} Trecho, ou texto vazio.
+ */
 function excerptForTarget(post) {
   const title = String(post?.title || "").trim();
   const body = stripHtmlTags(post?.body || "");
@@ -133,6 +142,11 @@ function excerptForTarget(post) {
   return body.length > 110 ? `${body.slice(0, 107)}…` : body;
 }
 
+/**
+ * Monta o HTML do alvo do painel (título, trecho e link).
+ * @param {object} post Post
+ * @returns {string} HTML.
+ */
 function buildExplodeTargetHtml(post) {
   const title = String(post?.title || "").trim() || "Esta pauta";
   const excerpt = excerptForTarget(post);
@@ -167,6 +181,12 @@ const EXPLODE_EXTRA_CHIPS = [
   { action: "cascade", icon: "🌊", label: "Uma rede por vez", title: "Abre WhatsApp, X, Threads e Bluesky em sequência" },
 ];
 
+/**
+ * Monta o HTML de um botão da grade, com selo se a conta estiver conectada.
+ * @param {object} btn Botão
+ * @param {object} linked Contas ligadas
+ * @returns {string} HTML.
+ */
 function renderExplodeGridButton(btn, linked) {
   const badge = btn.linkId && linked[btn.linkId]?.enabled && linked[btn.linkId]?.handle
     ? `<span class="explode-grid-connected" title="🔗🟢 @${escapeHtml(linked[btn.linkId].handle)}">✓</span>`
@@ -177,6 +197,12 @@ function renderExplodeGridButton(btn, linked) {
     </button>`;
 }
 
+/**
+ * Monta o HTML da grade de botões.
+ * @param {object[]} buttons Botões
+ * @param {string} label Rótulo acessível
+ * @returns {string} HTML.
+ */
 function buildExplodeGridHtml(buttons, label) {
   const linked = loadLinkedAccounts();
   const buttonsHtml = buttons.map((btn) => renderExplodeGridButton(btn, linked)).join("\n    ");
@@ -185,6 +211,10 @@ function buildExplodeGridHtml(buttons, label) {
   </div>`;
 }
 
+/**
+ * Monta o HTML da ação principal do painel.
+ * @returns {string} HTML.
+ */
 function buildExplodePrimaryHtml() {
   return `<div class="explode-primary-row">
       <button type="button" class="explode-primary btn-zap" data-explode-action="whatsapp">
@@ -199,12 +229,21 @@ function buildExplodePrimaryHtml() {
     <p class="explode-hint">Mensagem pronta, com link e hashtags.</p>`;
 }
 
+/**
+ * Monta o HTML de um chip de ação do painel.
+ * @param {object} chip Chip (`action`, `title`, `icon`, `label`, `css`)
+ * @returns {string} HTML.
+ */
 function renderExplodeChip(chip) {
   return `<button type="button" class="explode-chip ${chip.css || ""}" data-explode-action="${chip.action}" title="${chip.title}">
       <span aria-hidden="true">${chip.icon}</span> ${chip.label}
     </button>`;
 }
 
+/**
+ * Monta o HTML da seção "Mais redes e opções".
+ * @returns {string} HTML.
+ */
 function buildExplodeMoreHtml() {
   return `<details class="explode-more">
     <summary>Mais redes e opções</summary>
@@ -228,6 +267,11 @@ export function buildExplodeSheetHtml(post) {
     </div>`;
 }
 
+/**
+ * Garante que o painel de divulgação existe no documento e o preenche com o post.
+ * @param {object} post Post
+ * @returns {HTMLElement} Painel.
+ */
 function ensureExplodeSheet(post) {
   let root = document.getElementById(EXPLODE_SHEET_ID);
   if (!root) {

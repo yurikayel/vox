@@ -365,6 +365,11 @@ export function mountSceneCanvas(container, state, opts = {}) {
   const scene = getActiveScene(state);
   maybeApplyInitialFitCamera(container, canvas, state, scene);
   const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, draftAoe: null, ruler: null };
+  /**
+   * Redesenha a cena ativa no canvas com a câmera e o estado de sobreposição atuais.
+   *
+   * @returns {void}
+   */
   const draw = () => renderSceneToCanvas(canvas, getActiveScene(state), {
     camera: createCamera(state.camera),
     viewerRole: state.viewerRole === "gm" ? "gm" : "player",

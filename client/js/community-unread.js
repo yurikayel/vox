@@ -8,6 +8,10 @@ import { escapeHtml } from "./shared/html.js";
  */
 export const LAST_SEEN_STORAGE_KEY = "vox-community-last-seen-v1";
 
+/**
+ * Devolve o `localStorage` se disponível, ou `null`.
+ * @returns {Storage|null} Armazenamento.
+ */
 function getStorage() {
   try {
     return typeof globalThis.localStorage !== "undefined" ? globalThis.localStorage : null;

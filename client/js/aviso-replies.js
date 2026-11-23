@@ -23,6 +23,11 @@ const RULES = [
   ["ciente", /(\bciente\b|\bok\b|✅|👍)/],
 ];
 
+/**
+ * Tira acentos e põe em minúsculas.
+ * @param {string} s Texto
+ * @returns {string} Texto simplificado.
+ */
 const plain = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 /**
@@ -56,6 +61,12 @@ function isForOtherAviso(message, code) {
   return Boolean(code && tag && tag[1] !== code);
 }
 
+/**
+ * Junta as respostas coladas do WhatsApp, ficando com a última de cada remetente.
+ * @param {string[]} lines Linhas coladas
+ * @param {string} code Código do aviso
+ * @returns {object} Respostas por remetente e contagem de linhas ignoradas.
+ */
 function collectReplies(lines, code) {
   const bySender = new Map();
   let ignored = 0;

@@ -7,6 +7,13 @@ import { fitBox, log, bench, SPEC } from "./bench.js";
 const FPS = 30;
 const KEYFRAME_EVERY = 48;
 
+/**
+ * Monta a configuração do codificador H.264 (AVC).
+ * @param {number} width Largura, em pixels.
+ * @param {number} height Altura, em pixels.
+ * @param {object} [extra={}] Campos que sobrescrevem a configuração.
+ * @returns {object}
+ */
 function avcConfig(width, height, extra = {}) {
   return { codec: "avc1.640028", width, height, framerate: FPS, avc: { format: "annexb" }, ...extra };
 }
@@ -33,6 +40,10 @@ export async function probe() {
   return res;
 }
 
+/**
+ * Testa se o navegador decodifica AVIF.
+ * @returns {Promise<boolean>}
+ */
 function canDecodeAvif() {
   const img = new Image();
   const tiny = "data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErK42A=";
@@ -43,6 +54,11 @@ function canDecodeAvif() {
   });
 }
 
+/**
+ * Cria o codificador de vídeo que soma tamanho e quadros em `stats`.
+ * @param {object} stats Estatísticas (é alterado).
+ * @returns {VideoEncoder}
+ */
 function makeEncoder(stats) {
   const enc = new VideoEncoder({
     output: (chunk) => {
@@ -54,6 +70,11 @@ function makeEncoder(stats) {
   return enc;
 }
 
+/**
+ * Carrega o vídeo em um elemento `<video>` mudo e espera os metadados.
+ * @param {Blob} blob Arquivo de vídeo.
+ * @returns {Promise<HTMLVideoElement>}
+ */
 function loadVideo(blob) {
   const video = document.createElement("video");
   video.muted = true;
@@ -65,6 +86,12 @@ function loadVideo(blob) {
   });
 }
 
+/**
+ * Posiciona o vídeo no instante dado e espera o quadro ficar pronto.
+ * @param {HTMLVideoElement} video Vídeo.
+ * @param {number} t Instante, em segundos.
+ * @returns {Promise<void>}
+ */
 function seekTo(video, t) {
   return new Promise((resolve) => {
     video.onseeked = () => resolve();
@@ -100,6 +127,17 @@ export async function measureVideo(name, blob, quantizer, seconds = 10) {
   return row;
 }
 
+/**
+ * Desenha o quadro atual do vídeo no canvas e o codifica.
+ * @param {object} options Parâmetros do quadro.
+ * @param {VideoEncoder} options.enc Codificador.
+ * @param {CanvasRenderingContext2D} options.ctx Contexto do canvas.
+ * @param {OffscreenCanvas} options.canvas Canvas de trabalho.
+ * @param {HTMLVideoElement} options.video Vídeo de origem.
+ * @param {object} options.stats Estatísticas (é alterado).
+ * @param {number|undefined} options.quantizer Quantizador, se fixo.
+ * @returns {Promise<void>}
+ */
 function encodeFrame({ enc, ctx, canvas, video, stats, quantizer }) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const frame = new VideoFrame(canvas, { timestamp: Math.round((stats.frames * 1e6) / FPS) });

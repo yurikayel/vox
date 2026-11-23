@@ -91,6 +91,12 @@ export async function loadProposalVotes(proposalId) {
   return votes;
 }
 
+/**
+ * Liga os botões que copiam o resumo da proposta para chats.
+ *
+ * @param {object} proposal Proposta.
+ * @param {object} tally Apuração.
+ */
 function attachProposalBridgeHandlers(proposal, tally) {
   const payload = buildProposalPossePayload(proposal, tally);
   document.getElementById("btn-proposal-copy-discord")?.addEventListener("click", async () => {
@@ -167,6 +173,11 @@ export function attachProposalVotingHandlers(proposal, user) {
   });
 }
 
+/**
+ * Monta o mapa de identificador para título das comunidades da tela de votos.
+ *
+ * @returns {Promise<Map<string, string>>}
+ */
 async function buildVoteCommunityTitles() {
   const titles = new Map([["vox", mock.MOCK_OFFICIAL_COMMUNITY_VOX.title]]);
   const local = await cacheNode.getLocalCommunities().catch(() => []);
@@ -174,6 +185,13 @@ async function buildVoteCommunityTitles() {
   return titles;
 }
 
+/**
+ * Normaliza uma proposta com sua apuração para o painel de votos.
+ *
+ * @param {{proposal: object, tally: object, userVote: string|null, isEligible: boolean, isMember: boolean}} options Proposta e situação de quem vê.
+ * @param {Map<string, string>} titles Títulos das comunidades.
+ * @returns {object}
+ */
 function normalizeVoteItem({ proposal, tally, userVote, isEligible, isMember }, titles) {
   return {
     id: proposal.id,
@@ -214,6 +232,14 @@ export async function loadVoteItems(user) {
   return items;
 }
 
+/**
+ * Liga os botões de escolha de voto.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object[]} items Itens do painel.
+ * @param {string} user Rota de quem vota.
+ * @param {Function} rerender Redesenha a tela.
+ */
 function bindVoteChoiceButtons(main, items, user, rerender) {
   main.querySelectorAll(".agora-vote-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -249,6 +275,9 @@ export async function showVote({ filter = "all" } = {}) {
   render.renderLoading(main);
   const items = await loadVoteItems(user);
   let activeFilter = filter;
+  /**
+   * Redesenha o painel de votos e liga os filtros.
+   */
   const paint = () => {
     main.innerHTML = render.renderVoteDashboard(items, { filter: activeFilter });
     main.querySelectorAll("[data-vote-filter]").forEach((btn) => {
