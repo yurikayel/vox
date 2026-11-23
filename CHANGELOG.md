@@ -7,6 +7,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 - Testes: `cov-t4-compose-forms` "falha ao assinar" deixa de ser instável — a tentativa usa comunidade própria (um post de outro teste que chegue tarde ao cache não conta como gravado), a falha lista o que vazou e o `wipeLocalAccount` passa a ser aguardado.
+- Labs (Webxdc): `inlineCartridgeAssets` troca por data URL só a referência exata da imagem (valor de `src`/`href` e `url(...)`). Antes trocava por substring: `./i.png` virava `./data:…` (imagem quebrada), `ai.png` recebia a imagem de `i.png` e texto comum com o nome era alterado. Achado pelo lote de cobertura T7.
 
 - Refactor: `central-memory.js` (484 linhas) vira fachada de 140 linhas com a mesma API pública (ciclo de sincronização, envio automático e cursor), e as partes vão para `central-memory-urls.js` (endereços e transporte), `central-memory-bundle.js` (pacote local e cursor `syncCursor`), `central-memory-apply.js` (aplicar o pacote remoto e a trava de hidratação) e `central-memory-directory.js` (cartões do diretório). As 32 funções conferidas por AST como idênticas, salvo o prefixo `syncCursor.`; nenhum ciclo novo. SW `vox-pwa-v7.161-central-memory-split` com os quatro módulos no precache.
 
