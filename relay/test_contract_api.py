@@ -89,6 +89,9 @@ class TestContractHttpApi(unittest.TestCase):
         inbox.set_inbox_dir(root / "inbox")
         blind_relay.set_relay_dir(root / "blind")
         central_memory.set_memory_dir(root / "memory")
+        # Sem gateway upstream: o teste não depende da internet (o `/tx/` ausente vira 404 local).
+        cls.orig_gateways = server.UPSTREAM_GATEWAYS
+        server.UPSTREAM_GATEWAYS = []
 
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         cls.port = cls.httpd.server_address[1]
@@ -99,6 +102,7 @@ class TestContractHttpApi(unittest.TestCase):
     def tearDownClass(cls):
         cls.httpd.shutdown()
         cls.httpd.server_close()
+        server.UPSTREAM_GATEWAYS = cls.orig_gateways
         c_dir, i_dir, b_dir, m_dir = cls.orig_dirs
         server.set_cache_dir(c_dir)
         inbox.set_inbox_dir(i_dir)
