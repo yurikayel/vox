@@ -9,7 +9,7 @@ O Vox tem **dois processos** no diretório `relay/`. Eles são independentes:
 | Processo | Comando | Porta padrão | Bind padrão | O que faz | Quem roda |
 |---|---|---|---|---|---|
 | **Sinalização** | `npm start` = `python relay/signaling.py [--port N]` | `3921` (ou `$PORT`) | `0.0.0.0` (ou `$HOST`) | WebSocket que só troca SDP/ICE entre pares. Não guarda conteúdo. | `relay/Dockerfile`, nó público Render (`wss://vox-sentinel.onrender.com`), HF Space |
-| **Relay completo** | `python relay/server.py [--host H --port N --cache-dir D]` | `3920` (ou `$VOX_RELAY_PORT`) | `127.0.0.1` | Cache Arweave, índice/espelho de comunidade, inbox de DM, relay cego, memória central, seeder P2P, troca OAuth. | Stewards, Node Zero (Windows/Linux), `vox-populi/` |
+| **Relay completo** | `python relay/server.py [--host H --port N --cache-dir D]` | `3920` (ou `$VOX_RELAY_PORT`) | `127.0.0.1` | Cache Arweave, índice/espelho de comunidade, inbox de DM, relay cego, memória central, seeder P2P, troca OAuth. | Stewards, Vox Populi / Vox Memoria (Windows/Linux), `vox-populi/` |
 
 Todas as respostas são JSON com **CORS por origem**: `Access-Control-Allow-Origin` só é devolvido, sempre com o valor da lista (a entrada de configuração correspondente, nunca o texto do cabeçalho `Origin` recebido; origem com CR/LF ou outro caractere de controle é recusada), para as origens do app (GitHub Pages `https://yurikayel.github.io`, Cloudflare Pages `https://vox-9df.pages.dev`), qualquer `http(s)://localhost` ou `127.0.0.1` (com qualquer porta) e as de `VOX_RELAY_ALLOWED_ORIGINS`; toda resposta leva `Vary: Origin`. Origem fora da lista (ou sem `Origin`) não recebe `Allow-Origin`: a resposta existe, mas o navegador bloqueia a leitura. `OPTIONS` → `204` sempre; só origem permitida recebe `Allow-Methods`, `Allow-Headers` e `Allow-Private-Network`. Rota desconhecida → `404`.
 
@@ -88,7 +88,7 @@ Payload máx. da memória: **2 × 2 MB** (`MAX_BLOB_BYTES` × 2) → acima disso
 | `/p2p/seed/<hash>` | GET / DELETE | Consulta ou remove um seed. |
 | `/p2p/seed` | POST | Registra seed (`hash`, `sizeBytes`, `mimeType`), só se autorizado. |
 | `/peer/beacon`, `/p2p/peers` | GET | Pares anunciados. |
-| `/peer/beacon` | POST | Anuncia um par (usado pelo Node Zero com túnel). |
+| `/peer/beacon` | POST | Anuncia um par (usado pelo Vox Populi / Vox Memoria com túnel). |
 
 ### Login social (`oauth_exchange.py`)
 
@@ -130,7 +130,7 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 
 ## 5. Exposição pública
 
-Hoje **não existe** relay completo público: só a sinalização roda na nuvem. Inbox de DM entre aparelhos diferentes, `/oauth/exchange` e memória central dependem de um steward rodar `server.py` exposto (TLS via `relay/deploy/`, Caddy + coturn) ou do túnel Cloudflare do Node Zero. Riscos e custos em [INFRA-CUSTOS.md](../INFRA-CUSTOS.md).
+Hoje **não existe** relay completo público: só a sinalização roda na nuvem. Inbox de DM entre aparelhos diferentes, `/oauth/exchange` e memória central dependem de um steward rodar `server.py` exposto (TLS via `relay/deploy/`, Caddy + coturn) ou do túnel Cloudflare do Vox Populi / Vox Memoria. Riscos e custos em [INFRA-CUSTOS.md](../INFRA-CUSTOS.md).
 
 ## 6. Limites e retenção
 
@@ -162,7 +162,7 @@ Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_
 |---|---|---|
 | Nó público Render (`vox-sentinel.onrender.com`, `relay/render.yaml`) | `1` (alvo) | **Hoje 0**: o blueprint não define `envVars`, então todos os clientes dividem um balde. `1` assume que o balanceador do Render é o único proxy e acrescenta o IP de quem conectou; **não foi medido aqui** — antes de fixar, confirme que a última entrada do cabeçalho é o IP do cliente (e não um IP de borda compartilhado, o que repetiria o balde único). Ajuste no painel do serviço ou com `envVars` no `render.yaml` (PR próprio; este é só documentação). |
 | Caddy de `relay/deploy/` (`Caddyfile`, `reverse_proxy` para sinalização e relay) | `1` | Um proxy (Caddy) à frente, que acrescenta o IP do cliente ao `X-Forwarded-For`. Se houver outro proxy na frente do Caddy (ex.: Cloudflare), some um por camada. `docker-compose.yml` não define a variável hoje. |
-| Túnel Cloudflare do Node Zero, em `server.py` | medir | O `cloudflared` acrescenta o cabeçalho, mas o número de entradas não foi conferido; até medir, `0` (balde único, seguro). |
+| Túnel Cloudflare do Vox Populi / Vox Memoria, em `server.py` | medir | O `cloudflared` acrescenta o cabeçalho, mas o número de entradas não foi conferido; até medir, `0` (balde único, seguro). |
 | Local / loopback / `server.py` direto | `0` | Sem proxy. |
 | `relay/Dockerfile` (HF Space, Railway) | conforme a plataforma | O Dockerfile não define a variável; vale a regra da plataforma de borda (conte os proxies). |
 

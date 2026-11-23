@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string] $Ports = "3921,3922",
     [switch] $PreflightOnly
 )
@@ -8,13 +8,13 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
 $tempRoot = [System.IO.Path]::GetFullPath($env:TEMP)
-$smokeRoot = Join-Path $tempRoot "vox-node-zero-smoke-$([guid]::NewGuid().ToString('N'))"
+$smokeRoot = Join-Path $tempRoot "vox-populi-smoke-$([guid]::NewGuid().ToString('N'))"
 $workRoot = Join-Path $smokeRoot "work"
 $distRoot = Join-Path $smokeRoot "dist"
 $localAppData = Join-Path $smokeRoot "local-app-data"
 $exe = Join-Path $distRoot "VoxPopuli.exe"
-$stdout = Join-Path $smokeRoot "node-zero.stdout.log"
-$stderr = Join-Path $smokeRoot "node-zero.stderr.log"
+$stdout = Join-Path $smokeRoot "vox-populi.stdout.log"
+$stderr = Join-Path $smokeRoot "vox-populi.stderr.log"
 $node = $null
 $succeeded = $false
 
@@ -50,7 +50,7 @@ try {
     }
 
     $metadata = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-    if ($metadata.ProductName -ne "VoxPopuli Node Zero - Community Node") {
+    if ($metadata.ProductName -ne "Vox Populi") {
         throw "ProductName inesperado: $($metadata.ProductName)"
     }
 

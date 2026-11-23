@@ -1,4 +1,4 @@
-"""Local-only Node Zero: Vox relay/cache plus a Windows resource governor."""
+"""Local-only Vox Populi: Vox relay/cache plus a Windows resource governor."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from pathlib import Path
 
 from windows_host import WindowsHost, WindowsJobGovernor
 
-APP_NAME = "Vox Populi Node Zero"
+APP_NAME = "Vox Populi"
 RELAY_HOST = "127.0.0.1"
 RELAY_PORT = 3921
 LEGACY_RELAY_PORT = 3920
