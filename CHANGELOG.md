@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Testes: métrica de cobertura com catraca — `npm run coverage:js` (linhas de código do cliente, sem brancos/comentários; arquivo não carregado conta 0%) e `npm run coverage:py` (instruções do relay, stdlib); pisos em `scripts/coverage-floor.json` (base 22/11: 78,8% / 91,9%; meta 90%); CI roda no Node 24 e no Python 3.12 (`docs/TESTES.md` §3.2).
+
 - Relay: o arquivo de blob da memória central passa por `safe_path.child_of` (recusa symlink para fora de `blobs/`; alertas CodeQL `py/path-injection`); triagem do `py/partial-ssrf` em `docs/security/codeql-relay-python-triagem.md` (`relay/test_central_memory_blob_path.py`).
 
 ### Chore: alertas Dependabot (qs, minimatch)
