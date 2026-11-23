@@ -1,16 +1,13 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseRoute } from "../client/js/app/route-parse.js";
 import { renderVoxpedia, VOX_GITHUB_DOCS } from "../client/js/render/voxpedia.js";
+import { readShellRenderSource } from "./helpers/shell-render-source.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const shellSrc = fs.readFileSync(
-  path.join(__dirname, "../client/js/render/shell.js"),
-  "utf8"
-);
+const shellSrc = readShellRenderSource(path.join(__dirname, "../client"));
 
 function withLocation({ hash = "" }, fn) {
   const loc = { hash, search: "" };

@@ -9,6 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const read = (rel) => fs.readFileSync(path.join(here, "..", rel), "utf8");
 
 const { sumUnreadDms, formatDmBadge } = await import("../client/js/render/shell.js");
+import { readShellRenderSource } from "./helpers/shell-render-source.mjs";
 const feed = await import("../client/js/render/feed.js");
 
 test("dm badge — soma não lidas de todas as conversas", () => {
@@ -24,7 +25,7 @@ test("dm badge — formato do contador", () => {
 });
 
 test("dm badge — contador no item Mensagens e no ícone móvel, atualizado por evento", () => {
-  const shell = read("client/js/render/shell.js");
+  const shell = readShellRenderSource(path.join(here, "..", "client"));
   const live = read("client/js/app/dm-badge-live.js");
   assert.ok(shell.includes('item.tab === "dm" ? DM_BADGE_HTML : ""'));
   assert.ok(shell.includes('aria-label="Mensagens">${ICONS.dmTop}${DM_BADGE_HTML}</a>'));
