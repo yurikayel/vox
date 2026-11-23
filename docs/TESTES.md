@@ -56,7 +56,7 @@ Desde 22/11/2026 (decisão do mantenedor) a cobertura é medida e tem piso que s
 
 - `npm run coverage:js` (`scripts/coverage.mjs`): roda `node:test` com `--experimental-test-coverage` e conta só **linhas de código** de `client/js` e `client/aviso` (linhas em branco e de comentário ficam fora, medidas pelos tokens do espree; JSDoc novo não infla o número). Arquivo de produção que nenhum teste carrega entra com 0%. `--lcov <arquivo>` reaproveita um lcov pronto.
 - `npm run coverage:py` (`scripts/py_coverage.py`, Python 3.12+, só biblioteca padrão): roda a descoberta do `test:relay` com `sys.monitoring` e conta instruções do AST (docstrings fora) em `relay/*.py`.
-- Pisos em `scripts/coverage-floor.json`; `--raise` sobe o piso para o valor medido e nunca desce. Linha de base em 22/11: cliente 78,8%, relay 91,9%.
+- Pisos em `scripts/coverage-floor.json`; `--raise` sobe o piso para o valor medido e nunca desce. Linha de base em 22/11: cliente 78,8%, relay 91,9%. Em 23/11, depois dos lotes T1–T7: cliente 95,3%, relay 91,9% (pisos atuais; meta 90%).
 
 A métrica não muda a regra do teste: todo teste confere algo observável (retorno, DOM, chamada, estado). Proibido teste vazio, excluir arquivo da medição ou comentário `c8 ignore`/`istanbul ignore` para subir o número. A varredura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais viraram correções com teste próprio (`tests/achados-cobertura.test.js`).
 
