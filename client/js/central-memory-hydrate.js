@@ -7,6 +7,7 @@ import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import * as moderation from "./moderation.js";
 import { MEDIA_FIELD, WIRE_MARK } from "./post-wire.js";
+import { isSigVersionAllowed } from "./sig-format.js";
 
 /**
  * Retorna o maior timestamp conhecido de um item para desempate de atualização.
@@ -21,9 +22,10 @@ export function itemTimestamp(item) {
 /** Campos que só o aparelho escreve; um item que já chega com eles não é forma assinada. */
 const hasLocalOnlyKeys = (item) => WIRE_MARK in item || MEDIA_FIELD in item;
 
-/** Assinado por quem diz ser o autor e não bloqueado. */
+/** Assinado por quem diz ser o autor, versão de assinatura permitida (PM-102) e não bloqueado. */
 async function isTrustedItem(item) {
   if (!item?.id || !item.sig || !item.author || hasLocalOnlyKeys(item)) return false;
+  if (!isSigVersionAllowed(item)) return false;
   if (moderation.shouldDropGossip(item.author)) return false;
   return localAccount.verifyPayload(item);
 }
