@@ -24,8 +24,21 @@ const CHOICES = [["ciente", "✅ Ciente"], ["vou", "🙋 Vou"], ["talvez", "🤔
  */
 export const AVISO_SAFETY_HINT = "Não ponha telefone, CPF ou endereço de ninguém no aviso.";
 
+/**
+ * Link (hash) da lista de avisos da comunidade.
+ *
+ * @param {string} communityId
+ * @returns {string}
+ */
 const avisosHref = (communityId) => `#/c/${encodeURIComponent(communityId)}/avisos`;
 
+/**
+ * Linha com data e hora do evento do aviso, vazia se não há data válida.
+ *
+ * @param {object} aviso
+ * @param {string} [icsId=""]
+ * @returns {string}
+ */
 function whenLine(aviso, icsId = "") {
   const eventAt = aviso?.eventAt;
   if (parseInstant(eventAt) == null) return "";
@@ -35,18 +48,44 @@ function whenLine(aviso, icsId = "") {
   return `<p class="aviso-when">Quando: ${escapeHtml(when)}${place}${btn}</p>`;
 }
 
+/**
+ * Diz se a contagem da resposta `key` é maior que zero.
+ *
+ * @param {object|undefined} counts
+ * @param {string} key
+ * @returns {boolean}
+ */
 const hasCount = (counts, key) => Number(counts?.[key] || 0) > 0;
 
+/**
+ * Linha de contagens de respostas com o rótulo dado, vazia se não há nenhuma.
+ *
+ * @param {string} label
+ * @param {object|null} counts
+ * @returns {string}
+ */
 function countsLine(label, counts) {
   const parts = CHOICES.filter(([key]) => hasCount(counts, key)).map(([key, text]) => `${text} ${Number(counts[key])}`);
   return parts.length ? `<p class="aviso-counts"><strong>${label}:</strong> ${parts.join(" · ")}</p>` : "";
 }
 
+/**
+ * Converte as contagens do formato guardado para o formato de exibição.
+ *
+ * @param {object|null} count
+ * @returns {object|null}
+ */
 function pastedCounts(count) {
   if (!count) return null;
   return { ciente: count.countCiente, vou: count.countVou, talvez: count.countTalvez, "nao-vou": count.countNaoVou };
 }
 
+/**
+ * Botões de resposta do aviso (ciente, vou, talvez, não vou).
+ *
+ * @param {object} item
+ * @returns {string}
+ */
 function renderResponseButtons(item) {
   const options = item.aviso.eventAt ? CHOICES : CHOICES.slice(0, 1);
   const buttons = options.map(([key, text]) => {
@@ -56,6 +95,12 @@ function renderResponseButtons(item) {
   return `<div class="aviso-actions" role="group" aria-label="Responder ao aviso">${buttons.join("")}</div>`;
 }
 
+/**
+ * Ferramentas de moderação do aviso.
+ *
+ * @param {object} item
+ * @returns {string}
+ */
 function renderModTools(item) {
   const id = escapeHtml(item.aviso.id);
   return `<div class="aviso-actions">
@@ -77,6 +122,14 @@ function callLines(call) {
     <p class="aviso-quorum"><strong>Quórum:</strong> ${call.filled} de ${call.quorum} · ${CALL_STATE[call.state] || ""}${pending}</p>`;
 }
 
+/**
+ * Botão de papel (por exemplo, quem leva algo) com destaque para o escolhido.
+ *
+ * @param {object} item
+ * @param {string} role
+ * @param {string} text
+ * @returns {string}
+ */
 function roleButton(item, role, text) {
   const mine = item.myRole === role ? " is-active" : "";
   const look = item.suggested?.includes(role) ? "btn-primary" : "btn-outline";
@@ -116,6 +169,12 @@ function cardActions(item, { isMod, canRespond, live }) {
   ].join("");
 }
 
+/**
+ * Normaliza o item de cartão em dados de aviso prontos para exibir.
+ *
+ * @param {object} item
+ * @returns {object}
+ */
 function resolveCardAviso(item) {
   const aviso = item.aviso || item;
   const eventAt = item.eventAt ?? aviso.eventAt;
@@ -209,6 +268,11 @@ export function renderAvisosScreen(main, { communityId, title, items, isMod, can
   </div>`;
 }
 
+/**
+ * Passo do assistente: tipo do aviso.
+ *
+ * @returns {string}
+ */
 function kindStep() {
   const options = Object.entries(KIND_LABEL).map(([value, label], i) =>
     `<label class="aviso-kind"><input type="radio" name="avisoKind" value="${value}"${i === 0 ? " checked" : ""} /> ${label}</label>`).join("");
@@ -219,6 +283,11 @@ function kindStep() {
   </section>`;
 }
 
+/**
+ * Passo do assistente: título e texto do aviso.
+ *
+ * @returns {string}
+ */
 function textStep() {
   return `<section class="compose-step" data-step-key="text" data-step-required="aviso-title" hidden>
     <h2>O que avisar?</h2>
@@ -233,6 +302,11 @@ function textStep() {
   </section>`;
 }
 
+/**
+ * Passo do assistente: quando e onde.
+ *
+ * @returns {string}
+ */
 function whenStep() {
   return `<section class="compose-step" data-step-key="when" hidden>
     <h2>Quando e onde?</h2>

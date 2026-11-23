@@ -11,6 +11,14 @@ import {
   normalizeIdentityMeta,
 } from "../profile-identity-meta.js";
 
+/**
+ * Selo de metadado de identidade, vazio sem valor.
+ *
+ * @param {string} kind
+ * @param {string} value
+ * @param {string} titleText
+ * @returns {string}
+ */
 function renderMetaPill(kind, value, titleText) {
   if (!value) return "";
   return `<span class="profile-identity-pill profile-identity-pill--${kind}" title="${escapeHtml(titleText)}">${escapeHtml(value)}</span>`;
@@ -35,11 +43,24 @@ export function renderIdentityMetaPills(meta = {}) {
   return `<div class="profile-identity-pills" aria-label="Pronomes, gênero e orientação">${pills.join("")}</div>`;
 }
 
+/**
+ * Lista de sugestões (`datalist`) com as opções dadas.
+ *
+ * @param {string} id
+ * @param {string[]} options
+ * @returns {string}
+ */
 function renderDatalist(id, options) {
   const opts = options.map((o) => `<option value="${escapeHtml(o)}"></option>`).join("");
   return `<datalist id="${id}">${opts}</datalist>`;
 }
 
+/**
+ * Atalhos de pronomes, destacando o atual.
+ *
+ * @param {string} currentPronouns
+ * @returns {string}
+ */
 function renderPronounPresetChips(currentPronouns) {
   const active = String(currentPronouns || "").trim().toLowerCase();
   return PRONOUN_PRESETS.map((p) => {

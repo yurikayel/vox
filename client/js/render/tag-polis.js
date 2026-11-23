@@ -5,6 +5,13 @@ import * as hashtags from "../hashtags.js";
 import { escapeHtml } from "./util.js";
 import { renderPostItem } from "./feed.js";
 
+/**
+ * Cabeçalho do feed de uma etiqueta.
+ *
+ * @param {string} cleanSlug
+ * @param {string} countLabel
+ * @returns {string}
+ */
 function renderTagFeedHeader(cleanSlug, countLabel) {
   return `
     <header class="page-header tag-feed-header">
@@ -23,6 +30,12 @@ function renderTagFeedHeader(cleanSlug, countLabel) {
   `;
 }
 
+/**
+ * Estado vazio do feed de uma etiqueta.
+ *
+ * @param {string} cleanSlug
+ * @returns {string}
+ */
 function renderTagFeedEmptyState(cleanSlug) {
   return `
       <div class="empty-state card" style="text-align:center; padding:2.5rem 1.5rem; margin-top:1rem;">
@@ -64,6 +77,12 @@ export function renderTagFeed(main, slug, posts = []) {
   `;
 }
 
+/**
+ * Item de afirmação do mapa de opiniões com percentuais.
+ *
+ * @param {object} s
+ * @returns {string}
+ */
 function renderPolisStatementItem(s) {
   const agreePct = Math.round(Number(s.agreePct) || 0);
   const disagreePct = Math.round(Number(s.disagreePct) || 0);

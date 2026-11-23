@@ -27,10 +27,22 @@ export function describeAge(ms) {
   return hours === 1 ? "há 1 hora" : `há ${hours} horas`;
 }
 
+/**
+ * Código de conferência dos guardiões em texto.
+ *
+ * @param {string[]} code
+ * @returns {string}
+ */
 function codeHtml(code) {
   return `<p class="guardian-code" aria-label="Código de conferência">${code.map(escapeHtml).join(" · ")}</p>`;
 }
 
+/**
+ * Identificação (avatar e nome) do dono da conta a recuperar.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function ownerHtml({ name, avatarUrl }) {
   const img = avatarUrl ? `<img class="guardian-owner-avatar" src="${escapeHtml(avatarUrl)}" alt="" />` : "";
   return `<div class="guardian-owner">${img}<strong>${escapeHtml(name)}</strong></div>`;
