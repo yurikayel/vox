@@ -10,6 +10,9 @@ import * as cryptoDm from "../crypto-dm.js";
 import * as peers from "../peers.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+/**
+ * Liga os botões de teste do espelho do administrador.
+ */
 function bindStewardTestButtons() {
   document.getElementById("sw-test-mirror")?.addEventListener("click", async () => {
     const draft = stewardWizard.loadDraft();

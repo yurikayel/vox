@@ -36,8 +36,20 @@ export async function loadLinks(deps = null) {
   return natural.collectLinks(await getRecords(), verify);
 }
 
+/**
+ * Link para a pessoa, com a rota abreviada.
+ *
+ * @param {string} route Rota da pessoa.
+ * @returns {string}
+ */
 const person = (route) => `<a href="#/connect/${encodeURIComponent(route)}"><code>${escapeHtml(String(route).slice(0, 14))}…</code></a>`;
 
+/**
+ * Linha de texto sobre o padrinho, ou sobre a pessoa mais próxima quando não há padrinho.
+ *
+ * @param {{sponsor: string, closest: string}} options Padrinho e pessoa mais próxima.
+ * @returns {string}
+ */
 function sponsorLine({ sponsor, closest }) {
   if (sponsor) {
     return `<p><strong>Seu padrinho:</strong> ${person(sponsor)}. Se alguém denunciar um post seu, ele vê o post e o motivo (não quem denunciou) e pode arquivar.</p>`;
@@ -68,12 +80,27 @@ export function renderMyLinksHtml(model) {
   </details>`;
 }
 
+/**
+ * HTML dos casos abertos da pessoa.
+ *
+ * @param {object[]} links Vínculos conhecidos.
+ * @param {string} me Rota de quem vê.
+ * @param {object|null} deps Dependências.
+ * @returns {Promise<string>}
+ */
 async function casesHtml(links, me, deps) {
   if (deps?.skipCases) return "";
   const cases = await import("./natural-case-flow.js");
   return cases.renderCasesHtml(cases.listCases(), (target) => natural.hasFirmPower(links, me, target));
 }
 
+/**
+ * Liga os botões dos casos e redesenha a tela depois de cada decisão.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {string} me Rota de quem decide.
+ * @param {Function} rerender Redesenha a tela.
+ */
 function bindCases(main, me, rerender) {
   main.querySelector(".natural-mod-links")?.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-case-action]");
@@ -131,6 +158,12 @@ export async function loadNaturalHideActions(communityId, modActions = [], deps 
   ]);
   const raw = (await cacheNode.getWirePosts()).filter((p) => p.type === natural.NATURAL_HIDE_TYPE && p.communityId === communityId);
   if (!raw.length) return [];
+  /**
+   * Confere a assinatura de um payload.
+   *
+   * @param {object} signed Payload assinado.
+   * @returns {Promise<boolean>}
+   */
   const verify = (signed) => localAccount.verifyPayload(signed);
   const verified = (await Promise.all(raw.map((h) => natural.verifyNaturalHide(h, verify)))).filter(Boolean);
   const hides = await withPlausibleTime(verified, (id) => cacheNode.getLocalPost(id), deps?.now?.() ?? Date.now());

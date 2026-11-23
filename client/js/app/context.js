@@ -70,10 +70,22 @@ export function shareTopicUnlessQuarantined(opts = {}) {
   return true;
 }
 
+/**
+ * Rótulo do botão de quarentena conforme o estado.
+ *
+ * @param {boolean} on Quarentena ligada.
+ * @returns {string}
+ */
 function quarantineButtonLabel(on) {
   return on ? "Tirar da quarentena local" : mod.QUARANTINE_ACTION_LABEL;
 }
 
+/**
+ * Liga ou desliga os botões de compartilhar do post.
+ *
+ * @param {string} postId Post.
+ * @param {boolean} on Desabilitar.
+ */
 function setShareDisabled(postId, on) {
   document.querySelectorAll(".btn-share-post").forEach((el) => {
     if (el.dataset.id !== postId) return;
@@ -82,6 +94,12 @@ function setShareDisabled(postId, on) {
   });
 }
 
+/**
+ * Sincroniza aparência e rótulo do botão de quarentena com o estado.
+ *
+ * @param {HTMLElement} btn Botão de quarentena.
+ * @param {boolean} on Quarentena ligada.
+ */
 function syncQuarantineButton(btn, on) {
   const label = quarantineButtonLabel(on);
   btn.classList.toggle("is-quarantined", on);

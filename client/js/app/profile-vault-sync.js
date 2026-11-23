@@ -23,6 +23,12 @@ import { getCachedRouteIdSync } from "../identity/index.js";
 const NO_EMAIL_CONFIRM =
   "Esta conta tem saída por e-mail. Sem o e-mail, o cofre fica num endereço que sai só da senha, mais fácil de adivinhar. Gravar mesmo assim?";
 
+/**
+ * Lê o texto aparado de um campo pelo identificador.
+ *
+ * @param {string} id Identificador do elemento.
+ * @returns {string}
+ */
 function readField(id) {
   return (document.getElementById(id)?.value || "").trim();
 }
@@ -58,6 +64,12 @@ export function profileVaultOptions(email, prevPassphrase) {
   return prevPassphrase ? { email, prevPassphrase } : email;
 }
 
+/**
+ * Grava o cofre com a senha e o e-mail digitados.
+ *
+ * @param {string} missingPassText Mensagem se a senha faltar.
+ * @returns {Promise<object>}
+ */
 async function saveVault(missingPassText) {
   const pass = readField("input-sovereignty-passphrase");
   const email = readField("input-sovereignty-email");
@@ -72,12 +84,24 @@ async function saveVault(missingPassText) {
   return { pass, res, vault };
 }
 
+/**
+ * Grava o cofre e devolve o link de sincronização.
+ *
+ * @param {string} missingPassText Mensagem se a senha faltar.
+ * @returns {Promise<object>}
+ */
 async function linkUrl(missingPassText) {
   const out = await saveVault(missingPassText);
   if (!out.res) return out;
   return { url: buildSyncUrl(out.res.syncBundle || out.res.bundle, out.vault.encodeVaultBundleForUrl) };
 }
 
+/**
+ * Grava o cofre e devolve o link do QR de sincronização.
+ *
+ * @param {string} missingPassText Mensagem se a senha faltar.
+ * @returns {Promise<object>}
+ */
 async function qrUrl(missingPassText) {
   const out = await saveVault(missingPassText);
   if (!out.res) return out;
@@ -87,6 +111,11 @@ async function qrUrl(missingPassText) {
   return { url: buildSyncUrl(qr.record, out.vault.encodeVaultBundleForUrl) };
 }
 
+/**
+ * Mostra o link de sincronização na tela.
+ *
+ * @param {string} url Link gerado.
+ */
 function showSyncLink(url) {
   const el = document.getElementById("sovereignty-sync-feedback");
   if (!el) return;
@@ -101,6 +130,14 @@ function showSyncLink(url) {
   el.replaceChildren("Pronto para outro aparelho. Abra este link lá e digite a senha. Mande o link e a senha por caminhos diferentes: ", link);
 }
 
+/**
+ * Liga um botão do cofre: gera o link e entrega a quem pediu.
+ *
+ * @param {string} id Identificador do botão.
+ * @param {string} missingPassText Mensagem se a senha faltar.
+ * @param {Function} makeUrl Gera o link (`linkUrl` ou `qrUrl`).
+ * @param {Function} onUrl Recebe o link gerado.
+ */
 function bindVaultButton(id, missingPassText, makeUrl, onUrl) {
   const btn = document.getElementById(id);
   btn?.addEventListener("click", async () => {
