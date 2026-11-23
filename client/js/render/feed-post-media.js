@@ -166,7 +166,8 @@ function renderPostMoreMenuTrigger(t, author, authorDisplay) {
   const hasImage = t.image || t.mediaRef?.hash ? "1" : "";
   const isOwn = t.isOwnLocalPost ? "1" : "";
   const pix = escapeHtml(t.contactPix || "");
-  return `<button type="button" class="btn-post-more-menu" aria-label="Mais opções da publicação" data-post-id="${escapeHtml(t.id)}" data-author-route="${escapeHtml(author)}" data-title="${escapeHtml(t.title || authorDisplay || "")}" data-has-image="${hasImage}" data-is-own="${isOwn}" data-pix="${pix}"><span aria-hidden="true">⋯</span></button>`;
+  const comm = escapeHtml(t.communityId || "");
+  return `<button type="button" class="btn-post-more-menu" aria-label="Mais opções da publicação" data-post-id="${escapeHtml(t.id)}" data-community-id="${comm}" data-author-route="${escapeHtml(author)}" data-title="${escapeHtml(t.title || authorDisplay || "")}" data-has-image="${hasImage}" data-is-own="${isOwn}" data-pix="${pix}"><span aria-hidden="true">⋯</span></button>`;
 }
 
 /**

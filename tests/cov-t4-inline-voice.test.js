@@ -73,17 +73,12 @@ function mount(getUserMedia) {
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 /**
- * Inicia a gravação neutralizando só durante a chamada síncrona o `cleanupRecordingState` que
- * `clearMedia` dispara (ver o teste do defeito conhecido): sem isso a máquina volta a `idle`
- * antes do microfone responder e nenhuma gravação começa.
+ * Inicia a gravação de voz diretamente.
  * @param {object} state Estado do controlador.
  * @returns {void}
  */
 function startRecording(state) {
-  const real = state.cleanupRecordingState;
-  state.cleanupRecordingState = () => {};
   voice.startVoiceRecording(state);
-  state.cleanupRecordingState = real;
 }
 
 test("inline-voice — máquina de voz percorre idle, requesting, recording, stopping e volta", () => {
@@ -199,16 +194,12 @@ test("inline-voice — botões de microfone, concluir e cancelar acionam o estad
   const { el, state, cleanup } = mount(async () => stream);
   voice.bindVoiceButtons(state);
   const ev = { preventDefault() {} };
-  const real = state.cleanupRecordingState;
-  let skipNext = true;
-  state.cleanupRecordingState = () => { if (skipNext) skipNext = false; else real(); };
   await el["btn-inline-mic"].fire("click", ev);
   await flush();
   assert.equal(state.isRecording, true, "primeiro clique grava");
   await el["btn-inline-mic"].fire("click", ev);
   assert.equal(state.voiceMachine.matches("stopping"), true, "segundo clique conclui");
   state.voiceMachine.reset();
-  skipNext = true;
   await el["btn-inline-mic"].fire("click", ev);
   await flush();
   await el["btn-inline-stop-rec"].fire("click", ev);
@@ -229,13 +220,20 @@ test("inline-voice — startVoiceRecording durante a gravação a interrompe em 
   cleanup();
 });
 
-test("inline-voice — DEFEITO CONHECIDO: clearMedia zera a máquina e a gravação real nunca começa", async () => {
+test("inline-voice — startVoiceRecording limpa mídia anexada sem zerar a máquina de gravação após REQUEST", async () => {
   const stream = fakeStream();
   const { state, cleanup } = mount(async () => stream);
+  state.rawSourceFile = { name: "foto.png" };
+  state.activeLofiFilter = "vhs";
+  st.setComposerMedia({ type: "image", dataUrl: "data:image/png;base64,AA", byteLength: 2 });
   voice.startVoiceRecording(state);
+  assert.equal(state.voiceMachine.matches("requesting"), true, "permanece em requesting após limpar mídia prévia");
+  assert.equal(state.rawSourceFile, null);
+  assert.equal(state.activeLofiFilter, "normal");
+  assert.equal(st.inlineComposerMedia.type, "");
   await flush();
-  assert.equal(state.activeRecorder, null, "nenhum MediaRecorder criado");
-  assert.equal(state.isRecording, false);
-  assert.equal(stream.tracks[0].stopped, true, "o microfone é liberado logo ao chegar");
+  assert.notEqual(state.activeRecorder, null, "MediaRecorder criado ao receber stream");
+  assert.equal(state.isRecording, true);
+  assert.equal(stream.tracks[0].stopped, false, "microfone permanece aberto durante a gravação");
   cleanup();
 });
