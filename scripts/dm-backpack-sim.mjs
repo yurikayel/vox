@@ -24,10 +24,20 @@ export const BACKPACK_LIMITS = Object.freeze({
 /** Tolerância declarada de relógio: `ts` além de `now + 5 min` é rejeitado como `future_ts`. */
 export const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Normaliza um id: texto não vazio e que não seja chave reservada.
+ * @param {unknown} raw Valor bruto.
+ * @returns {string|null}
+ */
 function normalizeSafeId(raw) {
   if (typeof raw !== "string") return null;
   const clean = raw.trim();
@@ -35,6 +45,10 @@ function normalizeSafeId(raw) {
   return clean;
 }
 
+/**
+ * Garante que o estado da mochila tem a forma esperada.
+ * @param {object} state Estado da mochila.
+ */
 function assertValidState(state) {
   if (!isPlainObject(state) || !(state.envelopes instanceof Map) || !(state.purgedIds instanceof Set)) {
     throw new TypeError("Estado de mochila inválido.");
@@ -44,6 +58,11 @@ function assertValidState(state) {
   }
 }
 
+/**
+ * Valida o relógio injetado (milissegundos finitos >= 0).
+ * @param {unknown} nowMs Valor bruto.
+ * @returns {number}
+ */
 function validateNowMs(nowMs) {
   if (typeof nowMs !== "number" || !Number.isFinite(nowMs) || nowMs < 0) {
     throw new RangeError("nowMs deve ser um número finito >= 0.");
@@ -51,6 +70,11 @@ function validateNowMs(nowMs) {
   return nowMs;
 }
 
+/**
+ * Converte número ou data ISO em timestamp, ou `null` se inválido.
+ * @param {unknown} raw Valor bruto.
+ * @returns {number|null}
+ */
 function parseTimestampField(raw) {
   if (typeof raw === "number") {
     return Number.isFinite(raw) && raw >= 0 ? raw : null;
@@ -62,6 +86,11 @@ function parseTimestampField(raw) {
   return null;
 }
 
+/**
+ * Obtém o tamanho em bytes do envelope (campo `bytes` ou tamanho do `ct`), ou `null` se inválido.
+ * @param {object} envelope Envelope bruto.
+ * @returns {number|null}
+ */
 function resolveEnvelopeBytes(envelope) {
   if (envelope.bytes !== undefined) {
     return typeof envelope.bytes === "number" && Number.isFinite(envelope.bytes) && envelope.bytes >= 0
@@ -73,17 +102,34 @@ function resolveEnvelopeBytes(envelope) {
   return null;
 }
 
+/**
+ * Valida a contagem de cópias do envelope (padrão 0).
+ * @param {unknown} raw Valor bruto.
+ * @returns {number|null}
+ */
 function resolveEnvelopeCopies(raw) {
   if (raw === undefined) return 0;
   return typeof raw === "number" && Number.isInteger(raw) && raw >= 0 ? raw : null;
 }
 
+/**
+ * Obtém o instante do envelope (`ts` ou `createdAt`). Sem o campo, usa o relógio atual.
+ * @param {object} envelope Envelope bruto.
+ * @param {number} nowMs Relógio atual em milissegundos.
+ * @returns {number|null}
+ */
 function resolveEnvelopeTs(envelope, nowMs) {
   const raw = envelope.ts !== undefined ? envelope.ts : envelope.createdAt;
   if (raw === undefined) return nowMs;
   return parseTimestampField(raw);
 }
 
+/**
+ * Remove da mochila os envelopes que passaram do TTL.
+ * @param {object} state Estado da mochila.
+ * @param {number} nowMs Relógio atual em milissegundos.
+ * @returns {number}
+ */
 function pruneExpired(state, nowMs) {
   let removed = 0;
   for (const [id, entry] of state.envelopes) {
@@ -96,12 +142,24 @@ function pruneExpired(state, nowMs) {
   return removed;
 }
 
+/**
+ * Registra a rejeição nas estatísticas e devolve o resultado negativo.
+ * @param {object} state Estado da mochila.
+ * @param {string} reason Motivo da rejeição.
+ * @returns {{accepted: false, reason: string}}
+ */
 function rejectEnvelope(state, reason) {
   state.stats.rejected += 1;
   state.stats.rejectedByReason[reason] = (state.stats.rejectedByReason[reason] || 0) + 1;
   return { accepted: false, reason };
 }
 
+/**
+ * Valida e normaliza um envelope cego. Em caso de erro devolve `{ error }`.
+ * @param {unknown} envelope Envelope bruto.
+ * @param {number} nowMs Relógio atual em milissegundos.
+ * @returns {object}
+ */
 function parseBlindEnvelope(envelope, nowMs) {
   if (!isPlainObject(envelope)) return { error: "invalid_envelope" };
   const id = normalizeSafeId(envelope.id);
@@ -115,6 +173,14 @@ function parseBlindEnvelope(envelope, nowMs) {
   return { id, carrierPeerId, bytes, copies, ts };
 }
 
+/**
+ * Aplica a política de admissão e devolve o motivo da rejeição, ou `null` se admitido.
+ * @param {object} state Estado da mochila.
+ * @param {object} parsed Envelope já normalizado.
+ * @param {number} nowMs Relógio atual em milissegundos.
+ * @param {string} peerDayKey Chave do dia/par usada no limite diário por par.
+ * @returns {string|null}
+ */
 function checkAdmissionPolicy(state, parsed, nowMs, peerDayKey) {
   if (state.purgedIds.has(parsed.id)) return "already_purged";
   if (state.envelopes.has(parsed.id)) return "duplicate";
@@ -127,6 +193,10 @@ function checkAdmissionPolicy(state, parsed, nowMs, peerDayKey) {
   return null;
 }
 
+/**
+ * Descarta os envelopes mais antigos até haver espaço (teto padrão ou de guardião).
+ * @param {object} state Estado da mochila.
+ */
 function evictOldestIfAtCap(state) {
   const cap = state.guardian ? BACKPACK_LIMITS.guardianCap : BACKPACK_LIMITS.standardCap;
   while (state.envelopes.size >= cap) {
@@ -220,11 +290,23 @@ export function applyDeliveryReceipt(state, receipt) {
   return { envelopeId, removed };
 }
 
+/**
+ * Valida o relógio opcional; `undefined` passa direto.
+ * @param {unknown} raw Valor bruto.
+ * @returns {number|undefined}
+ */
 function parseOptionalNow(raw) {
   if (raw === undefined) return undefined;
   return validateNowMs(raw);
 }
 
+/**
+ * Obtém o relógio de um evento (`nowMs`, `at` ou o padrão). Sem nenhum, falha.
+ * @param {object} event Evento da simulação.
+ * @param {number|undefined} defaultNow Relógio padrão.
+ * @param {number} index Posição do evento, usada nas mensagens.
+ * @returns {number}
+ */
 function resolveEventNow(event, defaultNow, index) {
   const raw = event.nowMs ?? event.at ?? defaultNow;
   if (raw === undefined) {
@@ -233,6 +315,13 @@ function resolveEventNow(event, defaultNow, index) {
   return validateNowMs(raw);
 }
 
+/**
+ * Aplica um evento da simulação ao estado da mochila.
+ * @param {object} state Estado da mochila.
+ * @param {unknown} event Evento bruto.
+ * @param {number} index Posição do evento, usada nas mensagens.
+ * @param {number|undefined} defaultNow Relógio padrão.
+ */
 function replaySingleEvent(state, event, index, defaultNow) {
   if (!isPlainObject(event)) {
     throw new TypeError(`events[${index}] deve ser um objeto.`);
@@ -253,6 +342,11 @@ function replaySingleEvent(state, event, index, defaultNow) {
   throw new TypeError(`Tipo de evento desconhecido em events[${index}]: ${String(event.type)}`);
 }
 
+/**
+ * Soma os bytes dos envelopes carregados.
+ * @param {Map<string, object>} envelopes Envelopes da mochila.
+ * @returns {number}
+ */
 function sumCarriedBytes(envelopes) {
   let total = 0;
   for (const entry of envelopes.values()) {
@@ -289,6 +383,13 @@ export function simulateBackpackEvents(events, opts = {}) {
   };
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || value.startsWith("-")) {
@@ -297,6 +398,11 @@ function readNextArg(argv, index, flag) {
   return value;
 }
 
+/**
+ * Valida o valor de `--now`.
+ * @param {string} raw Valor bruto.
+ * @returns {number}
+ */
 function parseNowFlag(raw) {
   const num = Number(raw);
   if (!Number.isFinite(num) || num < 0) {
@@ -305,6 +411,11 @@ function parseNowFlag(raw) {
   return num;
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", guardian: false, now: undefined, json: false, help: false };
   for (let i = 0; i < argv.length; i++) {
@@ -321,6 +432,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta um arquivo JSON (aceita BOM).
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonFile(filePath) {
   let rawText;
   try {
@@ -335,6 +451,12 @@ function readJsonFile(filePath) {
   }
 }
 
+/**
+ * Extrai a lista de eventos e as opções do arquivo de entrada (lista ou objeto com `events`).
+ * @param {unknown} rawData JSON lido.
+ * @param {object} cliOpts Opções da linha de comando.
+ * @returns {object}
+ */
 function extractInputPayload(rawData, cliOpts) {
   if (Array.isArray(rawData)) {
     return { events: rawData, guardian: cliOpts.guardian, now: cliOpts.now };
@@ -349,6 +471,11 @@ function extractInputPayload(rawData, cliOpts) {
   throw new TypeError("Arquivo de entrada deve conter um array de eventos ou objeto `{ events: [...] }`.");
 }
 
+/**
+ * Formata o resumo da simulação em texto para o terminal.
+ * @param {object} summary Resumo da simulação.
+ * @returns {string}
+ */
 function formatTextSummary(summary) {
   const reasons = Object.entries(summary.rejectedByReason);
   const rejectedText = reasons.length ? reasons.map(([k, v]) => `${k}=${v}`).join(", ") : "nenhuma";
@@ -384,6 +511,10 @@ export function runCli(argv = process.argv.slice(2)) {
   return { summary, output, json: opts.json };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);
