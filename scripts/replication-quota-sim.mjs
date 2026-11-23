@@ -22,10 +22,21 @@ export const DEFAULT_QUOTA_POLICY = Object.freeze({
   defaultTtlMs: 30 * DAY_MS,
 });
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Exige um id de texto não vazio e que não seja chave reservada.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {string}
+ */
 function requireSafeId(raw, fieldName) {
   if (typeof raw !== "string" || !raw.trim()) {
     throw new TypeError(`${fieldName} deve ser string não vazia.`);
@@ -37,6 +48,13 @@ function requireSafeId(raw, fieldName) {
   return clean;
 }
 
+/**
+ * Valida número finito não negativo (e inteiro, se pedido).
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @param {boolean} [integerOnly=false] Se exige número inteiro.
+ * @returns {number}
+ */
 function parseNonNegativeNumber(raw, fieldName, integerOnly = false) {
   if (typeof raw !== "number" || !Number.isFinite(raw)) {
     throw new TypeError(`${fieldName} deve ser um número finito.`);
@@ -50,6 +68,12 @@ function parseNonNegativeNumber(raw, fieldName, integerOnly = false) {
   return raw;
 }
 
+/**
+ * Converte número ou data ISO em timestamp em milissegundos.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number}
+ */
 function parseTimestampMs(raw, fieldName) {
   if (typeof raw === "number") {
     return parseNonNegativeNumber(raw, fieldName);
@@ -61,6 +85,13 @@ function parseTimestampMs(raw, fieldName) {
   throw new TypeError(`${fieldName} deve ser timestamp em ms >= 0 ou string ISO válida.`);
 }
 
+/**
+ * Valida um booleano opcional, com valor de reserva se ausente.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @param {boolean} fallback Valor se `raw` for `undefined`.
+ * @returns {boolean}
+ */
 function parseOptionalBoolean(raw, fieldName, fallback) {
   if (raw === undefined) return fallback;
   if (typeof raw !== "boolean") {
@@ -69,6 +100,12 @@ function parseOptionalBoolean(raw, fieldName, fallback) {
   return raw;
 }
 
+/**
+ * Valida um TTL em milissegundos, maior que zero.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number}
+ */
 function parsePositiveTtlMs(raw, fieldName) {
   const value = parseNonNegativeNumber(raw, fieldName);
   if (value === 0) {
@@ -77,6 +114,12 @@ function parsePositiveTtlMs(raw, fieldName) {
   return value;
 }
 
+/**
+ * Valida um TTL opcional, ou `null` se ausente.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number|null}
+ */
 function parseOptionalTtlMs(raw, fieldName) {
   if (raw === undefined || raw === null) return null;
   return parsePositiveTtlMs(raw, fieldName);
@@ -105,6 +148,11 @@ export function normalizeReplicaItem(raw) {
   return { id, degree, mediaType: raw.mediaType, bytes, createdAt, pinned, ttlMs };
 }
 
+/**
+ * Valida e completa a política de cota com os padrões.
+ * @param {object} [policy={}] Política informada.
+ * @returns {object}
+ */
 function normalizePolicy(policy = {}) {
   if (!isPlainObject(policy)) {
     throw new TypeError("Política de cota deve ser um objeto.");
@@ -118,6 +166,11 @@ function normalizePolicy(policy = {}) {
   };
 }
 
+/**
+ * Valida os itens e garante ids únicos.
+ * @param {unknown} items Lista bruta de itens.
+ * @returns {object[]}
+ */
 function normalizeItemsUnique(items) {
   if (!Array.isArray(items)) {
     throw new TypeError("items deve ser um array.");
@@ -133,11 +186,22 @@ function normalizeItemsUnique(items) {
   });
 }
 
+/**
+ * Dá o nível de proteção do item (maior = mais protegido): fixado e sem cópias seguem no topo.
+ * @param {object} item Item de réplica.
+ * @returns {number}
+ */
 function protectionRank(item) {
   if (item.degree === 0) return item.pinned ? 3 : 2;
   return item.pinned ? 1 : 0;
 }
 
+/**
+ * Compara dois itens pela prioridade de despejo (o menos protegido sai primeiro).
+ * @param {object} a Primeiro item.
+ * @param {object} b Segundo item.
+ * @returns {number}
+ */
 function compareEvictionPriority(a, b) {
   const tierDiff = protectionRank(a) - protectionRank(b);
   if (tierDiff !== 0) return tierDiff;
@@ -146,6 +210,12 @@ function compareEvictionPriority(a, b) {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
+/**
+ * Separa os itens que sobrevivem dos despejados por TTL ou política antes de aplicar os tetos.
+ * @param {object[]} items Itens normalizados.
+ * @param {object} policy Política normalizada.
+ * @returns {{survivors: object[], evicted: object[]}}
+ */
 function partitionInitialEvictions(items, policy) {
   const survivors = [];
   const evicted = [];
@@ -163,6 +233,14 @@ function partitionInitialEvictions(items, policy) {
   return { survivors, evicted };
 }
 
+/**
+ * Despeja os itens do grupo que passam do teto de bytes, do menos protegido ao mais.
+ * @param {object[]} survivors Itens sobreviventes (é alterado).
+ * @param {number} limitBytes Teto em bytes.
+ * @param {string} reason Motivo registrado no despejo.
+ * @param {Function} predicate Seleciona os itens do grupo.
+ * @returns {object[]}
+ */
 function evictOverBudget(survivors, limitBytes, reason, predicate) {
   const candidates = survivors.filter(predicate);
   let usedBytes = candidates.reduce((sum, item) => sum + item.bytes, 0);
@@ -184,15 +262,33 @@ function evictOverBudget(survivors, limitBytes, reason, predicate) {
   };
 }
 
+/**
+ * Arredonda para duas casas decimais.
+ * @param {number} value Valor a arredondar.
+ * @returns {number}
+ */
 function roundTwoDecimals(value) {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Calcula o percentual de uso do teto, ou 0 se o teto é zero.
+ * @param {number} usedBytes Bytes usados.
+ * @param {number} capBytes Teto em bytes.
+ * @returns {number}
+ */
 function computeUtilizationPct(usedBytes, capBytes) {
   if (capBytes <= 0) return 0;
   return roundTwoDecimals((usedBytes / capBytes) * 100);
 }
 
+/**
+ * Monta as estatísticas de cota dos itens mantidos e despejados.
+ * @param {object[]} kept Itens mantidos.
+ * @param {object[]} evicted Itens despejados.
+ * @param {object} policy Política normalizada.
+ * @returns {object}
+ */
 function buildQuotaStats(kept, evicted, policy) {
   let totalBytes = 0;
   let videoBytes = 0;
@@ -247,6 +343,11 @@ export function simulateQuotaEviction(items, policy = {}) {
   return { ok, kept: afterGlobal.kept, evicted, stats };
 }
 
+/**
+ * Formata em linhas de tabela Markdown a contagem por grau de separação.
+ * @param {Object<string, object>} byDegree Contagens por grau.
+ * @returns {string[]}
+ */
 function formatDegreeRows(byDegree) {
   const degrees = Object.keys(byDegree).sort((a, b) => Number(a) - Number(b));
   if (degrees.length === 0) return ["| — | 0 | 0 | 0 |"];
@@ -287,6 +388,13 @@ export function formatQuotaReportMarkdown(result) {
   ].join("\n");
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (value === undefined || value.startsWith("-")) {
@@ -295,6 +403,11 @@ function readNextArg(argv, index, flag) {
   return value;
 }
 
+/**
+ * Converte o valor de `--now` em timestamp.
+ * @param {string} raw Valor bruto.
+ * @returns {number}
+ */
 function parseCliNow(raw) {
   const num = Number(raw);
   return parseTimestampMs(Number.isFinite(num) ? num : raw, "--now");
@@ -311,6 +424,11 @@ const VALUE_FLAG_HANDLERS = {
   "-o": (opts, v) => { opts.out = v; },
 };
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", out: "", json: false, help: false, policy: {} };
   for (let i = 0; i < argv.length; i++) {
@@ -327,6 +445,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta o JSON de entrada.
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonInput(filePath) {
   let rawText;
   try {
@@ -374,6 +497,10 @@ export function runCli(argv = process.argv.slice(2)) {
   return { result, output, format: opts.json ? "json" : "md", outputPath };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);

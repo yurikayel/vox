@@ -72,12 +72,28 @@ export function computeTurnComplexityScore(turnSignals = {}) {
   return Number(Math.max(0, Math.min(1, score)).toFixed(4));
 }
 
+/**
+ * Estima o custo da chamada em reais.
+ * @param {object} spec Preços do modelo por milhão de tokens
+ * @param {number} inTok Tokens de entrada
+ * @param {number} outTok Tokens de saída
+ * @param {boolean} useBrSp Se usa residência nacional (SP)
+ * @returns {number} Custo em BRL.
+ */
 function estimateCostBrl(spec, inTok, outTok, useBrSp) {
   const mult = useBrSp ? BR_SP_RESIDENCY_MULTIPLIER : 1;
   const raw = ((inTok * spec.inputPer1M + outTok * spec.outputPer1M) / 1000000) * mult;
   return Number(raw.toFixed(6));
 }
 
+/**
+ * Monta a rota de uma etapa com modelo, custo e opções.
+ * @param {string} tier Etapa
+ * @param {object} spec Especificação do modelo
+ * @param {object} routerOptions Opções do roteador
+ * @param {object} defaults Valores padrão de tokens
+ * @returns {object} Rota.
+ */
 function buildMaritacaRoute(tier, spec, routerOptions, defaults) {
   const useBrSp = Boolean(routerOptions.nationalResidencyBrSp);
   const inTok = Math.max(0, Number(routerOptions.inputTokens ?? defaults.inTok));
@@ -116,6 +132,11 @@ export function selectNarrativeRoute(complexityScore, routerOptions = {}) {
   return buildMaritacaRoute("TIER_2_CLIMAX_CLOUD", MARITACA_MODELS.sabia3, routerOptions, { inTok: 1200, outTok: 350 });
 }
 
+/**
+ * Confere a ordem do raciocínio e os valores enumerados do JSON.
+ * @param {object} payload JSON recebido
+ * @param {string[]} errors Lista de erros a preencher
+ */
 function checkReasoningAndEnums(payload, errors) {
   const keys = Object.keys(payload);
   if (keys[0] !== "mechanical_reasoning") {
@@ -129,6 +150,11 @@ function checkReasoningAndEnums(payload, errors) {
   if (!TURN_CONTROL_ENUM.has(payload.turn_control)) errors.push("turn_control fora do enum permitido.");
 }
 
+/**
+ * Confere que as coleções da resolução são listas.
+ * @param {object} payload JSON recebido
+ * @param {string[]} errors Lista de erros a preencher
+ */
 function checkResolutionCollections(payload, errors) {
   if (!Array.isArray(payload.state_mutations)) errors.push("state_mutations deve ser array.");
   if (!Array.isArray(payload.spatial_updates)) errors.push("spatial_updates deve ser array.");
@@ -162,6 +188,11 @@ const EXPECTED_STAGE1_ROLES = [
   "STAGE1_ACT_DIRECTOR",
 ];
 
+/**
+ * Monta o resumo para o narrador a partir das propostas aceitas.
+ * @param {object[]} accepted Propostas aceitas
+ * @returns {string} Resumo, limitado a 4000 caracteres.
+ */
 function buildNarratorBrief(accepted) {
   const lines = accepted.map((p) => `[${p.role}] ${String(p.summaryPtBr || "").trim()}`);
   return lines.filter(Boolean).join("\n").slice(0, 4000);

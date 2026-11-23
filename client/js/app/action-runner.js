@@ -10,10 +10,23 @@ import * as share from "../share.js";
 
 const busyButtons = new WeakSet();
 
+/**
+ * Diz se o botão já está ocupado por uma ação em andamento.
+ *
+ * @param {HTMLElement} btn
+ * @returns {boolean}
+ */
 function isButtonBusy(btn) {
   return busyButtons.has(btn) || Boolean(btn.disabled) || btn.getAttribute?.("aria-busy") === "true";
 }
 
+/**
+ * Trava o botão durante a ação e guarda o estado para restaurar depois.
+ *
+ * @param {HTMLElement} btn
+ * @param {string|undefined} busyText Texto exibido enquanto ocupado
+ * @returns {{text: string, disabled: boolean}}
+ */
 function lockButton(btn, busyText) {
   const snapshot = { text: btn.textContent, disabled: Boolean(btn.disabled) };
   busyButtons.add(btn);
@@ -23,6 +36,12 @@ function lockButton(btn, busyText) {
   return snapshot;
 }
 
+/**
+ * Devolve o botão ao estado guardado por `lockButton`.
+ *
+ * @param {HTMLElement} btn
+ * @param {{text: string, disabled: boolean}} snapshot Estado anterior do botão.
+ */
 function restoreButton(btn, snapshot) {
   busyButtons.delete(btn);
   if (btn.isConnected === false) return;
@@ -31,6 +50,12 @@ function restoreButton(btn, snapshot) {
   if (typeof snapshot.text === "string") btn.textContent = snapshot.text;
 }
 
+/**
+ * Mostra a falha de uma ação: usa `onError` quando existe, senão um aviso de erro.
+ *
+ * @param {unknown} err Erro lançado pela ação.
+ * @param {{onError?: Function, errorToast?: string}} opts Opções da ação.
+ */
 function handleActionFailure(err, opts) {
   if (typeof opts.onError === "function") {
     opts.onError(err);
@@ -60,6 +85,13 @@ export async function runButtonAction(btn, fn, opts = {}) {
   }
 }
 
+/**
+ * Combina as opções padrão com as sobrescritas nos atributos `data-` do botão.
+ *
+ * @param {HTMLElement} btn Botão com `data-busy-text` e `data-error-toast` opcionais.
+ * @param {object} defaultOpts Opções padrão.
+ * @returns {object}
+ */
 function resolveActionOptions(btn, defaultOpts) {
   return {
     ...defaultOpts,
@@ -77,6 +109,11 @@ function resolveActionOptions(btn, defaultOpts) {
  */
 export function bindActionDelegate(rootEl, handlers, defaultOpts = {}) {
   if (!rootEl || typeof rootEl.addEventListener !== "function" || !handlers) return () => {};
+  /**
+   * Trata o clique: acha o `data-action`, chama o handler registrado e roda a ação com o botão travado.
+   *
+   * @param {Event} ev Evento de clique delegado.
+   */
   const onClick = (ev) => {
     const btn = ev.target?.closest?.("[data-action]");
     const action = btn?.dataset?.action;

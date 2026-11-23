@@ -69,6 +69,10 @@ export async function handleCacheManifestMessage(item, source = "rtc") {
   relayToMesh({ type: "CACHE_MANIFEST", item, fromPeer: myPeerId }, source);
 }
 
+/**
+ * Atualiza o diretório de perfis com os dados do autor do item recebido.
+ * @param {object} item Item da fofoca
+ */
 function syncProfileDirectoryFromGossip(item) {
   if (item.author && (item.authorDisplay || item.authorAvatar || item.authorHandle)) {
     profileDirectory.setProfileCard(item.author, {
@@ -79,6 +83,11 @@ function syncProfileDirectoryFromGossip(item) {
   }
 }
 
+/**
+ * Diz se o item de comunidade recebido tem imagens recusadas.
+ * @param {object} item Item da fofoca
+ * @returns {Promise<boolean>} `true` se deve recusar.
+ */
 async function isRejectedCommunityGossipItem(item) {
   if (item.type !== "community" && item.type !== "community_update") return false;
   const { communityGossipHasRejectedImages } = await import("./shared/community-avatar-image.js");
@@ -87,6 +96,11 @@ async function isRejectedCommunityGossipItem(item) {
   return false;
 }
 
+/**
+ * Diz se o item está fora da rede viva (conta de teste ou anterior à gênese).
+ * @param {object} item Item da fofoca
+ * @returns {boolean} `true` se está fora.
+ */
 function isOutsideLiveNetwork(item) {
   if (isTestRouteId(item.author || item.routeId)) return true;
   return item.type !== profileCard.PROFILE_CARD_TYPE && isBeforeGenesisMs(item.ts || item.timestamp || 0);
@@ -120,6 +134,11 @@ export async function handleGossipMessage(item, source = "rtc", sentBlob = null)
   relayToMesh({ type: "GOSSIP", item, blob, fromPeer: myPeerId }, source);
 }
 
+/**
+ * Diz se o item já foi superado por lápide ou versão mais nova.
+ * @param {object} item Atualização recebida
+ * @returns {Promise<boolean>} `true` se superada.
+ */
 async function isGossipUpdateSuperseded(item) {
   const tombstone = await cacheNode.getTombstone(item.id);
   if (tombstone && (tombstone.editedAt || 0) >= item.editedAt) return true;
@@ -133,6 +152,11 @@ async function isGossipUpdateSuperseded(item) {
   return false;
 }
 
+/**
+ * Diz se a atualização é malformada ou de autor bloqueado.
+ * @param {object} item Atualização recebida
+ * @returns {boolean} `true` se deve ser descartada.
+ */
 function isMalformedOrBlockedUpdate(item) {
   if (!item?.id || !item?.sig || !item?.author) return true;
   if (moderation.shouldDropGossip(item.author) || isOutsideLiveNetwork(item)) return true;
@@ -160,6 +184,11 @@ export async function handleGossipUpdateMessage(item, source = "rtc") {
   relayToMesh({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
 }
 
+/**
+ * Diz se a lápide já foi superada por outra mais nova.
+ * @param {object} tombstone Lápide recebida
+ * @returns {Promise<boolean>} `true` se superada.
+ */
 async function isTombstoneSuperseded(tombstone) {
   const deleteTime = tombstone.editedAt || tombstone.ts || 0;
   const existingTombstone = await cacheNode.getTombstone(tombstone.id);
@@ -177,6 +206,11 @@ async function isTombstoneSuperseded(tombstone) {
   return false;
 }
 
+/**
+ * Diz se a lápide é malformada, grande demais ou de autor bloqueado.
+ * @param {object} tombstone Lápide recebida
+ * @returns {boolean} `true` se deve ser descartada.
+ */
 function isMalformedOrBlockedTombstone(tombstone) {
   if (!tombstone?.id || !tombstone?.sig || !tombstone?.author || isOversizedItem(tombstone)) return true;
   return moderation.shouldDropGossip(tombstone.author) || !(tombstone.editedAt || tombstone.ts);

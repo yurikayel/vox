@@ -20,6 +20,11 @@ const PILLARS = Object.freeze([
   { icon: "🎛️", title: "Controle total", desc: "Usa só o Wi‑Fi quando você quiser e respeita um limite diário de internet. Pause a ajuda à malha quando quiser." },
 ]);
 
+/**
+ * Mosaico de imagens da tela do pacto.
+ *
+ * @returns {string}
+ */
 function renderMosaic() {
   const tiles = MOSAIC.map(
     (m, i) =>
@@ -37,6 +42,11 @@ function renderMosaic() {
     </div>`;
 }
 
+/**
+ * Pilha de avatares da tela do pacto.
+ *
+ * @returns {string}
+ */
 function renderAvatarStack() {
   const faces = AVATARS.map(
     (a) => `<img src="${IMG}/av-${a}.jpg" alt="" width="36" height="36" loading="eager" decoding="async">`,
@@ -48,6 +58,12 @@ function renderAvatarStack() {
     </div>`;
 }
 
+/**
+ * Cartão de um pilar do pacto.
+ *
+ * @param {object} p
+ * @returns {string}
+ */
 function renderPillar(p) {
   return `
     <li class="modal-feature welcome-pillar">

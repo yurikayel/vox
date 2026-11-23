@@ -7,10 +7,20 @@ const CPF_REGEX = /^\d{11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Deixa só os dígitos do CPF.
+ * @param {string} val Texto
+ * @returns {string} Dígitos.
+ */
 function cleanCpf(val) {
   return String(val || "").replace(/\D/g, "");
 }
 
+/**
+ * Confere os dígitos verificadores do CPF.
+ * @param {string} cpf CPF só com dígitos
+ * @returns {boolean} `true` se válido.
+ */
 function validateCpfDigits(cpf) {
   if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
   let sum = 0;
@@ -116,11 +126,21 @@ export function validatePixKey(raw) {
   return { ok: !errorPt, type, normalized, errorPt };
 }
 
+/**
+ * Mascara o CPF, mostrando só os dígitos do meio.
+ * @param {string} str CPF
+ * @returns {string} CPF mascarado.
+ */
 function maskCpf(str) {
   const d = cleanCpf(str);
   return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : "***.***.***-**";
 }
 
+/**
+ * Mascara o e-mail, mostrando só o começo e o fim do usuário.
+ * @param {string} str E-mail
+ * @returns {string} E-mail mascarado.
+ */
 function maskEmail(str) {
   const [user, domain] = str.split("@");
   if (!domain) return "***@***";
@@ -128,12 +148,22 @@ function maskEmail(str) {
   return `${maskedUser}@${domain}`;
 }
 
+/**
+ * Mascara o telefone, mostrando DDD e os quatro últimos dígitos.
+ * @param {string} str Telefone
+ * @returns {string} Telefone mascarado.
+ */
 function maskPhone(str) {
   const d = str.replace(/\D/g, "");
   const ddd = d.length >= 12 ? d.slice(2, 4) : d.slice(0, 2);
   return `+55 (${ddd}) *****-${d.slice(-4)}`;
 }
 
+/**
+ * Mascara a chave aleatória, mostrando só as pontas.
+ * @param {string} str Chave
+ * @returns {string} Chave mascarada.
+ */
 function maskRandom(str) {
   return str.length >= 16 ? `${str.slice(0, 4)}••••-••••-••••-${str.slice(-4)}` : "••••-••••-••••";
 }

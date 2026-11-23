@@ -31,10 +31,20 @@ export function b64url(bytes) {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Gera um token aleatório em base64url.
+ * @param {number} [n=32] Quantidade de bytes aleatórios
+ * @returns {string} Token.
+ */
 function randomToken(n = 32) {
   return b64url(crypto.getRandomValues(new Uint8Array(n)));
 }
 
+/**
+ * Calcula o SHA-256 de um texto em base64url.
+ * @param {string} text Texto
+ * @returns {Promise<string>} Resumo em base64url.
+ */
 async function sha256b64url(text) {
   return b64url(await crypto.subtle.digest("SHA-256", enc.encode(text)));
 }
@@ -47,6 +57,11 @@ export function appBaseUrl(loc = globalThis.location) {
   return `${loc.origin}${path}`;
 }
 
+/**
+ * Diz se o endereço é de loopback (desenvolvimento local).
+ * @param {Location} loc Localização
+ * @returns {boolean} `true` se for loopback.
+ */
 function isLoopback(loc) {
   return ["localhost", "127.0.0.1", "[::1]"].includes(loc.hostname);
 }
@@ -64,11 +79,22 @@ export function bskyClientConfig(loc = globalThis.location) {
   return { clientId: `${base}oauth/bsky-client-metadata.json`, redirectUri: `${base}oauth-callback.html` };
 }
 
+/**
+ * Gera o par de chaves ECDSA P-256 do DPoP.
+ * @returns {Promise<{privateJwk: object, publicJwk: object}>} Par em JWK.
+ */
 async function newDpopKey() {
   const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
   return { privateJwk: await crypto.subtle.exportKey("jwk", pair.privateKey), publicJwk: await crypto.subtle.exportKey("jwk", pair.publicKey) };
 }
 
+/**
+ * Assina um JWT com ECDSA P-256.
+ * @param {object} header Cabeçalho
+ * @param {object} payload Corpo
+ * @param {object} privateJwk Chave privada em JWK
+ * @returns {Promise<string>} JWT assinado.
+ */
 async function signJwt(header, payload, privateJwk) {
   const key = await crypto.subtle.importKey("jwk", privateJwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
   const input = `${b64url(enc.encode(JSON.stringify(header)))}.${b64url(enc.encode(JSON.stringify(payload)))}`;
@@ -90,6 +116,12 @@ export async function dpopProof(keys, htm, htu, { nonce = "", accessToken = "" }
   return signJwt({ typ: "dpop+jwt", alg: "ES256", jwk: { kty, crv, x, y } }, payload, keys.privateJwk);
 }
 
+/**
+ * Diz se a resposta pede nova tentativa com o nonce do DPoP.
+ * @param {Response} res Resposta HTTP
+ * @param {object} body Corpo já lido
+ * @returns {boolean} `true` se deve repetir.
+ */
 function needsNonceRetry(res, body) {
   const header = res.headers.get("WWW-Authenticate") || "";
   return Boolean(res.headers.get("DPoP-Nonce")) && (body?.error === "use_dpop_nonce" || header.includes("use_dpop_nonce"));
@@ -116,12 +148,22 @@ export async function dpopFetch(keys, url, init = {}, state = {}) {
   throw new Error("dpopFetch: estado inesperado");
 }
 
+/**
+ * Busca um JSON por GET; falha se a resposta não for 2xx.
+ * @param {string} url Endereço
+ * @returns {Promise<object>} JSON recebido.
+ */
 async function getJson(url) {
   const r = await fetch(url, { headers: { Accept: "application/json" } });
   if (!r.ok) throw new Error(`Falha ao consultar ${new URL(url).host} (${r.status})`);
   return r.json();
 }
 
+/**
+ * Busca os metadados do servidor de autorização.
+ * @param {string} [issuer=BSKY_ENTRYWAY] Emissor
+ * @returns {Promise<object>} Metadados.
+ */
 async function authServerMetadata(issuer = BSKY_ENTRYWAY) {
   return getJson(`${issuer.replace(/\/$/, "")}/.well-known/oauth-authorization-server`);
 }
@@ -137,6 +179,10 @@ export async function resolveDid(did) {
   return { did, handle, pds };
 }
 
+/**
+ * Lê o fluxo de login em andamento da sessão do navegador.
+ * @returns {object|null} Fluxo salvo ou `null`.
+ */
 function readFlow() {
   try { return JSON.parse(sessionStorage.getItem(FLOW_KEY) || "null"); } catch { return null; }
 }
@@ -164,11 +210,23 @@ export async function startBskyLogin({ loginHint = "" } = {}) {
   location.assign(`${meta.authorization_endpoint}?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(par.request_uri)}`);
 }
 
+/**
+ * Confere se o servidor de autorização é o declarado pelo PDS da conta.
+ * @param {string} pds Endereço do PDS
+ * @param {string} issuer Emissor esperado
+ * @returns {Promise<void>} Conclui se confere; lança erro se não.
+ */
 async function assertIssuerForDid(pds, issuer) {
   const pr = await getJson(`${pds.replace(/\/$/, "")}/.well-known/oauth-protected-resource`);
   if (!(pr.authorization_servers || []).includes(issuer)) throw new Error("O servidor de login não corresponde à conta — login recusado.");
 }
 
+/**
+ * Troca o código de autorização por tokens.
+ * @param {object} flow Fluxo de login
+ * @param {string} code Código recebido
+ * @returns {Promise<object>} Resposta de tokens.
+ */
 async function exchangeCode(flow, code) {
   const body = new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: flow.redirectUri, client_id: flow.clientId, code_verifier: flow.verifier });
   const dpop = { nonce: flow.nonce };
@@ -287,6 +345,11 @@ export function clearBskySession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
+/**
+ * Renova a sessão do Bluesky com o token de renovação.
+ * @param {object} s Sessão atual
+ * @returns {Promise<object>} Sessão renovada.
+ */
 async function refreshSession(s) {
   if (!s.refreshToken) throw new Error("Sessão do Bluesky expirada — conecte de novo.");
   const body = new URLSearchParams({ grant_type: "refresh_token", refresh_token: s.refreshToken, client_id: s.clientId });

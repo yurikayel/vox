@@ -24,16 +24,34 @@ import {
 } from "./webrtc-peer-state.js";
 import { sendVoxMessage } from "./webrtc-messaging.js";
 
+/**
+ * Diz se a conexão é a ativa do par.
+ * @param {string} remotePeerId Par remoto
+ * @param {RTCPeerConnection} pc Conexão
+ * @returns {boolean} `true` se for a ativa.
+ */
 function isActivePc(remotePeerId, pc) {
   return peerConnections.get(remotePeerId)?.pc === pc;
 }
 
+/**
+ * Fecha a conexão só se ainda for a ativa do par.
+ * @param {string} remotePeerId Par remoto
+ * @param {RTCPeerConnection} pc Conexão
+ * @param {boolean} [skipFailureRecord=false] Se não registra a falha
+ */
 function closeIfSameConnection(remotePeerId, pc, skipFailureRecord = false) {
   if (isActivePc(remotePeerId, pc)) {
     closePeerConnection(remotePeerId, skipFailureRecord);
   }
 }
 
+/**
+ * Agenda o prazo de negociação da conexão.
+ * @param {string} remotePeerId Par remoto
+ * @param {RTCPeerConnection} pc Conexão
+ * @returns {number} Identificador do temporizador.
+ */
 function startNegotiationTimer(remotePeerId, pc) {
   return setTimeout(() => {
     const entry = peerConnections.get(remotePeerId);
@@ -45,6 +63,10 @@ function startNegotiationTimer(remotePeerId, pc) {
   }, NEGOTIATION_TIMEOUT_MS);
 }
 
+/**
+ * Marca o par como conectado e cancela o prazo de negociação.
+ * @param {string} remotePeerId Par remoto
+ */
 function markPeerConnected(remotePeerId) {
   const entry = peerConnections.get(remotePeerId);
   if (!entry) return;
@@ -62,6 +84,12 @@ function markPeerConnected(remotePeerId) {
   }
 }
 
+/**
+ * Liga os eventos do canal de dados do par.
+ * @param {RTCDataChannel} dc Canal de dados
+ * @param {string} remotePeerId Par remoto
+ * @param {RTCPeerConnection} pc Conexão
+ */
 function setupDataChannelEvents(dc, remotePeerId, pc) {
   dc.onopen = () => {
     if (peerConnections.get(remotePeerId)?.pc !== pc) return;
@@ -86,6 +114,12 @@ function setupDataChannelEvents(dc, remotePeerId, pc) {
   dc.onerror = () => closeIfSameConnection(remotePeerId, pc);
 }
 
+/**
+ * Liga os eventos do canal de mensagens diretas do par.
+ * @param {RTCDataChannel} dmDc Canal de DM
+ * @param {string} remotePeerId Par remoto
+ * @param {RTCPeerConnection} pc Conexão
+ */
 function setupDmChannelEvents(dmDc, remotePeerId, pc) {
   dmDc.onmessage = (event) => {
     const dmMessageHandler = getDmMessageHandler();
@@ -99,6 +133,11 @@ function setupDmChannelEvents(dmDc, remotePeerId, pc) {
   };
 }
 
+/**
+ * Cria os canais de dados de quem inicia a conexão.
+ * @param {RTCPeerConnection} pc Conexão
+ * @param {string} remotePeerId Par remoto
+ */
 function initInitiatorChannels(pc, remotePeerId) {
   const dc = pc.createDataChannel("vox-peer-v0");
   setupDataChannelEvents(dc, remotePeerId, pc);
@@ -107,6 +146,11 @@ function initInitiatorChannels(pc, remotePeerId) {
   return { dc, dmDc };
 }
 
+/**
+ * Liga o recebimento dos canais criados pelo outro lado.
+ * @param {RTCPeerConnection} pc Conexão
+ * @param {string} remotePeerId Par remoto
+ */
 function bindPeerDataChannelListener(pc, remotePeerId) {
   pc.ondatachannel = (event) => {
     const entry = peerConnections.get(remotePeerId);
@@ -122,6 +166,11 @@ function bindPeerDataChannelListener(pc, remotePeerId) {
   };
 }
 
+/**
+ * Negocia a oferta de quem inicia a conexão.
+ * @param {object} entry Entrada da conexão
+ * @returns {Promise<void>} Conclui após enviar a oferta.
+ */
 async function negotiateInitiatorOffer(entry) {
   const { pc, remotePeerId } = entry;
   entry.makingOffer = true;
@@ -138,8 +187,18 @@ async function negotiateInitiatorOffer(entry) {
   }
 }
 
+/**
+ * Diz se a URL é de servidor TURN.
+ * @param {string} u URL
+ * @returns {boolean} `true` se for TURN.
+ */
 const isTurnUrl = (u) => /^turns?:/i.test(String(u));
 
+/**
+ * Liga os eventos de estado da conexão e dos candidatos ICE.
+ * @param {RTCPeerConnection} pc Conexão
+ * @param {string} remotePeerId Par remoto
+ */
 function attachPeerConnectionEvents(pc, remotePeerId) {
   pc.onconnectionstatechange = () => {
     const state = pc.connectionState;
@@ -194,6 +253,11 @@ export async function createPeerConnection(remotePeerId, isInitiator) {
   return entry;
 }
 
+/**
+ * Aplica os candidatos ICE que chegaram antes da descrição remota.
+ * @param {object} entry Entrada da conexão
+ * @returns {Promise<void>} Conclui após aplicar.
+ */
 async function flushPendingIceCandidates(entry) {
   const pending = entry.pendingIceCandidates;
   if (!pending?.length) return;
@@ -204,6 +268,13 @@ async function flushPendingIceCandidates(entry) {
   }
 }
 
+/**
+ * Aplica a descrição remota e os candidatos ICE pendentes.
+ * @param {object} entry Entrada da conexão
+ * @param {string} remotePeerId Par remoto
+ * @param {object} sdp Descrição remota
+ * @returns {Promise<boolean>} `true` se a conexão continua ativa.
+ */
 async function applyRemoteDescription(entry, remotePeerId, sdp) {
   await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
   if (!isActivePc(remotePeerId, entry.pc)) return false;
@@ -211,6 +282,13 @@ async function applyRemoteDescription(entry, remotePeerId, sdp) {
   return isActivePc(remotePeerId, entry.pc);
 }
 
+/**
+ * Responde a uma oferta com uma resposta.
+ * @param {object} entry Entrada da conexão
+ * @param {string} fromPeer Par que ofereceu
+ * @param {object} sdp Oferta recebida
+ * @returns {Promise<void>} Conclui após enviar a resposta.
+ */
 async function respondWithAnswer(entry, fromPeer, sdp) {
   const { pc } = entry;
   const ready = await applyRemoteDescription(entry, fromPeer, sdp);
@@ -222,6 +300,11 @@ async function respondWithAnswer(entry, fromPeer, sdp) {
   sendSignaling({ type: "answer", to: fromPeer, sdp: pc.localDescription });
 }
 
+/**
+ * Diz se há colisão de ofertas com a conexão existente.
+ * @param {object|undefined} existing Entrada existente
+ * @returns {boolean} `true` se há colisão.
+ */
 function hasOfferCollision(existing) {
   return Boolean(existing?.pc && (existing.makingOffer || existing.pc.signalingState !== "stable"));
 }
@@ -278,6 +361,10 @@ export async function handleIncomingIce(fromPeer, candidate) {
   } catch {}
 }
 
+/**
+ * Solta os canais de dados da entrada, tirando os tratadores de eventos.
+ * @param {object} entry Entrada da conexão
+ */
 function disposePeerChannels(entry) {
   if (entry.dc) {
     entry.dc.onopen = null;

@@ -28,6 +28,7 @@ def is_test_route_id(route_id: Any) -> bool:
 
 
 def _created_ms(item: Dict[str, Any]) -> int:
+    """Devolve o primeiro campo de criação do item como milissegundos válidos, ou 0."""
     for field in _CREATED_FIELDS:
         val = item.get(field)
         if (

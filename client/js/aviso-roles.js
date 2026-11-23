@@ -62,8 +62,23 @@ export const ROLE_COUNT_TYPE = "aviso-papeis";
 const NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N} -]*$/u;
 const ITEM_RE = /^(.+?)\s+(\d{1,2})$/u;
 
+/**
+ * Normaliza o nome de um papel: aparado, minúsculo e com espaços únicos.
+ * @param {*} name Nome
+ * @returns {string} Nome normalizado.
+ */
 const normalizeName = (name) => String(name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+/**
+ * Diz se o nome de papel tem tamanho e caracteres válidos.
+ * @param {string} name Nome já normalizado
+ * @returns {boolean} `true` se válido.
+ */
 const validName = (name) => name.length >= 2 && name.length <= ROLE_NAME_MAX && NAME_RE.test(name);
+/**
+ * Diz se a quantidade de vagas é um inteiro dentro do limite.
+ * @param {*} n Quantidade
+ * @returns {boolean} `true` se válida.
+ */
 const validSlots = (n) => Number.isInteger(n) && n >= 1 && n <= ROLE_SLOTS_MAX;
 
 /**
@@ -104,6 +119,11 @@ export function decodeRoleList(encoded) {
     .map(([role, n]) => ({ role, n: Number(n) }));
 }
 
+/**
+ * Soma as vagas de uma lista de papéis codificada.
+ * @param {string} encoded Lista codificada
+ * @returns {number} Total de vagas.
+ */
 const totalSlots = (encoded) => decodeRoleList(encoded).reduce((sum, r) => sum + r.n, 0);
 
 /**
@@ -182,6 +202,11 @@ export function serializeRoleClaimDm(signedClaim, text = "") {
   return JSON.stringify({ __vox_dm_v2: 1, kind: ROLE_CLAIM_TYPE, text: String(text), contextCard: null, claim: signedClaim });
 }
 
+/**
+ * Diz se a reivindicação de papel tem a forma esperada.
+ * @param {object} c Reivindicação
+ * @returns {boolean} `true` se bem formada.
+ */
 function isWellFormedClaim(c) {
   if (!c || typeof c !== "object" || c.type !== ROLE_CLAIM_TYPE) return false;
   if (!c.avisoId || !c.communityId || !c.author || !(Number(c.ts) > 0)) return false;
@@ -254,6 +279,13 @@ export function buildRoleCount(aviso, counts = {}, now = Date.now()) {
   return { type: ROLE_COUNT_TYPE, communityId: aviso.communityId, avisoId: aviso.id, countRoles, countedAt: now, ts: now };
 }
 
+/**
+ * Diz se a contagem foi publicada pela moderação do aviso.
+ * @param {object} c Contagem
+ * @param {string} avisoId Aviso esperado
+ * @param {object} meta Dono e moderadores da comunidade
+ * @returns {boolean} `true` se vale como contagem oficial.
+ */
 function isCountByModeration(c, avisoId, meta) {
   if (c?.type !== ROLE_COUNT_TYPE || c.avisoId !== avisoId) return false;
   return isModerator(String(c.author || c.owner || ""), meta?.owner, meta?.moderators);
@@ -276,6 +308,14 @@ export function latestRoleCount(items = [], avisoId = "", meta = {}) {
   return best;
 }
 
+/**
+ * Resolve o estado de um papel: quórum, sem quórum ou aberta.
+ * @param {number} filled Vagas preenchidas
+ * @param {number} quorum Quórum exigido
+ * @param {number} eventAt Início do evento (ms)
+ * @param {number} now Agora (ms)
+ * @returns {string} `quorum`, `sem-quorum` ou `aberta`.
+ */
 function stateOf(filled, quorum, eventAt, now) {
   if (filled >= quorum) return "quorum";
   return Number(eventAt) > 0 && now >= Number(eventAt) ? "sem-quorum" : "aberta";

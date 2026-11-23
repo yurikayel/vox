@@ -36,6 +36,11 @@ export function rememberInviteArrival({ inviter, token, name = "" }, storage = g
   }
 }
 
+/**
+ * Lê o registro de chegada por convite do armazenamento.
+ * @param {Storage} storage Armazenamento
+ * @returns {object|null} Registro, ou `null`.
+ */
 function readRecord(storage) {
   try {
     return JSON.parse(storage.getItem(INVITE_ARRIVAL_KEY) || "null");

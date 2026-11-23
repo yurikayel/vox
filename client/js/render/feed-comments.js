@@ -57,6 +57,12 @@ export function renderCommentNestedReplyComposer(parentId, topicId, commId, ment
     </form>`;
 }
 
+/**
+ * Botão de reação do comentário com a contagem atual.
+ *
+ * @param {object} r
+ * @returns {string}
+ */
 function renderCommentReactBtn(r) {
   const baseReactions = Number(r.reactionsCount) || 0;
   const reacted = social.isCommentReacted(r.id);
@@ -70,6 +76,15 @@ function renderCommentReactBtn(r) {
     </button>`;
 }
 
+/**
+ * Lista aninhada de respostas filhas.
+ *
+ * @param {object[]} children
+ * @param {object} byParent
+ * @param {string} topicId
+ * @param {string} commId
+ * @returns {string}
+ */
 function renderReplyNestedList(children, byParent, topicId, commId) {
   if (!children || !children.length) return "";
   const items = children.map((c) => renderInlineReplyItem(c, { byParent, topicId, commId })).join("");
@@ -134,6 +149,13 @@ export function renderCommentList(replies = [], { topicId = "", commId = "" } = 
   return `<div class="post-comments-feed"><ul class="post-comment-list">${items.join("")}</ul></div>`;
 }
 
+/**
+ * Formulário de resposta inline do comentário.
+ *
+ * @param {string} topicId
+ * @param {string} commId
+ * @returns {string}
+ */
 function renderInlineReplyComposer(topicId, commId) {
   return `
     <form class="post-comment-composer" data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId || "")}">

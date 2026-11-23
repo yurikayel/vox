@@ -43,11 +43,24 @@ export function computeAccountSocialKey(acc) {
   return (cleanName && av) ? `name-av:${cleanName}:${av}` : null;
 }
 
+/**
+ * Compara o provedor esperado com o atual; `meta` e `facebook` contam como o mesmo.
+ * @param {string} expected Provedor esperado
+ * @param {string} current Provedor atual
+ * @returns {boolean} `true` se forem compatíveis.
+ */
 function isSameProvider(expected, current) {
   if (!expected || !current || expected === current) return true;
   return expected === "meta" && current === "facebook";
 }
 
+/**
+ * Diz se o avatar da rede social enriquecida corresponde ao avatar da conta.
+ * @param {string} enrichAv Avatar vindo do enriquecimento
+ * @param {string} targetAv Avatar da conta alvo
+ * @param {boolean} isGoogleAv Se o avatar é do Google
+ * @returns {boolean} `true` se correspondem.
+ */
 function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
   if (!enrichAv || !targetAv) return false;
   if (isGoogleAv && enrichAv.split("=")[0] === targetAv.split("=")[0]) return true;

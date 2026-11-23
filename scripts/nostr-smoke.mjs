@@ -18,6 +18,11 @@ import { createNostrTransport } from "../client/js/nostr-transport.js";
 
 const SMOKE_KIND = 25050;
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {{json: string, timeout: number, relays: string[], signaling: boolean}}
+ */
 export function parseArgs(argv) {
   const opts = { json: "", timeout: 8000, relays: [], signaling: false };
   for (let i = 0; i < argv.length; i++) {
@@ -30,11 +35,22 @@ export function parseArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê os relays Nostr (`ws://` ou `wss://`) da configuração de sinalização.
+ * @param {string|URL} [path] Caminho do arquivo de configuração.
+ * @returns {string[]}
+ */
 export function loadConfiguredRelays(path = new URL("../client/config/signaling.json", import.meta.url)) {
   const cfg = JSON.parse(readFileSync(path, "utf8"));
   return (cfg.nostrRelays || []).filter((r) => /^wss?:\/\//.test(r));
 }
 
+/**
+ * Abre um WebSocket e resolve quando conecta, ou rejeita no tempo limite.
+ * @param {string} url URL do relay.
+ * @param {number} timeoutMs Tempo limite, em ms.
+ * @returns {Promise<WebSocket>}
+ */
 function openSocket(url, timeoutMs) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
@@ -53,6 +69,11 @@ function openSocket(url, timeoutMs) {
   });
 }
 
+/**
+ * Interpreta um quadro Nostr, ou devolve `null` se não é JSON de lista.
+ * @param {string|Buffer} raw Quadro bruto.
+ * @returns {Array|null}
+ */
 function parseFrame(raw) {
   try {
     const msg = JSON.parse(String(raw));
@@ -62,6 +83,13 @@ function parseFrame(raw) {
   }
 }
 
+/**
+ * Espera por um quadro que satisfaça o predicado, ou `null` no tempo limite.
+ * @param {WebSocket} ws Socket a escutar.
+ * @param {Function} predicate Teste aplicado a cada quadro.
+ * @param {number} timeoutMs Tempo limite, em ms.
+ * @returns {Promise<Array|null>}
+ */
 function waitFor(ws, predicate, timeoutMs) {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(null), timeoutMs);
@@ -86,6 +114,14 @@ export function classifyRejection(message = "") {
   return m ? "rejeitado" : "";
 }
 
+/**
+ * Publica um evento por um socket e espera recebê-lo pelo outro, inscrito pela tag.
+ * @param {WebSocket} sub Socket inscrito para receber.
+ * @param {WebSocket} pub Socket que publica.
+ * @param {object} event Evento Nostr assinado.
+ * @param {number} timeoutMs Tempo limite, em ms.
+ * @returns {Promise<object>}
+ */
 async function publishAndListen(sub, pub, event, timeoutMs) {
   const subId = `vox-smoke-${Math.random().toString(36).slice(2, 8)}`;
   const tag = event.tags[0][1];
@@ -100,6 +136,13 @@ async function publishAndListen(sub, pub, event, timeoutMs) {
   return { okMsg, evMsg, latencyMs: evMsg ? Date.now() - started : null };
 }
 
+/**
+ * Sonda um relay: conecta, publica um evento efêmero e confere se ele é repassado.
+ * @param {string} url URL do relay.
+ * @param {object} [options={}] Opções.
+ * @param {number} [options.timeout=8000] Tempo limite, em ms.
+ * @returns {Promise<object>}
+ */
 export async function probeRelay(url, { timeout = 8000 } = {}) {
   const result = { relay: url, connected: false, accepted: false, relayed: false, latencyMs: null, reason: "" };
   const pending = [openSocket(url, timeout), openSocket(url, timeout)];
@@ -126,8 +169,19 @@ export async function probeRelay(url, { timeout = 8000 } = {}) {
   return result;
 }
 
+/**
+ * Espera o tempo dado.
+ * @param {number} ms Tempo, em ms.
+ * @returns {Promise<void>}
+ */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Repete a verificação até ela dar certo ou o tempo acabar.
+ * @param {Function} check Função que devolve verdadeiro quando a condição vale.
+ * @param {number} timeoutMs Tempo limite, em ms.
+ * @returns {Promise<boolean>}
+ */
 async function waitUntil(check, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -141,6 +195,13 @@ async function waitUntil(check, timeoutMs) {
 export async function probeSignalingRoundTrip(relays, { timeout = 15000 } = {}) {
   const room = `vox-smoke-${bytesToHex(globalThis.crypto.getRandomValues(new Uint8Array(4)))}`;
   const got = { a: [], b: [] };
+  /**
+   * Cria um transporte Nostr de teste que guarda as mensagens recebidas em `sink`.
+   * @param {string} peerId Id do par.
+   * @param {string} address Endereço da identidade.
+   * @param {object[]} sink Lista que recebe as mensagens.
+   * @returns {object}
+   */
   const mk = (peerId, address, sink) =>
     createNostrTransport({ relays, room, maxRelays: relays.length, peerId, getIdentity: () => ({ address }), onMessage: (m) => sink.push(m) });
   const A = mk("smoke_a", "vx_smoke_a", got.a);
@@ -162,6 +223,11 @@ export async function probeSignalingRoundTrip(relays, { timeout = 15000 } = {}) 
   }
 }
 
+/**
+ * Resume os resultados das sondagens em texto.
+ * @param {object[]} results Resultados de `probeRelay`.
+ * @returns {string}
+ */
 export function summarize(results) {
   const ok = results.filter((r) => r.accepted && r.relayed).length;
   const lines = [
@@ -178,6 +244,10 @@ export function summarize(results) {
   return { ok, total: results.length, markdown: lines.join("\n") };
 }
 
+/**
+ * Roda a sondagem dos relays e sai com código 1 se algum falhar.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const relays = opts.relays.length ? opts.relays : loadConfiguredRelays();

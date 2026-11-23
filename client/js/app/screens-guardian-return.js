@@ -28,6 +28,12 @@ const RECOVER_FAILURES = {
   "wrong-account": "Os pedaços não formam a conta pedida. Confira se colou o link do seu perfil certo.",
 };
 
+/**
+ * Mostra ou limpa a mensagem de erro de um campo.
+ *
+ * @param {string} id Identificador do elemento.
+ * @param {string} text Mensagem (vazia limpa).
+ */
 function setError(id, text) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -43,11 +49,22 @@ function ownerAsKnown(owner) {
   return { name, avatarUrl: getAuthorAvatarSync(owner) || "" };
 }
 
+/**
+ * Desenha a casca da tela com a conta ativa e devolve a raiz.
+ *
+ * @param {string} title Título da tela.
+ * @returns {Promise<HTMLElement>}
+ */
 async function mount(title) {
   const user = await getActiveUser();
   return render.renderShell(makeShellProps(user, "profile", title));
 }
 
+/**
+ * Liga a confirmação e o botão de devolver a conta como guardião.
+ *
+ * @param {object} request Pedido de devolução.
+ */
 function bindGuardianReturn(request) {
   const box = document.getElementById("guardian-return-confirm");
   const btn = document.getElementById("btn-guardian-return");
@@ -86,6 +103,9 @@ export async function showGuardianReturn(query) {
   bindGuardianReturn(res.request);
 }
 
+/**
+ * Conclui a recuperação da conta e leva ao perfil, ou mostra o motivo da falha.
+ */
 async function onFinish() {
   const res = await flow.finishRecovery().catch(() => ({ ok: false, reason: "error" }));
   if (res.ok) {
@@ -98,13 +118,31 @@ async function onFinish() {
   setError("guardian-recover-error", finishFailure(res));
 }
 
+/**
+ * Texto do motivo pelo qual a recuperação ainda não concluiu.
+ *
+ * @param {{reason: string, have?: number, need?: number}} res Resultado da tentativa.
+ * @returns {string}
+ */
 function finishFailure(res) {
   if (res.reason !== "not-enough") return RECOVER_FAILURES[res.reason] || "Não deu para entrar. Tente de novo.";
   if (!res.have) return "Ainda não chegou nenhuma resposta que valha para esta conta.";
   return `Ainda faltam pedaços: ${res.have} de ${res.need} que valem para esta conta.`;
 }
 
+/**
+ * Liga os botões da tela de pedido pendente.
+ *
+ * @param {{link: string, code: string, received: number}} view Resumo do pedido pendente.
+ */
 function bindPending(view) {
+  /**
+   * Liga o clique de um botão pelo identificador.
+   *
+   * @param {string} id Identificador do elemento.
+   * @param {Function} fn Tratador do clique.
+   * @returns {void}
+   */
   const on = (id, fn) => document.getElementById(id)?.addEventListener("click", fn);
   on("btn-guardian-recover-share", () => share.shareOrCopy({ title: "Vox", text: "Pedido para devolver minha conta no Vox:", url: view.link, copyText: view.link }));
   on("btn-guardian-recover-add", async () => {
@@ -124,6 +162,9 @@ function bindPending(view) {
   });
 }
 
+/**
+ * Liga o formulário de iniciar a recuperação.
+ */
 function bindStart() {
   document.getElementById("form-guardian-recover")?.addEventListener("submit", async (e) => {
     e.preventDefault();
