@@ -43,14 +43,21 @@ export class FakeElement {
     return [...this.classes].join(" ");
   }
 
-  /** @param {string} html Marcação; cada tag com `class=""` vira um filho consultável. */
+  /** @param {string} html Marcação; cada tag com `id`, `class` ou `data-*` vira um descendente consultável. */
   set innerHTML(html) {
     this._html = String(html);
     this.children = [];
-    for (const m of this._html.matchAll(/<(\w+)[^>]*class="([^"]+)"[^>]*>/g)) {
+    for (const m of this._html.matchAll(/<(\w+)((?:\s+[\w:-]+(?:="[^"]*")?)*)\s*\/?>/g)) {
       const child = new FakeElement(m[1]);
-      child.className = m[2];
-      this.children.push(child);
+      for (const a of m[2].matchAll(/\s+([\w:-]+)(?:="([^"]*)")?/g)) {
+        const [, name, value = ""] = a;
+        if (name === "id") child.id = value;
+        else if (name === "class") child.className = value;
+        else if (name === "hidden") child.hidden = true;
+        else if (name.startsWith("data-")) child.dataset[name.slice(5).replace(/-(\w)/g, (_, c) => c.toUpperCase())] = value;
+        else child.attrs[name] = value;
+      }
+      if (child.id || child.classes.size || Object.keys(child.dataset).length) this.children.push(child);
     }
   }
 
@@ -62,6 +69,11 @@ export class FakeElement {
   /** @param {string} k Nome. @param {string} v Valor. */
   setAttribute(k, v) {
     this.attrs[k] = String(v);
+  }
+
+  /** @param {string} k Nome. */
+  removeAttribute(k) {
+    delete this.attrs[k];
   }
 
   /** @param {string} k Nome. @returns {string|null} Valor ou `null`. */
@@ -80,9 +92,26 @@ export class FakeElement {
     return child;
   }
 
-  /** @param {string} sel Seletor `.classe`. @returns {FakeElement|null} Primeiro filho com a classe. */
+  /** @param {string} sel Seletor `.classe` ou `#id`. @returns {FakeElement|null} Primeiro descendente que casa. */
   querySelector(sel) {
-    return this.children.find((c) => sel.startsWith(".") && c.classes.has(sel.slice(1))) || null;
+    const last = sel.trim().split(/\s+/).at(-1);
+    const match = (c) => (last.startsWith(".") ? c.classes.has(last.slice(1)) : last.startsWith("#") && c.id === last.slice(1));
+    for (const c of this.children) {
+      if (match(c)) return c;
+      const deep = c.querySelector(sel);
+      if (deep) return deep;
+    }
+    return null;
+  }
+
+  /** @param {string} html Marcação inserida (só registrada em `inserted`). */
+  insertAdjacentHTML(where, html) {
+    (this.inserted ||= []).push([where, html]);
+  }
+
+  /** @returns {void} Registra o foco. */
+  focus() {
+    this.focused = true;
   }
 
   /** @param {string} ev Evento. @param {Function} fn Ouvinte. */
@@ -105,8 +134,12 @@ export function installFakeDocument() {
   const body = new FakeElement("body");
   const document = new FakeElement("document");
   document.body = body;
-  document.getElementById = (id) => body.children.find((c) => c.id === id) || null;
+  document.getElementById = (id) => body.querySelector(`#${id}`);
   document.createElement = (tag) => new FakeElement(tag);
+  document.querySelector = (sel) => body.querySelector(sel);
+  document.querySelectorAll = () => [];
+  document.documentElement = new FakeElement("html");
+  document.documentElement.style = {};
   globalThis.document = document;
   return {
     document,
