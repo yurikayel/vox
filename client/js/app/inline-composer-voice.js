@@ -130,7 +130,9 @@ export function startVoiceRecording(state) {
     return;
   }
   if (!state.voiceMachine.send("REQUEST").changed) return;
-  clearMedia(state);
+  state.rawSourceFile = null;
+  state.activeLofiFilter = "normal";
+  clearMedia();
   navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
     beginRecorderWithStream(stream, state);
   }).catch((err) => {
