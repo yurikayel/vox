@@ -25,8 +25,26 @@ const ECDSA = { name: "ECDSA", namedCurve: "P-256" };
 const ECDH = { name: "ECDH", namedCurve: "P-256" };
 const sessionKeys = new Map();
 
+/**
+ * Identificador da chave de assinatura no cofre de chaves.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 const signKid = (routeId) => `sign:${routeId}`;
+/**
+ * Identificador da chave de DM no cofre de chaves.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 const dmKid = (routeId) => `dm:${routeId}`;
+/**
+ * Referência no armazenamento que aponta para uma chave travada.
+ *
+ * @param {string} kid
+ * @returns {object}
+ */
 const lockedRef = (kid) => ({ locked: LOCKED_TAG, kid });
 
 /** Mapa `routeId → cópia`; o que estiver guardado e não for mapa conta como vazio. */
@@ -39,6 +57,14 @@ function writeCopies(map) {
   return writeStoredJson(LOCKED_COPIES, map);
 }
 
+/**
+ * Obtém a `CryptoKey` de um segredo selado ou travado (em sessão ou no cofre de chaves).
+ *
+ * @param {object} atRest
+ * @param {object} algo
+ * @param {string[]} usages
+ * @returns {Promise<CryptoKey>}
+ */
 async function keyFor(atRest, algo, usages) {
   if (!isLocked(atRest)) return crypto.subtle.importKey("jwk", await openSealed(atRest), algo, false, usages);
   if (!sessionKeys.has(atRest.kid)) {
@@ -67,6 +93,13 @@ export function dmPrivateKey(atRest) {
   return keyFor(atRest, ECDH, ["deriveKey"]);
 }
 
+/**
+ * Confere que a chave assina um desafio verificável pela chave pública.
+ *
+ * @param {CryptoKey} key
+ * @param {JsonWebKey} publicJwk
+ * @returns {Promise<boolean>}
+ */
 async function signsForPublicKey(key, publicJwk) {
   const nonce = crypto.getRandomValues(new Uint8Array(32));
   const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, nonce);
@@ -74,12 +107,27 @@ async function signsForPublicKey(key, publicJwk) {
   return crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pub, sig, nonce);
 }
 
+/**
+ * Guarda a chave de assinatura travada se ela corresponde à pública; devolve o id ou `null`.
+ *
+ * @param {string} routeId
+ * @param {JsonWebKey} publicJwk
+ * @param {JsonWebKey} privateJwk
+ * @returns {Promise<string|null>}
+ */
 async function storeSigningKey(routeId, publicJwk, privateJwk) {
   const key = await crypto.subtle.importKey("jwk", privateJwk, ECDSA, false, ["sign"]);
   const stored = await storeKey(signKid(routeId), key);
   return stored && (await signsForPublicKey(stored, publicJwk)) ? signKid(routeId) : null;
 }
 
+/**
+ * Guarda a chave de DM travada; devolve o id ou `null`.
+ *
+ * @param {string} routeId
+ * @param {object} dmKeypair
+ * @returns {Promise<string|null>}
+ */
 async function storeDmKey(routeId, dmKeypair) {
   if (!dmKeypair?.privateJwk) return null;
   const key = await crypto.subtle.importKey("jwk", dmKeypair.privateJwk, ECDH, false, ["deriveKey"]);

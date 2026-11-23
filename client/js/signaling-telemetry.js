@@ -11,15 +11,29 @@ export const SIGNALING_PATHS = Object.freeze(["ws", "nostr"]);
 export const MAX_FIRST_PEER_SAMPLES = 30;
 const PATH_LABELS = Object.freeze({ ws: "WebSocket", nostr: "Nostr" });
 
+/**
+ * Converte o valor em inteiro não negativo.
+ * @param {*} value Valor
+ * @returns {number} Inteiro, ou 0.
+ */
 function nonNegInt(value) {
   const n = Math.round(Number(value));
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+/**
+ * Cria um balde de contagem zerado.
+ * @returns {object} Balde.
+ */
 function emptyBucket() {
   return { attempts: 0, ok: 0, fail: 0, connectTotalMs: 0, lastConnectMs: null };
 }
 
+/**
+ * Limpa um balde vindo do armazenamento.
+ * @param {*} raw Valor bruto
+ * @returns {object} Balde limpo.
+ */
 function sanitizeBucket(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   const last = src.lastConnectMs === null || src.lastConnectMs === undefined ? null : nonNegInt(src.lastConnectMs);
@@ -32,11 +46,20 @@ function sanitizeBucket(raw) {
   };
 }
 
+/**
+ * Limpa um grupo de baldes (WebSocket e Nostr).
+ * @param {*} raw Valor bruto
+ * @returns {object} Grupo limpo.
+ */
 function sanitizeGroup(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   return { ws: sanitizeBucket(src.ws), nostr: sanitizeBucket(src.nostr) };
 }
 
+/**
+ * Cria o estado inicial da telemetria.
+ * @returns {object} Estado inicial.
+ */
 function defaultState() {
   return {
     channels: { ws: emptyBucket(), nostr: emptyBucket() },
@@ -46,6 +69,11 @@ function defaultState() {
   };
 }
 
+/**
+ * Lê o estado da telemetria do armazenamento; se falhar, devolve o inicial.
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento
+ * @returns {object} Estado.
+ */
 function loadState(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem?.(SIGNALING_TELEMETRY_KEY);
@@ -65,6 +93,11 @@ function loadState(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Grava o estado da telemetria; se falhar, segue sem gravar.
+ * @param {object} state Estado
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento
+ */
 function saveState(state, storage = globalThis.localStorage) {
   try {
     storage?.setItem?.(SIGNALING_TELEMETRY_KEY, JSON.stringify(state));
@@ -73,6 +106,13 @@ function saveState(state, storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Registra o resultado de uma tentativa no balde do caminho.
+ * @param {object} group Grupo de baldes
+ * @param {string} path Caminho (`ws` ou `nostr`)
+ * @param {object} [outcome={}] Resultado (`ok`, `durationMs`)
+ * @returns {boolean} `true` se registrou.
+ */
 function applyOutcome(group, path, { ok = false, durationMs = null } = {}) {
   if (!SIGNALING_PATHS.includes(path)) return false;
   const bucket = group[path];
@@ -152,6 +192,11 @@ export function recordFirstPeerLatency(
   return true;
 }
 
+/**
+ * Resume um balde: taxa de sucesso e tempo médio de conexão.
+ * @param {object} b Balde
+ * @returns {object} Resumo.
+ */
 function summarizeBucket(b) {
   const successRatePct = b.attempts > 0 ? Math.round((b.ok / b.attempts) * 100) : null;
   const avgConnectMs = b.ok > 0 && b.connectTotalMs > 0 ? Math.round(b.connectTotalMs / b.ok) : null;
@@ -165,6 +210,11 @@ function summarizeBucket(b) {
   };
 }
 
+/**
+ * Resume as latências: quantidade, última, média e mediana.
+ * @param {number[]} samples Amostras em ms
+ * @returns {object} Resumo.
+ */
 function summarizeLatencies(samples) {
   if (!samples.length) return { samples: [], count: 0, lastMs: null, avgMs: null, medianMs: null };
   const sorted = [...samples].sort((a, b) => a - b);
@@ -195,6 +245,13 @@ export function getSignalingTelemetrySummary(storage = globalThis.localStorage) 
   };
 }
 
+/**
+ * Formata a linha de texto do balde para o relatório.
+ * @param {string} kind Tipo (canal ou par)
+ * @param {string} path Caminho
+ * @param {object} b Resumo do balde
+ * @returns {string} Linha.
+ */
 function formatBucketLine(kind, path, b) {
   const rate = b.successRatePct === null ? "—" : `${b.successRatePct}%`;
   const avg = b.avgConnectMs === null ? "—" : `${b.avgConnectMs}ms`;

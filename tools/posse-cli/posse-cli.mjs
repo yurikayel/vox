@@ -5,6 +5,11 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { adaptWebhookPayloadForUrl, detectWebhookPlatform } from "../../client/js/chat-bridge.js";
 
+/**
+ * Valida o payload de exportação POSSE (versão 1).
+ * @param {unknown} raw Payload bruto.
+ * @returns {{valid: boolean, error?: string}}
+ */
 export function validatePosseExportPayload(raw) {
   if (!raw || typeof raw !== "object") return { valid: false, error: "Payload ausente" };
   if (raw.v !== 1) return { valid: false, error: "Versão v!=1" };
@@ -13,6 +18,11 @@ export function validatePosseExportPayload(raw) {
   return { valid: true, payload: raw };
 }
 
+/**
+ * Monta o texto de compartilhamento a partir do payload.
+ * @param {object} payload Payload validado.
+ * @returns {string}
+ */
 export function buildPosseShareText(payload) {
   const title = String(payload.title || "").trim() || "Publicação no Vox";
   const body = String(payload.body || "").trim();
@@ -24,6 +34,15 @@ export function buildPosseShareText(payload) {
   return lines.join("\n\n");
 }
 
+/**
+ * Envia o payload a um webhook, ou só simula com `dryRun`.
+ * @param {string} url URL do webhook.
+ * @param {object} payload Payload validado.
+ * @param {object} [options={}] Opções.
+ * @param {boolean} [options.dryRun=false] Se só simula, sem enviar.
+ * @param {Function} [options.fetchImpl=fetch] Implementação de `fetch` injetável.
+ * @returns {Promise<object>}
+ */
 export async function postWebhook(url, payload, { dryRun = false, fetchImpl = fetch } = {}) {
   const u = String(url || "").trim();
   if (!u) return { ok: false, reason: "url vazia" };
@@ -42,6 +61,15 @@ export async function postWebhook(url, payload, { dryRun = false, fetchImpl = fe
   }
 }
 
+/**
+ * Valida o payload e o envia a cada webhook.
+ * @param {object} payload Payload bruto.
+ * @param {object} [options={}] Opções.
+ * @param {string[]} [options.webhooks=[]] URLs dos webhooks.
+ * @param {boolean} [options.dryRun=false] Se só simula, sem enviar.
+ * @param {Function} [options.fetchImpl=fetch] Implementação de `fetch` injetável.
+ * @returns {Promise<object>}
+ */
 export async function dispatchPosseExport(payload, { webhooks = [], dryRun = false, fetchImpl = fetch } = {}) {
   const val = validatePosseExportPayload(payload);
   if (!val.valid) return { ok: false, error: val.error };
@@ -53,6 +81,10 @@ export async function dispatchPosseExport(payload, { webhooks = [], dryRun = fal
   return { ok: failed === 0, results, shareText: buildPosseShareText(val.payload) };
 }
 
+/**
+ * Lê todo o stdin e interpreta como JSON.
+ * @returns {Promise<unknown>}
+ */
 async function readStdinJson() {
   const chunks = [];
   for await (const c of process.stdin) chunks.push(c);
@@ -61,6 +93,11 @@ async function readStdinJson() {
   return JSON.parse(text);
 }
 
+/**
+ * Ponto de entrada da CLI: lê o payload (arquivo ou stdin) e o despacha aos webhooks.
+ * @param {string[]} [argv=process.argv.slice(2)] Argumentos sem `node` e o script.
+ * @returns {Promise<number>}
+ */
 export async function main(argv = process.argv.slice(2)) {
   const dryRun = argv.includes("--dry-run");
   const fileIdx = argv.indexOf("--file");

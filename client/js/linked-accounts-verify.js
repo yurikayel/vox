@@ -5,6 +5,11 @@ import { loadLinkedAccounts, saveLinkedAccount, getGeneralWebhookUrl } from "./l
 import { postToBlueskyAtProto } from "./linked-accounts-bsky.js";
 import { sendWebhookPost } from "./linked-accounts-dispatch.js";
 
+/**
+ * Testa a conexão com o Bluesky.
+ * @param {object} data Dados da conta
+ * @returns {Promise<object>} Resultado do teste.
+ */
 async function testBskyConnection(data) {
   if (data?.appPassword) {
     const res = await postToBlueskyAtProto(data.handle, data.appPassword, {
@@ -23,6 +28,11 @@ async function testBskyConnection(data) {
   }
 }
 
+/**
+ * Testa a conexão com o GitHub pela API pública.
+ * @param {object} data Dados da conta
+ * @returns {Promise<object>} Resultado do teste.
+ */
 async function testGithubConnection(data) {
   try {
     const res = await fetch(`https://api.github.com/users/${encodeURIComponent(data.handle)}`);
@@ -33,11 +43,24 @@ async function testGithubConnection(data) {
   }
 }
 
+/**
+ * Monta o resultado de teste de uma conta conectada por login.
+ * @param {string} netId Rede
+ * @param {object} data Dados da conta
+ * @returns {object} Resultado.
+ */
 function oauthTestResult(netId, data) {
   const who = data.handle ? `@${data.handle}` : data.displayName || "sua conta";
   return { ok: true, state: "verified", profileUrl: resolveNetworkProfileUrl(netId, data.handle), message: `✅ ${who} conectada por login na própria rede.` };
 }
 
+/**
+ * Testa a conexão enviando um evento de teste ao webhook.
+ * @param {string} netId Rede
+ * @param {object} data Dados da conta
+ * @param {string} webhookUrl Endereço do webhook
+ * @returns {Promise<object>} Resultado do teste.
+ */
 async function testWebhookConnection(netId, data, webhookUrl) {
   const payload = { event: "vox.connection.test", network: netId, handle: data.handle, testedAt: new Date().toISOString() };
   const res = await sendWebhookPost(webhookUrl, payload);
@@ -46,6 +69,12 @@ async function testWebhookConnection(netId, data, webhookUrl) {
     : { ok: false, message: `⚠️ Falha ao contactar webhook: ${res.error || "erro de rede"}` };
 }
 
+/**
+ * Testa a conexão pela API pública e salva a conta se confirmou.
+ * @param {string} netId Rede
+ * @param {object} data Dados da conta
+ * @returns {Promise<object>} Resultado do teste.
+ */
 async function testPublicApiConnection(netId, data) {
   const res = netId === "bsky" ? await testBskyConnection(data) : await testGithubConnection(data);
   if (res.ok) saveLinkedAccount(netId, { ...data, verified: true });

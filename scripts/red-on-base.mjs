@@ -23,6 +23,12 @@ const SKIP_LABEL = "red-on-base:skip";
 const JS_TEST = /^tests\/[^/]+\.test\.js$/;
 const PY_TEST = /^relay\/test_[^/]+\.py$/;
 
+/**
+ * Roda o git com os argumentos dados e devolve a saída padrão sem espaços nas pontas.
+ * @param {string[]} args Argumentos do git.
+ * @param {string} cwd Diretório de trabalho.
+ * @returns {string}
+ */
 function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
@@ -70,6 +76,11 @@ export function pickTests(files) {
  */
 export function pythonOutcome(file, output) {
   const failed = /FAILED \(([^)]*)\)/.exec(output)?.[1] ?? "";
+  /**
+   * Lê o contador `chave=N` da linha de resumo, ou 0.
+   * @param {string} key Nome do contador.
+   * @returns {number}
+   */
   const count = (key) => Number(new RegExp(`${key}=(\\d+)`).exec(failed)?.[1] ?? 0);
   const ran = /Ran (\d+) test/.test(output);
   let outcome = "pass";
@@ -106,12 +117,24 @@ export function verdict(kind, results, testCount) {
  */
 export function summaryMarkdown(result, results) {
   const label = { assert: "vermelho (asserção)", other: "inconclusivo", pass: "verde" };
+  /**
+   * Escapa o texto para uma célula de tabela Markdown.
+   * @param {unknown} text Texto da célula.
+   * @returns {string}
+   */
   const cell = (text) => String(text).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
   const rows = results.map((r) => `| \`${cell(r.file)}\` | ${cell(r.name)} | ${label[r.outcome]} | ${cell(r.message)} |`);
   const table = rows.length ? ["", "| Arquivo | Teste | Na base | Mensagem |", "|---|---|---|---|", ...rows] : [];
   return [`## Vermelho na base (PM-111): ${result.ok ? "OK" : "FALHOU"}`, "", result.headline, ...table, ""].join("\n");
 }
 
+/**
+ * Cria um worktree descartável no commit-base e liga as dependências.
+ * @param {string} baseSha Commit-base.
+ * @param {string} root Raiz do repositório.
+ * @param {string[]} pyFiles Testes Python que precisam estar no worktree.
+ * @returns {string}
+ */
 function prepareBase(baseSha, root, pyFiles) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "red-on-base-"));
   git(["worktree", "add", "--detach", dir, baseSha], root);
@@ -123,12 +146,23 @@ function prepareBase(baseSha, root, pyFiles) {
   return dir;
 }
 
+/**
+ * Remove o worktree descartável da base, soltando a junção `node_modules` antes.
+ * @param {string} dir Diretório do worktree.
+ * @param {string} root Raiz do repositório.
+ */
 function removeBase(dir, root) {
   const modules = path.join(dir, "node_modules");
   if (fs.existsSync(modules)) fs.unlinkSync(modules);
   git(["worktree", "remove", "--force", dir], root);
 }
 
+/**
+ * Roda os testes JS na base com o reporter que emite uma linha por teste.
+ * @param {string} dir Diretório do worktree da base.
+ * @param {string[]} files Arquivos de teste.
+ * @returns {object[]}
+ */
 function runJs(dir, files) {
   if (!files.length) return [];
   // Rodando dentro de outro `node --test`, NODE_TEST_CONTEXT faria o filho ignorar o reporter.
@@ -140,6 +174,12 @@ function runJs(dir, files) {
     .map((r) => ({ ...r, file: path.relative(dir, r.file).replace(/\\/g, "/") || r.file }));
 }
 
+/**
+ * Roda os testes Python na base, um arquivo por vez.
+ * @param {string} dir Diretório do worktree da base.
+ * @param {string[]} files Arquivos de teste.
+ * @returns {object[]}
+ */
 function runPy(dir, files) {
   const python = process.env.PYTHON || "python";
   return files.map((f) => {
@@ -150,6 +190,13 @@ function runPy(dir, files) {
   });
 }
 
+/**
+ * Roda os testes novos contra o commit-base, num worktree descartável.
+ * @param {string} baseSha Commit-base.
+ * @param {string} root Raiz do repositório.
+ * @param {{js} tests  string[], py: string[]}:Testes novos por linguagem.
+ * @returns {object[]}
+ */
 function runOnBase(baseSha, root, tests) {
   if (!tests.js.length && !tests.py.length) return [];
   const dir = prepareBase(baseSha, root, tests.py);
@@ -160,6 +207,9 @@ function runOnBase(baseSha, root, tests) {
   }
 }
 
+/**
+ * Ponto de entrada: acha os testes novos, roda-os na base e relata os que passam sem a correção.
+ */
 function main() {
   const root = git(["rev-parse", "--show-toplevel"], process.cwd());
   const baseSha = git(["merge-base", process.env.BASE_REF || process.argv[2] || "origin/develop", "HEAD"], root);

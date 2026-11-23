@@ -13,6 +13,12 @@ const SWAP_NOTE =
 const RETURN_NOTE =
   "Para devolver, cada guardião confere com você por voz ou pessoalmente. Sem servidor da comunidade, a devolução é com os aparelhos juntos.";
 
+/**
+ * Opção de contato como guardião.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function candidateHtml({ routeId, name }) {
   return `<label class="guardian-candidate">
       <input type="checkbox" name="guardian" value="${escapeHtml(routeId)}" />
@@ -20,6 +26,12 @@ function candidateHtml({ routeId, name }) {
     </label>`;
 }
 
+/**
+ * Opções do mínimo de guardiões necessários, marcando o selecionado.
+ *
+ * @param {number} selected
+ * @returns {string}
+ */
 function minimumOptions(selected) {
   return Array.from({ length: MAX_N - MIN_M + 1 }, (_, i) => MIN_M + i)
     .map((m) => `<option value="${m}"${m === selected ? " selected" : ""}>${m}</option>`)

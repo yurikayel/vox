@@ -111,6 +111,12 @@ export function buildBlueskyIntentUrl(text) {
   return `https://bsky.app/intent/compose?text=${encodeURIComponent(String(text || ""))}`;
 }
 
+/**
+ * Copia para a saída os campos opcionais não nulos do post.
+ * @param {object} [post={}] Post
+ * @param {object} [out={}] Objeto de saída
+ * @returns {object} A saída.
+ */
 function copyPosseOptionalAttributes(post = {}, out = {}) {
   const nonNullKeys = ["diffText", "tally", "state"];
   for (const k of nonNullKeys) {

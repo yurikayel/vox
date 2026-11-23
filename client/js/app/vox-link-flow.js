@@ -4,6 +4,11 @@ import * as share from "../share.js";
 import * as voxLink from "../vox-link.js";
 import { renderInviteCardHtml } from "../render/vox-link.js";
 
+/**
+ * Carrega as dependências reais do vínculo Vox.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
     import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
@@ -21,6 +26,13 @@ async function defaultDeps() {
   };
 }
 
+/**
+ * Assina, guarda e espalha um registro de vínculo.
+ *
+ * @param {object} payload Conteúdo ainda sem assinatura.
+ * @param {object} d Dependências.
+ * @returns {Promise<object>}
+ */
 async function publish(payload, d) {
   const signed = await d.sign(payload);
   await d.save(signed);
@@ -53,6 +65,14 @@ export async function acceptInvite({ inviter, token, sponsor = false, mediationO
   return publish(voxLink.buildAccept({ me, inviter, token, sponsor: asSponsor, mediationOnly, switchFrom, now: d.now() }), d);
 }
 
+/**
+ * Confirma um aceite quando ele vale para esta conta; devolve o registro assinado ou null.
+ *
+ * @param {object} accept Aceite recebido.
+ * @param {string} me Rota de quem confirma.
+ * @param {object} d Dependências.
+ * @returns {Promise<object|null>}
+ */
 async function confirmOne(accept, me, d) {
   const invite = voxLink.peekInvite(d.storage);
   if (!voxLink.shouldConfirm(accept, { me, invite, now: d.now() })) return null;
@@ -102,6 +122,13 @@ export async function startVoxLinks(deps = null) {
   await confirmPendingInvites(d).catch(() => {});
 }
 
+/**
+ * Monta o modelo do cartão de convite (se a conta é nova, pode apadrinhar ou trocar).
+ *
+ * @param {string} inviter Rota de quem convidou.
+ * @param {object} d Dependências.
+ * @returns {Promise<object>}
+ */
 async function inviteCardModel(inviter, d) {
   const account = await d.getAccount();
   const records = await d.loadRecords();
@@ -128,6 +155,12 @@ export async function mountInviteCard(main, { inviter, token, name = "" }, deps 
   main.insertAdjacentHTML("afterbegin", renderInviteCardHtml({ ...model, name: name || inviter }));
   main.querySelector("#btn-vox-link-accept")?.addEventListener("click", async (e) => {
     e.currentTarget.disabled = true;
+    /**
+     * Diz se a caixa de seleção está marcada.
+     *
+     * @param {string} id Seletor da caixa.
+     * @returns {boolean}
+     */
     const checked = (id) => Boolean(main.querySelector(id)?.checked);
     try {
       await acceptInvite({ inviter, token, sponsor: checked("#vox-link-sponsor"), mediationOnly: checked("#vox-link-mediation"), switchSponsor: checked("#vox-link-switch") }, d);

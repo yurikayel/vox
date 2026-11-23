@@ -26,15 +26,30 @@ export const DEFAULT_SHAMIR_THRESHOLD = 3;
  */
 export const DEFAULT_SHAMIR_PEERS = 4;
 
+/**
+ * Converte a entrada em bytes (texto vira UTF-8).
+ * @param {Uint8Array|string} input Bytes ou texto
+ * @returns {Uint8Array} Bytes.
+ */
 function toBytes(input) {
   if (input instanceof Uint8Array) return input;
   return TEXT_ENCODER.encode(String(input ?? ""));
 }
 
+/**
+ * Converte bytes em texto hexadecimal.
+ * @param {Uint8Array} bytes Bytes
+ * @returns {string} Texto hexadecimal.
+ */
 function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Converte texto hexadecimal em bytes.
+ * @param {string} hex Texto hexadecimal
+ * @returns {Uint8Array} Bytes.
+ */
 function hexToBytes(hex) {
   const clean = String(hex || "").trim();
   const out = new Uint8Array(clean.length / 2);
@@ -44,6 +59,11 @@ function hexToBytes(hex) {
   return out;
 }
 
+/**
+ * Concatena vetores de bytes.
+ * @param {Uint8Array[]} arrays Vetores
+ * @returns {Uint8Array} Bytes concatenados.
+ */
 function concatByteArrays(arrays) {
   const total = arrays.reduce((sum, arr) => sum + arr.length, 0);
   const joined = new Uint8Array(total);
@@ -138,6 +158,11 @@ export function sampleUnbiasedDieFromDigest(digestHex, dieSides = 20) {
   return (fallback % sides) + 1;
 }
 
+/**
+ * Confere se a semente revelada bate com o compromisso do participante.
+ * @param {object} participant Participante
+ * @returns {Promise<object>} Semente verificada.
+ */
 async function verifyRevealedSeed(participant) {
   const commitO = await sha256Hex(participant.seedBytes);
   if (participant.commitO && commitO !== participant.commitO) {
@@ -146,6 +171,11 @@ async function verifyRevealedSeed(participant) {
   return { peerId: participant.peerId || "", seedBytes: participant.seedBytes, commitO, recovered: false };
 }
 
+/**
+ * Recupera a semente de um participante que abortou, pelos pedaços de backup.
+ * @param {object} participant Participante
+ * @returns {Promise<object>} Semente recuperada.
+ */
 async function recoverParticipantSeed(participant) {
   const threshold = Number(participant.threshold) || DEFAULT_SHAMIR_THRESHOLD;
   const seedBytes = await recoverAbortedSeed(participant.backupShares, participant.commitO || "", threshold);
@@ -153,6 +183,11 @@ async function recoverParticipantSeed(participant) {
   return { peerId: participant.peerId || "", seedBytes, commitO, recovered: true };
 }
 
+/**
+ * Resolve a semente do participante: revelada ou recuperada do backup.
+ * @param {object} participant Participante
+ * @returns {Promise<object>} Semente resolvida.
+ */
 async function resolveParticipantSeed(participant) {
   const hasSeed = !participant?.aborted && participant?.seedBytes instanceof Uint8Array;
   if (hasSeed) return verifyRevealedSeed(participant);
@@ -254,23 +289,47 @@ export async function unlockLoreVaultSecret(vaultEnvelope, providedShares = [], 
   return { ok: true, reason: "unlocked", secretText: TEXT_DECODER.decode(bytes) };
 }
 
+/**
+ * Monta o prompt do juiz mecânico.
+ * @param {object} ctx Contexto do turno
+ * @param {string} turnIntent Intenção do jogador
+ * @returns {string} Prompt.
+ */
 function formatJudgePrompt(ctx, turnIntent) {
   const sheet = ctx?.tier3PartySheet || {};
   return `VALIDAÇÃO MECÂNICA | Personagem: ${sheet.name || "Aventureiro"} | Recursos: ${JSON.stringify(sheet.pools || {})} | Condições: ${(sheet.conditions || []).join(",") || "nenhuma"} | Ação: ${turnIntent}`;
 }
 
+/**
+ * Monta o prompt de recuperação de lore (RAG).
+ * @param {object} ctx Contexto do turno
+ * @param {string} turnIntent Intenção do jogador
+ * @returns {string} Prompt.
+ */
 function formatLoreRagPrompt(ctx, turnIntent) {
   const facts = (ctx?.tier4LoreRrf?.canonicalFacts || []).map((c) => c.text);
   const local = (ctx?.tier2SpatialMemory?.localEvents || []).map((e) => e.summary || e.text || "");
   return `CONTEXTO ESPACIAL & CANÔNICO | Eventos locais: ${local.join(" ; ") || "nenhum"} | Fatos: ${facts.join(" ; ") || "nenhum"} | Consulta: ${turnIntent}`;
 }
 
+/**
+ * Monta o prompt de atuação dos NPCs.
+ * @param {object} ctx Contexto do turno
+ * @param {string} turnIntent Intenção do jogador
+ * @returns {string} Prompt.
+ */
 function formatNpcActorPrompt(ctx, turnIntent) {
   const anchor = ctx?.tier2SpatialMemory?.anchor || {};
   const rumors = (ctx?.tier4LoreRrf?.disputedRumors || []).map((c) => `[boato de taverna não confirmado] ${c.text}`);
   return `ATUAÇÃO NPC (LoS) | Local: ${anchor.map_id || "cena"} (${anchor.grid_x ?? 0},${anchor.grid_y ?? 0}) | Rumores: ${rumors.join(" ; ") || "nenhum"} | Estímulo: ${turnIntent}`;
 }
 
+/**
+ * Monta o prompt do diretor de ritmo.
+ * @param {object} ctx Contexto do turno
+ * @param {string} turnIntent Intenção do jogador
+ * @returns {string} Prompt.
+ */
 function formatActDirectorPrompt(ctx, turnIntent) {
   const mem = ctx?.tier2SpatialMemory || {};
   return `DIREÇÃO DE RITMO | Resumo global: ${mem.globalPlotSummary || "-"} | Últimas 3 fases: ${(mem.lastThreePhases || []).join(" -> ") || "início"} | Intenção: ${turnIntent}`;

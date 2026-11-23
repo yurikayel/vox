@@ -47,6 +47,7 @@ def is_servable_vault(record: Any) -> bool:
 
 
 def _vault_json_name(name: str) -> bool:
+    """True se o nome é `<id válido>.json`."""
     return (
         name.endswith(".json")
         and len(name) > 5
@@ -55,6 +56,7 @@ def _vault_json_name(name: str) -> bool:
 
 
 def _vault_file(lookup_key: str):
+    """Devolve o caminho do cofre pela chave de busca, ou None se a chave for inválida."""
     clean = str(lookup_key or "").strip().lower()
     if not central_memory._is_valid_id(clean):
         return None
@@ -65,6 +67,7 @@ def _vault_file(lookup_key: str):
 
 
 def _read_stored(vault_file) -> Optional[Dict[str, Any]]:
+    """Lê o cofre gravado; None se não houver arquivo, estiver corrompido ou não for objeto."""
     if vault_file is None or not vault_file.is_file():
         return None
     try:
@@ -87,6 +90,7 @@ def owner_hash(token: Any) -> Optional[str]:
 
 
 def get_vault(lookup_key: str) -> Optional[Dict[str, Any]]:
+    """Devolve o cofre servível sem o campo do dono, ou None."""
     stored = _read_stored(_vault_file(lookup_key))
     if not stored or not is_servable_vault(stored):
         return None
@@ -94,6 +98,7 @@ def get_vault(lookup_key: str) -> Optional[Dict[str, Any]]:
 
 
 def _split_payload(payload: Any) -> Tuple[Any, Any]:
+    """Separa o payload em `(registro, token do dono)`."""
     if isinstance(payload, dict) and "record" in payload:
         return payload.get("record"), payload.get("ownerToken")
     return payload, None
@@ -127,6 +132,7 @@ def save_vault(lookup_key: str, payload: Any) -> str:
 
 
 def _save_vault_locked(lookup_key: str, payload: Any) -> str:
+    """Grava o cofre se o registro é válido e o token autoriza; devolve o status. Exige o lock tomado."""
     vault_file = _vault_file(lookup_key)
     record, token = _split_payload(payload)
     if vault_file is None or not is_servable_vault(record):

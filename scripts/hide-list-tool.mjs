@@ -31,28 +31,59 @@ const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-
 const EMAIL_PII_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const CPF_PII_RE = /(?<!\d)\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?!\d)/;
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Diz se o valor é texto não vazio com no máximo `maxLen` caracteres.
+ * @param {unknown} value Valor a testar.
+ * @param {number} maxLen Tamanho máximo, em caracteres.
+ * @returns {boolean}
+ */
 function isNonEmptyString(value, maxLen) {
   return typeof value === "string" && value.trim().length > 0 && value.length <= maxLen;
 }
 
+/**
+ * Diz se o valor é um timestamp ISO válido.
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isIsoTimestamp(value) {
   return typeof value === "string" && ISO_TIMESTAMP_RE.test(value) && Number.isFinite(Date.parse(value));
 }
 
+/**
+ * Diz se o texto contém dado pessoal (e-mail ou CPF).
+ * @param {string} text Texto a examinar.
+ * @returns {boolean}
+ */
 function containsPii(text) {
   return EMAIL_PII_RE.test(text) || CPF_PII_RE.test(text);
 }
 
+/**
+ * Valida um código de motivo: texto curto, sem quebra de linha e sem dado pessoal.
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isValidReasonCode(value) {
   if (!isNonEmptyString(value, MAX_REASON_CODE_LEN)) return false;
   if (/[\r\n\t]/.test(value)) return false;
   return !containsPii(value);
 }
 
+/**
+ * Copia o valor ordenando as chaves dos objetos, para a assinatura ser determinística.
+ * @param {unknown} value Valor a ordenar.
+ * @returns {unknown}
+ */
 function sortDeep(value) {
   if (Array.isArray(value)) return value.map(sortDeep);
   if (!value || typeof value !== "object") return value;
@@ -82,6 +113,12 @@ const ENTRY_RULES = [
   ["status", (v) => STATUSES.has(v), "must be active|retracted"],
 ];
 
+/**
+ * Valida uma entrada da lista de ocultação e devolve os erros (lista vazia se válida).
+ * @param {unknown} entry Entrada bruta.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @returns {string[]}
+ */
 function validateEntry(entry, index) {
   if (!isPlainObject(entry)) return [`entries[${index}] must be an object`];
   const errors = [];
@@ -120,6 +157,11 @@ export function validateHideList(manifest) {
   return { ok: errors.length === 0, errors };
 }
 
+/**
+ * Lê a chave privada Ed25519 em PEM.
+ * @param {string} privateKeyPem Chave privada em PEM.
+ * @returns {crypto.KeyObject}
+ */
 function parseEd25519PrivateKey(privateKeyPem) {
   if (!isNonEmptyString(privateKeyPem, 16384)) {
     throw new Error("privateKeyPem must be a non-empty PEM string");
@@ -131,6 +173,11 @@ function parseEd25519PrivateKey(privateKeyPem) {
   return key;
 }
 
+/**
+ * Lê a chave pública Ed25519 em PEM.
+ * @param {string} publicKeyPem Chave pública em PEM.
+ * @returns {crypto.KeyObject}
+ */
 function parseEd25519PublicKey(publicKeyPem) {
   const key = crypto.createPublicKey(publicKeyPem);
   if (key.asymmetricKeyType !== "ed25519") {
@@ -159,6 +206,12 @@ export function signHideList(manifest, privateKeyPem) {
   return { ...payload, signature: { alg: "Ed25519", publicKeyPem, sigBase64 } };
 }
 
+/**
+ * Confere se a chave que assinou é a chave fixada esperada. Sem chave esperada, aceita.
+ * @param {crypto.KeyObject} actualKey Chave pública que assinou.
+ * @param {string|null|undefined} expectedPublicKeyPem Chave pública esperada em PEM.
+ * @returns {{ok: boolean, reason?: string}}
+ */
 function verifyPinnedKey(actualKey, expectedPublicKeyPem) {
   if (expectedPublicKeyPem === undefined || expectedPublicKeyPem === null) return { ok: true };
   if (!isNonEmptyString(expectedPublicKeyPem, 16384)) {
@@ -176,6 +229,11 @@ function verifyPinnedKey(actualKey, expectedPublicKeyPem) {
   return matches ? { ok: true } : { ok: false, reason: "Public key mismatch against pinned key" };
 }
 
+/**
+ * Separa a assinatura do manifesto em um envelope assinado e valida o manifesto.
+ * @param {unknown} signedEnvelope Envelope assinado.
+ * @returns {object}
+ */
 function parseSignatureEnvelope(signedEnvelope) {
   if (!isPlainObject(signedEnvelope)) return { error: "signedEnvelope must be an object" };
   const { signature, ...manifest } = signedEnvelope;
@@ -213,6 +271,11 @@ export function verifyHideList(signedEnvelope, expectedPublicKeyPem) {
   return valid ? { ok: true } : { ok: false, reason: "Ed25519 signature verification failed" };
 }
 
+/**
+ * Resolve o formato de exportação (`json` ou `txt`) a partir de texto ou de opções.
+ * @param {string|object|undefined} options Formato ou objeto com `format`.
+ * @returns {string}
+ */
 function normalizeExportFormat(options) {
   const fmt = typeof options === "string" ? options : options?.format ?? "json";
   if (fmt !== "json" && fmt !== "txt") {
@@ -252,6 +315,12 @@ export function exportArioBlocklist(signedEnvelope, options = {}) {
   };
 }
 
+/**
+ * Lê um arquivo em UTF-8, com erro identificando o arquivo pelo rótulo.
+ * @param {string} filePath Caminho do arquivo.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ * @returns {string}
+ */
 function readUtf8File(filePath, label) {
   try {
     return fs.readFileSync(filePath, "utf8");
@@ -260,6 +329,12 @@ function readUtf8File(filePath, label) {
   }
 }
 
+/**
+ * Lê e interpreta um arquivo JSON, com erro identificando o arquivo pelo rótulo.
+ * @param {string} filePath Caminho do arquivo.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ * @returns {unknown}
+ */
 function readJsonFile(filePath, label) {
   const raw = readUtf8File(filePath, label);
   try {
@@ -269,6 +344,11 @@ function readJsonFile(filePath, label) {
   }
 }
 
+/**
+ * Interpreta pares `--chave valor` da linha de comando.
+ * @param {string[]} args Argumentos do subcomando.
+ * @returns {Object<string, string>}
+ */
 function parseFlags(args) {
   const flags = Object.create(null);
   for (let i = 0; i < args.length; i += 2) {
@@ -282,6 +362,10 @@ function parseFlags(args) {
   return flags;
 }
 
+/**
+ * Subcomando `sign`: assina o manifesto e grava o envelope.
+ * @param {Object<string, string>} flags Flags (`input`, `key`, `out`).
+ */
 function runSign(flags) {
   if (!flags.input || !flags.key || !flags.out) {
     throw new Error("Usage: sign --input <manifest.json> --key <priv.pem> --out <signed.json>");
@@ -294,6 +378,10 @@ function runSign(flags) {
   return 0;
 }
 
+/**
+ * Subcomando `verify`: verifica a assinatura de um envelope e, opcionalmente, a chave fixada.
+ * @param {Object<string, string>} flags Flags (`input`, `pubkey`).
+ */
 function runVerify(flags) {
   if (!flags.input) {
     throw new Error("Usage: verify --input <signed.json> [--pubkey <pub.pem>]");
@@ -309,6 +397,10 @@ function runVerify(flags) {
   return 0;
 }
 
+/**
+ * Subcomando `export-ario`: exporta o envelope assinado em `json` ou `txt`.
+ * @param {Object<string, string>} flags Flags (`input`, `format`, `out`).
+ */
 function runExportArio(flags) {
   if (!flags.input) {
     throw new Error("Usage: export-ario --input <signed.json> [--format json|txt] [--out <file>]");
@@ -331,6 +423,10 @@ function runExportArio(flags) {
   return 0;
 }
 
+/**
+ * Executa o subcomando pedido (`sign`, `verify` ou `export-ario`).
+ * @param {string[]} [argv=process.argv.slice(2)] Argumentos sem `node` e o script.
+ */
 function runCli(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
   const handlers = { sign: runSign, verify: runVerify, "export-ario": runExportArio };

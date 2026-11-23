@@ -35,6 +35,12 @@ export function groupRepliesForThread(replies = []) {
 export function flattenReplyThread(replies = [], maxDepth = MAX_THREAD_DEPTH) {
   if (!Array.isArray(replies)) return [];
   const { tops, byParent } = groupRepliesForThread(replies);
+  /**
+   * Compara respostas pelo horário, da mais antiga à mais nova.
+   * @param {object} a Primeira resposta
+   * @param {object} b Segunda resposta
+   * @returns {number} Diferença de horário.
+   */
   const byTs = (a, b) => (Number(a?.ts || a?.createdAt) || 0) - (Number(b?.ts || b?.createdAt) || 0);
   const out = [];
   const seen = new Set();

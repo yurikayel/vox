@@ -15,8 +15,22 @@ import * as share from "../share.js";
 import * as termo from "../community-termo.js";
 import { escapeHtml } from "../render/util.js";
 
+/**
+ * Lê do aparelho os posts de um tipo na comunidade; falha vira lista vazia.
+ *
+ * @param {string} type Tipo do post.
+ * @param {string} communityId
+ * @returns {Promise<object[]>}
+ */
 const localOf = (type, communityId) => cacheNode.getLocalPosts({ type, communityId }).catch(() => []);
 
+/**
+ * Carrega o termo de convivência mais recente da comunidade.
+ *
+ * @param {string} communityId
+ * @param {object} meta Metadados da comunidade.
+ * @returns {Promise<object|null>}
+ */
 async function loadTermo(communityId, meta) {
   return termo.latestTermo(await localOf(termo.TERMO_TYPE, communityId), communityId, meta);
 }
@@ -35,6 +49,13 @@ export async function joinTermoFields(communityId) {
   return termo.membershipTermoFields(meta ? await loadTermo(communityId, meta) : null);
 }
 
+/**
+ * Acha a entrada mais recente da pessoa na comunidade.
+ *
+ * @param {string} communityId
+ * @param {string} routeId
+ * @returns {Promise<object|null>}
+ */
 async function myMembership(communityId, routeId) {
   const mine = (await localOf("membership", communityId)).filter((m) => (m.author || m.owner) === routeId);
   return mine.sort((a, b) => Number(b.joinedAt || 0) - Number(a.joinedAt || 0))[0] || null;
@@ -74,6 +95,12 @@ export function renderTermoHtml(current, status, { isMember = false, isMod = fal
   return `<details class="card community-termo"${status === "mudou" ? " open" : ""}><summary>📜 Termo de convivência</summary>${body}${editor}</details>`;
 }
 
+/**
+ * Assina o payload, guarda no aparelho e espalha pela rede de vizinhos.
+ *
+ * @param {object} payload Conteúdo ainda sem assinatura.
+ * @returns {Promise<object>}
+ */
 async function publish(payload) {
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
@@ -81,12 +108,26 @@ async function publish(payload) {
   return signed;
 }
 
+/**
+ * Reassina a entrada da comunidade com o hash do termo atual.
+ *
+ * @param {string} communityId
+ * @param {string} routeId
+ * @param {object|null} current Termo vigente.
+ */
 async function resign(communityId, routeId, current) {
   const fields = await termo.membershipTermoFields(current);
   await publish({ id: `mem_${communityId}_${routeId}`, type: "membership", communityId, joinedAt: Date.now(), ...fields });
   share.showToast("Termo assinado.");
 }
 
+/**
+ * Liga os botões de assinar e de publicar o termo.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {{communityId: string, routeId: string, current: object|null}} ctx Contexto da tela.
+ * @param {Function} rerender Redesenha a tela depois da ação.
+ */
 function bindTermo(main, ctx, rerender) {
   main.querySelector("#btn-termo-assinar")?.addEventListener("click", () =>
     resign(ctx.communityId, ctx.routeId, ctx.current).then(rerender).catch((err) => share.showToast(`Erro: ${err.message}`, "error")));

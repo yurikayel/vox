@@ -679,6 +679,15 @@ export async function coldBootFetch({ channelId, relayUrl, fetchImpl = globalThi
   };
 }
 
+/**
+ * Busca o snapshot-base do canal no relay; 404 vira snapshot vazio.
+ *
+ * @param {string} baseUrl URL base do relay.
+ * @param {string} channelId ID do canal.
+ * @param {Function} fetchImpl Implementação de `fetch`.
+ * @returns {Promise<{snapshot: *, timestamp: number, epoch: number, coveredSerial: number}>}
+ * @throws {Error} Em falha de conexão ou resposta HTTP de erro.
+ */
 async function fetchBaseSnapshot(baseUrl, channelId, fetchImpl) {
   const target = `${baseUrl}/relay/snapshot/${encodeURIComponent(channelId)}`;
   let res;
@@ -699,6 +708,12 @@ async function fetchBaseSnapshot(baseUrl, channelId, fetchImpl) {
   return parseSnapshotResponse(data);
 }
 
+/**
+ * Normaliza a resposta do relay para o formato interno do snapshot.
+ *
+ * @param {object} data Corpo JSON da resposta.
+ * @returns {{snapshot: *, timestamp: number, epoch: number, coveredSerial: number}}
+ */
 function parseSnapshotResponse(data) {
   const d = data.data || data;
   return {
@@ -709,6 +724,17 @@ function parseSnapshotResponse(data) {
   };
 }
 
+/**
+ * Busca os envelopes posteriores ao snapshot (cauda incremental).
+ *
+ * @param {string} baseUrl URL base do relay.
+ * @param {string} channelId ID do canal.
+ * @param {number} sinceTs Marca de tempo mínima.
+ * @param {number} coveredSerial Serial coberto pelo snapshot; se maior que 0, tem precedência.
+ * @param {Function} fetchImpl Implementação de `fetch`.
+ * @returns {Promise<object[]>} Envelopes.
+ * @throws {Error} Em falha de conexão ou resposta HTTP de erro.
+ */
 async function fetchDeltaEnvelopes(baseUrl, channelId, sinceTs, coveredSerial, fetchImpl) {
   const query = coveredSerial > 0 ? `since_serial=${coveredSerial}` : `since=${sinceTs}`;
   const target = `${baseUrl}/relay/envelope/${encodeURIComponent(channelId)}?${query}`;

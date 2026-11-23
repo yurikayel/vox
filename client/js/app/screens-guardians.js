@@ -22,22 +22,45 @@ import {
 import { filterMutualTies, removeAllGuardians, sendGuardianShares, stopGuarding } from "./guardians-flow.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+/**
+ * Nome exibido da pessoa: contato, reserva, nome conhecido ou rota abreviada.
+ *
+ * @param {string} routeId Rota da pessoa.
+ * @param {string} [fallback=""] Nome de reserva.
+ * @returns {string}
+ */
 function labelFor(routeId, fallback = "") {
   const contact = contacts.listContacts().find((c) => c.routeId === routeId);
   return contact?.label || fallback || getAuthorDisplaySync(routeId) || shortId(routeId);
 }
 
+/**
+ * Lista as pessoas que podem ser guardiãs (vínculo mútuo).
+ *
+ * @returns {Promise<{routeId: string, name: string}[]>}
+ */
 async function loadCandidates() {
   const pool = [...contacts.listContacts().map((c) => c.routeId), ...social.getWatchedProfiles()];
   return (await filterMutualTies(pool)).map((routeId) => ({ routeId, name: labelFor(routeId) }));
 }
 
+/**
+ * Estado da divisão da conta: confirmações e nomes dos guardiões.
+ *
+ * @param {string} me Rota da dona.
+ * @returns {object|null}
+ */
 function ownerStatus(me) {
   const split = guardians.getOwnerSplit(me);
   if (!split) return null;
   return { ...guardians.countConfirmed(me), names: split.guardians.map((g) => labelFor(g.routeId)) };
 }
 
+/**
+ * Mostra ou limpa o erro do formulário de guardiões.
+ *
+ * @param {string} text Mensagem (vazia limpa).
+ */
 function showError(text) {
   const el = document.getElementById("guardian-error");
   if (!el) return;
@@ -45,10 +68,18 @@ function showError(text) {
   el.textContent = text || "";
 }
 
+/**
+ * Rotas dos guardiões marcados no formulário.
+ *
+ * @returns {string[]}
+ */
 function chosenGuardians() {
   return [...document.querySelectorAll('#form-guardians input[name="guardian"]:checked')].map((el) => el.value);
 }
 
+/**
+ * Atualiza o texto do limiar com os guardiões marcados.
+ */
 function syncHint() {
   const hint = document.getElementById("guardian-hint");
   const m = Number(document.getElementById("guardian-m")?.value) || guardians.DEFAULT_M;
@@ -61,6 +92,11 @@ const FAILURES = {
   "storage-full": "O navegador está sem espaço para anotar a divisão. Libere espaço do site e escolha os guardiões de novo.",
 };
 
+/**
+ * Valida a escolha e envia os pedaços aos guardiões.
+ *
+ * @returns {Promise<void>}
+ */
 async function submitGuardians() {
   const chosen = chosenGuardians();
   const m = Number(document.getElementById("guardian-m")?.value) || guardians.DEFAULT_M;
@@ -82,6 +118,9 @@ async function submitGuardians() {
 const REMOVE_CONFIRM =
   "Tirar todos os guardiões? Cada um recebe a revogação e apaga o pedaço. A conta fica sem esta saída até você escolher de novo ou ter a frase no papel.";
 
+/**
+ * Remove todos os guardiões depois de confirmar.
+ */
 async function removeAll() {
   if (!confirm(REMOVE_CONFIRM)) return;
   await removeAllGuardians();
@@ -89,6 +128,9 @@ async function removeAll() {
   await showGuardians();
 }
 
+/**
+ * Liga o formulário de guardiões e os botões da tela.
+ */
 function bindScreen() {
   const form = document.getElementById("form-guardians");
   form?.addEventListener("change", syncHint);

@@ -27,6 +27,13 @@ const MOD_ACTION_LABELS = {
   unlock: "Tópico reaberto.",
 };
 
+/**
+ * Busca o tópico e o corpo nos gateways quando não há cópia local.
+ *
+ * @param {string} topicId Identificador do tópico.
+ * @param {string} commIdParam Comunidade vinda da URL.
+ * @returns {Promise<{topic: object|null, topicData: object}>}
+ */
 async function fetchRemoteTopicFallback(topicId, commIdParam) {
   let topic = null;
   let topicData = { body: "" };
@@ -68,6 +75,13 @@ export async function resolveTopicContent(topicId, commIdParam, user) {
   return { topic: remote.topic, topicData: remote.topicData, isOfficial: false, isLocal: false };
 }
 
+/**
+ * Resolve as respostas do tópico: demonstração para o oficial, gateways para os demais.
+ *
+ * @param {string} topicId Identificador do tópico.
+ * @param {boolean} isOfficial Tópico oficial de demonstração.
+ * @returns {Promise<{replies: object[], gateway: string, demo: boolean}>}
+ */
 async function resolveTopicReplies(topicId, isOfficial) {
   if (isOfficial) return { replies: mock.mockReplies(topicId).items || [], gateway: "", demo: true };
   try {
@@ -78,6 +92,13 @@ async function resolveTopicReplies(topicId, isOfficial) {
   }
 }
 
+/**
+ * Mescla as respostas locais com as remotas, sem duplicar por identificador.
+ *
+ * @param {string} topicId Identificador do tópico.
+ * @param {object[]} remoteReplies Respostas vindas dos gateways.
+ * @returns {Promise<object[]>}
+ */
 async function mergeTopicReplies(topicId, remoteReplies) {
   const local = await cacheNode.getLocalPosts({ type: "reply", replyTo: topicId });
   const seen = new Set();
@@ -92,6 +113,13 @@ async function mergeTopicReplies(topicId, remoteReplies) {
   return { merged, hasLocal: Boolean(local.length) };
 }
 
+/**
+ * Atualiza nome e foto dos autores na tela quando o perfil deles chega pela rede.
+ *
+ * @param {string} topicAuthor Rota do autor do tópico.
+ * @param {object[]} filteredReplies Respostas exibidas.
+ * @returns {Function}
+ */
 function bindLiveProfileSync(topicAuthor, filteredReplies) {
   const authors = new Set(filteredReplies.map((r) => r.author || r.owner).filter(Boolean));
   if (topicAuthor) authors.add(topicAuthor);
@@ -110,6 +138,12 @@ function bindLiveProfileSync(topicAuthor, filteredReplies) {
   });
 }
 
+/**
+ * Liga os botões de moderação que alternam estado (fixar, trancar).
+ *
+ * @param {string} finalCommId Comunidade do tópico.
+ * @param {string} topicId Tópico.
+ */
 function bindTopicModToggleActions(finalCommId, topicId) {
   document.querySelectorAll(".btn-mod-action").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -128,6 +162,11 @@ function bindTopicModToggleActions(finalCommId, topicId) {
   });
 }
 
+/**
+ * Liga os botões de ocultar item da moderação.
+ *
+ * @param {string} finalCommId Comunidade do tópico.
+ */
 function bindTopicModHideActions(finalCommId) {
   document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -146,6 +185,13 @@ function bindTopicModHideActions(finalCommId) {
   });
 }
 
+/**
+ * Liga os eventos da tela de tópico: compartilhar e moderação.
+ *
+ * @param {string} topicId Tópico.
+ * @param {object} topic Tópico exibido.
+ * @param {string} finalCommId Comunidade do tópico.
+ */
 function bindTopicScreenEvents(topicId, topic, finalCommId) {
   document.getElementById("btn-share-topic")?.addEventListener("click", () => {
     shareTopicUnlessQuarantined({ title: topic.title || "Tópico no Vox", topicId, communityId: finalCommId });
@@ -154,6 +200,12 @@ function bindTopicScreenEvents(topicId, topic, finalCommId) {
   bindTopicModHideActions(finalCommId);
 }
 
+/**
+ * Busca em segundo plano o corpo das respostas remotas que chegaram sem texto.
+ *
+ * @param {object[]} filteredReplies Respostas exibidas.
+ * @param {string} finalCommId Comunidade do tópico.
+ */
 function hydrateMissingReplyBodies(filteredReplies, finalCommId) {
   filteredReplies.forEach(async (r) => {
     if (!r.isLocalP2p && (!r.body || r.body.startsWith("("))) {
@@ -166,6 +218,15 @@ function hydrateMissingReplyBodies(filteredReplies, finalCommId) {
   });
 }
 
+/**
+ * Aplica as ações de moderação à lista de respostas e ao tópico.
+ *
+ * @param {string} communityId Comunidade (vazia não filtra).
+ * @param {string} user Rota de quem vê.
+ * @param {object[]} replies Respostas a filtrar.
+ * @param {object|null} [topic=null] Tópico a filtrar.
+ * @returns {Promise<{filteredReplies: object[], filteredTopic: object|null, isUserMod: boolean}>}
+ */
 async function resolveTopicModeration(communityId, user, replies, topic = null) {
   if (!communityId) return { filteredReplies: replies, filteredTopic: topic, isUserMod: false };
   const meta = await resolveCommunityMetadata(communityId).catch(() => ({ owner: "" }));

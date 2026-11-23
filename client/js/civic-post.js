@@ -59,15 +59,30 @@ export const CIVIC_STANCES = [
 const HASHTAG_RE = /(^|\s)#([a-zà-ú0-9_]+)/giu;
 const POLL_LINE_RE = /^\s*(?:[-*•]|\(\s?\))\s+(.+?)\s*$/;
 
+/**
+ * Tira acentos e põe em minúsculas.
+ * @param {string} s Texto
+ * @returns {string} Texto simplificado.
+ */
 function stripAccents(s) {
   return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
+/**
+ * Lê a etiqueta cívica do prefixo do título (ex.: `[Denúncia]`).
+ * @param {string} title Título
+ * @returns {string} Chave da etiqueta, ou texto vazio.
+ */
 function tagFromTitlePrefix(title) {
   const m = String(title || "").match(/^\s*(\[[^\]]+\])/);
   return m && CIVIC_TAGS[m[1]] ? m[1] : "";
 }
 
+/**
+ * Procura uma etiqueta cívica nas hashtags do corpo.
+ * @param {string} body Corpo do post
+ * @returns {string} Chave da etiqueta, ou texto vazio.
+ */
 function tagFromHashtags(body) {
   for (const m of String(body || "").matchAll(HASHTAG_RE)) {
     const tag = HASHTAG_TO_TAG[stripAccents(m[2])];
@@ -95,16 +110,33 @@ export function parsePollOptions(body = "") {
     .slice(0, CIVIC_POLL_MAX + 1);
 }
 
+/**
+ * Remove o prefixo de etiqueta do título.
+ * @param {string} title Título
+ * @returns {string} Título sem o prefixo.
+ */
 function plainTitle(title) {
   return String(title || "").replace(/^\s*\[[^\]]+\]\s*/, "").trim();
 }
 
+/**
+ * Diz se o post tem autor assinado do Vox (não é externo nem do Bluesky).
+ * @param {object} post Post
+ * @returns {boolean} `true` se for de autor Vox.
+ */
 function isSignedVoxAuthor(post) {
   if (post.isExternal || post.source === "bluesky") return false;
   const author = String(post.author || post.owner || "");
   return author.length > 0;
 }
 
+/**
+ * Verifica uma exigência do post cívico (título, corpo, etc.).
+ * @param {string} key Exigência verificada
+ * @param {object} post Post
+ * @param {object} options Opções da verificação
+ * @returns {boolean} `true` se atendida.
+ */
 function checkRequirement(key, post, options) {
   switch (key) {
     case "title": return plainTitle(post.title).length >= CIVIC_MIN_TITLE;

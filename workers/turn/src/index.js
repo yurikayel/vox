@@ -125,6 +125,11 @@ export class TurnBudget {
   }
 }
 
+/**
+ * Monta os cabeçalhos CORS para a origem permitida.
+ * @param {string} origin Origem permitida.
+ * @returns {object}
+ */
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
@@ -134,10 +139,23 @@ function corsHeaders(origin) {
   };
 }
 
+/**
+ * Responde JSON com `no-store` e os cabeçalhos CORS.
+ * @param {unknown} body Corpo da resposta.
+ * @param {number} status Status HTTP.
+ * @param {string} origin Origem permitida.
+ * @param {object} [extra={}] Cabeçalhos extras.
+ * @returns {Response}
+ */
 function json(body, status, origin, extra = {}) {
   return Response.json(body, { status, headers: { ...corsHeaders(origin), "Cache-Control": "no-store", ...extra } });
 }
 
+/**
+ * Cria a função que consulta o orçamento global do Durable Object por IP.
+ * @param {object} env Ambiente do Worker (com o binding `TURN_BUDGET`).
+ * @returns {Function}
+ */
 function defaultBudget(env) {
   return async (ipKey) => {
     const stub = env.TURN_BUDGET.get(env.TURN_BUDGET.idFromName("global"));

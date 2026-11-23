@@ -14,6 +14,13 @@ export function bskyPostText(post) {
   return [title, body !== title ? body : "", url].filter(Boolean).join("\n\n").slice(0, 295);
 }
 
+/**
+ * Cria o registro do post no repositório do Bluesky.
+ * @param {string} pdsUrl Endereço do PDS
+ * @param {object} session Sessão
+ * @param {object} post Post
+ * @returns {Promise<object>} Resposta da criação.
+ */
 async function createBskyPostRecord(pdsUrl, session, post) {
   const rawText = bskyPostText(post);
   const recRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.createRecord`, {

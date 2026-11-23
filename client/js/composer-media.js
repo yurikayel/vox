@@ -51,6 +51,10 @@ export const COMPOSER_IMAGE_MAX_DIMENSION = 4096;
 
 const MIME_LABEL = "JPEG, PNG, WebP ou GIF";
 
+/**
+ * Descreve o limite de tamanho da imagem em MB ou KB.
+ * @returns {string} Texto do limite.
+ */
 function maxBytesLabel() {
   const mb = COMPOSER_IMAGE_MAX_BYTES / (1024 * 1024);
   return mb >= 1 ? `${mb} MB` : `${Math.round(COMPOSER_IMAGE_MAX_BYTES / 1024)} KB`;
@@ -100,6 +104,11 @@ export function validateComposerImageDimensions(width, height) {
   };
 }
 
+/**
+ * Lê um arquivo como data URL.
+ * @param {Blob} file Arquivo
+ * @returns {Promise<string>} Data URL.
+ */
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -109,6 +118,11 @@ function readFileAsDataUrl(file) {
   });
 }
 
+/**
+ * Resolve a imagem lo-fi para data URL, vinda de texto ou de arquivo.
+ * @param {string|Blob} fileOrDataUrl Data URL ou arquivo
+ * @returns {Promise<string>} Data URL.
+ */
 async function resolveLofiImageDataUrl(fileOrDataUrl) {
   if (typeof fileOrDataUrl === "string") return fileOrDataUrl;
   if (fileOrDataUrl && typeof fileOrDataUrl.slice === "function") {
@@ -117,6 +131,13 @@ async function resolveLofiImageDataUrl(fileOrDataUrl) {
   return null;
 }
 
+/**
+ * Desenha a imagem no canvas com recorte e filtro lo-fi.
+ * @param {HTMLImageElement} img Imagem
+ * @param {string} filter Filtro
+ * @param {string} aspect Proporção do recorte
+ * @returns {object} Resultado do desenho.
+ */
 function renderLofiCanvasResult(img, filter, aspect) {
   const naturalW = img.naturalWidth || img.width || 1;
   const naturalH = img.naturalHeight || img.height || 1;
@@ -150,6 +171,13 @@ function renderLofiCanvasResult(img, filter, aspect) {
   };
 }
 
+/**
+ * Carrega a imagem e aplica o processamento lo-fi.
+ * @param {string} dataUrl Imagem de entrada
+ * @param {string} filter Filtro
+ * @param {string} aspect Proporção do recorte
+ * @returns {Promise<object|null>} Resultado, ou `null` se a imagem falhar.
+ */
 function processLofiImageElement(dataUrl, filter, aspect) {
   return new Promise((resolve) => {
     const img = new Image();
