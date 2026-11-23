@@ -30,6 +30,11 @@ export function __resetOAuthConfigForTests() {
   configCache = null;
 }
 
+/**
+ * Carrega um script externo uma única vez.
+ * @param {string} src Endereço do script
+ * @returns {Promise<void>} Conclui quando carregado.
+ */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -42,6 +47,11 @@ function loadScript(src) {
   });
 }
 
+/**
+ * Lê o corpo de um JWT sem verificar a assinatura.
+ * @param {string} credential JWT
+ * @returns {object|null} Corpo, ou `null` se inválido.
+ */
 function extractJwtPayload(credential) {
   try {
     return JSON.parse(atob(credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
@@ -103,6 +113,10 @@ export async function signInWithGoogle() {
   });
 }
 
+/**
+ * Busca o perfil na Meta pelo SDK e resolve com o resultado.
+ * @param {Function} resolve Entrega o resultado
+ */
 function fetchMetaProfile(resolve) {
   window.FB.api("/me", { fields: "name,picture,id,email" }, async (profile) => {
     if (!profile?.name) return resolve({ ok: false, reason: "Perfil Meta vazio" });
@@ -171,6 +185,11 @@ export async function signInWithMetaIdentity() {
   return { netId: "facebook", handle: "", name: me.name || "", id: String(me.id) };
 }
 
+/**
+ * Resolve o handle do GitHub (informado ou perguntado à pessoa).
+ * @param {string} handle Handle informado
+ * @returns {string} Handle limpo, ou texto vazio.
+ */
 function resolveGithubHandleInput(handle) {
   const clean = String(handle || "").trim().replace(/^@/, "");
   if (clean) return clean;

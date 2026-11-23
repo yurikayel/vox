@@ -31,6 +31,10 @@ let current = { flags: { ...FLAG_DEFAULTS }, notice: "", electoralMode: false };
  * Erro lançado ao usar recurso desligado pelo kill-switch.
  */
 export class FeatureDisabledError extends Error {
+  /**
+   * Cria o erro de recurso desligado.
+   * @param {string} name Nome da flag
+   */
   constructor(name) {
     super(disabledMessage(name));
     this.name = "FeatureDisabledError";
@@ -109,6 +113,10 @@ export function assertFeatureEnabled(name) {
   if (!isFeatureEnabled(name)) throw new FeatureDisabledError(name);
 }
 
+/**
+ * Lê o estado das flags guardado no `localStorage`.
+ * @returns {object|null} Estado guardado, ou `null`.
+ */
 function readCached() {
   try {
     const raw = globalThis.localStorage?.getItem(STORAGE_KEY);
@@ -118,6 +126,10 @@ function readCached() {
   }
 }
 
+/**
+ * Grava o estado das flags no `localStorage`; se falhar, segue sem gravar.
+ * @param {object} state Estado
+ */
 function writeCached(state) {
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));

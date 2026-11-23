@@ -24,6 +24,11 @@ const MAX_TRACKED_KEYS = 5000;
 export function createRateLimiter({ windowMs = GOSSIP_WINDOW_MS, max = GOSSIP_MAX_PER_WINDOW, now = () => Date.now() } = {}) {
   const hits = new Map();
 
+  /**
+   * Remove da lista os instantes que já saíram da janela.
+   * @param {number[]} list Instantes registrados
+   * @param {number} t Instante atual (ms)
+   */
   function prune(list, t) {
     while (list.length && t - list[0] >= windowMs) list.shift();
   }

@@ -39,6 +39,12 @@ export function avisoExpiresAt(post) {
   return Number(post?.ts || 0) + 7 * DAY_MS;
 }
 
+/**
+ * Codifica bytes em base32 (alfabeto do código curto do aviso).
+ * @param {Uint8Array} bytes Bytes a codificar
+ * @param {number} length Número de caracteres a produzir
+ * @returns {string} Texto em base32.
+ */
 function base32(bytes, length) {
   let bits = 0;
   let value = 0;
@@ -54,6 +60,11 @@ function base32(bytes, length) {
   return out;
 }
 
+/**
+ * Calcula o SHA-256 de um texto UTF-8.
+ * @param {string} textValue Texto a resumir
+ * @returns {Promise<Uint8Array>} Resumo de 32 bytes.
+ */
 async function sha256(textValue) {
   const data = new TextEncoder().encode(String(textValue));
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
@@ -86,6 +97,11 @@ export async function personCode(routeId) {
   return `${code.slice(0, 3)}-${code.slice(3)}`;
 }
 
+/**
+ * Codifica um texto UTF-8 em base64 sem preenchimento, seguro para URL.
+ * @param {string} textValue Texto de entrada
+ * @returns {string} Texto em base64url.
+ */
 function toBase64Url(textValue) {
   const bytes = new TextEncoder().encode(textValue);
   let bin = "";
@@ -93,6 +109,11 @@ function toBase64Url(textValue) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Decodifica base64url de volta para texto UTF-8.
+ * @param {string} value Texto em base64url
+ * @returns {string} Texto original.
+ */
 function fromBase64Url(value) {
   const b64 = value.replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));

@@ -116,6 +116,12 @@ export async function queryAllGateways(query, variables) {
   return results;
 }
 
+/**
+ * Registra a aresta no mapa, ligando-a ao gateway de origem.
+ * @param {Map<string, object>} edgeMap Mapa de arestas
+ * @param {object} edge Aresta
+ * @param {string} gateway Gateway de origem
+ */
 function recordEdgeInMap(edgeMap, edge, gateway) {
   const id = edge.node?.id;
   if (!id) return;
@@ -158,6 +164,12 @@ export function mergeTopicEdgesWithConsensus(gatewayResults) {
   }));
 }
 
+/**
+ * Monta as URLs de leitura direta de uma transação nos gateways.
+ * @param {object} cfg Configuração dos gateways
+ * @param {string} txId Id da transação
+ * @returns {string[]} URLs.
+ */
 function rawUrlsForTx(cfg, txId) {
   const urls = [];
   for (const gw of cfg.gateways || []) {
@@ -171,6 +183,11 @@ function rawUrlsForTx(cfg, txId) {
   return urls;
 }
 
+/**
+ * Interpreta o texto devolvido pelo gateway (JSON ou texto puro).
+ * @param {string} text Texto recebido
+ * @returns {object} Corpo e texto bruto.
+ */
 function parseGatewayRawPayload(text) {
   const parsed = { body: text, raw: text };
   try {
@@ -195,6 +212,12 @@ function parseGatewayRawPayload(text) {
   return parsed;
 }
 
+/**
+ * Diz se a resposta de leitura direta é utilizável (não vazia nem HTML).
+ * @param {Response} res Resposta
+ * @param {string} text Texto lido
+ * @returns {boolean} `true` se válida.
+ */
 function isValidRawResponse(res, text) {
   if (!res.ok) return false;
   const ctype = res.headers?.get?.("content-type") || "";
@@ -203,6 +226,12 @@ function isValidRawResponse(res, text) {
   return !trimmed.startsWith("<!doctype html") && !trimmed.startsWith("<html");
 }
 
+/**
+ * Tenta ler a transação em uma URL, com timeout.
+ * @param {string} url Endereço
+ * @param {string} label Nome do gateway
+ * @returns {Promise<object|null>} Resultado, ou `null` se falhar.
+ */
 async function tryFetchRawFromUrl(url, label) {
   try {
     const res = await fetchWithTimeout(url, {}, { timeoutMs: 6000 });

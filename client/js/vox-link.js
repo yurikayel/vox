@@ -23,9 +23,24 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/;
  */
 export const isInviteToken = (token) => typeof token === "string" && TOKEN_PATTERN.test(token);
 
+/**
+ * Converte bytes em base64url sem preenchimento.
+ * @param {Uint8Array} bytes Bytes
+ * @returns {string} Texto em base64url.
+ */
 const toB64Url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+/**
+ * Gera bytes aleatórios.
+ * @param {number} n Quantidade
+ * @returns {Uint8Array} Bytes aleatórios.
+ */
 const randomBytes = (n) => crypto.getRandomValues(new Uint8Array(n));
 
+/**
+ * Lê o convite guardado; devolve `null` se faltar ou for inválido.
+ * @param {Storage|null} storage Armazenamento
+ * @returns {object|null} Convite, ou `null`.
+ */
 function readInvite(storage) {
   try {
     const invite = JSON.parse(storage?.getItem(INVITE_STORAGE_KEY) || "null");
@@ -36,6 +51,11 @@ function readInvite(storage) {
   }
 }
 
+/**
+ * Grava o convite; se falhar, segue sem gravar.
+ * @param {object} invite Convite
+ * @param {Storage|null} storage Armazenamento
+ */
 function writeInvite(invite, storage) {
   try {
     storage?.setItem(INVITE_STORAGE_KEY, JSON.stringify(invite));
@@ -135,6 +155,12 @@ export function buildConfirm(accept, now = Date.now()) {
   };
 }
 
+/**
+ * Diz se as duas metades (aceite e confirmação) se correspondem.
+ * @param {object} confirm Confirmação
+ * @param {object} accept Aceite
+ * @returns {boolean} `true` se correspondem.
+ */
 function halvesMatch(confirm, accept) {
   return accept?.type === VOX_LINK_TYPE && accept.kind === "accept"
     && accept.to === confirm.author && confirm.to === accept.author && accept.author !== confirm.author
@@ -142,6 +168,11 @@ function halvesMatch(confirm, accept) {
     && (accept.sponsor === true) === (confirm.sponsor === true);
 }
 
+/**
+ * Lê o aceite como JSON; devolve `null` se for inválido.
+ * @param {string} text Texto
+ * @returns {object|null} Aceite lido, ou `null`.
+ */
 function parseAccept(text) {
   try {
     return JSON.parse(text);

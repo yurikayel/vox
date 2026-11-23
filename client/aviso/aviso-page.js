@@ -19,6 +19,11 @@ import { verifyPayload } from "../js/signed-verify.js";
  */
 export const TRUST_KEY = "vox.aviso.trust";
 
+/**
+ * Normaliza um nome para comparação: sem acento, minúsculo e sem espaços nas pontas.
+ * @param {string} s Nome de entrada
+ * @returns {string} Nome normalizado.
+ */
 const plainName = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
 /**
@@ -28,6 +33,10 @@ const plainName = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036
  * @returns {{read: function(): {groups: Object<string, string[]>, names: Object<string, string[]>}, write: function(object): void}} Leitura e escrita da memória.
  */
 export function trustStore(storage) {
+  /**
+   * Lê a memória de confiança do `Storage`; se falhar, devolve a memória vazia.
+   * @returns {{groups: Object<string, string[]>, names: Object<string, string[]>}} Memória lida.
+   */
   const read = () => {
     try {
       const data = JSON.parse(storage?.getItem(TRUST_KEY) || "{}");
@@ -36,6 +45,10 @@ export function trustStore(storage) {
       return { groups: {}, names: {} };
     }
   };
+  /**
+   * Grava a memória de confiança; se o `Storage` falhar, a página segue sem gravar.
+   * @param {object} data Memória a gravar
+   */
   const write = (data) => {
     try {
       storage?.setItem(TRUST_KEY, JSON.stringify(data));
@@ -46,6 +59,12 @@ export function trustStore(storage) {
   return { read, write };
 }
 
+/**
+ * Acrescenta um valor à lista de uma chave, sem repetir.
+ * @param {Object<string, string[]>} map Mapa a atualizar
+ * @param {string} key Chave (ignorada se vazia)
+ * @param {string} value Valor a acrescentar
+ */
 const addTo = (map, key, value) => {
   if (!key) return;
   map[key] = [...new Set([...(map[key] || []), value])];
@@ -65,6 +84,12 @@ export function rememberKey(store, aviso) {
   store.write(data);
 }
 
+/**
+ * Diz como a pessoa vê o autor do aviso, conforme a memória de confiança.
+ * @param {object} store Memória de confiança
+ * @param {object} aviso Aviso exibido
+ * @returns {string} Estado de confiança do autor.
+ */
 function trustOf(store, aviso) {
   const { groups, names } = store.read();
   const lists = [groups[aviso.communityId], names[plainName(aviso.authorDisplay)]].filter(Boolean);
@@ -124,6 +149,14 @@ export function replyHref(label, code) {
   return `https://wa.me/?text=${encodeURIComponent(`${label} — ${code}`)}`;
 }
 
+/**
+ * Cria um elemento do DOM com classe e texto opcionais.
+ * @param {Document} doc Documento dono do elemento
+ * @param {string} tag Nome da tag
+ * @param {string} [className] Classe CSS
+ * @param {string} [text] Texto do elemento
+ * @returns {HTMLElement} Elemento criado.
+ */
 function el(doc, tag, className, text) {
   const node = doc.createElement(tag);
   if (className) node.className = className;
@@ -131,6 +164,12 @@ function el(doc, tag, className, text) {
   return node;
 }
 
+/**
+ * Desenha o título, o corpo e os dados do evento do aviso.
+ * @param {Document} doc Documento
+ * @param {HTMLElement} root Contêiner de destino
+ * @param {object} aviso Aviso exibido
+ */
 function renderAvisoBody(doc, root, aviso) {
   root.append(el(doc, "h2", "aviso-title", aviso.title));
   if (aviso.body) root.append(el(doc, "p", "aviso-body", aviso.body));
@@ -140,6 +179,12 @@ function renderAvisoBody(doc, root, aviso) {
   }
 }
 
+/**
+ * Desenha as opções de resposta do aviso (só "Ciente" quando não há evento).
+ * @param {Document} doc Documento
+ * @param {HTMLElement} root Contêiner de destino
+ * @param {object} result Resultado da verificação do aviso
+ */
 function renderReplies(doc, root, result) {
   const options = result.aviso.eventAt ? ["✅ Ciente", "🙋 Vou", "🤔 Talvez", "❌ Não vou"] : ["✅ Ciente"];
   const box = el(doc, "div", "aviso-replies");
@@ -152,6 +197,13 @@ function renderReplies(doc, root, result) {
   root.append(el(doc, "p", "aviso-hint", "Responder no grupo:"), box);
 }
 
+/**
+ * Desenha o botão com que a pessoa confirma que a coordenação publicou o código.
+ * @param {Document} doc Documento
+ * @param {HTMLElement} root Contêiner de destino
+ * @param {object} result Resultado da verificação do aviso
+ * @param {object} store Memória de confiança
+ */
 function renderConfirm(doc, root, result, store) {
   const button = el(doc, "button", "aviso-confirm", "A coordenação confirmou este código");
   button.type = "button";
@@ -183,6 +235,10 @@ export function paint(doc, root, result, store) {
   root.append(el(doc, "p", "aviso-note", "O verde só vale no seu celular. Print de tela verde não prova nada."));
 }
 
+/**
+ * Inicializa a página: lê o link, verifica o aviso e desenha o resultado.
+ * @returns {Promise<void>} Conclui quando a página foi desenhada.
+ */
 async function boot() {
   const root = document.getElementById("aviso-root");
   if (!root) return;

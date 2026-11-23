@@ -68,6 +68,11 @@ export function serializeReportDm(signedReport, { text = "", contextCard = null 
   return JSON.stringify({ __vox_dm_v2: 1, kind: "report", text: String(text), contextCard, report: signedReport });
 }
 
+/**
+ * Diz se a denúncia assinada tem os campos e o motivo esperados.
+ * @param {object} r Denúncia
+ * @returns {boolean} `true` se bem formada.
+ */
 function isWellFormedSignedReport(r) {
   if (!r || typeof r !== "object" || r.type !== SIGNED_REPORT_TYPE) return false;
   if (!r.reportId || !r.postId || !r.communityId || !r.author) return false;

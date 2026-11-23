@@ -22,6 +22,11 @@ function setAsideUnreadable(storage, raw) {
   } catch {}
 }
 
+/**
+ * Lê a fila de saída do armazenamento; se falhar, devolve lista vazia.
+ * @param {Storage|null} storage Armazenamento
+ * @returns {object[]} Fila lida.
+ */
 function readList(storage) {
   let raw = null;
   try {
@@ -33,6 +38,12 @@ function readList(storage) {
   return [];
 }
 
+/**
+ * Grava a fila de saída no armazenamento.
+ * @param {object[]} list Fila
+ * @param {Storage|null} storage Armazenamento
+ * @returns {boolean} `true` se gravou.
+ */
 function writeList(list, storage) {
   try {
     storage?.setItem(OUTBOX_KEY, JSON.stringify(list));
@@ -58,6 +69,11 @@ export function relayBackoffMs(attempts) {
   return Math.min(RELAY_BACKOFF_MAX_MS, RELAY_BACKOFF_BASE_MS * 2 ** (n - 1));
 }
 
+/**
+ * Tamanho aproximado de uma entrada, em caracteres do JSON.
+ * @param {object} entry Entrada da fila
+ * @returns {number} Tamanho.
+ */
 const entryBytes = (entry) => JSON.stringify(entry).length;
 
 /** Aplica os limites de quantidade e de tamanho: sai o mais antigo. 
@@ -104,6 +120,14 @@ export function planOutbox(list, { isConnected, now }) {
   return plan;
 }
 
+/**
+ * Tenta entregar uma entrada, direto ou pelo relay.
+ * @param {object} entry Entrada da fila
+ * @param {boolean} direct Se há canal direto
+ * @param {object} d Dependências de entrega
+ * @param {number} now Agora (ms)
+ * @returns {Promise<string>} Resultado da entrega.
+ */
 async function deliverOne(entry, direct, d, now) {
   if (direct && d.sendDirect(entry.to, entry.envelope)) return "delivered";
   try {
@@ -116,6 +140,13 @@ async function deliverOne(entry, direct, d, now) {
   }
 }
 
+/**
+ * Atualiza o estado da mensagem sem deixar o erro subir.
+ * @param {object} d Dependências
+ * @param {object} entry Entrada da fila
+ * @param {string} status Novo estado
+ * @returns {Promise<boolean>} `true` se atualizou.
+ */
 async function markSafe(d, entry, status) {
   try {
     await d.markStatus(entry.to, entry.envelope.id, status);

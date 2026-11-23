@@ -65,6 +65,10 @@ export function loadMirrorTelemetry() {
   }
 }
 
+/**
+ * Grava a telemetria do espelhamento no `localStorage`; se falhar, segue sem gravar.
+ * @param {object} state Estado a gravar
+ */
 function saveMirrorTelemetry(state) {
   try {
     localStorage.setItem(MIRROR_TELEMETRY_KEY, JSON.stringify(state));
@@ -119,6 +123,11 @@ export function getMirrorLastErrorExport() {
   };
 }
 
+/**
+ * Valida a lista de tópicos da comunidade a espelhar.
+ * @param {Array|null|undefined} topics Tópicos
+ * @returns {{valid: boolean, code?: string, error?: string}} Resultado da validação.
+ */
 function validateCommunityTopics(topics) {
   if (topics !== undefined && topics !== null && !Array.isArray(topics)) {
     return { valid: false, code: "mirror.topics_invalid", error: "topics deve ser um array." };
@@ -133,6 +142,11 @@ function validateCommunityTopics(topics) {
   return null;
 }
 
+/**
+ * Valida o manifesto de cache da comunidade, quando houver.
+ * @param {object|null} cacheManifest Manifesto
+ * @returns {object|null} Erro de validação, ou `null` se válido.
+ */
 function validateCommunityCacheManifest(cacheManifest) {
   if (cacheManifest == null) return null;
   const cmCheck = validateManifestBody(cacheManifest);
@@ -210,6 +224,11 @@ export function buildCommunityMirrorIndex(community, topics = [], options = {}) 
   return index;
 }
 
+/**
+ * Lê o motivo do erro numa resposta de espelhamento recusada.
+ * @param {Response} res Resposta HTTP
+ * @returns {Promise<object>} Código e mensagem do erro.
+ */
 async function parseMirrorErrorResponse(res) {
   const text = await res.text().catch(() => "");
   try {
@@ -223,6 +242,12 @@ async function parseMirrorErrorResponse(res) {
   return { code: null, error: text || `HTTP ${res.status}`, httpStatus: res.status };
 }
 
+/**
+ * Envia o espelho a um servidor; falha de rede vira resultado, não exceção.
+ * @param {string} root Endereço do servidor
+ * @param {object} body Corpo do espelho
+ * @returns {Promise<object>} Resultado do envio.
+ */
 async function postMirrorToSingleTarget(root, body) {
   try {
     const url = `${root}/vox/mirror`;
@@ -299,6 +324,11 @@ export async function mirrorCommunityToRelay(community, topics, baseUrl = null, 
   return { index, result };
 }
 
+/**
+ * Diz se a falha do espelhamento deve aparecer para a pessoa.
+ * @param {object} [options={}] Opções (`manual`, `notify`)
+ * @returns {boolean} `true` se deve notificar.
+ */
 function shouldNotifyMirrorFailure(options = {}) {
   return Boolean(options.manual || options.notify || isMirrorVerbose());
 }

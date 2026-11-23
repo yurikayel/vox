@@ -85,12 +85,22 @@ export const ACHIEVEMENT_CATALOG = Object.freeze([
   },
 ]);
 
+/**
+ * Valida e limpa o id de rota do cidadão.
+ * @param {string} routeId Id de rota
+ * @returns {string} Id limpo.
+ */
 function normalizeRouteId(routeId) {
   const clean = String(routeId || "").trim();
   if (!clean) throw new Error("routeId do cidadão é obrigatório");
   return clean;
 }
 
+/**
+ * Valida e normaliza a categoria do voxel.
+ * @param {string} category Categoria
+ * @returns {string} Categoria normalizada.
+ */
 function normalizeCategory(category) {
   const clean = String(category || "").trim().toLowerCase();
   if (!VOXEL_CATEGORIES.includes(clean)) {
@@ -99,6 +109,12 @@ function normalizeCategory(category) {
   return clean;
 }
 
+/**
+ * Valida a quantidade do voxel.
+ * @param {number} [amount] Quantidade
+ * @param {string} action Ação (para a mensagem de erro)
+ * @returns {number} Quantidade válida.
+ */
 function normalizeAmount(amount, action) {
   if (amount !== undefined && amount !== null) {
     const num = Number(amount);
@@ -458,11 +474,21 @@ export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = 
   return { rewarded: true, receipt, amount: receipt.amount };
 }
 
+/**
+ * Resolve o id de rota ativo (o informado ou o da conta local).
+ * @param {string} [routeId] Id informado
+ * @returns {string|null} Id de rota, ou `null`.
+ */
 function resolveActiveRouteId(routeId) {
   if (routeId) return routeId;
   return localAccount.getCachedRouteIdSync ? localAccount.getCachedRouteIdSync() : null;
 }
 
+/**
+ * Testa se o relay está online.
+ * @param {Function} checkRelayFn Função que consulta o relay
+ * @returns {Promise<boolean>} `true` se online.
+ */
 async function probeRelayOnline(checkRelayFn) {
   if (typeof checkRelayFn !== "function") return false;
   try {

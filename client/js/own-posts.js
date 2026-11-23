@@ -41,6 +41,13 @@ export async function collectOwnPostEntries(me, { filter = () => true, store = c
   return entries;
 }
 
+/**
+ * Restaura um post próprio no cache se for válido e não substituído.
+ * @param {object} entry Entrada do backup
+ * @param {string} me Endereço da conta
+ * @param {object} d Dependências
+ * @returns {Promise<boolean>} `true` se restaurou.
+ */
 async function restoreEntry(entry, me, d) {
   const post = entry?.post;
   if (!post?.id || !post.sig || post.author !== me || isBeforeGenesisMs(post.ts || 0)) return false;

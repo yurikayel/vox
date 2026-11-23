@@ -40,6 +40,13 @@ export function leadingZeroBits(bytes) {
   return bits;
 }
 
+/**
+ * Calcula o resumo da prova de trabalho de um post.
+ * @param {string} author Autor
+ * @param {string} id Id do post
+ * @param {number|string} nonce Nonce tentado
+ * @returns {Promise<Uint8Array>} Resumo SHA-256.
+ */
 async function powDigest(author, id, nonce) {
   const data = new TextEncoder().encode(`vox-pow:${author}:${id}:${nonce}`);
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
@@ -69,6 +76,11 @@ export async function hasValidPow(item, minBits = POW_BITS) {
   return leadingZeroBits(await powDigest(item.author, item.id, nonce)) >= minBits;
 }
 
+/**
+ * Lê o livro de chaves vistas do armazenamento.
+ * @param {Storage|null} storage Armazenamento
+ * @returns {object|null} Livro, ou `null` se faltar ou for inválido.
+ */
 function readBook(storage) {
   try {
     const parsed = JSON.parse(storage?.getItem(FIRST_SEEN_STORAGE_KEY) || "null");
@@ -77,6 +89,11 @@ function readBook(storage) {
   return null;
 }
 
+/**
+ * Grava o livro de chaves vistas; se falhar, segue sem gravar.
+ * @param {Storage|null} storage Armazenamento
+ * @param {object} book Livro
+ */
 function saveBook(storage, book) {
   try {
     storage?.setItem(FIRST_SEEN_STORAGE_KEY, JSON.stringify(book));
@@ -98,6 +115,10 @@ function trimKeys(keys) {
  * @returns {*} Resultado da operação.*/
 export function createKeyAgeBook({ storage = globalThis.localStorage, now = () => Date.now(), ageMs = NEW_KEY_AGE_MS } = {}) {
   let book = null;
+  /**
+   * Carrega o livro de chaves vistas, criando um novo se preciso.
+   * @returns {object} Livro.
+   */
   function load() {
     if (!book) book = readBook(storage) || { since: now(), keys: {} };
     return book;

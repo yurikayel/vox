@@ -6,6 +6,12 @@ import * as hashtags from "./hashtags.js";
 import * as mock from "./mock.js";
 import { getLocalPosts } from "./cache-node-posts.js";
 
+/**
+ * Diz se o item tem a tag, pelas tags guardadas ou pelas extraídas do texto.
+ * @param {object} item Item
+ * @param {string} targetSlug Tag procurada
+ * @returns {boolean} `true` se tiver.
+ */
 function itemMatchesTag(item, targetSlug) {
   const tags = Array.isArray(item.tags) && item.tags.length > 0
     ? item.tags
@@ -13,6 +19,14 @@ function itemMatchesTag(item, targetSlug) {
   return tags.includes(targetSlug);
 }
 
+/**
+ * Junta os itens que têm a tag, sem repetir ids.
+ * @param {object[]} items Itens
+ * @param {string} targetSlug Tag procurada
+ * @param {Set<string>} seenIds Ids já vistos
+ * @param {object[]} results Lista de resultados a preencher
+ * @param {Function|null} [typeFilter=null] Filtro de tipo
+ */
 function collectMatchingItems(items, targetSlug, seenIds, results, typeFilter = null) {
   for (const item of items) {
     if (!item || seenIds.has(item.id)) continue;
