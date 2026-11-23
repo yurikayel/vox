@@ -67,6 +67,13 @@ export function formatCountdown(closesAt, now = Date.now()) {
   return `Encerra em ${Math.max(1, m)} min`;
 }
 
+/**
+ * Percentual inteiro de `part` sobre `total`; 0 se o total é zero.
+ *
+ * @param {number} part
+ * @param {number} total
+ * @returns {number}
+ */
 function pct(part, total) {
   if (!total) return 0;
   return Math.round((part / total) * 1000) / 10;
@@ -90,6 +97,13 @@ export function renderStat(label, value, hint, tone = "") {
     </div>`;
 }
 
+/**
+ * Barra de filtros da lista de votações.
+ *
+ * @param {object[]} items
+ * @param {string} activeFilter
+ * @returns {string}
+ */
 function renderFilterBar(items, activeFilter) {
   const buttons = VOTE_FILTERS.map((f) => {
     const count = items.filter((i) => matchesVoteFilter(i, f.key)).length;
@@ -99,6 +113,13 @@ function renderFilterBar(items, activeFilter) {
   return `<div class="agora-filter-bar" role="group" aria-label="Filtrar pautas">${buttons}</div>`;
 }
 
+/**
+ * Destaque com os números das votações.
+ *
+ * @param {object[]} items
+ * @param {string} activeFilter
+ * @returns {string}
+ */
 function renderHero(items, activeFilter) {
   const stats = computeVoteStats(items);
   const head = renderPageHead({
@@ -120,6 +141,12 @@ function renderHero(items, activeFilter) {
     </section>`;
 }
 
+/**
+ * Placar da votação do item.
+ *
+ * @param {object} item
+ * @returns {string}
+ */
 function renderTally(item) {
   const t = item.tally || {};
   const yes = Number(t.yes) || 0;
@@ -147,6 +174,12 @@ function renderTally(item) {
     </div>`;
 }
 
+/**
+ * Ações do item de votação (ver detalhe).
+ *
+ * @param {object} item
+ * @returns {string}
+ */
 function renderVoteActions(item) {
   const href = `#/c/${encodeURIComponent(item.communityId)}/proposal/${encodeURIComponent(item.id)}`;
   const detailBtn = `<a class="agora-btn agora-btn--secondary" href="${href}">Ver pauta e debate</a>`;
@@ -170,8 +203,23 @@ function renderVoteActions(item) {
   return renderBallot(item, detailBtn);
 }
 
+/**
+ * Cédula de voto do item.
+ *
+ * @param {object} item
+ * @param {string} detailBtn
+ * @returns {string}
+ */
 function renderBallot(item, detailBtn) {
   const current = item.userVote?.choice || "";
+  /**
+   * Botão de uma escolha de voto.
+   *
+   * @param {string} choice
+   * @param {string} label
+   * @param {string} cls
+   * @returns {string}
+   */
   const btn = (choice, label, cls) =>
     `<button type="button" class="agora-btn agora-btn--secondary ${cls} agora-vote-btn" data-vote-choice="${choice}" data-proposal-id="${escapeHtml(item.id)}" aria-pressed="${current === choice}">${label}</button>`;
   const note = current ? `<p class="agora-vote-note">Seu voto atual: <strong>${escapeHtml(STATE_CHOICE_LABEL[current] || current)}</strong>. Você pode mudar até o encerramento — vale o mais recente.</p>` : "";
@@ -217,6 +265,13 @@ export function renderDeliberation(item) {
     </article>`;
 }
 
+/**
+ * Estado vazio da lista de votações.
+ *
+ * @param {string} activeFilter
+ * @param {boolean} hasAny
+ * @returns {string}
+ */
 function renderEmpty(activeFilter, hasAny) {
   if (hasAny) {
     return `<div class="agora-empty"><h2>Nada neste filtro</h2><p>Não há pautas com esse status agora.</p></div>`;

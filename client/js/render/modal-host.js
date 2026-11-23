@@ -15,6 +15,9 @@ const hostTraps = new WeakMap();
  * @returns {void}
  */
 function watchModalContent(el, trap) {
+  /**
+   * Mostra ou oculta o hospedeiro conforme ele tem modais dentro.
+   */
   const sync = () => {
     const hasChildren = (el.childNodes?.length ?? 0) > 0;
     if (hasChildren) trap.activate();

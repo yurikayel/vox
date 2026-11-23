@@ -6,6 +6,12 @@ import { escapeHtml } from "./util.js";
 import { renderSteps, renderReviewList } from "./compose-steps.js";
 import { PIX_RECEIVER_NAME_NOTICE_PT } from "../pix-key.js";
 
+/**
+ * Moldura comum dos assistentes guiados (voltar, título, passos).
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function wizardShell({ backHref, kicker, formId, stepsHtml }) {
   return `
     <div class="compose-card agora-composer agora-composer--steps guided-wizard">
@@ -39,6 +45,12 @@ export function renderChoiceCards(id, legend, options, selected) {
 
 const CAP_OPTIONS = [50, 100, 150, 200];
 
+/**
+ * Seletor do teto diário de dados em MB.
+ *
+ * @param {number} current
+ * @returns {string}
+ */
 function capSelect(current) {
   const opts = CAP_OPTIONS.map((mb) => `<option value="${mb}"${Number(current) === mb ? " selected" : ""}>${mb} MB por dia</option>`).join("");
   return `<select id="net-g-cap" class="form-control">${opts}</select>`;
