@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Testes: `cov-t4-compose-forms` "falha ao assinar" deixa de ser instável — a tentativa usa comunidade própria (um post de outro teste que chegue tarde ao cache não conta como gravado), a falha lista o que vazou e o `wipeLocalAccount` passa a ser aguardado.
+
 - Refactor: `central-memory.js` (484 linhas) vira fachada de 140 linhas com a mesma API pública (ciclo de sincronização, envio automático e cursor), e as partes vão para `central-memory-urls.js` (endereços e transporte), `central-memory-bundle.js` (pacote local e cursor `syncCursor`), `central-memory-apply.js` (aplicar o pacote remoto e a trava de hidratação) e `central-memory-directory.js` (cartões do diretório). As 32 funções conferidas por AST como idênticas, salvo o prefixo `syncCursor.`; nenhum ciclo novo. SW `vox-pwa-v7.161-central-memory-split` com os quatro módulos no precache.
 
 - Refactor: `app/screens-dm.js` (475 linhas) vira fachada de 45 linhas com a mesma API pública (`pollInboxMessages`, `showDmList`, `showDmThread`, `handleSendDmSubmit`, `initDmListeners`), e as partes vão para `screens-dm-inbox.js` (caixa de entrada), `screens-dm-list.js` (lista de conversas), `screens-dm-thread.js` (conversa, envio, reações, painel dividido) e `screens-dm-draft.js` (rascunho: resposta, cartão de contexto, foto). As três variáveis de rascunho viram campos do objeto compartilhado `dmDraft`; nenhum ciclo novo. SW `vox-pwa-v7.160-dm-split` com os quatro módulos no precache.
