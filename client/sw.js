@@ -524,6 +524,8 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/civic-credential.js",
   "./js/labs/parado/idb-store.js",
   "./js/labs/parado/identity-link.js",
+  "./js/labs/parado/kit-genesis-data.js",
+  "./js/labs/parado/kit-genesis-validate.js",
   "./js/labs/parado/kit-genesis.js",
   "./js/labs/parado/node-health-api.js",
   "./js/labs/parado/node-health-evaluator.js",
