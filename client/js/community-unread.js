@@ -1,6 +1,7 @@
 /** @file Gestão de leitura e novidades por comunidade (anti-abandono do Orkut, sem ansiedade algorítmica). */
 import { resolveTopicLastActivityTs } from "./community-topic-order.js";
 import { escapeHtml } from "./shared/html.js";
+import { isSafeKey } from "./shared/safe-key.js";
 
 /**
  * Operação `LAST_SEEN_STORAGE_KEY` do módulo.
@@ -64,7 +65,7 @@ export function getCommunityLastSeenTs(communityId) {
  * @param {*} [ts] Parâmetro `ts`.
  */
 export function markCommunitySeen(communityId, ts = Date.now()) {
-  if (!communityId) return;
+  if (!isSafeKey(communityId)) return;
   const map = loadLastSeenMap();
   map[communityId] = Number(ts) || Date.now();
   saveLastSeenMap(map);

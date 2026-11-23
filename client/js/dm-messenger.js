@@ -9,6 +9,8 @@
  * - Cartões nativos de contexto (Oferta da Feira, Pix, Tópico)
  * - Estado local de não lidas (unread), conversas fixadas (pin) e busca instantânea*/
 
+import { isSafeKey } from "./shared/safe-key.js";
+
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const DM_READ_STORAGE_KEY = "vox-dm-read-ts-v1";
 /** Chave em `localStorage` (só neste aparelho). @type {string} */
@@ -443,7 +445,7 @@ export function getLastReadTs(peerAddress) {
  * @param {*} [ts] Parâmetro `ts`.
  */
 export function markThreadRead(peerAddress, ts = Date.now()) {
-  if (!peerAddress) return;
+  if (!isSafeKey(peerAddress)) return;
   const map = readJsonStorage(DM_READ_STORAGE_KEY, {});
   map[peerAddress] = Math.max(Number(map[peerAddress]) || 0, Number(ts) || Date.now());
   try {

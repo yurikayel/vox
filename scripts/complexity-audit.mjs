@@ -92,7 +92,7 @@ function formatMarkdownReport(files, violations, date) {
     "| File | Line | Rule | Message |",
     "|------|------|------|---------|",
     ...top.map(
-      (v) => `| \`${v.file}\` | ${v.line} | ${v.rule} | ${v.message.replace(/\|/g, "\\|")} |`
+      (v) => `| \`${v.file}\` | ${v.line} | ${v.rule} | ${v.message.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} |`
     ),
     "",
     `Full JSON: \`docs/metrics/baseline-${date}.json\``,
