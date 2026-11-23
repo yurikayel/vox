@@ -6,6 +6,14 @@ import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import { escapeHtml } from "./util.js";
 import { resolveCommunityOnlinePeople, isSeedCompleteForRender } from "./community-shared.js";
 
+/**
+ * Estima o percentual local de leituras da vizinhança, com valor fixo na comunidade de demonstração.
+ *
+ * @param {string} communityId
+ * @param {boolean} isDemoComm
+ * @param {object|undefined} readOriginStats
+ * @returns {object}
+ */
 function resolveNeighborReadPct(communityId, isDemoComm, readOriginStats) {
   if (isDemoComm) return { localReadPct: 96, readOriginInsufficient: false };
   const agg = readOriginStats ?? getReadOriginAggregate(communityId);
@@ -52,6 +60,12 @@ export function computeCommunityNeighborStats({
   };
 }
 
+/**
+ * Formata a hora do último espelhamento; vazio se inválida.
+ *
+ * @param {number|string} at
+ * @returns {string}
+ */
 function formatMirrorTime(at) {
   if (!at) return "";
   try {
@@ -82,6 +96,12 @@ export function renderCommunityMirrorHint(mirrorStatus) {
   return `<p class="community-vox-mirror-hint meta community-vox-mirror-hint--warn" role="status">Último espelho: falha (<code>${escapeHtml(code)}</code>).</p>`;
 }
 
+/**
+ * Texto da estimativa de leituras locais.
+ *
+ * @param {object} stats
+ * @returns {string}
+ */
 function formatNeighborReadLabel(stats) {
   if (stats.readOriginInsufficient || stats.localReadPct == null) {
     return "Ainda coletando estimativa local das leituras neste aparelho (precisamos de algumas leituras na rede)";
@@ -121,10 +141,26 @@ export function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
     </section>`;
 }
 
+/**
+ * Item da lista de semeadura, marcado como feito ou pendente.
+ *
+ * @param {boolean} done
+ * @param {string} label
+ * @param {string} detail
+ * @returns {string}
+ */
 function renderSeedStep(done, label, detail) {
   return `<li class="community-seed-step${done ? " is-done" : ""}">${done ? "✓" : "○"} ${label}${detail ? ` <span class="meta">${detail}</span>` : ""}</li>`;
 }
 
+/**
+ * Lista de passos para semear a comunidade.
+ *
+ * @param {string} communityId
+ * @param {object} state
+ * @param {object} ctx
+ * @returns {string}
+ */
 function renderCommunitySeedStepList(communityId, state, ctx) {
   const activeDone = state.activeAck || ctx.peerEnabled !== false;
   const invitesDone = state.invitesSent >= 2;

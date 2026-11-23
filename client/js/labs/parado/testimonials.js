@@ -150,6 +150,12 @@ export function renderCommunityBadgesHtml(communities = []) {
   return `<div class="vox-badges-grid">${items.join("")}</div>`;
 }
 
+/**
+ * Escapa caracteres especiais de HTML.
+ *
+ * @param {string} str Texto a escapar.
+ * @returns {string} Texto seguro para inserir em HTML.
+ */
 function escapeHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")

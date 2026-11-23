@@ -106,6 +106,9 @@ export function stopPostSpeech(win = globalThis) {
  * @returns {void}
  */
 function attachSpeechLifecycle(win, utt, postId) {
+  /**
+   * Limpa o estado de leitura em voz alta ao terminar.
+   */
   const onDone = () => {
     if (currentSpeakingPostId === String(postId)) {
       currentSpeakingPostId = null;
@@ -118,6 +121,11 @@ function attachSpeechLifecycle(win, utt, postId) {
   utt.onend = onDone;
   utt.onerror = onDone;
   if (typeof win.addEventListener === "function") {
+    /**
+     * Interrompe a leitura quando a rota (hash) muda.
+     *
+     * @returns {*}
+     */
     const onHashChange = () => stopPostSpeech(win);
     win.addEventListener("hashchange", onHashChange, { once: true });
     cleanupHashListener = () => win.removeEventListener?.("hashchange", onHashChange);

@@ -30,6 +30,12 @@ export async function decideReview(communityId, postId, outcome, { dispatch, sto
   return decision;
 }
 
+/**
+ * Registra a decisão de revisão do botão clicado e atualiza o aviso na tela.
+ *
+ * @param {HTMLElement} btn Botão com `data-comm` e `data-id`.
+ * @param {string} outcome Resultado escolhido.
+ */
 async function onReviewClick(btn, outcome) {
   btn.disabled = true;
   try {

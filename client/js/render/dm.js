@@ -20,12 +20,26 @@ import {
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
 import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 
+/**
+ * Nome de exibição do interlocutor.
+ *
+ * @param {string} peer
+ * @returns {string}
+ */
 function resolvePeerLabel(peer) {
   if (!peer) return "";
   if (peer === WELCOME_ROUTE_ID) return getWelcomeProfile().name;
   return profileDirectory.getAuthorDisplaySync(peer) || shortId(peer);
 }
 
+/**
+ * Botão de fixar conversa, ausente na conversa de boas-vindas.
+ *
+ * @param {string} peer
+ * @param {boolean} isWelcome
+ * @param {boolean} pinned
+ * @returns {string}
+ */
 function renderInboxPinButton(peer, isWelcome, pinned) {
   if (isWelcome) return "";
   const cls = `btn-dm-pin${pinned ? " active is-pinned" : ""}`;
@@ -33,6 +47,12 @@ function renderInboxPinButton(peer, isWelcome, pinned) {
   return `<button type="button" class="${cls}" data-peer="${escapeHtml(peer)}" title="${label}" aria-label="${label}">📌</button>`;
 }
 
+/**
+ * Classes CSS da linha da caixa de entrada.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function buildInboxRowClass({ unread, pinned, active }) {
   const parts = ["dm-inbox-row"];
   if (unread > 0) parts.push("is-unread");
@@ -41,6 +61,13 @@ function buildInboxRowClass({ unread, pinned, active }) {
   return parts.join(" ");
 }
 
+/**
+ * Linha da caixa de entrada para uma conversa.
+ *
+ * @param {object} c
+ * @param {string} [activePeer=""]
+ * @returns {string}
+ */
 function renderDmInboxItem(c, activePeer = "") {
   const peer = c.peerAddress || "";
   const label = resolvePeerLabel(peer);
@@ -69,6 +96,12 @@ function renderDmInboxItem(c, activePeer = "") {
     </div>`;
 }
 
+/**
+ * Atalhos de contatos para iniciar uma conversa.
+ *
+ * @param {object[]} [contactList=[]]
+ * @returns {string}
+ */
 function renderContactQuickHtml(contactList = []) {
   if (!contactList.length) return "";
   const chips = contactList
@@ -84,6 +117,12 @@ function renderContactQuickHtml(contactList = []) {
   </div>`;
 }
 
+/**
+ * Seção avançada para iniciar conversa por endereço.
+ *
+ * @param {object[]} [contactList=[]]
+ * @returns {string}
+ */
 function renderDmAdvancedSection(contactList = []) {
   const datalistOptions = contactList
     .map((c) => `<option value="${escapeHtml(c.routeId)}">${escapeHtml(c.label || resolvePeerLabel(c.routeId))}</option>`)
@@ -104,6 +143,12 @@ function renderDmAdvancedSection(contactList = []) {
     </details>`;
 }
 
+/**
+ * Cartão de abertura da página de mensagens.
+ *
+ * @param {object[]} [contactList=[]]
+ * @returns {string}
+ */
 function renderDmHeroCard(contactList = []) {
   return `
     <header class="agora-page-head dm-hero-simple">
@@ -160,6 +205,12 @@ export function renderDmList(main, conversations = [], _myAddress = "", { contac
     ${renderDmAdvancedSection(contactList)}`;
 }
 
+/**
+ * Citação da mensagem respondida dentro do balão.
+ *
+ * @param {object|undefined} replyTo
+ * @returns {string}
+ */
 function renderBubbleReplyQuote(replyTo) {
   if (!replyTo?.id || !replyTo?.snippet) return "";
   const who = replyTo.author ? resolvePeerLabel(replyTo.author) : "Mensagem";
@@ -170,6 +221,12 @@ function renderBubbleReplyQuote(replyTo) {
     </blockquote>`;
 }
 
+/**
+ * Cartão de contexto (oferta, Pix ou tópico) anexado ao balão.
+ *
+ * @param {object|null} card
+ * @returns {string}
+ */
 function renderBubbleContextCard(card) {
   if (!card) return "";
   const badge = card.type === "listing" ? "🛒 Oferta da Feira" : card.type === "pix" ? "⚡ Pix" : "💬 Tópico";
@@ -186,6 +243,13 @@ function renderBubbleContextCard(card) {
     </div>`;
 }
 
+/**
+ * Reações do balão, destacando as da própria conta.
+ *
+ * @param {object} m
+ * @param {string} myAddress
+ * @returns {string}
+ */
 function renderBubbleReactions(m, myAddress) {
   const reactions = m.reactions && typeof m.reactions === "object" ? m.reactions : {};
   const activePills = Object.entries(reactions)
@@ -209,6 +273,12 @@ function renderBubbleReactions(m, myAddress) {
     </div>`;
 }
 
+/**
+ * Rótulo do estado de entrega da mensagem.
+ *
+ * @param {string} status
+ * @returns {string}
+ */
 function formatBubbleStatusLabel(status) {
   if (status === "read") return "✓✓ Lido";
   if (status === "delivered") return "✓✓ Direta";
@@ -218,6 +288,13 @@ function formatBubbleStatusLabel(status) {
   return "✓";
 }
 
+/**
+ * Balões da conversa, ou o estado vazio.
+ *
+ * @param {object[]} messages
+ * @param {string} myAddress
+ * @returns {string}
+ */
 function renderDmMessageBubbles(messages, myAddress) {
   if (!messages.length) {
     return `<div class="empty" style="text-align:center; padding:1.5rem 0;"><p>Início da conversa. As mensagens ficam só neste navegador.</p></div>`;
@@ -244,6 +321,11 @@ function renderDmMessageBubbles(messages, myAddress) {
     .join("");
 }
 
+/**
+ * Introdução da conversa de boas-vindas.
+ *
+ * @returns {string}
+ */
 function renderWelcomeThreadIntro() {
   const profileHref = `#/u/${encodeURIComponent(WELCOME_ROUTE_ID)}`;
   return `
@@ -257,6 +339,12 @@ function renderWelcomeThreadIntro() {
     </div>`;
 }
 
+/**
+ * Faixa do cartão de contexto pendente de envio.
+ *
+ * @param {object|null} card
+ * @returns {string}
+ */
 function renderContextDraftBanner(card) {
   if (!card) return "";
   const price = card.price ? ` · <strong>${escapeHtml(card.price)}</strong>` : "";
@@ -270,6 +358,12 @@ function renderContextDraftBanner(card) {
     </div>`;
 }
 
+/**
+ * Aviso quando o interlocutor ainda não publicou chave de DM.
+ *
+ * @param {boolean} hasDmPub
+ * @returns {string}
+ */
 function renderThreadKeyWarning(hasDmPub) {
   if (hasDmPub) return "";
   return `<details class="dm-advanced dm-thread-advanced">
@@ -284,6 +378,13 @@ function renderThreadKeyWarning(hasDmPub) {
   </details>`;
 }
 
+/**
+ * Compositor da conversa, com o cartão de contexto pendente.
+ *
+ * @param {boolean} hasDmPub
+ * @param {object|null} pendingContextCard
+ * @returns {string}
+ */
 function renderThreadComposerHtml(hasDmPub, pendingContextCard) {
   return `
     <div class="dm-composer-stack">

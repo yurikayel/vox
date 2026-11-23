@@ -90,6 +90,14 @@ export function createWebxdcHost({
   };
 }
 
+/**
+ * Cria o ouvinte de `message` que aceita só mensagens do iframe do app.
+ *
+ * @param {HTMLIFrameElement} iframe Iframe do app.
+ * @param {Function} onSendUpdate Chamada com cada update válido.
+ * @param {Function} onReady Chamada com o serial quando o app avisa que está pronto.
+ * @returns {(event: MessageEvent) => void} Ouvinte.
+ */
 function createHostMessageHandler(iframe, onSendUpdate, onReady) {
   return function handleMessage(event) {
     if (!iframe || event.source !== iframe.contentWindow) {
@@ -106,6 +114,13 @@ function createHostMessageHandler(iframe, onSendUpdate, onReady) {
   };
 }
 
+/**
+ * Valida um update enviado pelo app e o repassa; erro de validação é registrado e descartado.
+ *
+ * @param {object} data Mensagem `webxdc_send_update`.
+ * @param {Function} onSendUpdate Destino do update.
+ * @returns {void}
+ */
 function processSendUpdate(data, onSendUpdate) {
   try {
     validateWebxdcUpdate(data.update);
@@ -117,12 +132,26 @@ function processSendUpdate(data, onSendUpdate) {
   }
 }
 
+/**
+ * Envia um update ao iframe por `postMessage`.
+ *
+ * @param {HTMLIFrameElement} iframe Iframe do app.
+ * @param {object} update Update a entregar.
+ * @returns {void}
+ */
 function dispatchUpdateToIframe(iframe, update) {
   if (iframe && iframe.contentWindow) {
     iframe.contentWindow.postMessage({ type: "webxdc_update", update }, "*");
   }
 }
 
+/**
+ * Remove o ouvinte de mensagens e o iframe do DOM.
+ *
+ * @param {HTMLIFrameElement} iframe Iframe do app.
+ * @param {Function} listener Ouvinte registrado em `window`.
+ * @returns {void}
+ */
 function teardownHost(iframe, listener) {
   if (typeof window !== "undefined") {
     window.removeEventListener("message", listener);

@@ -23,6 +23,12 @@ import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-
 
 export { KIND_PLAIN, KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
+/**
+ * Monta o pacote de backup da conta (identidade, chaves de DM e semente), abrindo as chaves com a senha se estiverem travadas.
+ *
+ * @param {string} passphrase
+ * @returns {Promise<object>}
+ */
 async function buildAccountBackup(passphrase) {
   const { acc, privateJwk, dmKeypair, seed } = await openAccountKeys(passphrase);
   return {
@@ -57,6 +63,12 @@ export async function exportAccountBundle(passphrase, { asFile = false } = {}) {
   return wrapped;
 }
 
+/**
+ * Aceita o backup como texto JSON ou objeto e devolve o objeto.
+ *
+ * @param {string|object} rawBundle
+ * @returns {object}
+ */
 function parseBackupRaw(rawBundle) {
   if (typeof rawBundle === "string") {
     try {
@@ -69,12 +81,25 @@ function parseBackupRaw(rawBundle) {
   throw new Error("Formato de backup inválido (não é JSON)");
 }
 
+/**
+ * Devolve o backup em claro, decifrando o envelope quando ele veio protegido por senha.
+ *
+ * @param {object} parsed
+ * @param {string} passphrase
+ * @returns {Promise<object>}
+ */
 async function unwrapIfNeeded(parsed, passphrase) {
   if (parsed?.kind === KIND_PLAIN) return parsed;
   if (parsed?.kind === KIND_WRAPPED) return unwrapBackup(parsed, passphrase);
   throw new Error("Backup incompatível ou corrompido");
 }
 
+/**
+ * Valida identidade e chaves do backup; lança se algo não bater.
+ *
+ * @param {object} parsed
+ * @returns {Promise<void>}
+ */
 async function assertBackupIdentity(parsed) {
   if (!parsed?.routeId) throw new Error("Backup incompatível ou corrompido");
   if (!parsed.publicJwk || !parsed.privateJwk) {
@@ -86,6 +111,13 @@ async function assertBackupIdentity(parsed) {
   }
 }
 
+/**
+ * Importa uma chave ECDSA P-256 a partir de JWK.
+ *
+ * @param {JsonWebKey} jwk
+ * @param {string[]} usages
+ * @returns {Promise<CryptoKey>}
+ */
 async function importEcdsaKey(jwk, usages) {
   return crypto.subtle.importKey(
     "jwk",
@@ -96,6 +128,12 @@ async function importEcdsaKey(jwk, usages) {
   );
 }
 
+/**
+ * Prova que a chave privada assina o que a pública verifica, antes de aceitar o backup.
+ *
+ * @param {object} parsed
+ * @returns {Promise<void>}
+ */
 async function challengeSigningPair(parsed) {
   try {
     const privKey = await importEcdsaKey(parsed.privateJwk, ["sign"]);
@@ -111,6 +149,12 @@ async function challengeSigningPair(parsed) {
 
 // Pelo mesmo caminho da frase e do cofre: a conta que estava ativa vai para o cofre local e não deixa nome, Pix,
 // enriquecimento nem chave de DM na restaurada.
+/**
+ * Grava a conta do backup no aparelho e restaura os metadados de identidade.
+ *
+ * @param {object} parsed
+ * @returns {Promise<object>}
+ */
 async function persistAccountBackup(parsed) {
   if (!(await importLocalAccountBundle({ ...parsed, pix: parsed.pixKey }))) throw new Error("Backup sem chaves válidas");
   const acc = await ensureLocalAccount();

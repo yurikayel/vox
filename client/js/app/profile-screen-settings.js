@@ -27,6 +27,15 @@ export function broadcastActiveIdentityChanges() {
   void centralMemory.syncWithCentralMemory();
 }
 
+/**
+ * Salva ou remove a chave Pix do perfil, validando o formato.
+ *
+ * @param {string} rawVal Valor digitado (vazio remove).
+ * @param {HTMLElement|null} feedback Elemento da mensagem de erro.
+ * @param {string} address Rota do perfil.
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function handlePixFormSubmit(rawVal, feedback, address, activeTab, onReload) {
   if (!rawVal) {
     invalidateProfileCache();
@@ -110,6 +119,13 @@ export function bindGithubButtons(address, activeTab, isSelf, onReload) {
   }
 }
 
+/**
+ * Liga o botão que mostra e esconde o formulário do leia-me.
+ *
+ * @param {HTMLElement} btnToggleReadme Botão de alternar.
+ * @param {HTMLElement} formReadme Formulário do leia-me.
+ * @param {HTMLElement|null} readmeView Texto do leia-me.
+ */
 function bindReadmeToggle(btnToggleReadme, formReadme, readmeView) {
   btnToggleReadme.addEventListener("click", () => {
     const isHidden = formReadme.style.display === "none";
@@ -155,6 +171,11 @@ export function bindReadmeButtons(address, activeTab, isSelf, onReload) {
   }
 }
 
+/**
+ * Liga os botões que abrem o QR de conexão.
+ *
+ * @param {string} address Rota do perfil.
+ */
 function bindQrShareButtons(address) {
   document.querySelectorAll("[data-qr-share='connect'], #btn-qr-connect-link").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -200,6 +221,12 @@ export function bindSharingAndClipboardButtons(address) {
   bindQrShareButtons(address);
 }
 
+/**
+ * Liga o formulário de nome exibido.
+ *
+ * @param {string} address Rota do perfil.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindDisplayNameForm(address, onReload) {
   document.getElementById("form-display-name")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -247,6 +274,14 @@ export function bindDisplayNameAndOAuthButtons(address, activeTab, onReload) {
   });
 }
 
+/**
+ * Liga o botão de bloquear e desbloquear a pessoa.
+ *
+ * @param {HTMLElement} btnToggleBlock Botão de alternar.
+ * @param {string} address Rota do perfil.
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindBlockToggle(btnToggleBlock, address, activeTab, onReload) {
   btnToggleBlock.addEventListener("click", () => {
     const route = btnToggleBlock.dataset.route || address;
@@ -261,6 +296,14 @@ function bindBlockToggle(btnToggleBlock, address, activeTab, onReload) {
   });
 }
 
+/**
+ * Liga o botão de silenciar e reativar a pessoa.
+ *
+ * @param {HTMLElement} btnToggleMute Botão de alternar.
+ * @param {string} address Rota do perfil.
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindMuteToggle(btnToggleMute, address, activeTab, onReload) {
   btnToggleMute.addEventListener("click", () => {
     const route = btnToggleMute.dataset.route || address;

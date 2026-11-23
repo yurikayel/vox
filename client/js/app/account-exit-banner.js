@@ -28,12 +28,23 @@ export function renderAccountExitBannerHtml() {
   </div>`;
 }
 
+/**
+ * Lê o estado do aviso de saída soberana: conta ativa, se há saída preparada e quantos posts próprios existem.
+ *
+ * @returns {Promise<{routeId: string, hasExit: boolean, ownPosts: number}>}
+ */
 async function currentState() {
   const routeId = await localAccount.getRouteId().catch(() => "");
   const [hasExit, ownPosts] = await Promise.all([accountExit.hasSovereignExit(routeId), accountExit.countOwnPosts(routeId)]);
   return { routeId, hasExit, ownPosts };
 }
 
+/**
+ * Monta o banner de saída no corpo do documento e liga o botão de adiar.
+ *
+ * @param {Document} doc
+ * @param {{routeId: string, ownPosts: number}} state Estado lido por `currentState`.
+ */
 function mountBanner(doc, state) {
   const holder = doc.createElement("div");
   holder.innerHTML = renderAccountExitBannerHtml();
