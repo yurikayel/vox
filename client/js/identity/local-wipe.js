@@ -120,6 +120,11 @@ export const BLOCKED_WAIT_MS = 2000;
 export function deleteDatabase(name, blockedWaitMs = BLOCKED_WAIT_MS) {
   return new Promise((resolve) => {
     let timer = null;
+    /**
+     * Encerra a espera do apagamento com o resultado.
+     *
+     * @param {boolean} deleted
+     */
     const finish = (deleted) => {
       clearTimeout(timer);
       resolve(deleted);
