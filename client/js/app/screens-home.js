@@ -24,6 +24,12 @@ import { resolveCommunityMetadata, checkCommunityMembership } from "./screens-co
 let postOverlayMenuHandlersBound = false;
 let quoteExternalBound = false;
 
+/**
+ * Insere a citação no compositor da Ágora; devolve se havia compositor.
+ *
+ * @param {string} quoteText Texto citado.
+ * @returns {boolean}
+ */
 function insertQuoteIntoComposer(quoteText) {
   const textarea = document.getElementById("inline-topic-body");
   const collapsed = document.querySelector("#feed-inline-composer .inline-composer-collapsed");
@@ -81,6 +87,11 @@ export function attachPostOverlayActionMenuHandlers() {
   });
 }
 
+/**
+ * Monta o mapa de identificador para título das comunidades.
+ *
+ * @returns {Promise<Map<string, string>>}
+ */
 async function buildCommunityTitleMap() {
   const commMap = new Map();
   try {
@@ -96,6 +107,13 @@ async function buildCommunityTitleMap() {
   return commMap;
 }
 
+/**
+ * Soma as respostas locais ao contador de cada tópico.
+ *
+ * @param {object[]} topics Tópicos.
+ * @param {Object<string, number>} replyCounts Respostas por tópico.
+ * @returns {object[]}
+ */
 function applyReplyCountsToTopics(topics, replyCounts) {
   if (!replyCounts || typeof replyCounts !== "object") return topics;
   for (const t of topics) {
@@ -107,6 +125,15 @@ function applyReplyCountsToTopics(topics, replyCounts) {
   return topics;
 }
 
+/**
+ * Mescla posts locais e remotos da Ágora sem duplicar.
+ *
+ * @param {object[]} localPosts Posts do aparelho.
+ * @param {object[]} remoteItems Posts dos gateways.
+ * @param {Map<string, string>} commMap Títulos das comunidades.
+ * @param {string} user Rota de quem vê.
+ * @returns {object[]}
+ */
 function mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user) {
   const seen = new Set();
   const merged = [];
@@ -140,6 +167,14 @@ async function filterTopicsBySphere(merged, activeFeed, user) {
   return activeFeed === "civic" ? civic : socialPosts;
 }
 
+/**
+ * Filtra os tópicos conforme o feed ativo (para você, cívico, seguindo).
+ *
+ * @param {object[]} merged Tópicos mesclados.
+ * @param {string} activeFeed Feed ativo.
+ * @param {string} [user=""] Rota de quem vê.
+ * @returns {Promise<object[]>}
+ */
 async function filterTopicsForActiveFeed(merged, activeFeed, user = "") {
   if (activeFeed === "for-you" || activeFeed === "civic") {
     return filterTopicsBySphere(merged, activeFeed, user);
@@ -158,6 +193,11 @@ async function filterTopicsForActiveFeed(merged, activeFeed, user = "") {
   return merged;
 }
 
+/**
+ * Liga os botões de dispensar o tópico de boas-vindas.
+ *
+ * @param {Function} onDismiss Chamado depois de dispensar.
+ */
 function attachWelcomeTopicDismissHandlers(onDismiss) {
   document.querySelectorAll(".btn-dismiss-welcome-topic").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -173,6 +213,11 @@ function attachWelcomeTopicDismissHandlers(onDismiss) {
   });
 }
 
+/**
+ * Liga os tratadores interativos da Ágora.
+ *
+ * @param {string} activeFeed Feed ativo.
+ */
 function wireHomeInteractiveHandlers(activeFeed) {
   attachPostShareHandlers();
   attachPostMoreMenuHandlers();
@@ -183,6 +228,12 @@ function wireHomeInteractiveHandlers(activeFeed) {
   attachQuoteExternalHandlers();
 }
 
+/**
+ * Busca nos gateways os itens remotos do feed ativo.
+ *
+ * @param {string} activeFeed Feed ativo.
+ * @returns {Promise<{items: object[], gateway: string}>}
+ */
 async function fetchRemoteHomeItems(activeFeed) {
   if (activeFeed === "following") {
     const watched = social.getWatchedProfiles();
@@ -196,6 +247,15 @@ async function fetchRemoteHomeItems(activeFeed) {
   return { items: res.items || [], gateway: res.gateway || "" };
 }
 
+/**
+ * Diz se o tópico da comunidade pode aparecer (comunidade fechada exige ser membro).
+ *
+ * @param {string} cId Comunidade.
+ * @param {string} user Rota de quem vê.
+ * @param {Map<string, boolean>} commClosedCache Cache de comunidades fechadas.
+ * @param {Map<string, boolean>} membershipCache Cache de participação.
+ * @returns {Promise<boolean>}
+ */
 async function isCommunityTopicPermitted(cId, user, commClosedCache, membershipCache) {
   if (!cId || cId === "vox") return true;
   let isClosed = commClosedCache.get(cId);
@@ -237,6 +297,15 @@ export async function filterClosedCommunityTopics(topics, user) {
   return allowed;
 }
 
+/**
+ * Monta a lista de tópicos da Ágora com posts locais e remotos.
+ *
+ * @param {object[]} remoteItems Posts dos gateways.
+ * @param {Map<string, string>} commMap Títulos das comunidades.
+ * @param {string} user Rota de quem vê.
+ * @param {string} activeFeed Feed ativo.
+ * @returns {Promise<object[]>}
+ */
 async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
   const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
   const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
@@ -289,6 +358,11 @@ export async function showHome(feed = "for-you") {
   attachCivicVoteHandlers((id) => byId.get(id), user, () => showHome(activeFeed));
 }
 
+/**
+ * Liga o botão de importar quem a pessoa segue no Bluesky.
+ *
+ * @param {Function} onRefresh Chamado depois de importar.
+ */
 function bindBskyImportButton(onRefresh) {
   const importBtn = document.getElementById("btn-import-bsky-follows");
   if (!importBtn || importBtn.dataset.wired) return;
@@ -313,6 +387,11 @@ function bindBskyImportButton(onRefresh) {
   });
 }
 
+/**
+ * Liga os botões de sugestão do Bluesky.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindBskyChipActions(onRefresh) {
   document.querySelectorAll(".btn-add-suggestion").forEach((btn) => {
     if (btn.dataset.wired) return;
@@ -361,6 +440,12 @@ export function attachBskyManagerHandlers(onRefresh) {
   bindBskyChipActions(onRefresh);
 }
 
+/**
+ * Acrescenta a cada comunidade a contagem de itens novos desde a última visita.
+ *
+ * @param {object[]} [communities=[]] Comunidades.
+ * @returns {Promise<{enriched: object[], totalUnread: number}>}
+ */
 async function enrichCommunitiesWithUnread(communities = []) {
   let totalUnread = 0;
   const enriched = await Promise.all(

@@ -6,10 +6,18 @@ export { coerceImageAltString };
 
 let keyHandler = null;
 
+/**
+ * Acha o elemento do lightbox de mídia do post.
+ *
+ * @returns {HTMLElement|null}
+ */
 function getLightbox() {
   return document.getElementById("post-media-lightbox");
 }
 
+/**
+ * Fecha o lightbox e limpa a imagem exibida.
+ */
 function closePostMediaLightbox() {
   const lb = getLightbox();
   if (!lb || lb.hidden) return;
@@ -26,12 +34,26 @@ function closePostMediaLightbox() {
   }
 }
 
+/**
+ * Escolhe o primeiro valor preenchido entre os candidatos.
+ *
+ * @param {string} primary Valor preferido.
+ * @param {string} secondary Segundo valor.
+ * @param {string} [fallback=""] Valor se os dois estiverem vazios.
+ * @returns {string}
+ */
 function resolveMediaValue(primary, secondary, fallback = "") {
   if (primary) return primary;
   if (secondary) return secondary;
   return fallback;
 }
 
+/**
+ * Extrai origem e texto alternativo da mídia de um gatilho do lightbox.
+ *
+ * @param {HTMLElement|null} el Elemento gatilho (imagem ou contêiner).
+ * @returns {{src: string, alt: string}}
+ */
 function extractMediaFromTrigger(el) {
   if (!el) return { src: "", alt: "" };
   const img = el.matches("img") ? el : el.querySelector("img");
@@ -41,11 +63,21 @@ function extractMediaFromTrigger(el) {
   return { src, alt };
 }
 
+/**
+ * Lista os gatilhos do lightbox que têm imagem.
+ *
+ * @returns {HTMLElement[]}
+ */
 function getVisibleLightboxTriggers() {
   const elements = document.querySelectorAll(".post-media-lightbox-trigger, .post-media-hero-img");
   return Array.from(elements).filter((el) => Boolean(extractMediaFromTrigger(el).src));
 }
 
+/**
+ * Troca a imagem do lightbox para a anterior ou a seguinte.
+ *
+ * @param {number} direction -1 para anterior, 1 para seguinte.
+ */
 function navigateLightbox(direction) {
   const lb = getLightbox();
   if (!lb || lb.hidden) return;
@@ -115,6 +147,12 @@ const IGNORED_LIGHTBOX_SELECTORS = [
   ".btn-post-more-menu",
 ].join(", ");
 
+/**
+ * Diz se o clique deve ser ignorado (toque longo, modo de marcar ou controle interno).
+ *
+ * @param {HTMLElement} target Alvo do clique.
+ * @returns {boolean}
+ */
 function shouldIgnoreLightboxClick(target) {
   if (window.__justLongPressed) return true;
   if (document.body.classList.contains("photo-tagging")) return true;

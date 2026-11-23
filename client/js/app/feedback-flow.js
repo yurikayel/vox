@@ -59,7 +59,17 @@ export function renderFeedbackDoneHtml(total = 1) {
     </div>`;
 }
 
+/**
+ * Elemento que hospeda o modal de feedback.
+ *
+ * @returns {HTMLElement}
+ */
 const container = () => modalHost(MODAL_ID);
+/**
+ * Fecha o modal de feedback.
+ *
+ * @returns {void}
+ */
 const closeFeedbackModal = () => clearModalHost(MODAL_ID);
 
 /**
@@ -93,6 +103,12 @@ export function shareFeedbackList(list = feedback.listFeedback()) {
   });
 }
 
+/**
+ * Monta o registro de feedback do formulário, guarda no aparelho e mostra o agradecimento.
+ *
+ * @param {string} screen Tela de onde veio o feedback.
+ * @param {HTMLFormElement} form Formulário preenchido.
+ */
 async function submitFeedback(screen, form) {
   const kind = form.querySelector('input[name="feedback-kind"]:checked')?.value || "";
   const note = form.querySelector("#feedback-note")?.value || "";
