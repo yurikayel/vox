@@ -11,8 +11,20 @@ const G = {
   y: 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n,
 };
 
+/**
+ * Resto da divisão, sempre não negativo.
+ * @param {bigint} a Dividendo
+ * @param {bigint} [m=P] Módulo
+ * @returns {bigint} Resto.
+ */
 const mod = (a, m = P) => ((a % m) + m) % m;
 
+/**
+ * Inverso modular.
+ * @param {bigint} a Valor
+ * @param {bigint} [m=P] Módulo
+ * @returns {bigint} Inverso de `a` módulo `m`.
+ */
 function modInv(a, m = P) {
   let [lo, hi, x0, x1] = [mod(a, m), m, 1n, 0n];
   while (lo > 1n) {
@@ -23,6 +35,13 @@ function modInv(a, m = P) {
   return mod(x0, m);
 }
 
+/**
+ * Potência modular.
+ * @param {bigint} base Base
+ * @param {bigint} exp Expoente
+ * @param {bigint} [m=P] Módulo
+ * @returns {bigint} Resultado.
+ */
 function modPow(base, exp, m = P) {
   let result = 1n;
   let b = mod(base, m);
@@ -35,6 +54,12 @@ function modPow(base, exp, m = P) {
   return result;
 }
 
+/**
+ * Soma dois pontos da curva secp256k1.
+ * @param {object|null} a Primeiro ponto
+ * @param {object|null} b Segundo ponto
+ * @returns {object|null} Soma (`null` é o infinito).
+ */
 function pointAdd(a, b) {
   if (!a) return b;
   if (!b) return a;
@@ -46,6 +71,12 @@ function pointAdd(a, b) {
   return { x, y: mod(lambda * (a.x - x) - a.y) };
 }
 
+/**
+ * Multiplica um ponto da curva por um escalar.
+ * @param {object|null} point Ponto
+ * @param {bigint} scalar Escalar
+ * @returns {object|null} Resultado.
+ */
 function pointMul(point, scalar) {
   let result = null;
   let addend = point;
@@ -58,6 +89,11 @@ function pointMul(point, scalar) {
   return result;
 }
 
+/**
+ * Recupera o ponto da curva a partir da coordenada X.
+ * @param {bigint} x Coordenada X
+ * @returns {object|null} Ponto com Y par, ou `null` se não existir.
+ */
 function liftX(x) {
   if (x <= 0n || x >= P) return null;
   const c = mod(x * x * x + 7n);
@@ -86,9 +122,24 @@ export function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Converte bytes em inteiro grande.
+ * @param {Uint8Array} bytes Bytes
+ * @returns {bigint} Inteiro.
+ */
 const bytesToInt = (bytes) => BigInt(`0x${bytesToHex(bytes) || "0"}`);
+/**
+ * Converte inteiro em 32 bytes.
+ * @param {bigint} n Inteiro
+ * @returns {Uint8Array} Bytes.
+ */
 const intToBytes = (n) => hexToBytes(n.toString(16).padStart(64, "0"));
 
+/**
+ * Concatena vetores de bytes.
+ * @param {...Uint8Array} parts Pedaços
+ * @returns {Uint8Array} Bytes concatenados.
+ */
 function concatBytes(...parts) {
   const out = new Uint8Array(parts.reduce((s, p) => s + p.length, 0));
   let offset = 0;
@@ -107,11 +158,23 @@ export async function sha256(bytes) {
   return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes));
 }
 
+/**
+ * Calcula o hash com etiqueta (BIP-340).
+ * @param {string} tag Etiqueta
+ * @param {...Uint8Array} parts Pedaços
+ * @returns {Promise<Uint8Array>} Resumo.
+ */
 async function taggedHash(tag, ...parts) {
   const tagHash = await sha256(new TextEncoder().encode(tag));
   return sha256(concatBytes(tagHash, tagHash, ...parts));
 }
 
+/**
+ * Garante que o valor é um vetor de bytes do tamanho esperado.
+ * @param {*} bytes Valor
+ * @param {number} len Tamanho esperado
+ * @param {string} label Nome para a mensagem de erro
+ */
 function assertLen(bytes, len, label) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== len) throw new Error(`${label}: esperado ${len} bytes`);
 }
@@ -261,6 +324,9 @@ export function isFreshEvent(event, nowMs = Date.now(), windowS = EVENT_WINDOW_S
  */
 export function createSeenWindow({ limit = 4096, ttlMs = 2 * EVENT_WINDOW_S * 1000, now = Date.now } = {}) {
   const entries = new Map();
+  /**
+   * Descarta os ids vistos há mais tempo que o prazo.
+   */
   const prune = () => {
     const cutoff = now() - ttlMs;
     for (const [id, at] of entries) {

@@ -11,6 +11,10 @@ function normalizeOwnMap(raw) {
   return raw;
 }
 
+/**
+ * Lê do `localStorage` o mapa das próprias republicações.
+ * @returns {object} Mapa normalizado, ou vazio se falhar.
+ */
 function readOwn() {
   try {
     return normalizeOwnMap(JSON.parse(localStorage.getItem(KEY) || "{}"));
@@ -19,10 +23,20 @@ function readOwn() {
   }
 }
 
+/**
+ * Grava no `localStorage` o mapa das próprias republicações.
+ * @param {object} map Mapa
+ */
 function writeOwn(map) {
   localStorage.setItem(KEY, JSON.stringify(map));
 }
 
+/**
+ * Conta o post visível na republicação original e marca se é do próprio autor.
+ * @param {object} p Post
+ * @param {string} authorId Autor logado
+ * @param {object} own Mapa das próprias republicações
+ */
 function noteVisible(p, authorId, own) {
   const oid = getOriginalId(p);
   if (!oid) return;

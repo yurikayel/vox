@@ -109,6 +109,7 @@ class PurgeSweeper:
     """Thread daemon que repete `purge_expired_once` até `stop()`."""
 
     def __init__(self, interval: float, sweep: Callable[[], dict] = purge_expired_once):
+        """Prepara o agendador com o intervalo (0 desliga) e a função de varredura."""
         self.interval = interval
         self._sweep = sweep
         self._stop = threading.Event()
@@ -123,6 +124,7 @@ class PurgeSweeper:
         return True
 
     def _run(self) -> None:
+        """Laço da thread: varre a cada intervalo até ser parada; falha na varredura não derruba o relay."""
         while not self._stop.wait(self.interval):
             try:
                 self._sweep()

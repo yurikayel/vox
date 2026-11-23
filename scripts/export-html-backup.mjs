@@ -41,8 +41,18 @@ const ARCHIVE_CSS = [
   "@media print { body { background: #fff; padding: 0; } .archive-header, .post { border-color: #94a3b8; break-inside: avoid; } }",
 ].join("\n");
 
+/**
+ * Devolve a string (ou o número como texto). Qualquer outro tipo vira texto vazio.
+ * @param {unknown} val Valor bruto.
+ * @returns {string}
+ */
 const asStr = (val) => (typeof val === "string" ? val : typeof val === "number" ? String(val) : "");
 
+/**
+ * Converte número ou data ISO em timestamp, ou 0 se inválido.
+ * @param {unknown} val Valor bruto.
+ * @returns {number}
+ */
 function parseTimestampMs(val) {
   if (typeof val === "number" && Number.isFinite(val)) return val;
   if (typeof val === "string" && val.trim()) {
@@ -52,6 +62,11 @@ function parseTimestampMs(val) {
   return 0;
 }
 
+/**
+ * Formata um timestamp como data UTC legível. Sem valor, devolve "Data não informada".
+ * @param {number} ms Timestamp em milissegundos.
+ * @returns {string}
+ */
 function formatDateUtc(ms) {
   if (!ms || !Number.isFinite(ms)) return "Data não informada";
   return `${new Date(ms).toISOString().replace("T", " ").slice(0, 19)} UTC`;
@@ -78,18 +93,35 @@ export function sanitizeSafeImageDataUrl(dataUrl) {
   return SAFE_RASTER_DATA_URL_RE.test(trimmed) ? trimmed : null;
 }
 
+/**
+ * Registra no mapa de mídia uma imagem segura (data URL sanitizada), ignorando hash reservado.
+ * @param {Object<string, string>} mediaMap Mapa hash -> data URL (é alterado).
+ * @param {string} hash Hash da mídia.
+ * @param {unknown} rawUrl URL bruta.
+ */
 function registerMedia(mediaMap, hash, rawUrl) {
   if (!hash || FORBIDDEN_KEYS.has(hash)) return;
   const safeUrl = sanitizeSafeImageDataUrl(rawUrl);
   if (safeUrl) mediaMap[hash] = safeUrl;
 }
 
+/**
+ * Extrai a URL da mídia de um item do backup (texto ou objeto com `data`/`url`).
+ * @param {unknown} item Item bruto.
+ * @returns {string}
+ */
 function extractMediaUrl(item) {
   if (typeof item === "string") return item;
   if (item && typeof item === "object") return asStr(item.data || item.url);
   return "";
 }
 
+/**
+ * Normaliza uma publicação do backup para a forma usada na renderização.
+ * @param {object} raw Publicação bruta.
+ * @param {string} fallbackAuthor Autor usado quando a publicação não traz um.
+ * @returns {object}
+ */
 function normalizePost(raw, fallbackAuthor) {
   const ts = parseTimestampMs(raw.ts ?? raw.timestamp ?? raw.createdAt);
   const editedAt = parseTimestampMs(raw.editedAt);
@@ -113,6 +145,11 @@ function normalizePost(raw, fallbackAuthor) {
   };
 }
 
+/**
+ * Interpreta o backup (texto JSON ou objeto), removendo BOM.
+ * @param {string|object} rawJson Conteúdo do backup.
+ * @returns {object}
+ */
 function parseJsonObject(rawJson) {
   if (typeof rawJson === "string") {
     const clean = rawJson.replace(/^\uFEFF/, "").trim();
@@ -126,6 +163,10 @@ function parseJsonObject(rawJson) {
   return rawJson;
 }
 
+/**
+ * Valida a estrutura mínima do backup.
+ * @param {unknown} data Backup interpretado.
+ */
 function validateBackupStructure(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) {
     throw new Error("Backup inválido: esperado um objeto JSON.");
@@ -149,6 +190,13 @@ function validateBackupStructure(data) {
   }
 }
 
+/**
+ * Reúne as publicações do backup (`entries`, `posts` ou campos avulsos), registrando as mídias no mapa.
+ * @param {object} data Backup interpretado.
+ * @param {Object<string, string>} mediaMap Mapa de mídia (é alterado).
+ * @param {string} fallbackAuthor Autor padrão.
+ * @returns {object[]}
+ */
 function collectRawPosts(data, mediaMap, fallbackAuthor) {
   const posts = [];
   if (Array.isArray(data.entries)) {
@@ -170,8 +218,18 @@ function collectRawPosts(data, mediaMap, fallbackAuthor) {
   return posts;
 }
 
+/**
+ * Devolve a primeira string não vazia entre os valores.
+ * @param {...unknown} vals Candidatos, em ordem de preferência.
+ * @returns {string}
+ */
 const firstStr = (...vals) => vals.map(asStr).find(Boolean) || "";
 
+/**
+ * Normaliza o mapa de mídia do backup, mantendo só imagens seguras.
+ * @param {unknown} rawMedia Mapa bruto de mídia.
+ * @returns {Object<string, string>}
+ */
 function extractMediaMap(rawMedia) {
   const media = {};
   if (!rawMedia || typeof rawMedia !== "object" || Array.isArray(rawMedia)) return media;
@@ -236,12 +294,23 @@ export function verifyBundleStats(bundle) {
   return { postCount: posts.length, signedCount, mediaCount: Object.keys(validMedia).length, missingMediaRefs };
 }
 
+/**
+ * Renderiza o corpo da publicação em parágrafos HTML escapados.
+ * @param {unknown} body Texto do corpo.
+ * @returns {string}
+ */
 function renderBodyParagraphs(body) {
   const text = asStr(body).trim();
   if (!text) return '<p class="muted"><em>Sem texto.</em></p>';
   return text.split(/\r?\n\r?\n+/).map((p) => `<p>${escapeHtml(p).replace(/\r?\n/g, "<br>")}</p>`).join("\n");
 }
 
+/**
+ * Renderiza a imagem da publicação, se houver uma segura.
+ * @param {object} post Publicação normalizada.
+ * @param {Object<string, string>} media Mapa de mídia.
+ * @returns {string}
+ */
 function renderPostMedia(post, media) {
   const hash = asStr(post.mediaHash);
   const mappedUrl = hash && Object.hasOwn(media, hash) ? sanitizeSafeImageDataUrl(media[hash]) : null;
@@ -251,6 +320,11 @@ function renderPostMedia(post, media) {
   return "";
 }
 
+/**
+ * Renderiza os dados de proveniência (id, versão da assinatura, hash de mídia).
+ * @param {object} post Publicação normalizada.
+ * @returns {string}
+ */
 function renderPostProvenance(post) {
   const idHtml = `<span>ID: <code>${escapeHtml(post.id || "—")}</code></span>`;
   const sigvHtml = post.sigv !== null && post.sigv !== undefined ? `<span>sigv: <code>${escapeHtml(post.sigv)}</code></span>` : "";
@@ -262,6 +336,12 @@ function renderPostProvenance(post) {
   return `<footer class="provenance"><div>${[idHtml, sigvHtml, hashHtml].filter(Boolean).join(" · ")}</div>${sigDetails}</footer>`;
 }
 
+/**
+ * Renderiza uma publicação como `<article>` HTML.
+ * @param {object} post Publicação normalizada.
+ * @param {Object<string, string>} media Mapa de mídia.
+ * @returns {string}
+ */
 function renderPostArticle(post, media) {
   const titleText = asStr(post.title).trim() || `Publicação (${asStr(post.type) || "post"})`;
   const communityBadge = post.community ? `<span class="badge">${escapeHtml(post.community)}</span>` : "";
@@ -271,6 +351,11 @@ function renderPostArticle(post, media) {
   return `<article class="post">\n  <div class="post-meta">${typeBadge}${communityBadge}${deletedNote}<time>${escapeHtml(formatDateUtc(post.timestamp))}</time>${editedNote}</div>\n  <h2>${escapeHtml(titleText)}</h2>\n  <div class="post-body">${renderBodyParagraphs(post.body)}</div>\n  ${renderPostMedia(post, media)}\n  ${renderPostProvenance(post)}\n</article>`;
 }
 
+/**
+ * Resume o autor do backup em uma linha (nome, handle, endereço ou chave).
+ * @param {object} bundle Backup interpretado.
+ * @returns {string}
+ */
 function formatAuthorSummary(bundle) {
   const unique = [...new Set([bundle.displayName, bundle.handle, bundle.author || bundle.address].map((v) => asStr(v).trim()).filter(Boolean))];
   if (unique.length) return unique.join(" · ");
@@ -278,6 +363,12 @@ function formatAuthorSummary(bundle) {
   return bundle.pubkey ? "Chave pública registrada" : "Autor não identificado";
 }
 
+/**
+ * Renderiza o cabeçalho do arquivo HTML.
+ * @param {object} bundle Backup interpretado.
+ * @param {object} stats Estatísticas do arquivo.
+ * @returns {string}
+ */
 function renderArchiveHeader(bundle, stats) {
   const authorText = escapeHtml(formatAuthorSummary(bundle));
   const exportedText = escapeHtml(formatDateUtc(bundle.exportedAt));
@@ -302,6 +393,13 @@ export function renderStandaloneBackupHtml(bundle) {
   return `<!doctype html>\n<html lang="pt-BR">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <meta http-equiv="Content-Security-Policy" content="${ARCHIVE_CSP}">\n  <title>${escapeHtml(docTitle)}</title>\n  <style>\n${ARCHIVE_CSS}\n  </style>\n</head>\n<body>\n  <main class="archive">\n${renderArchiveHeader(normalized, stats)}\n${postsHtml}\n  </main>\n</body>\n</html>\n`;
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const next = argv[index + 1];
   if (!next || next.startsWith("-")) throw new Error(`Falta valor para ${flag}.`);
@@ -363,6 +461,10 @@ export function runCli(argv = process.argv.slice(2)) {
   return { stats, outputPath: opts.output || null };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);

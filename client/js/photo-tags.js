@@ -16,6 +16,10 @@ export const TAGS_MAX = 12;
 export const TAGS_HINT =
   "Marca local; quem não está na sua agenda não é notificado magicamente.";
 
+/**
+ * Lê do `localStorage` as marcações de fotos.
+ * @returns {object} Marcações por foto, ou objeto vazio.
+ */
 function loadAll() {
   if (typeof window === "undefined" || !window.localStorage) return {};
   try {
@@ -26,6 +30,10 @@ function loadAll() {
   }
 }
 
+/**
+ * Grava no `localStorage` as marcações de fotos.
+ * @param {object} map Marcações por foto
+ */
 function saveAll(map) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {

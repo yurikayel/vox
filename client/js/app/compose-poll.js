@@ -3,6 +3,11 @@
 const POLL_MIN = 2;
 const POLL_MAX = 6;
 
+/**
+ * Renumera as opções da enquete e atualiza o contador de opções.
+ *
+ * @param {HTMLElement} list Lista de opções.
+ */
 function renumberPollRows(list) {
   [...list.querySelectorAll(".civic-poll-input")].forEach((input, i) => {
     input.placeholder = `Opção ${i + 1}`;

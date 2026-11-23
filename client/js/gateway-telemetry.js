@@ -13,6 +13,10 @@ export const READ_ORIGIN_MIN_SAMPLE = 5;
 
 const READ_ORIGINS = new Set(["mesh", "relay", "gateway", "cache_idb"]);
 
+/**
+ * Lê do `localStorage` o estado da telemetria dos gateways.
+ * @returns {object} Estado lido, ou o inicial.
+ */
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -27,6 +31,10 @@ function loadState() {
   }
 }
 
+/**
+ * Grava o estado da telemetria dos gateways; se falhar, segue sem gravar.
+ * @param {object} state Estado
+ */
 function saveState(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -35,6 +43,10 @@ function saveState(state) {
   }
 }
 
+/**
+ * Lê do `localStorage` o estado de origem de leitura por comunidade.
+ * @returns {object} Estado lido, ou o inicial.
+ */
 function loadReadOriginState() {
   try {
     const raw = localStorage.getItem(READ_ORIGIN_KEY);
@@ -48,6 +60,10 @@ function loadReadOriginState() {
   }
 }
 
+/**
+ * Grava o estado de origem de leitura; se falhar, segue sem gravar.
+ * @param {object} state Estado
+ */
 function saveReadOriginState(state) {
   try {
     localStorage.setItem(READ_ORIGIN_KEY, JSON.stringify(state));
@@ -56,6 +72,12 @@ function saveReadOriginState(state) {
   }
 }
 
+/**
+ * Descarta amostras vencidas e fica só com as mais recentes.
+ * @param {object[]} samples Amostras
+ * @param {number} [now=Date.now()] Agora (ms)
+ * @returns {object[]} Amostras mantidas.
+ */
 function pruneReadSamples(samples, now = Date.now()) {
   const cutoff = now - READ_ORIGIN_TTL_MS;
   return samples.filter((s) => s.at >= cutoff).slice(-READ_ORIGIN_MAX);

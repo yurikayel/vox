@@ -11,6 +11,12 @@ export const NOTICE_BANNER_ID = "meshVaultNoticeBanner";
 /** Intervalo da volta de quem guarda com o app aberto. */
 export const TICK_MS = 10 * 60 * 1000;
 
+/**
+ * Formata um instante como data e hora curtas em pt-BR; erro devolve texto vazio.
+ *
+ * @param {number} ts Instante em ms.
+ * @returns {string}
+ */
 function formatWhen(ts) {
   try {
     return new Date(ts).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -59,6 +65,11 @@ export function refreshNoticeBanner({ doc = globalThis.document, decide = decide
   const holder = doc.createElement("div");
   holder.innerHTML = renderNoticeBannerHtml(next);
   doc.body.appendChild(holder.firstElementChild);
+  /**
+   * Responde ao aviso mostrado e passa ao próximo, se houver.
+   *
+   * @param {string} decision Decisão da pessoa.
+   */
   const answer = (decision) => {
     doc.getElementById(NOTICE_BANNER_ID)?.remove();
     focusStable(doc);
@@ -82,6 +93,9 @@ let started = false;
 export function startMeshVault({ win = globalThis.window, hasAccount }) {
   if (started || !win?.addEventListener) return false;
   started = true;
+  /**
+   * Repete o compartilhamento do cofre e o ciclo de guarda, quando há conta.
+   */
   const tick = () => {
     if (!hasAccount()) return;
     void shareMyVault().catch(() => {});

@@ -111,6 +111,12 @@ export function persistGenesisMeshWait(vaultEmail = "", store = globalThis.sessi
   writeGenesisResume({ step: "have", meshWaiting: true, ...(email ? { vaultEmail: email } : {}) }, store);
 }
 
+/**
+ * Preenche um campo (texto ou caixa) pelo identificador; valor vazio é ignorado.
+ *
+ * @param {string} id Identificador do elemento.
+ * @param {string|boolean|null} value Valor a colocar.
+ */
 function setInputValue(id, value) {
   const el = document.getElementById(id);
   if (!el || value == null || value === "") return;
@@ -132,6 +138,11 @@ function applyRestoreResume(resume) {
   document.getElementById(passFirst ? "oauth-sovereign-passphrase-input" : "oauth-restore-email-input")?.focus();
 }
 
+/**
+ * Guarda o rascunho da entrada enquanto a pessoa digita.
+ *
+ * @param {HTMLFormElement} form Formulário de entrada.
+ */
 function bindEntryDraftPersistence(form) {
   form.addEventListener("input", () => {
     const v = readEntryFormValues();
@@ -140,6 +151,9 @@ function bindEntryDraftPersistence(form) {
   });
 }
 
+/**
+ * Liga o botão de mostrar e ocultar a senha.
+ */
 function bindEntryPasswordToggle() {
   const input = document.getElementById("oauth-entry-pass-input");
   const toggle = document.getElementById("btn-oauth-toggle-pass");
@@ -152,6 +166,11 @@ function bindEntryPasswordToggle() {
   });
 }
 
+/**
+ * Lê os campos do formulário de entrada.
+ *
+ * @returns {object}
+ */
 function readEntryFormValues() {
   return {
     rawName: document.getElementById("oauth-custom-name-input")?.value.trim() || "",
@@ -161,6 +180,12 @@ function readEntryFormValues() {
   };
 }
 
+/**
+ * Mostra o cartão do kit de e-mail no lugar do formulário.
+ *
+ * @param {{kit: object, routeId: string, email: string, form: HTMLFormElement, finish: Function}} options Kit, conta, e-mail, formulário e função de encerrar.
+ * @returns {*}
+ */
 function showEmailKitCard({ kit, routeId, email, form, finish }) {
   const slot = document.getElementById("oauth-email-kit-slot");
   const links = form.parentElement?.querySelector(".genesis-links");
@@ -178,6 +203,11 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
   });
   document.getElementById("btn-email-kit-copy")?.addEventListener("click", () => void emailKit.copyEmailKit(kit));
   document.getElementById("btn-email-kit-download")?.addEventListener("click", () => emailKit.downloadEmailKitFile(kit, routeId));
+  /**
+   * Conclui a entrada, confirmando o envio do kit quando a pessoa disse que mandou.
+   *
+   * @param {boolean} confirmExit A pessoa confirmou que enviou o kit.
+   */
   const done = (confirmExit) => {
     if (confirmExit) emailKit.confirmEmailKitSent(routeId);
     clearGenesisResume();
@@ -187,6 +217,12 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
   document.getElementById("btn-email-kit-later")?.addEventListener("click", () => done(false));
 }
 
+/**
+ * Valida o formulário de entrada e segue para a criação da conta ou só do nome.
+ *
+ * @param {{draftState: object, form: HTMLFormElement, finish: Function, finishNameOnly: Function}} options Estado do rascunho, formulário e funções de encerrar.
+ * @returns {Promise<*>}
+ */
 async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly }) {
   const v = readEntryFormValues();
   const issue = emailKit.validateEmailEntryIssue(v);
@@ -257,6 +293,11 @@ export function stopMeshPoll() {
   meshPollGen += 1;
 }
 
+/**
+ * Escreve o texto de estado da busca em malha.
+ *
+ * @param {string} text Texto exibido.
+ */
 function setMeshStatus(text) {
   const el = document.getElementById("oauth-mesh-status");
   if (!el) return;
@@ -278,15 +319,32 @@ export async function tryMeshRestoreOnce({ email, pass }, { collect, restore, ca
   return res.ok ? res : { ok: false, reason: res.reason || "O cofre chegou, mas a senha não abriu." };
 }
 
+/**
+ * Resolve e-mail e senha para a busca em malha, com o e-mail guardado como reserva.
+ *
+ * @param {{email?: string, pass?: string}} inputs Valores digitados.
+ * @returns {{email: string, pass: string}}
+ */
 function resolveMeshCreds(inputs) {
   const resume = readGenesisResume();
   return { email: inputs.email || resume?.vaultEmail || "", pass: inputs.pass || "" };
 }
 
+/**
+ * Repete a busca do cofre em malha até restaurar ou a tela sair.
+ *
+ * @param {Function} getInputs Lê os valores digitados.
+ * @param {Function} onRestored Chamado ao restaurar.
+ */
 function startMeshPollLoop(getInputs, onRestored) {
   const gen = (meshPollGen += 1);
   void (async () => {
     const { ops } = await meshOps();
+    /**
+     * Faz uma tentativa de restaurar o cofre em malha.
+     *
+     * @returns {Promise<void>}
+     */
     const poll = async () => {
       if (gen !== meshPollGen) return;
       if (!document.getElementById("oauth-mesh-status")) return;
@@ -304,6 +362,11 @@ function startMeshPollLoop(getInputs, onRestored) {
   })();
 }
 
+/**
+ * Carrega o fluxo e o cofre usados na busca em malha.
+ *
+ * @returns {Promise<{flow: object, vault: object, ops: object}>}
+ */
 async function meshOps() {
   const [flow, vault] = await Promise.all([import("./mesh-vault-flow.js"), import("../vault/index.js")]);
   return { flow, vault, ops: { collect: () => flow.collectMeshReply(), restore: vault.restoreFromPassphraseVault, cancel: flow.cancelMeshRequest } };
@@ -329,6 +392,12 @@ export async function startMeshRestore({ email, pass }, onRestored) {
   startMeshPollLoop(() => ({ email, pass }), onRestored);
 }
 
+/**
+ * Cria a função que mostra uma etapa da gênese e esconde as outras.
+ *
+ * @param {HTMLElement} panel Painel da gênese.
+ * @returns {Function}
+ */
 function genesisStepShower(panel) {
   return (key) => {
     panel.querySelectorAll("[data-genesis-step]").forEach((s) => { s.hidden = s.dataset.genesisStep !== key; });
@@ -355,6 +424,12 @@ function resumeGenesisHave(resume, show, onMeshRestored) {
   void resumeMeshPollIfPending(onMeshRestored);
 }
 
+/**
+ * Reconstrói o kit de e-mail a partir do link `mailto:` guardado.
+ *
+ * @param {string} mailtoUrl Link `mailto:` do kit.
+ * @returns {object}
+ */
 function hydrateKitFromMailto(mailtoUrl) {
   const raw = String(mailtoUrl || "");
   const q = raw.indexOf("?");
@@ -366,6 +441,13 @@ function hydrateKitFromMailto(mailtoUrl) {
   return { to, subject, body, copyText, filename: "vox-acesso.txt", mailtoUrl: raw };
 }
 
+/**
+ * Retoma a tela do kit de e-mail depois de recarregar.
+ *
+ * @param {object} resume Estado de retomada da gênese.
+ * @param {Function} show Mostra uma etapa.
+ * @param {Function} onEmailKitFinish Chamado ao concluir.
+ */
 function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
   if (!resume.mailtoUrl) return;
   show("entry");

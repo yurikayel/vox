@@ -99,6 +99,11 @@ export function pushBits(bits, value, n) {
   for (let i = n - 1; i >= 0; i--) bits.push((value >>> i) & 1);
 }
 
+/**
+ * Completa os bits com terminador e preenchimento até a capacidade.
+ * @param {number[]} bits Bits do dado
+ * @param {number} cap Capacidade em bits
+ */
 function padToCapacity(bits, cap) {
   const term = Math.min(4, Math.max(0, cap - bits.length));
   for (let i = 0; i < term; i++) bits.push(0);
@@ -111,6 +116,12 @@ function padToCapacity(bits, cap) {
   }
 }
 
+/**
+ * Agrupa bits em palavras-código de 8 bits.
+ * @param {number[]} bits Bits
+ * @param {number} n Quantidade de palavras
+ * @returns {Uint8Array} Palavras-código.
+ */
 function bitsToCodewords(bits, n) {
   const cw = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
@@ -150,6 +161,11 @@ export function splitDataBlocks(data, blocks) {
   return Array.from({ length: blocks }, (_, b) => data.subarray(b * len, (b + 1) * len));
 }
 
+/**
+ * Intercala os blocos de palavras-código, coluna a coluna.
+ * @param {number[][]} blocks Blocos
+ * @returns {number[]} Palavras intercaladas.
+ */
 function interleave(blocks) {
   const out = [];
   const len = Math.max(...blocks.map((b) => b.length));
@@ -199,6 +215,11 @@ export function deinterleaveDataBits(bits, spec) {
  */
 export function parseBytePayload(bits, version = 2) {
   let pos = 0;
+  /**
+   * Lê `n` bits como inteiro, avançando a posição.
+   * @param {number} n Quantidade de bits
+   * @returns {number} Valor lido.
+   */
   const take = (n) => {
     let v = 0;
     for (let i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0);

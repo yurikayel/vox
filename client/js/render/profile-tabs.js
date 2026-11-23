@@ -20,6 +20,15 @@ import { renderProfileVoxelsTab } from "./profile-voxels.js";
 import { renderProfileGridHeader, renderProfileGridTabs } from "./profile-header.js";
 import { renderProfileActions } from "./profile-settings.js";
 
+/**
+ * Seção de apresentação (README) do perfil, com edição na própria conta.
+ *
+ * @param {string} address
+ * @param {string} displayName
+ * @param {string} readme
+ * @param {boolean} isCurrentWallet
+ * @returns {string}
+ */
 function renderProfileReadme(address, displayName, readme, isCurrentWallet) {
   if (!readme && !isCurrentWallet) return "";
   const contentHtml = readme
@@ -46,6 +55,12 @@ function renderProfileReadme(address, displayName, readme, isCurrentWallet) {
     </div>`;
 }
 
+/**
+ * Texto institucional da conta oficial, vazio nas demais.
+ *
+ * @param {string} address
+ * @returns {string}
+ */
 function renderOfficialPlatformAboutBlurb(address) {
   if (!isWelcomeRouteId(address)) return "";
   return `
@@ -55,6 +70,13 @@ function renderOfficialPlatformAboutBlurb(address) {
     </p>`;
 }
 
+/**
+ * Grade de posts do perfil, com o fixado em destaque.
+ *
+ * @param {object[]} posts
+ * @param {string} [pinnedPostId=""]
+ * @returns {string}
+ */
 function renderProfilePostGrid(posts, pinnedPostId = "") {
   if (!posts?.length) {
     return `<div class="profile-grid-empty empty"><p>Nenhuma publicação ainda.</p></div>`;
@@ -72,6 +94,14 @@ function renderProfilePostGrid(posts, pinnedPostId = "") {
   return `<div class="profile-grid">${tiles}</div>`;
 }
 
+/**
+ * Metadados de identidade do perfil, usando os informados ou os locais.
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @param {object|undefined} optMeta
+ * @returns {object}
+ */
 function resolveProfileIdentityMeta(address, isCurrentWallet, optMeta) {
   if (optMeta && (optMeta.pronouns || optMeta.gender || optMeta.orientation)) return optMeta;
   if (isCurrentWallet) return getLocalIdentityMeta(address);
@@ -83,6 +113,16 @@ function resolveProfileIdentityMeta(address, isCurrentWallet, optMeta) {
   };
 }
 
+/**
+ * Campos personalizados do perfil (GitHub, README, fixado).
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @param {string} githubHandle
+ * @param {string} readme
+ * @param {string} pinnedPostId
+ * @returns {object}
+ */
 function resolveProfileCustomFields(address, isCurrentWallet, githubHandle, readme, pinnedPostId) {
   const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
@@ -90,6 +130,13 @@ function resolveProfileCustomFields(address, isCurrentWallet, githubHandle, read
   return { finalGithub, finalReadme, finalPinned };
 }
 
+/**
+ * Lista de posts do autor com o fixado na frente.
+ *
+ * @param {object[]} posts
+ * @param {string} finalPinned
+ * @returns {object[]}
+ */
 function prepareAuthorPostList(posts, finalPinned) {
   const list = [...(posts || [])];
   if (finalPinned) {
@@ -102,6 +149,16 @@ function prepareAuthorPostList(posts, finalPinned) {
   return list;
 }
 
+/**
+ * Diz se a aba Sobre aparece.
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @param {string} finalReadme
+ * @param {object[]} starredList
+ * @param {object[]} memberships
+ * @returns {boolean}
+ */
 function shouldShowProfileAboutTab(address, isCurrentWallet, finalReadme, starredList, memberships) {
   const mockProf = mock.getMockProfile(address);
   const hasStereotype = Boolean(mockProf?.isStereotypeDemo || mockProf?.stereotypeTitle);
@@ -121,6 +178,13 @@ export function normalizeProfileTab(tab, isCurrentWallet) {
   return t;
 }
 
+/**
+ * Seção de favoritos da aba Sobre.
+ *
+ * @param {object[]} starredList
+ * @param {string} activeTab
+ * @returns {string}
+ */
 function renderProfileAboutStarredSection(starredList, activeTab) {
   if (starredList.length) {
     return `<h3 class="profile-grid-about-heading">Estrelados (${starredList.length})</h3><div class="feed-container profile-grid-about-feed">${starredList.map((p) => renderPostItem(p)).join("")}</div>`;
@@ -131,6 +195,13 @@ function renderProfileAboutStarredSection(starredList, activeTab) {
   return "";
 }
 
+/**
+ * Seção de comunidades da aba Sobre.
+ *
+ * @param {object[]} memberships
+ * @param {string} activeTab
+ * @returns {string}
+ */
 function renderProfileAboutCommunitiesSection(memberships, activeTab) {
   if (memberships.length) {
     const items = memberships.map((m) => `
@@ -146,6 +217,12 @@ function renderProfileAboutCommunitiesSection(memberships, activeTab) {
   return "";
 }
 
+/**
+ * Aba Sobre do perfil.
+ *
+ * @param {object} p
+ * @returns {string}
+ */
 function renderProfileAboutTab(p) {
   const blurb = renderOfficialPlatformAboutBlurb(p.address);
   const routeIdLine = `<p class="meta profile-route-id">ID de rede: <code>${escapeHtml(p.address)}</code></p>`;
@@ -159,6 +236,12 @@ function renderProfileAboutTab(p) {
   return `<div class="profile-grid-about">${blurb}${routeIdLine}${readmeHtml}${actionsHtml}${starredHtml}${commHtml}</div>`;
 }
 
+/**
+ * Aba de posts salvos.
+ *
+ * @param {object[]} savedList
+ * @returns {string}
+ */
 function renderProfileSavedTab(savedList) {
   if (savedList && savedList.length) {
     return renderProfilePostGrid(savedList);
@@ -166,6 +249,12 @@ function renderProfileSavedTab(savedList) {
   return `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
 }
 
+/**
+ * Linha de uma pessoa nas abas de rede.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 function renderNetworkUserRow(routeId) {
   const disp = profileDirectory.getAuthorDisplaySync(routeId) || shortId(routeId);
   return `
@@ -184,6 +273,14 @@ function renderNetworkUserRow(routeId) {
     </div>`;
 }
 
+/**
+ * Abas de seguidores e seguindo.
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @param {string} currentTab
+ * @returns {string}
+ */
 function renderProfileNetworkTab(address, isCurrentWallet, currentTab) {
   const isFollowing = currentTab !== "followers";
   const list = isCurrentWallet ? social.getWatchedProfiles() : [];

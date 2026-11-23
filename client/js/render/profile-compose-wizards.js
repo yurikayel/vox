@@ -11,6 +11,11 @@ import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderSteps, renderReviewList } from "./compose-steps.js";
 import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 
+/**
+ * Seção de foto da comunidade no assistente.
+ *
+ * @returns {string}
+ */
 function renderComposeCommunityPhotoSection() {
   return `
     <div class="form-group community-compose-photo-group">
@@ -43,6 +48,11 @@ function communityNameStepHtml() {
       </div>`;
 }
 
+/**
+ * Passo da comunidade: foto.
+ *
+ * @returns {string}
+ */
 function communityPhotoStepHtml() {
   return `
       <div class="form-group">
@@ -69,6 +79,11 @@ function communityPhotoStepHtml() {
       </div>`;
 }
 
+/**
+ * Passo da comunidade: regras.
+ *
+ * @returns {string}
+ */
 function communityRulesStepHtml() {
   return `
       <div class="form-group">
@@ -77,6 +92,11 @@ function communityRulesStepHtml() {
       </div>`;
 }
 
+/**
+ * Passo da comunidade: revisão.
+ *
+ * @returns {string}
+ */
 function communityReviewStepHtml() {
   return `
       ${renderReviewList([
@@ -124,6 +144,11 @@ function listingWhatStepHtml() {
       </div>`;
 }
 
+/**
+ * Passo da oferta: preço.
+ *
+ * @returns {string}
+ */
 function listingPriceStepHtml() {
   return `
       <div class="form-group">
@@ -136,6 +161,12 @@ function listingPriceStepHtml() {
       </div>`;
 }
 
+/**
+ * Passo da oferta: chave Pix, com valor padrão.
+ *
+ * @param {string} defaultPix
+ * @returns {string}
+ */
 function listingPixStepHtml(defaultPix) {
   return `
       <div class="form-group">
@@ -145,6 +176,11 @@ function listingPixStepHtml(defaultPix) {
       <p class="listing-form-disclaimer compose-step-lead">⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}</p>`;
 }
 
+/**
+ * Passo da oferta: detalhes.
+ *
+ * @returns {string}
+ */
 function listingDetailsStepHtml() {
   return `
       <div class="form-group">

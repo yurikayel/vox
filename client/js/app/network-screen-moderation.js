@@ -35,6 +35,9 @@ export function bindModerationListButtons(onRefresh) {
   });
 }
 
+/**
+ * Exporta o registro de moderação (ações locais e remotas) como arquivo.
+ */
 async function handleExportModLog() {
   let localActions = [];
   try {

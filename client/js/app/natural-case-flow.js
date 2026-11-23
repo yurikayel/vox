@@ -16,6 +16,12 @@ import { REPORT_REASONS, isGraveReason } from "../report.js";
 export const CASES_KEY = "vox-casos-naturais-v1";
 const CASES_MAX = 200;
 
+/**
+ * Lê a lista de casos guardada; erro ou dado inválido devolve lista vazia.
+ *
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {object[]}
+ */
 function readCases(storage = globalThis.localStorage) {
   try {
     const list = JSON.parse(storage?.getItem(CASES_KEY) || "[]");
@@ -25,6 +31,12 @@ function readCases(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Grava a lista de casos, mantendo só os mais recentes.
+ *
+ * @param {object[]} list Casos.
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento.
+ */
 function writeCases(list, storage = globalThis.localStorage) {
   try {
     storage?.setItem(CASES_KEY, JSON.stringify(list.slice(-CASES_MAX)));
@@ -38,10 +50,23 @@ function writeCases(list, storage = globalThis.localStorage) {
  */
 export const listCases = (storage) => readCases(storage);
 
+/**
+ * Atualiza campos de um caso identificado por caso e lado.
+ *
+ * @param {string} caseId Caso.
+ * @param {string} side Lado da pessoa no caso.
+ * @param {object} patch Campos a alterar.
+ * @param {Storage|null} storage Armazenamento.
+ */
 function updateCase(caseId, side, patch, storage) {
   writeCases(readCases(storage).map((c) => (c.caseId === caseId && c.side === side ? { ...c, ...patch } : c)), storage);
 }
 
+/**
+ * Carrega as dependências reais do envio de mensagens do caso.
+ *
+ * @returns {Promise<object>}
+ */
 async function dmDeps() {
   const [gql, peers, cryptoDm, cacheNode, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../cache-node.js"), import("./dm-wire.js"),
@@ -124,11 +149,32 @@ export function receiveCase(notice, { now = Date.now(), storage } = {}) {
   return true;
 }
 
+/**
+ * Rótulo do motivo da denúncia pelo identificador.
+ *
+ * @param {string} id Motivo.
+ * @returns {string}
+ */
 const reasonLabel = (id) => REPORT_REASONS.find((r) => r.id === id)?.label || "não informado";
 const STATUS = { arquivado: "Você arquivou para todos.", revisao: "Mandado para a moderação revisar.", recusado: "Você não quis decidir; seguiu para a moderação." };
 
+/**
+ * Botões de decisão de um caso (arquivar, revisar ou recusar).
+ *
+ * @param {object} c Caso.
+ * @param {boolean} firm A pessoa tem poder firme de arquivar.
+ * @returns {string}
+ */
 function caseButtons(c, firm) {
   const id = escapeHtml(c.caseId);
+  /**
+   * Monta o HTML de um botão de ação do caso.
+   *
+   * @param {string} action Ação (`data-case-action`).
+   * @param {string} text Rótulo.
+   * @param {string} [cls="btn-outline"] Classes do botão.
+   * @returns {string}
+   */
   const btn = (action, text, cls = "btn-outline") =>
     `<button type="button" class="btn ${cls} btn-sm" data-case-action="${action}" data-case-id="${id}" data-case-side="${c.side}">${text}</button>`;
   const agree = firm ? btn("arquivar", "Arquivar para todos", "btn-primary") : btn("revisao", "Concordo: mandar para revisão", "btn-primary");
@@ -153,6 +199,12 @@ export function renderCasesHtml(cases = [], firmFor = () => false) {
     <p class="hint">Arquivar esconde o post para todos até a moderação da comunidade rever. Se a moderação desfizer 3 vezes em 90 dias, você perde esse poder nesta comunidade.</p></div>`;
 }
 
+/**
+ * Resolve a rota de quem modera o post do caso.
+ *
+ * @param {object} c Caso.
+ * @returns {Promise<string>}
+ */
 async function moderatorOf(c) {
   const { resolveModeratorRoute } = await import("./report-flow.js");
   return (await resolveModeratorRoute(c.postId, c.communityId)).moderator;
@@ -163,6 +215,15 @@ const MOD_TEXT = {
   recusado: "O moderador natural não quis decidir sobre este post. O caso segue com você.",
 };
 
+/**
+ * Avisa a moderação do que a pessoa decidiu no caso.
+ *
+ * @param {string} self Rota de quem avisa.
+ * @param {object} c Caso.
+ * @param {string} kind Tipo do aviso.
+ * @param {object} d Dependências.
+ * @returns {Promise<string>}
+ */
 async function tellModerator(self, c, kind, d) {
   const mod = await moderatorOf(c);
   if (!mod || mod === self) return "sem-moderacao";
@@ -170,6 +231,12 @@ async function tellModerator(self, c, kind, d) {
   return sendDm(self, mod, { payload: JSON.stringify({ __vox_dm_v2: 1, kind: "message", text: MOD_TEXT[kind], contextCard: card }), text: MOD_TEXT[kind], card }, d);
 }
 
+/**
+ * Arquiva o post com o poder firme de padrinho, publicando o ocultamento assinado.
+ *
+ * @param {string} self Rota de quem arquiva.
+ * @param {object} c Caso.
+ */
 async function archiveFirm(self, c) {
   const [cacheNode, localAccount, peers] = await Promise.all([import("../cache-node.js"), import("../identity/index.js"), import("../peers.js")]);
   const proof = (await cacheNode.getWirePosts()).find((r) => r.type === "vox-link" && r.kind === "confirm" && r.author === self && r.to === c.target && r.sponsor === true);

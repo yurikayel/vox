@@ -15,6 +15,11 @@ const METRICS_DIR = path.join(ROOT, "docs", "metrics");
 
 const SKIP = new Set(["mock.js"]);
 
+/**
+ * Lista recursivamente os `.js` de um diretório, pulando os nomes em `SKIP`.
+ * @param {string} dir Diretório raiz da busca.
+ * @returns {string[]}
+ */
 function collectJsFiles(dir) {
   const out = [];
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -32,6 +37,10 @@ const eslint = new ESLint({ cwd: ROOT });
 
 const RULES = ["complexity", "max-depth", "max-lines-per-function"];
 
+/**
+ * Reúne os arquivos do cliente que entram na auditoria (módulos de `client/js` e `client/sw.js`).
+ * @returns {string[]}
+ */
 function getFilesToLint() {
   const files = collectJsFiles(CLIENT_JS);
   const swPath = path.join(ROOT, "client", "sw.js");
@@ -41,6 +50,11 @@ function getFilesToLint() {
   return files;
 }
 
+/**
+ * Converte o resultado do ESLint nas violações das regras medidas.
+ * @param {object[]} results Resultados de `eslint.lintFiles`.
+ * @returns {object[]}
+ */
 function extractViolations(results) {
   const violations = [];
   for (const r of results) {
@@ -59,6 +73,13 @@ function extractViolations(results) {
   return violations;
 }
 
+/**
+ * Monta o relatório de complexidade em Markdown (as 40 piores violações).
+ * @param {string[]} files Arquivos varridos.
+ * @param {object[]} violations Violações encontradas.
+ * @param {string} date Data do relatório (AAAA-MM-DD).
+ * @returns {string}
+ */
 function formatMarkdownReport(files, violations, date) {
   const top = violations.slice(0, 40);
   return [
@@ -79,6 +100,12 @@ function formatMarkdownReport(files, violations, date) {
   ].join("\n");
 }
 
+/**
+ * Grava o relatório em JSON e Markdown em `docs/metrics/`.
+ * @param {string[]} files Arquivos varridos.
+ * @param {object[]} violations Violações encontradas.
+ * @param {string} date Data do relatório (AAAA-MM-DD).
+ */
 function writeReports(files, violations, date) {
   fs.mkdirSync(METRICS_DIR, { recursive: true });
   const jsonPath = path.join(METRICS_DIR, `baseline-${date}.json`);
@@ -95,6 +122,10 @@ function writeReports(files, violations, date) {
   return jsonPath;
 }
 
+/**
+ * Roda o ESLint nos arquivos do cliente, ordena as violações e grava os relatórios.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const files = getFilesToLint();
   const results = await eslint.lintFiles(files);

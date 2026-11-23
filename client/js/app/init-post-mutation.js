@@ -9,10 +9,22 @@ import * as peers from "../peers.js";
 import { getActiveUser } from "./context.js";
 import { route } from "./navigation.js";
 
+/**
+ * Fecha o modal de edição de post.
+ */
 function closePostEditModalUi() {
   render.closePostEditModal(document.getElementById("modal-container"));
 }
 
+/**
+ * Monta o post editado sem assinatura, para ser assinado de novo.
+ *
+ * @param {object} existing Post atual.
+ * @param {string} title Novo título.
+ * @param {string} body Novo texto.
+ * @param {boolean} removeImage Remover a imagem.
+ * @returns {object}
+ */
 function createEditedPayload(existing, title, body, removeImage) {
   const { sig: _s, pubKey: _p, ...rest } = existing;
   return {
@@ -26,6 +38,12 @@ function createEditedPayload(existing, title, body, removeImage) {
   };
 }
 
+/**
+ * Valida a edição do modal, assina e publica o post editado.
+ *
+ * @param {object} existing Post atual.
+ * @param {HTMLElement} btn Botão de salvar.
+ */
 async function submitPostEdit(existing, btn) {
   const textRaw = document.getElementById("post-edit-text")?.value?.trim() || "";
   const { title, body } = postOwnership.deriveTopicTitleFromBody(textRaw);

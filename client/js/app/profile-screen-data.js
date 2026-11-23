@@ -21,6 +21,13 @@ import { getLocalIdentityMeta, pickIdentityMeta } from "../profile-identity-meta
 
 let activeProfileCache = null;
 
+/**
+ * Pega os posts com os identificadores dados, sem repetir.
+ *
+ * @param {object[]} posts Posts disponíveis.
+ * @param {string[]} ids Identificadores desejados.
+ * @returns {object[]}
+ */
 function collectByIds(posts, ids) {
   const set = new Set(ids);
   const out = [];
@@ -42,6 +49,12 @@ export function invalidateProfileCache() {
   activeProfileCache = null;
 }
 
+/**
+ * Carrega as comunidades de que a pessoa participa (gateways e aparelho).
+ *
+ * @param {string} targetAddress Rota do perfil.
+ * @returns {Promise<object[]>}
+ */
 async function loadProfileMemberships(targetAddress) {
   const memberships = await gql.fetchUserMemberships(targetAddress);
   const localMems = await cacheNode.getLocalPosts({ type: "membership" });
@@ -53,6 +66,12 @@ async function loadProfileMemberships(targetAddress) {
   return memberships;
 }
 
+/**
+ * Carrega carteira, saldo e chave de mensagens do perfil.
+ *
+ * @param {boolean} isSelf É o próprio perfil.
+ * @returns {Promise<object>}
+ */
 async function loadProfileWalletAndDm(isSelf) {
   let dmPub = null;
   if (isSelf) {
@@ -69,6 +88,12 @@ async function loadProfileWalletAndDm(isSelf) {
   return { dmPub, balance };
 }
 
+/**
+ * Busca o handle da pessoa e informa se há conflito de dono.
+ *
+ * @param {string} targetAddress Rota do perfil.
+ * @returns {Promise<{handle: string|null, conflictInfo: object|null}>}
+ */
 async function fetchHandleWithConflict(targetAddress) {
   const handle = await gql.fetchHandleForAddress(targetAddress);
   if (!handle) return { handle: null, conflictInfo: null };
@@ -77,6 +102,15 @@ async function fetchHandleWithConflict(targetAddress) {
   return { handle, conflictInfo };
 }
 
+/**
+ * Resolve nome, handle e bio do perfil (boas-vindas, próprio, demonstração ou diretório).
+ *
+ * @param {string} targetAddress Rota do perfil.
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {object} resolved Perfil resolvido no diretório.
+ * @param {object|null} mockProf Perfil de demonstração.
+ * @returns {object}
+ */
 function resolveIdentityFields(targetAddress, isSelf, resolved, mockProf) {
   if (welcomeProfile.isWelcomeRouteId(targetAddress)) {
     return {
@@ -100,6 +134,13 @@ function resolveIdentityFields(targetAddress, isSelf, resolved, mockProf) {
   };
 }
 
+/**
+ * Carrega a identidade exibida no perfil.
+ *
+ * @param {string} targetAddress Rota do perfil.
+ * @param {boolean} isSelf É o próprio perfil.
+ * @returns {Promise<object>}
+ */
 async function loadProfileIdentity(targetAddress, isSelf) {
   const { handle: fetchedHandle, conflictInfo } = await fetchHandleWithConflict(targetAddress);
   const mockProf = mock.getMockProfile(targetAddress);
@@ -111,6 +152,15 @@ async function loadProfileIdentity(targetAddress, isSelf) {
   return { handle, conflictInfo, mockProf, resolved, displayName, profileBio, pixKey, pixKeyMasked };
 }
 
+/**
+ * Carrega os posts da pessoa (locais, ou de demonstração se não há).
+ *
+ * @param {string} targetAddress Rota do perfil.
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {string} user Rota de quem vê.
+ * @param {object|null} mockProf Perfil de demonstração.
+ * @returns {Promise<object>}
+ */
 async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
   const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
   let authorPosts = localPosts.filter((p) => (p.author || p.owner) === targetAddress);
@@ -124,6 +174,15 @@ async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
   return { authorPosts, allAvailable, starredPosts, savedPosts };
 }
 
+/**
+ * Resolve os campos sociais do perfil (GitHub, leia-me e afins).
+ *
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {string} targetAddress Rota do perfil.
+ * @param {object|null} mockProf Perfil de demonstração.
+ * @param {object} resolved Perfil resolvido no diretório.
+ * @returns {object}
+ */
 function resolveProfileSocialFields(isSelf, targetAddress, mockProf, resolved) {
   if (isSelf) {
     const readme = social.getLocalReadme();
@@ -148,6 +207,12 @@ function resolveProfileSocialFields(isSelf, targetAddress, mockProf, resolved) {
   };
 }
 
+/**
+ * Monta o objeto de dados que a tela de perfil exibe.
+ *
+ * @param {{targetAddress: string, isSelf: boolean, ident: object, postsData: object, balance: string, memberships: object[], dmPub: object|null, activeTab: string}} options Dados já carregados do perfil.
+ * @returns {object}
+ */
 function buildProfileDataObject({
   targetAddress, isSelf, ident, postsData, balance, memberships, dmPub, activeTab,
 }) {
