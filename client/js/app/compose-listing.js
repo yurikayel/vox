@@ -20,6 +20,11 @@ import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { getInputValue, leaveComposeAfterPublish, renderIfPaused } from "./compose-shared.js";
 
+/**
+ * Lê os campos do formulário de anúncio.
+ *
+ * @returns {object}
+ */
 function readListingFormValues() {
   return {
     title: getInputValue("listing-title"),
@@ -31,6 +36,12 @@ function readListingFormValues() {
   };
 }
 
+/**
+ * Valida a chave Pix de contato e devolve a forma normalizada.
+ *
+ * @param {string} contactPix Chave digitada (vazia é permitida).
+ * @returns {{ok: boolean, normalized?: string, error?: string}}
+ */
 function resolveContactPix(contactPix) {
   if (!contactPix) return { ok: true, normalized: "" };
   const pixVal = pixKeyHelper.validatePixKey(contactPix);
@@ -40,6 +51,14 @@ function resolveContactPix(contactPix) {
   return { ok: true, normalized: pixVal.normalized };
 }
 
+/**
+ * Monta, assina e publica o anúncio.
+ *
+ * @param {object} form Valores do formulário.
+ * @param {string} pixNormalized Chave Pix normalizada.
+ * @param {string} user Rota do autor.
+ * @param {string} communityId Comunidade.
+ */
 async function executeListingPublish(form, pixNormalized, user, communityId) {
   const listingId = `listing_${Date.now()}_${randomBase36(5)}`;
   const draft = listing.buildListingDraft({

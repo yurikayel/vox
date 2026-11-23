@@ -39,8 +39,19 @@ const b64 = (bytes) => {
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(bin);
 };
+/**
+ * Decodifica base64 em bytes.
+ * @param {string} str Texto base64
+ * @returns {Uint8Array} Bytes.
+ */
 const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
 
+/**
+ * Deriva a chave AES-GCM do segredo compartilhado com o outro par.
+ * @param {Uint8Array} secretKey Chave secreta local
+ * @param {string} theirPubHex Chave pública do outro par (hex)
+ * @returns {Promise<CryptoKey>} Chave AES.
+ */
 async function deriveKey(secretKey, theirPubHex) {
   const shared = getSharedSecret(secretKey, theirPubHex);
   const raw = await sha256(new Uint8Array([...KEY_LABEL, ...shared]));
@@ -86,6 +97,11 @@ const tagValue = (event, name) => {
   return tags.find((t) => Array.isArray(t) && t[0] === name)?.[1] || "";
 };
 
+/**
+ * Publica o evento em todos os relays conectados.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} event Evento assinado
+ */
 function publish(ctx, event) {
   const frame = JSON.stringify(["EVENT", event]);
   for (const ws of ctx.sockets) {
@@ -93,16 +109,35 @@ function publish(ctx, event) {
   }
 }
 
+/**
+ * Anuncia a presença na sala com um evento `hello`.
+ * @param {object} ctx Contexto do transporte
+ * @returns {Promise<void>} Conclui após publicar.
+ */
 async function sendHello(ctx) {
   const content = JSON.stringify({ type: "hello", from: ctx.peerId });
   publish(ctx, await finalizeEvent({ kind: SIGNAL_KIND, tags: [["t", ctx.room]], content }, ctx.sk));
 }
 
+/**
+ * Envia uma mensagem cifrada a um par.
+ * @param {object} ctx Contexto do transporte
+ * @param {string} theirPub Chave pública do par
+ * @param {object} payload Conteúdo
+ * @returns {Promise<void>} Conclui após publicar.
+ */
 async function sendDirected(ctx, theirPub, payload) {
   const content = await encryptFor(ctx.sk, theirPub, { ...payload, from: ctx.peerId });
   publish(ctx, await finalizeEvent({ kind: SIGNAL_KIND, tags: [["p", theirPub], ["t", ctx.room]], content }, ctx.sk));
 }
 
+/**
+ * Envia os dados do próprio par a um par remoto (uma vez por par).
+ * @param {object} ctx Contexto do transporte
+ * @param {string} remotePeerId Par de destino
+ * @param {boolean} reply Se é resposta a um `hello`
+ * @returns {Promise<void>} Conclui após enviar.
+ */
 async function sendPeerInfo(ctx, remotePeerId, reply) {
   const theirPub = ctx.pubByPeer.get(remotePeerId);
   if (!theirPub || ctx.infoSent.has(remotePeerId)) return;
@@ -111,8 +146,23 @@ async function sendPeerInfo(ctx, remotePeerId, reply) {
   await sendDirected(ctx, theirPub, { type: "peer-info", address, dmPub, reply });
 }
 
+/**
+ * Diz se o valor é um texto de 64 caracteres hexadecimais.
+ * @param {*} v Valor
+ * @returns {boolean} `true` se for.
+ */
 const isHex64 = (v) => typeof v === "string" && HEX64.test(v);
+/**
+ * Diz se o valor é um id de par válido (texto não vazio, dentro do limite).
+ * @param {*} v Valor
+ * @returns {boolean} `true` se for.
+ */
 const isPeerId = (v) => typeof v === "string" && v.length > 0 && v.length <= MAX_PEER_ID_CHARS;
+/**
+ * Diz se o valor é um objeto simples (não nulo, não lista).
+ * @param {*} v Valor
+ * @returns {boolean} `true` se for.
+ */
 const isPlainObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
@@ -137,12 +187,26 @@ function sanitizePeerInfo(msg) {
   return addressOk && dmPubOk ? { address, dmPub } : null;
 }
 
+/**
+ * Trata um `hello` de outro par.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} event Evento
+ * @param {object} body Conteúdo
+ * @returns {Promise<void>} Conclui após tratar.
+ */
 async function onHello(ctx, event, body) {
   if (!isPeerId(body?.from) || body.from === ctx.peerId) return;
   if (claimPeer(ctx, body.from, event.pubkey) !== "new") return;
   await sendPeerInfo(ctx, body.from, true);
 }
 
+/**
+ * Trata os dados de par recebidos e avisa que ele entrou.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} event Evento
+ * @param {object} msg Mensagem
+ * @returns {Promise<void>} Conclui após tratar.
+ */
 async function onPeerInfo(ctx, event, msg) {
   const info = sanitizePeerInfo(msg);
   if (!info || claimPeer(ctx, msg.from, event.pubkey) === "conflict") return;
@@ -150,6 +214,12 @@ async function onPeerInfo(ctx, event, msg) {
   if (msg.reply) await sendPeerInfo(ctx, msg.from, false);
 }
 
+/**
+ * Trata uma mensagem cifrada endereçada a este par.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} event Evento
+ * @returns {Promise<void>} Conclui após tratar.
+ */
 async function onDirected(ctx, event) {
   const msg = await decryptFrom(ctx.sk, event.pubkey, event.content);
   if (!isPeerId(msg?.from) || msg.from === ctx.peerId) return;
@@ -183,6 +253,11 @@ async function handleEvent(ctx, event) {
   }
 }
 
+/**
+ * Abre a conexão com um relay e liga os tratadores.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} slot Vaga do relay
+ */
 function openRelay(ctx, slot) {
   let ws;
   try {
@@ -273,6 +348,10 @@ function notifyStatus(ctx) {
   ctx.onStatus?.({ open: ctx.open, pending: ctx.pending });
 }
 
+/**
+ * Encerra o transporte: para o relógio e fecha os relays.
+ * @param {object} ctx Contexto do transporte
+ */
 function stopTransport(ctx) {
   ctx.stopped = true;
   clearInterval(ctx.timer);
@@ -291,6 +370,12 @@ function stopTransport(ctx) {
   ctx.pending = 0;
 }
 
+/**
+ * Envia um sinal a um par conhecido.
+ * @param {object} ctx Contexto do transporte
+ * @param {object} msg Mensagem (`to` é o par de destino)
+ * @returns {boolean} `true` se o par é conhecido e o envio foi iniciado.
+ */
 function sendSignal(ctx, msg) {
   const theirPub = ctx.pubByPeer.get(msg?.to);
   if (!theirPub) return false;
@@ -300,6 +385,11 @@ function sendSignal(ctx, msg) {
   return true;
 }
 
+/**
+ * Cria o contexto do transporte com chave nova e a lista de relays.
+ * @param {object} opts Opções (`relays`, sala, id do par, etc.)
+ * @returns {object} Contexto.
+ */
 function createContext(opts) {
   const sk = generateSecretKey();
   const pool = [...new Set((opts.relays || []).filter(Boolean))];

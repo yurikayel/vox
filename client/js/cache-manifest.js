@@ -55,6 +55,11 @@ export function validatePinEntry(entry) {
   return { valid: true, entry: normalized };
 }
 
+/**
+ * Valida a lista de fixações (não vazia, até 512 entradas).
+ * @param {Array} pins Fixações
+ * @returns {{valid: boolean, error?: string}} Resultado da validação.
+ */
 function validatePinsCollection(pins) {
   if (!Array.isArray(pins) || !pins.length) return { valid: false, error: "pins não pode ser vazio." };
   if (pins.length > 512) return { valid: false, error: "pins excede limite de 512 entradas." };

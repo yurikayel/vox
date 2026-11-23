@@ -19,6 +19,10 @@ export const TAG_INDEX_STORE = "tag-index";
 
 let dbPromise = null;
 
+/**
+ * Cria o armazém de transações do IndexedDB, se ainda não existir.
+ * @param {IDBDatabase} db Banco
+ */
 function initTxStore(db) {
   if (db.objectStoreNames.contains(STORE_NAME)) return;
   const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
@@ -26,6 +30,10 @@ function initTxStore(db) {
   store.createIndex("timestamp", "timestamp", { unique: false });
 }
 
+/**
+ * Cria os armazéns de DM e de tags, se ainda não existirem.
+ * @param {IDBDatabase} db Banco
+ */
 function initDmAndTagStores(db) {
   if (!db.objectStoreNames.contains(DM_STORE_NAME)) {
     const dmStore = db.createObjectStore(DM_STORE_NAME, { keyPath: "id" });
@@ -38,6 +46,10 @@ function initDmAndTagStores(db) {
   }
 }
 
+/**
+ * Cria o armazém de posts locais, se ainda não existir.
+ * @param {IDBDatabase} db Banco
+ */
 function initLocalPostsStore(db) {
   if (db.objectStoreNames.contains(LOCAL_POSTS_STORE)) return;
   const localStore = db.createObjectStore(LOCAL_POSTS_STORE, { keyPath: "id" });
@@ -47,6 +59,10 @@ function initLocalPostsStore(db) {
   localStore.createIndex("ts", "ts", { unique: false });
 }
 
+/**
+ * Aplica o esquema completo do banco durante o upgrade.
+ * @param {IDBDatabase} db Banco
+ */
 function upgradeDatabaseSchema(db) {
   initTxStore(db);
   initDmAndTagStores(db);

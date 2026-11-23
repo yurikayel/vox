@@ -9,6 +9,11 @@ export const SEED_RITUAL_SKIP_COMMUNITY_IDS = new Set([
   "demo-aprenda-vox-mirror",
   "demo-feira-local",
 ]);
+/**
+ * Monta a chave de armazenamento do estado de semeadura de uma comunidade.
+ * @param {string} communityId Comunidade
+ * @returns {string} Chave do `localStorage`.
+ */
 const stateKey = (communityId) => `vox-community-seed-${communityId}`;
 
 /**

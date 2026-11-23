@@ -18,6 +18,12 @@ const PROFILE_GRID_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="t
 const PROFILE_SAVED_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
 const CATEGORY_RING = { forja: "ring-cobalt", agora: "ring-emerald", cuidado: "ring-amber" };
 
+/**
+ * Selo do GitHub do perfil, vazio se não há.
+ *
+ * @param {string} githubHandle
+ * @returns {string}
+ */
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
   const clean = escapeHtml(String(githubHandle).replace(/^@+/, ""));
@@ -40,6 +46,12 @@ function renderProfileGithubBadge(githubHandle) {
  * @returns {string} Fragmento HTML da barra de abas.
  */
 export function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
+  /**
+   * Link da aba do perfil.
+   *
+   * @param {string} tab
+   * @returns {string}
+   */
   const href = (tab) => `#/u/${encodeURIComponent(address)}?tab=${tab}`;
   const saved = showSaved
     ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" data-tab="saved" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
@@ -58,6 +70,15 @@ export function renderProfileGridTabs(address, currentTab, showAbout, showSaved)
     </nav>`;
 }
 
+/**
+ * Estatísticas do perfil (posts, seguidores, seguindo).
+ *
+ * @param {number} postsCount
+ * @param {object} statsData
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @returns {string}
+ */
 function renderProfileGridStats(postsCount, statsData, address, isCurrentWallet) {
   const baseFollowers = statsData?.followers || 0;
   const followersCount = social.getFollowersCount(address, baseFollowers);
@@ -82,6 +103,12 @@ function renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)
     </div>`;
 }
 
+/**
+ * Faixa de aviso de perfil de demonstração (estereótipo).
+ *
+ * @param {string} address
+ * @returns {string}
+ */
 function renderStereotypeDemoBanner(address) {
   const prof = mock.getMockProfile(address);
   if (!prof?.isStereotypeDemo && !prof?.stereotypeTitle) return "";
@@ -118,6 +145,13 @@ export function renderOfficialPlatformBadge(address) {
   return `<span class="profile-grid-verified" title="Conta oficial Vox">✓</span>`;
 }
 
+/**
+ * Selo da chave Pix do perfil, vazio se não há.
+ *
+ * @param {string} pixKeyMasked
+ * @param {string} pixKeyRaw
+ * @returns {string}
+ */
 function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
   if (!pixKeyMasked) return "";
   const query = encodeURIComponent(pixKeyRaw || pixKeyMasked);
@@ -129,6 +163,14 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
     </div>`;
 }
 
+/**
+ * Interior do avatar do perfil (imagem ou inicial).
+ *
+ * @param {string} address
+ * @param {string} displayName
+ * @param {string} handle
+ * @returns {string}
+ */
 function renderProfileGridAvatarInner(address, displayName, handle) {
   const initial = escapeHtml((displayName || handle || address || "U").slice(0, 1).toUpperCase());
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
@@ -142,12 +184,27 @@ function renderProfileGridAvatarInner(address, displayName, handle) {
   return `<div class="profile-grid-avatar-wrap"><span class="avatar profile-grid-avatar-fallback${squircle}">${initial}</span></div>`;
 }
 
+/**
+ * Avatar do perfil, com troca de foto para a própria conta.
+ *
+ * @param {string} address
+ * @param {string} displayName
+ * @param {string} handle
+ * @param {boolean} isOwn
+ * @returns {string}
+ */
 function renderProfileGridAvatar(address, displayName, handle, isOwn) {
   const inner = renderProfileGridAvatarInner(address, displayName, handle);
   const bubble = renderProfileNoteBubbleHtml(address, { isOwn });
   return `<div class="profile-grid-avatar-stage">${inner}${bubble}</div>`;
 }
 
+/**
+ * Ações do perfil da própria conta.
+ *
+ * @param {string} address
+ * @returns {string}
+ */
 function renderCurrentWalletActionRow(address) {
   return `
     <div class="profile-grid-actions">
@@ -159,6 +216,12 @@ function renderCurrentWalletActionRow(address) {
     </div>`;
 }
 
+/**
+ * Ações do perfil oficial de boas-vindas.
+ *
+ * @param {string} address
+ * @returns {string}
+ */
 function renderWelcomeActionRow(address) {
   return `
     <div class="profile-grid-actions">
@@ -167,6 +230,16 @@ function renderWelcomeActionRow(address) {
     </div>`;
 }
 
+/**
+ * Ações do perfil de outra pessoa (seguir, silenciar, bloquear, Pix).
+ *
+ * @param {string} address
+ * @param {boolean} isBlocked
+ * @param {boolean} isMuted
+ * @param {string} [pixKeyRaw=""]
+ * @param {string} [displayName=""]
+ * @returns {string}
+ */
 function renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
   const isWatchingAuthor = social.isWatching(address);
   const followClass = isWatchingAuthor ? "profile-grid-btn-outline is-following" : "profile-grid-btn-primary";
@@ -197,12 +270,26 @@ function renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw = "", d
     </details>`;
 }
 
+/**
+ * Linha de ações do perfil conforme de quem é.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderProfileGridActionRow({ address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "" }) {
   if (isCurrentWallet) return renderCurrentWalletActionRow(address);
   if (isWelcomeRouteId(address)) return renderWelcomeActionRow(address);
   return renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw, displayName);
 }
 
+/**
+ * Faixa de conflito de handle, vazia se não há.
+ *
+ * @param {boolean} isConflict
+ * @param {object[]} claimants
+ * @param {string} handle
+ * @returns {string}
+ */
 function renderProfileConflictBanner(isConflict, claimants, handle) {
   if (!isConflict || !claimants?.length) return "";
   const claimantItems = claimants.map((c) => `<div>• <a href="#/u/${c.owner}">${escapeHtml(shortId(c.owner))}</a></div>`).join("");
@@ -213,6 +300,12 @@ function renderProfileConflictBanner(isConflict, claimants, handle) {
     </div>`;
 }
 
+/**
+ * Bloco de identidade do perfil (nome, handle, bio, selos).
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderProfileIdentityBlock({ address, displayName, handleLabel, profileBio, identityMeta, isCurrentWallet, pixBadge, githubBadge }) {
   const primaryName = displayName || (isWelcomeRouteId(address) ? "Vox" : handleLabel);
   const secondaryHandle = displayName ? handleLabel : "";
@@ -232,6 +325,12 @@ function renderProfileIdentityBlock({ address, displayName, handleLabel, profile
     </div>`;
 }
 
+/**
+ * Ids das conquistas já desbloqueadas pela conta; vazio se a leitura falha.
+ *
+ * @param {string} address
+ * @returns {string[]}
+ */
 function readOwnUnlockedAchievementIds(address) {
   try {
     const receipts = loadVoxelReceipts(address);
@@ -241,6 +340,13 @@ function readOwnUnlockedAchievementIds(address) {
   }
 }
 
+/**
+ * Destaques cívicos do perfil, só na própria conta.
+ *
+ * @param {string} address
+ * @param {boolean} isCurrentWallet
+ * @returns {string}
+ */
 function renderProfileCivicHighlights(address, isCurrentWallet) {
   if (!isCurrentWallet || !address) return "";
   const unlockedIds = readOwnUnlockedAchievementIds(address);

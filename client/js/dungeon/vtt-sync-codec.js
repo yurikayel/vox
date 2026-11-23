@@ -178,6 +178,12 @@ async function finalizeAssembledBlob(hash, chunks) {
  */
 export function createBlobAssembler() {
   const pending = new Map();
+  /**
+   * Recebe um pedaço de blob, valida limites e devolve o blob completo quando o último chega.
+   *
+   * @param {object} chunk Mensagem `BLOB_CHUNK`.
+   * @returns {Promise<{ complete: boolean, sha256?: string, bytes?: Uint8Array, error?: string }>} Estado da montagem.
+   */
   async function pushChunk(chunk) {
     const meta = parseChunkMeta(chunk);
     if (!meta.valid) return { complete: false, error: "Chunk de blob inválido." };

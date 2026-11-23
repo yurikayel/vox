@@ -12,6 +12,12 @@ let wired = false;
 let longPressTimer = null;
 let startCoords = { x: 0, y: 0 };
 
+/**
+ * Acha a moldura da foto do post.
+ *
+ * @param {string} postId Post.
+ * @returns {HTMLElement|null}
+ */
 function frameOf(postId) {
   return document.querySelector(`.post[data-id="${CSS.escape(postId)}"] .post-media-hero`);
 }
@@ -34,6 +40,13 @@ export function beginTagMode(postId) {
   }
 }
 
+/**
+ * Converte um clique em porcentagem da imagem.
+ *
+ * @param {MouseEvent} e Clique.
+ * @param {HTMLElement} frame Moldura da foto.
+ * @returns {{x: number, y: number}}
+ */
 function pctFromClick(e, frame) {
   const img = frame.querySelector("img") || frame;
   const r = img.getBoundingClientRect();
@@ -57,6 +70,11 @@ export function togglePins(postId) {
   return true;
 }
 
+/**
+ * Guarda a marca escolhida e sai do modo de marcar.
+ *
+ * @param {{postId: string, x: number, y: number, targetId: string, label: string}} options Post, posição e pessoa marcada.
+ */
 async function onPicked({ postId, x, y, targetId, label }) {
   const next = photoTags.addTag(photoTags.getLocalTags(postId), { x, y, targetId, label });
   await persistPhotoTags(postId, next);
@@ -64,6 +82,9 @@ async function onPicked({ postId, x, y, targetId, label }) {
   share.showToast("Marca guardada neste aparelho.");
 }
 
+/**
+ * Cancela o toque longo em andamento.
+ */
 function cancelLongPress() {
   if (longPressTimer) {
     clearTimeout(longPressTimer);
@@ -71,6 +92,12 @@ function cancelLongPress() {
   }
 }
 
+/**
+ * Dispara a ação do toque longo na foto do post.
+ *
+ * @param {string} postId Post.
+ * @param {HTMLElement} post Elemento do post.
+ */
 function triggerLongPress(postId, post) {
   window.__justLongPressed = true;
   setTimeout(() => {
@@ -85,6 +112,11 @@ function triggerLongPress(postId, post) {
   beginTagMode(postId);
 }
 
+/**
+ * Começa a contar o toque longo sobre a foto.
+ *
+ * @param {PointerEvent} e Evento do ponteiro.
+ */
 function onPointerDown(e) {
   if (e.button && e.button !== 0) return;
   const hero = e.target.closest(".post-media-hero");
@@ -102,6 +134,11 @@ function onPointerDown(e) {
   }, 500);
 }
 
+/**
+ * Cancela o toque longo se o dedo se mexeu além do limite.
+ *
+ * @param {PointerEvent} e Evento do ponteiro.
+ */
 function onPointerMove(e) {
   if (!longPressTimer) return;
   const dx = Math.abs(e.clientX - startCoords.x);
@@ -109,6 +146,12 @@ function onPointerMove(e) {
   if (dx > 10 || dy > 10) cancelLongPress();
 }
 
+/**
+ * Ignora o clique que acabou de terminar um toque longo.
+ *
+ * @param {Event} e Clique na foto.
+ * @returns {boolean}
+ */
 function onHeroClick(e) {
   if (window.__justLongPressed) {
     e.preventDefault();

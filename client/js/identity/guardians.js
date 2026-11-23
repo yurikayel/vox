@@ -27,8 +27,27 @@ export const MAX_HELD = 20;
 export const HELD_STORAGE = "vox-guardian-shares-v1";
 
 const TYPES = [SHARE_TYPE, RECEIPT_TYPE, REVOKE_TYPE];
+/**
+ * Chave do `localStorage` com os guardiões da conta.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 const ownerMapKey = (routeId) => `vox-guardians-v1:${routeId}`;
+/**
+ * Codifica bytes em base64url.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
 const toB64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+/**
+ * Apara o texto e o limita a `max` caracteres.
+ *
+ * @param {*} s
+ * @param {number} max
+ * @returns {string}
+ */
 const clip = (s, max) => String(s || "").trim().slice(0, max);
 
 /**

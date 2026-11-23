@@ -67,6 +67,9 @@ export function ensureAdultCheck(doc, anchor) {
  */
 export function bindAdultCheck(doc, buttons = []) {
   const box = ensureAdultCheck(doc, buttons.find(Boolean));
+  /**
+   * Habilita os botões conforme a caixa de confirmação de idade está marcada.
+   */
   const sync = () => {
     const ok = Boolean(box?.checked);
     for (const btn of buttons) {

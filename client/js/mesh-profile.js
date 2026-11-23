@@ -8,6 +8,10 @@ import * as profileNote from "./profile-note.js";
 import * as peers from "./peers.js";
 import * as featureFlags from "./feature-flags.js";
 
+/**
+ * Aplica ao diretório local o cartão de um perfil assinado.
+ * @param {object} signed Perfil assinado
+ */
 function applyLocalCardFromSigned(signed) {
   if (!signed?.routeId) return;
   markProfileCardSeen(signed);

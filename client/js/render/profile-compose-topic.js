@@ -10,6 +10,11 @@ import { renderInlineComposer } from "./feed.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderStep } from "./compose-steps.js";
 
+/**
+ * Bloco opcional para colar a conversa de chat no tópico.
+ *
+ * @returns {string}
+ */
 function renderChatTranscriptDetails() {
   return `
     <details class="compose-chat-import" style="margin-top:0.75rem; padding:0.75rem 1rem; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-soft, rgba(255, 255, 255, 0.03));">
@@ -27,6 +32,12 @@ function renderChatTranscriptDetails() {
 
 /** Construtor de enquete: 2 a 6 opções, adicionar/remover (aparece com a categoria Enquete). */
 function renderPollBuilder() {
+  /**
+   * Linha de opção de enquete cívica.
+   *
+   * @param {number} i
+   * @returns {string}
+   */
   const row = (i) => `<li class="civic-poll-row"><input type="text" class="form-control civic-poll-input" maxlength="80" placeholder="Opção ${i}" aria-label="Opção ${i}" /><button type="button" class="civic-poll-remove" aria-label="Remover opção">×</button></li>`;
   return `
       <div class="civic-poll-builder" id="civic-poll-builder" hidden>
@@ -36,6 +47,11 @@ function renderPollBuilder() {
       </div>`;
 }
 
+/**
+ * Barra de etiquetas cívicas do tópico.
+ *
+ * @returns {string}
+ */
 function renderTopicCivicTagBar() {
   return `
     <div class="form-group topic-tag-selector-group">
@@ -54,6 +70,12 @@ function renderTopicCivicTagBar() {
     </div>`;
 }
 
+/**
+ * Selo do destino (comunidade) do tópico.
+ *
+ * @param {string} communityId
+ * @returns {string}
+ */
 function renderComposeTargetPill(communityId) {
   if (communityId) {
     return `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" /><span class="compose-pill-tag agora-stamp agora-stamp--teal">Círculo: <strong>${escapeHtml(communityId)}</strong></span>`;
@@ -61,6 +83,12 @@ function renderComposeTargetPill(communityId) {
   return `<div class="compose-pill-group agora-compose-target"><label class="agora-field-label" for="topic-comm-id">Círculo de destino</label> <input type="text" id="topic-comm-id" class="compose-pill-input agora-inscription" value="geral" placeholder="ex: geral, cinema-nacional" required /></div>`;
 }
 
+/**
+ * Passo do assistente: esfera de publicação.
+ *
+ * @param {string} communityId
+ * @returns {string}
+ */
 function renderComposeSphereStep(communityId) {
   const c = communityId ? `?c=${encodeURIComponent(communityId)}` : "";
   return `
@@ -79,6 +107,12 @@ function renderComposeSphereStep(communityId) {
         <p class="compose-sphere-more">Também: <a href="#/compose/listing${c}">oferta na feira</a> · <a href="#/compose/community">nova comunidade</a> · <a href="#/compose/proposal?c=${encodeURIComponent(communityId || "vox")}">proposta de regra</a></p>`;
 }
 
+/**
+ * Passo do assistente: onde publicar.
+ *
+ * @param {string} commInput
+ * @returns {string}
+ */
 function renderComposeWhereStep(commInput) {
   return `
         <div class="compose-target-row">${commInput}</div>
@@ -88,6 +122,11 @@ function renderComposeWhereStep(commInput) {
         </div>`;
 }
 
+/**
+ * Passo do assistente: escrever o tópico.
+ *
+ * @returns {string}
+ */
 function renderComposeWriteStep() {
   return `
         <div class="compose-body-field agora-compose-field">
@@ -98,12 +137,22 @@ function renderComposeWriteStep() {
         ${renderChatTranscriptDetails()}`;
 }
 
+/**
+ * Passo do assistente: marcação cívica.
+ *
+ * @returns {string}
+ */
 function renderComposeCivicStep() {
   return `
         <p class="compose-step-lead">Escolha a categoria. Enquete abre os campos de opções.</p>
         ${renderTopicCivicTagBar()}`;
 }
 
+/**
+ * Passo do assistente: revisão antes de publicar.
+ *
+ * @returns {string}
+ */
 function renderComposeReviewStep() {
   return `
         <dl class="compose-review" data-compose-review>

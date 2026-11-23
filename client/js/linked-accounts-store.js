@@ -63,6 +63,12 @@ export function loadLinkedAccounts() {
   }
 }
 
+/**
+ * Resolve um campo: valor novo, ou o de reserva, ou texto vazio.
+ * @param {*} val Valor novo
+ * @param {*} fallback Valor de reserva
+ * @returns {string} Texto aparado.
+ */
 function resolveField(val, fallback) {
   if (val != null) return String(val).trim();
   if (fallback != null) return String(fallback).trim();
@@ -72,6 +78,11 @@ function resolveField(val, fallback) {
 /** Campos de identidade: herdados só quando o @usuário não mudou. */
 function identityFields(opts, prev, cleanHandle) {
   const same = prev.handle === cleanHandle;
+  /**
+   * Mantém o campo anterior só se a conta é a mesma.
+   * @param {string} k Campo
+   * @returns {string} Valor anterior, ou texto vazio.
+   */
   const keep = (k) => (same ? prev[k] : "");
   return {
     verified: opts.verified !== undefined ? Boolean(opts.verified) : same && Boolean(prev.verified),

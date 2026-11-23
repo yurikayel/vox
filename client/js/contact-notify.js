@@ -23,10 +23,21 @@ export const ADDED_BY_STORAGE_KEY = "vox-added-by-v1";
 
 const ADDED_BY_MAX = 100;
 
+/**
+ * Aparia o texto e corta no máximo de caracteres.
+ * @param {*} str Texto
+ * @param {number} max Máximo de caracteres
+ * @returns {string} Texto cortado.
+ */
 function clip(str, max) {
   return String(str || "").trim().slice(0, max);
 }
 
+/**
+ * Lê a lista de quem adicionou a pessoa; se falhar, devolve lista vazia.
+ * @param {Storage|null} storage Armazenamento
+ * @returns {object[]} Lista lida.
+ */
 function readStoredList(storage) {
   try {
     const raw = storage?.getItem(ADDED_BY_STORAGE_KEY);
@@ -37,6 +48,11 @@ function readStoredList(storage) {
   }
 }
 
+/**
+ * Grava a lista de quem adicionou a pessoa; se falhar, segue sem gravar.
+ * @param {Storage|null} storage Armazenamento
+ * @param {object[]} list Lista
+ */
 function writeStoredList(storage, list) {
   try {
     storage?.setItem(ADDED_BY_STORAGE_KEY, JSON.stringify(list));

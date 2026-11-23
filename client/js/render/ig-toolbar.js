@@ -9,33 +9,74 @@ import * as mod from "../moderation.js";
 import { escapeHtml } from "./util.js";
 import { renderRepostBtn } from "./repost-btn.js";
 
+/**
+ * Ícone SVG de coração, cheio quando curtido.
+ *
+ * @param {boolean} on
+ * @returns {string}
+ */
 function iconHeart(on) {
   return `<svg class="action-icon icon-heart" width="16" height="16" viewBox="0 0 24 24" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
 }
 
+/**
+ * Ícone SVG de comentário.
+ *
+ * @returns {string}
+ */
 function iconComment() {
   return `<svg class="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
 }
 
+/**
+ * Ícone SVG de compartilhar.
+ *
+ * @returns {string}
+ */
 function iconShare() {
   return `<svg class="action-icon icon-share" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
 }
 
+/**
+ * Ícone SVG de salvar, cheio quando salvo.
+ *
+ * @param {boolean} on
+ * @returns {string}
+ */
 function iconBookmark(on) {
   return `<svg class="action-icon icon-bookmark" width="16" height="16" viewBox="0 0 24 24" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
 }
 
+/**
+ * Atributos de bloqueio do compartilhamento quando o post está em quarentena.
+ *
+ * @param {string} postId
+ * @returns {string}
+ */
 function shareAttrs(postId) {
   if (!mod.isPostQuarantined(postId)) return "";
   return ` disabled aria-disabled="true" title="${escapeHtml(mod.QUARANTINE_HINT)}"`;
 }
 
+/**
+ * Botão de comentários da barra estilo foto.
+ *
+ * @param {object} t
+ * @returns {string}
+ */
 function commentBtn(t) {
   const n = Number(t.repliesCount) || 0;
   const count = `<span class="overlay-action-count count-replies">${n > 0 ? n : ""}</span>`;
   return `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">${iconComment()}${count}</button>`;
 }
 
+/**
+ * Botão de compartilhar da barra estilo foto.
+ *
+ * @param {object} t
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderIgShareBtn(t, authorDisplay) {
   const baseExplodes = Number(t.explodesCount) || 0;
   const explodes = social.getExplodesCount(t.id, baseExplodes);

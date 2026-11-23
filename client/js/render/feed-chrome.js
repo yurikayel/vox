@@ -73,6 +73,11 @@ export function renderFeedTabsBar(activeFeed = "for-you") {
     </div>`;
 }
 
+/**
+ * Barra do escudo cidadão no topo do feed.
+ *
+ * @returns {string}
+ */
 function renderCitizenShieldBarHtml() {
   return `
     <div class="vox-citizen-shield-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:6px 10px; margin-bottom:0.65rem; border-radius:var(--radius-sm); background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.35); font-size:0.75rem;">
@@ -81,6 +86,11 @@ function renderCitizenShieldBarHtml() {
     </div>`;
 }
 
+/**
+ * Linha de sugestões do Bluesky; no período eleitoral mostra só um aviso.
+ *
+ * @returns {string}
+ */
 function renderBskySuggestionsRow() {
   if (isElectoralModeActive()) {
     return '<p class="meta bsky-suggestions-row" role="note">Período eleitoral: o Vox não sugere perfis nem ranqueia conteúdo político (Res. TSE 23.755/2026).</p>';
@@ -96,6 +106,11 @@ function renderBskySuggestionsRow() {
     </div>`;
 }
 
+/**
+ * Formulário para adicionar perfil do Bluesky e importar.
+ *
+ * @returns {string}
+ */
 function renderBskyFormAndImport() {
   return `
     <form id="form-add-bsky" class="bsky-add-form" aria-label="Adicionar perfil do Bluesky">
@@ -145,6 +160,12 @@ const CIVIC_EMPTY_HTML = `<div class="empty civic-empty">
     <p class="desc">Publique uma pauta, ideia, debate ou enquete com título e argumento — ela aparece aqui para posicionamento assinado.</p>
   </div>`;
 
+/**
+ * Estado vazio do feed ativo.
+ *
+ * @param {string} activeFeed
+ * @returns {string}
+ */
 function renderFeedEmptyState(activeFeed) {
   if (activeFeed === "civic") return CIVIC_EMPTY_HTML;
   if (activeFeed === "external") {
