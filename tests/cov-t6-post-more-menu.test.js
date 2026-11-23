@@ -226,3 +226,30 @@ test("Pedir mediação sem moderação conhecida avisa e não navega", async () 
   assert.equal(lastToast(), "Esta publicação não tem moderação conhecida no seu aparelho.");
   assert.equal(globalThis.location.hash, "#/inicio");
 });
+
+test("gatilho ⋯ de feed-post-media emite data-community-id e menu repassa communityId para mediação", async () => {
+  const [{ renderPostMediaHeader }, cacheNode] = await Promise.all([
+    import("../client/js/render/feed-post-media.js"),
+    import("../client/js/cache-node.js"),
+  ]);
+  await cacheNode.saveLocalPost({
+    id: "c_t6_comm_hdr",
+    type: "community",
+    communityId: "t6_comm_hdr",
+    title: "Comunidade T6",
+    author: "vx_mod_t6_hdr",
+    ts: 1,
+  });
+  const headerHtml = renderPostMediaHeader(
+    { id: "m15_sem_cache", communityId: "t6_comm_hdr", title: "Post na comunidade", ts: 1000 },
+    "vx_autor_t6",
+    { authorDisplay: "Autor T6" },
+  );
+  const btn = mount(doc, `<article class="post">${headerHtml}</article>`).querySelector(".btn-post-more-menu");
+  assert.equal(btn.dataset.communityId, "t6_comm_hdr");
+  globalThis.location.hash = "#/inicio";
+  click(btn);
+  await pick("mediation");
+  assert.match(globalThis.location.hash, /^#\/dm\/vx_mod_t6_hdr\?/);
+  assert.match(globalThis.location.hash, /c=t6_comm_hdr/);
+});
