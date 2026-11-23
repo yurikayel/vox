@@ -8,6 +8,7 @@ import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as profileNote from "./profile-note.js";
+import { isNewerLww } from "./shared/reduce-lww.js";
 
 /**
  * Extrai o `routeId` a partir de um ID canônico de cartão de perfil (`pc_vx_...`).
@@ -34,7 +35,8 @@ const cardTime = (item) => Number(item?.editedAt || item?.ts || 0);
 function isCovered(seen, item) {
   if (!seen) return false;
   const t = cardTime(item);
-  return seen.at > t || (seen.at === t && seen.sig === item.sig);
+  if (t === seen.at && item?.sig !== seen.sig) return false;
+  return !isNewerLww({ editedAt: t, sig: item?.sig }, { editedAt: seen.at, sig: seen.sig });
 }
 
 /**
