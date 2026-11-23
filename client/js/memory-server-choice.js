@@ -19,6 +19,12 @@ const SOURCE_TEXT = {
   anterior: "Uma versão anterior do app (sem perguntar)",
 };
 
+/**
+ * Lê uma chave do armazenamento; se falhar, devolve texto vazio.
+ * @param {Storage|null} storage Armazenamento
+ * @param {string} key Chave
+ * @returns {string} Valor lido.
+ */
 function read(storage, key) {
   try {
     return storage?.getItem(key) || "";
@@ -27,6 +33,12 @@ function read(storage, key) {
   }
 }
 
+/**
+ * Grava (ou remove, se vazio) uma chave do armazenamento; se falhar, segue.
+ * @param {Storage|null} storage Armazenamento
+ * @param {string} key Chave
+ * @param {string} value Valor
+ */
 function write(storage, key, value) {
   try {
     if (value) storage?.setItem(key, value);
@@ -78,6 +90,11 @@ export function getMemorySuggestion(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Lê a lista de servidores dispensados.
+ * @param {Storage|null} storage Armazenamento
+ * @returns {string[]} Lista.
+ */
 function dismissedList(storage) {
   try {
     const list = JSON.parse(read(storage, DISMISSED_KEY) || "[]");

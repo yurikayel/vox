@@ -44,6 +44,11 @@ export async function hydrateBlobs(blobs) {
   return byHash;
 }
 
+/**
+ * Aceita uma lápide remota se for confiável, nova e do autor do post.
+ * @param {object} tomb Lápide
+ * @returns {Promise<boolean>} `true` se foi aplicada.
+ */
 async function hydrateSingleTombstone(tomb) {
   if (!(await isTrustedItem(tomb)) || (await cacheNode.getTombstone(tomb.id))) return false;
   const post = await cacheNode.getLocalPost(tomb.id);
@@ -66,6 +71,11 @@ export async function hydrateTombstones(tombstones) {
   return added;
 }
 
+/**
+ * Diz se o post remoto pode entrar: confiável, e atualização de comunidade válida.
+ * @param {object} post Post
+ * @returns {Promise<boolean>} `true` se aceitável.
+ */
 async function isAcceptablePost(post) {
   if (!(await isTrustedItem(post))) return false;
   if (post.type === "community_update" && !(await cacheNode.isCommunityUpdateAcceptable(post))) return false;

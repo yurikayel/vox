@@ -19,14 +19,43 @@ export const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 /** …ou depois de mais 10 posts, o que vier primeiro. */
 export const SNOOZE_POSTS = 10;
 
+/**
+ * Chave do `localStorage` com o registro de saídas da conta.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 const exitsKey = (routeId) => `vox-account-exits-v1:${routeId}`;
+/**
+ * Chave do `localStorage` com o adiamento do aviso de saída.
+ *
+ * @param {string} routeId
+ * @returns {string}
+ */
 const snoozeKey = (routeId) => `vox-account-exit-snooze-v1:${routeId}`;
+/**
+ * Rota (id) da conta local em cache, ou texto vazio.
+ *
+ * @returns {string}
+ */
 const currentRouteId = () => localAccount.getCachedRouteIdSync() || "";
 
+/**
+ * Lê um registro JSON do armazenamento, tolerando valor inválido.
+ *
+ * @param {string} key
+ * @returns {object|null}
+ */
 function readJson(key) {
   return readStoredRecord(key, null);
 }
 
+/**
+ * Grava um registro JSON no armazenamento; falha de cota é ignorada.
+ *
+ * @param {string} key
+ * @param {*} value
+ */
 function writeJson(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));

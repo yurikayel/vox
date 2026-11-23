@@ -32,7 +32,12 @@ class ChildOfTest(unittest.TestCase):
 
     def test_rejects_absolute_name(self):
         outside = os.path.abspath(os.sep + "etc")
-        for bad in (outside, os.path.join(os.path.dirname(str(self.root)), "x"), "C:\\Windows", "/tmp/x"):
+        for bad in (
+            outside,
+            os.path.join(os.path.dirname(str(self.root)), "x"),
+            "C:\\Windows",
+            "/tmp/x",
+        ):
             with self.subTest(name=bad), self.assertRaises(ValueError):
                 child_of(self.root, bad)
 
@@ -113,10 +118,24 @@ class ChildOfTest(unittest.TestCase):
 
 class CallerValidatorsTest(unittest.TestCase):
     def test_stored_name_accepts_only_our_files(self):
-        good = ("latest_snapshot.json", "env_1_" + "a" * 20 + ".json", "env_" + "9" * 19 + "_" + "0f" * 10 + ".json")
-        bad = ("env_1_" + "A" * 20 + ".json", "env__" + "a" * 20 + ".json", "env_" + "1" * 20 + "_" + "a" * 20 + ".json",
-               "env_1_" + "a" * 19 + ".json", "env_1_" + "a" * 20 + ".json\n", "env_1_" + "a" * 20 + ".jsonx",
-               "env_1.json", "latest_snapshot.json.bak", "env_1_" + "a" * 20, "..", "")
+        good = (
+            "latest_snapshot.json",
+            "env_1_" + "a" * 20 + ".json",
+            "env_" + "9" * 19 + "_" + "0f" * 10 + ".json",
+        )
+        bad = (
+            "env_1_" + "A" * 20 + ".json",
+            "env__" + "a" * 20 + ".json",
+            "env_" + "1" * 20 + "_" + "a" * 20 + ".json",
+            "env_1_" + "a" * 19 + ".json",
+            "env_1_" + "a" * 20 + ".json\n",
+            "env_1_" + "a" * 20 + ".jsonx",
+            "env_1.json",
+            "latest_snapshot.json.bak",
+            "env_1_" + "a" * 20,
+            "..",
+            "",
+        )
         for name in good:
             with self.subTest(name=name):
                 self.assertTrue(blind_relay._is_stored_name(name))
@@ -132,11 +151,23 @@ class CallerValidatorsTest(unittest.TestCase):
                 self.assertFalse(server.is_tx_id(bad))
 
     def test_index_name_has_prefix_suffix_and_a_safe_slug(self):
-        for good in ("index_abc.json", "index_a.b-c_D.json", "index_...json", "index_" + "a" * 128 + ".json"):
+        for good in (
+            "index_abc.json",
+            "index_a.b-c_D.json",
+            "index_...json",
+            "index_" + "a" * 128 + ".json",
+        ):
             with self.subTest(name=good):
                 self.assertTrue(server.is_index_name(good))
-        for bad in ("index_.json", "index_json", "index_a/b.json", "index_a.json\n", "index_" + "a" * 129 + ".json",
-                    "x_index_a.json", "index_a.jsonx"):
+        for bad in (
+            "index_.json",
+            "index_json",
+            "index_a/b.json",
+            "index_a.json\n",
+            "index_" + "a" * 129 + ".json",
+            "x_index_a.json",
+            "index_a.jsonx",
+        ):
             with self.subTest(name=bad):
                 self.assertFalse(server.is_index_name(bad))
 

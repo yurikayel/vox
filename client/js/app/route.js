@@ -1,7 +1,7 @@
 /** @file Hash router — dispatches to screen modules. */
 import { closePostMoreMenu } from "./post-more-menu.js";
 import { parseRoute, routeTitle } from "./route-parse.js";
-import { setRoute } from "./navigation.js";
+import { getRouteScope, setRoute, setRouteScope } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
 import { showHome, showCommunities, showTagFeed } from "./screens-home.js";
 import { showCommunity } from "./screens-community.js";
@@ -18,6 +18,12 @@ import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showNotFound } from "./screens-not-found.js";
+import { createScope } from "../shared/signals.js";
+
+// Escopo reativo da rota atual (descartado antes de montar a próxima) mora em `navigation.js`, onde as telas o
+// leem sem importar o roteador. Em telas async, capture o 2º argumento do handler (`handler(route, scope)`) ou
+// `getRouteScope()` **antes** de qualquer `await`.
+export { getRouteScope } from "./navigation.js";
 
 /** @type {Promise<typeof import("./screens-voxpedia.js")>|null} */
 let voxpediaRoute = null;
@@ -26,16 +32,31 @@ let ajudaTesteRoute = null;
 /** @type {Promise<typeof import("./screens-labs.js")>|null} */
 let labsRoute = null;
 
+/**
+ * Carrega sob demanda a tela da Voxpédia.
+ *
+ * @returns {Promise<object>}
+ */
 function loadVoxpediaRoute() {
   voxpediaRoute ??= import("./screens-voxpedia.js");
   return voxpediaRoute;
 }
 
+/**
+ * Carrega sob demanda a tela de ajuda e teste.
+ *
+ * @returns {Promise<object>}
+ */
 function loadAjudaTesteRoute() {
   ajudaTesteRoute ??= import("./screens-ajuda-teste.js");
   return ajudaTesteRoute;
 }
 
+/**
+ * Carrega sob demanda as telas de laboratório.
+ *
+ * @returns {Promise<object>}
+ */
 function loadLabsRoute() {
   labsRoute ??= import("./screens-labs.js");
   return labsRoute;
@@ -46,11 +67,21 @@ let avisoRoute = null;
 /** @type {Promise<typeof import("./screens-compose.js")>|null} */
 let composeRoute = null;
 
+/**
+ * Carrega sob demanda o fluxo de avisos.
+ *
+ * @returns {Promise<object>}
+ */
 function loadAvisoRoute() {
   avisoRoute ??= import("./aviso-flow.js");
   return avisoRoute;
 }
 
+/**
+ * Carrega sob demanda as telas de compor.
+ *
+ * @returns {Promise<object>}
+ */
 function loadComposeRoute() {
   composeRoute ??= import("./screens-compose.js");
   return composeRoute;
@@ -123,18 +154,81 @@ export function announceRoute(route, doc = globalThis.document) {
   return true;
 }
 
+const MAX_SCROLL_HISTORY = 50;
+const scrollByHash = new Map();
+let lastRenderedHash = "";
+let pendingPopHash = null;
+
 /**
- * Aplica a rota atual: fecha menus, checa portão e despacha para a tela.
+ * Hash da rota atual, ou `#/` quando não há.
+ *
+ * @param {Window} [win=globalThis.window] Janela a consultar.
+ * @returns {string}
+ */
+function currentRouteHash(win = globalThis.window) {
+  return win?.location?.hash || "#/";
+}
+
+/**
+ * Guarda a posição de rolagem vertical da rota atual (para restauração ao voltar no histórico).
+ * @param {string} hash Hash da rota que está saindo da tela.
+ * @param {Window} [win=globalThis.window] Janela alvo (injetável nos testes).
+ * @returns {void}
+ */
+export function rememberRouteScroll(hash, win = globalThis.window) {
+  if (!hash || !win) return;
+  scrollByHash.delete(hash);
+  scrollByHash.set(hash, Number(win.scrollY) || 0);
+  if (scrollByHash.size > MAX_SCROLL_HISTORY) {
+    scrollByHash.delete(scrollByHash.keys().next().value);
+  }
+}
+
+/**
+ * Restaura o scroll salvo em retorno pelo histórico (`popstate`) ou sobe para o topo em rota nova.
+ * @param {string} hash Hash da rota recém-montada.
+ * @param {boolean} isBack `true` quando a navegação veio de `popstate`.
+ * @param {Window} [win=globalThis.window] Janela alvo (injetável nos testes).
+ * @returns {number} Posição vertical aplicada.
+ */
+export function restoreRouteScroll(hash, isBack, win = globalThis.window) {
+  const y = isBack && scrollByHash.has(hash) ? scrollByHash.get(hash) : 0;
+  win?.scrollTo?.(0, y);
+  return y;
+}
+
+/**
+ * Limpa a memória de rolagem entre rotas (uso em testes).
+ * @returns {void}
+ */
+export function __resetRouteScrollForTests() {
+  scrollByHash.clear();
+  lastRenderedHash = "";
+  pendingPopHash = null;
+}
+
+/**
+ * Aplica a rota atual: fecha menus, checa portão, despacha e restaura rolagem.
  *
  * @returns {Promise<void>}
  */
 export async function routeImpl() {
+  const nextHash = currentRouteHash();
+  if (lastRenderedHash && lastRenderedHash !== nextHash) rememberRouteScroll(lastRenderedHash);
+  const isBack = pendingPopHash !== null && pendingPopHash === nextHash;
+  pendingPopHash = null;
+
   closePostMoreMenu();
   checkCantinaGate();
+  getRouteScope()?.dispose?.();
+  const scope = createScope();
+  setRouteScope(scope);
   const r = parseRoute();
-  const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
-  const result = await handler(r);
+  const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
+  const result = await handler(r, scope);
   announceRoute(r);
+  lastRenderedHash = nextHash;
+  restoreRouteScroll(nextHash, isBack);
   return result;
 }
 
@@ -148,10 +242,13 @@ export function wireRoute() {
 }
 
 /**
- * Re-rota quando o hash da URL muda.
+ * Re-rota quando o hash da URL muda e marca retornos pelo histórico (`popstate`).
  *
  * @returns {void}
  */
 export function setupHashchangeListener() {
+  window.addEventListener("popstate", () => {
+    pendingPopHash = currentRouteHash();
+  });
   window.addEventListener("hashchange", () => routeImpl());
 }

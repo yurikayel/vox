@@ -1,7 +1,7 @@
 # Replicação por grau de amizade (v0)
 
 > **Status:** aceita (não implementada) · **Owner:** mantenedor · **Revisado:** 2026-11-09
-> Relacionados: [mídia v2](./midia-v2.md), [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md), REV-15 (guardião na tomada), `client/js/supporter-mode.js`, `client/js/moderation.js`.
+> Relacionados: [mídia v2](./midia-v2.md), [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md), [árvore do repasse (PM-106)](./arvore-repasse-pm106.md), REV-15 (guardião na tomada), `client/js/supporter-mode.js`, `client/js/moderation.js`.
 
 ## Ideia
 
@@ -72,3 +72,11 @@ O que já está no aparelho funciona sem internet. Conteúdo novo chega quando d
 ## Métrica do piloto
 
 **Porcentagem de posts acessíveis com o autor offline** 1 h, 6 h e 24 h depois de publicados. Se sobe conforme a rede se adensa, o modelo funciona. É também a métrica do marco M2 da proposta ao NLnet.
+
+## Simulador de cota (CLI REV-11 / PM-74)
+
+`scripts/replication-quota-sim.mjs` simula offline expiração por TTL, filtro de grau e despejo por subcota de vídeo e cota global; testes em `tests/replication-quota-sim.test.js` (`node --test tests/replication-quota-sim.test.js`). Regras do simulador:
+
+- **Ordem:** expira por TTL (`ttlMs` do item ou `defaultTtlMs`, sempre > 0; 0 é rejeitado), remove grau acima de `maxDegree`, despeja até caber na subcota de vídeo e depois no teto global.
+- **`pinned`:** isenta de expiração e de `degree_exceeded`, mas **não** de despejo por cota; na cota só muda a prioridade (grau 0 fixado é o último a sair; grau ≥ 1 fixado sai antes do grau 0 não fixado).
+- **Determinismo:** sem aleatoriedade e sem grafo social; desempate por grau (maior sai primeiro), data e id.

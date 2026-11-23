@@ -18,6 +18,7 @@ import {
   republicarFromMenu,
   apoiarFromMenu,
   marcarFromMenu,
+  ouvirFromMenu,
 } from "./post-more-actions.js";
 import { createFocusTrap } from "../render/focus-trap.js";
 
@@ -30,6 +31,7 @@ const SHEET_ITEMS_HTML = `
   <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
   <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
   <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
+  <button type="button" class="post-more-sheet-item" data-action="listen">Ouvir post</button>
   <button type="button" class="post-more-sheet-item" data-action="repost">Republicar</button>
   <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
   <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
@@ -41,6 +43,11 @@ const SHEET_ITEMS_HTML = `
   <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-action="cancel">Cancelar</button>
 `;
 
+/**
+ * Cria a folha do menu "mais" do post se ainda não existe e devolve a raiz.
+ *
+ * @returns {HTMLElement}
+ */
 function ensurePostMoreSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -63,6 +70,12 @@ let wired = false;
 /** @type {ReturnType<typeof createFocusTrap>|null} */
 let sheetTrap = null;
 
+/**
+ * Abre ou fecha a folha do menu e ajusta os atributos de acessibilidade.
+ *
+ * @param {HTMLElement} sheet Raiz da folha.
+ * @param {boolean} open Aberta.
+ */
 function setSheetOpen(sheet, open) {
   if (open) {
     sheet.hidden = false;
@@ -77,6 +90,12 @@ function setSheetOpen(sheet, open) {
   }
 }
 
+/**
+ * Monta o link permanente do post.
+ *
+ * @param {string} topicId Identificador do tópico.
+ * @returns {string}
+ */
 function postPermalink(topicId) {
   const origin =
     typeof window !== "undefined" && window.location?.origin
@@ -120,6 +139,11 @@ export function openPostMoreMenu(ctx, openerEl) {
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
 
+/**
+ * Compartilha o post da folha, exceto se estiver em quarentena.
+ *
+ * @param {object} ctx Contexto do post aberto.
+ */
 async function shareSheetPost(ctx) {
   if (!mod.canEchoPost(ctx.postId)) {
     share.showToast(mod.QUARANTINE_HINT);
@@ -128,7 +152,18 @@ async function shareSheetPost(ctx) {
   await share.shareTopic({ title: ctx.title || "Post no Vox", topicId: ctx.postId });
 }
 
+/**
+ * Trata as ações sociais da folha (ouvir, salvar e afins); devolve se tratou.
+ *
+ * @param {string} action Ação escolhida.
+ * @param {object} ctx Contexto do post aberto.
+ * @returns {Promise<boolean>}
+ */
 async function onSocialSheetAction(action, ctx) {
+  if (action === "listen") {
+    ouvirFromMenu(ctx);
+    return true;
+  }
   if (action === "save") {
     toggleSaveFromMenu(ctx.postId);
     return true;
@@ -148,6 +183,11 @@ async function onSocialSheetAction(action, ctx) {
   return false;
 }
 
+/**
+ * Copia o link do post para a área de transferência.
+ *
+ * @param {string} postId Post.
+ */
 async function copyPostLink(postId) {
   const url = postPermalink(postId);
   try {
@@ -158,6 +198,11 @@ async function copyPostLink(postId) {
   }
 }
 
+/**
+ * Abre o QR do link do post, exceto se estiver em quarentena.
+ *
+ * @param {object} ctx Contexto do post aberto.
+ */
 function handleQrAction(ctx) {
   if (!mod.canEchoPost(ctx.postId)) {
     share.showToast(mod.QUARANTINE_HINT);
@@ -166,6 +211,13 @@ function handleQrAction(ctx) {
   openQrUrlSheet(share.topicShareUrl(ctx.postId));
 }
 
+/**
+ * Trata as ações de navegação e compartilhamento da folha; devolve se tratou.
+ *
+ * @param {string} action Ação escolhida.
+ * @param {object} ctx Contexto do post aberto.
+ * @returns {Promise<boolean>}
+ */
 async function onNavigationOrShareAction(action, ctx) {
   if (action === "about-account" && ctx.authorRoute) {
     window.location.hash = `#/u/${encodeURIComponent(ctx.authorRoute)}`;
@@ -218,6 +270,11 @@ async function openMediation(ctx) {
   location.hash = buildMediationDmHash(moderator, { postId: ctx.postId, communityId });
 }
 
+/**
+ * Fecha o menu e executa a ação escolhida sobre o post aberto.
+ *
+ * @param {string} action Ação escolhida.
+ */
 async function onSheetAction(action) {
   const ctx = activeContext;
   closePostMoreMenu();
@@ -238,22 +295,52 @@ async function onSheetAction(action) {
   if (action === "embed") share.showToast("Incorporar — em breve.");
 }
 
+/**
+ * Texto do post a partir do botão, do botão de copiar ou do corpo do cartão.
+ *
+ * @param {HTMLElement} openBtn Botão que abriu o menu.
+ * @returns {string}
+ */
+function extractPostText(openBtn) {
+  if (openBtn.dataset.body) return openBtn.dataset.body;
+  const card = openBtn.closest(".post");
+  const copyBtn = card?.querySelector(".btn-copy-md");
+  if (copyBtn?.dataset.body) return copyBtn.dataset.body;
+  const bodyEl = card?.querySelector(".post-body");
+  return bodyEl?.textContent?.trim() || "";
+}
+
+/**
+ * Abre o menu "mais" a partir do botão gatilho.
+ *
+ * @param {HTMLElement} openBtn Botão gatilho.
+ * @param {Event} e Clique.
+ */
 function handlePostMoreMenuTriggerClick(openBtn, e) {
   e.preventDefault();
   e.stopPropagation();
+  const d = openBtn.dataset;
   openPostMoreMenu(
     {
-      postId: openBtn.dataset.postId || "",
-      authorRoute: openBtn.dataset.authorRoute || "",
-      title: openBtn.dataset.title || "",
-      isOwn: openBtn.dataset.isOwn === "1",
-      hasImage: openBtn.dataset.hasImage === "1",
-      pix: openBtn.dataset.pix || "",
+      postId: d.postId || "",
+      communityId: d.communityId || "",
+      authorRoute: d.authorRoute || "",
+      title: d.title || "",
+      body: extractPostText(openBtn),
+      isOwn: d.isOwn === "1",
+      hasImage: d.hasImage === "1",
+      pix: d.pix || "",
     },
     openBtn,
   );
 }
 
+/**
+ * Trata o clique no documento: gatilho do menu ou ação dentro da folha.
+ *
+ * @param {Event} e Clique delegado.
+ * @returns {*}
+ */
 function handlePostMoreMenuDocumentClick(e) {
   const openBtn = e.target.closest(".btn-post-more-menu");
   if (openBtn) return handlePostMoreMenuTriggerClick(openBtn, e);

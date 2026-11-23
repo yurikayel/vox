@@ -4,8 +4,8 @@ Testes unitários para o Vox Relay Desktop (server.py).
 Biblioteca padrão Python (unittest).
 """
 
-import json
 import hashlib
+import json
 import os
 import shutil
 import tempfile
@@ -17,13 +17,11 @@ from http.server import HTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
-from relay import server
+from relay import blind_relay, central_memory, inbox, server
 from relay.genesis_data import GENESIS_MS
 
 # Memória central: datas depois da gênese (o servidor recusa post criado antes dela).
 T0 = GENESIS_MS
-from relay import inbox
-from relay import blind_relay
 
 
 class TestVoxRelayServer(unittest.TestCase):
@@ -109,7 +107,9 @@ class TestVoxRelayServer(unittest.TestCase):
 
     def test_options_cors(self):
         origin = "https://yurikayel.github.io"
-        req = urllib.request.Request(self._url("/health"), method="OPTIONS", headers={"Origin": origin})
+        req = urllib.request.Request(
+            self._url("/health"), method="OPTIONS", headers={"Origin": origin}
+        )
         with urllib.request.urlopen(req, timeout=2) as resp:
             self.assertEqual(resp.status, 204)
             self.assertEqual(resp.headers.get("Access-Control-Allow-Origin"), origin)
@@ -307,12 +307,14 @@ class TestVoxRelayServer(unittest.TestCase):
         self.assertEqual(server.INTEGRITY_FAILURES, failures_before + 1)
 
     def test_transaction_route_never_returns_corrupt_cache_body(self):
-        for index, (suffix, sidecar_value, mutate_payload) in enumerate((
-            ("missing", None, False),
-            ("invalid", "not-a-digest", False),
-            ("mismatch", "0" * 64, False),
-            ("changed", None, True),
-        )):
+        for index, (suffix, sidecar_value, mutate_payload) in enumerate(
+            (
+                ("missing", None, False),
+                ("invalid", "not-a-digest", False),
+                ("mismatch", "0" * 64, False),
+                ("changed", None, True),
+            )
+        ):
             with self.subTest(case=suffix):
                 tx_id = "Z" + chr(ord("A") + index) * 42
                 payload = f"private-invalid-tx-{suffix}".encode("ascii")
@@ -732,7 +734,6 @@ class TestVoxRelayServer(unittest.TestCase):
         h.headers = {"Content-Length": None}
         self.assertEqual(h._get_content_length(), 0)
 
-
     def test_cache_dir_resolution_and_custom_env(self):
         default_dir = server.resolve_cache_dir({})
         self.assertTrue(str(default_dir).endswith(".cache"))
@@ -753,6 +754,31 @@ class TestVoxRelayServer(unittest.TestCase):
         from_cache = inbox.resolve_inbox_dir({"VOX_RELAY_CACHE_DIR": "/tmp/custom_cache"})
         self.assertEqual(str(from_cache), str(Path("/tmp/custom_cache/inbox").resolve()))
 
+    def _seed_timed_cache_entry(self, path, data, age_offset):
+        server.write_cache_entry(path, data)
+        target_time = time.time() - age_offset
+        os.utime(path, (target_time, target_time))
+
+    def _assert_lru_eviction(self, f1, f2, f3):
+        self.assertFalse(f1.exists(), "Arquivo f1 mais antigo deve ter sido expurgado")
+        self.assertFalse(
+            server.cache_hash_path(f1).exists(), "Sidecar da entrada expurgada deve sair junto"
+        )
+        self.assertTrue(f2.exists(), "Arquivo f2 mais recente deve ter sido preservado")
+        self.assertTrue(
+            server.cache_hash_path(f2).exists(), "Sidecar da entrada recente deve permanecer"
+        )
+        self.assertTrue(f3.exists(), "Nova entrada deve ser gravada após a eviction")
+        self.assertTrue(
+            server.cache_hash_path(f3).exists(), "Sidecar da nova entrada deve ser gravado"
+        )
+        expected_bytes = sum(
+            path.stat().st_size
+            for path in (f2, server.cache_hash_path(f2), f3, server.cache_hash_path(f3))
+        )
+        self.assertEqual(server.cache_dir_bytes(), expected_bytes)
+        self.assertLessEqual(server.cache_dir_bytes(), 1024 * 1024)
+
     def test_lru_cache_eviction_under_quota(self):
         prev = os.environ.get("VOX_RELAY_MAX_CACHE_MB")
         test_cache = Path(self.temp_dir) / "evict_test"
@@ -766,31 +792,18 @@ class TestVoxRelayServer(unittest.TestCase):
 
             # Cria entrada 1 antiga (conteúdo + sidecar SHA-256, 500 KB)
             f1 = test_cache / ("1" * 43)
-            server.write_cache_entry(f1, b"X" * (500 * 1024))
-            os.utime(f1, (time.time() - 200, time.time() - 200))
+            self._seed_timed_cache_entry(f1, b"X" * (500 * 1024), 200)
 
             # Cria entrada 2 recente (conteúdo + sidecar SHA-256, 400 KB)
             f2 = test_cache / ("2" * 43)
-            server.write_cache_entry(f2, b"Y" * (400 * 1024))
-            os.utime(f2, (time.time() - 100, time.time() - 100))
+            self._seed_timed_cache_entry(f2, b"Y" * (400 * 1024), 100)
 
             # A gravação deve remover a entrada LRU como par antes de persistir a nova.
             f3 = test_cache / ("3" * 43)
             accepted = server.store_cache_entry_with_quota(f3, b"Z" * (300 * 1024))
 
             self.assertTrue(accepted, "Nova entrada deve caber após eviction da entrada LRU")
-            self.assertFalse(f1.exists(), "Arquivo f1 mais antigo deve ter sido expurgado")
-            self.assertFalse(server.cache_hash_path(f1).exists(), "Sidecar da entrada expurgada deve sair junto")
-            self.assertTrue(f2.exists(), "Arquivo f2 mais recente deve ter sido preservado")
-            self.assertTrue(server.cache_hash_path(f2).exists(), "Sidecar da entrada recente deve permanecer")
-            self.assertTrue(f3.exists(), "Nova entrada deve ser gravada após a eviction")
-            self.assertTrue(server.cache_hash_path(f3).exists(), "Sidecar da nova entrada deve ser gravado")
-            expected_bytes = sum(
-                path.stat().st_size
-                for path in (f2, server.cache_hash_path(f2), f3, server.cache_hash_path(f3))
-            )
-            self.assertEqual(server.cache_dir_bytes(), expected_bytes)
-            self.assertLessEqual(server.cache_dir_bytes(), 1024 * 1024)
+            self._assert_lru_eviction(f1, f2, f3)
         finally:
             server.CACHE_DIR = orig
             if prev is None:
@@ -851,9 +864,25 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(data["epoch"], 3)
             self.assertEqual(data["snapshot"], "YJS_V2_SNAPSHOT_BASE64")
 
-    def test_central_memory_ingest_sync_and_crash_restart_persistence(self):
-        from relay import central_memory
+    def _verify_crash_and_corruption_recovery(self, mem_dir, blob_hash):
+        # Simula queda e reinício do processo limpando cache em memória
+        central_memory.set_memory_dir(mem_dir)
+        reloaded = central_memory.load_state(force_reload=True)
+        self.assertIn("top_persist_001", reloaded["posts"])
+        self.assertIn("rep_persist_002", reloaded["posts"])
+        self.assertIn("vx_alice123", reloaded["profiles"])
 
+        # Simula corrupção do state.json para validar fallback automático via state.json.bak
+        (mem_dir / "state.json").write_text("{corrupted_json", encoding="utf-8")
+        recovered = central_memory.load_state(force_reload=True)
+        self.assertIn("top_persist_001", recovered["posts"])
+
+        with urllib.request.urlopen(self._url(f"/memory/blob/{blob_hash}"), timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            blob_data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(blob_data["hash"], blob_hash)
+
+    def test_central_memory_ingest_sync_and_crash_restart_persistence(self):
         mem_dir = Path(self.temp_dir) / "zero_central_memory_test"
         central_memory.set_memory_dir(mem_dir)
         post_item = {
@@ -879,7 +908,7 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertTrue(res["changed"])
             self.assertEqual(res["counts"]["posts"], 1)
 
-        blob_hash = hashlib.sha256(bytes(3)).hexdigest()  # "AAAA" em base64 = 3 bytes zero; o relay confere o hash
+        blob_hash = hashlib.sha256(bytes(3)).hexdigest()  # "AAAA" em base64 = 3 bytes zero
         sync_payload = {
             "posts": [
                 {
@@ -892,7 +921,14 @@ class TestVoxRelayServer(unittest.TestCase):
                 }
             ],
             "profiles": [{"routeId": "vx_alice123", "name": "Alice", "updatedAt": T0 + 1000}],
-            "blobs": [{"hash": blob_hash, "mime": "image/png", "byteLength": 12, "data": "data:image/png;base64,AAAA"}],
+            "blobs": [
+                {
+                    "hash": blob_hash,
+                    "mime": "image/png",
+                    "byteLength": 12,
+                    "data": "data:image/png;base64,AAAA",
+                }
+            ],
         }
         sync_req = urllib.request.Request(
             self._url("/memory/sync"),
@@ -907,24 +943,8 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(synced["counts"]["profiles"], 1)
             self.assertEqual(synced["counts"]["blobs"], 1)
 
-        # Simula queda e reinício do processo limpando cache em memória
-        central_memory.set_memory_dir(mem_dir)
-        reloaded = central_memory.load_state(force_reload=True)
-        self.assertIn("top_persist_001", reloaded["posts"])
-        self.assertIn("rep_persist_002", reloaded["posts"])
-        self.assertIn("vx_alice123", reloaded["profiles"])
-
-        # Simula corrupção do state.json para validar fallback automático via state.json.bak
-        (mem_dir / "state.json").write_text("{corrupted_json", encoding="utf-8")
-        recovered = central_memory.load_state(force_reload=True)
-        self.assertIn("top_persist_001", recovered["posts"])
-
-        with urllib.request.urlopen(self._url(f"/memory/blob/{blob_hash}"), timeout=2) as resp:
-            self.assertEqual(resp.status, 200)
-            blob_data = json.loads(resp.read().decode("utf-8"))
-            self.assertEqual(blob_data["hash"], blob_hash)
+        self._verify_crash_and_corruption_recovery(mem_dir, blob_hash)
 
 
 if __name__ == "__main__":
     unittest.main()
-

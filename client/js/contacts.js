@@ -2,6 +2,10 @@
 
 const STORAGE_KEY = "vox-contacts-v1";
 
+/**
+ * Lê a lista de contatos do `localStorage`; se falhar, devolve lista vazia.
+ * @returns {object[]} Contatos.
+ */
 function loadRaw() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -11,6 +15,10 @@ function loadRaw() {
   }
 }
 
+/**
+ * Grava a lista de contatos no `localStorage`; se falhar, segue sem gravar.
+ * @param {object[]} list Contatos
+ */
 function saveRaw(list) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));

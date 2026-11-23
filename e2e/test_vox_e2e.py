@@ -245,6 +245,8 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
         self.assertNotIn("IA Local", chronicle)
         self.assertNotIn("Sabiá", chronicle)
         self._roll_until_at_least(page, 15)
+        # A mini-grade 5×5 fica num <details> fechado desde o redesenho da Mesa: abrir antes de clicar no altar.
+        page.locator("details[data-dungeon-details='legacy-grid'] > summary").click()
         page.locator("button[data-dungeon='grid-cell'][data-x='3'][data-y='1']").click()
         page.locator(".dungeon-unlocked-banner").wait_for(state="visible", timeout=10000)
         self.assertIn("Aberto com 3 de 5 partes", page.locator(".dungeon-unlocked-banner").inner_text())
@@ -261,6 +263,8 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
             self.assertIn("Floresta de Vidro", page.locator(".dungeon-scene-caption h1").inner_text())
             page.locator(".dungeon-topnav a[href^='#/dungeon/ficha/']").click()
             page.locator("button[data-dungeon='spend-10']").click()
+            # O teste de saldo negativo mora na "Auditoria Técnica", um <details> fechado por padrão.
+            page.locator("details[data-dungeon-details='sheet-audit'] > summary").click()
             page.locator("button[data-dungeon='test-overdraft']").click()
             self.assertIn("Saldo Negativo", page.locator(".dungeon-alert-warn").inner_text())
             page.locator("button[data-dungeon='confirm-lore']").first.click()

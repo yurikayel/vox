@@ -3,6 +3,11 @@
  * Parser puro de `location.hash` e query `?h=` / `?labs=` — sem DOM side effects.
  */
 
+/**
+ * Lê da query string (`?h=`, `?labs=`) a rota pedida por link direto.
+ *
+ * @returns {object|null}
+ */
 function parseSearchHints() {
   if (typeof window === "undefined" || !window.location?.search) return null;
   const q = new URLSearchParams(window.location.search);
@@ -13,6 +18,12 @@ function parseSearchHints() {
   return null;
 }
 
+/**
+ * Interpreta as rotas `#/labs/...`.
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @returns {object|null}
+ */
 function parseLabsHash(parts) {
   if (parts[0] !== "labs") return null;
   if (parts[1] === "mofn") return { name: "labs-mofn" };
@@ -21,6 +32,12 @@ function parseLabsHash(parts) {
   return null;
 }
 
+/**
+ * Interpreta as rotas `#/dungeon/...` (mesa e entrada).
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @returns {object|null}
+ */
 function parseDungeonRoute(parts) {
   if (parts[0] !== "dungeon") return null;
   const sub = (parts[1] || "").toLowerCase();
@@ -32,6 +49,12 @@ function parseDungeonRoute(parts) {
   return { name: "dungeon", screen: "acampamento" };
 }
 
+/**
+ * Interpreta as rotas `#/settings/...`; o padrão é a rede.
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @returns {object|null}
+ */
 function parseSettingsRoute(parts) {
   if (parts[0] !== "settings") return null;
   if (parts[1] === "linked-accounts") return { name: "linked-accounts" };
@@ -51,6 +74,13 @@ const COMMUNITY_TAB_MAP = {
   online: "members",
 };
 
+/**
+ * Resolve a aba da comunidade pela query ou pelo subcaminho; o padrão é `posts`.
+ *
+ * @param {string} subPath Subcaminho da rota.
+ * @param {string} rawQueryTab Aba pedida na query.
+ * @returns {string}
+ */
 function resolveCommunityTab(subPath, rawQueryTab) {
   const qTab = (rawQueryTab || "").toLowerCase();
   if (COMMUNITY_TAB_MAP[qTab]) return COMMUNITY_TAB_MAP[qTab];
@@ -58,6 +88,13 @@ function resolveCommunityTab(subPath, rawQueryTab) {
   return COMMUNITY_TAB_MAP[sPath] || "posts";
 }
 
+/**
+ * Interpreta as rotas `#/c/<comunidade>/...`.
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @param {URLSearchParams} query Query do hash.
+ * @returns {object|null}
+ */
 function parseCommunityRoute(parts, query) {
   if (parts[0] !== "c" || !parts[1]) return null;
   if (parts[2] === "avisos") return { name: "community-avisos", communityId: decodeURIComponent(parts[1]) };
@@ -87,6 +124,13 @@ const COMPOSE_WITH_COMMUNITY = {
   aviso: "compose-aviso",
 };
 
+/**
+ * Interpreta as rotas `#/compose/...`.
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @param {URLSearchParams} query Query do hash.
+ * @returns {object|null}
+ */
 function parseComposeRoute(parts, query) {
   if (parts[0] !== "compose") return null;
   const sub = parts[1] || "";
@@ -98,11 +142,25 @@ function parseComposeRoute(parts, query) {
   return { name: COMPOSE_WITH_COMMUNITY[sub], communityId: query.get("c") || "" };
 }
 
+/**
+ * Interpreta o parâmetro do perfil: `@handle` ou rota.
+ *
+ * @param {string} rawParam Parâmetro cru da rota.
+ * @param {URLSearchParams} query Query do hash.
+ * @returns {object}
+ */
 function parseUserProfileRoute(rawParam, query) {
   if (rawParam.startsWith("@")) return { name: "handle-lookup", slug: rawParam.slice(1) };
   return { name: "profile", address: rawParam, tab: (query.get("tab") || "posts").toLowerCase() };
 }
 
+/**
+ * Interpreta rotas com uma entidade (tópico, perfil, mensagens e afins).
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @param {URLSearchParams} query Query do hash.
+ * @returns {object|null}
+ */
 function parseEntityRoute(parts, query) {
   const [root, param] = parts;
   if (!param) {
@@ -139,9 +197,16 @@ const STATIC_ROUTES = {
   "revolução": () => ({ name: "revolucao" }),
 };
 
+/**
+ * Interpreta as rotas estáticas (pessoas, ajustes e afins).
+ *
+ * @param {string[]} parts Segmentos do hash.
+ * @param {URLSearchParams} query Query do hash.
+ * @returns {object|null}
+ */
 function parseStaticRoute(parts, query) {
   const root = parts[0];
-  if (STATIC_ROUTES[root]) return STATIC_ROUTES[root](parts, query);
+  if (Object.hasOwn(STATIC_ROUTES, root)) return STATIC_ROUTES[root](parts, query);
   if (root === "people" || root === "pessoas") {
     return { name: "people", query: query.get("q") || "" };
   }

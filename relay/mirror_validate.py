@@ -16,10 +16,12 @@ PIN_ROLES = frozenset({"community", "topic", "reply", "post", "blob", "index"})
 
 
 def _err(code: str, message: str) -> dict[str, str]:
+    """Monta o corpo de erro `{code, error}` devolvido ao cliente."""
     return {"code": code, "error": message}
 
 
 def _validate_pin_entry(raw: dict[str, Any]) -> tuple[bool, str | None]:
+    """Valida uma entrada de pin do espelho; devolve `(True, None)` ou `(False, motivo)`."""
     tx_id = str(raw.get("txId") or raw.get("id") or "").strip()
     if not TX_ID_RE.match(tx_id):
         return False, "txId inválido (43 caracteres base64url)."
@@ -72,7 +74,9 @@ def validate_cache_manifest_body(body: dict[str, Any]) -> tuple[bool, str | None
     return True, None
 
 
-def validate_mirror_body(raw: bytes) -> tuple[bool, dict[str, Any] | None, dict[str, str] | None, int]:
+def validate_mirror_body(
+    raw: bytes,
+) -> tuple[bool, dict[str, Any] | None, dict[str, str] | None, int]:
     """
     Retorna (ok, payload, error_json, http_status).
     http_status só é relevante quando ok é False.

@@ -100,4 +100,5 @@ O Vox adota uma terceira via soberana com os **Pix Zaps Nativos** (especificaç�
 - Intermediação financeira, custódia de valores ou split de pagamentos (o Vox não é e não será gateway bancário).
 - Impulsionamento pago de posts ou anúncios patrocinados corporativos.
 
-> Mensagens diretas E2E **já existem** (`crypto-dm.js`, inbox com TTL no relay) — ver [IDENTITY.md](../IDENTITY.md) e [docs/FEATURES.md](../FEATURES.md).
+> Mensagens diretas E2E **já existem** (`crypto-dm.js`, inbox com TTL no relay) — ver [IDENTITY.md](../IDENTITY.md) e [docs/FEATURES.md](../FEATURES.md).  
+> Garantias públicas de conta e comunicação externa: [Garantia da Praça (PM-104)](./garantia-da-praca-pm104.md) · [Página de Apresentação & Kit de Imprensa (LAN-35)](./kit-imprensa-apresentacao-lan35.md).

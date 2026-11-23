@@ -138,8 +138,7 @@ test("kit-genesis - gera ID criptográfico e valida formato customizado", () => 
   );
 });
 
-test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", () => {
-  // Proíbe abrir leitura a convidados se o kit restringe (Sindicato tem allowGuestRead: false)
+function assertKitNoDowngradeThrows() {
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-sindicato", {
@@ -149,7 +148,6 @@ test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", ()
     /Não é permitido abrir leitura pública/
   );
 
-  // Proíbe desativar flags de proteção obrigatórias do kit
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-sindicato", {
@@ -159,7 +157,6 @@ test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", ()
     /Não é permitido desativar proteção obrigatória/
   );
 
-  // Proíbe bypass de tipo com strings ou números falsy
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-sindicato", {
@@ -168,6 +165,10 @@ test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", ()
       }),
     /deve ser estritamente booleano/
   );
+}
+
+test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", () => {
+  assertKitNoDowngradeThrows();
 
   // Proíbe minTrustScore inválido ou rebaixado
   assert.throws(

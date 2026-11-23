@@ -260,6 +260,7 @@ Arquivo sugerido: `tests/gossip-retract.test.js` (Node + mock IndexedDB como `po
 - `client/js/cache-node.js` — `saveLocalPost`, `deleteLocalPost`, `editedAt`
 - `client/js/post-ownership.js` — mutabilidade
 - `tests/post-edit-delete.test.js` — baseline edição local
+- [lapide-conta-pm101.md](./lapide-conta-pm101.md) — spec de lápide de conta (`account_tombstone` v1, PM-101)
 - Lobby `politica/lobby.md` — item Antigravity gossip retract
 
 ---

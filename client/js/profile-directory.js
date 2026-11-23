@@ -10,11 +10,17 @@ import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getLocalIdentityMeta, hasAnyIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 import { detectSocialAvatarType } from "./account-social-match.js";
+import { dedupeAsync } from "./shared/async-dedupe.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 const FORBIDDEN_CARD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 let profileMemorySink = null;
 
+/**
+ * Diz se o id pode ser chave de cartão (não é nome perigoso).
+ * @param {string} id Id
+ * @returns {boolean} `true` se for seguro.
+ */
 function isSafeCardKey(id) {
   return Boolean(id) && !FORBIDDEN_CARD_KEYS.has(id);
 }
@@ -26,6 +32,10 @@ export function registerProfileMemorySink(fn) {
   profileMemorySink = typeof fn === "function" ? fn : null;
 }
 
+/**
+ * Lê do `localStorage` o mapa de cartões.
+ * @returns {Map<string, object>} Cartões por id.
+ */
 function loadCardsMap() {
   try {
     const raw = localStorage.getItem(CARDS_KEY);
@@ -38,6 +48,10 @@ function loadCardsMap() {
   }
 }
 
+/**
+ * Grava no `localStorage` o mapa de cartões.
+ * @param {Map<string, object>} cardsMap Cartões por id
+ */
 function saveCardsMap(cardsMap) {
   try {
     localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(cardsMap)));
@@ -46,6 +60,11 @@ function saveCardsMap(cardsMap) {
   }
 }
 
+/**
+ * Normaliza o avatar da Meta (query só quando identifica a conta).
+ * @param {URL} url Endereço do avatar
+ * @returns {string} Base normalizada.
+ */
 function normalizeMetaAvatarBase(url) {
   // Links do Facebook identificam a conta por query (?psid=/asid=); sem isso todos colidiriam.
   const base = `${url.origin}${url.pathname}`;
@@ -53,6 +72,11 @@ function normalizeMetaAvatarBase(url) {
 }
 
 // Provedor pelo host da URL (detectSocialAvatarType), nunca por trecho: "https://x.example/?a=fbcdn.net" fica inteira.
+/**
+ * Normaliza o avatar de rede social para comparação.
+ * @param {string} av Avatar
+ * @returns {string} Base normalizada.
+ */
 function normalizeSocialAvatarBase(av) {
   const clean = String(av || "").trim();
   const type = detectSocialAvatarType(clean);
@@ -92,6 +116,13 @@ export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName
   if (changed) saveCardsMap(cards);
 }
 
+/**
+ * Diz se o cartão é apelido (alias) do mesmo perfil pelo endereço Arweave.
+ * @param {object} c Cartão existente
+ * @param {string} id Id do cartão novo
+ * @param {object} nextCard Cartão novo
+ * @returns {boolean} `true` se for apelido.
+ */
 function isAliasProfileCard(c, id, nextCard) {
   if (c?.arweaveAddress && (c.arweaveAddress === id || c.arweaveAddress === nextCard.arweaveAddress)) {
     return true;
@@ -99,6 +130,12 @@ function isAliasProfileCard(c, id, nextCard) {
   return Boolean(c?.onChainTxId && nextCard.onChainTxId && c.onChainTxId === nextCard.onChainTxId);
 }
 
+/**
+ * Remove cartões que conflitam com a identidade do cartão novo.
+ * @param {Map<string, object>} cards Cartões
+ * @param {string} id Id do cartão novo
+ * @param {object} nextCard Cartão novo
+ */
 function pruneConflictingIdentityCards(cards, id, nextCard) {
   for (const [otherId, c] of Array.from(cards.entries())) {
     if (otherId === id) continue;
@@ -175,6 +212,11 @@ export function hasChosenCardName(card) {
 
 // Só sai do aparelho cartão com nome escolhido: conta só com a chave é a descartável que suja a rede.
 // O próprio cartão também não sai quando a pessoa desligou "aparecer na malha".
+/**
+ * Diz se o cartão pode ser compartilhado com a malha.
+ * @param {object} card Cartão
+ * @returns {boolean} `true` se pode.
+ */
 function isShareableCard(card) {
   if (!hasChosenCardName(card)) return false;
   return card.routeId !== localAccount.getCachedRouteIdSync() || localAccount.getMeshDiscoverable();
@@ -222,6 +264,11 @@ export function __resetProfileCardsForTests() {
   }
 }
 
+/**
+ * Resolve o nome exibido do perfil.
+ * @param {object} args Dados (`id`, `card`, `mockProf`, `myId`, `enrich`)
+ * @returns {string} Nome.
+ */
 function resolveDisplayName({ id, card, mockProf, myId, enrich }) {
   if (myId === id) {
     const selfName = localAccount.getDisplayName();
@@ -236,6 +283,11 @@ function resolveDisplayName({ id, card, mockProf, myId, enrich }) {
   return id.slice(0, 12);
 }
 
+/**
+ * Resolve o avatar do perfil.
+ * @param {object} args Dados (`id`, `card`, `enrich`, `mockProf`)
+ * @returns {string} Avatar.
+ */
 function resolveAvatar({ id, card, enrich, mockProf }) {
   if (card?.avatarUrl) return card.avatarUrl;
   if (card?.avatar) return card.avatar;
@@ -244,12 +296,22 @@ function resolveAvatar({ id, card, enrich, mockProf }) {
   return mock.getAuthorAvatar(id) || "";
 }
 
+/**
+ * Resolve o handle do perfil.
+ * @param {object} args Dados (`id`, `card`, `mockProf`)
+ * @returns {string} Handle, ou texto vazio.
+ */
 function resolveHandle({ id, card, mockProf }) {
   if (card?.handle) return card.handle;
   if (mockProf?.handle) return mockProf.handle;
   return mock.getAuthorHandle(id) || "";
 }
 
+/**
+ * Resolve a bio do perfil.
+ * @param {object} args Dados (`card`, `enrich`, `mockProf`)
+ * @returns {string} Bio, ou texto vazio.
+ */
 function resolveBio({ card, enrich, mockProf }) {
   if (card?.bio) return card.bio;
   if (enrich?.bio) return enrich.bio;
@@ -257,11 +319,21 @@ function resolveBio({ card, enrich, mockProf }) {
   return "";
 }
 
+/**
+ * Resolve o texto de apresentação (README) do perfil.
+ * @param {object} args Dados (`id`, `mockProf`)
+ * @returns {string} Texto, ou vazio.
+ */
 function resolveReadme({ id, mockProf }) {
   if (mockProf?.readme) return mockProf.readme;
   return mock.getAuthorReadme(id) || "";
 }
 
+/**
+ * Resolve os metadados de identidade do perfil.
+ * @param {object} args Dados (`id`, `card`, `mockProf`, `myId`)
+ * @returns {object} Metadados.
+ */
 function resolveIdentityMeta({ id, card, mockProf, myId }) {
   if (myId && myId === id) {
     const local = getLocalIdentityMeta(id);
@@ -346,13 +418,12 @@ export function getAuthorAvatarSync(routeId) {
   return "";
 }
 
-/** Busca AndCacheOnChainProfile nos gateways configurados.
- * @param {*} [target] Parâmetro `target`.
- * @returns {*} Resultado da operação.
+/**
+ * Busca o cartão do perfil na rede e o guarda no diretório local.
+ * @param {string} id Id de rota ou endereço
+ * @returns {Promise<object|null>} Cartão, ou `null`.
  */
-export async function fetchAndCacheOnChainProfile(target) {
-  const id = String(target || "").trim();
-  if (!id) return null;
+async function loadAndCacheOnChainProfile(id) {
   const isRoute = id.startsWith("vx_");
   const gql = await import("./graphql.js");
   const onChain = await gql.fetchProfileCardOnChain(isRoute ? { routeId: id } : { address: id });
@@ -370,8 +441,16 @@ export async function fetchAndCacheOnChainProfile(target) {
 
   const key = onChain.routeId || id;
   setProfileCard(key, cardData);
-  if (onChain.owner && onChain.routeId) {
-    setProfileCard(onChain.owner, cardData);
-  }
+  if (onChain.owner && onChain.routeId) setProfileCard(onChain.owner, cardData);
   return { routeId: key, ...cardData };
+}
+
+/** Busca AndCacheOnChainProfile nos gateways configurados (deduplicando chamadas concorrentes).
+ * @param {*} [target] Parâmetro `target`.
+ * @returns {*} Resultado da operação.
+ */
+export async function fetchAndCacheOnChainProfile(target) {
+  const id = String(target || "").trim();
+  if (!id) return null;
+  return dedupeAsync(`profile-onchain:${id}`, () => loadAndCacheOnChainProfile(id));
 }

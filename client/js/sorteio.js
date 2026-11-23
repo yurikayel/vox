@@ -32,6 +32,11 @@ export const ROSTER_MAX = 500;
 const HEX64 = /^[0-9a-f]{64}$/;
 const ROUTE_RE = /^[A-Za-z0-9_-]{3,80}$/;
 
+/**
+ * Calcula o SHA-256 de um texto em hexadecimal.
+ * @param {string} text Texto
+ * @returns {Promise<string>} Resumo em hexadecimal.
+ */
 async function sha256Hex(text) {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text)));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -138,10 +143,21 @@ export function buildReveal(sorteio, secret, now = Date.now()) {
   return { type: REVEAL_TYPE, communityId: sorteio.communityId, sorteioId: sorteio.id, secret: String(secret), ts: now };
 }
 
+/**
+ * Diz se o item é um compromisso válido do sorteio.
+ * @param {object} c Item
+ * @param {object} sorteio Sorteio
+ * @returns {boolean} `true` se for.
+ */
 function isCommitFor(c, sorteio) {
   return c?.type === COMMIT_TYPE && c.sorteioId === sorteio.id && HEX64.test(String(c.commit)) && ROUTE_RE.test(String(c.author));
 }
 
+/**
+ * Fica com o item mais recente de cada autor.
+ * @param {object[]} items Itens
+ * @returns {Map<string, object>} Último item por autor.
+ */
 function latestByAuthor(items) {
   const latest = new Map();
   for (const it of items) {
@@ -151,6 +167,12 @@ function latestByAuthor(items) {
   return latest;
 }
 
+/**
+ * Diz se o item foi publicado pela moderação da comunidade.
+ * @param {object} item Item
+ * @param {object} meta Dono e moderadores da comunidade
+ * @returns {boolean} `true` se for da moderação.
+ */
 const byModeration = (item, meta) => isModerator(String(item?.author || ""), meta?.owner, meta?.moderators);
 
 /**
@@ -238,6 +260,12 @@ export async function pickWinners(roster, seats, seed) {
   return chosen;
 }
 
+/**
+ * Separa os participantes apurados dos ignorados (fora da lista revelada).
+ * @param {Map<string, object>} valid Participantes válidos
+ * @param {object} tally Apuração
+ * @returns {{kept: Map<string, object>, ignored: string[]}} Mantidos e ignorados.
+ */
 function tallied(valid, tally) {
   const listed = new Set(decodeRoster(tally.revealed));
   const kept = new Map([...valid].filter(([a]) => listed.has(a)));

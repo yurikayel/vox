@@ -81,14 +81,26 @@ export function formatRelayHealthSummary(data) {
   return `${n} espelho(s)`;
 }
 
+/**
+ * Lê os campos do passo 1 do assistente (compromisso).
+ * @returns {object} Dados do passo.
+ */
 function readStepOne() {
   return { pledge: Boolean(document.getElementById("sw-pledge")?.checked) };
 }
 
+/**
+ * Lê os campos do passo 2 do assistente (comunidade).
+ * @returns {object} Dados do passo.
+ */
 function readStepTwo() {
   return { communityId: document.getElementById("sw-community-id")?.value.trim() || "" };
 }
 
+/**
+ * Lê os campos do passo 4 do assistente (endereços do servidor).
+ * @returns {object} Dados do passo.
+ */
 function readStepFour() {
   return {
     signalingUrl: document.getElementById("sw-signaling")?.value.trim() || "",
@@ -96,6 +108,10 @@ function readStepFour() {
   };
 }
 
+/**
+ * Lê os campos do passo 5 do assistente (link da comunidade).
+ * @returns {object} Dados do passo.
+ */
 function readStepFive() {
   const cid = loadDraft().communityId || "";
   const slug = cid.replace(/^#\/c\//, "");

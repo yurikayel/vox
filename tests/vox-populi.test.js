@@ -8,7 +8,6 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "vox-populi");
-const relayDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "relay");
 
 test("vox-populi - config/vox-populi.json possui schema valido e limites de recursos", () => {
   const configPath = path.join(root, "config", "vox-populi.json");
@@ -120,6 +119,47 @@ test("vox-populi - health-check.sh calcula metricas reais e diferencia seeder de
   assert.ok(!code.includes('"storageUsedMb": 0,\n    "storageAvailableMb": 2048'), "Nao deve usar constantes fixas");
 });
 
+async function waitForRelayHealth(port, cacheDir) {
+  for (let i = 0; i < 20; i++) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/health`);
+      if (!res.ok) continue;
+      const body = await res.json();
+      if (body.status === "ok") {
+        assert.equal(body.app, "vox-relay");
+        assert.equal(path.resolve(body.cacheDir), path.resolve(cacheDir));
+        return true;
+      }
+    } catch {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+  return false;
+}
+
+async function exerciseMirrorEndpoint(port, cacheDir) {
+  const mirrorPayload = {
+    communityId: "vox-populi-lab-comm",
+    title: "Comunidade Laboratório",
+    topics: [{ id: "t100", title: "Primeiro Tópico Vox Populi" }],
+  };
+  const postRes = await fetch(`http://127.0.0.1:${port}/vox/mirror`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(mirrorPayload),
+  });
+  assert.equal(postRes.status, 200);
+
+  const writtenFile = path.join(cacheDir, "index_vox-populi-lab-comm.json");
+  assert.ok(fs.existsSync(writtenFile), "Arquivo de cache deve ser gravado no diretório configurado");
+  const writtenData = JSON.parse(fs.readFileSync(writtenFile, "utf8"));
+  assert.equal(writtenData.communityId, "vox-populi-lab-comm");
+
+  const getRes = await fetch(`http://127.0.0.1:${port}/vox/index/vox-populi-lab-comm.json`);
+  assert.equal(getRes.status, 200);
+  assert.equal(getRes.headers.get("x-vox-cache"), "HIT");
+}
+
 test("vox-populi - teste de integracao funcional em tempo de execucao (boot, cache, quota)", async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "farol_integration_"));
   const cacheDir = path.join(tempDir, "cache");
@@ -143,47 +183,11 @@ test("vox-populi - teste de integracao funcional em tempo de execucao (boot, cac
 
   try {
     // 1. Aguarda inicialização do servidor
-    let isUp = false;
-    for (let i = 0; i < 20; i++) {
-      try {
-        const res = await fetch(`http://127.0.0.1:${randomPort}/health`);
-        if (res.ok) {
-          const body = await res.json();
-          if (body.status === "ok") {
-            isUp = true;
-            assert.equal(body.app, "vox-relay");
-            assert.equal(path.resolve(body.cacheDir), path.resolve(cacheDir));
-            break;
-          }
-        }
-      } catch {
-        await new Promise((r) => setTimeout(r, 100));
-      }
-    }
+    const isUp = await waitForRelayHealth(randomPort, cacheDir);
     assert.ok(isUp, "Servidor relay deve subir e responder no endpoint /health");
 
     // 2. Exercita gravação no diretório de cache isolado (/vox/mirror)
-    const mirrorPayload = {
-      communityId: "vox-populi-lab-comm",
-      title: "Comunidade Laboratório",
-      topics: [{ id: "t100", title: "Primeiro Tópico Vox Populi" }],
-    };
-    const postRes = await fetch(`http://127.0.0.1:${randomPort}/vox/mirror`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mirrorPayload),
-    });
-    assert.equal(postRes.status, 200);
-
-    const writtenFile = path.join(cacheDir, "index_vox-populi-lab-comm.json");
-    assert.ok(fs.existsSync(writtenFile), "Arquivo de cache deve ser gravado no diretório configurado");
-    const writtenData = JSON.parse(fs.readFileSync(writtenFile, "utf8"));
-    assert.equal(writtenData.communityId, "vox-populi-lab-comm");
-
-    // 3. Lê de volta o espelho do cache
-    const getRes = await fetch(`http://127.0.0.1:${randomPort}/vox/index/vox-populi-lab-comm.json`);
-    assert.equal(getRes.status, 200);
-    assert.equal(getRes.headers.get("x-vox-cache"), "HIT");
+    await exerciseMirrorEndpoint(randomPort, cacheDir);
   } finally {
     proc.kill("SIGTERM");
     await new Promise((resolve) => {

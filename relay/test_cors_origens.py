@@ -1,4 +1,4 @@
-"""CORS do relay completo por origem (THREAT-MODEL T32): origem estranha não lê, origem do app lê."""
+"""CORS completo por origem (THREAT-MODEL T32): estranha não lê, app lê."""
 
 import json
 import os
@@ -21,7 +21,10 @@ STRANGE = (
     "https://yurikayel.github.io.evil.example",
     "https://evil.example/yurikayel.github.io",
 )
-PREFLIGHT = {"Access-Control-Request-Method": "POST", "Access-Control-Request-Private-Network": "true"}
+PREFLIGHT = {
+    "Access-Control-Request-Method": "POST",
+    "Access-Control-Request-Private-Network": "true",
+}
 
 
 class TestCorsUnit(unittest.TestCase):
@@ -32,9 +35,17 @@ class TestCorsUnit(unittest.TestCase):
             self.assertIsNone(request_guard.cors_allow_origin(origin, {}))
 
     def test_env_list_adds_exact_origins(self):
-        with patch.dict(os.environ, {"VOX_RELAY_ALLOWED_ORIGINS": "https://espelho.example, https://outro.example/"}):
-            self.assertEqual(request_guard.cors_allow_origin("https://espelho.example"), "https://espelho.example")
-            self.assertEqual(request_guard.cors_allow_origin("https://outro.example"), "https://outro.example")
+        with patch.dict(
+            os.environ,
+            {"VOX_RELAY_ALLOWED_ORIGINS": "https://espelho.example, https://outro.example/"},
+        ):
+            self.assertEqual(
+                request_guard.cors_allow_origin("https://espelho.example"),
+                "https://espelho.example",
+            )
+            self.assertEqual(
+                request_guard.cors_allow_origin("https://outro.example"), "https://outro.example"
+            )
             self.assertIsNone(request_guard.cors_allow_origin("https://evil.example"))
 
 
@@ -57,20 +68,39 @@ class TestCorsNeverEchoesTheRequest(unittest.TestCase):
             self.assertIsNone(request_guard.cors_allow_origin(origin, {}), repr(origin))
 
     def test_returns_the_configured_entry_not_the_received_text(self):
-        self.assertEqual(request_guard.cors_allow_origin("HTTPS://YuriKayel.GitHub.io/", {}), OFFICIAL[0])
+        self.assertEqual(
+            request_guard.cors_allow_origin("HTTPS://YuriKayel.GitHub.io/", {}), OFFICIAL[0]
+        )
         env = {"VOX_RELAY_ALLOWED_ORIGINS": "https://espelho.example"}
-        self.assertEqual(request_guard.cors_allow_origin("HTTPS://ESPELHO.example", env), "https://espelho.example")
-        self.assertEqual(request_guard.cors_allow_origin("HTTP://LOCALHOST:5173", {}), "http://localhost:5173")
+        self.assertEqual(
+            request_guard.cors_allow_origin("HTTPS://ESPELHO.example", env),
+            "https://espelho.example",
+        )
+        self.assertEqual(
+            request_guard.cors_allow_origin("HTTP://LOCALHOST:5173", {}), "http://localhost:5173"
+        )
 
     def test_loopback_with_path_user_or_bad_port_is_refused(self):
-        for origin in ("http://localhost/x", "http://localhost@evil.example", "http://localhost:abc", "http://localhost:99999", "ftp://localhost"):
+        for origin in (
+            "http://localhost/x",
+            "http://localhost@evil.example",
+            "http://localhost:abc",
+            "http://localhost:99999",
+            "ftp://localhost",
+        ):
             self.assertIsNone(request_guard.cors_allow_origin(origin, {}), origin)
 
 
 class TestCorsOverHttp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.limiter = patch.object(rate_limit, "LIMITER", rate_limit.RateLimiter({name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}))
+        cls.limiter = patch.object(
+            rate_limit,
+            "LIMITER",
+            rate_limit.RateLimiter(
+                {name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}
+            ),
+        )
         cls.limiter.start()
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
@@ -90,7 +120,9 @@ class TestCorsOverHttp(unittest.TestCase):
             headers["Content-Type"] = "application/json"
         url = f"http://127.0.0.1:{self.httpd.server_address[1]}{path}"
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers, method=method), timeout=3) as resp:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, data=data, headers=headers, method=method), timeout=3
+            ) as resp:
                 return resp.status, resp.headers
         except urllib.error.HTTPError as err:
             return err.code, err.headers
@@ -132,7 +164,12 @@ class TestCorsOverHttp(unittest.TestCase):
     def test_preflight_from_stranger_gets_no_grant(self):
         status, headers = self.call("OPTIONS", origin="https://evil.example", extra=PREFLIGHT)
         self.assertEqual(status, 204)
-        for name in ("Access-Control-Allow-Origin", "Access-Control-Allow-Private-Network", "Access-Control-Allow-Methods", "Access-Control-Allow-Headers"):
+        for name in (
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Private-Network",
+            "Access-Control-Allow-Methods",
+            "Access-Control-Allow-Headers",
+        ):
             self.assertIsNone(headers.get(name), name)
 
     def test_refused_write_from_stranger_is_not_readable_either(self):

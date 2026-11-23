@@ -17,6 +17,11 @@ export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
 }
 
+/**
+ * Barra de filtros da foto no compositor.
+ *
+ * @returns {string}
+ */
 function renderComposerFilterBar() {
   return `
     <div class="lofi-filter-bar" id="lofi-filter-bar">
@@ -28,6 +33,11 @@ function renderComposerFilterBar() {
     </div>`;
 }
 
+/**
+ * Barra de proporção da imagem no compositor.
+ *
+ * @returns {string}
+ */
 function renderComposerAspectBar() {
   return `
     <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
@@ -41,6 +51,11 @@ function renderComposerAspectBar() {
     </div>`;
 }
 
+/**
+ * Área de prévia do tópico no compositor.
+ *
+ * @returns {string}
+ */
 function renderComposerPreviewWrap() {
   return `
     <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap" hidden>
@@ -71,26 +86,56 @@ function renderComposerPreviewWrap() {
     </div>`;
 }
 
+/**
+ * Ícone SVG de foto.
+ *
+ * @returns {string}
+ */
 function iconMediaPhoto() {
   return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
 }
 
+/**
+ * Ícone SVG de microfone.
+ *
+ * @returns {string}
+ */
 function iconMediaMic() {
   return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`;
 }
 
+/**
+ * Ícone SVG de áudio.
+ *
+ * @returns {string}
+ */
 function iconMediaAudio() {
   return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
 }
 
+/**
+ * Ícone SVG de vídeo.
+ *
+ * @returns {string}
+ */
 function iconMediaVideo() {
   return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="2" y="5" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>`;
 }
 
+/**
+ * Ícone SVG de comunidade.
+ *
+ * @returns {string}
+ */
 function iconCommunity() {
   return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 }
 
+/**
+ * Ferramentas de anexo de mídia do compositor.
+ *
+ * @returns {string}
+ */
 function renderMediaTools() {
   return `
     <label class="inline-composer-tool" title="Foto (até 99 KB)" aria-label="Anexar foto">
@@ -118,6 +163,11 @@ function renderMediaTools() {
     </label>`;
 }
 
+/**
+ * Seletor de audiência do compositor.
+ *
+ * @returns {string}
+ */
 function renderComposerAudience() {
   return `
     <div class="inline-composer-audience">
@@ -129,6 +179,11 @@ function renderComposerAudience() {
     </div>`;
 }
 
+/**
+ * Barra de ferramentas do compositor.
+ *
+ * @returns {string}
+ */
 function renderComposerToolbar() {
   return `
     <div class="inline-composer-toolbar">
@@ -143,6 +198,11 @@ function renderComposerToolbar() {
     </div>`;
 }
 
+/**
+ * Rodapé do compositor com contador e avisos.
+ *
+ * @returns {string}
+ */
 function renderComposerMeta() {
   return `
     <div class="inline-composer-meta" aria-live="polite">

@@ -211,6 +211,11 @@ export function extractPostImage(embed) {
   return embed.thumbnail || "";
 }
 
+/**
+ * Resolve handle e nome do autor de um post do Bluesky.
+ * @param {object} [author={}] Autor do post
+ * @returns {object} Metadados do autor.
+ */
 function resolveBskyAuthorMeta(author = {}) {
   const handle = author?.handle || "bluesky";
   return {
@@ -221,6 +226,12 @@ function resolveBskyAuthorMeta(author = {}) {
   };
 }
 
+/**
+ * Resolve o id e a URL pública de um post do Bluesky.
+ * @param {object} [post={}] Post
+ * @param {string} [handle="bluesky"] Handle do autor
+ * @returns {object} Id e URL do post.
+ */
 function resolveBskyPostIdAndUrl(post = {}, handle = "bluesky") {
   const uri = String(post?.uri || "");
   const uriParts = uri.split("/");
@@ -231,6 +242,12 @@ function resolveBskyPostIdAndUrl(post = {}, handle = "bluesky") {
   };
 }
 
+/**
+ * Resolve o horário do post (data do registro, depois a indexação, depois agora).
+ * @param {object} [record={}] Registro do post
+ * @param {object} [post={}] Post
+ * @returns {number} Horário em ms.
+ */
 function resolveBskyPostTimestamp(record = {}, post = {}) {
   const tsRaw = record?.createdAt || post?.indexedAt || Date.now();
   return new Date(tsRaw).getTime();

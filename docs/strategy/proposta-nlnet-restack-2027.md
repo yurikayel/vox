@@ -104,3 +104,4 @@ O valor/hora é **decisão do mantenedor**. O exemplo usa €50/h só como base 
 
 - Anotar a data e o número da proposta na linha LAN-36 do ROADMAP.
 - O NLnet responde em semanas. Se aprovar, os marcos acima viram o plano de trabalho e os pagamentos saem por marco entregue.
+- **Trilhas relacionadas de governança e plano B:** acompanhar custos, incidentes e métricas de campo no [Relatório Trimestral "Estado da Praça" (PM-103)](./relatorio-trimestral-estado-praca-pm103.md); se houver recusa ou inelegibilidade, acionar a [Matriz de Editais Brasileiros (PM-108)](./editais-brasileiros-pm108.md); no horizonte operacional de 2028, consultar o [Preparo Eleitoral 2028 (PM-109)](../operations/preparo-eleitoral-2028-pm109.md).

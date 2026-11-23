@@ -69,6 +69,11 @@ const LISTING_STATUS_OPTIONS = [
   { key: "sold", label: "Vendido" },
 ];
 
+/**
+ * Escapa texto para uso em atributo HTML.
+ * @param {string} s Texto
+ * @returns {string} Texto escapado.
+ */
 function escapeAttr(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")

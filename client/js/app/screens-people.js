@@ -15,6 +15,11 @@ import { mountInviteCard } from "./vox-link-flow.js";
 import { rememberInviteArrival } from "../invite-arrival.js";
 import { hasPassedCantinaGate } from "./cantina-gate.js";
 
+/**
+ * Atualiza a seção de quem adicionou a pessoa; some quando há busca.
+ *
+ * @param {string} [rawQuery=""] Busca atual.
+ */
 function refreshAddedYouSection(rawQuery = "") {
   const box = document.getElementById("people-added-you-container");
   if (!box) return;
@@ -22,6 +27,11 @@ function refreshAddedYouSection(rawQuery = "") {
   box.innerHTML = q ? "" : render.renderAddedYouSection(listPendingAddedYouNotices());
 }
 
+/**
+ * Atualiza os resultados da tela de pessoas conforme a busca.
+ *
+ * @param {string} rawQuery Busca atual.
+ */
 async function updatePeopleResultsContainer(rawQuery) {
   const container = document.getElementById("people-results-container");
   if (!container) return;
@@ -33,6 +43,9 @@ async function updatePeopleResultsContainer(rawQuery) {
 }
 
 let watchingContactAdded = false;
+/**
+ * Liga uma única vez o aviso ao vivo de contato adicionado.
+ */
 function ensureContactAddedLiveListener() {
   if (watchingContactAdded || typeof document === "undefined") return;
   watchingContactAdded = true;
@@ -42,6 +55,9 @@ function ensureContactAddedLiveListener() {
   });
 }
 
+/**
+ * Liga os botões de retribuir e dispensar de quem adicionou a pessoa.
+ */
 function bindPeopleAddedYouActions() {
   const box = document.getElementById("people-added-you-container");
   box?.addEventListener("click", (e) => {

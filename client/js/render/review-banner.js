@@ -12,6 +12,12 @@ export function renderInReviewPillHtml() {
   return `<span class="badge-pill community-review-pill" title="Arquivada depois de uma denúncia: só o autor e a moderação veem até a revisão">⏳ Em revisão</span>`;
 }
 
+/**
+ * Resumo dos casos de revisão abertos, vazio se não há.
+ *
+ * @param {object[]} cases
+ * @returns {string}
+ */
 function renderCaseSummaryHtml(cases) {
   if (!cases.length) return "";
   const reasons = [...new Set(cases.map((c) => findReason(c.reason)?.label || c.reason))];
@@ -23,6 +29,14 @@ function renderCaseSummaryHtml(cases) {
   return `<p class="review-reasons">${count}: ${escapeHtml(reasons.join("; "))}</p>${graveHtml}`;
 }
 
+/**
+ * Faixa de revisão para moderadores com os casos do tópico.
+ *
+ * @param {string} topicId
+ * @param {string} communityId
+ * @param {object[]} cases
+ * @returns {string}
+ */
 function renderModeratorReviewHtml(topicId, communityId, cases) {
   const attrs = `data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(communityId)}" data-requires-entry`;
   return `${renderCaseSummaryHtml(cases)}

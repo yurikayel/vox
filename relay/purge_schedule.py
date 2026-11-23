@@ -1,11 +1,11 @@
-"""Varredura periódica de expirados do relay (inbox 72 h e canal cego 7 d) e limites de leitura de `/tx`.
+"""Varredura periódica de expirados do relay e limites de leitura de `/tx`.
 
-A limpeza antes era só preguiçosa: endereço ou canal que ninguém lê mais ficava no disco para sempre. Este módulo
-roda uma thread daemon que varre os dois diretórios a cada `VOX_RELAY_PURGE_INTERVAL_SECONDS` (padrão 900;
-`0` desliga). Cada pasta é varrida com a trava do seu módulo tomada só enquanto ela é examinada, nunca durante a
-varredura inteira.
+A limpeza antes era só preguiçosa: endereço ou canal sem leituras ficava no disco.
+Este módulo roda uma thread daemon que varre os dois diretórios a cada
+`VOX_RELAY_PURGE_INTERVAL_SECONDS` (padrão 900; `0` desliga). Cada pasta é varrida
+com a trava do seu módulo tomada só enquanto é examinada, nunca durante a varredura toda.
 
-A memória central e o cofre não têm TTL no código; não há o que varrer neles (ver `docs/specs/relay-api.md` §6).
+A memória central e o cofre não têm TTL no código; não há o que varrer neles.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def _expired(path: Path, now: float) -> bool:
 
 
 def _purge_dir(directory: Path, pattern: str, lock, now: float) -> int:
-    """Apaga os registros vencidos de uma pasta sob a trava do módulo dono; remove a pasta se esvaziar."""
+    """Apaga os registros vencidos sob a trava do módulo; remove pasta se esvaziar."""
     removed = 0
     with lock:
         for path in list(directory.glob(pattern)):
@@ -109,6 +109,7 @@ class PurgeSweeper:
     """Thread daemon que repete `purge_expired_once` até `stop()`."""
 
     def __init__(self, interval: float, sweep: Callable[[], dict] = purge_expired_once):
+        """Prepara o agendador com o intervalo (0 desliga) e a função de varredura."""
         self.interval = interval
         self._sweep = sweep
         self._stop = threading.Event()
@@ -123,6 +124,7 @@ class PurgeSweeper:
         return True
 
     def _run(self) -> None:
+        """Laço da thread: varre a cada intervalo até ser parada; falha na varredura não derruba o relay."""
         while not self._stop.wait(self.interval):
             try:
                 self._sweep()

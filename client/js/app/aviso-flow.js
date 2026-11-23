@@ -10,6 +10,7 @@ import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as render from "../render.js";
 import * as aviso from "../aviso.js";
+import { buildAvisoIcs, icsDownloadFilename } from "../aviso-ics.js";
 import * as roles from "../aviso-roles.js";
 import { myRoleFor, mySkills, receivedClaims, saveMySkills, sendRoleClaim } from "./aviso-roles-dm.js";
 import { countPastedReplies } from "../aviso-replies.js";
@@ -44,6 +45,14 @@ export function avisoLabOn(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Maior instante de um campo entre os itens de um autor.
+ *
+ * @param {object[]} items Mensagens verificadas.
+ * @param {string} author Rota do autor.
+ * @param {string} field Nome do campo de instante.
+ * @returns {number}
+ */
 const lastTs = (items, author, field) =>
   Math.max(0, ...items.filter((m) => (m.author || m.owner) === author).map((m) => Number(m[field] || m.ts || 0)));
 
@@ -63,8 +72,21 @@ export function memberSet(joins = [], leaves = [], owner = "") {
   return members;
 }
 
+/**
+ * Lê do aparelho os posts de um tipo na comunidade; falha vira lista vazia.
+ *
+ * @param {string} type Tipo do post.
+ * @param {string} communityId
+ * @returns {Promise<object[]>}
+ */
 const localOf = (type, communityId) => cacheNode.getLocalPosts({ type, communityId }).catch(() => []);
 
+/**
+ * Reúne tudo o que a tela de avisos precisa: metadados, posts locais, membros e papel de quem vê.
+ *
+ * @param {string} communityId
+ * @returns {Promise<object>}
+ */
 async function loadContext(communityId) {
   const meta = await resolveCommunityMetadata(communityId);
   const [topics, responses, counts, roleCounts, joins, leaves] = await Promise.all(
@@ -76,15 +98,32 @@ async function loadContext(communityId) {
   return { communityId, meta, topics, responses, counts, roleCounts, members, routeId, isMod };
 }
 
+/**
+ * Última escolha de resposta de quem vê para um aviso.
+ *
+ * @param {object[]} responses Respostas locais.
+ * @param {string} avisoId Aviso respondido.
+ * @param {string} routeId
+ * @returns {string}
+ */
 function myChoice(responses, avisoId, routeId) {
   const mine = responses.filter((r) => r.avisoId === avisoId && r.author === routeId);
   mine.sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
   return mine[0]?.choice || "";
 }
 
+/**
+ * Monta os itens da tela: aviso classificado, código, contagem de respostas e papéis.
+ *
+ * @param {object} ctx Contexto de `loadContext`.
+ * @param {number} [now=Date.now()] Instante de referência em ms.
+ * @returns {Promise<object[]>}
+ */
 async function buildItems(ctx, now = Date.now()) {
   const classified = aviso.classifyAvisos(ctx.topics, ctx.meta, now);
   return Promise.all(classified.map(async (a) => ({
+    id: a.id,
+    eventAt: a.eventAt,
     aviso: a,
     code: await aviso.avisoCode(a),
     tally: aviso.tallyAvisoResponses(ctx.responses, a.id, ctx.members),
@@ -105,8 +144,20 @@ function callFields(ctx, a, now) {
   return { call, myRole, received, suggested };
 }
 
+/**
+ * Gera um identificador local com prefixo.
+ *
+ * @param {string} prefix Prefixo do tipo (por exemplo `avr`).
+ * @returns {string}
+ */
 const newId = (prefix) => `${prefix}_${randomBase36(8)}`;
 
+/**
+ * Assina o payload, guarda no aparelho e espalha pela rede de vizinhos.
+ *
+ * @param {object} payload Conteúdo ainda sem assinatura.
+ * @returns {Promise<object>}
+ */
 async function signAndPublish(payload) {
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
@@ -153,6 +204,13 @@ export async function mountCommunityAvisoBanner(main, communityId) {
   main.insertAdjacentHTML("afterbegin", avisoView.renderPinnedAviso(pinned, communityId));
 }
 
+/**
+ * Lê o formulário de novo aviso e devolve o rascunho.
+ *
+ * @param {HTMLFormElement} form Formulário de composição.
+ * @param {string} communityId
+ * @returns {object}
+ */
 function readDraft(form, communityId) {
   const data = new FormData(form);
   const kind = String(data.get("avisoKind") || "");
@@ -185,6 +243,13 @@ const ROLE_SENT = {
   "no-key": "Não achei a chave de mensagem de quem convocou. Tente mais tarde.",
 };
 
+/**
+ * Valida e publica o aviso do formulário; mostra os problemas na tela quando há.
+ *
+ * @param {Event} e Evento `submit`.
+ * @param {string} communityId
+ * @param {object} meta Metadados da comunidade.
+ */
 async function handleComposeSubmit(e, communityId, meta) {
   e.preventDefault();
   const form = e.currentTarget;
@@ -239,10 +304,23 @@ export async function showComposeAviso(communityId) {
   }));
 }
 
+/**
+ * Acha a folha de detalhes de um aviso na tela.
+ *
+ * @param {HTMLElement} main Raiz da tela de avisos.
+ * @param {string} avisoId Aviso procurado.
+ * @returns {HTMLElement}
+ */
 function sheetFor(main, avisoId) {
   return main.querySelector(`[data-aviso-sheet="${CSS.escape(avisoId)}"]`);
 }
 
+/**
+ * Monta o link de conferência do aviso assinado (`aviso.html` com o fragmento).
+ *
+ * @param {object} signed Aviso assinado.
+ * @returns {string}
+ */
 function conferLink(signed) {
   const base = new URL("aviso.html", location.href.split("#")[0]);
   return `${base.href}#${aviso.encodeAvisoFragment(signed)}`;
@@ -313,14 +391,46 @@ function bindSkillsForm(main, communityId) {
   });
 }
 
+/**
+ * Abre o envio do aviso pedido na URL (`?enviar=`), se existir.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object} ctx Contexto da tela.
+ * @param {object[]} items Itens montados.
+ */
 function openRequestedShare(main, ctx, items) {
   const wanted = new URLSearchParams(location.hash.split("?")[1] || "").get("enviar");
   const item = wanted && items.find((i) => i.aviso.id === wanted);
   if (item) ACTIONS.enviar(ctx, item, null, main);
 }
 
+/**
+ * Baixa o aviso como arquivo `.ics` para a agenda.
+ *
+ * @param {HTMLElement} button Botão com `data-id`.
+ * @param {object[]} items Itens montados.
+ */
+function downloadAvisoIcs(button, items) {
+  const item = items.find((i) => (i.id || i.aviso?.id) === button.dataset.id);
+  if (!item) return;
+  const target = item.aviso || item;
+  const ics = buildAvisoIcs(target);
+  if (!ics) return;
+  share.downloadBlob(new Blob([ics], { type: "text/calendar;charset=utf-8" }), icsDownloadFilename(target));
+  share.showToast("Evento salvo em .ics para sua agenda!");
+}
+
+/**
+ * Liga os cliques da tela de avisos às ações (`ACTIONS`) e ao download de `.ics`.
+ *
+ * @param {HTMLElement} main Raiz da tela.
+ * @param {object} ctx Contexto da tela.
+ * @param {object[]} items Itens montados.
+ */
 function bindAvisoActions(main, ctx, items) {
   main.addEventListener("click", (e) => {
+    const icsBtn = e.target.closest(".btn-aviso-ics");
+    if (icsBtn) return void downloadAvisoIcs(icsBtn, items);
     const button = e.target.closest("[data-aviso-action]");
     const item = button && items.find((i) => i.aviso.id === button.dataset.avisoId);
     const action = item && ACTIONS[button.dataset.avisoAction];

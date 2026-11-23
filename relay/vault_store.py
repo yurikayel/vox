@@ -1,13 +1,14 @@
 """Cofres de recuperação na memória central (`/memory/vault/<endereço>`).
 
-O relay guarda o envelope cifrado e não consegue abri-lo. Desde o PM-90, só aceita e serve o formato v2
-(sal e iterações no envelope) ou a marca de revogado que o dono grava por cima de um cofre antigo.
-Registros em formato antigo continuam no disco, mas não saem mais daqui.
+O relay guarda o envelope cifrado e não consegue abri-lo. Desde o PM-90, só aceita
+e serve o formato v2 (sal e iterações no envelope) ou a marca de revogado que o dono
+grava por cima de um cofre antigo. Registros antigos continuam no disco, mas não saem.
 
-PM-94: cada cofre tem um dono. O aparelho manda uma prova do dono (`ownerToken`, 32 bytes em hex derivados da
-Senha Soberana por PBKDF2 com 600 mil iterações); o relay guarda só o SHA-256 dela (`ownerHash`). Depois disso,
-regravar o cofre exige a mesma prova. Cofre v2 novo sem prova é recusado. Registro antigo sem dono aceita a
-primeira gravação com prova, que passa a ser o dono.
+PM-94: cada cofre tem um dono. O aparelho manda uma prova do dono (`ownerToken`, 32 bytes
+em hex derivados da Senha Soberana por PBKDF2 com 600 mil iterações); o relay guarda
+só o SHA-256 dela (`ownerHash`). Depois disso, regravar o cofre exige a mesma prova.
+Cofre v2 novo sem prova é recusado. Registro antigo sem dono aceita a primeira
+gravação com prova, que passa a ser o dono.
 """
 
 import hashlib
@@ -46,10 +47,16 @@ def is_servable_vault(record: Any) -> bool:
 
 
 def _vault_json_name(name: str) -> bool:
-    return name.endswith(".json") and len(name) > 5 and central_memory._is_valid_id(name[: -len(".json")])
+    """True se o nome é `<id válido>.json`."""
+    return (
+        name.endswith(".json")
+        and len(name) > 5
+        and central_memory._is_valid_id(name[: -len(".json")])
+    )
 
 
 def _vault_file(lookup_key: str):
+    """Devolve o caminho do cofre pela chave de busca, ou None se a chave for inválida."""
     clean = str(lookup_key or "").strip().lower()
     if not central_memory._is_valid_id(clean):
         return None
@@ -60,6 +67,7 @@ def _vault_file(lookup_key: str):
 
 
 def _read_stored(vault_file) -> Optional[Dict[str, Any]]:
+    """Lê o cofre gravado; None se não houver arquivo, estiver corrompido ou não for objeto."""
     if vault_file is None or not vault_file.is_file():
         return None
     try:
@@ -82,6 +90,7 @@ def owner_hash(token: Any) -> Optional[str]:
 
 
 def get_vault(lookup_key: str) -> Optional[Dict[str, Any]]:
+    """Devolve o cofre servível sem o campo do dono, ou None."""
     stored = _read_stored(_vault_file(lookup_key))
     if not stored or not is_servable_vault(stored):
         return None
@@ -89,12 +98,15 @@ def get_vault(lookup_key: str) -> Optional[Dict[str, Any]]:
 
 
 def _split_payload(payload: Any) -> Tuple[Any, Any]:
+    """Separa o payload em `(registro, token do dono)`."""
     if isinstance(payload, dict) and "record" in payload:
         return payload.get("record"), payload.get("ownerToken")
     return payload, None
 
 
-def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: Any) -> Tuple[str, Optional[str]]:
+def _authorize(
+    stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: Any
+) -> Tuple[str, Optional[str]]:
     """Decide se a gravação entra e com qual dono fica."""
     current = (stored or {}).get(OWNER_FIELD)
     presented = owner_hash(token)
@@ -112,14 +124,15 @@ def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: 
 def save_vault(lookup_key: str, payload: Any) -> str:
     """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`.
 
-    Ler o dono, autorizar e gravar é uma só decisão: sob o lock da memória central, duas gravações simultâneas
-    num cofre sem dono não podem as duas virar o primeiro dono.
+    Ler o dono, autorizar e gravar é uma só decisão: sob lock da memória central, duas
+    gravações concorrentes sem dono não podem as duas virar o primeiro dono.
     """
     with central_memory._MEMORY_LOCK:
         return _save_vault_locked(lookup_key, payload)
 
 
 def _save_vault_locked(lookup_key: str, payload: Any) -> str:
+    """Grava o cofre se o registro é válido e o token autoriza; devolve o status. Exige o lock tomado."""
     vault_file = _vault_file(lookup_key)
     record, token = _split_payload(payload)
     if vault_file is None or not is_servable_vault(record):

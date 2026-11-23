@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "description": "Vetores determinísticos de envelope de Mensagens Diretas (DM v1) Vox E2E",
+  "recipient": {
+    "pub": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "_N4v0XxUz8AW3dSKLLTj8uaFI2q0pEa3c7fTf48TABk",
+      "y": "g1wNvEfhSaOWp-kAkFrBs34YGSmr9ajmALJf_b0zMjQ"
+    },
+    "priv": { "kty": "EC", "crv": "P-256", "x": "_N4v0XxUz8AW3dSKLLTj8uaFI2q0pEa3c7fTf48TABk", "y": "g1wNvEfhSaOWp-kAkFrBs34YGSmr9ajmALJf_b0zMjQ", "d": "_0QqKw_hbsmCzC-BrszRcXhXX3Y6ofrkNi8OEl4Wuf8", "_audit": "vox-secrets-audit: fixture" }
+  },
+  "ephemeralKeypair": {
+    "pub": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "lkvHesOmJEyG-8xnEjuLvRjyxDWDTu9Qof-Ed66kjvk",
+      "y": "BNpOP50mANlpDW2RcQ1TXkTHsQA2FTEd-kejBk1RpXk"
+    }
+  },
+  "plaintext": "Mensagem direta confidencial Vox PM-114",
+  "rawDeleteTokenHex": "101112131415161718191a1b1c1d1e1f",
+  "envelope": {
+    "v": 1,
+    "id": "dm_pm114_test_001",
+    "from": "vx_sender_alice_001",
+    "to": "vx_recipient_bob_002",
+    "ts": 1700000000000,
+    "ephPub": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "lkvHesOmJEyG-8xnEjuLvRjyxDWDTu9Qof-Ed66kjvk",
+      "y": "BNpOP50mANlpDW2RcQ1TXkTHsQA2FTEd-kejBk1RpXk"
+    },
+    "iv": "AQIDBAUGBwgJCgsM",
+    "ct": "iHy45n9PZw1rlVN4os4SSrau9PoOjx4PhZ0bWawrKq_X-FAtUM3qBOa0nD5xh7k32iDfqXVqtg",
+    "del": {
+      "iv": "Hx4dHBsaGRgXFhUU",
+      "ct": "JZcCacJimZEdvlF6WwGjPZhz4iRCuvt7znz-xY-2whM",
+      "hash": "fc2e2c73072bfa2bda03ff9307472debd3cc8105028a8a9e235e35ba8d2e37f4"
+    }
+  }
+}

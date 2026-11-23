@@ -226,9 +226,33 @@ export function attachCanvasInput(canvas, opts) {
   if (!canvas || typeof canvas.addEventListener !== "function") return () => {};
   if (canvas.style) canvas.style.touchAction = "none";
   const st = { pointers: new Map(), mode: "idle", dragToken: null, dragCell: null, lastPt: null, originWorld: null, lastWorld: null, stroke: null, aoeKind: "circle", pinchStartDist: 1, pinchStartZoom: 1, didDrag: false, tappedTokenId: null };
+  /**
+   * Inicia o gesto do ponteiro no canvas.
+   *
+   * @param {PointerEvent} ev Evento `pointerdown`.
+   * @returns {void}
+   */
   const onDown = (ev) => beginGesture(st, canvas, ev, opts);
+  /**
+   * Atualiza o gesto em andamento.
+   *
+   * @param {PointerEvent} ev Evento `pointermove`.
+   * @returns {void}
+   */
   const onMove = (ev) => updateGesture(st, canvas, ev, opts);
+  /**
+   * Conclui o gesto do ponteiro.
+   *
+   * @param {PointerEvent} ev Evento `pointerup`/`pointercancel`.
+   * @returns {void}
+   */
   const onUp = (ev) => finishGesture(st, canvas, ev, opts);
+  /**
+   * Aplica zoom da câmera na roda do mouse (com Ctrl/Meta, ou sempre se `wheelZoomAlways`).
+   *
+   * @param {WheelEvent} ev Evento `wheel`.
+   * @returns {void}
+   */
   const onWheel = (ev) => {
     if (!ev.ctrlKey && !ev.metaKey && !opts.wheelZoomAlways) return;
     ev.preventDefault?.();

@@ -17,8 +17,25 @@ export const POSTING_MODE_OPEN = "open";
  */
 export const isChannel = (meta) => meta?.postingMode === POSTING_MODE_MODS;
 
+/**
+ * Extrai o autor de um tópico (`owner` ou `author`).
+ * @param {object} topic Tópico
+ * @returns {string} Endereço do autor.
+ */
 const topicAuthor = (topic) => String(topic?.owner || topic?.author || "");
+/**
+ * Compara dois endereços sem diferenciar maiúsculas.
+ * @param {string} a Primeiro endereço
+ * @param {string} b Segundo endereço
+ * @returns {boolean} `true` se iguais e não vazios.
+ */
 const sameAddress = (a, b) => Boolean(a) && Boolean(b) && a.toLowerCase() === b.toLowerCase();
+/**
+ * Diz se a pessoa é dona ou moderadora da comunidade.
+ * @param {object} meta Dono e moderadores da comunidade
+ * @param {string} who Endereço da pessoa
+ * @returns {boolean} `true` se for moderação.
+ */
 const isModOf = (meta, who) => isModerator(who, meta?.owner, meta?.moderators);
 
 /** Pode publicar tópico? `selves`: as identidades do aparelho (ativa e conta local). 

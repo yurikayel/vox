@@ -1,0 +1,6 @@
+{
+  "_leia": "Pisos de cobertura medidos por scripts/coverage.mjs (cliente, linhas de código) e scripts/py_coverage.py (relay, instruções). Catraca: só sobem (--raise); nunca baixe à mão. Meta do mantenedor: target.",
+  "js": 95.3,
+  "relay": 91.9,
+  "target": 90
+}

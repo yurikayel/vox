@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from relay import genesis_guard
+from relay.safe_path import child_of, only_chars
 
 HASH_HEX_REGEX = re.compile(r"^[0-9a-fA-F]{64}$")
 SAFE_ID_REGEX = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
@@ -37,6 +38,7 @@ _STATE_CACHE: Optional[Dict[str, Any]] = None
 
 
 def resolve_memory_dir(env: Optional[Dict[str, str]] = None) -> Path:
+    """Resolve o diretório da memória central: `VOX_CENTRAL_MEMORY_DIR`, senão `<cache>/central_memory`, senão o padrão local."""
     environ = env if env is not None else os.environ
     raw = str(environ.get("VOX_CENTRAL_MEMORY_DIR") or "").strip()
     if raw:
@@ -51,6 +53,7 @@ MEMORY_DIR = resolve_memory_dir()
 
 
 def set_memory_dir(path: Path) -> Path:
+    """Troca o diretório da memória central, descarta o cache em memória e devolve o novo caminho."""
     global MEMORY_DIR, _STATE_CACHE
     with _MEMORY_LOCK:
         MEMORY_DIR = Path(path).resolve()
@@ -58,7 +61,27 @@ def set_memory_dir(path: Path) -> Path:
         return MEMORY_DIR
 
 
+_HEX_CHARS = frozenset("0123456789abcdef")
+
+
+def _is_blob_hash(text: str) -> bool:
+    """True para 64 caracteres hexadecimais minúsculos (sha256), sem regex."""
+    return only_chars(text, _HEX_CHARS, 64, 64)
+
+
+def _is_blob_file_name(name: str) -> bool:
+    """True para `<sha256 hex>.json`."""
+    return name.endswith(".json") and _is_blob_hash(name[: -len(".json")])
+
+
+def _blob_path(blob_hash: str) -> Path:
+    """Arquivo do blob dentro de `blobs/`; `ValueError` se o hash não for sha256 hex."""
+    _, _, _, blobs_dir = _state_paths()
+    return child_of(blobs_dir, f"{blob_hash}.json", _is_blob_file_name)
+
+
 def _empty_state() -> Dict[str, Any]:
+    """Cria o estado vazio da memória central (revisão 0, sem posts, perfis, manifestos nem blobs)."""
     return {
         "version": 1,
         "mode": "zero-central-memory",
@@ -73,6 +96,7 @@ def _empty_state() -> Dict[str, Any]:
 
 
 def _state_paths() -> tuple[Path, Path, Path, Path]:
+    """Devolve os caminhos de `state.json`, do backup, do journal de eventos e da pasta de blobs."""
     base = MEMORY_DIR
     return (
         base / "state.json",
@@ -83,11 +107,13 @@ def _state_paths() -> tuple[Path, Path, Path, Path]:
 
 
 def _ensure_dirs() -> None:
+    """Garante que o diretório da memória e o de blobs existam."""
     MEMORY_DIR.mkdir(parents=True, exist_ok=True)
     (MEMORY_DIR / "blobs").mkdir(parents=True, exist_ok=True)
 
 
 def _atomic_write_bytes(target: Path, data: bytes) -> None:
+    """Grava bytes de forma atômica: arquivo temporário no mesmo diretório e troca por rename."""
     _ensure_dirs()
     tmp_path = None
     try:
@@ -105,6 +131,7 @@ def _atomic_write_bytes(target: Path, data: bytes) -> None:
 
 
 def _read_json_file(path: Path) -> Optional[Dict[str, Any]]:
+    """Lê um JSON-objeto do disco; devolve None se faltar, estiver corrompido ou não for objeto."""
     if not path.is_file():
         return None
     try:
@@ -115,6 +142,7 @@ def _read_json_file(path: Path) -> Optional[Dict[str, Any]]:
 
 
 def _normalize_loaded_state(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Completa e saneia um estado lido do disco, descartando chaves de tipo errado."""
     state = _empty_state()
     if not isinstance(raw, dict):
         return state
@@ -144,6 +172,7 @@ def _normalize_loaded_state(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def _replay_journal(state: Dict[str, Any], journal_path: Path) -> bool:
+    """Reaplica no estado os eventos do journal; devolve True se algum foi reaplicado."""
     if not journal_path.is_file():
         return False
     replayed = False
@@ -164,6 +193,7 @@ def _replay_journal(state: Dict[str, Any], journal_path: Path) -> bool:
 
 
 def load_state(force_reload: bool = False) -> Dict[str, Any]:
+    """Carrega o estado (cache, arquivo, backup e journal) e o devolve; `force_reload` ignora o cache."""
     global _STATE_CACHE
     with _MEMORY_LOCK:
         if _STATE_CACHE is not None and not force_reload:
@@ -183,6 +213,7 @@ def load_state(force_reload: bool = False) -> Dict[str, Any]:
 
 
 def _append_journal(event: Dict[str, Any]) -> None:
+    """Acrescenta um evento ao journal de eventos."""
     _ensure_dirs()
     _, _, journal_file, _ = _state_paths()
     line = json.dumps(event, ensure_ascii=False) + "\n"
@@ -196,6 +227,7 @@ def _append_journal(event: Dict[str, Any]) -> None:
 
 
 def save_state() -> Dict[str, Any]:
+    """Persiste o estado atual (mantendo backup) e devolve o estado salvo."""
     with _MEMORY_LOCK:
         state = load_state()
         state["updatedAt"] = int(time.time() * 1000)
@@ -216,14 +248,21 @@ def save_state() -> Dict[str, Any]:
 
 
 def _item_timestamp(item: Dict[str, Any]) -> int:
+    """Devolve o carimbo de tempo do item (edição, ts, timestamp ou criação), ou 0 se não houver válido."""
     for field in ("editedAt", "ts", "timestamp", "createdAt"):
         val = item.get(field)
-        if isinstance(val, (int, float)) and not isinstance(val, bool) and math.isfinite(val) and val > 0:
+        if (
+            isinstance(val, (int, float))
+            and not isinstance(val, bool)
+            and math.isfinite(val)
+            and val > 0
+        ):
             return int(val)
     return 0
 
 
 def _parse_nonneg_int(value: Any, field: str, default: int = 0) -> int:
+    """Converte um campo para inteiro não negativo; usa `default` se vazio.\n\n    Raises:\n        ValueError: Se o valor não for inteiro finito não negativo."""
     if value is None or value == "":
         return default
     if isinstance(value, bool) or not isinstance(value, (int, float, str)):
@@ -240,6 +279,7 @@ def _parse_nonneg_int(value: Any, field: str, default: int = 0) -> int:
 
 
 def _is_valid_id(raw_id: Any) -> bool:
+    """True se o id é uma string que casa com o formato seguro de ids."""
     return isinstance(raw_id, str) and bool(SAFE_ID_REGEX.match(raw_id.strip()))
 
 
@@ -256,6 +296,7 @@ def _capped(apply_fn):
 
     @functools.wraps(apply_fn)
     def wrapper(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
+        """Aplica `apply_fn` só se o item couber no limite de tamanho; senão o descarta."""
         if isinstance(item, dict) and not _item_within_limit(item):
             return False
         return apply_fn(state, item)
@@ -282,6 +323,7 @@ def _blob_sha256(data: str) -> Optional[str]:
 
 @_capped
 def _apply_post(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
+    """Aplica um post (ou tombstone) ao estado; True se o estado mudou."""
     if not isinstance(item, dict):
         return False
     item_id = str(item.get("id") or "").strip()
@@ -319,6 +361,7 @@ def _apply_post(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
 
 @_capped
 def _apply_tombstone(state: Dict[str, Any], tombstone: Dict[str, Any]) -> bool:
+    """Aplica um tombstone ao estado; True se o estado mudou."""
     if not isinstance(tombstone, dict):
         return False
     item_id = str(tombstone.get("id") or "").strip()
@@ -347,6 +390,7 @@ def _apply_tombstone(state: Dict[str, Any], tombstone: Dict[str, Any]) -> bool:
 
 @_capped
 def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
+    """Aplica um cartão de perfil ao estado; True se mudou."""
     if not isinstance(card, dict):
         return False
     route_id = str(card.get("author") or card.get("routeId") or card.get("id") or "").strip()
@@ -362,7 +406,8 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
     in_avatar = str(card.get("avatarUrl") or "")
     if "lh3.googleusercontent.com/a/" in in_avatar:
         dup_keys = [
-            k for k, v in state["profiles"].items()
+            k
+            for k, v in state["profiles"].items()
             if k != route_id and isinstance(v, dict) and v.get("avatarUrl") == in_avatar
         ]
         for k in dup_keys:
@@ -374,6 +419,7 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
 
 @_capped
 def _apply_manifest(state: Dict[str, Any], manifest: Dict[str, Any]) -> bool:
+    """Aplica um manifesto de comunidade ao estado; True se mudou."""
     if not isinstance(manifest, dict):
         return False
     comm_id = str(manifest.get("communityId") or manifest.get("id") or "").strip()
@@ -392,6 +438,7 @@ def _apply_manifest(state: Dict[str, Any], manifest: Dict[str, Any]) -> bool:
 
 
 def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
+    """Valida o hash do blob, grava-o em disco e o registra no estado; True se mudou."""
     if not isinstance(blob, dict):
         return False
     blob_hash = str(blob.get("hash") or "").strip().lower()
@@ -401,7 +448,9 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     if _blob_sha256(data) != blob_hash:
         return False
     try:
-        byte_length = _parse_nonneg_int(blob.get("byteLength"), "byteLength", len(data)) or len(data)
+        byte_length = _parse_nonneg_int(blob.get("byteLength"), "byteLength", len(data)) or len(
+            data
+        )
     except ValueError:
         return False
     mime = str(blob.get("mime") or "application/octet-stream")
@@ -417,8 +466,10 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     if len(raw_bytes) > MAX_BLOB_BYTES:
         return False
 
-    _, _, _, blobs_dir = _state_paths()
-    blob_file = blobs_dir / f"{blob_hash}.json"
+    try:
+        blob_file = _blob_path(blob_hash)
+    except ValueError:
+        return False
     if blob_file.is_file() and blob_hash in state["blobs"]:
         return False
     _atomic_write_bytes(blob_file, raw_bytes)
@@ -433,15 +484,19 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
 
 
 def get_blob(blob_hash: str) -> Optional[Dict[str, Any]]:
+    """Devolve o blob pelo hash SHA-256, ou None se o hash for inválido ou o blob não existir."""
     clean = str(blob_hash or "").strip().lower()
     if not HASH_HEX_REGEX.match(clean):
         return None
     with _MEMORY_LOCK:
-        _, _, _, blobs_dir = _state_paths()
-        return _read_json_file(blobs_dir / f"{clean}.json")
+        try:
+            return _read_json_file(_blob_path(clean))
+        except ValueError:
+            return None
 
 
 def _apply_event_to_state(state: Dict[str, Any], payload: Dict[str, Any]) -> bool:
+    """Despacha um evento para a função de aplicação do seu tipo; True se o estado mudou."""
     if not isinstance(payload, dict):
         return False
     etype = str(payload.get("type") or "").upper()
@@ -467,6 +522,7 @@ def _apply_event_to_state(state: Dict[str, Any], payload: Dict[str, Any]) -> boo
 
 
 def ingest_event(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Aplica um evento ao estado, registra no journal e salva se mudou; devolve o resumo do resultado."""
     with _MEMORY_LOCK:
         state = load_state()
         changed = _apply_event_to_state(state, payload)
@@ -482,6 +538,7 @@ def ingest_event(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _ingest_collection(state: Dict[str, Any], items: Any, apply_fn) -> int:
+    """Aplica `apply_fn` a cada item de uma lista e devolve quantos mudaram o estado."""
     if not isinstance(items, list):
         return 0
     changed_count = 0
@@ -492,6 +549,7 @@ def _ingest_collection(state: Dict[str, Any], items: Any, apply_fn) -> int:
 
 
 def sync_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Sincroniza com um cliente: ingere o que ele enviou e devolve o que mudou desde `since`.\n\n    Raises:\n        ValueError: Se o payload não for um objeto JSON ou os campos numéricos forem inválidos."""
     if not isinstance(payload, dict):
         raise ValueError("Payload de sincronização deve ser um objeto JSON")
     with _MEMORY_LOCK:
@@ -523,13 +581,16 @@ def sync_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
             }
         include_blobs = bool(payload.get("includeBlobs", True))
         raw_known = payload.get("knownBlobs")
-        known_blobs = {str(h).strip().lower() for h in raw_known} if isinstance(raw_known, list) else set()
+        known_blobs = (
+            {str(h).strip().lower() for h in raw_known} if isinstance(raw_known, list) else set()
+        )
         exported = export_state(since=since, include_blobs=include_blobs, known_blobs=known_blobs)
         exported["ingestedCount"] = changes
         return exported
 
 
 def _filter_since(mapping: Dict[str, Dict[str, Any]], since: int) -> List[Dict[str, Any]]:
+    """Filtra os itens com carimbo >= `since` (se positivo) e os ordena por tempo."""
     items = list(mapping.values())
     if since > 0:
         items = [it for it in items if _item_timestamp(it) >= since]
@@ -540,6 +601,7 @@ def _filter_since(mapping: Dict[str, Dict[str, Any]], since: int) -> List[Dict[s
 def _load_blobs_for_export(
     state: Dict[str, Any], include_blobs: bool, known_blobs: Optional[set[str]] = None
 ) -> List[Dict[str, Any]]:
+    """Lista os blobs a exportar, com ou sem o conteúdo, omitindo os que o cliente já conhece."""
     excluded = known_blobs or set()
     if not include_blobs:
         return [v for k, v in state["blobs"].items() if k not in excluded]
@@ -554,6 +616,7 @@ def _load_blobs_for_export(
 
 
 def _state_counts(state: Dict[str, Any]) -> Dict[str, int]:
+    """Conta posts, tombstones, perfis, manifestos e blobs do estado."""
     return {
         "posts": len(state["posts"]),
         "tombstones": len(state["tombstones"]),
@@ -566,6 +629,7 @@ def _state_counts(state: Dict[str, Any]) -> Dict[str, int]:
 def export_state(
     since: int = 0, include_blobs: bool = True, known_blobs: Optional[set[str]] = None
 ) -> Dict[str, Any]:
+    """Exporta o estado (itens desde `since`, blobs opcionais) para um cliente que sincroniza."""
     with _MEMORY_LOCK:
         state = load_state()
         return {
@@ -584,6 +648,7 @@ def export_state(
 
 
 def get_status_summary() -> Dict[str, Any]:
+    """Devolve o resumo de status da memória central (revisão, contagens e arquivos)."""
     with _MEMORY_LOCK:
         state = load_state()
         state_file, bak_file, _, _ = _state_paths()

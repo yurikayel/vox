@@ -1,4 +1,5 @@
-"""Gerado por scripts/gen-genesis-guard.mjs a partir de client/js/genesis.js e client/js/data/test-route-ids.js. Não editar."""
+"""Gerado por scripts/gen-genesis-guard.mjs a partir de client/js/genesis.js
+e client/js/data/test-route-ids.js. Não editar."""
 
 GENESIS_MS = 1794452400000
 

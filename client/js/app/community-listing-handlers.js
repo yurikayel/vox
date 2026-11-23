@@ -14,6 +14,11 @@ import { getActiveUser } from "./context.js";
 import { route } from "./navigation.js";
 import { openZapModal } from "./zap-modal.js";
 
+/**
+ * Abre o pagamento Pix de um anúncio a partir do botão clicado.
+ *
+ * @param {HTMLElement} btn Botão com `data-pix` e `data-price`.
+ */
 async function handleListingPixClick(btn) {
   const pix = btn.dataset.pix;
   if (!pix) return;

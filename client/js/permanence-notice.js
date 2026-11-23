@@ -81,6 +81,10 @@ export function askPermanenceChoice(doc = globalThis.document) {
     const holder = doc.createElement("div");
     holder.innerHTML = renderPermanenceModalHtml();
     doc.body.appendChild(holder);
+    /**
+     * Fecha o aviso e entrega a escolha com a marca de lembrar.
+     * @param {string} choice Escolha da pessoa
+     */
     const finish = (choice) => {
       const remember = Boolean(holder.querySelector("#permanence-remember")?.checked);
       holder.remove();

@@ -1,15 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as render from "../client/js/render.js";
-import * as mock from "../client/js/mock.js";
 
 function createContainer() {
   return {
     innerHTML: "",
-    querySelector(sel) {
+    querySelector(_sel) {
       return null;
     },
-    querySelectorAll(sel) {
+    querySelectorAll(_sel) {
       return [];
     },
   };
