@@ -30,6 +30,12 @@ export function requireArweaveUpload(missingWalletMsg) {
   return true;
 }
 
+/**
+ * Liga o botão de anunciar a chave de mensagens na cadeia.
+ *
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {object|null} dmPub Chave pública de mensagens.
+ */
 function bindPublishDmPubButton(isSelf, dmPub) {
   const btnPub = document.getElementById("btn-publish-dmpub");
   if (!btnPub || !isSelf || !dmPub) return;
@@ -51,6 +57,13 @@ function bindPublishDmPubButton(isSelf, dmPub) {
   });
 }
 
+/**
+ * Grava o handle na Permaweb, guarda o mapeamento e recarrega a tela.
+ *
+ * @param {string} slug Handle reivindicado.
+ * @param {string} user Rota de quem reivindica.
+ * @param {Function} onReload Recarrega a tela.
+ */
 async function executeClaimHandle(slug, user, onReload) {
   const tags = upload.buildTags("handle", { Handle: slug, "Owner-Addr": user });
   await upload.postData({ handle: slug, owner: user }, tags);
@@ -59,6 +72,13 @@ async function executeClaimHandle(slug, user, onReload) {
   if (onReload) onReload(user);
 }
 
+/**
+ * Liga o formulário de reivindicar handle.
+ *
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {string} user Rota de quem reivindica.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindClaimHandleButton(isSelf, user, onReload) {
   const formClaim = document.getElementById("form-claim-handle");
   if (!formClaim || !isSelf) return;
@@ -84,6 +104,12 @@ function bindClaimHandleButton(isSelf, user, onReload) {
   });
 }
 
+/**
+ * Liga os botões de gerar carteira e de desconectar.
+ *
+ * @param {string} address Rota do perfil.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindWalletGenerateAndDisconnect(address, onReload) {
   const btnGenWallet = document.getElementById("btn-generate-wallet");
   if (btnGenWallet) {
@@ -140,6 +166,11 @@ export function bindWalletAndDmButtons(address, isSelf, dmPub, user, onReload) {
   bindClaimHandleButton(isSelf, user, onReload);
 }
 
+/**
+ * Liga o botão de gerar carteira Arweave.
+ *
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindWalletGenerateAction(onReload) {
   const btnGen = document.getElementById("btn-generate-wallet");
   if (!btnGen) return;
@@ -159,6 +190,11 @@ function bindWalletGenerateAction(onReload) {
   });
 }
 
+/**
+ * Liga o formulário de importar carteira e o botão de desconectar.
+ *
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindWalletImportAndDisconnect(onReload) {
   const formImport = document.getElementById("form-import-wallet");
   if (formImport) {

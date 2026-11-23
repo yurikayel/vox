@@ -19,6 +19,11 @@ export function renderOwnPostsSection() {
   </div>`;
 }
 
+/**
+ * Exporta os posts próprios para um arquivo, travando o botão durante o processo.
+ *
+ * @param {HTMLElement} btn Botão de exportar.
+ */
 async function exportNow(btn) {
   btn.disabled = true;
   try {
@@ -36,6 +41,12 @@ async function exportNow(btn) {
   }
 }
 
+/**
+ * Importa posts próprios do arquivo escolhido e avisa o resultado.
+ *
+ * @param {HTMLInputElement} input Campo de arquivo.
+ * @param {Function} onDone Chamado depois de importar.
+ */
 async function importFrom(input, onDone) {
   const file = input.files?.[0];
   input.value = "";

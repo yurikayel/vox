@@ -79,12 +79,23 @@ function applyOAuthProviderAvailability() {
   });
 }
 
+/**
+ * Sincroniza identidade, cartão da malha e diretório depois do onboarding.
+ */
 function syncIdentityAndDirectoryAfterOnboarding() {
   void syncIdentity();
   void meshProfile.syncMeshProfileCard();
   void centralMemory.syncWithCentralMemory();
 }
 
+/**
+ * Conclui a entrada: limpa a retomada, sincroniza e encerra a gênese.
+ *
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ * @param {Function} onComplete Chamado ao concluir.
+ * @param {object} result Resultado da entrada.
+ * @param {string} [toastMsg=""] Aviso opcional.
+ */
 function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = "") {
   clearGenesisResume();
   oauthProfile.skipOAuthEnrichment();
@@ -93,6 +104,11 @@ function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = 
   endGenesis(modalContainer, onComplete, result);
 }
 
+/**
+ * Liga o botão de entrar com um provedor OAuth.
+ *
+ * @param {{btnId: string, signInFn: Function, fallbackError: string, labelFn: Function, modalContainer: HTMLElement, onDone: Function}} options Botão, função de login, textos e destino.
+ */
 function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, modalContainer, onDone }) {
   document.getElementById(btnId)?.addEventListener("click", async () => {
     const res = await runOAuthEnrichSignIn(document.getElementById(btnId), signInFn, { fallbackError });
@@ -100,6 +116,14 @@ function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, moda
   });
 }
 
+/**
+ * Entra só com nome ou apelido, sem e-mail nem senha.
+ *
+ * @param {string} rawName Nome digitado.
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ * @param {Function} onComplete Chamado ao concluir.
+ * @returns {Promise<*>}
+ */
 async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
   if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
   setOAuthEnrichError("");
@@ -113,6 +137,12 @@ async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
   }
 }
 
+/**
+ * Liga o formulário de nome e e-mail da entrada.
+ *
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ * @param {Function} onComplete Chamado ao concluir.
+ */
 function bindCustomNameForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
@@ -125,6 +155,12 @@ function bindCustomNameForm(modalContainer, onComplete) {
   });
 }
 
+/**
+ * Liga o formulário de restaurar a conta pela senha soberana.
+ *
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ * @param {Function} onComplete Chamado ao concluir.
+ */
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-restore-passphrase");
   if (!form) return;
@@ -136,6 +172,12 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
     try {
       const inputs = readRestoreInputs();
       const res = await emailKit.restoreAccountFromInputs(inputs);
+      /**
+       * Conclui a restauração com o aviso de boas-vindas.
+       *
+       * @param {{routeId: string, displayName?: string}} ok Resultado da restauração.
+       * @returns {void}
+       */
       const done = (ok) => completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: ok.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${ok.displayName || "Cidadão"}!`);
       if (res.ok) done(res);
       else handleRestoreFailure(res, inputs, done);
@@ -164,6 +206,13 @@ function endGenesis(modalContainer, onComplete, res) {
   if (onComplete) onComplete(res);
 }
 
+/**
+ * Conclui o onboarding depois de restaurar a conta pela malha.
+ *
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ * @param {Function} onComplete Chamado ao concluir.
+ * @param {{routeId: string, displayName?: string}} ok Resultado da restauração.
+ */
 function completeMeshRestoredOnboarding(modalContainer, onComplete, ok) {
   completeEntryOnboarding(
     modalContainer,
@@ -329,6 +378,11 @@ function protectNewAccount() {
   void startAccountExitBanner({ hasAccount: hasFullEntry }).catch(() => {});
 }
 
+/**
+ * Conclui a aceitação do pacto: fecha o modal e segue para boas-vindas e convite.
+ *
+ * @param {HTMLElement} modalContainer Contêiner do modal.
+ */
 async function finishPactAcceptance(modalContainer) {
   const returning = localStorage.getItem("vox-pact-accepted") === "true";
   if (!acceptPact()) return;
@@ -377,6 +431,11 @@ function bindPactActions(modalContainer) {
   accept.dataset.bound = "1";
   const settings = document.getElementById("btn-pact-settings");
   const ageBox = ageGate.bindAdultCheck(document, [accept, settings]);
+  /**
+   * Diz se a pessoa marcou a confirmação de 18 anos ou mais.
+   *
+   * @returns {boolean}
+   */
   const confirmed = () => Boolean(ageBox?.checked);
   accept.addEventListener("click", () => {
     if (confirmed()) void finishPactAcceptance(modalContainer);

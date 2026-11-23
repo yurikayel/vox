@@ -31,6 +31,11 @@ export function isAllowedOrigin(origin, env = {}) {
   return APP_ORIGINS.includes(text) || extra.includes(text) || LOCALHOST.test(text);
 }
 
+/**
+ * Diz se a URL usa a porta 53.
+ * @param {string} url URL do servidor TURN.
+ * @returns {boolean}
+ */
 const isPort53 = (url) => /:53(\?|$)/.test(url);
 
 /**
@@ -47,6 +52,11 @@ export function filterIceServers(iceServers) {
   return out;
 }
 
+/**
+ * Formata a data como `AAAA-MM-DD` (UTC).
+ * @param {Date} date Data.
+ * @returns {string}
+ */
 const isoDay = (date) => date.toISOString().slice(0, 10);
 
 /**

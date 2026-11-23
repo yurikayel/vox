@@ -11,11 +11,21 @@ import { initEmscriptenModule } from "../../node_modules/@jsquash/avif/utils.js"
 import { defaultOptions } from "../../node_modules/@jsquash/avif/meta.js";
 
 let avifModule = null;
+/**
+ * Inicializa o módulo WASM do codificador AVIF uma só vez.
+ * @returns {Promise<object>}
+ */
 function initAvif() {
   avifModule ??= initEmscriptenModule(avifEncFactory);
   return avifModule;
 }
 
+/**
+ * Codifica a imagem em AVIF.
+ * @param {ImageData} imageData Pixels da imagem.
+ * @param {object} options Opções que sobrescrevem as padrão.
+ * @returns {Promise<Uint8Array>}
+ */
 async function encodeAvif(imageData, options) {
   const module = await initAvif();
   const output = module.encode(new Uint8Array(imageData.data.buffer), imageData.width, imageData.height, { ...defaultOptions, ...options });
@@ -35,6 +45,10 @@ const out = document.getElementById("out");
 const logEl = document.getElementById("log");
 const bench = (globalThis.__bench = { images: [], videos: [], probe: null, avifInitMs: null });
 
+/**
+ * Acrescenta uma linha ao registro da página.
+ * @param {string} msg Mensagem.
+ */
 function log(msg) {
   logEl.textContent += `${msg}\n`;
 }
@@ -42,10 +56,20 @@ function log(msg) {
 /** Caixa da spec (lado maior e lado menor), nunca amplia. Dimensões pares (exigência do H.264). */
 export function fitBox(w, h, box = SPEC.image) {
   const scale = Math.min(1, box.long / Math.max(w, h), box.short / Math.min(w, h));
+  /**
+   * Arredonda a dimensão pela escala, para número par com no mínimo 2.
+   * @param {number} n Dimensão original.
+   * @returns {number}
+   */
   const even = (n) => Math.max(2, Math.round((n * scale) / 2) * 2);
   return { width: even(w), height: even(h) };
 }
 
+/**
+ * Decodifica o arquivo em um canvas ajustado ao limite de tamanho.
+ * @param {Blob} blob Arquivo de imagem.
+ * @returns {Promise<object>}
+ */
 async function toCanvas(blob) {
   const src = await createImageBitmap(blob, { imageOrientation: "from-image" });
   const { width, height } = fitBox(src.width, src.height);
@@ -55,6 +79,12 @@ async function toCanvas(blob) {
   return { canvas, source: `${src.width}×${src.height}`, size: `${width}×${height}` };
 }
 
+/**
+ * Procura a qualidade AVIF mais alta que cabe no teto de bytes, descendo a escada de qualidade.
+ * @param {ImageData} imageData Pixels da imagem.
+ * @param {number} [speed=6] Velocidade do codificador.
+ * @returns {Promise<object>}
+ */
 async function avifUnderCap(imageData, speed = 6) {
   const steps = [];
   for (const quality of AVIF_LADDER) {
@@ -79,6 +109,12 @@ export function psnrY(ref, test) {
   return mse === 0 ? 99 : Math.round(100 * 10 * Math.log10((255 * 255) / mse)) / 100;
 }
 
+/**
+ * Calcula o PSNR entre a imagem de referência e a imagem decodificada.
+ * @param {ImageData} ref Pixels de referência.
+ * @param {Blob} blob Imagem codificada.
+ * @returns {Promise<number>}
+ */
 async function decodedPsnr(ref, blob) {
   const bmp = await createImageBitmap(blob);
   const c = new OffscreenCanvas(ref.width, ref.height);
@@ -87,10 +123,22 @@ async function decodedPsnr(ref, blob) {
   return psnrY(ref, ctx.getImageData(0, 0, ref.width, ref.height));
 }
 
+/**
+ * Mede o tamanho do canvas codificado no tipo e na qualidade dados.
+ * @param {OffscreenCanvas} canvas Canvas.
+ * @param {string} type Tipo MIME.
+ * @param {number} quality Qualidade, de 0 a 1.
+ * @returns {Promise<number>}
+ */
 async function blobBytes(canvas, type, quality) {
   return (await canvas.convertToBlob({ type, quality })).size;
 }
 
+/**
+ * Mede o tamanho da miniatura (lado maior de 160 px).
+ * @param {OffscreenCanvas} canvas Canvas.
+ * @returns {Promise<number>}
+ */
 async function thumbBytes(canvas) {
   const scale = 160 / Math.max(canvas.width, canvas.height);
   const thumb = new OffscreenCanvas(Math.round(canvas.width * scale), Math.round(canvas.height * scale));
@@ -98,12 +146,23 @@ async function thumbBytes(canvas) {
   return blobBytes(thumb, "image/webp", 0.6);
 }
 
+/**
+ * Mede o tempo de codificação AVIF rápida.
+ * @param {ImageData} imageData Pixels da imagem.
+ * @returns {Promise<object>}
+ */
 async function measureFast(imageData) {
   const t0 = performance.now();
   const buf = await encodeAvif(imageData, { quality: SPEC.image.quality, speed: 8 });
   return { bytes: buf.byteLength, ms: Math.round(performance.now() - t0) };
 }
 
+/**
+ * Mede o tamanho e a qualidade de uma imagem em cada formato.
+ * @param {string} name Nome do arquivo.
+ * @param {Blob} blob Arquivo de imagem.
+ * @returns {Promise<object>}
+ */
 export async function measureImage(name, blob) {
   const { canvas, source, size } = await toCanvas(blob);
   const ref = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
@@ -126,13 +185,27 @@ function esc(text) {
   return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
+/**
+ * Renderiza a tabela de resultados das imagens em HTML.
+ * @param {object[]} rows Resultados por imagem.
+ * @returns {string}
+ */
 function renderImageTable(rows) {
+  /**
+   * Formata bytes em KB com uma casa.
+   * @param {number} n Bytes.
+   * @returns {string}
+   */
   const kb = (n) => (n / 1024).toFixed(1);
   const body = rows.map((r) => `<tr><td>${esc(r.name)}</td><td>${r.source}→${r.size}</td><td class="${r.steps ? "over" : ""}">${kb(r.avifBytes)} (q${r.avifQ})</td>
     <td>${r.avifMsBase}</td><td>${kb(r.webpBytes)}</td><td>${kb(r.thumbBytes)}</td></tr>`).join("");
   out.innerHTML = `<table><tr><th>Imagem</th><th>Original→caixa</th><th>AVIF KiB</th><th>ms q70</th><th>WebP 0,78 KiB</th><th>Miniatura KiB</th></tr>${body}</table>`;
 }
 
+/**
+ * Garante que o codificador AVIF foi inicializado e registra o tempo.
+ * @returns {Promise<void>}
+ */
 async function ensureAvifReady() {
   if (bench.avifInitMs !== null) return;
   const t0 = performance.now();
@@ -141,6 +214,11 @@ async function ensureAvifReady() {
   log(`Codificador AVIF carregado em ${bench.avifInitMs} ms (crossOriginIsolated=${globalThis.crossOriginIsolated})`);
 }
 
+/**
+ * Mede cada imagem da lista e atualiza a tabela.
+ * @param {object[]} items Itens com `name` e `blob`.
+ * @returns {Promise<void>}
+ */
 export async function runImages(items) {
   await ensureAvifReady();
   for (const { name, blob } of items) {

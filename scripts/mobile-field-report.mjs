@@ -27,11 +27,23 @@ const BROWSER_FAMILIES = Object.freeze({
   opera: "Opera", samsung: "Samsung Internet",
 });
 
+/**
+ * Converte em inteiro não negativo, ou 0 se inválido.
+ * @param {unknown} value Valor bruto.
+ * @returns {number}
+ */
 function nonNegInt(value) {
   const n = Math.round(Number(value));
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+/**
+ * Limpa um rótulo (sem quebras de linha, com tamanho máximo), ou usa o valor de reserva.
+ * @param {unknown} value Valor bruto.
+ * @param {string} [fallback="desconhecido"] Valor de reserva quando o rótulo é inválido ou vazio.
+ * @param {number} [maxLen=48] Tamanho máximo, em caracteres.
+ * @returns {string}
+ */
 function cleanLabel(value, fallback = "desconhecido", maxLen = 48) {
   if (typeof value !== "string") return fallback;
   const trimmed = value.replace(/[\r\n\t]+/g, " ").trim().slice(0, maxLen);
@@ -59,6 +71,11 @@ function normalizeDeviceClass(value) {
   return "desconhecido";
 }
 
+/**
+ * Calcula a mediana, ou `null` se a lista é vazia.
+ * @param {number[]} values Valores.
+ * @returns {number|null}
+ */
 function median(values) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -68,11 +85,22 @@ function median(values) {
     : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
 }
 
+/**
+ * Calcula o percentual com uma casa decimal, ou `null` se o total é zero.
+ * @param {number} part Parte.
+ * @param {number} total Total.
+ * @returns {number|null}
+ */
 function pct(part, total) {
   if (!total) return null;
   return Math.round((part / total) * 1000) / 10;
 }
 
+/**
+ * Sanitiza a lista de passos do relatório de campo.
+ * @param {unknown} rawSteps Lista bruta de passos.
+ * @returns {object[]}
+ */
 function sanitizeSteps(rawSteps) {
   if (!Array.isArray(rawSteps)) return [];
   const out = [];
@@ -88,6 +116,11 @@ function sanitizeSteps(rawSteps) {
   return out;
 }
 
+/**
+ * Sanitiza os dados de sinalização do relatório de campo.
+ * @param {unknown} raw Objeto bruto.
+ * @returns {object}
+ */
 function sanitizeSignaling(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   const connectMs = src.connectMs === undefined || src.connectMs === null
@@ -102,6 +135,11 @@ function sanitizeSignaling(raw) {
   };
 }
 
+/**
+ * Sanitiza a contagem de origens de leitura, mantendo só as chaves conhecidas.
+ * @param {unknown} raw Objeto bruto.
+ * @returns {Object<string, number>}
+ */
 function sanitizeReadOrigins(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   const out = {};
@@ -133,6 +171,11 @@ export function sanitizeFieldReport(entry) {
   };
 }
 
+/**
+ * Acumula os passos de um relatório no mapa de estatísticas por passo.
+ * @param {Map<string, object>} stepMap Mapa por passo (é alterado).
+ * @param {object[]} steps Passos sanitizados.
+ */
 function accumulateSteps(stepMap, steps) {
   for (const step of steps) {
     if (!stepMap.has(step.id)) {
@@ -145,6 +188,11 @@ function accumulateSteps(stepMap, steps) {
   }
 }
 
+/**
+ * Fecha as estatísticas por passo (taxa de sucesso e mediana de duração).
+ * @param {Map<string, object>} stepMap Mapa por passo.
+ * @returns {object[]}
+ */
 function finalizeStepStats(stepMap) {
   const out = [];
   for (const item of stepMap.values()) {
@@ -159,6 +207,11 @@ function finalizeStepStats(stepMap) {
   return out.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+/**
+ * Fecha a contagem de origens de leitura, com o percentual de cada uma.
+ * @param {Object<string, number>} counts Contagem por origem.
+ * @returns {object}
+ */
 function finalizeReadOrigins(counts) {
   let totalReads = 0;
   for (const key of READ_ORIGIN_KEYS) totalReads += counts[key];
@@ -169,10 +222,20 @@ function finalizeReadOrigins(counts) {
   return { totalReads, breakdown };
 }
 
+/**
+ * Incrementa o contador de uma chave no objeto.
+ * @param {Object<string, number>} map Contadores (é alterado).
+ * @param {string} key Chave a incrementar.
+ */
 function incCount(map, key) {
   map[key] = (map[key] || 0) + 1;
 }
 
+/**
+ * Acumula um relatório sanitizado nos totais gerais.
+ * @param {object} acc Acumulador (é alterado).
+ * @param {object} report Relatório sanitizado.
+ */
 function accumulateReport(acc, report) {
   incCount(acc.byOs, report.os);
   incCount(acc.byBrowser, report.browser);
@@ -186,6 +249,11 @@ function accumulateReport(acc, report) {
   for (const key of READ_ORIGIN_KEYS) acc.originCounts[key] += report.readOrigins[key];
 }
 
+/**
+ * Fecha os totais de sinalização (tentativas, sucessos e taxas).
+ * @param {object} sig Totais de sinalização acumulados.
+ * @returns {object}
+ */
 function finalizeSignaling(sig) {
   return {
     wsAttempts: sig.wsAttempts,
@@ -228,6 +296,11 @@ export function aggregateFieldReports(entries) {
   };
 }
 
+/**
+ * Formata percentual, ou `n/d` quando nulo.
+ * @param {number|null} value Percentual.
+ * @returns {string}
+ */
 function fmtPct(value) {
   return value === null ? "n/d" : `${value}%`;
 }
@@ -263,6 +336,11 @@ export function renderFieldReportMarkdown(summary) {
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseArgs(argv) {
   const opts = { input: "", format: "md", out: "" };
   for (let i = 0; i < argv.length; i++) {
