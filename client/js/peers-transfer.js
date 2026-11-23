@@ -36,6 +36,12 @@ export async function collectUserCommunityIds() {
   return ids;
 }
 
+/**
+ * Descobre a comunidade da transação, pelos dados em cache ou por consulta.
+ * @param {string} txId Id da transação
+ * @param {object} cachedData Dados em cache
+ * @returns {Promise<string|undefined>} Comunidade, se houver.
+ */
 async function resolveTxCommunityId(txId, cachedData) {
   if (cachedData && typeof cachedData === "object" && cachedData.communityId) {
     return cachedData.communityId;
@@ -118,9 +124,20 @@ export function handleBlobMessage(msg) {
   pendingRequests.delete(msg.txId);
 }
 
+/**
+ * Pede a transação por um transporte e resolve com a resposta ou `null` no prazo.
+ * @param {string} txId Id da transação
+ * @param {Function} sendFn Envia o pedido
+ * @param {number} timeoutMs Prazo em ms
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 function requestWithTransport(txId, sendFn, timeoutMs) {
   return new Promise((resolve) => {
     let timer = null;
+    /**
+     * Encerra a espera com os dados recebidos.
+     * @param {object|null} data Dados
+     */
     const onResolve = (data) => {
       if (timer) clearTimeout(timer);
       resolve(data);
@@ -147,6 +164,12 @@ function requestWithTransport(txId, sendFn, timeoutMs) {
   });
 }
 
+/**
+ * Pede a transação pelos pares da mesma aba/aparelho (BroadcastChannel).
+ * @param {string} txId Id da transação
+ * @param {number} [timeoutMs=600] Prazo em ms
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 function requestFromBroadcast(txId, timeoutMs = 600) {
   return requestWithTransport(
     txId,
@@ -157,6 +180,12 @@ function requestFromBroadcast(txId, timeoutMs = 600) {
   );
 }
 
+/**
+ * Pede a transação pela malha WebRTC.
+ * @param {string} txId Id da transação
+ * @param {number} [timeoutMs=2000] Prazo em ms
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 function requestFromRtc(txId, timeoutMs = 2000) {
   return requestWithTransport(
     txId,
@@ -167,6 +196,11 @@ function requestFromRtc(txId, timeoutMs = 2000) {
   );
 }
 
+/**
+ * Pede a transação aos pares com mais afinidade, um a um.
+ * @param {string} txId Id da transação
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 async function requestFromAffinityPeers(txId) {
   const openPeers = webrtcPeer.listOpenRtcPeerIds ? webrtcPeer.listOpenRtcPeerIds() : [];
   const ranked = blobAffinity.rankAffinity(openPeers);
@@ -181,11 +215,24 @@ async function requestFromAffinityPeers(txId) {
   return null;
 }
 
+/**
+ * Pede a transação ao canal local, se existir.
+ * @param {string} txId Id da transação
+ * @param {boolean} priority Se tem prioridade (prazo maior)
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 async function requestFromLocalBroadcast(txId, priority) {
   if (!getBroadcastChannel()) return null;
   return requestFromBroadcast(txId, priority ? 900 : 600);
 }
 
+/**
+ * Pede a transação à malha WebRTC, se houver conexão.
+ * @param {string} txId Id da transação
+ * @param {boolean} priority Se tem prioridade (prazo maior)
+ * @param {boolean} hasRtc Se há conexão WebRTC
+ * @returns {Promise<object|null>} Dados recebidos, ou `null`.
+ */
 async function requestFromMeshRtc(txId, priority, hasRtc) {
   if (!hasRtc) return null;
   return requestFromRtc(txId, priority ? 2500 : 2000);

@@ -41,6 +41,12 @@ export function isOpaqueSandbox(iframe) {
   return !String(attr).split(/\s+/).includes("allow-same-origin");
 }
 
+/**
+ * Aplica ao frame uma mensagem recebida (altura ou ação).
+ * @param {object} msg Mensagem
+ * @param {HTMLIFrameElement} iframe Frame
+ * @param {Function} onAction Chamada quando há ação
+ */
 function applyMessage(msg, iframe, onAction) {
   if (msg.type === "of:resize" && msg.payload?.height) {
     iframe.style.height = `${Math.min(640, Math.max(120, Number(msg.payload.height) || 0))}px`;
@@ -59,6 +65,10 @@ function applyMessage(msg, iframe, onAction) {
 export function attachOpenFrameHost(container, iframe, { allowedOrigins = [], onAction = null, win = globalThis.window } = {}) {
   if (!container || !iframe || !win) return () => {};
   const origins = isOpaqueSandbox(iframe) ? [...allowedOrigins, OPAQUE_ORIGIN] : allowedOrigins;
+  /**
+   * Recebe as mensagens do frame e as aplica.
+   * @param {MessageEvent} ev Evento
+   */
   const onMessage = (ev) => {
     const msg = handleFrameMessage(ev, { allowedOrigins: origins, source: iframe.contentWindow });
     if (msg) applyMessage(msg, iframe, onAction);

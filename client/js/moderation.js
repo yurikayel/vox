@@ -97,6 +97,12 @@ export function isModerator(userAddress, communityOwner, rawModerators = "") {
   return list.some((m) => m.toLowerCase() === userAddress.toLowerCase());
 }
 
+/**
+ * Monta o conjunto de moderadores válidos (dono e lista informada).
+ * @param {string} [communityOwner=""] Dono da comunidade
+ * @param {string} [rawModerators=""] Lista bruta de moderadores
+ * @returns {Set<string>} Endereços em minúsculas.
+ */
 function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   const validModerators = new Set();
   if (communityOwner) validModerators.add(communityOwner.toLowerCase());
@@ -231,6 +237,11 @@ export const QUARANTINE_ACTION_LABEL = "Quarentena local / não ecoar";
 export const QUARANTINE_HINT =
   "Só neste aparelho. Não apaga o permaweb nem é ban da plataforma.";
 
+/**
+ * Lê uma lista do `localStorage`; se falhar, devolve lista vazia.
+ * @param {string} key Chave
+ * @returns {Array} Lista lida.
+ */
 function loadStorage(key) {
   try {
     const raw = localStorage.getItem(key);
@@ -240,6 +251,11 @@ function loadStorage(key) {
   }
 }
 
+/**
+ * Grava uma lista no `localStorage`; se falhar, segue sem gravar.
+ * @param {string} key Chave
+ * @param {Array} list Lista
+ */
 function saveStorage(key, list) {
   try {
     localStorage.setItem(key, JSON.stringify(list));
@@ -346,6 +362,11 @@ export function shouldDropGossip(authorRouteId) {
   return isUserBlocked(authorRouteId);
 }
 
+/**
+ * Converte o valor bruto em lista de ids de post.
+ * @param {*} raw Valor bruto
+ * @returns {string[]} Ids.
+ */
 function asPostIdList(raw) {
   if (!Array.isArray(raw)) return [];
   const ids = [];
@@ -408,12 +429,23 @@ export function unquarantinePost(postId) {
   return true;
 }
 
+/**
+ * Monta o conjunto de autores bloqueados ou silenciados.
+ * @returns {Set<string>} Autores ocultos.
+ */
 function hiddenAuthorSet() {
   const blocked = getBlockedUsers().map((b) => b.routeId);
   const muted = getMutedUsers().map((m) => m.routeId);
   return new Set([...blocked, ...muted]);
 }
 
+/**
+ * Diz se o post aparece no feed (nem oculto, nem de autor oculto).
+ * @param {object} post Post
+ * @param {Set<string>} hiddenAuthors Autores ocultos
+ * @param {Set<string>} hiddenIds Posts ocultos
+ * @returns {boolean} `true` se aparece.
+ */
 function isFeedPostVisible(post, hiddenAuthors, hiddenIds) {
   if (post?.id && hiddenIds.has(post.id)) return false;
   const author = post?.author || post?.owner || "";

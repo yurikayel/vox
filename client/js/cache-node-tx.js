@@ -111,6 +111,12 @@ export async function clearCache() {
   } catch {}
 }
 
+/**
+ * Remove as entradas mais antigas até caber no limite de bytes.
+ * @param {IDBObjectStore} store Armazém
+ * @param {object[]} items Entradas
+ * @param {number} maxBytes Limite em bytes
+ */
 function purgeOldEntries(store, items, maxBytes) {
   let currentBytes = items.reduce((acc, cur) => acc + (cur.size || 0), 0);
   if (currentBytes <= maxBytes) return;

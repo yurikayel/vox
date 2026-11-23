@@ -23,6 +23,11 @@ export function routeIdFromProfileCardId(cardId) {
 /** Versão (`editedAt` e assinatura) de cada cartão já aplicado nesta sessão; o diretório guarda a mesma marca entre sessões. */
 const seenCards = new Map();
 const SEEN_CARDS_MAX = 2000;
+/**
+ * Horário do cartão (edição ou criação).
+ * @param {object} item Cartão
+ * @returns {number} Horário em ms, ou 0.
+ */
 const cardTime = (item) => Number(item?.editedAt || item?.ts || 0);
 
 /** Já tenho esta versão ou uma mais nova. Mesma data com outra assinatura é outro cartão. */
@@ -75,6 +80,11 @@ export async function applyVerifiedProfileCardItem(item) {
   return applied;
 }
 
+/**
+ * Aplica um cartão de perfil recebido por fofoca, se for válido e novo.
+ * @param {object} item Cartão recebido
+ * @returns {boolean|object} Resultado da aplicação.
+ */
 function applyProfileCard(item) {
   // Validar antes de olhar a validade: um cartão vencido só apaga o cartão de quem o assinou.
   const check = profileCard.validateProfileCardItem(item);

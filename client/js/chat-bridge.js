@@ -33,6 +33,11 @@ export function detectWebhookPlatform(url = "") {
   return "generic";
 }
 
+/**
+ * Descobre o tipo do conteúdo (proposta, anúncio ou tópico) pelo corpo.
+ * @param {object} [payload={}] Conteúdo
+ * @returns {string} Tipo.
+ */
 function resolveKind(payload = {}) {
   const k = String(payload.kind || payload.contentType || payload.type || "").toLowerCase();
   if (k.includes("proposal") || payload.diffText != null || payload.tally != null) return "proposal";
@@ -46,6 +51,11 @@ const PROPOSAL_STATUS_CONFIG = {
   open: { color: 0x2b5fb8, label: "🟢 Em votação" },
 };
 
+/**
+ * Formata o placar de uma proposta.
+ * @param {object} tally Placar
+ * @returns {string} Texto do placar.
+ */
 function formatProposalTally(tally) {
   if (!tally || tally.yes == null) {
     return "1 membro = 1 voto (corte anti-brigading)";
@@ -53,6 +63,11 @@ function formatProposalTally(tally) {
   return `🟢 Sim: ${tally.yes || 0} · 🔴 Não: ${tally.no || 0} · ⚪ Abst: ${tally.abstain || 0}`;
 }
 
+/**
+ * Monta o embed do Discord para uma proposta.
+ * @param {object} p Proposta
+ * @returns {object} Embed.
+ */
 function buildDiscordProposalEmbed(p) {
   const rawState = p.state || (p.tally && p.tally.state) || "open";
   const state = String(rawState).toLowerCase();
@@ -74,6 +89,11 @@ function buildDiscordProposalEmbed(p) {
   };
 }
 
+/**
+ * Monta o embed do Discord para um anúncio de feira.
+ * @param {object} p Anúncio
+ * @returns {object} Embed.
+ */
 function buildDiscordListingEmbed(p) {
   const fields = [{ name: "Comunidade", value: p.communityId || "feira", inline: true }];
   if (p.priceLabel) fields.push({ name: "Preço", value: String(p.priceLabel), inline: true });
@@ -89,6 +109,11 @@ function buildDiscordListingEmbed(p) {
   };
 }
 
+/**
+ * Monta o embed do Discord para um tópico.
+ * @param {object} p Tópico
+ * @returns {object} Embed.
+ */
 function buildDiscordTopicEmbed(p) {
   const embed = {
     title: clip(p.title || "Publicação no Vox", 240),
@@ -125,6 +150,12 @@ export function formatDiscordWebhookPayload(payload = {}) {
   };
 }
 
+/**
+ * Monta os blocos extras do Slack conforme o tipo.
+ * @param {object} payload Conteúdo
+ * @param {string} kind Tipo
+ * @returns {object[]} Blocos.
+ */
 function buildSlackExtraBlocks(payload, kind) {
   const blocks = [];
   if (kind === "proposal" && payload.diffText) {
@@ -193,6 +224,12 @@ export function adaptWebhookPayloadForUrl(url, payload) {
   return payload;
 }
 
+/**
+ * Monta as linhas de resumo de uma proposta.
+ * @param {object} payload Proposta
+ * @param {Function} bold Aplica negrito do app de destino
+ * @returns {string[]} Linhas.
+ */
 function buildProposalSummaryLines(payload, bold) {
   const lines = [];
   if (payload.diffText) {
@@ -205,6 +242,11 @@ function buildProposalSummaryLines(payload, bold) {
   return lines;
 }
 
+/**
+ * Monta as linhas de resumo de um anúncio.
+ * @param {object} payload Anúncio
+ * @returns {string[]} Linhas.
+ */
 function buildListingSummaryLines(payload) {
   if (!payload.priceLabel && !payload.contactPix) return [];
   const parts = [];
@@ -238,6 +280,11 @@ export function buildChatSummaryCopy(payload = {}, { format = "discord" } = {}) 
   return lines.join("\n\n");
 }
 
+/**
+ * Reconhece uma linha de cabeçalho de transcrição (Discord, Slack ou WhatsApp).
+ * @param {string} line Linha
+ * @returns {object|null} Autor, hora e texto na mesma linha, ou `null`.
+ */
 function matchTranscriptHeaderLine(line) {
   // Discord: "Nome — Hoje às 14:32" ou "Nome - 28/10/2026 14:32"
   const discordMatch = line.match(/^([^—\-:\[\]]{1,42}?)\s*[—–-]\s*(?:Hoje às\s*|Ontem às\s*|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\s*)?(\d{1,2}:\d{2})\s*$/i);
@@ -257,6 +304,11 @@ function matchTranscriptHeaderLine(line) {
   return null;
 }
 
+/**
+ * Agrupa as linhas de uma transcrição em entradas por autor.
+ * @param {string[]} lines Linhas
+ * @returns {object[]} Entradas.
+ */
 function collectTranscriptEntries(lines) {
   const entries = [];
   let current = null;

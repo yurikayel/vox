@@ -18,6 +18,11 @@ export const VOX_KIT_PREFIX = "VOX1:";
 export const MAILTO_MAX_CHARS = 1950;
 const PHRASE_EMAIL_KEY_PREFIX = "vox-phrase-in-email-v1:";
 
+/**
+ * Monta a chave de armazenamento da marca de frase no e-mail.
+ * @param {string} routeId Id de rota
+ * @returns {string} Chave do `localStorage`.
+ */
 const phraseEmailKey = (routeId) => PHRASE_EMAIL_KEY_PREFIX + routeId;
 
 /**
@@ -86,6 +91,11 @@ export function confirmEmailKitSent(routeId = localAccount.getCachedRouteIdSync(
   return localAccount.markAccountExit("email", routeId, now);
 }
 
+/**
+ * Resolve o endereço base do link de sincronização, sem o fragmento.
+ * @param {string} [baseUrl] Endereço base
+ * @returns {string} Endereço base.
+ */
 function resolveSyncBaseUrl(baseUrl) {
   if (baseUrl) return String(baseUrl).replace(/#.*$/, "");
   const origin = globalThis.location?.origin;
@@ -94,10 +104,22 @@ function resolveSyncBaseUrl(baseUrl) {
   return "https://yurikayel.github.io/vox/";
 }
 
+/**
+ * Monta um link `mailto:` com assunto e corpo.
+ * @param {string} email Destinatário
+ * @param {string} subject Assunto
+ * @param {string} body Corpo
+ * @returns {string} Link `mailto:`.
+ */
 function buildMailtoUri(email, subject, body) {
   return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+/**
+ * Monta o corpo do e-mail do kit de acesso.
+ * @param {object} parts Dados do kit (nome, chave, data, link, código, frase, `includePhrase`, `compact`)
+ * @returns {string} Corpo do e-mail.
+ */
 function formatKitBody({ displayName, routeId, dateIso, syncUrl, kitCode, phrase, includePhrase, compact }) {
   const lines = [
     `Conta: ${displayName || "Cidadão"}`,
@@ -116,6 +138,13 @@ function formatKitBody({ displayName, routeId, dateIso, syncUrl, kitCode, phrase
   return lines.join("\n");
 }
 
+/**
+ * Escolhe o `mailto:` completo ou o compacto, conforme o limite de tamanho.
+ * @param {string} email Destinatário
+ * @param {string} subject Assunto
+ * @param {object} parts Dados do kit
+ * @returns {{mailtoUrl: string, truncatedForMailto: boolean}} Link e se foi encurtado.
+ */
 function selectMailtoUrl(email, subject, parts) {
   const fullMailto = buildMailtoUri(email, subject, formatKitBody({ ...parts, compact: false }));
   if (fullMailto.length <= MAILTO_MAX_CHARS) return { mailtoUrl: fullMailto, truncatedForMailto: false };
@@ -162,6 +191,11 @@ export function buildEmailKit(opts = {}) {
   };
 }
 
+/**
+ * Decodifica um trecho de URL; se falhar, devolve o texto como veio.
+ * @param {string} value Texto codificado
+ * @returns {string} Texto decodificado.
+ */
 function decodeUriSafe(value) {
   try {
     return decodeURIComponent(value);
@@ -170,6 +204,11 @@ function decodeUriSafe(value) {
   }
 }
 
+/**
+ * Reúne os trechos do texto que podem ser o kit de acesso.
+ * @param {string} raw Texto colado
+ * @returns {string[]} Candidatos.
+ */
 function collectKitCandidates(raw) {
   const out = [];
   const urlMatch = raw.match(/#\/?sync\?[^#\s"']*?\bb=([A-Za-z0-9._~%-]+)/i);
@@ -343,6 +382,13 @@ export async function restoreAccountFromInputs({ email = "", pass = "", kitText 
   return oauthVault.restoreFromPassphraseVault(pass, { email });
 }
 
+/**
+ * Restaura de um arquivo de backup ou de kit de acesso.
+ * @param {string} text Conteúdo do arquivo
+ * @param {string} pass Senha
+ * @param {string} email E-mail
+ * @returns {Promise<object>} Resultado da restauração.
+ */
 async function restoreSingleBackupFile(text, pass, email) {
   const kitRecord = extractVaultRecordFromEmailKit(text);
   if (kitRecord) {
@@ -359,6 +405,13 @@ async function restoreSingleBackupFile(text, pass, email) {
   return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
 }
 
+/**
+ * Restaura a partir dos arquivos escolhidos da caixa de entrada.
+ * @param {File[]} files Arquivos
+ * @param {string} pass Senha
+ * @param {string} [email=""] E-mail
+ * @returns {Promise<object>} Resultado da restauração.
+ */
 async function restoreFromInboxFiles(files, pass, email = "") {
   const texts = await Promise.all(files.map((f) => f.text()));
   if (texts.length === 1) {

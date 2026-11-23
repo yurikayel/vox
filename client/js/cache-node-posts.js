@@ -103,6 +103,12 @@ export async function deleteLocalPost(id) {
   }
 }
 
+/**
+ * Filtra os itens por tipo, comunidade, resposta, proposta e post.
+ * @param {object[]} items Itens
+ * @param {object} filters Filtros (`type`, `communityId`, `replyTo`, `proposalId`, `postId`)
+ * @returns {object[]} Itens filtrados.
+ */
 function filterPostItems(items, { type, communityId, replyTo, proposalId, postId }) {
   let res = items;
   if (type) res = res.filter((p) => p.type === type);
@@ -113,6 +119,12 @@ function filterPostItems(items, { type, communityId, replyTo, proposalId, postId
   return res;
 }
 
+/**
+ * Ordena os itens: respostas da mais antiga à mais nova, o resto ao contrário.
+ * @param {object[]} items Itens
+ * @param {string} type Tipo filtrado
+ * @returns {object[]} Itens ordenados.
+ */
 function sortPostItems(items, type) {
   if (type === "reply") {
     return items.sort((a, b) => (a.ts || 0) - (b.ts || 0));
