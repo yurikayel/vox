@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Perfil: salvar a chave Pix voltou a funcionar — o formulário lia `valid`/`error` em vez de `ok`/`errorPt` de `validatePixKey` (toda chave válida mostrava "undefined" e não era gravada) e passava o texto a `setPixKey` em vez do registro `{ normalized, type, masked }`. Achado pelo lote de cobertura T3 (`tests/perfil-pix-salvar.test.js`).
+
 - Testes: cobertura do cliente sobe de 78,8% para 95,3% (lotes T1–T7, `tests/cov-*`); relay em 91,9%. Pisos de `scripts/coverage-floor.json` sobem para esses valores (meta 90%).
 
 - Testes: `relay/test_contract_api.py` não sai mais para a internet — os gateways upstream ficam vazios durante o teste, e o `/tx/` ausente vira 404 local (antes o pedido ia a `arweave.net` com timeout de 8 s contra 5 s do cliente e falhava de forma intermitente no CI).
