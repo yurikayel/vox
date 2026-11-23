@@ -206,7 +206,7 @@ const STATIC_ROUTES = {
  */
 function parseStaticRoute(parts, query) {
   const root = parts[0];
-  if (STATIC_ROUTES[root]) return STATIC_ROUTES[root](parts, query);
+  if (Object.hasOwn(STATIC_ROUTES, root)) return STATIC_ROUTES[root](parts, query);
   if (root === "people" || root === "pessoas") {
     return { name: "people", query: query.get("q") || "" };
   }

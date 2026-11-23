@@ -6,7 +6,10 @@
   const script = document.currentScript;
   if (!script) return;
   const topicId = script.getAttribute("data-topic") || "";
-  const base = script.getAttribute("data-base") || "https://yurikayel.github.io/vox/";
+  const DEFAULT_BASE = "https://yurikayel.github.io/vox/";
+  const rawBase = script.getAttribute("data-base") || DEFAULT_BASE;
+  // Só http(s): outro esquema (ex.: `javascript:`) viraria código no clique do link.
+  const base = /^https?:\/\//i.test(rawBase) ? rawBase : DEFAULT_BASE;
   const label = script.getAttribute("data-label") || "Comentar no Vox";
   const ref = script.getAttribute("data-ref") || "embed";
   const path = topicId
