@@ -10,6 +10,11 @@
 import * as guardians from "../identity/index.js";
 import { clearAccountExit, markAccountExit } from "../identity/index.js";
 
+/**
+ * Carrega as dependências reais do fluxo de guardiões.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultDeps() {
   const [gql, peers, cryptoDm, localAccount, wire, phrase, contacts, social, notice, share] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../identity/index.js"),
@@ -31,6 +36,16 @@ async function defaultDeps() {
   };
 }
 
+/**
+ * Assina e envia uma mensagem de guardiões; sem chave do destino, devolve `no-key`.
+ *
+ * @param {object} d Dependências.
+ * @param {string} me Rota de quem envia.
+ * @param {string} to Rota do destino.
+ * @param {object} body Corpo ainda sem assinatura.
+ * @param {string|null} [pub=null] Chave pública já conhecida.
+ * @returns {Promise<string>}
+ */
 async function sendSigned(d, me, to, body, pub = null) {
   const key = pub || (await d.getDmPub(to).catch(() => null));
   if (!key) return "no-key";
@@ -39,6 +54,13 @@ async function sendSigned(d, me, to, body, pub = null) {
   return d.dispatch(to, envelope);
 }
 
+/**
+ * Revoga junto aos guardiões a divisão anterior; falhas de envio são ignoradas.
+ *
+ * @param {object} d Dependências.
+ * @param {string} me Rota de quem envia.
+ * @param {object|null} previous Divisão anterior.
+ */
 async function revokePrevious(d, me, previous) {
   if (!previous) return;
   for (const g of previous.guardians) {
@@ -102,6 +124,13 @@ export async function removeAllGuardians(deps = null) {
   return true;
 }
 
+/**
+ * Trata um pedaço recebido: guarda, confirma ao dono e avisa a pessoa.
+ *
+ * @param {object} d Dependências.
+ * @param {string} me Rota de quem recebe.
+ * @param {object} p Pedaço recebido.
+ */
 async function onShare(d, me, p) {
   if (!guardians.isWellFormedShare(p) || !d.follows(p.author)) return;
   if (!(await guardians.storeHeldShare(p, me))) return;
@@ -109,6 +138,12 @@ async function onShare(d, me, p) {
   d.alert(`${p.ownerName || "Uma pessoa"} escolheu você para guardar a volta da conta. Sozinho, o seu pedaço não abre nada.`);
 }
 
+/**
+ * Trata o recibo de um guardião e marca ou limpa a saída soberana conforme o quórum.
+ *
+ * @param {string} me Rota do dono.
+ * @param {object} p Recibo recebido.
+ */
 function onReceipt(me, p) {
   if (!guardians.applyReceipt(me, p)) return;
   const { confirmed, m } = guardians.countConfirmed(me);

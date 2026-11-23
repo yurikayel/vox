@@ -8,6 +8,12 @@ import { canUpdateCommunity, COMMUNITY_UPDATE_TYPE } from "../community-updates.
 
 const CHANNEL_BLOCKED_MSG = "Esta comunidade é um canal: só a moderação publica posts. Você pode comentar nos posts dela.";
 
+/**
+ * Resolve os metadados da comunidade pela tela de comunidades.
+ *
+ * @param {string} id Identificador da comunidade.
+ * @returns {Promise<object>}
+ */
 const resolveMeta = async (id) => (await import("./screens-community.js")).resolveCommunityMetadata(id);
 
 /**
@@ -44,6 +50,11 @@ export async function assertCanPostTopic(communityId, deps = null) {
   return false;
 }
 
+/**
+ * Carrega as dependências reais da troca de modo de postagem.
+ *
+ * @returns {Promise<object>}
+ */
 async function defaultModeDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
     import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
@@ -105,6 +116,11 @@ export function dropMountedCommunityPage(communityId, doc = globalThis.document)
   return Boolean(page);
 }
 
+/**
+ * Confirma e aplica a troca do modo de postagem do botão clicado.
+ *
+ * @param {HTMLElement} btn Botão com `data-comm` e `data-mode`.
+ */
 async function onModeClick(btn) {
   const { comm, mode } = btn.dataset;
   if (!CONFIRM_TEXT[mode] || !globalThis.confirm?.(CONFIRM_TEXT[mode])) return;
