@@ -319,15 +319,17 @@ function extractPostText(openBtn) {
 function handlePostMoreMenuTriggerClick(openBtn, e) {
   e.preventDefault();
   e.stopPropagation();
+  const d = openBtn.dataset;
   openPostMoreMenu(
     {
-      postId: openBtn.dataset.postId || "",
-      authorRoute: openBtn.dataset.authorRoute || "",
-      title: openBtn.dataset.title || "",
+      postId: d.postId || "",
+      communityId: d.communityId || "",
+      authorRoute: d.authorRoute || "",
+      title: d.title || "",
       body: extractPostText(openBtn),
-      isOwn: openBtn.dataset.isOwn === "1",
-      hasImage: openBtn.dataset.hasImage === "1",
-      pix: openBtn.dataset.pix || "",
+      isOwn: d.isOwn === "1",
+      hasImage: d.hasImage === "1",
+      pix: d.pix || "",
     },
     openBtn,
   );

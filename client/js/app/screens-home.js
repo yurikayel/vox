@@ -252,27 +252,26 @@ async function fetchRemoteHomeItems(activeFeed) {
  *
  * @param {string} cId Comunidade.
  * @param {string} user Rota de quem vê.
- * @param {Map<string, boolean>} commClosedCache Cache de comunidades fechadas.
+ * @param {Map<string, object|null>} commClosedCache Cache de metadados das comunidades.
  * @param {Map<string, boolean>} membershipCache Cache de participação.
  * @returns {Promise<boolean>}
  */
 async function isCommunityTopicPermitted(cId, user, commClosedCache, membershipCache) {
   if (!cId || cId === "vox") return true;
-  let isClosed = commClosedCache.get(cId);
-  if (isClosed === undefined) {
+  let meta = commClosedCache.get(cId);
+  if (meta === undefined) {
     try {
-      const meta = await resolveCommunityMetadata(cId);
-      isClosed = Boolean(meta && (meta.visibility === "closed" || meta.type === "closed"));
+      meta = await resolveCommunityMetadata(cId);
     } catch {
-      isClosed = false;
+      meta = null;
     }
-    commClosedCache.set(cId, isClosed);
+    commClosedCache.set(cId, meta);
   }
-  if (!isClosed) return true;
+  if (!meta || (meta.visibility !== "closed" && meta.type !== "closed")) return true;
   if (!user) return false;
   let isMember = membershipCache.get(cId);
   if (isMember === undefined) {
-    isMember = await checkCommunityMembership(cId, user);
+    isMember = await checkCommunityMembership(cId, user, meta);
     membershipCache.set(cId, isMember);
   }
   return Boolean(isMember);

@@ -120,6 +120,35 @@ test("home — filterClosedCommunityTopics deixa passar abertas e sem comunidade
   assert.deepEqual(await ids(""), ["a", "d", "e"], "sem usuário, fechadas ficam de fora");
 });
 
+test("home — filterClosedCommunityTopics repassa meta a checkCommunityMembership para liberar comunidade fechada ao próprio dono sem membership explícito", async () => {
+  await cacheNode.saveLocalPost({
+    id: "c_t1_dona_sem_mem",
+    type: "community",
+    communityId: "t1_dona_sem_mem",
+    title: "Fechada da Dona",
+    author: me,
+    visibility: "closed",
+    ts: 10,
+  });
+  await cacheNode.saveLocalPost({
+    id: "c_t1_outro_fechada",
+    type: "community",
+    communityId: "t1_outro_fechada",
+    title: "Fechada de Outro",
+    author: "vx_outro_dono",
+    visibility: "closed",
+    ts: 11,
+  });
+  const allowed = await home.filterClosedCommunityTopics(
+    [
+      { id: "top_dona", communityId: "t1_dona_sem_mem" },
+      { id: "top_outro", communityId: "t1_outro_fechada" },
+    ],
+    me,
+  );
+  assert.deepEqual(allowed.map((t) => t.id), ["top_dona"]);
+});
+
 /** Compositor aberto/fechado e citação: elementos mínimos que `insertQuoteIntoComposer` procura. */
 function addComposer({ collapsedForm = false } = {}) {
   const textarea = Object.assign(dom.add("inline-topic-body"), { value: "texto antes" });
