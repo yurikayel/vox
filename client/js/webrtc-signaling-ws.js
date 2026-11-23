@@ -97,16 +97,29 @@ export function disconnectWebRtc() {
   resetSignalingIndex();
 }
 
+/**
+ * Diz se a sinalização por Nostr está habilitada e tem relays.
+ * @param {object} config Configuração de sinalização
+ * @returns {boolean} `true` se habilitada.
+ */
 function isNostrSignalingEnabled(config) {
   return config?.nostrSignaling?.enabled !== false && getNostrSignalingRelays(config).length > 0;
 }
 
+/**
+ * Trata uma mensagem de sinalização vinda do Nostr.
+ * @param {object} msg Mensagem
+ */
 function onNostrSignalingMessage(msg) {
   const remote = msg.from || msg.peerId;
   if (remote && !peerTransport.has(remote)) peerTransport.set(remote, "nostr");
   void handleSignalingMessage(msg);
 }
 
+/**
+ * Inicia a sinalização por Nostr.
+ * @returns {Promise<void>} Conclui quando iniciada.
+ */
 async function startNostrSignaling() {
   if (getNostrTransport() || !getIsWebRtcEnabled() || !getCurrentPeerId()) return;
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
@@ -126,6 +139,11 @@ async function startNostrSignaling() {
   transport.start();
 }
 
+/**
+ * Reaproveita o socket de sinalização vivo ou o solta.
+ * @param {string} url Endereço do servidor
+ * @returns {boolean} `true` se pode abrir uma nova conexão.
+ */
 function reuseOrReleaseSignalingSocket(url) {
   const ws = getSignalingWs();
   if (!ws) return true;
@@ -139,6 +157,10 @@ function reuseOrReleaseSignalingSocket(url) {
   return true;
 }
 
+/**
+ * Conecta ao servidor de sinalização por WebSocket.
+ * @returns {Promise<void>} Conclui quando a conexão foi iniciada.
+ */
 async function connectSignaling() {
   if (!getIsWebRtcEnabled() || !getCurrentPeerId()) return;
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
@@ -160,6 +182,11 @@ async function connectSignaling() {
   }
 }
 
+/**
+ * Trata o fechamento do socket de sinalização, tentando outro candidato.
+ * @param {object} config Configuração de sinalização
+ * @param {boolean} wasOpened Se o socket chegou a abrir
+ */
 function handleSignalingSocketClose(config, wasOpened) {
   setSignalingWs(null);
   if (!wasOpened) recordSignalingDial("ws", { ok: false });
@@ -176,6 +203,10 @@ function handleSignalingSocketClose(config, wasOpened) {
   }
 }
 
+/**
+ * Trata uma mensagem recebida pelo socket de sinalização.
+ * @param {string} raw Texto recebido
+ */
 function handleWsSignalingPayload(raw) {
   try {
     const msg = JSON.parse(raw);
@@ -185,6 +216,12 @@ function handleWsSignalingPayload(raw) {
   } catch {}
 }
 
+/**
+ * Liga os tratadores de eventos do socket de sinalização.
+ * @param {WebSocket} ws Socket
+ * @param {object} config Configuração de sinalização
+ * @param {number} [startedAt=Date.now()] Início da conexão (ms)
+ */
 function bindSignalingSocket(ws, config, startedAt = Date.now()) {
   let wasOpened = false;
   ws.onopen = () => {
@@ -209,6 +246,10 @@ function bindSignalingSocket(ws, config, startedAt = Date.now()) {
   ws.onclose = () => handleSignalingSocketClose(config, wasOpened);
 }
 
+/**
+ * Agenda a reconexão com espera crescente.
+ * @param {boolean} [immediate=false] Se tenta sem esperar
+ */
 function scheduleReconnect(immediate = false) {
   if (!getIsWebRtcEnabled() || getReconnectTimer()) return;
   getSignalingMachine().send("BACKOFF");
@@ -222,6 +263,10 @@ function scheduleReconnect(immediate = false) {
   setReconnectTimer(timer);
 }
 
+/**
+ * Esquece o endereço registrado do par.
+ * @param {string} remotePeerId Par remoto
+ */
 function unregisterPeerAddress(remotePeerId) {
   for (const [addr, pid] of addressToPeer.entries()) {
     if (pid === remotePeerId) {
@@ -230,6 +275,10 @@ function unregisterPeerAddress(remotePeerId) {
   }
 }
 
+/**
+ * Trata a lista de pares registrados no servidor, abrindo conexões até o limite.
+ * @param {string[]} peersList Pares registrados
+ */
 function handleRegisteredPeers(peersList) {
   const maxPeers = getConfigCache()?.maxRtcPeers || 8;
   const currentPeerId = getCurrentPeerId();
@@ -241,6 +290,10 @@ function handleRegisteredPeers(peersList) {
   }
 }
 
+/**
+ * Trata a entrada de um par novo.
+ * @param {string} remoteId Par que entrou
+ */
 function handlePeerJoined(remoteId) {
   if (!remoteId || isBeaconIdentity("", remoteId) || peerConnections.has(remoteId)) return;
   const maxPeers = getConfigCache()?.maxRtcPeers || 8;

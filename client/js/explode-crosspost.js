@@ -37,10 +37,19 @@ export function removeCascadeBar() {
   activeCascade = null;
 }
 
+/**
+ * Passos ativos da cascata de divulgação.
+ * @returns {object[]} Passos.
+ */
 function getActiveCascadeSteps() {
   return activeCascade?.steps?.length ? activeCascade.steps : CASCADE_STEPS;
 }
 
+/**
+ * Abre o passo atual da cascata para o post.
+ * @param {object} step Passo
+ * @param {object} post Post
+ */
 function openCascadeStep(step, post) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   const text = buildExplodeText({ title: post?.title, body: post?.body, url: canonicalUrl });
@@ -53,6 +62,9 @@ function openCascadeStep(step, post) {
   }
 }
 
+/**
+ * Atualiza a barra da cascata na tela.
+ */
 function updateCascadeBarUi() {
   const root = document.getElementById(CASCADE_BAR_ID);
   if (!root || !activeCascade) return;
@@ -87,6 +99,12 @@ export function advanceCascadeExplode() {
   updateCascadeBarUi();
 }
 
+/**
+ * Monta o HTML da barra da cascata para o passo informado.
+ * @param {number} stepIndex Índice do passo
+ * @param {object[]} [steps=CASCADE_STEPS] Passos
+ * @returns {string} HTML da barra.
+ */
 function buildCascadeBarHtml(stepIndex, steps = CASCADE_STEPS) {
   const current = steps[stepIndex] || steps[0];
   const next = steps[stepIndex + 1];
@@ -139,12 +157,26 @@ export function startCascadeExplode(post, { steps = CASCADE_STEPS, skipBurst = f
   mountCascadeBar(validSteps, post, 0);
 }
 
+/**
+ * Prepara o cartão visual se algum destino for Instagram ou TikTok.
+ * @param {object[]} intentTargets Destinos
+ * @param {object} post Post
+ * @returns {Promise<object|null>} Resultado do cartão, ou `null`.
+ */
 async function prepareVisualMediaIfNeeded(intentTargets, post) {
   const needsCard = intentTargets.some((t) => t.id === "instagram" || t.id === "tiktok");
   if (!needsCard) return null;
   return copyStoryCardToClipboard(post).catch(() => null);
 }
 
+/**
+ * Abre as janelas dos destinos conectados de forma síncrona (para o navegador não bloquear).
+ * @param {object[]} intentTargets Destinos
+ * @param {object} post Post
+ * @param {string} text Texto
+ * @param {string} canonicalUrl Link do post
+ * @returns {{opened: number, blocked: object[]}} Quantas abriram e quais foram bloqueadas.
+ */
 function launchConnectedIntentsSync(intentTargets, post, text, canonicalUrl) {
   if (!intentTargets.length || typeof window === "undefined" || typeof window.open !== "function") {
     return { opened: 0, blocked: [] };
@@ -161,6 +193,11 @@ function launchConnectedIntentsSync(intentTargets, post, text, canonicalUrl) {
   return { opened, blocked };
 }
 
+/**
+ * Copia o texto para a área de transferência.
+ * @param {string} text Texto
+ * @returns {Promise<boolean>} `true` se copiou.
+ */
 async function tryCopyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -170,6 +207,12 @@ async function tryCopyToClipboard(text) {
   }
 }
 
+/**
+ * Dispara todos os canais configurados da rajada.
+ * @param {object} post Post
+ * @param {string} canonicalUrl Link do post
+ * @returns {Promise<object>} Resultado dos envios.
+ */
 async function fireAllBurstChannels(post, canonicalUrl) {
   const payload = buildPosseExportPayload({ ...post, canonicalUrl });
   const webhooks = loadPosseWebhooks();
@@ -178,6 +221,10 @@ async function fireAllBurstChannels(post, canonicalUrl) {
   return (res.sent || 0) + (autoRep.count || 0);
 }
 
+/**
+ * Conta mais uma explosão do post e atualiza os botões.
+ * @param {object} post Post
+ */
 function bumpPostExplodeCounter(post) {
   if (!post?.id) return;
   const exp = recordExplosion(post.id, post.explodesCount || 0);

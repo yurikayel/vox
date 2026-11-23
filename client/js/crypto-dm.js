@@ -11,6 +11,11 @@ import { dmPrivateKey } from "./identity/keys.js";
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
 const ECDH_ALGO = { name: "ECDH", namedCurve: "P-256" };
 
+/**
+ * Converte bytes em base64url.
+ * @param {ArrayBuffer|Uint8Array} bytes Bytes
+ * @returns {string} Texto em base64url.
+ */
 function bytesToB64Url(bytes) {
   let bin = "";
   const arr = new Uint8Array(bytes);
@@ -20,6 +25,11 @@ function bytesToB64Url(bytes) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Converte base64url em bytes.
+ * @param {string} b64url Texto em base64url
+ * @returns {Uint8Array} Bytes.
+ */
 function b64UrlToBytes(b64url) {
   const padded = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(padded);
@@ -30,6 +40,11 @@ function b64UrlToBytes(b64url) {
   return out;
 }
 
+/**
+ * Aceita chave JWK como objeto ou como texto JSON.
+ * @param {object|string} jwkOrStr Chave
+ * @returns {object} Chave em JWK.
+ */
 function parseJwkInput(jwkOrStr) {
   if (typeof jwkOrStr === "string") {
     return JSON.parse(jwkOrStr);
@@ -107,6 +122,13 @@ export async function setDmKeypair(keypair) {
   return true;
 }
 
+/**
+ * Deriva a chave AES-GCM a partir do ECDH entre duas chaves.
+ * @param {CryptoKey} privateKey Chave privada
+ * @param {CryptoKey} publicKey Chave pública da outra ponta
+ * @param {string[]} usages Usos da chave
+ * @returns {Promise<CryptoKey>} Chave AES.
+ */
 async function deriveAesKey(privateKey, publicKey, usages) {
   return crypto.subtle.deriveKey(
     { name: "ECDH", public: publicKey },
@@ -117,11 +139,27 @@ async function deriveAesKey(privateKey, publicKey, usages) {
   );
 }
 
+/**
+ * Monta os dados autenticados (AAD) ligados a remetente e destinatário.
+ * @param {string} from Remetente
+ * @param {string} to Destinatário
+ * @returns {Uint8Array} AAD.
+ */
 function buildAad(from, to) {
   return new TextEncoder().encode(`v1|${from || ""}|${to || ""}`);
 }
 
+/**
+ * Monta os dados autenticados da chave de apagar de uma mensagem.
+ * @param {string} msgId Id da mensagem
+ * @returns {Uint8Array} AAD.
+ */
 const deleteAad = (msgId) => new TextEncoder().encode(`vox-dm-delete-v1|${msgId}`);
+/**
+ * Converte bytes em texto hexadecimal.
+ * @param {ArrayBuffer|Uint8Array} bytes Bytes
+ * @returns {string} Texto hexadecimal.
+ */
 const bytesToHex = (bytes) => Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
 
 /**
@@ -136,6 +174,11 @@ async function sealDeleteToken(aesKey, msgId) {
   return { iv: bytesToB64Url(iv), ct: bytesToB64Url(ct), hash };
 }
 
+/**
+ * Valida e limpa a chave pública EC do destinatário.
+ * @param {object|string} toPubInput Chave pública
+ * @returns {object} Chave pública em JWK.
+ */
 function sanitizeEcPublicJwk(toPubInput) {
   const toPubJwk = parseJwkInput(toPubInput);
   if (!toPubJwk || toPubJwk.kty !== "EC") {
@@ -189,6 +232,12 @@ export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
   };
 }
 
+/**
+ * Deriva a chave AES do destinatário a partir do envelope.
+ * @param {object} envelope Envelope da mensagem
+ * @param {object} [privateJwkOverride] Chave privada alternativa
+ * @returns {Promise<CryptoKey>} Chave AES.
+ */
 async function recipientAesKey(envelope, privateJwkOverride) {
   const privKey = await dmPrivateKey(privateJwkOverride || (await ensureDmKeys()).privateJwk);
   const ephPubKey = await crypto.subtle.importKey("jwk", envelope.ephPub, ECDH_ALGO, false, []);

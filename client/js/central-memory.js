@@ -77,6 +77,10 @@ export function notifyCentralMemory(event) {
   }
 }
 
+/**
+ * Lê o parâmetro de memória da URL atual.
+ * @returns {string} Valor ou texto vazio.
+ */
 function extractMemoryParamFromLocation() {
   if (typeof window === "undefined" || !window.location) return "";
   try {
@@ -118,6 +122,12 @@ export function isHydratingFromCentralMemory() {
   return hydratingDepth > 0;
 }
 
+/**
+ * Faz uma requisição com timeout e lê o JSON.
+ * @param {string} url Endereço
+ * @param {object} [options={}] Opções do `fetch`
+ * @returns {Promise<object>} Resposta decodificada.
+ */
 async function fetchJsonWithTimeout(url, options = {}) {
   try {
     const res = await fetchWithTimeout(url, options, { timeoutMs: REQUEST_TIMEOUT_MS });
@@ -133,6 +143,12 @@ async function fetchJsonWithTimeout(url, options = {}) {
   }
 }
 
+/**
+ * Envia o corpo ao primeiro servidor de memória que responder, preferindo o último bom.
+ * @param {string} path Caminho da rota
+ * @param {object} payload Corpo
+ * @returns {Promise<object|null>} Resposta ou `null` se nenhum respondeu.
+ */
 async function postToFirstAvailable(path, payload) {
   const urls = preferredUrl
     ? [preferredUrl, ...getCentralMemoryUrls().filter((u) => u !== preferredUrl)]
@@ -163,6 +179,11 @@ export async function pushEventToCentralMemory(event) {
   return postToFirstAvailable("/memory/ingest", event);
 }
 
+/**
+ * Extrai o hash do blob de mídia de um post.
+ * @param {object} post Post
+ * @returns {string} Hash, ou texto vazio.
+ */
 function extractPostBlobHash(post) {
   if (!post || typeof post !== "object") return "";
   if (post.mediaRef && post.mediaRef.hash) return post.mediaRef.hash;
@@ -170,6 +191,12 @@ function extractPostBlobHash(post) {
   return "";
 }
 
+/**
+ * Resolve o blob de mídia de um post, do próprio post ou do cache.
+ * @param {object} post Post
+ * @param {string} hash Hash do blob
+ * @returns {Promise<object|null>} Blob ou `null`.
+ */
 async function resolveBlobForPost(post, hash) {
   if (post.mediaBlob && post.mediaBlob.data) {
     return post.mediaBlob;
@@ -177,6 +204,11 @@ async function resolveBlobForPost(post, hash) {
   return mediaBlob.defaultBlobStorage.get(hash);
 }
 
+/**
+ * Reúne os blobs locais dos posts, sem repetir.
+ * @param {object[]} posts Posts
+ * @returns {Promise<object[]>} Blobs.
+ */
 async function collectLocalBlobs(posts) {
   const blobs = [];
   const seen = new Set();
@@ -192,11 +224,22 @@ async function collectLocalBlobs(posts) {
   return blobs;
 }
 
+/**
+ * Filtra os itens mais novos que a marca d'água.
+ * @param {object[]} items Itens
+ * @param {number} watermarkMs Marca d'água em ms
+ * @returns {object[]} Itens novos.
+ */
 function filterDeltaItems(items, watermarkMs) {
   if (watermarkMs <= 0) return items;
   return items.filter((it) => hydrate.itemTimestamp(it) >= watermarkMs);
 }
 
+/**
+ * Lista os hashes de blob conhecidos nos posts.
+ * @param {object[]} posts Posts
+ * @returns {string[]} Hashes.
+ */
 function listKnownBlobHashes(posts) {
   const hashes = new Set();
   for (const post of posts) {
@@ -206,14 +249,33 @@ function listKnownBlobHashes(posts) {
   return [...hashes];
 }
 
+/**
+ * Converte um valor em texto aparado.
+ * @param {*} val Valor
+ * @returns {string} Texto aparado.
+ */
 function cleanStr(val) {
   return val ? String(val).trim() : "";
 }
 
+/**
+ * Diz se o novo valor existe e difere do anterior.
+ * @param {string} nextVal Valor novo
+ * @param {string} prevVal Valor anterior
+ * @returns {boolean} `true` se mudou.
+ */
 function hasFieldDiff(nextVal, prevVal) {
   return Boolean(nextVal && nextVal !== prevVal);
 }
 
+/**
+ * Diz se o cartão do diretório mudaria com os novos campos.
+ * @param {object|null} existing Cartão atual
+ * @param {string} cleanName Nome
+ * @param {string} cleanAvatar Avatar
+ * @param {string} cleanBio Bio
+ * @returns {boolean} `true` se há mudança.
+ */
 function hasCardChanges(existing, cleanName, cleanAvatar, cleanBio) {
   if (!existing) return true;
   if (hasFieldDiff(cleanName, existing.name)) return true;
@@ -221,10 +283,23 @@ function hasCardChanges(existing, cleanName, cleanAvatar, cleanBio) {
   return hasFieldDiff(cleanBio, existing.bio);
 }
 
+/**
+ * Escolhe o valor novo ou mantém o existente.
+ * @param {string} cleanVal Valor novo
+ * @param {string} existingVal Valor atual
+ * @returns {string} Valor escolhido.
+ */
 function mergeCardField(cleanVal, existingVal) {
   return cleanVal ? cleanVal : cleanStr(existingVal);
 }
 
+/**
+ * Cria ou atualiza o cartão do diretório de perfis, se houver mudança.
+ * @param {string} routeId Id de rota (`vx_...`)
+ * @param {string} name Nome
+ * @param {string} [avatarUrl=""] Avatar
+ * @param {string} [bio=""] Bio
+ */
 function upsertDirectoryCardIfNeeded(routeId, name, avatarUrl = "", bio = "") {
   const id = cleanStr(routeId);
   if (!id.startsWith("vx_")) return;
@@ -244,6 +319,9 @@ function upsertDirectoryCardIfNeeded(routeId, name, avatarUrl = "", bio = "") {
 
 // Só a conta ativa, com nome e visível na malha. As outras contas do cofre não saem daqui: publicá-las
 // juntas contaria a quem lê que são da mesma pessoa.
+/**
+ * Sincroniza o cartão da conta ativa com o diretório de perfis.
+ */
 function syncActiveAccountCard() {
   const myId = localAccount.getCachedRouteIdSync();
   if (!myId || !localAccount.getMeshDiscoverable()) return;
@@ -254,15 +332,27 @@ function syncActiveAccountCard() {
   }
 }
 
+/**
+ * Atualiza o cartão do autor de um post no diretório.
+ * @param {object} post Post
+ */
 function upsertAuthorCard(post) {
   if (post) upsertDirectoryCardIfNeeded(post.author || post.owner, post.authorDisplay, post.authorAvatar, "");
 }
 
+/**
+ * Sincroniza as contas locais e os autores dos posts com o diretório de perfis.
+ * @param {object[]} allPosts Posts
+ */
 function syncLocalAccountsToProfileDirectory(allPosts) {
   syncActiveAccountCard();
   for (const post of Array.isArray(allPosts) ? allPosts : []) upsertAuthorCard(post);
 }
 
+/**
+ * Monta o pacote local (posts, lápides, blobs) para enviar à memória central.
+ * @returns {Promise<object>} Pacote de sincronização.
+ */
 async function buildLocalSyncBundle() {
   const [allPosts, allTombstones] = await Promise.all([
     cacheNode.getWirePosts(),
@@ -305,6 +395,11 @@ function afterGenesis(items) {
   );
 }
 
+/**
+ * Aplica localmente o pacote recebido da memória central.
+ * @param {object} remote Pacote remoto
+ * @returns {Promise<void>} Conclui quando aplicado.
+ */
 async function applyRemoteBundle(remote) {
   hydratingDepth += 1;
   try {
@@ -318,6 +413,11 @@ async function applyRemoteBundle(remote) {
   }
 }
 
+/**
+ * Registra a marca d'água da sincronização e os endereços descobertos.
+ * @param {object} remote Resposta remota
+ * @param {number} syncStartedMs Início da sincronização (ms)
+ */
 function recordRemoteSyncWatermark(remote, syncStartedMs) {
   if (remote.tunnelUrl) {
     registerDiscoveredMemoryUrl(remote.tunnelUrl, "servidor");

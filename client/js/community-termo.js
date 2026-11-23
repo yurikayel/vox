@@ -35,6 +35,11 @@ export const TERMO_MAX = 2000;
  */
 export const TERMO_MIN = 20;
 
+/**
+ * Normaliza o texto: quebras de linha unificadas e sem espaços nas pontas.
+ * @param {*} text Texto
+ * @returns {string} Texto limpo.
+ */
 const cleanText = (text) => String(text ?? "").replace(/\r\n?/g, "\n").trim();
 
 /**
@@ -64,6 +69,13 @@ export function buildTermo(communityId, text, now = Date.now()) {
   return { type: TERMO_TYPE, communityId, termoText: cleanText(text), ts: now };
 }
 
+/**
+ * Diz se o termo foi publicado pela moderação da comunidade.
+ * @param {object} t Termo
+ * @param {string} communityId Comunidade esperada
+ * @param {object} meta Dono e moderadores da comunidade
+ * @returns {boolean} `true` se vale como termo oficial.
+ */
 function isTermoByModeration(t, communityId, meta) {
   if (t?.type !== TERMO_TYPE || t.communityId !== communityId || !t.termoText) return false;
   return isModerator(String(t.author || t.owner || ""), meta?.owner, meta?.moderators);

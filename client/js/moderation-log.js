@@ -9,6 +9,11 @@
 import { shortId } from "./short-id.js";
 import { findReason } from "./report.js";
 
+/**
+ * Limpa o valor para caber numa célula de tabela Markdown.
+ * @param {*} value Valor
+ * @returns {string} Texto seguro.
+ */
 function sanitizeCell(value) {
   return String(value ?? "")
     .replace(/[\r\n]+/g, " ")
@@ -17,6 +22,11 @@ function sanitizeCell(value) {
     .trim();
 }
 
+/**
+ * Dá o rótulo legível do motivo.
+ * @param {string} reason Motivo
+ * @returns {string} Rótulo.
+ */
 function formatReasonLabel(reason) {
   const clean = String(reason || "").trim();
   if (!clean) return "—";
@@ -24,11 +34,22 @@ function formatReasonLabel(reason) {
   return known ? `${clean} (${known.label})` : clean;
 }
 
+/**
+ * Extrai o id curto do moderador da ação.
+ * @param {object} action Ação
+ * @returns {string} Id curto, ou texto vazio.
+ */
 function extractModeratorShort(action) {
   const raw = String(action.moderator || action.owner || action.author || "").trim();
   return raw ? shortId(raw) : "";
 }
 
+/**
+ * Normaliza um horário para número positivo.
+ * @param {*} rawTs Horário bruto
+ * @param {number} [fallback=0] Valor de reserva
+ * @returns {number} Horário válido ou o de reserva.
+ */
 function normalizePositiveTs(rawTs, fallback = 0) {
   const num = Number(rawTs);
   return Number.isFinite(num) && num > 0 ? num : fallback;
@@ -56,11 +77,24 @@ export function normalizeModLogEntry(action) {
   return { id, action: actType, targetId, communityId, moderator, reason, ts };
 }
 
+/**
+ * Diz se a entrada passa nos filtros de comunidade e período.
+ * @param {object} entry Entrada
+ * @param {string} communityFilter Comunidade
+ * @param {number} sinceTs Início (ms)
+ * @param {number} untilTs Fim (ms)
+ * @returns {boolean} `true` se passa.
+ */
 function isWithinFilter(entry, communityFilter, sinceTs, untilTs) {
   if (communityFilter && entry.communityId !== communityFilter) return false;
   return entry.ts >= sinceTs && entry.ts <= untilTs;
 }
 
+/**
+ * Conta as decisões por ação e por comunidade.
+ * @param {object[]} entries Entradas
+ * @returns {object} Contagens por ação e por comunidade.
+ */
 function aggregateDecisionCounts(entries) {
   const byAction = {};
   const byCommunity = {};
@@ -103,12 +137,22 @@ export function summarizeModerationDecisions(
   return { total: entries.length, byAction, byCommunity, entries };
 }
 
+/**
+ * Monta as linhas da tabela de resumo por ação.
+ * @param {Object<string, number>} byAction Contagem por ação
+ * @returns {string[]} Linhas Markdown.
+ */
 function renderActionSummaryRows(byAction) {
   const pairs = Object.entries(byAction || {});
   if (!pairs.length) return ["| Nenhuma decisão | 0 |"];
   return pairs.map(([act, count]) => `| ${sanitizeCell(act)} | ${Number(count) || 0} |`);
 }
 
+/**
+ * Monta as linhas da tabela da trilha de decisões.
+ * @param {object[]} entries Entradas
+ * @returns {string[]} Linhas Markdown.
+ */
 function renderDecisionTrailRows(entries) {
   if (!Array.isArray(entries) || !entries.length) {
     return ["| — | — | Nenhuma decisão registrada | — | — | — |"];
@@ -124,6 +168,12 @@ function renderDecisionTrailRows(entries) {
   });
 }
 
+/**
+ * Monta o cabeçalho do relatório de transparência.
+ * @param {object} safe Dados do relatório
+ * @param {number} generatedAt Geração (ms)
+ * @returns {string[]} Linhas Markdown.
+ */
 function buildReportHeaderLines(safe, generatedAt) {
   const total = Number(safe.total) || 0;
   const lines = [

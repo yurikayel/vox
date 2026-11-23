@@ -24,6 +24,11 @@ export const OAUTH_PROVIDERS = Object.freeze({
   instagram: { configKey: "instagramAppId", label: "Instagram", authorize: "https://www.instagram.com/oauth/authorize", scope: "instagram_business_basic", idParam: "client_id", note: "Só contas profissionais (Comercial ou Criador)." },
 });
 
+/**
+ * Diz se o valor está configurado (não vazio nem placeholder).
+ * @param {*} v Valor
+ * @returns {boolean} `true` se configurado.
+ */
 function configured(v) {
   return Boolean(v) && !String(v).includes("YOUR_");
 }
@@ -48,6 +53,10 @@ export function oauthRedirectUri() {
   return `${appBaseUrl()}oauth-callback.html`;
 }
 
+/**
+ * Gera o par PKCE (verificador e desafio).
+ * @returns {Promise<{verifier: string, challenge: string}>} Par PKCE.
+ */
 async function pkcePair() {
   const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
   const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
@@ -66,6 +75,11 @@ export function buildAuthorizeUrl(provider, { clientId, redirectUri, state, chal
   return `${p.authorize}?${q}`;
 }
 
+/**
+ * Inicia o login PKCE com o provedor.
+ * @param {string} provider Provedor
+ * @returns {Promise<void>} Conclui ao redirecionar.
+ */
 async function startPkceLogin(provider) {
   const cfg = await loadOAuthConfig();
   const p = OAUTH_PROVIDERS[provider];
@@ -106,6 +120,12 @@ export async function startSocialLogin(netId) {
   throw new Error("Rede sem login disponível.");
 }
 
+/**
+ * Troca o código pelo token pelo relay de OAuth.
+ * @param {object} flow Fluxo pendente
+ * @param {string} code Código recebido
+ * @returns {Promise<object>} Resposta da troca.
+ */
 async function exchangeViaRelay(flow, code) {
   const cfg = await loadOAuthConfig();
   const res = await fetch(`${String(cfg.oauthRelayUrl).replace(/\/$/, "")}/oauth/exchange`, {
@@ -132,11 +152,19 @@ export function takePendingCallback() {
   }
 }
 
+/**
+ * Apaga os fluxos de login pendentes da sessão.
+ */
 function clearPendingFlows() {
   sessionStorage.removeItem(BSKY_FLOW_KEY);
   sessionStorage.removeItem(FLOW_KEY);
 }
 
+/**
+ * Lê um fluxo de login pendente da sessão.
+ * @param {string} key Chave do fluxo
+ * @returns {object|null} Fluxo, ou `null`.
+ */
 function readPendingFlow(key) {
   try {
     return JSON.parse(sessionStorage.getItem(key) || "null");

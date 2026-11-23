@@ -55,6 +55,12 @@ export async function republicarLocal(original) {
   return persistRepost(draft);
 }
 
+/**
+ * Monta o post original de reserva quando ele não está disponível.
+ * @param {object} ctx Contexto da republicação
+ * @param {string} postId Id do post original
+ * @returns {object} Post de reserva.
+ */
 function fallbackOriginal(ctx, postId) {
   return {
     id: postId,
@@ -76,6 +82,11 @@ export async function republicarFromContext(ctx) {
   return republicarLocal(rec || fallbackOriginal(ctx, postId));
 }
 
+/**
+ * Procura nos posts locais uma republicação própria do post original.
+ * @param {string} originalId Id do post original
+ * @returns {Promise<object|null>} Republicação encontrada, ou `null`.
+ */
 async function scanOwnRepost(originalId) {
   const acc = await localAccount.ensureLocalAccount();
   const locals = await cacheNode.getLocalPosts({ type: "topic" });

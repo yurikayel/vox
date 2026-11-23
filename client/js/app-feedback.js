@@ -101,6 +101,11 @@ export function summarizeByScreen(list = []) {
     .sort((a, b) => b.count - a.count || a.screen.localeCompare(b.screen));
 }
 
+/**
+ * Formata um registro de feedback como uma linha de texto.
+ * @param {object} rec Registro de feedback
+ * @returns {string} Linha formatada.
+ */
 function formatLine(rec) {
   const label = findKind(rec.kind)?.label || rec.kind;
   const day = new Date(rec.ts).toISOString().slice(0, 10);

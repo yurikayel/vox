@@ -47,6 +47,9 @@ export function setBlobPeerSoftPriorityEnabled(enabled) {
   }
 }
 
+/**
+ * Remove o par mais antigo quando o mapa de afinidade chega ao limite.
+ */
 function evictOldestIfNeeded() {
   if (affinityMap.size < MAX_AFFINITY_PEERS) return;
 
