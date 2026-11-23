@@ -407,6 +407,13 @@ export function instantiateCommunityFromKit(kitId, communityMeta = {}) {
   return deepFreeze(payload);
 }
 
+/**
+ * Valida e normaliza o endereço do criador da comunidade.
+ *
+ * @param {string} addr Endereço `vx_…`.
+ * @returns {string} Endereço sem espaços nas pontas.
+ * @throws {Error} Se vazio, sem prefixo `vx_` ou com menos de 8 caracteres.
+ */
 function validateCreatorAddr(addr) {
   const clean = String(addr || "").trim();
   if (!clean) {
@@ -418,6 +425,14 @@ function validateCreatorAddr(addr) {
   return clean;
 }
 
+/**
+ * Usa o ID informado (validado) ou gera um ID novo com entropia criptográfica.
+ *
+ * @param {string} kitId ID do kit.
+ * @param {string|null|undefined} customId ID escolhido pelo criador.
+ * @returns {string} ID da comunidade.
+ * @throws {Error} Se o ID informado for inválido.
+ */
 function resolveCommunityId(kitId, customId) {
   if (customId !== undefined && customId !== null) {
     const clean = String(customId).trim();
@@ -431,6 +446,12 @@ function resolveCommunityId(kitId, customId) {
   return `comm_${cleanPrefix}_${Date.now().toString(36)}_${randomSuffix}`;
 }
 
+/**
+ * Gera 128 bits de entropia em hexadecimal via CSPRNG.
+ *
+ * @returns {string} Texto hexadecimal.
+ * @throws {Error} Se o ambiente não tiver CSPRNG.
+ */
 function generateCryptoEntropy() {
   if (typeof crypto !== "undefined") {
     if (typeof crypto.randomUUID === "function") {
@@ -445,6 +466,14 @@ function generateCryptoEntropy() {
   throw new Error("Módulo criptográfico CSPRNG não disponível no ambiente para geração de identificador");
 }
 
+/**
+ * Aplica sobreposições à política-base, recusando qualquer rebaixamento de segurança.
+ *
+ * @param {object} basePolicy Política do kit.
+ * @param {object|undefined} overrides Valores pedidos pelo criador.
+ * @returns {object} Política resultante.
+ * @throws {Error} Se alguma sobreposição rebaixar a proteção.
+ */
 function applyPolicyOverrides(basePolicy, overrides) {
   if (!overrides || typeof overrides !== "object") {
     return { ...basePolicy };
@@ -456,6 +485,15 @@ function applyPolicyOverrides(basePolicy, overrides) {
   return { ...basePolicy, ...overrides };
 }
 
+/**
+ * Garante que a sobreposição não afrouxa a política-base.
+ *
+ * @param {string} key Nome da chave da política.
+ * @param {*} baseVal Valor do kit.
+ * @param {*} overrideVal Valor pedido.
+ * @returns {void}
+ * @throws {Error} Em caso de rebaixamento.
+ */
 function validateNoDowngrade(key, baseVal, overrideVal) {
   // Para allowGuestRead: false é a política mais restrita; mudar para true é rebaixamento!
   if (key === "allowGuestRead") {
@@ -474,6 +512,16 @@ function validateNoDowngrade(key, baseVal, overrideVal) {
   }
 }
 
+/**
+ * Monta a carga inicial da comunidade a partir do manifesto do kit.
+ *
+ * @param {object} manifest Manifesto do kit.
+ * @param {string} communityId ID da comunidade.
+ * @param {string} creatorAddr Endereço do criador, que vira Admin.
+ * @param {object} meta Nome e descrição opcionais.
+ * @param {object} securityPolicy Política de segurança final.
+ * @returns {object} Carga da comunidade.
+ */
 function buildCommunityPayload(manifest, communityId, creatorAddr, meta, securityPolicy) {
   return {
     communityId,

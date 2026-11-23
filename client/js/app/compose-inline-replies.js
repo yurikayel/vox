@@ -11,6 +11,12 @@ import * as cacheNode from "../cache-node.js";
 import * as localAccount from "../identity/index.js";
 import { persistLocalReply } from "./compose-reply.js";
 
+/**
+ * Lê do painel de comentários o tópico e a comunidade.
+ *
+ * @param {HTMLElement|null} panel Painel de comentários.
+ * @returns {{topicId: string, commId: string}}
+ */
 function commentListContext(panel) {
   return {
     topicId: panel?.dataset.topic || "",
@@ -211,6 +217,12 @@ export function toggleCommentReplyComposer(item, open) {
   }
 }
 
+/**
+ * Limpa o formulário e acrescenta a resposta enviada à lista.
+ *
+ * @param {HTMLFormElement} form Formulário de resposta.
+ * @param {object} signed Resposta assinada.
+ */
 function updateFormAfterReplySent(form, signed) {
   const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   appendInlineReply(form.closest(".post-comments"), {

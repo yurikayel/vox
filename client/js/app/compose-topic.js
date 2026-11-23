@@ -25,6 +25,14 @@ import { bindPollBuilder, readPollOptions } from "./compose-poll.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
 import { getInputValue } from "./compose-shared.js";
 
+/**
+ * Notariza a conversa importada e devolve a marca para o texto.
+ *
+ * @param {object} parsed Conversa convertida.
+ * @param {string} title Título do tópico.
+ * @param {object|null} user Conta ativa.
+ * @returns {Promise<string>}
+ */
 async function buildNotarizedBadge(parsed, title, user) {
   const notary = await createCivicNotaryRecord({
     title,
@@ -35,6 +43,12 @@ async function buildNotarizedBadge(parsed, title, user) {
   return `\n\n> 🏛️ **Cartório Cívico Arweave** • Prova de Existência Imutável\n> Hash SHA-256: \`${notary.documentHash}\`\n> Testemunhas registradas: ${notary.witnesses.join(", ") || "Assembleia"}`;
 }
 
+/**
+ * Converte a conversa colada em Markdown e preenche o compositor; opcionalmente notariza.
+ *
+ * @param {boolean} shouldNotarize Registrar notarização.
+ * @param {object|null} user Conta ativa.
+ */
 async function applyTranscriptToComposer(shouldNotarize, user) {
   const raw = document.getElementById("chat-transcript-input")?.value || "";
   const parsed = parseChatTranscriptToMarkdown(raw);
@@ -59,11 +73,19 @@ async function applyTranscriptToComposer(shouldNotarize, user) {
   share.showToast(shouldNotarize ? "Ata formatada e selada com Cartório Cívico!" : `Ata formatada (${parsed.messageCount} intervenções)!`);
 }
 
+/**
+ * Liga os botões de importar conversa (Slack, Discord).
+ *
+ * @param {object|null} user Conta ativa.
+ */
 function bindChatTranscriptImportHandler(user) {
   document.getElementById("btn-convert-chat-transcript")?.addEventListener("click", () => applyTranscriptToComposer(false, user));
   document.getElementById("btn-convert-and-notarize")?.addEventListener("click", () => applyTranscriptToComposer(true, user));
 }
 
+/**
+ * Aplica ao compositor a citação guardada na sessão, uma única vez.
+ */
 function applyQuotePrefillToTopicComposer() {
   try {
     const quotePrefill = sessionStorage.getItem("vox_quote_prefill");
@@ -77,6 +99,15 @@ function applyQuotePrefillToTopicComposer() {
   } catch {}
 }
 
+/**
+ * Envia o tópico à Permaweb se o envio está ligado, há carteira e a pessoa confirma.
+ *
+ * @param {string} topicId Tópico.
+ * @param {string} finalComm Comunidade.
+ * @param {string} title Título.
+ * @param {string} body Texto.
+ * @returns {Promise<object|null>}
+ */
 async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
   if (!featureFlags.isFeatureEnabled("arweaveUpload")) return { success: false, skipped: "arweave-disabled" };
   if (!wallet.hasWallet()) return null;
@@ -95,6 +126,11 @@ async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
   }
 }
 
+/**
+ * Lê os campos do formulário de tópico.
+ *
+ * @returns {object}
+ */
 function readTopicInputs() {
   const commInput = document.getElementById("topic-comm-id");
   const rawComm = commInput ? commInput.value.trim().toLowerCase() : "";
@@ -111,6 +147,15 @@ function readTopicInputs() {
   };
 }
 
+/**
+ * Assina o tópico, guarda no aparelho e espalha pela rede.
+ *
+ * @param {string} topicId Tópico.
+ * @param {string} finalComm Comunidade.
+ * @param {string} title Título.
+ * @param {string} body Texto.
+ * @param {string} [civicTag=""] Selo cívico.
+ */
 async function signAndBroadcastTopic(topicId, finalComm, title, body, civicTag = "") {
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
@@ -132,6 +177,11 @@ async function signAndBroadcastTopic(topicId, finalComm, title, body, civicTag =
   peers.broadcastGossip(signed);
 }
 
+/**
+ * Avisa onde o tópico foi publicado (malha, Permaweb ou falha).
+ *
+ * @param {object|null} permawebResult Resultado do envio à Permaweb.
+ */
 function showTopicPublishToast(permawebResult) {
   if (permawebResult?.success) {
     const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
@@ -147,6 +197,11 @@ function showTopicPublishToast(permawebResult) {
   }
 }
 
+/**
+ * Dispara a réplica automática e o registro de posse do tópico, se estiverem ligados.
+ *
+ * @param {object} topicPayload Tópico assinado.
+ */
 async function triggerTopicReplicationAndPosse(topicPayload) {
   try {
     const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("../linked-accounts.js");
@@ -166,6 +221,12 @@ async function triggerTopicReplicationAndPosse(topicPayload) {
   } catch {}
 }
 
+/**
+ * Valida e publica o tópico do formulário.
+ *
+ * @param {Event} e Evento `submit`.
+ * @param {string} communityId Comunidade fixa da tela (vazia usa o campo).
+ */
 async function handleComposeTopicSubmit(e, communityId) {
   e.preventDefault();
   const btn = document.getElementById("btn-submit-topic");
@@ -191,6 +252,9 @@ async function handleComposeTopicSubmit(e, communityId) {
   }
 }
 
+/**
+ * Liga os botões de selo cívico ao campo oculto.
+ */
 function bindCivicTagSelector() {
   const hiddenInput = document.getElementById("topic-civic-tag");
   if (!hiddenInput) return;

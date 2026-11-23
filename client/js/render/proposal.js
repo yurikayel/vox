@@ -15,6 +15,16 @@ import {
   renderAgoraBreadcrumbHtml,
 } from "./util.js";
 
+/**
+ * Artigo da proposta com autor, texto e diff.
+ *
+ * @param {object} proposal
+ * @param {object} labels
+ * @param {string} timeLabel
+ * @param {object} state
+ * @param {string} diffHtml
+ * @returns {string}
+ */
 function renderProposalArticle(proposal, labels, timeLabel, state, diffHtml) {
   const author = proposal.author || proposal.owner || "";
   const countdown = state === "open" ? formatCountdown(proposal.closesAt) : "";
@@ -128,6 +138,12 @@ function renderProposalTallyRow(key, label, count, share) {
  */
 export function renderProposalTally(tally, _proposal) {
   const total = tally.totalEligible || 0;
+  /**
+   * Percentual da votação de `n` sobre o total.
+   *
+   * @param {number} n
+   * @returns {number}
+   */
   const share = (n) => (total > 0 ? Math.round(((n || 0) / total) * 100) : 0);
   const rows = [["yes", "Sim", tally.yes], ["no", "Não", tally.no], ["abstain", "Abstenção", tally.abstain]]
     .map(([key, label, n]) => renderProposalTallyRow(key, label, n || 0, share(n)))
@@ -141,6 +157,13 @@ export function renderProposalTally(tally, _proposal) {
     </section>`;
 }
 
+/**
+ * Aviso de quem não pode votar na proposta.
+ *
+ * @param {boolean} isMember
+ * @param {boolean} isEligible
+ * @returns {string}
+ */
 function renderProposalVoterWarning(isMember, isEligible) {
   if (!isMember) {
     return `<div class="banner-warning">⚠️ Você ainda não é membro desta comunidade. Membresia obtida após a abertura não confere voto nesta proposta (marco de corte anti-brigading).</div>`;
@@ -185,6 +208,12 @@ export function renderProposalVotingBox(proposal, tally, { userVote, isEligible,
     </div>`;
 }
 
+/**
+ * Linha de um voto registrado.
+ *
+ * @param {object} v
+ * @returns {string}
+ */
 function renderVoteRow(v) {
   const labels = resolvePostAuthorLabels(v.author, {
     authorDisplay: v.authorDisplay,

@@ -41,6 +41,14 @@ export function openZapModal({ pixKey, authorName = "Autor", title = "", default
   bindZapModalEvents(container, { pixKey, authorName });
 }
 
+/**
+ * Liga os botões de valor do apoio e o campo de valor livre.
+ *
+ * @param {HTMLElement} container Raiz do modal.
+ * @param {HTMLElement} customContainer Contêiner do valor livre.
+ * @param {HTMLInputElement} customInput Campo do valor livre.
+ * @param {Function} onSelectAmount Chamado com o valor escolhido.
+ */
 function bindZapValueButtons(container, customContainer, customInput, onSelectAmount) {
   container.querySelectorAll(".btn-zap-val").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -64,6 +72,13 @@ function bindZapValueButtons(container, customContainer, customInput, onSelectAm
   });
 }
 
+/**
+ * Liga os botões de copiar o código Pix e de fechar.
+ *
+ * @param {HTMLElement} container Raiz do modal.
+ * @param {HTMLTextAreaElement|null} area Campo com o código.
+ * @param {string} pixKey Chave Pix.
+ */
 function bindZapCopyAndClose(container, area, pixKey) {
   const copyBtn = container.querySelector("#btn-copy-zap-payload");
   if (copyBtn) {
@@ -105,6 +120,11 @@ export function bindZapModalEvents(container, { pixKey, authorName }) {
   const customContainer = container.querySelector(".zap-custom-container");
   const customInput = container.querySelector("#zap-custom-input");
 
+  /**
+   * Gera o código Pix para o valor e escreve no campo; erro volta para a chave pura.
+   *
+   * @param {number} amt Valor em reais.
+   */
   const update = (amt) => {
     try {
       area.value = brcode.buildPixPayload({ key: pixKey, name: authorName, amount: amt, description: "Apoio Vox" });

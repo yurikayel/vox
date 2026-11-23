@@ -17,6 +17,12 @@ import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { resolveCommunityMetadata } from "./community-metadata.js";
 
+/**
+ * Busca os tópicos da comunidade nos gateways; sem rede, usa os de demonstração.
+ *
+ * @param {string} communityId
+ * @returns {Promise<{topics: object[], demo: boolean, gateway: string}>}
+ */
 async function fetchRawCommunityTopics(communityId) {
   try {
     const res = await gql.fetchTopics(communityId).catch(() => mock.mockTopics(communityId));
@@ -63,6 +69,14 @@ export async function loadCommunityMetaAndTopics(communityId, user) {
   return { meta, filteredTopics: orderCommunityTopics(visible, "active"), localTopics, demo, gateway, isUserMod, heldCount };
 }
 
+/**
+ * Junta os anúncios guardados no aparelho com os de demonstração (comunidades de exemplo).
+ *
+ * @param {string} communityId
+ * @param {string} user Rota de quem vê.
+ * @param {boolean} demo A comunidade é de demonstração.
+ * @returns {Promise<object[]>}
+ */
 async function loadCommunityListings(communityId, user, demo) {
   try {
     const local = await cacheNode.getLocalPosts({ type: "listing", communityId });
@@ -79,6 +93,13 @@ async function loadCommunityListings(communityId, user, demo) {
   }
 }
 
+/**
+ * Junta as propostas de governança guardadas no aparelho com as de demonstração.
+ *
+ * @param {string} communityId
+ * @param {boolean} demo A comunidade é de demonstração.
+ * @returns {Promise<object[]>}
+ */
 async function loadCommunityProposals(communityId, demo) {
   try {
     const local = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId });
@@ -109,6 +130,12 @@ export async function loadCommunityTabSpecifics(communityId, tab, user, demo) {
   return { listings, proposals };
 }
 
+/**
+ * Acrescenta ao conjunto de pessoas recentes os perfis descobríveis do diretório Vox que não saíram da comunidade.
+ *
+ * @param {object[]} recentPeople Lista de pessoas a completar (alterada no lugar).
+ * @param {Set<string>} peopleSet Rotas já presentes.
+ */
 async function appendVoxDirectoryMembers(recentPeople, peopleSet) {
   try {
     const leaves = await cacheNode.getLocalPosts({ type: "membership_leave", communityId: "vox" }).catch(() => []);

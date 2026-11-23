@@ -2,6 +2,12 @@
 import { escapeHtml } from "./util.js";
 import { renderGeneralPreferencesHtml } from "./network-participation.js";
 
+/**
+ * Campos do servidor TURN personalizado.
+ *
+ * @param {object|undefined} customTurn
+ * @returns {string}
+ */
 function renderTurnFields(customTurn) {
   return `
     <div style="border-top:1px solid var(--border); padding-top:0.75rem; margin-top:0.75rem;">
@@ -23,6 +29,13 @@ function renderTurnFields(customTurn) {
     </div>`;
 }
 
+/**
+ * Texto do estado de saúde do relay, com o endereço quando houver.
+ *
+ * @param {object} relayStatus
+ * @param {string} relayHttpUrl
+ * @returns {string}
+ */
 function relayHealthLabel(relayStatus, relayHttpUrl) {
   const host = relayHttpUrl ? new URL(relayHttpUrl).host : "";
   if (relayStatus?.online) {
@@ -31,6 +44,11 @@ function relayHealthLabel(relayStatus, relayHttpUrl) {
   return host ? `🔗❌ (${escapeHtml(host)})` : "🔗❌";
 }
 
+/**
+ * Faixa que leva às contas conectadas.
+ *
+ * @returns {string}
+ */
 function renderLinkedAccountsBannerHtml() {
   return `
     <div class="card" style="margin-bottom:1.25rem; padding:1rem 1.2rem; background:var(--surface-soft); border:1px solid var(--outline); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.85rem;">
@@ -42,6 +60,12 @@ function renderLinkedAccountsBannerHtml() {
     </div>`;
 }
 
+/**
+ * Campos de endereço do relay.
+ *
+ * @param {object} opts
+ * @returns {string}
+ */
 function renderRelayUrlInputsHtml(opts) {
   return `
     <div class="form-group">
@@ -60,6 +84,12 @@ function renderRelayUrlInputsHtml(opts) {
     </div>`;
 }
 
+/**
+ * Estado do relay e conexões da malha.
+ *
+ * @param {object} opts
+ * @returns {string}
+ */
 function renderRelayHealthAndTourHtml(opts) {
   const rtcCount = opts.rtcStatus?.remotePeersConnected || 0;
   return `
@@ -79,6 +109,12 @@ function renderRelayHealthAndTourHtml(opts) {
     </div>`;
 }
 
+/**
+ * Configurações avançadas dos servidores.
+ *
+ * @param {object} opts
+ * @returns {string}
+ */
 function renderAdvancedServerSettingsHtml(opts) {
   const isBg = Boolean(opts.settings?.backgroundRelay);
   const notifNotice = opts.notifPermission === "granted"

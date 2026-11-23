@@ -17,6 +17,11 @@ async function revealSocialLoginButtons() {
   });
 }
 
+/**
+ * Abre o painel de vínculo manual de uma rede.
+ *
+ * @param {string} netId Identificador da rede.
+ */
 function openManualLink(netId) {
   const panel = document.querySelector(`.link-manual[data-net-id="${netId}"]`);
   if (!panel) return;
@@ -24,6 +29,11 @@ function openManualLink(netId) {
   panel.querySelector(".input-net-handle")?.focus();
 }
 
+/**
+ * Guarda o resultado de um login social como conta vinculada.
+ *
+ * @param {object} r Resultado do login.
+ */
 function saveLoginResult(r) {
   linkedAccounts.saveLinkedAccount(r.netId, {
     handle: r.handle || "",
@@ -37,6 +47,11 @@ function saveLoginResult(r) {
   linkedAccounts.setAutoReplicationEnabled(true);
 }
 
+/**
+ * Roda o login social e, se houver resultado, guarda e avisa.
+ *
+ * @param {Function} run Função assíncrona que faz o login.
+ */
 async function finishSocialLogin(run) {
   try {
     const r = await run();
@@ -70,6 +85,14 @@ function bindSocialLoginButtons() {
   });
 }
 
+/**
+ * Acha o identificador digitado, no painel, no formulário ou o sugerido para a rede.
+ *
+ * @param {HTMLElement|null} box Painel manual.
+ * @param {HTMLFormElement|null} form Formulário.
+ * @param {string} netId Rede.
+ * @returns {string}
+ */
 function resolveNetworkFormHandle(box, form, netId) {
   const boxHandle = box?.querySelector(".input-net-handle")?.value?.trim();
   if (boxHandle) return boxHandle;
@@ -78,6 +101,11 @@ function resolveNetworkFormHandle(box, form, netId) {
   return linkedAccounts.getSuggestedHandle(netId);
 }
 
+/**
+ * Liga os botões de conectar com um clique.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindOneClickConnectButtons(onRefresh) {
   document.querySelectorAll(".btn-one-click-connect").forEach((btn) => {
     if (btn.dataset.wired) return;
@@ -100,6 +128,11 @@ function bindOneClickConnectButtons(onRefresh) {
   });
 }
 
+/**
+ * Liga os botões de salvar identificador rápido.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindSaveHandleQuickButtons(onRefresh) {
   document.querySelectorAll(".btn-save-handle-quick").forEach((btn) => {
     if (btn.dataset.wired) return;
@@ -121,6 +154,11 @@ function bindSaveHandleQuickButtons(onRefresh) {
   });
 }
 
+/**
+ * Liga os formulários de vincular rede.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindFormLinkNetwork(onRefresh) {
   document.querySelectorAll(".form-link-network").forEach((form) => {
     if (form.dataset.wired) return;
@@ -145,6 +183,11 @@ function bindFormLinkNetwork(onRefresh) {
   });
 }
 
+/**
+ * Liga os botões de desvincular rede.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindUnlinkNetworkButtons(onRefresh) {
   document.querySelectorAll(".btn-unlink-network").forEach((btn) => {
     if (btn.dataset.wired) return;
@@ -158,6 +201,11 @@ function bindUnlinkNetworkButtons(onRefresh) {
   });
 }
 
+/**
+ * Liga os botões de confirmar rede vinculada.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindConfirmNetworkButtons(onRefresh) {
   document.querySelectorAll(".btn-confirm-network").forEach((btn) => {
     if (btn.dataset.wired) return;
@@ -171,6 +219,11 @@ function bindConfirmNetworkButtons(onRefresh) {
   });
 }
 
+/**
+ * Liga formulários e botões das contas vinculadas.
+ *
+ * @param {Function} onRefresh Chamado depois de mudar o estado.
+ */
 function bindLinkedAccountFormsAndButtons(onRefresh) {
   bindSocialLoginButtons();
   bindConfirmNetworkButtons(onRefresh);
@@ -180,6 +233,9 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
   bindUnlinkNetworkButtons(onRefresh);
 }
 
+/**
+ * Liga as caixas de réplica automática por rede.
+ */
 function bindLinkedAccountCheckboxes() {
   document.querySelectorAll(".chk-network-replicate").forEach((chk) => {
     if (chk.dataset.wired) return;
@@ -195,6 +251,12 @@ function bindLinkedAccountCheckboxes() {
   });
 }
 
+/**
+ * Mostra o resultado do teste de conexão de uma rede.
+ *
+ * @param {string} netId Rede.
+ * @param {{ok: boolean, state?: string, message?: string}} res Resultado do teste.
+ */
 function displayTestFeedback(netId, res) {
   const fb = document.getElementById(`test-feedback-${netId}`);
   if (!fb) return;
@@ -209,6 +271,9 @@ function displayTestFeedback(netId, res) {
   fb.innerHTML = `<span>${escapeHtml(res.message)}</span>${link}`;
 }
 
+/**
+ * Liga os botões de testar conexão com a rede.
+ */
 function bindLinkedAccountTestButtons() {
   document.querySelectorAll(".btn-test-network").forEach((btn) => {
     if (btn.dataset.wired) return;

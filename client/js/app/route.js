@@ -40,16 +40,31 @@ let ajudaTesteRoute = null;
 /** @type {Promise<typeof import("./screens-labs.js")>|null} */
 let labsRoute = null;
 
+/**
+ * Carrega sob demanda a tela da Voxpédia.
+ *
+ * @returns {Promise<object>}
+ */
 function loadVoxpediaRoute() {
   voxpediaRoute ??= import("./screens-voxpedia.js");
   return voxpediaRoute;
 }
 
+/**
+ * Carrega sob demanda a tela de ajuda e teste.
+ *
+ * @returns {Promise<object>}
+ */
 function loadAjudaTesteRoute() {
   ajudaTesteRoute ??= import("./screens-ajuda-teste.js");
   return ajudaTesteRoute;
 }
 
+/**
+ * Carrega sob demanda as telas de laboratório.
+ *
+ * @returns {Promise<object>}
+ */
 function loadLabsRoute() {
   labsRoute ??= import("./screens-labs.js");
   return labsRoute;
@@ -60,11 +75,21 @@ let avisoRoute = null;
 /** @type {Promise<typeof import("./screens-compose.js")>|null} */
 let composeRoute = null;
 
+/**
+ * Carrega sob demanda o fluxo de avisos.
+ *
+ * @returns {Promise<object>}
+ */
 function loadAvisoRoute() {
   avisoRoute ??= import("./aviso-flow.js");
   return avisoRoute;
 }
 
+/**
+ * Carrega sob demanda as telas de compor.
+ *
+ * @returns {Promise<object>}
+ */
 function loadComposeRoute() {
   composeRoute ??= import("./screens-compose.js");
   return composeRoute;
@@ -142,6 +167,12 @@ const scrollByHash = new Map();
 let lastRenderedHash = "";
 let pendingPopHash = null;
 
+/**
+ * Hash da rota atual, ou `#/` quando não há.
+ *
+ * @param {Window} [win=globalThis.window] Janela a consultar.
+ * @returns {string}
+ */
 function currentRouteHash(win = globalThis.window) {
   return win?.location?.hash || "#/";
 }
