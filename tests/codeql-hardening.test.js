@@ -59,6 +59,15 @@ test("vox-embed: `data-base` com `javascript:` volta para o endereço padrão", 
     },
   };
   const document = { currentScript: script, createElement: () => ({ style: {} }) };
-  vm.runInNewContext(src, { document, encodeURIComponent });
+  vm.runInNewContext(src, { document, encodeURIComponent, URL });
   assert.match(link.href, /^https:\/\/yurikayel\.github\.io\/vox\/#\/t\/top_1/);
+});
+
+test("vox-embed: `data-base` http(s) próprio continua valendo", () => {
+  const src = fs.readFileSync(new URL("../client/embed/vox-embed.js", import.meta.url), "utf8");
+  let link = null;
+  const attrs = { "data-topic": "top_1", "data-base": "https://meu.site/vox" };
+  const script = { getAttribute: (n) => attrs[n] ?? null, insertAdjacentElement: (_p, el) => (link = el) };
+  vm.runInNewContext(src, { document: { currentScript: script, createElement: () => ({ style: {} }) }, encodeURIComponent, URL });
+  assert.match(link.href, /^https:\/\/meu\.site\/vox\/#\/t\/top_1\?ref=embed$/);
 });
