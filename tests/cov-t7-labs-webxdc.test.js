@@ -245,3 +245,12 @@ test("prepareSandboxedSrcdoc - injeta CSP, prelúdio e bridge no <head> ou cria 
   assert.match(noHead, /<\/head>\n<body>y<\/body>/);
   assert.throws(() => loader.prepareSandboxedSrcdoc({}), /index\.html não encontrado/);
 });
+
+test("inlineCartridgeAssets - troca só a referência exata da imagem, com ou sem ./, em atributo e em url()", () => {
+  const html = '<img src="./i.png"><img src="ai.png"><style>.b{background:url("i.png")}</style><p>arquivo i.png</p>';
+  const out = loader.inlineCartridgeAssets(html, { "i.png": new Uint8Array([1, 2]), "ai.png": new Uint8Array([3]) });
+  assert.match(out, /<img src="data:image\/png;base64,AQI=">/, "./i.png vira data URL inteira, sem sobrar ./");
+  assert.match(out, /<img src="data:image\/png;base64,Aw==">/, "ai.png recebe a própria imagem, não a de i.png");
+  assert.match(out, /url\("data:image\/png;base64,AQI="\)/);
+  assert.match(out, /<p>arquivo i\.png<\/p>/, "texto comum não é tocado");
+});

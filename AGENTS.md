@@ -13,6 +13,8 @@ Escopo **somente** o sub-repo [`vox/`](.). Não escrever roteiro Matrix/vídeo a
 
 Operação curta: [docs/process/metodo-agentes-mutex-e-revisor.md](docs/process/metodo-agentes-mutex-e-revisor.md).
 
+**Orçamento de orquestração:** um executor por padrão (no máximo 2 em paralelo, com mutex disjunto), brief com aceite, até 8 caminhos e um comando de teste, sem ondas automáticas nem polling de CI. Regra completa em [metodo-agentes-mutex-e-revisor.md § Orçamento de orquestração](docs/process/metodo-agentes-mutex-e-revisor.md#orçamento-de-orquestração-fonte-única).
+
 ## Testes e Qualidade
 
 PRs de feature vão para `develop`; `develop` vai para `main` por PR quando o lote está pronto. Antes de pedir merge: `npm run validate` na raiz de `vox/` (lint, lint do Python, auditoria de complexidade, auditoria de documentação e testes). `develop` e `main` são protegidos: merge só por PR com o CI verde.

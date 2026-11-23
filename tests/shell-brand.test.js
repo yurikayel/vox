@@ -5,16 +5,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { brandMarkSrcForColorScheme } from "../client/js/render/shell.js";
+import { readShellRenderSource } from "./helpers/shell-render-source.mjs";
 
 const styleCss = fs.readFileSync(
   path.join(path.dirname(fileURLToPath(import.meta.url)), "../client/css/style.css"),
   "utf8"
 );
 
-const shellSrc = fs.readFileSync(
-  path.join(path.dirname(fileURLToPath(import.meta.url)), "../client/js/render/shell.js"),
-  "utf8"
-);
+const shellSrc = readShellRenderSource(path.join(path.dirname(fileURLToPath(import.meta.url)), "../client"));
 
 test("shell brand — Sovereign Agora: nav Ágora usa ícone de fórum, marca fica só no wordmark", () => {
   const navBlock = shellSrc.match(/const NAV_ITEMS = \[[\s\S]*?\];/)?.[0] ?? "";
