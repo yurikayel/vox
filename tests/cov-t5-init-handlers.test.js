@@ -7,7 +7,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { person } from "./signer.js";
-import { makeEl, installDom, settle, unrefLongTimers } from "./helpers/cov-t5-dom.mjs";
+import { makeEl, installDom, settle, unrefLongTimers, waitFor } from "./helpers/cov-t5-dom.mjs";
 
 unrefLongTimers();
 const realSetInterval = globalThis.setInterval;
@@ -86,13 +86,14 @@ test("gossip: post novo na Ágora redesenha a tela inicial", async () => {
   at("#/");
   const doc = installDom();
   events.dispatchGossipPost({ id: "t9", type: "topic", title: "Feira do bairro", body: "sábado", ts: 5, communityId: "praca" });
-  await settle();
+  await waitFor(() => doc.main.innerHTML.length > 0);
   assert.ok(doc.main.innerHTML.length > 0, "a Ágora foi montada de novo");
 });
 
 test("gossip: item de outro tipo em rota sem relação não redesenha nada", async () => {
   bindOnce();
   at("#/perfil/vx_a");
+  await settle(150);
   const doc = installDom();
   for (const type of ["listing", "governance-proposal", "governance-vote", "frame-action", "desconhecido"]) {
     events.dispatchGossipPost({ id: `g_${type}`, type, title: "Oferta de teste muito longa para cortar", ts: 5 });
@@ -329,7 +330,7 @@ test("repostar: o botão fica ocupado durante a ação e é liberado depois", as
   const doc = boot();
   const btn = makeEl({ dataset: { id: "p_repost" } });
   await clickOn(doc, ".btn-repost", btn);
-  await settle();
+  await waitFor(() => !btn.disabled);
   assert.equal(btn.disabled, false);
 });
 
@@ -357,8 +358,11 @@ test("editar post: o formulário regrava o post assinado com título e corpo nov
   await mutation.openPostEditModal("post_edit_1");
   assert.ok(container.innerHTML.includes("post_edit_1") || container.innerHTML.length > 0, "o modal foi desenhado");
   await form.fire("submit");
-  await settle();
-  const saved = await cacheNode.getLocalPost("post_edit_1");
+  let saved = await cacheNode.getLocalPost("post_edit_1");
+  for (let i = 0; i < 300 && saved.title !== "Título novo"; i++) {
+    await new Promise((r) => setTimeout(r, 10));
+    saved = await cacheNode.getLocalPost("post_edit_1");
+  }
   assert.equal(saved.title, "Título novo");
   assert.match(saved.body, /Corpo novo/);
   assert.equal(saved.image, "data:image/png;base64,AAAA", "sem marcar remover, a imagem fica");

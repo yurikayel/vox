@@ -152,7 +152,7 @@ test("entrada só com nome: cria a conta, grava o nome e entrega o resultado", a
   let result = null;
   onboarding.openOAuthEnrichModal({ onComplete: (r) => { result = r; } });
   await ids["form-oauth-custom-name"].fire("submit");
-  await settle();
+  await waitFor(() => result !== null);
   assert.equal(result.customName, "Ana Voz");
   assert.equal(localAccount.getDisplayName(), "Ana Voz");
   assert.equal(oauthProfile.hasCompletedOAuthStep(), true);
