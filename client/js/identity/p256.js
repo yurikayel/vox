@@ -17,8 +17,23 @@ const G = {
   y: 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5n,
 };
 
+/**
+ * Resto não negativo de `v` módulo `m`.
+ *
+ * @param {bigint} v
+ * @param {bigint} [m=P]
+ * @returns {bigint}
+ */
 const mod = (v, m = P) => ((v % m) + m) % m;
 
+/**
+ * Exponenciação modular por quadrados.
+ *
+ * @param {bigint} base
+ * @param {bigint} exp
+ * @param {bigint} m
+ * @returns {bigint}
+ */
 function modPow(base, exp, m) {
   let result = 1n;
   let b = mod(base, m);
@@ -29,6 +44,12 @@ function modPow(base, exp, m) {
   return result;
 }
 
+/**
+ * Inverso modular no corpo P-256 (pequeno teorema de Fermat).
+ *
+ * @param {bigint} v
+ * @returns {bigint}
+ */
 const inverse = (v) => modPow(v, P - 2n, P);
 
 /** Dobra um ponto em coordenadas jacobianas (X, Y, Z). */

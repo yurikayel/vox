@@ -20,16 +20,37 @@ export const INBOX_BACKUP_TYPE = "vox-inbox-backup";
 const STATE_PREFIX = "vox-inbox-backup-v1:";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * Chave do estado do backup da caixa de entrada para a conta atual.
+ *
+ * @returns {string}
+ */
 const stateKey = () => STATE_PREFIX + (localAccount.getCachedRouteIdSync() || "");
 
+/**
+ * Lê o estado guardado do backup da caixa de entrada.
+ *
+ * @returns {object|null}
+ */
 function readState() {
   return readStoredRecord(stateKey(), null);
 }
 
+/**
+ * Grava o estado do backup da caixa de entrada.
+ *
+ * @param {object} next
+ */
 function writeState(next) {
   localStorage.setItem(stateKey(), JSON.stringify(next));
 }
 
+/**
+ * Índice contínuo de mês (ano×12+mês) de um instante em ms.
+ *
+ * @param {number} ms
+ * @returns {number}
+ */
 const monthOf = (ms) => {
   const d = new Date(ms);
   return d.getFullYear() * 12 + d.getMonth();
@@ -98,10 +119,29 @@ function loadOwnPosts() {
   return import("../own-posts.js");
 }
 
+/**
+ * Reúne o conteúdo próprio (posts, contatos, perfil) do período `[from, to]`.
+ *
+ * @param {number} from
+ * @param {number} to
+ * @returns {Promise<object>}
+ */
 async function collectContent(from, to) {
   const me = localAccount.getCachedRouteIdSync();
   // Post editado ou apagado no período entra (versão atual ou lápide).
+  /**
+   * Diz se o registro foi criado ou editado dentro do período.
+   *
+   * @param {object} r
+   * @returns {boolean}
+   */
   const inRange = (r) => Math.max(r.ts || 0, r.editedAt || 0) >= from && (r.ts || 0) <= to;
+  /**
+   * Diz se o registro é da conta atual e está no período.
+   *
+   * @param {object} r
+   * @returns {boolean}
+   */
   const mine = (r) => (r.author || r.owner) === me && inRange(r);
   // PM-72: forma assinada e mídia à parte, para o post voltar conferido e seguir valendo na rede.
   const postEntries = await (await loadOwnPosts()).collectOwnPostEntries(me, { filter: inRange });
@@ -147,6 +187,12 @@ export function markInboxBackupSent(period, to) {
   accountExit.markAccountExit("email");
 }
 
+/**
+ * Aplica ao aparelho o perfil vindo do backup.
+ *
+ * @param {object|undefined} profile
+ * @param {string} me
+ */
 function applyProfile(profile, me) {
   if (profile?.displayName) localAccount.setDisplayName(profile.displayName);
   if (profile?.enrichment) localAccount.setProfileEnrichment(profile.enrichment);
@@ -154,6 +200,13 @@ function applyProfile(profile, me) {
   if (profile?.identityMeta && me) setLocalIdentityMeta(me, profile.identityMeta);
 }
 
+/**
+ * Aplica o conteúdo do backup ao aparelho; o que vem de fora passa pelo crivo do fio.
+ *
+ * @param {object} c
+ * @param {string} me
+ * @returns {Promise<void>}
+ */
 async function applyContent(c, me) {
   applyProfile(c.profile, me);
   for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);

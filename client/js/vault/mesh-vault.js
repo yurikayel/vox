@@ -60,6 +60,12 @@ export const NOTICES_STORAGE = "vox-cofre-malha-avisos-v0";
 const enc = new TextEncoder();
 const ADDRESS_RE = /^[0-9a-f]{64}$/;
 
+/**
+ * SHA-256 do texto, em hexadecimal.
+ *
+ * @param {string} text
+ * @returns {Promise<string>}
+ */
 async function sha256Hex(text) {
   const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(text)));
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -183,6 +189,11 @@ export function buildDecisionBody({ to, requestId, decision }) {
 
 // ---- Pedido e resposta (selados, sem assinatura) ----
 
+/**
+ * Gera nonce aleatório de 9 bytes em hexadecimal.
+ *
+ * @returns {string}
+ */
 function randomNonce() {
   const bytes = crypto.getRandomValues(new Uint8Array(9));
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -252,6 +263,13 @@ export function parseReplyText(text, requestId) {
 
 // ---- Armazenamento ----
 
+/**
+ * Lê JSON do `localStorage`, com valor de reserva se faltar ou estiver inválido.
+ *
+ * @param {string} key
+ * @param {*} fallback
+ * @returns {*}
+ */
 function readJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -261,6 +279,12 @@ function readJson(key, fallback) {
   }
 }
 
+/**
+ * Grava JSON no `localStorage`; `null` remove a chave.
+ *
+ * @param {string} key
+ * @param {*} value
+ */
 function writeJson(key, value) {
   try {
     if (value === null) localStorage.removeItem(key);
@@ -436,6 +460,12 @@ export function pickHolders(mine, candidates) {
 
 // ---- Avisos (aparelho da dona) ----
 
+/**
+ * Diz se o objeto tem a forma de um aviso de pedido de guarda.
+ *
+ * @param {*} n
+ * @returns {boolean}
+ */
 function isNotice(n) {
   return Boolean(n) && typeof n.holder === "string" && typeof n.requestId === "string" && Number.isFinite(n.firstSeen);
 }

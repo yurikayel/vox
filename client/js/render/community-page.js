@@ -34,6 +34,14 @@ import {
 import { renderCommunityAvatarHtml, renderCommunityOrkutMembersBox } from "./community-home.js";
 import { renderCommunityGovernanceTab, renderCommunityListingsTab } from "./community-governance.js";
 
+/**
+ * Avatar do cabeçalho da comunidade, com botão de troca quando permitido.
+ *
+ * @param {object} meta
+ * @param {string} communityId
+ * @param {boolean} canChangePhoto
+ * @returns {string}
+ */
 function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   const photoBtn = canChangePhoto ? `
     <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
@@ -43,6 +51,14 @@ function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   return `<div class="community-vox-avatar-wrap">${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}${photoBtn}</div>`;
 }
 
+/**
+ * Detalhe da quarentena de chaves novas, só para quem gerencia.
+ *
+ * @param {object} meta
+ * @param {string} communityId
+ * @param {boolean} canManage
+ * @returns {string}
+ */
 function renderCommunityQuarantineDetail(meta, communityId, canManage) {
   if (!canManage) return "";
   const on = Boolean(meta?.newKeyQuarantine);
@@ -62,6 +78,15 @@ function renderCommunityQuarantineDetail(meta, communityId, canManage) {
         </div>`;
 }
 
+/**
+ * Ficha da comunidade (estilo Orkut) com dono, membros e quarentena.
+ *
+ * @param {object} meta
+ * @param {object|undefined} ownerLabels
+ * @param {number} memberCount
+ * @param {string} [quarantineHtml=""]
+ * @returns {string}
+ */
 function renderCommunityFichaOrkut(meta, ownerLabels, memberCount, quarantineHtml = "") {
   const ownerItem = meta.owner && ownerLabels ? `
     <div class="community-orkut-detail-item">
@@ -96,12 +121,27 @@ function canChangeCommunityPhoto(meta, opts) {
   return communityUpdates.canUpdateCommunity(meta, opts.routeId || opts.walletAddress);
 }
 
+/**
+ * Diz se a conta pode gerenciar a quarentena da comunidade.
+ *
+ * @param {object} meta
+ * @param {object} [opts={}]
+ * @returns {boolean}
+ */
 function canManageCommunityQuarantine(meta, opts = {}) {
   const who = opts.routeId || opts.walletAddress;
   if (who) return communityUpdates.canUpdateCommunity(meta, who);
   return Boolean(opts.isMod);
 }
 
+/**
+ * Cabeçalho da página da comunidade.
+ *
+ * @param {object} meta
+ * @param {string} communityId
+ * @param {object} [opts={}]
+ * @returns {string}
+ */
 function renderCommunityHeader(meta, communityId, opts = {}) {
   const commTitle = meta.title || communityId;
   const memberCount = resolveCommunityMemberCount(meta, communityId);
@@ -130,6 +170,14 @@ function renderCommunityHeader(meta, communityId, opts = {}) {
     </header>`;
 }
 
+/**
+ * Abas de navegação da comunidade (posts, ofertas, governança, membros).
+ *
+ * @param {string} communityId
+ * @param {string} activeTab
+ * @param {number} [proposalCount=0]
+ * @returns {string}
+ */
 function renderCommunityNavTabs(communityId, activeTab, proposalCount = 0) {
   const encId = encodeURIComponent(communityId);
   const isPosts = activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members";
