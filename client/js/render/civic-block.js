@@ -2,10 +2,25 @@
 import { escapeHtml } from "./util.js";
 import { civicChoicesFor, CIVIC_REQUIREMENTS, describeMissingRequirements } from "../civic-post.js";
 
+/**
+ * Percentual inteiro de `n` sobre `total`; 0 se o total é zero.
+ *
+ * @param {number} n
+ * @param {number} total
+ * @returns {number}
+ */
 function pct(n, total) {
   return total > 0 ? Math.round((n / total) * 100) : 0;
 }
 
+/**
+ * Botão de escolha da enquete cívica com a barra de participação.
+ *
+ * @param {object} post
+ * @param {object} choice
+ * @param {object} tally
+ * @returns {string}
+ */
 function renderChoiceButton(post, choice, tally) {
   const count = tally.counts[choice.key] || 0;
   const share = pct(count, tally.total);
@@ -18,6 +33,12 @@ function renderChoiceButton(post, choice, tally) {
       </button>`;
 }
 
+/**
+ * Link para a votação formal quando o post é uma pauta.
+ *
+ * @param {object} post
+ * @returns {string}
+ */
 function renderFormalVoteLink(post) {
   if (post.civic?.kind !== "pauta") return "";
   const c = encodeURIComponent(post.communityId || "vox");

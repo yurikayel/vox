@@ -4,6 +4,12 @@ import { honestMessage } from "../honest-errors.js";
 import { renderNetworkChip, renderMeshStatusChip } from "./shell.js";
 import { getMonthlyUsage, isDataSaverActive } from "../peers-settings.js";
 
+/**
+ * Bloco com a saúde dos gateways.
+ *
+ * @param {object|undefined} gatewayHealth
+ * @returns {string}
+ */
 function renderGatewayHealthBlock(gatewayHealth) {
   const state = gatewayHealth?.state || "all_ok";
   if (state === "all_ok") {
@@ -73,6 +79,11 @@ export function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealt
     </div>`;
 }
 
+/**
+ * Cartão da atestação de contribuição.
+ *
+ * @returns {string}
+ */
 function renderContributionAttestationCardHtml() {
   return `
     <div class="card network-attestation-card" style="margin-bottom:1.25rem; padding:1.05rem 1.15rem;">
@@ -88,6 +99,14 @@ function renderContributionAttestationCardHtml() {
     </div>`;
 }
 
+/**
+ * Cartão de uso diário e mensal de dados.
+ *
+ * @param {object} dailyUsage
+ * @param {object} settings
+ * @param {object} monthlyUsage
+ * @returns {string}
+ */
 function renderUsageStatsCard(dailyUsage, settings, monthlyUsage) {
   const capMb = settings?.dailyCapMb || 200;
   const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
@@ -175,6 +194,14 @@ export function renderPosseWebhooksSection(webhooks = []) {
     </div>`;
 }
 
+/**
+ * Linha de usuário na lista de moderação, com botão de ação.
+ *
+ * @param {string} route
+ * @param {string} buttonClass
+ * @param {string} buttonLabel
+ * @returns {string}
+ */
 function renderModerationUserRow(route, buttonClass, buttonLabel) {
   return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(route))}</code><button type="button" class="btn btn-sm btn-outline ${buttonClass}" data-route="${escapeHtml(route)}">${buttonLabel}</button></div>`;
 }

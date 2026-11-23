@@ -45,6 +45,14 @@ export function renderSyncFormHtml({ legacyPassphrase = false, hasBundle = true 
     </section>`;
 }
 
+/**
+ * Restaura a conta com a senha, o pacote do link e o e-mail opcional.
+ *
+ * @param {string} pass Senha soberana.
+ * @param {string|null} bundle Pacote vindo do link.
+ * @param {string} [email=""] E-mail do cofre.
+ * @returns {Promise<object>}
+ */
 async function restoreWith(pass, bundle, email = "") {
   const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../vault/index.js");
   const directRecord = bundle ? decodeVaultBundleFromUrl(bundle) : null;

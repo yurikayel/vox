@@ -3,6 +3,14 @@
 import { escapeHtml } from "./util.js";
 import { isChannel, POSTING_MODE_MODS, POSTING_MODE_OPEN } from "../community-channel.js";
 
+/**
+ * Botão de modo da barra de canais.
+ *
+ * @param {string} communityId
+ * @param {string} mode
+ * @param {string} label
+ * @returns {string}
+ */
 function modeButtonHtml(communityId, mode, label) {
   return `<button type="button" class="btn btn-sm btn-outline btn-channel-mode" data-comm="${escapeHtml(communityId)}" data-mode="${mode}" data-requires-entry>${label}</button>`;
 }

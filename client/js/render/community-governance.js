@@ -16,6 +16,12 @@ import {
   renderAvatarHtml,
 } from "./util.js";
 
+/**
+ * Painel exibido quando a Feira está desligada na comunidade.
+ *
+ * @param {string} communityId
+ * @returns {string}
+ */
 function renderCommercialDisabledView(communityId) {
   return `<div class="community-vox-panel">${renderFeiraDisabled(communityId)}</div>`;
 }
@@ -89,6 +95,14 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
   return `${actions}<div class="feed-container community-vox-panel-feed">${items}</div></div>`;
 }
 
+/**
+ * Rodapé da proposta com data e selo de diff.
+ *
+ * @param {object} item
+ * @param {string} commId
+ * @param {string} timeLabel
+ * @returns {string}
+ */
 function renderProposalMetaFooter(item, commId, timeLabel) {
   const diffBadge = item.diffText ? '<span class="pill">📄 Contém diff unificado</span>' : "";
   return `
@@ -157,11 +171,23 @@ export function renderProposalStatusBadge(state) {
   return `<span class="status-pill status-open">🟢 Em votação</span>`;
 }
 
+/**
+ * Imagem da oferta da Feira, vazia se não há.
+ *
+ * @param {object} item
+ * @returns {string}
+ */
 function renderListingMedia(item) {
   if (!item.image) return "";
   return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.title || "Oferta")}" /></div>`;
 }
 
+/**
+ * Ações da oferta (Pix, mensagem, link).
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderListingActions({ item, author, authorDisplay, price, pixKey, commId }) {
   const pixBtn = pixKey
     ? `<button type="button" class="btn btn-secondary btn-sm btn-zap-post btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" aria-label="Apoiar com Pix" title="Apoiar com Pix">⚡ Apoiar</button>`
@@ -178,6 +204,16 @@ function renderListingActions({ item, author, authorDisplay, price, pixKey, comm
     </div>`;
 }
 
+/**
+ * Cabeçalho da oferta com autor, selos e hora.
+ *
+ * @param {object} author
+ * @param {object} labels
+ * @param {string} locBadge
+ * @param {string} timeLabel
+ * @param {string} headerBadges
+ * @returns {string}
+ */
 function renderListingHeader(author, labels, locBadge, timeLabel, headerBadges) {
   return `
     <div class="post-header">
@@ -193,6 +229,13 @@ function renderListingHeader(author, labels, locBadge, timeLabel, headerBadges) 
     </div>`;
 }
 
+/**
+ * Título, descrição e preço da oferta.
+ *
+ * @param {object} item
+ * @param {string} price
+ * @returns {string}
+ */
 function renderListingContent(item, price) {
   const priceHtml = price ? `<span class="listing-price">${escapeHtml(price)}</span>` : "";
   return `
@@ -240,6 +283,11 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
     </article>`;
 }
 
+/**
+ * Passo da proposta: o que muda.
+ *
+ * @returns {string}
+ */
 function proposalWhatStepHtml() {
   return `
         <div class="form-group agora-compose-field">
@@ -248,6 +296,11 @@ function proposalWhatStepHtml() {
         </div>`;
 }
 
+/**
+ * Passo da proposta: por quê.
+ *
+ * @returns {string}
+ */
 function proposalWhyStepHtml() {
   return `
         <div class="form-group agora-compose-field">
@@ -256,6 +309,11 @@ function proposalWhyStepHtml() {
         </div>`;
 }
 
+/**
+ * Passo da proposta: diff opcional.
+ *
+ * @returns {string}
+ */
 function proposalDiffStepHtml() {
   return `
         <div class="form-group agora-compose-field">
@@ -265,6 +323,11 @@ function proposalDiffStepHtml() {
         </div>`;
 }
 
+/**
+ * Passo da proposta: revisão antes de enviar.
+ *
+ * @returns {string}
+ */
 function proposalReviewStepHtml() {
   return `
         ${renderReviewList([

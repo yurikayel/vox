@@ -13,15 +13,31 @@ const FORBIDDEN_TOKENS = new Set(["__proto__", "constructor", "prototype"]);
 const LOCAL_HTTP_HOSTS = new Set(["127.0.0.1", "localhost"]);
 const TRACKING_EXACT = new Set(["fbclid", "gclid", "si", "ref"]);
 
+/**
+ * Diz se a chave é de rastreamento (`utm_*` ou nome conhecido).
+ * @param {string} key Nome do parâmetro.
+ * @returns {boolean}
+ */
 function isTrackingKey(key) {
   const lower = String(key || "").toLowerCase();
   return lower.startsWith("utm_") || TRACKING_EXACT.has(lower);
 }
 
+/**
+ * Diz se o valor é um token válido e não reservado.
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isValidToken(value) {
   return typeof value === "string" && TOKEN_RE.test(value) && !FORBIDDEN_TOKENS.has(value);
 }
 
+/**
+ * Exige um token válido e o devolve.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} label Rótulo usado na mensagem de erro.
+ * @returns {string}
+ */
 function requireToken(raw, label) {
   if (typeof raw !== "string") {
     throw new TypeError(`${label} deve ser uma string.`);
@@ -33,6 +49,11 @@ function requireToken(raw, label) {
   return token;
 }
 
+/**
+ * Interpreta a URL e confere o protocolo e a origem.
+ * @param {string} rawUrl URL bruta.
+ * @returns {object}
+ */
 function parseAndCheckOrigin(rawUrl) {
   if (typeof rawUrl !== "string" || !rawUrl.trim()) {
     return { ok: false, reason: "URL ausente ou vazia." };
@@ -55,11 +76,21 @@ function parseAndCheckOrigin(rawUrl) {
   return { ok: true, parsed };
 }
 
+/**
+ * Devolve o caminho base canônico, sempre terminado em `/`.
+ * @param {string} pathname Caminho da URL.
+ * @returns {string}
+ */
 function formatCanonicalBasePath(pathname) {
   const clean = pathname || "/";
   return clean.endsWith("/") ? clean : `${clean}/`;
 }
 
+/**
+ * Normaliza a lista de hosts permitidos (minúsculas, sem vazios), ou `null` se não há lista.
+ * @param {Iterable<string>|null|undefined} allowedHosts Hosts permitidos.
+ * @returns {Set<string>|null}
+ */
 function normalizeAllowedHosts(allowedHosts) {
   if (allowedHosts === undefined || allowedHosts === null) return null;
   const list = [...allowedHosts].map((h) => String(h || "").trim().toLowerCase()).filter(Boolean);
@@ -69,15 +100,31 @@ function normalizeAllowedHosts(allowedHosts) {
   return new Set(list);
 }
 
+/**
+ * Diz se o host da URL está na lista de permitidos (sem lista, aceita todos).
+ * @param {URL} parsed URL interpretada.
+ * @param {Set<string>|null} hostSet Hosts permitidos.
+ * @returns {boolean}
+ */
 function matchesAllowedHost(parsed, hostSet) {
   if (!hostSet) return true;
   return hostSet.has(parsed.hostname.toLowerCase()) || hostSet.has(parsed.host.toLowerCase());
 }
 
+/**
+ * Lista os parâmetros de rastreamento presentes na consulta.
+ * @param {URLSearchParams} searchParams Parâmetros da consulta.
+ * @returns {string[]}
+ */
 function findTrackingKeys(searchParams) {
   return [...searchParams.keys()].filter(isTrackingKey);
 }
 
+/**
+ * Separa a rota do hash (`#/caminho?consulta`) em caminho e consulta.
+ * @param {string} hash Hash da URL.
+ * @returns {object}
+ */
 function splitHashRoute(hash) {
   if (!hash.startsWith("#/")) {
     return { error: "Rota hash canônica deve iniciar com '#/'." };
@@ -88,6 +135,11 @@ function splitHashRoute(hash) {
   return { pathPart: route.slice(0, qIdx), hashQuery: route.slice(qIdx + 1) };
 }
 
+/**
+ * Interpreta o caminho canônico do hash (`/t/<token>` ou equivalente).
+ * @param {string} pathPart Caminho da rota do hash.
+ * @returns {object}
+ */
 function parseCanonicalHashPath(pathPart) {
   const segments = pathPart.slice(1).split("/");
   if (segments.length === 2 && segments[0] === "t" && isValidToken(segments[1])) {
@@ -101,6 +153,10 @@ function parseCanonicalHashPath(pathPart) {
   return { error: "Rota canônica inválida: esperado '#/t/<topicId>' ou '#/c/<communityId>/t/<topicId>'." };
 }
 
+/**
+ * Remove os parâmetros de rastreamento de uma consulta.
+ * @param {URLSearchParams} params Parâmetros da consulta (é alterado).
+ */
 function deleteTrackingKeys(params) {
   for (const key of [...params.keys()]) {
     if (isTrackingKey(key)) params.delete(key);
@@ -153,6 +209,12 @@ export function stripTrackingParams(rawUrl) {
   return parsed.toString();
 }
 
+/**
+ * Procura rastreamento na consulta da URL e na do hash.
+ * @param {URL} parsed URL interpretada.
+ * @param {URLSearchParams|null} hashQuery Consulta dentro do hash.
+ * @returns {object}
+ */
 function checkTrackingInUrl(parsed, hashQuery) {
   const trackers = findTrackingKeys(parsed.searchParams);
   if (hashQuery) {
@@ -190,6 +252,11 @@ export function validateReturnUrl(rawUrl, allowedHosts) {
   return out;
 }
 
+/**
+ * Tenta remover o rastreamento da URL, ou devolve `null` se ela é inválida.
+ * @param {string} rawUrl URL bruta.
+ * @returns {string|null}
+ */
 function tryStrip(rawUrl) {
   try {
     return stripTrackingParams(rawUrl);
@@ -221,6 +288,13 @@ export function auditShareBatch(urls, opts = {}) {
   return { total: results.length, validCount, invalidCount, allValid: invalidCount === 0, results };
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextValue(argv, index, flag) {
   const val = argv[index + 1];
   if (!val || val.startsWith("-")) {
@@ -229,10 +303,23 @@ function readNextValue(argv, index, flag) {
   return val;
 }
 
+/**
+ * Separa uma lista de hosts separados por vírgula.
+ * @param {string} raw Texto bruto.
+ * @returns {string[]}
+ */
 function splitHostsList(raw) {
   return String(raw || "").split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+/**
+ * Aplica um argumento da linha de comando e diz qual opção mudar e em que posição seguir.
+ * @param {object} opts Opções acumuladas.
+ * @param {string} arg Argumento atual.
+ * @param {string[]} argv Todos os argumentos.
+ * @param {number} index Posição do argumento atual.
+ * @returns {{next: number, key: string, val: unknown}}
+ */
 function applyArgPair(opts, arg, argv, index) {
   if (arg === "--help" || arg === "-h") return { next: index, key: "help", val: true };
   if (arg === "--json") return { next: index, key: "json", val: true };
@@ -246,6 +333,11 @@ function applyArgPair(opts, arg, argv, index) {
   throw new Error(`Argumento desconhecido: ${arg}`);
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", out: "", json: false, stripTracking: false, help: false, allowedHosts: null };
   for (let i = 0; i < argv.length; i++) {
@@ -256,6 +348,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta o JSON de entrada.
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonInput(filePath) {
   let rawText;
   try {
@@ -276,6 +373,11 @@ function readJsonInput(filePath) {
   throw new TypeError("JSON de entrada deve ser um array de URLs ou objeto { urls: [...] }.");
 }
 
+/**
+ * Formata o relatório em texto para o terminal.
+ * @param {object} report Relatório da auditoria.
+ * @returns {string}
+ */
 function formatTextReport(report) {
   const lines = [`PM-105 audit: ${report.validCount}/${report.total} válidos (${report.invalidCount} inválidos)`];
   for (const item of report.results) {
@@ -314,6 +416,10 @@ export function runCli(argv = process.argv.slice(2), { stdout = process.stdout }
   return { report, output, outputPath };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);

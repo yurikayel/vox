@@ -136,22 +136,44 @@ export function completeAirgapHandshake(pc, answerEnvelopeStr) {
   });
 }
 
+/**
+ * Espera a coleta de candidatos ICE terminar ou o tempo-limite estourar (nunca rejeita).
+ *
+ * @param {RTCPeerConnection} pc Conexão em negociação.
+ * @param {number} [timeoutMs=1200] Tempo-limite em milissegundos.
+ * @returns {Promise<void>}
+ */
 function waitForIceComplete(pc, timeoutMs = 1200) {
   if (pc.iceGatheringState === "complete") {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
     let timer = null;
+    /**
+     * Resolve a espera quando a coleta ICE chega a `complete`.
+     *
+     * @returns {void}
+     */
     const checkState = () => {
       if (pc.iceGatheringState === "complete") {
         cleanup();
         resolve();
       }
     };
+    /**
+     * Encerra a espera por estouro de tempo.
+     *
+     * @returns {void}
+     */
     const onTimeout = () => {
       cleanup();
       resolve();
     };
+    /**
+     * Cancela o temporizador e remove o ouvinte de `icegatheringstatechange`.
+     *
+     * @returns {void}
+     */
     const cleanup = () => {
       if (timer) clearTimeout(timer);
       if (typeof pc.removeEventListener === "function") {

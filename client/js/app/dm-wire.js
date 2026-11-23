@@ -43,6 +43,13 @@ export async function applyBubbleReaction(peerAddress, actorAddress, targetId, e
   return true;
 }
 
+/**
+ * Marca como lidas as mensagens enviadas a quem confirmou a leitura, até o instante dado.
+ *
+ * @param {string} peerAddress Endereço do par.
+ * @param {number} upToTs Instante limite em ms.
+ * @returns {Promise<boolean>}
+ */
 async function applyReadReceipt(peerAddress, upToTs) {
   const msgs = await cacheNode.getDmMessages(peerAddress);
   let updated = false;
@@ -111,6 +118,13 @@ async function isKnownMessageId(id) {
   return (await cacheNode.getAllDmMessages()).some((m) => m.id === id);
 }
 
+/**
+ * Guarda no aparelho uma mensagem recebida já aberta.
+ *
+ * @param {object} env Envelope recebido.
+ * @param {object} parsed Conteúdo já interpretado.
+ * @returns {Promise<*>}
+ */
 function saveIncomingMessage(env, parsed) {
   return cacheNode.saveDmMessage({
     id: env.id,
@@ -196,6 +210,11 @@ async function markDmStatus(peerAddress, id, status) {
   return true;
 }
 
+/**
+ * Dependências reais da fila de saída: armazenamento, relógio e transportes.
+ *
+ * @returns {object}
+ */
 function defaultOutboxDeps() {
   return {
     storage: globalThis.localStorage,

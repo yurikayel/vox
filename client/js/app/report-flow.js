@@ -41,6 +41,11 @@ export function renderReportFormHtml() {
     </div>`;
 }
 
+/**
+ * Monta o HTML dos canais oficiais para denúncias graves.
+ *
+ * @returns {string}
+ */
 function renderOfficialChannelsHtml() {
   const items = report.OFFICIAL_CHANNELS_PT.map(
     (c) => `<li><a href="${escapeHtml(c.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.label)}</a></li>`
@@ -96,7 +101,17 @@ export function renderReportDoneHtml({ grave = false, moderatorHash = "", sent =
     </div>`;
 }
 
+/**
+ * Elemento que hospeda o modal de denúncia.
+ *
+ * @returns {HTMLElement}
+ */
 const container = () => modalHost(MODAL_ID);
+/**
+ * Fecha o modal de denúncia.
+ *
+ * @returns {void}
+ */
 const closeReportModal = () => clearModalHost(MODAL_ID);
 
 /**
@@ -131,6 +146,12 @@ async function notifyNaturalModerators(self, rec, target) {
   } catch {}
 }
 
+/**
+ * Registra a denúncia do formulário e a envia a quem modera.
+ *
+ * @param {{postId: string, authorRoute: string, communityId: string}} ctx Contexto do post denunciado.
+ * @param {HTMLFormElement} form Formulário preenchido.
+ */
 async function submitReport(ctx, form) {
   const reason = form.querySelector('input[name="report-reason"]:checked')?.value || "";
   const detail = form.querySelector("#report-detail")?.value || "";

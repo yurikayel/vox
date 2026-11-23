@@ -24,6 +24,10 @@
     'button[aria-label="Publicar"]:not([disabled])',
   ];
 
+  /**
+   * Acha o botão de publicar da caixa de diálogo do Threads.
+   * @returns {HTMLElement|null}
+   */
   function findThreadsPostButton() {
     const buttons = document.querySelectorAll('div[role="dialog"] div[role="button"], button');
     for (const btn of buttons) {
@@ -35,6 +39,10 @@
     return null;
   }
 
+  /**
+   * Acha o botão de publicar pelo primeiro seletor conhecido que existir na página.
+   * @returns {HTMLElement|null}
+   */
   function findPublishButton() {
     for (const sel of SELECTORS) {
       const el = document.querySelector(sel);

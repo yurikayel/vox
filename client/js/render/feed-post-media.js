@@ -35,6 +35,14 @@ export function getPostFeedLayout(t) {
   return "text";
 }
 
+/**
+ * Cabeçalho de post de rede externa.
+ *
+ * @param {object} t
+ * @param {object} labels
+ * @param {string} ownerMenu
+ * @returns {string}
+ */
 function renderExternalPostHeader(t, labels, ownerMenu) {
   const authorDisplay = labels.authorDisplay;
   const avatarImg = t.authorAvatar
@@ -97,18 +105,37 @@ export function renderPostHeaderBlock(t, author, labels, { photoOverlay = false 
     </header>`;
 }
 
+/**
+ * Diz se o botão de seguir aparece sobre a mídia do post.
+ *
+ * @param {object} t
+ * @param {string} author
+ * @returns {boolean}
+ */
 function shouldShowPostFollowOverlay(t, author) {
   if (!author || t?.isOwnLocalPost) return false;
   if (isWelcomeRouteId(author)) return false;
   return true;
 }
 
+/**
+ * Botão de seguir sobre a mídia.
+ *
+ * @param {string} author
+ * @returns {string}
+ */
 function renderPostHeroFollowBtn(author) {
   const watching = social.isWatching(author);
   const label = watching ? "Seguindo" : "Seguir";
   return `<button type="button" class="btn-overlay-follow btn-watch-profile${watching ? " is-following" : ""}" data-route="${escapeHtml(author)}" aria-pressed="${watching ? "true" : "false"}" aria-label="${watching ? "Deixar de seguir autor" : "Seguir autor"}">${label}</button>`;
 }
 
+/**
+ * Selo de perfil oficial, só para a conta de boas-vindas.
+ *
+ * @param {string} author
+ * @returns {string}
+ */
 function renderPostHeroVerifiedBadge(author) {
   if (!isWelcomeRouteId(author)) return "";
   const official = getWelcomeProfile();
@@ -116,11 +143,25 @@ function renderPostHeroVerifiedBadge(author) {
   return `<span class="post-media-header-verified" title="Conta verificada" aria-label="Conta verificada">✓</span>`;
 }
 
+/**
+ * UF do autor no cabeçalho da foto, vazia se desconhecida.
+ *
+ * @param {string} author
+ * @returns {string}
+ */
 function photoHeaderUf(author) {
   const uf = mock.getMockProfile(author)?.uf;
   return uf ? `<span class="post-ig-header-uf">${escapeHtml(uf)}</span>` : "";
 }
 
+/**
+ * Gatilho do menu Mais do post.
+ *
+ * @param {object} t
+ * @param {string} author
+ * @param {string} authorDisplay
+ * @returns {string}
+ */
 function renderPostMoreMenuTrigger(t, author, authorDisplay) {
   const hasImage = t.image || t.mediaRef?.hash ? "1" : "";
   const isOwn = t.isOwnLocalPost ? "1" : "";
@@ -166,6 +207,14 @@ export function renderPostMediaHeader(t, author, labels) {
   </div>`;
 }
 
+/**
+ * Vídeo em destaque com sobreposições.
+ *
+ * @param {string} videoSrc
+ * @param {string} overlayHeaderHtml
+ * @param {string} overlayFooterHtml
+ * @returns {string}
+ */
 function renderVideoHero(videoSrc, overlayHeaderHtml, overlayFooterHtml) {
   const src = escapeHtml(videoSrc);
   return `
@@ -179,6 +228,14 @@ function renderVideoHero(videoSrc, overlayHeaderHtml, overlayFooterHtml) {
     </div>`;
 }
 
+/**
+ * Áudio em destaque com sobreposições.
+ *
+ * @param {string} audioSrc
+ * @param {string} overlayHeaderHtml
+ * @param {string} overlayFooterHtml
+ * @returns {string}
+ */
 function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
   const src = escapeHtml(audioSrc);
   return `
@@ -196,6 +253,15 @@ function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
     </div>`;
 }
 
+/**
+ * Imagem em destaque com texto alternativo e proporção.
+ *
+ * @param {object} t
+ * @param {string} layer
+ * @param {string} overlayHeaderHtml
+ * @param {string} overlayFooterHtml
+ * @returns {string}
+ */
 function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
   const altText = resolvePostImageAltText(t);
   const aspect = normalizePostAspect(t?.aspectRatio);
@@ -209,6 +275,15 @@ function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
     </div>`;
 }
 
+/**
+ * Espaço de mídia carregada sob demanda pelo hash.
+ *
+ * @param {object} t
+ * @param {string} layer
+ * @param {string} overlayHeaderHtml
+ * @param {string} overlayFooterHtml
+ * @returns {string}
+ */
 function renderLazyMediaHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
   return `
     <div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">

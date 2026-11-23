@@ -17,14 +17,33 @@ import {
 const HANDLE_PLACEHOLDERS = { bsky: "voce.bsky.social", github: "seu-usuario" };
 const LOGIN_NOTES = { instagram: "Login só para contas profissionais." };
 
+/**
+ * Diz se a conta da rede está conectada.
+ *
+ * @param {object|undefined} acc
+ * @returns {boolean}
+ */
 function isConnected(acc) {
   return Boolean(acc?.handle || acc?.via === "oauth");
 }
 
+/**
+ * Rótulo escapado de quem está conectado.
+ *
+ * @param {object|undefined} acc
+ * @returns {string}
+ */
 function whoLabel(acc) {
   return acc?.handle ? `@${escapeHtml(acc.handle)}` : escapeHtml(acc?.displayName || "conta conectada");
 }
 
+/**
+ * Linha de rede conectada, com ações de desconectar.
+ *
+ * @param {object} net
+ * @param {object} acc
+ * @returns {string}
+ */
 function renderConnectedRow(net, acc) {
   const id = escapeHtml(net.id);
   const status = acc.verified ? `<span class="link-ok">✓ verificado</span>` : `<span class="link-warn">não verificado</span>`;
@@ -48,6 +67,12 @@ function renderConnectedRow(net, acc) {
       <div class="linked-test-feedback link-feedback" id="test-feedback-${id}" style="display:none;"></div>`;
 }
 
+/**
+ * Linha de rede ainda não conectada.
+ *
+ * @param {object} net
+ * @returns {string}
+ */
 function renderDisconnectedRow(net) {
   const id = escapeHtml(net.id);
   const note = LOGIN_NOTES[net.id] ? `<p class="link-hint">${escapeHtml(LOGIN_NOTES[net.id])}</p>` : "";
@@ -69,6 +94,13 @@ function renderDisconnectedRow(net) {
       <button type="button" class="link-alt btn-link-manual" data-net-id="${id}" hidden>ou digitar @usuário</button>`;
 }
 
+/**
+ * Linha de uma rede, conectada ou não.
+ *
+ * @param {object} net
+ * @param {object|undefined} acc
+ * @returns {string}
+ */
 function renderNetworkRow(net, acc) {
   return `
     <li class="link-row linked-network-card" data-net-id="${escapeHtml(net.id)}">
@@ -76,6 +108,13 @@ function renderNetworkRow(net, acc) {
     </li>`;
 }
 
+/**
+ * Campos avançados de credencial da rede.
+ *
+ * @param {object} net
+ * @param {object|undefined} acc
+ * @returns {string}
+ */
 function renderAdvancedCredentials(net, acc) {
   const id = escapeHtml(net.id);
   const pwd = net.supportsAtProto ? `<input type="password" class="input-net-app-password form-control" placeholder="App Password do Bluesky (opcional)" autocomplete="off" />` : "";
@@ -90,6 +129,12 @@ function renderAdvancedCredentials(net, acc) {
         </form>`;
 }
 
+/**
+ * Seção avançada com as credenciais de todas as redes.
+ *
+ * @param {object} accounts
+ * @returns {string}
+ */
 function renderAdvanced(accounts) {
   return `
     <details class="link-advanced">
