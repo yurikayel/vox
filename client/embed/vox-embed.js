@@ -7,9 +7,15 @@
   if (!script) return;
   const topicId = script.getAttribute("data-topic") || "";
   const DEFAULT_BASE = "https://yurikayel.github.io/vox/";
-  const rawBase = script.getAttribute("data-base") || DEFAULT_BASE;
-  // Só http(s): outro esquema (ex.: `javascript:`) viraria código no clique do link.
-  const base = /^https?:\/\//i.test(rawBase) ? rawBase : DEFAULT_BASE;
+  let parsed;
+  try {
+    parsed = new URL(script.getAttribute("data-base") || DEFAULT_BASE);
+  } catch {
+    parsed = new URL(DEFAULT_BASE);
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") parsed = new URL(DEFAULT_BASE);
+  // O esquema do link é sempre constante (http/https): `data-base` só escolhe host e caminho, nunca `javascript:`.
+  const base = (parsed.protocol === "http:" ? "http://" : "https://") + parsed.host + parsed.pathname;
   const label = script.getAttribute("data-label") || "Comentar no Vox";
   const ref = script.getAttribute("data-ref") || "embed";
   const path = topicId
