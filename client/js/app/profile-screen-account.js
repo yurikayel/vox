@@ -13,6 +13,12 @@ import { bindProfileVaultSync } from "./profile-vault-sync.js";
 import { invalidateProfileCache } from "./profile-screen-data.js";
 import { broadcastActiveIdentityChanges } from "./profile-screen-settings.js";
 
+/**
+ * Liga o formulário de criar nova conta no cofre.
+ *
+ * @param {boolean} isSelf É o próprio perfil.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindCreateVaultAccount(isSelf, onReload) {
   const formCreateVault = document.getElementById("form-create-vault-account");
   if (!formCreateVault || !isSelf) return;
@@ -32,6 +38,12 @@ function bindCreateVaultAccount(isSelf, onReload) {
   });
 }
 
+/**
+ * Liga os botões de remover conta do cofre.
+ *
+ * @param {string} address Rota da conta aberta.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindRemoveVaultAccount(address, onReload) {
   document.querySelectorAll(".btn-remove-vault-account").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -47,6 +59,12 @@ function bindRemoveVaultAccount(address, onReload) {
   });
 }
 
+/**
+ * Liga os botões de trocar e de remover conta do cofre.
+ *
+ * @param {string} address Rota da conta aberta.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindSwitchAndRemoveVaultAccounts(address, onReload) {
   document.querySelectorAll(".btn-switch-vault-account").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
@@ -85,20 +103,41 @@ export function bindVaultAccountButtons(address, isSelf, onReload) {
   bindSwitchAndRemoveVaultAccounts(address, onReload);
 }
 
+/**
+ * Lê a senha digitada para exportar ou importar a conta.
+ *
+ * @returns {string}
+ */
 function readSovereigntyPassphrase() {
   return document.getElementById("input-sovereignty-passphrase")?.value || "";
 }
 
+/**
+ * Baixa o arquivo `.voxid` da conta.
+ *
+ * @param {string} jsonStr Conteúdo do arquivo.
+ * @param {string} routeId Rota da conta, usada no nome do arquivo.
+ */
 function downloadSovereigntyFile(jsonStr, routeId) {
   share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${routeId || "identity"}.voxid`);
 }
 
+/**
+ * Resolve a senha da importação, pedindo ao usuário quando o arquivo é cifrado e o campo está vazio.
+ *
+ * @param {string} text Conteúdo do arquivo.
+ * @param {string} fieldValue Senha digitada no campo.
+ * @returns {Promise<string>}
+ */
 async function resolveImportPassphrase(text, fieldValue) {
   if (peekBackupKind(text) !== KIND_WRAPPED) return fieldValue;
   if (String(fieldValue || "").trim()) return fieldValue;
   return window.prompt("Este .voxid está cifrado. Senha:") || "";
 }
 
+/**
+ * Liga o botão de exportar a conta soberana.
+ */
 function bindSovereigntyExport() {
   const btn = document.getElementById("btn-export-account");
   if (!btn) return;
@@ -113,6 +152,13 @@ function bindSovereigntyExport() {
   });
 }
 
+/**
+ * Restaura a conta a partir de um arquivo `.voxid`.
+ *
+ * @param {File} file Arquivo escolhido.
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 async function restoreSovereigntyFile(file, activeTab, onReload) {
   const text = await file.text();
   const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
@@ -125,6 +171,14 @@ async function restoreSovereigntyFile(file, activeTab, onReload) {
   if (onReload) onReload(null, activeTab);
 }
 
+/**
+ * Restaura a conta a partir de um `.voxid` ou de backups do e-mail.
+ *
+ * @param {File[]} files Arquivos escolhidos.
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ * @returns {Promise<*>}
+ */
 async function restoreBackupFiles(files, activeTab, onReload) {
   const texts = await Promise.all(files.map((f) => f.text()));
   const backups = texts.filter(isInboxBackupText).length;
@@ -137,6 +191,12 @@ async function restoreBackupFiles(files, activeTab, onReload) {
   if (onReload) onReload(null, activeTab);
 }
 
+/**
+ * Liga o campo de importar conta.
+ *
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 function bindSovereigntyImport(activeTab, onReload) {
   const input = document.getElementById("file-import-account");
   if (!input) return;
@@ -166,11 +226,20 @@ export function bindSovereigntyBackup(isSelf, activeTab, onReload) {
   bindProfileVaultSync();
 }
 
+/**
+ * Limpa o campo da senha soberana.
+ */
 function clearPassphraseField() {
   const el = document.getElementById("input-sovereignty-passphrase");
   if (el) el.value = "";
 }
 
+/**
+ * Apaga os dados deste aparelho depois de confirmar e mostra o resultado.
+ *
+ * @param {string} activeTab Aba ativa.
+ * @param {Function} onReload Recarrega a tela.
+ */
 async function runLocalWipe(activeTab, onReload) {
   if (!localAccount.confirmLocalWipe()) return;
   clearPassphraseField();

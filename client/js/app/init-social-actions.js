@@ -15,6 +15,11 @@ import { runButtonAction } from "./action-runner.js";
 import { openPostEditModal, handleDeletePost } from "./init-post-mutation.js";
 import { handleFrameActionClick } from "./init-frame-actions.js";
 
+/**
+ * Alterna a reação a um comentário e atualiza o botão.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleCommentReactClick(btn) {
   const commentId = btn.dataset.id;
   const baseCount = btn.dataset.count || 0;
@@ -33,6 +38,11 @@ function handleCommentReactClick(btn) {
   }
 }
 
+/**
+ * Abre ou fecha o campo de resposta de um comentário (só um aberto por vez).
+ *
+ * @param {HTMLElement} btn
+ */
 function handleCommentReplyClick(btn) {
   const item = btn.closest(".post-comment-item");
   const form = item?.querySelector(".post-comment-nested-reply");
@@ -43,6 +53,11 @@ function handleCommentReplyClick(btn) {
   toggleCommentReplyComposer(item, opening);
 }
 
+/**
+ * Alterna a curtida do post e atualiza o botão.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleLikeClick(btn) {
   const postId = btn.dataset.id;
   const baseCount = btn.dataset.count || 0;
@@ -54,6 +69,11 @@ function handleLikeClick(btn) {
   if (countLabel) countLabel.textContent = res.count > 0 ? res.count : "";
 }
 
+/**
+ * Alterna a estrela do post e atualiza o botão.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleStarClick(btn) {
   const postId = btn.dataset.id;
   const baseCount = btn.dataset.count || 0;
@@ -66,6 +86,11 @@ function handleStarClick(btn) {
   share.showToast(res.starred ? "Estrela adicionada ⭐ (nos seus Estrelados)!" : "Estrela removida.");
 }
 
+/**
+ * Alterna o item salvo do post e atualiza o botão.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleSaveClick(btn) {
   const postId = btn.dataset.id;
   const saved = social.toggleSave(postId);
@@ -75,6 +100,11 @@ function handleSaveClick(btn) {
   share.showToast(saved ? "Post salvo nos seus favoritos!" : "Post removido dos favoritos.");
 }
 
+/**
+ * Copia o post em Markdown para a área de transferência.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleCopyMdClick(btn) {
   const mdText = render.formatPostMarkdown({
     id: btn.dataset.id,
@@ -92,6 +122,11 @@ function handleCopyMdClick(btn) {
   }
 }
 
+/**
+ * Alterna o acompanhamento de uma pessoa e atualiza o botão.
+ *
+ * @param {HTMLElement} btn
+ */
 function handleWatchClick(btn) {
   const routeId = btn.dataset.route;
   const watching = social.toggleWatch(routeId);
@@ -108,6 +143,12 @@ function handleWatchClick(btn) {
   share.showToast(watching ? "Agora você acompanha este autor no feed Seguindo!" : "Deixou de acompanhar este autor.");
 }
 
+/**
+ * Despacha cliques das ações do post (editar, excluir e afins).
+ *
+ * @param {Event} e Clique delegado.
+ * @returns {boolean}
+ */
 function dispatchPostActionClicks(e) {
   const btnEdit = e.target.closest(".btn-post-edit");
   if (btnEdit) { e.preventDefault(); openPostEditModal(btnEdit.dataset.id); return true; }
@@ -137,6 +178,12 @@ function dispatchPostActionClicks(e) {
   return false;
 }
 
+/**
+ * Despacha cliques de reação e apoio (zap, curtida e afins).
+ *
+ * @param {Event} e Clique delegado.
+ * @returns {boolean}
+ */
 function dispatchSocialFeedbackClicks(e) {
   const btnZap = e.target.closest(".btn-zap-post:not(.disabled), .btn-zap-profile");
   if (btnZap) {

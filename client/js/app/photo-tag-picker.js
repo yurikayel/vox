@@ -11,6 +11,11 @@ const SHEET_ID = "photo-tag-picker";
 let pending = null;
 let wired = false;
 
+/**
+ * Monta a lista de contatos do seletor, ou o aviso de agenda vazia.
+ *
+ * @returns {string}
+ */
 function contactRows() {
   const list = contacts.listContacts();
   if (!list.length) {
@@ -25,6 +30,11 @@ function contactRows() {
     .join("");
 }
 
+/**
+ * Cria o seletor de pessoas se ainda não existe e devolve a raiz.
+ *
+ * @returns {HTMLElement}
+ */
 function ensureSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -48,6 +58,12 @@ function ensureSheet() {
   return root;
 }
 
+/**
+ * Abre ou fecha o seletor.
+ *
+ * @param {HTMLElement} sheet Raiz do seletor.
+ * @param {boolean} open Aberto.
+ */
 function setOpen(sheet, open) {
   sheet.hidden = !open;
   sheet.classList.toggle("is-open", open);
@@ -70,12 +86,21 @@ export function openPhotoTagPicker(postId, x, y, onPick) {
   setOpen(sheet, true);
 }
 
+/**
+ * Fecha o seletor e descarta a marcação pendente.
+ */
 function closePicker() {
   const sheet = document.getElementById(SHEET_ID);
   if (sheet) setOpen(sheet, false);
   pending = null;
 }
 
+/**
+ * Resolve o texto colado (vx_, @handle ou nome) em uma pessoa a marcar.
+ *
+ * @param {string} raw Texto colado.
+ * @returns {Promise<{targetId: string, label: string}|null>}
+ */
 async function resolvePaste(raw) {
   const parsed = peopleIndex.parseConnectTarget(raw);
   if (parsed) return { targetId: parsed, label: parsed };
@@ -87,6 +112,12 @@ async function resolvePaste(raw) {
   return { targetId: q, label: q };
 }
 
+/**
+ * Fecha o seletor e entrega a pessoa escolhida a quem pediu.
+ *
+ * @param {string} targetId Rota da pessoa.
+ * @param {string} label Nome exibido.
+ */
 function emitPick(targetId, label) {
   if (!pending) return;
   const ctx = pending;
