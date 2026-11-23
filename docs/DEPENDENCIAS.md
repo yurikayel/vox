@@ -41,7 +41,7 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
-| `pyinstaller` | `windows-node-zero-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
+| `pyinstaller` | `vox-populi-windows-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
 | `ruff` | `ci.yml`, job do relay (só CI) | `0.17.4` | sem hash | Lint obrigatório desde 09/11/2026: pyflakes e complexidade (`ruff.toml`); estilo e tamanho de função só informados |
 
 ## 4. Imagens de contêiner
@@ -60,7 +60,7 @@ Desde o PM-95 toda action é fixada pelo **SHA do commit**, com a versão em com
 |---|---|---|---|
 | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | todos os workflows | Oficial do GitHub. |
 | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1` | v7.1.0 | `ci.yml`, `deps-mensal.yml`, `nostr-smoke.yml` | Oficial do GitHub. |
-| `actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | v7.1.0 | `ci.yml`, `release-binarios.yml`, `windows-node-zero-smoke.yml` | Oficial do GitHub. |
+| `actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | v7.1.0 | `ci.yml`, `release-binarios.yml`, `vox-populi-windows-smoke.yml` | Oficial do GitHub. |
 | `actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | `ci.yml`, `nostr-smoke.yml`, `release-binarios.yml` | Oficial do GitHub. |
 | `actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d` | v6.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
 | `actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |

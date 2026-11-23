@@ -86,7 +86,7 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 | `security-audit` | Grep por chaves privadas (`BEGIN … PRIVATE KEY`) | Sim |
 | `pilot-freeze` (só PR) | Com `PILOT_FREEZE=1` ou `.github/pilot-freeze.flag`, falha PRs que tocam `client/js/**`, salvo label `pilot-hotfix` | Sim, quando ativo |
 | `codeql.yml` (PR e push em `main`/`develop`, e semanal) | Análise estática do GitHub CodeQL | Conforme o ruleset do repositório |
-| `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
+| `vox-populi-windows-smoke.yml` | PyInstaller + smoke do Vox Populi no Windows | Sim |
 | `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
 | `deps-mensal.yml` (dia 1 de cada mês, 09:00 UTC; também manual) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20); falha agendada abre issue `alerta-automatico` (PM-61). **Ainda sem execução registrada:** `gh run list --workflow deps-mensal.yml` não devolve nenhuma em 17/11, então o fluxo não foi observado de ponta a ponta | Não (agenda) |
 | `sentinel-keepalive.yml` (a cada 14 min; também manual) | `curl` em `/health` de cada nó sentinela (segredos `SENTINEL_NODE_1…3`; sem segredo, usa `vox-sentinel.onrender.com`); falha gera alerta | Não (agenda) |

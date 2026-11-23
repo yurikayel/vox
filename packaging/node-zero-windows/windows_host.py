@@ -1,4 +1,4 @@
-"""Windows host telemetry and process resource controls for Vox Node Zero."""
+"""Windows host telemetry and process resource controls for Vox Populi."""
 
 from __future__ import annotations
 
