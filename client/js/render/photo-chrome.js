@@ -9,6 +9,12 @@ import { renderRepostCiteHtml } from "./repost-cite.js";
 
 const IMAGE_ONLY_ALT = "Foto da publicação";
 
+/**
+ * Diz se o post define `imageAlt` (mesmo vazio).
+ *
+ * @param {object} post
+ * @returns {boolean}
+ */
 function postHasExplicitImageAlt(post) {
   return Boolean(post && Object.prototype.hasOwnProperty.call(post, "imageAlt"));
 }

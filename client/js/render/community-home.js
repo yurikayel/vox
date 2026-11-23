@@ -74,6 +74,12 @@ export function renderCommunityOrkutMembersBox(meta, communityId, recentPeople =
     </section>`;
 }
 
+/**
+ * Selos do cartão da comunidade (fechada, derivação etc.).
+ *
+ * @param {object} c
+ * @returns {string}
+ */
 function renderHomeCommunityPills(c) {
   const isClosed = c.visibility === "closed" || c.type === "closed";
   const isFork = Boolean(c.communityForkOf || c.forkOf);
@@ -87,6 +93,12 @@ function renderHomeCommunityPills(c) {
   ].join("");
 }
 
+/**
+ * Métricas do cartão da comunidade (membros e não lidas).
+ *
+ * @param {object} c
+ * @returns {string}
+ */
 function renderHomeCommunityMetrics(c) {
   const members = resolveCommunityMemberCount(c, c.id);
   const unread = Number(c.unreadCount) || 0;
@@ -97,6 +109,12 @@ function renderHomeCommunityMetrics(c) {
   ].join("");
 }
 
+/**
+ * Cartão de uma comunidade na Ágora.
+ *
+ * @param {object} c
+ * @returns {string}
+ */
 function renderHomeCommunityCard(c) {
   const href = `#/c/${encodeURIComponent(c.id)}`;
   const avatarHtml = renderCommunityAvatarHtml(c, c.id, "community-avatar-md agora-community-avatar");

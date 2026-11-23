@@ -35,6 +35,11 @@ export function printPhraseCard({ doc = globalThis.document, win = globalThis } 
   card.id = PRINT_ROOT_ID;
   doc.body.append(card);
   doc.body.classList.add(PRINT_CLASS);
+  /**
+   * Descarta a cópia impressa da frase.
+   *
+   * @returns {void}
+   */
   const cleanup = () => discardPhrasePrintCopy(doc);
   for (const type of CLEANUP_EVENTS) win.addEventListener?.(type, cleanup, { once: true });
   win.print();

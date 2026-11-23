@@ -18,11 +18,22 @@ export function failureOutcome(error) {
   return isAssert ? "assert" : "other";
 }
 
+/**
+ * Devolve a primeira linha da mensagem do erro, limitada a 200 caracteres.
+ * @param {Error|unknown} error Erro do teste.
+ * @returns {string}
+ */
 function firstLine(error) {
   const cause = error?.cause ?? error;
   return String(cause?.message ?? cause ?? "").split("\n")[0].slice(0, 200);
 }
 
+/**
+ * Monta a linha de resultado de um teste, ou `null` para eventos que não são teste.
+ * @param {string} type Tipo do evento do `node:test`.
+ * @param {object} data Dados do evento.
+ * @returns {string|null}
+ */
 function resultLine(type, data) {
   if ((type !== "test:pass" && type !== "test:fail") || data.details?.type === "suite") return null;
   const outcome = type === "test:pass" ? "pass" : failureOutcome(data.details?.error);

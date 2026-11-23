@@ -44,6 +44,12 @@ export function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => HTML_ENTITIES[ch]);
 }
 
+/**
+ * Converte o valor em timestamp (ms) ou falha com o nome do campo.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number}
+ */
 function parseTimestampMs(raw, fieldName) {
   const ms = Date.parse(String(raw ?? ""));
   if (!Number.isFinite(ms)) {
@@ -52,17 +58,33 @@ function parseTimestampMs(raw, fieldName) {
   return ms;
 }
 
+/**
+ * Normaliza a latência em milissegundos inteiros, ou `null` se vazia ou inválida.
+ * @param {unknown} value Valor bruto.
+ * @returns {number|null}
+ */
 function parseLatencyMs(value) {
   if (value === null || value === undefined || value === "") return null;
   const num = Number(value);
   return Number.isFinite(num) && num >= 0 ? Math.round(num) : null;
 }
 
+/**
+ * Resolve o grupo de um check (`group`, `nostr` se tem relay, senão `unknown`).
+ * @param {object} item Check bruto.
+ * @returns {string}
+ */
 function resolveCheckGroup(item) {
   if (item.group) return String(item.group).trim().toLowerCase();
   return item.relay ? "nostr" : "unknown";
 }
 
+/**
+ * Normaliza um check do snapshot (id, URL, grupo, resultado e latência).
+ * @param {unknown} raw Check bruto.
+ * @param {number} index Posição na lista, usada para gerar o id.
+ * @returns {object}
+ */
 function normalizeCheck(raw, index) {
   const item = raw && typeof raw === "object" ? raw : {};
   const url = String(item.url || item.relay || "").trim();
@@ -79,6 +101,11 @@ function normalizeCheck(raw, index) {
   };
 }
 
+/**
+ * Valida e normaliza um snapshot de sondagem.
+ * @param {unknown} snapshot Snapshot bruto.
+ * @returns {object}
+ */
 function normalizeSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== "object") {
     throw new Error("Snapshot inválido: objeto esperado.");
@@ -132,12 +159,25 @@ export function mergeHistorySnapshot(history, snapshot, maxDays = DEFAULT_DAYS, 
     .map(([, entry]) => entry);
 }
 
+/**
+ * Calcula o percentil de uma lista ordenada (método do posto mais próximo).
+ * @param {number[]} sortedValues Valores em ordem crescente.
+ * @param {number} p Percentil, de 0 a 100.
+ * @returns {number|null}
+ */
 function percentile(sortedValues, p) {
   if (!sortedValues.length) return null;
   const idx = Math.min(sortedValues.length - 1, Math.max(0, Math.ceil((p / 100) * sortedValues.length) - 1));
   return sortedValues[idx];
 }
 
+/**
+ * Classifica o estado do serviço: fora, degradado (falha recente) ou operacional.
+ * @param {object[]} entries Amostras do serviço.
+ * @param {boolean} latestOk Se a última amostra deu certo.
+ * @param {number} newestMs Instante da amostra mais nova, em ms.
+ * @returns {string}
+ */
 function classifyServiceStatus(entries, latestOk, newestMs) {
   if (!latestOk) return "outage";
   const recentCutoff = newestMs - RECENT_DEGRADED_MS;
@@ -145,6 +185,12 @@ function classifyServiceStatus(entries, latestOk, newestMs) {
   return hadRecentFailure ? "degraded" : "operational";
 }
 
+/**
+ * Resume um serviço: estado, uptime e latências p50 e p95.
+ * @param {object[]} entries Amostras do serviço, da mais antiga à mais nova.
+ * @param {number} newestMs Instante da amostra mais nova, em ms.
+ * @returns {object}
+ */
 function summarizeService(entries, newestMs) {
   const latest = entries[entries.length - 1];
   const okEntries = entries.filter((item) => item.ok);
@@ -173,6 +219,11 @@ function summarizeService(entries, newestMs) {
   };
 }
 
+/**
+ * Determina o estado geral a partir dos serviços (fora, degradado ou operacional).
+ * @param {object[]} services Serviços resumidos.
+ * @returns {string}
+ */
 function determineOverallStatus(services) {
   if (!services.length) return "operational";
   const outages = services.filter((s) => s.status === "outage").length;
@@ -182,6 +233,11 @@ function determineOverallStatus(services) {
   return "operational";
 }
 
+/**
+ * Agrupa as amostras dos snapshots por serviço.
+ * @param {object[]} snapshots Snapshots normalizados.
+ * @returns {Map<string, object[]>}
+ */
 function collectServiceBuckets(snapshots) {
   const buckets = new Map();
   for (const snap of snapshots) {
@@ -229,6 +285,11 @@ export function computeServiceStats(history) {
   };
 }
 
+/**
+ * Agrega os pontos por dia (UTC), marcando o dia como falho se algum ponto falhou.
+ * @param {object[]} points Pontos com `generatedAt` e `ok`.
+ * @returns {object[]}
+ */
 function aggregateDailyDots(points) {
   const byDay = new Map();
   for (const pt of points) {
@@ -245,6 +306,11 @@ function aggregateDailyDots(points) {
   }));
 }
 
+/**
+ * Renderiza a barra de pontos de histórico (um por amostra, ou por dia se há muitas).
+ * @param {object[]} points Pontos com `generatedAt` e `ok`.
+ * @returns {string}
+ */
 function renderDotBar(points) {
   const dots = points.length <= 30
     ? points.map((pt) => ({
@@ -258,12 +324,23 @@ function renderDotBar(points) {
   return `<div class="dot-bar" role="img" aria-label="${escapeHtml(`${dots.length} medições recentes`)}">${spans}</div>`;
 }
 
+/**
+ * Formata as latências p50 e p95 em uma linha.
+ * @param {number|null} p50Ms Latência p50 em ms.
+ * @param {number|null} p95Ms Latência p95 em ms.
+ * @returns {string}
+ */
 function formatLatency(p50Ms, p95Ms) {
   const p50 = p50Ms !== null ? `${p50Ms} ms` : "—";
   const p95 = p95Ms !== null ? `${p95Ms} ms` : "—";
   return `${p50} / ${p95}`;
 }
 
+/**
+ * Renderiza a linha da tabela de um serviço.
+ * @param {object} svc Serviço resumido.
+ * @returns {string}
+ */
 function renderServiceRow(svc) {
   const badgeLabel = STATUS_LABELS[svc.status] || svc.status;
   const detailText = svc.latestDetail ? ` · ${svc.latestDetail}` : "";
@@ -277,6 +354,12 @@ function renderServiceRow(svc) {
   </tr>`;
 }
 
+/**
+ * Renderiza os cartões de resumo do topo da página.
+ * @param {object} stats Estatísticas agregadas.
+ * @param {number} days Dias de histórico considerados.
+ * @returns {string}
+ */
 function renderSummaryCards(stats, days) {
   const { summary } = stats;
   const cards = [
@@ -307,6 +390,11 @@ th{color:var(--muted);font-weight:600}.meta-url{font-size:.8rem;color:var(--mute
 .dot-ok{background:var(--ok-dot)}.dot-warn{background:var(--warn-dot)}.dot-fail{background:var(--fail-dot)}.muted{color:var(--muted);font-size:.82rem}
 footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:16px}`;
 
+/**
+ * Renderiza a tabela de serviços.
+ * @param {object[]} services Serviços resumidos.
+ * @returns {string}
+ */
 function renderServicesTable(services) {
   const rowsHtml = services.length
     ? services.map((svc) => renderServiceRow(svc)).join("\n")
@@ -319,6 +407,13 @@ function renderServicesTable(services) {
   ].join("");
 }
 
+/**
+ * Renderiza o cabeçalho da página com o banner de estado geral.
+ * @param {string} title Título da página.
+ * @param {string} subtitle Subtítulo.
+ * @param {string} overallStatus Estado geral.
+ * @returns {string}
+ */
 function renderStatusHeader(title, subtitle, overallStatus) {
   const bannerText = BANNER_LABELS[overallStatus] || overallStatus;
   return [
@@ -358,6 +453,11 @@ export function renderStatusHtml(stats, meta = {}) {
   ].join("\n");
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseCliArgs(argv) {
   const opts = { probes: "", history: "", out: "", days: DEFAULT_DAYS, now: "" };
   for (let i = 0; i < argv.length; i++) {
@@ -374,6 +474,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê o histórico de snapshots, ou devolve lista vazia se o caminho falta ou o arquivo não existe.
+ * @param {string} filePath Caminho do arquivo de histórico.
+ * @returns {object[]}
+ */
 function readOptionalHistory(filePath) {
   if (!filePath) return [];
   try {
@@ -384,6 +489,11 @@ function readOptionalHistory(filePath) {
   }
 }
 
+/**
+ * Grava o texto em UTF-8, criando as pastas que faltam.
+ * @param {string} filePath Caminho do arquivo.
+ * @param {string} content Conteúdo.
+ */
 function writeTextFile(filePath, content) {
   fs.mkdirSync(path.dirname(path.resolve(filePath)), { recursive: true });
   fs.writeFileSync(filePath, content, "utf8");
