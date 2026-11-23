@@ -1,40 +1,49 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-//! Scaffold binary for `vox-node` (ADR-039 Phase 4, PR4.1a).
+//! Binary entry point for `vox-node` (ADR-039 Phase 4, PR4.1b).
 //!
-//! Exposes a minimal zero-external-dependency CLI (`--help`, `--version`,
-//! `--health-json` / `--check`) consuming [`vox_core::genesis_guard`].
+//! Supports `--help`, `--version`, `--health-json` / `--check`, and
+//! `--mode signaling [--host <addr>] [--port <port>]`.
 
 use std::env;
+use std::io::{self, Write};
 use std::process::ExitCode;
 
 use vox_core::genesis_data::GENESIS_MS;
 use vox_core::genesis_guard;
+use vox_node::signaling::{SignalingConfig, SignalingServer};
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Parsed CLI command for the PR4.1a scaffold.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Command {
     Help,
     Version,
     HealthJson,
+    Signaling {
+        host: Option<String>,
+        port: Option<u16>,
+    },
 }
 
 fn usage_text() -> String {
     format!(
-        "{PKG_NAME} {PKG_VERSION} — Vox unified node scaffold (ADR-039 PR4.1a)\n\
+        "{PKG_NAME} {PKG_VERSION} — Vox unified node (ADR-039 PR4.1b)\n\
          \n\
          USAGE:\n\
          \t{PKG_NAME} [OPTIONS]\n\
+         \t{PKG_NAME} --mode signaling [--host <ADDR>] [--port <PORT>]\n\
          \n\
          OPTIONS:\n\
-         \t-h, --help           Show this help message\n\
-         \t-V, --version        Show version information\n\
-         \t    --health-json    Emit JSON health report using vox_core::genesis_guard\n\
-         \t    --check          Alias for --health-json\n"
+         \t-h, --help                 Show this help message\n\
+         \t-V, --version              Show version information\n\
+         \t    --health-json          Emit JSON health report using vox_core::genesis_guard\n\
+         \t    --check                Alias for --health-json\n\
+         \t    --mode signaling       Run WebSocket signaling + HTTP health server\n\
+         \t    --host <ADDR>          Bind host (default: HOST env or 0.0.0.0)\n\
+         \t    --port <PORT>          Bind port (default: PORT env or 3921; 0 = ephemeral)\n"
     )
 }
 
@@ -42,20 +51,64 @@ fn parse_args<I>(args: I) -> Result<Command, String>
 where
     I: IntoIterator<Item = String>,
 {
-    let mut iter = args.into_iter();
-    let _program = iter.next();
-    let Some(first) = iter.next() else {
+    let items: Vec<String> = args.into_iter().skip(1).collect();
+    let Some(first) = items.first().map(String::as_str) else {
         return Ok(Command::Help);
     };
-    if iter.next().is_some() {
-        return Err("too many arguments (expected at most one flag)".to_string());
+    if items.len() == 1 {
+        return match first {
+            "-h" | "--help" => Ok(Command::Help),
+            "-V" | "--version" => Ok(Command::Version),
+            "--health-json" | "--check" | "health-json" | "check" => Ok(Command::HealthJson),
+            "signaling" => Ok(Command::Signaling {
+                host: None,
+                port: None,
+            }),
+            other => Err(format!("unknown argument: {other}")),
+        };
     }
-    match first.as_str() {
-        "-h" | "--help" => Ok(Command::Help),
-        "-V" | "--version" => Ok(Command::Version),
-        "--health-json" | "--check" | "health-json" | "check" => Ok(Command::HealthJson),
-        other => Err(format!("unknown argument: {other}")),
+    parse_signaling_args(&items)
+}
+
+fn parse_signaling_args(items: &[String]) -> Result<Command, String> {
+    let mut mode_signaling = false;
+    let mut host = None;
+    let mut port = None;
+    let mut idx = 0;
+
+    while idx < items.len() {
+        match items[idx].as_str() {
+            "signaling" => mode_signaling = true,
+            "--mode" => {
+                idx += 1;
+                let mode = items.get(idx).ok_or("missing value for --mode")?;
+                if mode != "signaling" {
+                    return Err(format!("unsupported mode: {mode}"));
+                }
+                mode_signaling = true;
+            }
+            "--host" => {
+                idx += 1;
+                let val = items.get(idx).ok_or("missing value for --host")?;
+                host = Some(val.clone());
+            }
+            "--port" => {
+                idx += 1;
+                let val = items.get(idx).ok_or("missing value for --port")?;
+                let parsed = val
+                    .parse::<u16>()
+                    .map_err(|_| format!("invalid port value: {val}"))?;
+                port = Some(parsed);
+            }
+            other => return Err(format!("unknown argument: {other}")),
+        }
+        idx += 1;
     }
+
+    if !mode_signaling {
+        return Err("too many arguments (expected --mode signaling or a single flag)".to_string());
+    }
+    Ok(Command::Signaling { host, port })
 }
 
 fn genesis_guard_ready() -> bool {
@@ -75,26 +128,44 @@ fn render_health_json() -> Result<String, &'static str> {
     ))
 }
 
-fn run<I>(args: I) -> Result<String, (u8, String)>
+fn run_signaling(host: Option<String>, port: Option<u16>) -> Result<(), (u8, String)> {
+    let config = SignalingConfig::from_env(host, port);
+    let server = SignalingServer::bind(config)
+        .map_err(|err| (1, format!("failed to bind signaling server: {err}")))?;
+    let addr = server.local_addr();
+    let _ = writeln!(io::stdout(), "PORT={}", addr.port());
+    let _ = io::stdout().flush();
+    eprintln!(
+        "{PKG_NAME} {PKG_VERSION} signaling listening on ws://{}:{}",
+        addr.ip(),
+        addr.port()
+    );
+    server.serve_forever();
+    Ok(())
+}
+
+fn run<I>(args: I) -> Result<Option<String>, (u8, String)>
 where
     I: IntoIterator<Item = String>,
 {
     match parse_args(args) {
-        Ok(Command::Help) => Ok(usage_text()),
-        Ok(Command::Version) => Ok(format!("{PKG_NAME} {PKG_VERSION}\n")),
+        Ok(Command::Help) => Ok(Some(usage_text())),
+        Ok(Command::Version) => Ok(Some(format!("{PKG_NAME} {PKG_VERSION}\n"))),
         Ok(Command::HealthJson) => render_health_json()
-            .map(|json| format!("{json}\n"))
+            .map(|json| Some(format!("{json}\n")))
             .map_err(|err| (1, err.to_string())),
+        Ok(Command::Signaling { host, port }) => run_signaling(host, port).map(|()| None),
         Err(msg) => Err((2, format!("{msg}\n\n{}", usage_text()))),
     }
 }
 
 fn main() -> ExitCode {
     match run(env::args()) {
-        Ok(out) => {
+        Ok(Some(out)) => {
             print!("{out}");
             ExitCode::SUCCESS
         }
+        Ok(None) => ExitCode::SUCCESS,
         Err((code, msg)) => {
             eprintln!("{msg}");
             ExitCode::from(code)
@@ -128,17 +199,35 @@ mod tests {
             parse_args(args(&["vox-node", "--check"])),
             Ok(Command::HealthJson)
         );
+        assert_eq!(
+            parse_args(args(&[
+                "vox-node",
+                "--mode",
+                "signaling",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "0"
+            ])),
+            Ok(Command::Signaling {
+                host: Some("127.0.0.1".to_string()),
+                port: Some(0)
+            })
+        );
     }
 
     #[test]
     fn rejects_unknown_or_extra_arguments() {
         assert!(parse_args(args(&["vox-node", "--unknown"])).is_err());
         assert!(parse_args(args(&["vox-node", "--version", "--help"])).is_err());
+        assert!(parse_args(args(&["vox-node", "--mode", "invalid"])).is_err());
     }
 
     #[test]
     fn health_json_reports_ok_and_genesis_ms() {
-        let out = run(args(&["vox-node", "--health-json"])).expect("health json should succeed");
+        let out = run(args(&["vox-node", "--health-json"]))
+            .expect("health json should succeed")
+            .expect("output string");
         let trimmed = out.trim();
         assert!(trimmed.starts_with('{') && trimmed.ends_with('}'));
         assert!(trimmed.contains("\"status\":\"ok\""));
@@ -149,11 +238,15 @@ mod tests {
 
     #[test]
     fn version_and_help_outputs_are_populated() {
-        let version = run(args(&["vox-node", "--version"])).expect("version output");
+        let version = run(args(&["vox-node", "--version"]))
+            .expect("version output")
+            .expect("output string");
         assert_eq!(version.trim(), format!("vox-node {PKG_VERSION}"));
 
-        let help = run(args(&["vox-node", "--help"])).expect("help output");
+        let help = run(args(&["vox-node", "--help"]))
+            .expect("help output")
+            .expect("output string");
         assert!(help.contains("--health-json"));
-        assert!(help.contains("--check"));
+        assert!(help.contains("--mode signaling"));
     }
 }
