@@ -52,8 +52,24 @@ const HOOKS_SOURCE = [
 
 const REGISTER_SOURCE = 'import { register } from "node:module";\nregister("./hooks.mjs", import.meta.url);\n';
 
+/**
+ * Calcula o SHA-256 em hexadecimal.
+ * @param {Buffer|string} buf Conteúdo a resumir.
+ * @returns {string}
+ */
 const sha256 = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
+/**
+ * Troca barras invertidas por barras normais no caminho.
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {string}
+ */
 const toPosix = (filePath) => filePath.replace(/\\/g, "/");
+/**
+ * Roda o git com os argumentos dados e devolve a saída padrão.
+ * @param {string[]} args Argumentos do git.
+ * @param {string} cwd Diretório de trabalho.
+ * @returns {string}
+ */
 const git = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
 /**
@@ -151,6 +167,11 @@ export function resolveTestsForFile(relFile, root) {
   return byImport.map((f) => `tests/${f}`);
 }
 
+/**
+ * Percorre a árvore sintática chamando `visit` em cada nó.
+ * @param {object} node Nó inicial.
+ * @param {Function} visit Função chamada com cada nó.
+ */
 function walkAst(node, visit) {
   if (!node || typeof node.type !== "string") return;
   visit(node);
@@ -161,6 +182,12 @@ function walkAst(node, visit) {
   }
 }
 
+/**
+ * Acha o token do operador entre os dois lados de uma expressão binária.
+ * @param {object} node Nó da expressão.
+ * @param {object[]} tokens Tokens do arquivo.
+ * @returns {object|undefined}
+ */
 function findOperatorToken(node, tokens) {
   const leftEnd = node.left.range[1];
   const rightStart = node.right.range[0];
@@ -169,6 +196,12 @@ function findOperatorToken(node, tokens) {
   );
 }
 
+/**
+ * Cria o mutante que troca o operador (por exemplo `===` por `!==`), ou `null` se não há troca.
+ * @param {object} node Nó da expressão.
+ * @param {object[]} tokens Tokens do arquivo.
+ * @returns {object|null}
+ */
 function operatorMutant(node, tokens) {
   const replacement = OPERATOR_SWAPS[node.operator];
   if (!replacement) return null;
@@ -186,6 +219,12 @@ function operatorMutant(node, tokens) {
   };
 }
 
+/**
+ * Cria o mutante que troca a condição do `if` por `false`.
+ * @param {object} node Nó do `if`.
+ * @param {string} source Código-fonte do arquivo.
+ * @returns {object}
+ */
 function ifConditionMutant(node, source) {
   const [start, end] = node.test.range;
   const original = source.slice(start, end);
@@ -202,6 +241,11 @@ function ifConditionMutant(node, source) {
   };
 }
 
+/**
+ * Cria o mutante que inverte um literal booleano.
+ * @param {object} node Nó do literal.
+ * @returns {object}
+ */
 function booleanMutant(node) {
   const original = node.value ? "true" : "false";
   const replacement = node.value ? "false" : "true";
@@ -217,6 +261,13 @@ function booleanMutant(node) {
   };
 }
 
+/**
+ * Escolhe o mutante adequado ao tipo do nó, ou `null` se o nó não é mutável.
+ * @param {object} node Nó da árvore sintática.
+ * @param {string} source Código-fonte do arquivo.
+ * @param {object[]} tokens Tokens do arquivo.
+ * @returns {object|null}
+ */
 function mutantForNode(node, source, tokens) {
   if (node.type === "BinaryExpression" || node.type === "LogicalExpression") return operatorMutant(node, tokens);
   if (node.type === "IfStatement") return ifConditionMutant(node, source);
@@ -257,6 +308,10 @@ export function applyMutant(source, mutant) {
   return source.slice(0, mutant.start) + mutant.replacement + source.slice(mutant.end);
 }
 
+/**
+ * Cria o diretório temporário com os ganchos de carga que trocam o módulo alvo pelo mutante.
+ * @returns {object}
+ */
 function createSandbox() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "vox-mutate-"));
   fs.writeFileSync(path.join(dir, "hooks.mjs"), HOOKS_SOURCE, "utf8");
@@ -265,6 +320,17 @@ function createSandbox() {
   return { dir, registerUrl: pathToFileURL(registerPath).href, mutatedPath: path.join(dir, "mutated.js") };
 }
 
+/**
+ * Roda a suíte de testes com o módulo alvo trocado pelo mutante.
+ * @param {object} options Parâmetros da execução.
+ * @param {string[]} options.tests Arquivos de teste.
+ * @param {string} options.cwd Diretório de trabalho.
+ * @param {number} options.timeoutMs Limite de tempo, em ms.
+ * @param {string} options.registerUrl URL do módulo de registro dos ganchos.
+ * @param {string} options.targetFile Arquivo alvo da mutação.
+ * @param {string} options.mutatedPath Caminho do arquivo mutado.
+ * @returns {object}
+ */
 function runTestSuite({ tests, cwd, timeoutMs, registerUrl, targetFile, mutatedPath }) {
   const { NODE_TEST_CONTEXT: _ignored, ...baseEnv } = process.env;
   const env = registerUrl
@@ -280,8 +346,27 @@ function runTestSuite({ tests, cwd, timeoutMs, registerUrl, targetFile, mutatedP
   return { status: res.status === 0 ? "survived" : "killed", durationMs };
 }
 
+/**
+ * Calcula a nota de mutação (percentual de mutantes mortos), ou `null` sem mutantes.
+ * @param {number} killed Mutantes mortos.
+ * @param {number} total Total de mutantes.
+ * @returns {number|null}
+ */
 const computeScore = (killed, total) => (total === 0 ? null : Number(((killed / total) * 100).toFixed(1)));
 
+/**
+ * Roda a suíte contra cada mutante e registra se foi morto, sobreviveu ou estourou o tempo.
+ * @param {object} options Parâmetros da avaliação.
+ * @param {string} options.source Código-fonte original.
+ * @param {string} options.absFile Caminho absoluto do alvo.
+ * @param {string} options.relFile Caminho relativo do alvo.
+ * @param {string[]} options.absTests Testes (caminhos absolutos).
+ * @param {string} options.cwd Diretório de trabalho.
+ * @param {number} options.timeoutMs Limite de tempo por mutante, em ms.
+ * @param {object[]} options.mutants Mutantes a avaliar.
+ * @param {object} options.sandbox Sandbox com os ganchos.
+ * @returns {object[]}
+ */
 function evaluateMutants({ source, absFile, relFile, absTests, cwd, timeoutMs, mutants, sandbox }) {
   const results = [];
   for (const mutant of mutants) {
@@ -295,6 +380,14 @@ function evaluateMutants({ source, absFile, relFile, absTests, cwd, timeoutMs, m
   return results;
 }
 
+/**
+ * Monta o relatório de mutação de um arquivo.
+ * @param {string} relFile Caminho relativo do alvo.
+ * @param {string[]} relTests Testes usados.
+ * @param {object[]} evaluated Mutantes avaliados.
+ * @param {number} started Instante de início, em ms.
+ * @returns {object}
+ */
 function buildFileReport(relFile, relTests, evaluated, started) {
   const killed = evaluated.filter((r) => r.status === "killed").length;
   const survivors = evaluated.filter((r) => r.status === "survived");
@@ -377,6 +470,12 @@ export function formatTextReport(report) {
   return lines.join("\n");
 }
 
+/**
+ * Resolve o commit-base do diff (`merge-base` com `HEAD`).
+ * @param {string} baseRef Referência git da base.
+ * @param {string} root Raiz do repositório.
+ * @returns {string}
+ */
 function resolveBaseSha(baseRef, root) {
   try {
     return git(["merge-base", baseRef, "HEAD"], root).trim();
@@ -385,6 +484,12 @@ function resolveBaseSha(baseRef, root) {
   }
 }
 
+/**
+ * Modo diff: roda a mutação nos arquivos Tier A alterados em relação à base.
+ * @param {object} opts Opções da linha de comando.
+ * @param {string} root Raiz do repositório.
+ * @returns {object}
+ */
 function runDiffMode(opts, root) {
   const patterns = loadTierAPatterns(root);
   const baseSha = resolveBaseSha(opts.base, root);
@@ -404,6 +509,12 @@ function runDiffMode(opts, root) {
   return aggregateReports("diff", reports);
 }
 
+/**
+ * Modo arquivo único: roda a mutação em um arquivo, resolvendo seus testes se não foram dados.
+ * @param {object} opts Opções da linha de comando.
+ * @param {string} root Raiz do repositório.
+ * @returns {object}
+ */
 function runSingleFileMode(opts, root) {
   const tests = opts.tests.length > 0 ? opts.tests : resolveTestsForFile(opts.file, root);
   if (tests.length === 0) throw new Error(`Nenhum teste resolvido para ${opts.file}; informe --test <caminho>.`);
@@ -411,6 +522,9 @@ function runSingleFileMode(opts, root) {
   return aggregateReports("file", [report]);
 }
 
+/**
+ * Ponto de entrada: interpreta os argumentos, roda o modo escolhido e imprime o relatório.
+ */
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help || (!opts.file && !opts.base)) {

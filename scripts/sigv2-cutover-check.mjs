@@ -18,6 +18,11 @@ const TEST_ID_SET = new Set(TEST_ROUTE_IDS);
 const IDENTITY_FIELDS = Object.freeze(["author", "owner", "routeId", "authorId", "ownerId", "from", "to", "peerId"]);
 const CREATED_FIELDS = Object.freeze(["ts", "timestamp", "createdAt"]);
 
+/**
+ * Extrai o instante de criação do item (primeiro campo de data conhecido), ou `null`.
+ * @param {object} item Item do lote.
+ * @returns {number|null}
+ */
 function extractCreatedMs(item) {
   for (const field of CREATED_FIELDS) {
     const val = item[field];
@@ -71,6 +76,13 @@ export function checkOutboundRehearsalLeak(item) {
   return { leaked: reasons.length > 0, reasons };
 }
 
+/**
+ * Avalia um item do lote pela política `sigv2` e acumula o veredito.
+ * @param {object} acc Acumulador (é alterado).
+ * @param {unknown} item Item do lote.
+ * @param {number} index Posição do item.
+ * @param {object} opts Opções da política.
+ */
 function recordBatchItem(acc, item, index, opts) {
   const id = item && typeof item === "object" && item.id ? String(item.id) : `#${index}`;
   const verdict = evaluateSigv2Policy(item, opts);
@@ -115,6 +127,11 @@ export function auditCutoverBatch(items, opts = {}) {
   };
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {object}
+ */
 function parseArgs(argv) {
   const opts = { input: "", graceMs: 0, checkRehearsal: false, json: false };
   for (let i = 0; i < argv.length; i++) {

@@ -23,6 +23,11 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const JS_ROOT = path.join(ROOT, "client", "js");
 const DEBT_FILE = path.join(ROOT, "scripts", "layers-debt.json");
 
+/**
+ * Lista recursivamente os módulos `.js` de um diretório.
+ * @param {string} dir Diretório raiz da busca.
+ * @returns {string[]}
+ */
 function listModules(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const full = path.join(dir, e.name);
@@ -31,12 +36,19 @@ function listModules(dir) {
   });
 }
 
+/**
+ * Coleta as violações de camada de todos os módulos do cliente.
+ * @returns {string[]}
+ */
 function collectViolations() {
   return listModules(JS_ROOT)
     .flatMap((file) => layerViolations(path.relative(JS_ROOT, file).split(path.sep).join("/"), fs.readFileSync(file, "utf8")))
     .sort();
 }
 
+/**
+ * Compara as violações com a dívida registrada e reprova se surgir violação nova.
+ */
 function main() {
   const prune = process.argv.includes("--prune");
   const found = collectViolations();
