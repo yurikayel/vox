@@ -152,8 +152,13 @@ test("memória central: rotas de pessoas, comunidade, tópico, proposta e tag ta
     at(hash);
     memory = { status: "ok", revision: 10 + i, posts: [await ana.sign({ id: `mc_r${i}`, type: "topic", communityId: "praca", title: "Novo", body: "x", ts: Date.now() + i })], tombstones: [], blobs: [], profiles: [] };
     installDom();
-    const res = await syncWithCentralMemory();
-    assert.equal(res.ok, true, hash);
+    // O redesenho da rota anterior pode ter um sync em voo: espera ele terminar em vez de contar com a velocidade da máquina.
+    let res = await syncWithCentralMemory();
+    for (let k = 0; res.skipped && k < 200; k++) {
+      await settle(5);
+      res = await syncWithCentralMemory();
+    }
+    assert.equal(res.ok, true, `${hash} ${JSON.stringify(res)}`);
     await settle(10);
   }
   memory = null;
@@ -377,8 +382,12 @@ test("editar post: 'remover imagem' apaga imagem e texto alternativo", async () 
   dom.doc.getElementById("post-edit-remove-image").checked = true;
   await mutation.openPostEditModal("post_edit_2");
   await dom.form.fire("submit");
-  await settle();
-  const saved = await cacheNode.getLocalPost("post_edit_2");
+  // A gravação é assíncrona: lê de novo até ela aparecer (ou o prazo acabar e a asserção acusar).
+  let saved = await cacheNode.getLocalPost("post_edit_2");
+  for (let k = 0; saved.image !== "" && k < 200; k++) {
+    await settle(5);
+    saved = await cacheNode.getLocalPost("post_edit_2");
+  }
   assert.equal(saved.image, "");
   assert.equal(saved.imageAlt, "");
 });
