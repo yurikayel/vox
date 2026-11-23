@@ -1,6 +1,12 @@
 /** @file Página #/status — telemetria honesta local. */
 import { escapeHtml } from "./util.js";
 
+/**
+ * Linhas da tabela de gateways com estado e latência.
+ *
+ * @param {object|undefined} gatewayHealth
+ * @returns {string}
+ */
 function renderGatewayTableRowsHtml(gatewayHealth) {
   const gwMap = gatewayHealth?.gateways && typeof gatewayHealth.gateways === "object" ? gatewayHealth.gateways : {};
   const entries = Object.entries(gwMap);
@@ -10,6 +16,12 @@ function renderGatewayTableRowsHtml(gatewayHealth) {
     .join("");
 }
 
+/**
+ * Linha do último espelhamento ou do erro dele.
+ *
+ * @param {object|undefined} mirrorExport
+ * @returns {string}
+ */
 function renderMirrorExportLineHtml(mirrorExport) {
   if (mirrorExport?.mirror_last_error) {
     return `<p><strong>Cópia no servidor comunitário (última falha):</strong> <code>${escapeHtml(mirrorExport.mirror_last_error)}</code> · ${escapeHtml(mirrorExport.mirror_last_error_community || "—")} · ${escapeHtml(mirrorExport.mirror_last_error_at || "")}</p>`;
@@ -20,10 +32,22 @@ function renderMirrorExportLineHtml(mirrorExport) {
 /** Estado da leitura do Arweave em palavras de gente (a tela não mostra o código interno). */
 const READ_STATE_LABELS = { all_ok: "Normal", degraded: "Instável", critical: "Leitura reserva" };
 
+/**
+ * Rótulo do estado de leitura; Desconhecido se não mapeado.
+ *
+ * @param {string} state
+ * @returns {string}
+ */
 function readStateLabel(state) {
   return READ_STATE_LABELS[state] || "Desconhecido";
 }
 
+/**
+ * Nota de leitura de reserva quando o estado não é normal.
+ *
+ * @param {string} state
+ * @returns {string}
+ */
 function renderLeituraReservaNoteHtml(state) {
   if (state !== "all_ok") {
     return `<p class="desc status-leigo-note">Quando aparece <strong>leitura reserva</strong>, os pontos de leitura falharam ou demoraram aqui — o app usa o que já está guardado ou um servidor comunitário. É plano B, não significa que você quebrou a rede.</p>`;
@@ -31,6 +55,14 @@ function renderLeituraReservaNoteHtml(state) {
   return `<p class="desc status-leigo-note">Pontos de leitura respondendo neste aparelho. Se um dia aparecer <strong>leitura reserva</strong>, é backup (o que já está guardado ou vizinhos), não falha sua.</p>`;
 }
 
+/**
+ * Cartões de estado de leitura, relay e pares.
+ *
+ * @param {string} state
+ * @param {object} relayStatus
+ * @param {object} rtcStatus
+ * @returns {string}
+ */
 function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
   const peers = Number(rtcStatus?.remotePeersConnected || 0);
   const readOk = state === "all_ok";
@@ -89,6 +121,11 @@ export function renderStatusPage(
     </div>`;
 }
 
+/**
+ * Cabeçalho da página de saúde do nó.
+ *
+ * @returns {string}
+ */
 function renderNodeHealthHeadHtml() {
   return `
       <header class="agora-page-head agora-page-head--wide">
@@ -103,6 +140,11 @@ function renderNodeHealthHeadHtml() {
       </header>`;
 }
 
+/**
+ * Quadro de armazenamento local.
+ *
+ * @returns {string}
+ */
 function renderStorageTabletHtml() {
   return `
       <section class="agora-tablet">
@@ -115,6 +157,12 @@ function renderStorageTabletHtml() {
       </section>`;
 }
 
+/**
+ * Quadro da malha, do relay e dos gateways.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirrorExport, gatewayHealth }) {
   return `
       <section class="agora-tablet card">
@@ -135,21 +183,46 @@ function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirro
       </section>`;
 }
 
+/**
+ * Duração em ms para célula de tabela; traço se ausente.
+ *
+ * @param {number|null|undefined} ms
+ * @returns {string}
+ */
 function formatDurationCell(ms) {
   return ms === null || ms === undefined ? "—" : `${Number(ms) || 0} ms`;
 }
 
+/**
+ * Linha de telemetria de um canal de sinalização.
+ *
+ * @param {string} label
+ * @param {object} bucket
+ * @returns {string}
+ */
 function renderSignalingRowHtml(label, bucket) {
   const b = bucket && typeof bucket === "object" ? bucket : {};
   return `<tr><td>${escapeHtml(label)}</td><td>${Number(b.attempts) || 0}</td><td>${Number(b.ok) || 0}</td><td>${Number(b.fail) || 0}</td><td>${formatDurationCell(b.avgConnectMs)}</td></tr>`;
 }
 
+/**
+ * Linha do tempo até o primeiro par conectado.
+ *
+ * @param {object|undefined} firstPeer
+ * @returns {string}
+ */
 function renderFirstPeerLineHtml(firstPeer) {
   const fp = firstPeer && typeof firstPeer === "object" ? firstPeer : {};
   if (!Number(fp.count)) return "Sem pareamento medido neste aparelho ainda.";
   return `Último: <strong>${Number(fp.lastMs) || 0} ms</strong> · Média: <strong>${Number(fp.avgMs) || 0} ms</strong> · Mediana: <strong>${Number(fp.medianMs) || 0} ms</strong> (${Number(fp.count)} ${Number(fp.count) === 1 ? "sessão" : "sessões"})`;
 }
 
+/**
+ * Quadro de telemetria de sinalização.
+ *
+ * @param {object|undefined} signalingStats
+ * @returns {string}
+ */
 function renderSignalingTelemetryTabletHtml(signalingStats) {
   const ch = signalingStats?.channels || {};
   const peers = signalingStats?.peers || {};
@@ -192,6 +265,12 @@ export function hydrateStatusStorage({ usage = 0, quota = 0 } = {}) {
     label.textContent = "Estimativa indisponível";
     return;
   }
+  /**
+   * Formata bytes em MB, sem casas decimais acima de 100 MB.
+   *
+   * @param {number} n
+   * @returns {string}
+   */
   const mb = (n) => `${(n / (1024 * 1024)).toFixed(n > 100 * 1024 * 1024 ? 0 : 1)} MB`;
   const pct = Math.min(100, Math.max(0.5, (usage / quota) * 100));
   label.textContent = `${mb(usage)} / ${mb(quota)}`;

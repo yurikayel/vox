@@ -28,6 +28,12 @@ export function splitMarkdownFences(text) {
   return parts;
 }
 
+/**
+ * Converte um trecho de texto comum em HTML seguro.
+ *
+ * @param {string} raw
+ * @returns {string}
+ */
 function renderTextSegment(raw) {
   const trimmed = String(raw || "");
   if (!trimmed.trim()) return "";
@@ -42,6 +48,13 @@ function renderTextSegment(raw) {
     .join("");
 }
 
+/**
+ * Renderiza um bloco de código, com a linguagem informada.
+ *
+ * @param {string} code
+ * @param {string} lang
+ * @returns {string}
+ */
 function renderCodeBlock(code, lang) {
   const normLang = String(lang || "").trim().toLowerCase();
   if (normLang === "diff") {

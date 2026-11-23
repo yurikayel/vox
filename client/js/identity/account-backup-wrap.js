@@ -9,6 +9,12 @@ export const KIND_PLAIN = "vox-account-backup";
 export const KIND_WRAPPED = "vox-account-backup-wrapped";
 const WRAP_ITER = 210000;
 
+/**
+ * Codifica bytes em base64url (sem preenchimento).
+ *
+ * @param {ArrayBuffer|Uint8Array} bytes
+ * @returns {string}
+ */
 function bytesToB64Url(bytes) {
   let bin = "";
   const arr = new Uint8Array(bytes);
@@ -18,6 +24,12 @@ function bytesToB64Url(bytes) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Decodifica base64url para bytes.
+ *
+ * @param {string} b64url
+ * @returns {Uint8Array}
+ */
 function b64UrlToBytes(b64url) {
   let padded = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
   const pad = padded.length % 4;
@@ -30,18 +42,40 @@ function b64UrlToBytes(b64url) {
   return out;
 }
 
+/**
+ * Exige senha não vazia; lança com `emptyMsg` quando falta.
+ *
+ * @param {string} passphrase
+ * @param {string} emptyMsg
+ * @returns {string}
+ */
 function requireSecret(passphrase, emptyMsg) {
   const secret = String(passphrase || "");
   if (!secret) throw new Error(emptyMsg);
   return secret;
 }
 
+/**
+ * Valida o número de iterações do PBKDF2 vindo do arquivo; fora do intervalo seguro volta ao padrão.
+ *
+ * @param {number|string} raw
+ * @returns {number}
+ */
 function wrapIterations(raw) {
   const n = Number(raw) || WRAP_ITER;
   if (n < 10000 || n > 1000000) return WRAP_ITER;
   return n;
 }
 
+/**
+ * Deriva a chave AES-GCM de embrulho a partir da senha e do sal.
+ *
+ * @param {string} passphrase
+ * @param {Uint8Array} salt
+ * @param {string[]} usages
+ * @param {number} iterations
+ * @returns {Promise<CryptoKey>}
+ */
 async function deriveWrapKey(passphrase, salt, usages, iterations) {
   const material = await crypto.subtle.importKey(
     "raw",
@@ -87,12 +121,24 @@ export async function wrapBackup(plainObj, passphrase) {
   };
 }
 
+/**
+ * Confere que o envelope tem tipo, texto cifrado, sal e IV; lança se estiver incompatível.
+ *
+ * @param {object} env
+ */
 function assertWrappedShape(env) {
   if (env?.kind !== KIND_WRAPPED || !env.ct || !env.salt || !env.iv) {
     throw new Error("Backup incompatível ou corrompido");
   }
 }
 
+/**
+ * Decifra o envelope de backup com a senha e devolve os bytes internos.
+ *
+ * @param {object} env
+ * @param {string} passphrase
+ * @returns {Promise<Uint8Array>}
+ */
 async function decryptWrappedBytes(env, passphrase) {
   const secret = requireSecret(passphrase, "Este arquivo está cifrado — informe a senha");
   try {
@@ -112,6 +158,12 @@ async function decryptWrappedBytes(env, passphrase) {
   }
 }
 
+/**
+ * Interpreta os bytes decifrados como o JSON do backup; lança se estiver corrompido.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {object}
+ */
 function parseInnerPlain(bytes) {
   let inner;
   try {

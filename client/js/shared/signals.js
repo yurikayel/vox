@@ -207,6 +207,11 @@ export function batch(fn) {
 async function executeResourceFetch(ctx, args) {
   const id = ++ctx.seq;
   const ac = new AbortController();
+  /**
+   * Propaga o aborto do escopo pai para o controlador local.
+   *
+   * @returns {void}
+   */
   const onScopeAbort = () => ac.abort();
   ctx.abortCurrent();
   ctx.abortCurrent = () => {

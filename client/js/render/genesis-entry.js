@@ -11,6 +11,11 @@ import { createFocusTrap } from "./focus-trap.js";
 
 let genesisTrap = null;
 
+/**
+ * Trata a tecla Esc na entrada: volta ao passo inicial quando está num passo interno.
+ *
+ * @param {HTMLElement|null} container
+ */
 function handleGenesisEscape(container) {
   const have = container?.querySelector?.('[data-genesis-step="have"]');
   if (have && !have.hidden) {
@@ -20,6 +25,14 @@ function handleGenesisEscape(container) {
   container?.querySelector?.("#btn-oauth-skip")?.click?.();
 }
 
+/**
+ * Envolve o corpo de um passo da entrada, com botão de voltar opcional.
+ *
+ * @param {string} key
+ * @param {string} bodyHtml
+ * @param {object} [options={}]
+ * @returns {string}
+ */
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
   const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}"><span aria-hidden="true">←</span> Voltar</button>` : "";
   return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
@@ -32,6 +45,13 @@ function renderInviteLeadHtml(invite) {
   return `<p class="genesis-lead genesis-lead--invite">${who} te chamou para o Vox. Ao entrar, essa pessoa já fica nos seus contatos.</p>`;
 }
 
+/**
+ * Tela de entrada (gênese) com os passos de criar ou recuperar conta.
+ *
+ * @param {string} currentName
+ * @param {object|null} [invite=null]
+ * @returns {string}
+ */
 function renderGenesisEntryHtml(currentName, invite = null) {
   return `
           <h2 id="oauth-enrich-title" class="genesis-panel-title">Entrar no Vox</h2>
