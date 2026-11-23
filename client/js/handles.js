@@ -4,7 +4,7 @@
  * Tratamento de conflitos comunitários sem autoridade central.
  */
 
-import { isSafeKey } from "./shared/safe-key.js";
+import { isSafeKey, withEntry } from "./shared/safe-key.js";
 
 /** Conjunto de handles reservados que não podem ser registrados por usuários. */
 export const RESERVED_HANDLES = new Set([
@@ -140,10 +140,8 @@ export function cacheHandleMapping(slug, address) {
   try {
     const raw = localStorage.getItem(HANDLES_CACHE_KEY);
     const store = raw ? JSON.parse(raw) : { bySlug: {}, byAddress: {} };
-    if (!store.bySlug) store.bySlug = {};
-    if (!store.byAddress) store.byAddress = {};
-    store.bySlug[cleanSlug] = address;
-    store.byAddress[address] = cleanSlug;
+    store.bySlug = withEntry(store.bySlug, cleanSlug, address);
+    store.byAddress = withEntry(store.byAddress, address, cleanSlug);
     localStorage.setItem(HANDLES_CACHE_KEY, JSON.stringify(store));
   } catch {}
 }
