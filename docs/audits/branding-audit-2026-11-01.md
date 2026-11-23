@@ -1,4 +1,6 @@
-# Auditoria de branding — VoxPopuli Node Zero
+# Auditoria de branding — Vox Populi (registro histórico de 01/11/2026)
+
+> **Supersedido pelo [ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md):** o termo legado "Node Zero" foi descontinuado; a taxonomia canônica oficial é **Vox**, **Vox Populi** e **Vox Memoria**. Este arquivo é preservado apenas como registro histórico da auditoria de 2026-11-01.
 
 > **Status:** auditoria (retrato de 2026-11-01) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-01
 

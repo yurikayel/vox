@@ -4,7 +4,7 @@
  *
  * Fonte: `client/js/genesis.js` (`GENESIS_MS`) e `client/js/data/test-route-ids.js` (`TEST_ROUTE_IDS`).
  * Saídas (não editar à mão):
- * - `relay/genesis_data.py` — lido por `relay/genesis_guard.py` (relay Python e Node Zero empacotado);
+ * - `relay/genesis_data.py` — lido por `relay/genesis_guard.py` (relay Python e Vox Populi empacotado);
  * - `packaging/zero-central-memory-windows/src/GenesisData.cs` — compilado no `ZeroCentralMemory.exe`.
  *
  * Uso: `node scripts/gen-genesis-guard.mjs` regrava as saídas; `--check` só confere e sai com 1 se alguma

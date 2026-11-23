@@ -1,4 +1,4 @@
-# Vox Populi (Node Zero) — Executável Dedicado do Nó sem o Client
+# Vox Populi — Executável Dedicado do Nó de Apoio (Windows)
 
 Nó comunitário para operação local de relay e cache, com controle de recursos e gerenciamento pelo tray. O **`VoxPopuli.exe`** fica na área de notificação do Windows e abre um menu de controle com clique direito, operando de forma 100% autônoma **sem abrir janela de cliente ou navegador**.
 

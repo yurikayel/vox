@@ -144,7 +144,7 @@ Se Voxels não são dinheiro e não compram alcance, quais são seus benefícios
 1. **Buffer Circular de Segurança (Ring Buffer / FIFO):**
    - O armazenamento local armazena até $500$ recibos mais recentes por `routeId` (`MAX_STORED_RECEIPTS`).
    - Ao ultrapassar a cota, ocorre poda automática (*FIFO pruning*) para prevenir estouro de cota do navegador (IndexedDB / localStorage) e garantir renderização sub-milissegundo.
-2. **Compensação Automática de Nó Dedicado (`checkAndRecordNodeZeroReward`):**
+2. **Compensação Automática de Nó Dedicado (`checkAndRecordLocalNodeReward`):**
    - O cliente `Vox` consulta em loopback o nó dedicado (`127.0.0.1:3920` / `:3921`).
    - Se o nó estiver ativo e responder `/health` com sucesso, um recibo da Forja (`relay_cache_uptime`, $+10$ Voxels) é registrado.
    - Aplica-se **cooldown estrito de 1 hora** (`3.600.000 ms`) para impedir inundação de recibos no mesmo período.

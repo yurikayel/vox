@@ -20,7 +20,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Vox Populi • Zero-Central-Memory (Dev Alpha/Beta)")]
 [assembly: AssemblyDescription("Vox Populi Dev Node — Sustentação de Memória Central para Alpha e Beta")]
 [assembly: AssemblyCompany("Vox Populi")]
-[assembly: AssemblyProduct("VoxPopuli Node Zero - Community Node")]
+[assembly: AssemblyProduct("Vox Memoria")]
 [assembly: AssemblyVersion("0.5.0.0")]
 [assembly: AssemblyFileVersion("0.5.0.0")]
 
@@ -941,7 +941,7 @@ namespace Vox.ZeroMemory {
 
         public Dictionary<string, object> BuildControlStatus() {
             var d = new Dictionary<string, object>();
-            d["app"] = "Vox Populi Node Zero";
+            d["app"] = "Vox Memoria";
             d["edition"] = "dev-alpha-beta";
             d["mode"] = "zero-central-memory";
             d["nodeId"] = nodeId;
@@ -1592,7 +1592,7 @@ namespace Vox.ZeroMemory {
                 Directory.CreateDirectory(store.MemoryDir);
                 Process.Start("explorer.exe", store.MemoryDir);
             });
-            menu.Items.Add("Abrir Log de Execução (node-zero.log)", null, (s, e) => {
+            menu.Items.Add("Abrir Log de Execução", null, (s, e) => {
                 if (File.Exists(store.LogFile)) Process.Start("notepad.exe", store.LogFile);
             });
 
