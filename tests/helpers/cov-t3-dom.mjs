@@ -46,6 +46,9 @@ export function makeEl(props = {}) {
   return el;
 }
 
+/** `setTimeout` original: `withToasts` o troca por uma versão sem referência, que não pode segurar as esperas dos testes. */
+const realSetTimeout = globalThis.setTimeout;
+
 /** Espera os manipuladores assíncronos pendentes (cadeia de promessas curtas) terminarem. */
 export async function settle() {
   for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
@@ -59,7 +62,7 @@ export async function settle() {
  */
 export async function waitFor(cond, ms = 5000) {
   const fim = Date.now() + ms;
-  while (!cond() && Date.now() < fim) await new Promise((r) => setTimeout(r, 5));
+  while (!cond() && Date.now() < fim) await new Promise((r) => realSetTimeout(r, 5));
 }
 
 /**
