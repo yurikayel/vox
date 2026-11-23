@@ -1,0 +1,33 @@
+name: Rust Vox Node (ADR-039 PR4.1a)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vox-node:
+    name: Rust vox-node (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: rust
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verificar formatação (rustfmt)
+        run: cargo fmt --all -- --check
+
+      - name: Clippy estrito (vox-node)
+        run: cargo clippy -p vox-node --all-targets -- -D warnings
+
+      - name: Executar testes (vox-node)
+        run: cargo test -p vox-node
