@@ -642,7 +642,8 @@ self.addEventListener("message", (event) => {
 
   const data = event.data;
 
-  if (!data || data.type !== "VOX_SETTINGS_UPDATED") return;
+  // Só páginas do próprio Vox mudam os ajustes do nó em segundo plano.
+  if ((event.origin && event.origin !== self.location.origin) || !data || data.type !== "VOX_SETTINGS_UPDATED") return;
 
   const settings = data.settings || {};
 
