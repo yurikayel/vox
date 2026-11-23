@@ -94,6 +94,7 @@ export class FakeElement {
     for (const [k, v] of this.attrs) if (k.startsWith("data-")) out[camel(k.slice(5))] = v;
     return out;
   }
+  get firstElementChild() { return this.children.find((c) => c instanceof FakeElement) || null; }
   get textContent() { return this.children.map((c) => (c instanceof FakeText ? c.text : c.textContent)).join(""); }
   set textContent(v) { this.replaceChildren(); if (v !== "") this.#add(new FakeText(String(v))); }
   get innerHTML() { return this.children.map((c) => (c instanceof FakeText ? escapeText(c.text) : c.outerHTML)).join(""); }
@@ -116,6 +117,7 @@ export class FakeElement {
       if (!m[2]) continue;
       const el = top.#add(new FakeElement(m[2], this.ownerDocument));
       for (const a of (m[3] || "").matchAll(/([^\s=>]+)(?:="([^"]*)"|='([^']*)'|=([^\s>]+))?/g)) el.attrs.set(a[1], decode(a[2] ?? a[3] ?? a[4] ?? ""));
+      if (el.attrs.has("value")) el.value = el.attrs.get("value");
       if (!VOID.has(m[2].toLowerCase()) && !m[0].endsWith("/>")) stack.push(el);
     }
   }

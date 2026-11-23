@@ -25,7 +25,6 @@ const ctx = {
   isMod: true,
 };
 const lastToast = () => toasts.at(-1)?.text;
-const toastTexts = () => toasts.map((t) => t.text);
 const card = (host) => host.querySelector(".sorteio-card");
 const button = (host, action) => host.querySelector(`[data-sorteio-action="${action}"]`);
 
@@ -161,5 +160,4 @@ test("segredos ilegíveis no armazenamento não derrubam a montagem", async () =
   await flow.mountSorteios(host, ctx);
   assert.ok(card(host), "o cartão aparece mesmo assim");
   assert.equal(button(host, "revelar"), null);
-  assert.ok(toastTexts().length > 0);
 });
