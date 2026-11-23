@@ -14,6 +14,11 @@ const GITHUB_KEY = "vox-profile-github";
 const COMMENT_REACT_KEY = "vox-liked-comments";
 const EXPLODE_COUNTS_KEY = "vox-explode-counts";
 
+/**
+ * Lê do `localStorage` um conjunto de textos.
+ * @param {string} key Chave
+ * @returns {Set<string>} Conjunto lido, ou vazio.
+ */
 function loadSet(key) {
   if (typeof window === "undefined" || !window.localStorage) return new Set();
   try {
@@ -24,6 +29,11 @@ function loadSet(key) {
   }
 }
 
+/**
+ * Grava no `localStorage` um conjunto de textos.
+ * @param {string} key Chave
+ * @param {Set<string>} set Conjunto
+ */
 function saveSet(key, set) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
@@ -31,6 +41,11 @@ function saveSet(key, set) {
   } catch {}
 }
 
+/**
+ * Lê do `localStorage` um mapa.
+ * @param {string} key Chave
+ * @returns {object} Mapa lido, ou vazio.
+ */
 function loadMap(key) {
   if (typeof window === "undefined" || !window.localStorage) return {};
   try {
@@ -41,6 +56,11 @@ function loadMap(key) {
   }
 }
 
+/**
+ * Grava no `localStorage` um mapa.
+ * @param {string} key Chave
+ * @param {object} map Mapa
+ */
 function saveMap(key, map) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {

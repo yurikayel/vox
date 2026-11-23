@@ -70,16 +70,30 @@ export function persistedSignal(key, fallback, options = {}) {
   const validate = typeof options.validate === "function" ? options.validate : null;
   const onWriteError = typeof options.onWriteError === "function" ? options.onWriteError : null;
   const sig = signal(readValidated(storage, key, fallback, validate));
+  /**
+   * Relê o valor persistido quando outra aba altera a mesma chave.
+   *
+   * @param {StorageEvent} ev
+   */
   const onStorage = (ev) => {
     if (!ev || (ev.key !== null && ev.key !== key)) return;
     if (ev.storageArea && storage && ev.storageArea !== storage) return;
     sig.set(readValidated(storage, key, fallback, validate));
   };
   if (eventTarget?.addEventListener) eventTarget.addEventListener("storage", onStorage);
+  /**
+   * Para de escutar o evento `storage`.
+   */
   const dispose = () => {
     eventTarget?.removeEventListener?.("storage", onStorage);
   };
   if (options.scope?.onCleanup) options.scope.onCleanup(dispose);
+  /**
+   * Valida e grava o novo valor no sinal e no armazenamento.
+   *
+   * @param {*} next
+   * @returns {boolean}
+   */
   const set = (next) => {
     if (validate && !validate(next)) throw new TypeError(`persistedSignal(${key}): valor inválido`);
     sig.set(next);

@@ -15,6 +15,11 @@ export const GENESIS_MS = Date.UTC(2026, 10, 12, 3, 0, 0); // 2026-11-12 00:00 (
 
 const GENESIS_SEC = Math.floor(GENESIS_MS / 1000);
 
+/**
+ * Lê o horário da tag `Timestamp`.
+ * @param {object[]} tags Tags do nó
+ * @returns {number} Horário em ms, ou 0.
+ */
 function tagTimestampMs(tags) {
   if (!Array.isArray(tags)) return 0;
   const t = tags.find((x) => x?.name === "Timestamp");
@@ -57,11 +62,21 @@ export function isTestRouteId(routeId) {
 
 const ROUTE_TAG_NAMES = new Set(["Route-Id", "Author", "Author-Address", "Owner"]);
 
+/**
+ * Diz se o nó tem tag de rota de conta de teste.
+ * @param {object} node Nó do GraphQL
+ * @returns {boolean} `true` se tiver.
+ */
 function hasTestRouteTag(node) {
   if (!Array.isArray(node?.tags)) return false;
   return node.tags.some((t) => ROUTE_TAG_NAMES.has(t?.name) && isTestRouteId(t?.value));
 }
 
+/**
+ * Diz se o nó deve ficar oculto: anterior à gênese ou de conta de teste.
+ * @param {object} node Nó do GraphQL
+ * @returns {boolean} `true` se deve ocultar.
+ */
 function isHiddenGraphqlNode(node) {
   return isBeforeGenesisNode(node) || hasTestRouteTag(node);
 }

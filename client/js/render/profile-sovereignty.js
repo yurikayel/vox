@@ -6,6 +6,12 @@
 import { escapeHtml } from "./util.js";
 import { formatPhraseSentInEmailNotice } from "../email-kit.js";
 
+/**
+ * Aviso de que a frase foi enviada por e-mail, quando aplicável.
+ *
+ * @param {string} address
+ * @returns {string}
+ */
 function renderPhraseInEmailNoticeHtml(address) {
   const emailNotice = formatPhraseSentInEmailNotice(address);
   return emailNotice
@@ -14,6 +20,11 @@ function renderPhraseInEmailNoticeHtml(address) {
 }
 
 // Senha e e-mail do cofre (o e-mail só para quem criou a conta com e-mail, ADR-032 Emenda 1).
+/**
+ * Campos do cofre de recuperação.
+ *
+ * @returns {string}
+ */
 function renderVaultFieldsHtml() {
   return `
         <label for="input-sovereignty-passphrase" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">

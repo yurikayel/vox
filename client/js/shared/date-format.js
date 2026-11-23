@@ -21,6 +21,12 @@ export function parseInstant(ts) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/**
+ * Completa com zero à esquerda até duas casas.
+ *
+ * @param {number} n
+ * @returns {string}
+ */
 function pad2(n) {
   return String(n).padStart(2, "0");
 }

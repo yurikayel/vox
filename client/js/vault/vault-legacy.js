@@ -14,6 +14,11 @@ export const LEGACY_VAULT_PREFIX = "vox-oauth-vault-v1:";
 const NOTICE_KEY = "vox-vault-v1-revoked-notice";
 const DONE_KEY = "vox-vault-v1-migrated-for";
 
+/**
+ * Marcador de cofre revogado.
+ *
+ * @returns {object}
+ */
 const revokedMarker = () => ({ v: 1, revoked: true, updatedAt: Date.now() });
 
 /**
@@ -53,6 +58,12 @@ export function revokeLegacyVaults(lookupKeys, { saveRemote, storage = globalThi
   return unique.length;
 }
 
+/**
+ * Chaves de cofre legadas para quem entrou por provedor (Google ou Meta).
+ *
+ * @param {object} enrichment
+ * @returns {Promise<object[]>}
+ */
 async function legacyKeysForLinkedLogin(enrichment) {
   const sub = String(enrichment?.oauthSub || "").trim();
   const provider = String(enrichment?.oauthProvider || "").trim();
@@ -60,6 +71,12 @@ async function legacyKeysForLinkedLogin(enrichment) {
   return [await legacyLookupKey(sub, provider)];
 }
 
+/**
+ * Lê o marcador de migração concluída, tolerando armazenamento indisponível.
+ *
+ * @param {Storage} storage
+ * @returns {string|null}
+ */
 function readDoneMarker(storage) {
   try {
     return storage.getItem(DONE_KEY);

@@ -85,6 +85,12 @@ export function normalizeLocalPost(record) {
   };
 }
 
+/**
+ * Diz se o campo tem o valor padrão legado acrescentado pela normalização antiga.
+ * @param {string} key Campo
+ * @param {*} value Valor
+ * @returns {boolean} `true` se for.
+ */
 const isLegacyDefault = (key, value) => key in LOCAL_POST_DEFAULTS && Object.is(LOCAL_POST_DEFAULTS[key], value);
 
 /** Registro gravado antes da marca: tira o que a normalização antiga acrescentou (melhor esforço; quem recebe confere a assinatura). */

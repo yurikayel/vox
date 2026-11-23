@@ -50,6 +50,7 @@ LIMITED_MESSAGE = "Muitas escritas deste endereço; tente de novo em instantes"
 
 
 def _positive_int(raw, fallback):
+    """Converte para inteiro positivo; usa `fallback` se não for."""
     text = str(raw or "").strip()
     return int(text) if text.isdigit() and int(text) > 0 else fallback
 
@@ -76,6 +77,7 @@ class _Buckets:
     """Buckets de uma classe, do menos para o mais recentemente usado (`OrderedDict`)."""
 
     def __init__(self, policy, clock, max_entries):
+        """Cria o conjunto de buckets de uma política, com relógio e limite de entradas."""
         self.rate = policy.per_min / 60.0
         self.burst = float(policy.burst)
         self.clock = clock
@@ -84,6 +86,7 @@ class _Buckets:
         self.lock = threading.Lock()
 
     def _refilled(self, tokens, stamp, now):
+        """Devolve os tokens após a recarga desde `stamp`, limitados ao burst."""
         return min(self.burst, tokens + (now - stamp) * self.rate)
 
     def _sweep(self, now):
@@ -111,6 +114,7 @@ class _Buckets:
             return wait
 
     def size(self):
+        """Devolve quantos buckets estão guardados."""
         with self.lock:
             return len(self.entries)
 
@@ -122,16 +126,19 @@ class RateLimiter:
     """
 
     def __init__(self, policies=None, clock=time.monotonic, max_entries=MAX_ENTRIES):
+        """Cria um conjunto de buckets por classe; sem `policies`, usa as do ambiente."""
         chosen = policies if policies is not None else policies_from_env()
         self.buckets = {
             name: _Buckets(policy, clock, max_entries) for name, policy in chosen.items()
         }
 
     def check(self, klass, ip):
+        """Consome um token da classe para o IP; devolve 0 se liberado, senão o tempo de espera. Classe desconhecida não limita."""
         buckets = self.buckets.get(klass)
         return buckets.take(ip) if buckets else 0
 
     def size(self, klass):
+        """Devolve quantos buckets a classe guarda."""
         return self.buckets[klass].size()
 
 

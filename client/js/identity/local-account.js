@@ -61,11 +61,22 @@ export function getAccountStorageIssue() {
   return accountPersistIssue;
 }
 
+/**
+ * Diz se há conta local completa guardada no aparelho.
+ *
+ * @returns {boolean}
+ */
 function hasStoredAccount() {
   const parsed = readStoredRecord(ACCOUNT_STORAGE, null);
   return Boolean(parsed?.routeId && parsed.publicJwk && parsed.privateJwk);
 }
 
+/**
+ * Carrega a conta guardada, descartando o resultado se um apagamento ocorreu no meio.
+ *
+ * @param {number} epoch
+ * @returns {Promise<object|null>}
+ */
 async function loadStoredLocalAccount(epoch) {
   if (!hasStoredAccount()) return null;
   const dm = await cryptoDm.ensureDmKeys();
@@ -103,6 +114,14 @@ async function generateNewAccountKeys() {
   return { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
 }
 
+/**
+ * Monta a entrada do cofre para a conta, preservando o que já havia.
+ *
+ * @param {object} acc
+ * @param {object} existing
+ * @param {object} [extras={}]
+ * @returns {object}
+ */
 function buildVaultAccountEntry(acc, existing, extras = {}) {
   const enrich = getProfileEnrichment() || existing.enrichment || null;
   const now = Date.now();
@@ -119,6 +138,9 @@ function buildVaultAccountEntry(acc, existing, extras = {}) {
   };
 }
 
+/**
+ * Copia os metadados da conta atual (nome, perfil, Pix) para o cofre.
+ */
 function syncCurrentAccountMetadataToVault() {
   if (cachedAccount && !accountPersistIssue && !readStoredRecord(ACCOUNT_STORAGE, null)?.routeId) cachedAccount = null;
   const acc = cachedAccount;
@@ -285,6 +307,12 @@ export function clearProfileEnrichment() {
   }
 }
 
+/**
+ * Abre a chave privada de DM selada.
+ *
+ * @param {object|null} dmAtRest
+ * @returns {Promise<object|null>}
+ */
 async function openDmKeypair(dmAtRest) {
   if (!dmAtRest) return null;
   return { publicJwk: dmAtRest.publicJwk, privateJwk: await openSealed(dmAtRest.privateJwk) };
@@ -367,6 +395,12 @@ export async function exportLocalAccountBundle(passphrase = "") {
   };
 }
 
+/**
+ * Adota a identidade de um pacote importado (por semente ou por chaves).
+ *
+ * @param {object} bundle
+ * @returns {Promise<object|null>}
+ */
 async function adoptImportedIdentity(bundle) {
   if (typeof bundle?.seed === "string") {
     const seeded = await identitySeed.restoreAccountFromSeedB64(bundle.seed, bundle.routeId);
@@ -376,6 +410,13 @@ async function adoptImportedIdentity(bundle) {
   return { routeId: bundle.routeId, publicJwk: bundle.publicJwk, privateJwk: bundle.privateJwk, dmKeypair: bundle.dmKeypair || null };
 }
 
+/**
+ * Combina as configurações já conhecidas com as do pacote importado.
+ *
+ * @param {object} bundle
+ * @param {object} identity
+ * @returns {object}
+ */
 function importedSettings(bundle, identity) {
   const known = readVaultMap()[identity.routeId] || {};
   const picked = { displayName: bundle.displayName, enrichment: bundle.enrichment, pixKey: bundle.pix, dmKeypair: identity.dmKeypair };
@@ -447,6 +488,13 @@ export function clearPixKey() {
   }
 }
 
+/**
+ * Completa o conteúdo a assinar com nome e avatar da conta.
+ *
+ * @param {object} payload
+ * @param {string} routeId
+ * @returns {object}
+ */
 function buildEnrichedPayloadForSigning(payload, routeId) {
   const enrich = getProfileEnrichment();
   const fallbackDisplay = getDisplayName() || enrich?.displayName || "";
@@ -531,11 +579,22 @@ export function wipeLocalAccount() {
 }
 
 
+/**
+ * Lê o mapa do cofre local, descartando entradas que não são registros.
+ *
+ * @returns {object}
+ */
 function readVaultMap() {
   const raw = readStoredRecord(VAULT_STORAGE);
   return Object.fromEntries(Object.entries(raw).filter(([, item]) => isPlainRecord(item)));
 }
 
+/**
+ * Grava o mapa do cofre local.
+ *
+ * @param {object} map
+ * @returns {boolean}
+ */
 function writeVaultMap(map) {
   return writeStoredJson(VAULT_STORAGE, map);
 }
@@ -651,12 +710,24 @@ export async function listVaultAccounts() {
   return listVaultAccountsSync();
 }
 
+/**
+ * Grava o valor em JSON ou remove a chave se ele é vazio.
+ *
+ * @param {string} key
+ * @param {*} value
+ */
 function writeOrRemove(key, value) {
   if (value) localStorage.setItem(key, JSON.stringify(value));
   else localStorage.removeItem(key);
 }
 
 // Sem chave de DM guardada, gera uma nova: a da conta que estava ativa nunca passa para outra.
+/**
+ * Restaura nome, perfil e chaves de DM da conta de destino.
+ *
+ * @param {object} target
+ * @returns {Promise<void>}
+ */
 async function restoreTargetAccountSettings(target) {
   await cryptoDm.setDmKeypair(target.dmKeypair || (await cryptoDm.generateDmKeypair()));
   setDisplayName(target.displayName || target.enrichment?.displayName || "");

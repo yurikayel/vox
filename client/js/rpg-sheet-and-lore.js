@@ -47,6 +47,11 @@ export const LORE_TRUST_WEIGHTS = Object.freeze({
  */
 export const RRF_SMOOTHING_K = 60;
 
+/**
+ * Monta os máximos padrão dos recursos da ficha.
+ * @param {object} [base={}] Valores base
+ * @returns {object} Máximos dos recursos.
+ */
 function defaultPoolsBase(base = {}) {
   const slots = base.spell_slots_max || {};
   return {
@@ -61,6 +66,11 @@ function defaultPoolsBase(base = {}) {
   };
 }
 
+/**
+ * Normaliza os atributos (padrão 10 quando faltam).
+ * @param {object} [abilities={}] Atributos
+ * @returns {object} Atributos completos.
+ */
 function normalizeAbilities(abilities = {}) {
   const out = {};
   for (const key of ["str", "dex", "con", "int", "wis", "cha"]) {
@@ -69,6 +79,11 @@ function normalizeAbilities(abilities = {}) {
   return out;
 }
 
+/**
+ * Monta os atributos padrão da ficha.
+ * @param {object} [init={}] Valores iniciais
+ * @returns {object} Atributos da ficha.
+ */
 function defaultAttributesLww(init = {}) {
   return {
     name: String(init.name || "Aventureiro"),
@@ -82,6 +97,11 @@ function defaultAttributesLww(init = {}) {
   };
 }
 
+/**
+ * Monta o estado espacial padrão.
+ * @param {object} [spatial={}] Posição informada
+ * @returns {object} Estado espacial.
+ */
 function defaultSpatialState(spatial = {}) {
   return {
     map_id: String(spatial?.map_id || "taverna_01"),
@@ -111,6 +131,13 @@ export function createCharacterSheetDoc(init = {}) {
   };
 }
 
+/**
+ * Normaliza uma operação de delta do livro-razão.
+ * @param {object} opInput Operação bruta
+ * @param {string} opId Id da operação
+ * @param {number} fallbackClock Relógio lógico de reserva
+ * @returns {object} Operação normalizada.
+ */
 function buildNormalizedDeltaOp(opInput, opId, fallbackClock) {
   const pool = String(opInput.target_pool || "hp_current");
   return {
@@ -144,6 +171,11 @@ export function appendPoolDeltaOp(sheetDoc, opInput = {}) {
   return { ...sheetDoc, delta_ledger: [...ledger, op] };
 }
 
+/**
+ * Monta os valores iniciais dos recursos a partir dos máximos.
+ * @param {object} base Valores base
+ * @returns {object} Valores iniciais.
+ */
 function initialPoolValues(base) {
   const slots = base.spell_slots_max || {};
   return {
@@ -157,6 +189,12 @@ function initialPoolValues(base) {
   };
 }
 
+/**
+ * Resolve o teto de um recurso a partir da referência.
+ * @param {string} ref Nome da referência
+ * @param {object} base Valores base
+ * @returns {number} Teto do recurso.
+ */
 function resolveMaxBound(ref, base) {
   const slots = base.spell_slots_max || {};
   if (ref === "hp_max") return base.hp_max;
@@ -167,6 +205,11 @@ function resolveMaxBound(ref, base) {
   return Infinity;
 }
 
+/**
+ * Ordena as operações do livro-razão pelo relógio lógico.
+ * @param {object[]} deltaLedger Operações
+ * @returns {object[]} Operações ordenadas.
+ */
 function sortLedgerOps(deltaLedger) {
   return [...deltaLedger].sort((a, b) => {
     const clockDiff = (Number(a.lamport_clock) || 0) - (Number(b.lamport_clock) || 0);
@@ -175,6 +218,11 @@ function sortLedgerOps(deltaLedger) {
   });
 }
 
+/**
+ * Soma os deltas por recurso, com os limites mínimo e máximo.
+ * @param {object[]} ops Operações ordenadas
+ * @returns {object} Somas, mínimos e referências de máximo.
+ */
 function accumulatePoolDeltas(ops) {
   const sums = {};
   const minBounds = {};
@@ -250,6 +298,12 @@ export function extractCrossCharacterMentions(contentBody = "", knownChars = {})
   return edges;
 }
 
+/**
+ * Diz se a aresta do grafo corresponde ao atestado.
+ * @param {object} edge Aresta
+ * @param {object} attestation Atestado
+ * @returns {boolean} `true` se corresponde.
+ */
 function edgeMatchesAttestation(edge, attestation) {
   if (attestation.target_char_id && edge.target_char_id === attestation.target_char_id) return true;
   if (!attestation.target_char_id && attestation.signer_pubkey) {
@@ -284,6 +338,12 @@ export function applyLoreEdgeAttestation(loreNode, attestation = {}) {
   return { ...loreNode, cross_character_edges: updatedEdges };
 }
 
+/**
+ * Diz se o trecho de lore pode ser visto pelo par.
+ * @param {object} chunk Trecho
+ * @param {string} allowedPubkey Chave pública do par
+ * @returns {boolean} `true` se visível.
+ */
 function isChunkVisibleToPeer(chunk, allowedPubkey) {
   const vis = chunk?.visibility || {};
   const mode = vis.mode || "PUBLIC_TABLE";
@@ -292,10 +352,21 @@ function isChunkVisibleToPeer(chunk, allowedPubkey) {
   return Boolean(allowedPubkey && list.includes(allowedPubkey));
 }
 
+/**
+ * Quebra o texto em termos de busca em minúsculas.
+ * @param {string} text Texto
+ * @returns {string[]} Termos com 2 ou mais caracteres.
+ */
 function tokenizeTerms(text) {
   return String(text || "").toLowerCase().split(/[^a-z0-9áéíóúâêôãõç_]+/i).filter((t) => t.length >= 2);
 }
 
+/**
+ * Calcula a sobreposição lexical entre o trecho e a consulta.
+ * @param {string} chunkText Texto do trecho
+ * @param {string[]} queryTerms Termos da consulta
+ * @returns {number} Pontuação.
+ */
 function lexicalOverlapScore(chunkText, queryTerms) {
   if (!queryTerms.length) return 0;
   const terms = new Set(tokenizeTerms(chunkText));
@@ -306,6 +377,13 @@ function lexicalOverlapScore(chunkText, queryTerms) {
   return hits / queryTerms.length;
 }
 
+/**
+ * Calcula a vizinhança do trecho (entidades ativas e posição).
+ * @param {object} chunk Trecho
+ * @param {Set<string>} activeCharIds Personagens ativos
+ * @param {object} anchor Âncora espacial
+ * @returns {object} Vizinhança calculada.
+ */
 function computeChunkNeighbors(chunk, activeCharIds, anchor) {
   const chunkEntities = Array.isArray(chunk.entityIds) ? chunk.entityIds : [];
   const sharesEntity = chunkEntities.some((id) => activeCharIds.has(id));
@@ -319,6 +397,12 @@ function computeChunkNeighbors(chunk, activeCharIds, anchor) {
   return sharesEntity || nearSpatial ? 1 : 0;
 }
 
+/**
+ * Atribui a posição (1 é o maior valor) a cada item.
+ * @param {object[]} items Itens com `id`
+ * @param {Function} valueFn Devolve o valor de um item
+ * @returns {Map<string, number>} Posição por id.
+ */
 function assignRanks(items, valueFn) {
   const sorted = [...items].sort((a, b) => valueFn(b) - valueFn(a));
   const map = new Map();
@@ -352,6 +436,13 @@ export function rankLoreChunksHybridRrf(chunks = [], queryContext = {}) {
   return packChunksWithinBudget(scored, Number(queryContext.maxTokens) || 1200, droppedPrivateCount);
 }
 
+/**
+ * Escolhe os trechos que cabem no orçamento de tokens.
+ * @param {object[]} scored Trechos pontuados
+ * @param {number} maxTokens Orçamento de tokens
+ * @param {number} droppedPrivateCount Trechos privados já descartados
+ * @returns {object} Trechos escolhidos e contagens.
+ */
 function packChunksWithinBudget(scored, maxTokens, droppedPrivateCount) {
   const selected = [];
   let totalTokens = 0;
@@ -364,6 +455,13 @@ function packChunksWithinBudget(scored, maxTokens, droppedPrivateCount) {
   return { selected, totalTokens, droppedPrivateCount };
 }
 
+/**
+ * Atualiza a lista de condições, somando as novas e tirando as removidas.
+ * @param {string[]} currentList Condições atuais
+ * @param {string[]} [added=[]] Condições novas
+ * @param {string[]} [removed=[]] Condições removidas
+ * @returns {string[]} Lista atualizada.
+ */
 function syncConditionsList(currentList, added = [], removed = []) {
   const next = new Set(Array.isArray(currentList) ? currentList : []);
   for (const item of Array.isArray(added) ? added : []) if (item) next.add(String(item));
@@ -371,6 +469,13 @@ function syncConditionsList(currentList, added = [], removed = []) {
   return [...next];
 }
 
+/**
+ * Aplica uma mutação de turno ao documento da ficha.
+ * @param {object} doc Documento da ficha
+ * @param {object} mut Mutação
+ * @param {string} actorPubkey Chave pública de quem age
+ * @returns {object} Documento atualizado.
+ */
 function applySingleTurnMutation(doc, mut, actorPubkey) {
   if (!mut || (mut.character_id && mut.character_id !== doc.character_id)) return doc;
   let next = doc;
@@ -406,6 +511,12 @@ export function applyTurnResolutionToSheet(sheetDoc, turnResolution = {}, actorP
   return next;
 }
 
+/**
+ * Diz se o evento está a até 2 casas da âncora, no mesmo mapa.
+ * @param {object} ev Evento
+ * @param {object} anchor Âncora
+ * @returns {boolean} `true` se for vizinho.
+ */
 function isSameTileNeighborhood(ev, anchor) {
   if (!ev || !anchor?.map_id || ev.map_id !== anchor.map_id) return false;
   return Math.abs((ev.grid_x ?? 999) - anchor.grid_x) <= 2 && Math.abs((ev.grid_y ?? 999) - anchor.grid_y) <= 2;

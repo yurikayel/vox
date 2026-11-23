@@ -41,10 +41,22 @@ export function renderPostTextHtml(post) {
   return `<div class="post-body post-body-md">${renderPostBodyMarkdown(fullText)}</div>`;
 }
 
+/**
+ * Texto do post já formatado e escapado.
+ *
+ * @param {object} t
+ * @returns {string}
+ */
 function renderPostText(t) {
   return renderPostTextHtml(t);
 }
 
+/**
+ * Trecho de código do GitHub Gist anexado ao post, vazio se não há.
+ *
+ * @param {object} t
+ * @returns {string}
+ */
 function renderPostGithubGist(t) {
   const gist = t.githubGist;
   if (!gist?.lines?.length) return "";
@@ -56,6 +68,12 @@ function renderPostGithubGist(t) {
   </div>`;
 }
 
+/**
+ * Conteúdo da enquete em quadro, com barras após o voto.
+ *
+ * @param {object} state
+ * @returns {string}
+ */
 function renderFramePollContent(state) {
   if (state.userVotedIndex) {
     const bars = state.options
@@ -72,6 +90,12 @@ function renderFramePollContent(state) {
   return `<p class="frame-prompt">Vote na enquete abaixo para ver os resultados parciais em tempo real:</p>`;
 }
 
+/**
+ * Conteúdo do abaixo-assinado em quadro.
+ *
+ * @param {object} state
+ * @returns {string}
+ */
 function renderFramePetitionContent(state) {
   const msg = state.hasSigned
     ? '<p class="frame-signed-msg">✓ Você assinou este abaixo-assinado.</p>'
@@ -84,6 +108,12 @@ function renderFramePetitionContent(state) {
     </div>`;
 }
 
+/**
+ * Conteúdo do quadro de cálculo CLT.
+ *
+ * @param {object} state
+ * @returns {string}
+ */
 function renderFrameCltContent(state) {
   return `
     <div class="frame-clt-box">
@@ -107,6 +137,14 @@ export function renderFrameContentHtml(frame, state) {
   return "";
 }
 
+/**
+ * Botões do quadro, com o botão acionado em destaque.
+ *
+ * @param {object} t
+ * @param {object} frame
+ * @param {object|undefined} localAction
+ * @returns {string}
+ */
 function renderFrameButtons(t, frame, localAction) {
   const activeIndex = localAction?.buttonIndex || 0;
   return frame.buttons
@@ -151,6 +189,13 @@ export function renderPostFrame(t) {
     </div>`;
 }
 
+/**
+ * Faixa de post fixado, vazia se não está fixado.
+ *
+ * @param {object} t
+ * @param {boolean} isPinned
+ * @returns {string}
+ */
 function renderPostPinnedRibbon(t, isPinned) {
   const isPostPinned = Boolean(isPinned || t.isPinned);
   if (!isPostPinned) return "";
@@ -160,6 +205,14 @@ function renderPostPinnedRibbon(t, isPinned) {
   return `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo ao Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`;
 }
 
+/**
+ * Item de post com foto.
+ *
+ * @param {object} t
+ * @param {string} author
+ * @param {object} labels
+ * @returns {string}
+ */
 function renderPhotoPostItem(t, author, labels) {
   const igHead = renderPostMediaHeader(t, author, labels);
   const igBar = renderIgToolbar(t, labels.authorDisplay);
@@ -182,6 +235,16 @@ function renderPhotoPostItem(t, author, labels) {
     </article>`;
 }
 
+/**
+ * Item de post de texto ou de código do GitHub.
+ *
+ * @param {object} t
+ * @param {string} author
+ * @param {object} labels
+ * @param {string} layout
+ * @param {boolean} isPinned
+ * @returns {string}
+ */
 function renderTextOrGithubPostItem(t, author, labels, layout, isPinned) {
   const isPostPinned = Boolean(isPinned || t.isPinned);
   const pinnedRibbon = renderPostPinnedRibbon(t, isPinned);

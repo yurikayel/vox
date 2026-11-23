@@ -8,12 +8,26 @@
 
 import { signal } from "./signals.js";
 
+/**
+ * Normaliza a transição (string ou objeto) para `{ target, ... }`; `null` se inválida.
+ *
+ * @param {string|object|null} spec
+ * @returns {object|null}
+ */
 function normalizeTransition(spec) {
   if (typeof spec === "string") return { target: spec };
   if (spec && typeof spec === "object" && typeof spec.target === "string") return spec;
   return null;
 }
 
+/**
+ * Acha a transição de `event` no estado atual, só se o destino existir.
+ *
+ * @param {object} states
+ * @param {string} current
+ * @param {string} event
+ * @returns {object|null}
+ */
 function resolveTransition(states, current, event) {
   const stateDef = states?.[current];
   const raw = stateDef?.on?.[event];
@@ -22,12 +36,27 @@ function resolveTransition(states, current, event) {
   return spec;
 }
 
+/**
+ * Diz se a transição existe e o guard (quando há) a permite.
+ *
+ * @param {object} states
+ * @param {string} current
+ * @param {string} event
+ * @param {*} payload
+ * @returns {boolean}
+ */
 function allowsTransition(states, current, event, payload) {
   const spec = resolveTransition(states, current, event);
   if (!spec) return false;
   return typeof spec.guard === "function" ? Boolean(spec.guard(current, payload)) : true;
 }
 
+/**
+ * Aplica a transição: saída do estado, ação, atualização do sinal e entrada no destino.
+ *
+ * @param {object} options
+ * @returns {object}
+ */
 function executeTransition({ states, stateSig, spec, from, payload }) {
   const to = spec.target;
   if (to === from) {

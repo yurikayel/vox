@@ -89,6 +89,11 @@ export function resolveProposalState(proposal, yesCount, noCount, now = Date.now
   return yesCount > noCount ? "merged" : "rejected";
 }
 
+/**
+ * Monta o mapa de entrada de cada membro (autor para horário).
+ * @param {object[]} memberships Entradas
+ * @returns {Map<string, number>} Horário de entrada por autor.
+ */
 function buildMembershipTimestampMap(memberships) {
   const memberMap = new Map();
   for (const m of memberships) {
@@ -98,6 +103,11 @@ function buildMembershipTimestampMap(memberships) {
   return memberMap;
 }
 
+/**
+ * Fica com o voto mais recente de cada autor.
+ * @param {object[]} votes Votos
+ * @returns {object[]} Votos deduplicados.
+ */
 function deduplicateLatestVotesByAuthor(votes) {
   const sortedVotes = [...votes].sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
   const latestByAuthor = new Map();
@@ -108,6 +118,14 @@ function deduplicateLatestVotesByAuthor(votes) {
   return latestByAuthor;
 }
 
+/**
+ * Avalia um voto (membro, entrada antes da proposta) e soma na contagem.
+ * @param {string} author Autor
+ * @param {object} v Voto
+ * @param {Map<string, number>} memberMap Entradas por autor
+ * @param {number} proposalCreatedAt Criação da proposta (ms)
+ * @param {object} counts Contagem a atualizar
+ */
 function evaluateVoteRecord(author, v, memberMap, proposalCreatedAt, counts) {
   const choice = normalizeVoteChoice(v.choice);
   const memberJoinedAt = memberMap.get(author);

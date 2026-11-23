@@ -51,6 +51,11 @@ export function canUpdateCommunity(community, author) {
   return parseModerators(community.moderators).includes(author);
 }
 
+/**
+ * Normaliza o campo de quarentena para booleano.
+ * @param {*} val Valor bruto
+ * @returns {boolean|undefined} Valor normalizado, ou `undefined` se inválido.
+ */
 function pickQuarantineField(val) {
   if (typeof val === "boolean") return val;
   if (val === "true") return true;
@@ -58,12 +63,23 @@ function pickQuarantineField(val) {
   return undefined;
 }
 
+/**
+ * Normaliza o início da quarentena para texto.
+ * @param {*} val Valor bruto
+ * @returns {string|undefined} Valor normalizado, ou `undefined` se inválido.
+ */
 function pickQuarantineSince(val) {
   if (typeof val === "number" && Number.isFinite(val)) return String(val);
   if (typeof val === "string" && val.trim().length > 0) return val.trim();
   return undefined;
 }
 
+/**
+ * Aceita um campo de texto da atualização (imagem e avatar passam pelo filtro de data URL).
+ * @param {string} field Nome do campo
+ * @param {*} val Valor bruto
+ * @returns {string|undefined} Valor aceito, ou `undefined`.
+ */
 function pickTextField(field, val) {
   if (typeof val !== "string" || !val) return undefined;
   if (field === "image" || field === "avatar") {
@@ -72,6 +88,12 @@ function pickTextField(field, val) {
   return val;
 }
 
+/**
+ * Escolhe o valor aceito de um campo da atualização.
+ * @param {string} field Nome do campo
+ * @param {object} update Atualização
+ * @returns {*} Valor aceito, ou `undefined`.
+ */
 function pickFieldValue(field, update) {
   if (field === "newKeyQuarantine") return pickQuarantineField(update.newKeyQuarantine);
   if (field === "newKeyQuarantineSince") return pickQuarantineSince(update.newKeyQuarantineSince);
@@ -115,6 +137,11 @@ export function buildQuarantineUpdate(communityId, enabled, now = Date.now()) {
   };
 }
 
+/**
+ * Horário da atualização (`updatedAt` ou `ts`).
+ * @param {object} update Atualização
+ * @returns {number} Horário em ms, ou 0.
+ */
 function updateTime(update) {
   return Number(update.updatedAt || update.ts) || 0;
 }

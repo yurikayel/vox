@@ -56,6 +56,12 @@ export function markFrameChoice(btn, index) {
   for (const b of buttons) b.classList?.toggle("active", Number(b.dataset.index) === index);
 }
 
+/**
+ * Apura a moldura do cartão uma única vez, depois de resolver o post.
+ *
+ * @param {HTMLElement} card Cartão com `data-post-id`.
+ * @param {Function} resolvePost Resolve o post pelo identificador.
+ */
 async function tallyCard(card, resolvePost) {
   const postId = card.dataset.postId;
   if (!postId || card.dataset.tallied) return;
@@ -76,6 +82,11 @@ export async function tallyFrameCards(root, resolvePost = resolvePostForFrame) {
   await Promise.all(cards.map((card) => tallyCard(card, resolvePost).catch(() => {})));
 }
 
+/**
+ * Apura os cartões de moldura que entraram na página.
+ *
+ * @param {MutationRecord[]} records Registros do observador de mutações.
+ */
 function tallyAdded(records) {
   for (const record of records) {
     for (const node of record.addedNodes) {

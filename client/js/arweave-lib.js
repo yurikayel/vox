@@ -16,6 +16,10 @@ export const ARWEAVE_BUNDLE_SHA384 =
 const TIMEOUT_MIN_MS = 1;
 const TIMEOUT_MAX_MS = 120_000;
 
+/**
+ * Garante que o timeout é um número finito em milissegundos.
+ * @param {*} timeout Valor a validar
+ */
 function assertTimeoutMs(timeout) {
   if (typeof timeout !== "number" || !Number.isFinite(timeout)) {
     throw new TypeError("timeout precisa ser número finito em milissegundos");
@@ -25,6 +29,11 @@ function assertTimeoutMs(timeout) {
   }
 }
 
+/**
+ * Converte bytes em base64.
+ * @param {ArrayBuffer|Uint8Array} bytes Bytes de entrada
+ * @returns {string} Texto em base64.
+ */
 function bytesToBase64(bytes) {
   const view = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes;
   let binary = "";
@@ -34,6 +43,11 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
+/**
+ * Lê os bytes do pacote vendorizado (disco no Node, rede no navegador).
+ * @param {string} bundleUrl URL do pacote
+ * @returns {Promise<Uint8Array|ArrayBuffer>} Bytes do pacote.
+ */
 async function readBundleBytes(bundleUrl) {
   const resolved = new URL(bundleUrl, import.meta.url);
   if (typeof process !== "undefined" && process.versions?.node) {
@@ -46,6 +60,11 @@ async function readBundleBytes(bundleUrl) {
   return new Uint8Array(await resp.arrayBuffer());
 }
 
+/**
+ * Confere o SHA-384 do pacote vendorizado e recusa se divergir do esperado.
+ * @param {string} bundleUrl URL do pacote
+ * @returns {Promise<void>} Conclui se a integridade confere.
+ */
 async function assertVendorIntegrity(bundleUrl) {
   const digest = await crypto.subtle.digest("SHA-384", await readBundleBytes(bundleUrl));
   const actual = `sha384-${bytesToBase64(digest)}`;

@@ -11,6 +11,11 @@
  */
 export const SIGV2_FROM = Date.UTC(2026, 10, 24);
 
+/**
+ * Ordena as chaves dos objetos em todos os níveis, para a assinatura ser estável.
+ * @param {*} value Valor
+ * @returns {*} Valor com chaves ordenadas.
+ */
 function sortDeep(value) {
   if (Array.isArray(value)) return value.map(sortDeep);
   if (!value || typeof value !== "object") return value;

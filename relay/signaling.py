@@ -37,11 +37,13 @@ MAX_CONTROL_PAYLOAD = 125
 
 
 def compute_accept_key(sec_key: str) -> str:
+    """Calcula o `Sec-WebSocket-Accept` a partir da chave do cliente (RFC 6455)."""
     raw = (sec_key.strip() + WS_GUID).encode("utf-8")
     return base64.b64encode(hashlib.sha1(raw).digest()).decode("ascii")
 
 
 def make_ws_frame(payload: bytes, opcode: int = 1) -> bytes:
+    """Monta um frame WebSocket sem máscara (servidor para cliente) com o payload e o opcode."""
     first_byte = 0x80 | (opcode & 0x0F)
     length = len(payload)
     if length < 126:
@@ -54,6 +56,7 @@ def make_ws_frame(payload: bytes, opcode: int = 1) -> bytes:
 
 
 def read_exact(sock, n: int) -> bytes:
+    """Lê exatamente `n` bytes do socket."""
     buf = bytearray()
     while len(buf) < n:
         chunk = sock.recv(n - len(buf))
@@ -64,6 +67,7 @@ def read_exact(sock, n: int) -> bytes:
 
 
 def parse_frame_length(sock, second_byte: int):
+    """Lê o tamanho do payload do frame, incluindo a extensão de 2 ou 8 bytes."""
     payload_len = second_byte & 0x7F
     if payload_len == 126:
         ext = read_exact(sock, 2)
@@ -135,11 +139,13 @@ class MessageAssembler:
     """
 
     def __init__(self, max_size: int = MAX_WS_MESSAGE_SIZE):
+        """Cria o montador de mensagens com o teto de tamanho."""
         self.max_size = max_size
         self.opcode = None
         self.parts = bytearray()
 
     def _open(self, opcode: int) -> None:
+        """Abre ou continua uma mensagem fragmentada conforme o opcode.\n\n    Raises:\n        ValueError: Se a sequência de frames for inválida."""
         if opcode == 0x0 and self.opcode is None:
             raise ValueError("continuação sem mensagem aberta")
         if opcode != 0x0 and self.opcode is not None:
@@ -162,6 +168,7 @@ class MessageAssembler:
 
 
 def _positive_int(raw, default: int) -> int:
+    """Converte para inteiro positivo; usa `default` se inválido."""
     try:
         value = int(str(raw or "").strip())
     except ValueError:
@@ -179,6 +186,7 @@ def resolve_max_connections(env=None) -> int:
 
 
 def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
+    """Resolve a porta: argumento da linha de comando, senão ambiente, senão `default`."""
     if cli_port is not None:
         try:
             return int(cli_port)
@@ -230,6 +238,7 @@ def make_http_response(
 
 
 def parse_http_target(request_line: str):
+    """Extrai `(método, caminho)` da linha de requisição HTTP, com GET e `/` por padrão."""
     parts = (request_line or "").strip().split()
     method = parts[0].upper() if len(parts) > 0 else "GET"
     path = parts[1] if len(parts) > 1 else "/"
@@ -237,6 +246,7 @@ def parse_http_target(request_line: str):
 
 
 def handle_http_request(request_sock, request_line: str, peer_count: int = 0, origin=None) -> None:
+    """Responde um pedido HTTP comum na porta do sinalizador."""
     method, path = parse_http_target(request_line)
     if method == "OPTIONS":
         resp = make_http_response(204, "No Content", body=b"", origin=origin)
@@ -268,13 +278,16 @@ def handle_http_request(request_sock, request_line: str, peer_count: int = 0, or
 
 
 class PeerRegistry:
+    """Registro, seguro entre threads, dos pares conectados, com endereço e chave pública de DM."""
     def __init__(self):
+        """Cria o registro vazio de pares."""
         self.lock = threading.Lock()
         self.peers = {}  # peer_id -> handler
         self.addresses = {}  # peer_id -> arweave_address
         self.dm_pubs = {}  # peer_id -> public JWK dict
 
     def register(self, peer_id: str, handler, address: str = "", dm_pub=None) -> list:
+        """Registra o par e devolve os ids dos pares que já estavam conectados."""
         with self.lock:
             existing = list(self.peers.keys())
             self.peers[peer_id] = handler
@@ -285,6 +298,7 @@ class PeerRegistry:
             return existing
 
     def unregister(self, peer_id: str, handler=None) -> bool:
+        """Remove o par; devolve False se `handler` não for o registrado, senão se algo foi removido."""
         with self.lock:
             if handler is not None and self.peers.get(peer_id) is not handler:
                 return False
@@ -294,10 +308,12 @@ class PeerRegistry:
             return removed is not None
 
     def get(self, peer_id: str):
+        """Devolve o handler do par, ou None."""
         with self.lock:
             return self.peers.get(peer_id)
 
     def get_peer_by_address(self, address: str):
+        """Devolve o id do par que tem o endereço, ou None."""
         with self.lock:
             for pid, addr in self.addresses.items():
                 if addr == address:
@@ -305,6 +321,7 @@ class PeerRegistry:
             return None
 
     def get_address_map(self, exclude_peer: str = "") -> dict:
+        """Devolve o mapa par para endereço, sem `exclude_peer` e sem endereços vazios."""
         with self.lock:
             result = {}
             for pid, addr in self.addresses.items():
@@ -316,6 +333,7 @@ class PeerRegistry:
             return result
 
     def broadcast_others(self, sender_id: str, message: dict):
+        """Envia a mensagem a todos os pares, exceto o remetente."""
         with self.lock:
             targets = [h for pid, h in self.peers.items() if pid != sender_id]
         for handler in targets:
@@ -326,13 +344,16 @@ registry = PeerRegistry()
 
 
 class WebSocketHandler(socketserver.BaseRequestHandler):
+    """Atende uma conexão WebSocket de sinalização: handshake, registro do par e repasse de mensagens."""
     peer_ip = None  # IP usado no limite de taxa; definido no handshake
 
     def setup(self):
+        """Inicializa o estado da conexão (sem par, aberta)."""
         self.peer_id = None
         self.closed = False
 
     def handle(self):
+        """Ponto de entrada da conexão: handshake, laço de leitura e limpeza ao final."""
         try:
             if not self.perform_handshake():
                 return
@@ -342,6 +363,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         self.receive_loop()
 
     def _parse_headers(self, lines: list) -> dict:
+        """Converte as linhas de cabeçalho HTTP em dicionário."""
         headers = {}
         for line in lines:
             if ":" in line:
@@ -365,6 +387,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return request_data
 
     def perform_handshake(self) -> bool:
+        """Faz o handshake WebSocket; True se a conexão foi aceita."""
         request_data = self.read_handshake_request()
         if request_data is None:
             return False
@@ -438,6 +461,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def receive_loop(self):
+        """Lê frames, remontando mensagens, até a conexão acabar."""
         assembler = MessageAssembler()
         try:
             while not self.closed:
@@ -469,6 +493,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def handle_text_payload(self, payload: bytes):
+        """Decodifica o texto JSON do payload e o despacha; respeita o limite de taxa."""
         if self.peer_ip and rate_limit.LIMITER.check("signal_msg", self.peer_ip):
             return  # acima do limite da conexão: descarta sem responder
         try:
@@ -478,6 +503,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             pass
 
     def dispatch_message(self, msg: dict):
+        """Roteia a mensagem pelo seu tipo."""
         mtype = msg.get("type")
         if mtype == "register":
             self.on_register(
@@ -491,6 +517,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             self.send_json({"type": "pong"})
 
     def on_register(self, peer_id: str, address: str = "", dm_pub=None):
+        """Registra o par, avisa os outros e devolve a ele a lista de pares."""
         if not isinstance(peer_id, str):
             return
         clean_id = peer_id.strip()
@@ -523,6 +550,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         )
 
     def forward_peer_message(self, msg: dict):
+        """Repassa a mensagem ao par de destino, marcando o remetente em `from`."""
         to_peer = msg.get("to")
         if not to_peer:
             return
@@ -532,6 +560,7 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             target.send_json(msg)
 
     def send_json(self, data: dict):
+        """Envia o dicionário como frame de texto; falha de envio é ignorada."""
         try:
             raw = json.dumps(data).encode("utf-8")
             self.send_frame(make_ws_frame(raw, opcode=1))
@@ -539,9 +568,11 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             self.closed = True
 
     def send_frame(self, frame_bytes: bytes):
+        """Envia o frame já montado pelo socket."""
         self.request.sendall(frame_bytes)
 
     def cleanup(self):
+        """Remove o par do registro e avisa os outros que ele saiu."""
         if self.peer_id:
             if registry.unregister(self.peer_id, handler=self):
                 registry.broadcast_others(
@@ -558,10 +589,12 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
 
     def __init__(self, server_address, handler_class, max_connections=None, **kwargs):
+        """Cria o servidor com o limite de conexões simultâneas."""
         self._slots = threading.BoundedSemaphore(max_connections or resolve_max_connections())
         super().__init__(server_address, handler_class, **kwargs)
 
     def process_request(self, request, client_address):
+        """Aceita a conexão se houver vaga; senão a fecha sem atender."""
         if not self._slots.acquire(blocking=False):
             self.shutdown_request(request)
             return
@@ -572,6 +605,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
             raise
 
     def process_request_thread(self, request, client_address):
+        """Atende a conexão na thread e libera a vaga ao final."""
         try:
             super().process_request_thread(request, client_address)
         finally:
@@ -579,6 +613,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 def main():
+    """Ponto de entrada: lê porta e host da linha de comando e sobe o sinalizador."""
     cli_port = None
     cli_host = None
 
