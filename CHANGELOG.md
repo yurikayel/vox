@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Comunidade: sair da rota enquanto a comunidade ainda carrega não deixa mais a página atrasada desenhar por cima da tela nova (ex.: `#/c/…` → `#/voxpedia` mostrava a comunidade). O escopo da rota passa a morar em `app/navigation.js` (`setRouteScope`/`getRouteScope`, sem ciclo) e `showCommunity` confere se ele foi abortado antes de desenhar. E2E: `test_03` abre os `<details>` da Mesa (mini-grade e Auditoria Técnica) fechados desde o redesenho.
 - Testes: `cov-t4-compose-forms` "falha ao assinar" deixa de ser instável — a tentativa usa comunidade própria (um post de outro teste que chegue tarde ao cache não conta como gravado), a falha lista o que vazou e o `wipeLocalAccount` passa a ser aguardado.
 - Labs (Webxdc): `inlineCartridgeAssets` troca por data URL só a referência exata da imagem (valor de `src`/`href` e `url(...)`). Antes trocava por substring: `./i.png` virava `./data:…` (imagem quebrada), `ai.png` recebia a imagem de `i.png` e texto comum com o nome era alterado. Achado pelo lote de cobertura T7.
 

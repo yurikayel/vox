@@ -23,7 +23,7 @@ import * as newKeyGuard from "../new-key-guard.js";
 import { markCommunitySeen } from "../community-unread.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
-import { route } from "./navigation.js";
+import { getRouteScope, route } from "./navigation.js";
 import { resolveCommunityMetadata, checkCommunityMembership, dispatchCommunityModAction } from "./community-metadata.js";
 import { loadCommunityMetaAndTopics, loadCommunityTabSpecifics, buildCommunityRecentPeople, resolveCommunitySeedChecklist } from "./community-data.js";
 import { bindCommunityHeaderEvents } from "./community-controls.js";
@@ -160,10 +160,11 @@ function renderCommunityBanners(main, base, tab) {
 /**
  * Monta a página completa da comunidade.
  *
- * @param {{communityId: string, tab: string, user: string, base: object, specifics: object, meta: object, isMember: boolean, recentPeople: object[], memberCount: number}} options Dados já carregados da comunidade.
+ * @param {{communityId: string, tab: string, user: string, base: object, specifics: object, meta: object, isMember: boolean, recentPeople: object[], memberCount: number, routeScope?: {signal: AbortSignal}|null}} options Dados já carregados da comunidade.
  */
-async function mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount }) {
+async function mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount, routeScope }) {
   const routeId = await localAccount.getRouteId();
+  if (routeScope?.signal?.aborted) return; // trocou de rota durante a leitura do routeId
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
   render.renderLoading(main);
   main.innerHTML = "";
@@ -212,6 +213,7 @@ function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeop
  * @returns {Promise<void>}
  */
 export async function showCommunity(communityId, tab = "posts") {
+  const routeScope = getRouteScope(); // antes do 1º await: depois dele já pode ser a rota seguinte
   markCommunitySeen(communityId);
   const user = await getActiveUser();
   const existingComm = document.querySelector(`.community-vox-page[data-community-id="${communityId}"]`);
@@ -227,6 +229,7 @@ export async function showCommunity(communityId, tab = "posts") {
   const recentPeople = await buildCommunityRecentPeople({ filteredTopics: base.filteredTopics, meta, user, isMember, tab, communityId });
   const memberCount = meta.memberCount != null ? Number(meta.memberCount) : (communityId === "vox" ? Math.max(1, recentPeople.length) : null);
   const tabProps = buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount });
+  if (routeScope?.signal?.aborted) return; // a pessoa já foi para outra rota: não desenhar por cima dela
 
   if (existingComm && slot) {
     updateCommunityTabIndicator(existingComm, tab);
@@ -235,5 +238,5 @@ export async function showCommunity(communityId, tab = "posts") {
     attachPostShareHandlers();
     return;
   }
-  await mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount });
+  await mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount, routeScope });
 }

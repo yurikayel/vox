@@ -415,3 +415,21 @@ test("compose comunidade: falha ao assinar avisa e devolve o botão", async () =
   assert.equal(t.submit.disabled, false);
   assert.equal(t.submit.textContent, "Publicar Comunidade");
 });
+
+test("showCommunity: se a pessoa sai da rota durante a carga, a página atrasada não desenha por cima", async () => {
+  await account();
+  await comunidade("tarde-scr");
+  const { main } = shell();
+  main.innerHTML = "<h1>Voxpedia</h1>";
+  const ac = new AbortController();
+  navigation.setRouteScope?.({ signal: ac.signal });
+  try {
+    const pending = sc.showCommunity("tarde-scr", "posts");
+    ac.abort(); // a pessoa navegou para outra rota antes de a comunidade terminar de carregar
+    await pending;
+    assert.doesNotMatch(main.innerHTML, /Com tarde-scr/, "a comunidade não pode sobrescrever a rota que está na tela");
+    assert.equal(main.innerHTML, "<h1>Voxpedia</h1>");
+  } finally {
+    navigation.setRouteScope?.(null);
+  }
+});
