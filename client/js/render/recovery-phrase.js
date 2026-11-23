@@ -37,6 +37,12 @@ export function renderPhraseIntroHtml({ needsPassphrase }) {
     </section>`;
 }
 
+/**
+ * Lista numerada das palavras da frase de recuperação.
+ *
+ * @param {string[]} words
+ * @returns {string}
+ */
 function wordListHtml(words) {
   return `<ol class="phrase-words">${words.map((w) => `<li>${escapeHtml(w)}</li>`).join("")}</ol>`;
 }

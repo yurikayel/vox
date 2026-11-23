@@ -12,6 +12,11 @@ export const VOX_GITHUB_ISSUES = "https://github.com/yurikayel/vox/issues";
 const DEMO_COMMUNITY = "demo-aprenda-vox";
 const DEMO_FEIRA = "demo-feira-local";
 
+/**
+ * Seção da ajuda de teste sobre as três lógicas do Vox.
+ *
+ * @returns {string}
+ */
 function renderTresLogicasTeste() {
   return `
       <section class="voxpedia-section card" id="teste-tres-logicas" aria-labelledby="teste-tres-logicas-title">
@@ -25,6 +30,11 @@ function renderTresLogicasTeste() {
       </section>`;
 }
 
+/**
+ * Cabeçalho da página de ajuda de teste.
+ *
+ * @returns {string}
+ */
 function renderAjudaHero() {
   return `
       <header class="voxpedia-hero card">
@@ -38,6 +48,11 @@ function renderAjudaHero() {
       </header>`;
 }
 
+/**
+ * Seção com o roteiro de teste passo a passo.
+ *
+ * @returns {string}
+ */
 function renderAjudaRoteiro() {
   return `
       <section class="voxpedia-section card" id="teste-roteiro" aria-labelledby="teste-roteiro-title">
@@ -54,6 +69,11 @@ function renderAjudaRoteiro() {
       </section>`;
 }
 
+/**
+ * Seção sobre transparência do feed e posse do conteúdo.
+ *
+ * @returns {string}
+ */
 function renderAjudaFeedEPosse() {
   return `
       <section class="voxpedia-section card" id="teste-transparencia-feed" aria-labelledby="teste-transparencia-feed-title">
@@ -77,6 +97,11 @@ function renderAjudaFeedEPosse() {
       ${renderTresLogicasTeste()}`;
 }
 
+/**
+ * Seção sobre o pacto de convivência e a atualização do app.
+ *
+ * @returns {string}
+ */
 function renderAjudaPactoEAtualizar() {
   return `
       <section class="voxpedia-section card" id="teste-pacto" aria-labelledby="teste-pacto-title">
@@ -99,6 +124,12 @@ function renderAjudaPactoEAtualizar() {
       </section>`;
 }
 
+/**
+ * Seção sobre leitura de reserva e relay, com link para o índice de docs.
+ *
+ * @param {string} docsReadme
+ * @returns {string}
+ */
 function renderAjudaReservaERelay(docsReadme) {
   return `
       <section class="voxpedia-section card" id="teste-leitura-reserva" aria-labelledby="teste-leitura-reserva-title">
@@ -119,6 +150,11 @@ function renderAjudaReservaERelay(docsReadme) {
       </section>`;
 }
 
+/**
+ * Seção sobre privacidade e saída da conta.
+ *
+ * @returns {string}
+ */
 function renderAjudaPrivacidadeESaida() {
   return `
       <section class="voxpedia-section card" id="teste-privacidade" aria-labelledby="teste-privacidade-title">
@@ -140,6 +176,11 @@ function renderAjudaPrivacidadeESaida() {
       </section>`;
 }
 
+/**
+ * Seção sobre carteira e Feira.
+ *
+ * @returns {string}
+ */
 function renderAjudaCarteiraEFeira() {
   return `
       <section class="voxpedia-section card" id="teste-carteira" aria-labelledby="teste-carteira-title">
@@ -159,6 +200,12 @@ function renderAjudaCarteiraEFeira() {
       </section>`;
 }
 
+/**
+ * Rodapé da ajuda com links para docs, guia de desenvolvimento e repositório.
+ *
+ * @param {object} options
+ * @returns {string}
+ */
 function renderAjudaFooter({ docsReadme, devGuide, docsIndex, repo }) {
   return `
       <footer class="voxpedia-footer card">
