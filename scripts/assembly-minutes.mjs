@@ -19,21 +19,44 @@ const VALID_FORMATS = new Set(["md", "json"]);
 const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const MAX_BLOCK_REASON_LEN = 280;
 
+/**
+ * Diz se o valor é um objeto simples (não nulo e não array).
+ * @param {unknown} value Valor a testar.
+ * @returns {boolean}
+ */
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/**
+ * Exige string não vazia e a devolve sem espaços nas pontas.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {string}
+ */
 function requireText(raw, fieldName) {
   if (typeof raw !== "string" || !raw.trim()) throw new TypeError(`${fieldName} deve ser string não vazia.`);
   return raw.trim();
 }
 
+/**
+ * Exige texto não vazio que também não seja chave reservada (`__proto__` e afins).
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {string}
+ */
 function requireKey(raw, fieldName) {
   const clean = requireText(raw, fieldName);
   if (FORBIDDEN_KEYS.has(clean)) throw new RangeError(`${fieldName} contém chave reservada proibida: ${clean}.`);
   return clean;
 }
 
+/**
+ * Converte número ou data ISO em timestamp em milissegundos, rejeitando valores inválidos.
+ * @param {unknown} raw Valor bruto.
+ * @param {string} fieldName Nome do campo, usado na mensagem de erro.
+ * @returns {number}
+ */
 function parseTimestampMs(raw, fieldName) {
   if (typeof raw === "number") {
     if (!Number.isFinite(raw) || raw < 0) throw new RangeError(`${fieldName} deve ser timestamp numérico finito >= 0.`);
@@ -46,10 +69,20 @@ function parseTimestampMs(raw, fieldName) {
   throw new TypeError(`${fieldName} deve ser timestamp em ms ou string ISO válida.`);
 }
 
+/**
+ * Calcula o SHA-256 do texto em UTF-8.
+ * @param {string} text Texto a resumir.
+ * @returns {string}
+ */
 function sha256Hex(text) {
   return createHash("sha256").update(String(text), "utf8").digest("hex");
 }
 
+/**
+ * Copia o valor ordenando as chaves dos objetos, para a saída ser determinística.
+ * @param {unknown} value Valor a canonicalizar.
+ * @returns {unknown}
+ */
 function canonicalizeValue(value) {
   if (Array.isArray(value)) return value.map(canonicalizeValue);
   if (!isPlainObject(value)) return value;
@@ -60,10 +93,22 @@ function canonicalizeValue(value) {
   return sorted;
 }
 
+/**
+ * Serializa o valor como JSON canônico (chaves ordenadas).
+ * @param {unknown} value Valor a serializar.
+ * @returns {string}
+ */
 function canonicalJson(value) {
   return JSON.stringify(canonicalizeValue(value));
 }
 
+/**
+ * Valida um item de pauta e registra seu id para detectar duplicatas.
+ * @param {unknown} raw Item bruto da pauta.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @param {Set<string>} seenIds Ids já vistos (é alterado).
+ * @returns {object}
+ */
 function validateAgendaItem(raw, index, seenIds) {
   if (!isPlainObject(raw)) throw new TypeError(`agenda[${index}] deve ser um objeto.`);
   const id = requireKey(raw.id, `agenda[${index}].id`);
@@ -74,6 +119,12 @@ function validateAgendaItem(raw, index, seenIds) {
   return { id, title, proposalId };
 }
 
+/**
+ * Valida uma assinatura de presença.
+ * @param {unknown} raw Entrada bruta de presença.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @returns {object}
+ */
 function validateAttendanceEntry(raw, index) {
   if (!isPlainObject(raw)) throw new TypeError(`attendance[${index}] deve ser um objeto.`);
   const pubkey = requireKey(raw.pubkey, `attendance[${index}].pubkey`);
@@ -84,6 +135,12 @@ function validateAttendanceEntry(raw, index) {
   return { pubkey, displayName, signedAt: parseTimestampMs(raw.signedAt, `attendance[${index}].signedAt`), sig: requireText(raw.sig, `attendance[${index}].sig`) };
 }
 
+/**
+ * Remove duplicatas por chave mantendo o registro de `signedAt` mais recente.
+ * @param {object[]} items Registros a deduplicar.
+ * @param {Function} keyFn Função que devolve a chave de um registro.
+ * @returns {{items: object[], duplicatesRemoved: number}}
+ */
 function deduplicateByLatest(items, keyFn) {
   const byKey = new Map();
   let duplicatesRemoved = 0;
@@ -100,6 +157,13 @@ function deduplicateByLatest(items, keyFn) {
   return { items: [...byKey.values()], duplicatesRemoved };
 }
 
+/**
+ * Valida o motivo de um bloqueio; só `block` exige e devolve motivo.
+ * @param {unknown} rawReason Motivo bruto.
+ * @param {string} choice Escolha do voto.
+ * @param {number} index Posição do voto, usada nas mensagens.
+ * @returns {string}
+ */
 function validateBlockReason(rawReason, choice, index) {
   if (choice !== "block") return "";
   if (typeof rawReason !== "string" || !rawReason.trim()) {
@@ -110,6 +174,13 @@ function validateBlockReason(rawReason, choice, index) {
   return trimmed;
 }
 
+/**
+ * Valida um voto contra a pauta conhecida.
+ * @param {unknown} raw Voto bruto.
+ * @param {number} index Posição na lista, usada nas mensagens.
+ * @param {Set<string>} agendaIds Ids da pauta aceitos.
+ * @returns {object}
+ */
 function validateVote(raw, index, agendaIds) {
   if (!isPlainObject(raw)) throw new TypeError(`votes[${index}] deve ser um objeto.`);
   const agendaId = requireKey(raw.agendaId, `votes[${index}].agendaId`);
@@ -128,6 +199,11 @@ function validateVote(raw, index, agendaIds) {
   };
 }
 
+/**
+ * Valida o cabeçalho da assembleia (datas, quórum, ids) e devolve os campos limpos.
+ * @param {object} bundle Pacote bruto da assembleia.
+ * @returns {object}
+ */
 function validateAssemblyHeader(bundle) {
   const convenedAt = parseTimestampMs(bundle.convenedAt, "convenedAt");
   const closedAt = parseTimestampMs(bundle.closedAt, "closedAt");
@@ -170,6 +246,12 @@ export function validateAssemblyBundle(bundle) {
   };
 }
 
+/**
+ * Decide o status de um item da pauta a partir do quórum e da contagem de votos.
+ * @param {boolean} quorumMet Se o quórum de presença foi atingido.
+ * @param {{yes} counts  number, no: number, block: number}:Contagem de votos do item.
+ * @returns {"no_quorum"|"blocked"|"approved"|"rejected"}
+ */
 function resolveAgendaStatus(quorumMet, counts) {
   if (!quorumMet) return "no_quorum";
   if (counts.block > 0) return "blocked";
@@ -177,6 +259,12 @@ function resolveAgendaStatus(quorumMet, counts) {
   return "rejected";
 }
 
+/**
+ * Decide o status geral da assembleia a partir dos itens apurados.
+ * @param {boolean} quorumMet Se o quórum de presença foi atingido.
+ * @param {object[]} agendaTallies Itens já apurados.
+ * @returns {"no_quorum"|"blocked"|"approved"|"rejected"}
+ */
 function resolveOverallStatus(quorumMet, agendaTallies) {
   if (!quorumMet) return "no_quorum";
   if (agendaTallies.some((item) => item.decisionStatus === "blocked")) return "blocked";
@@ -184,6 +272,13 @@ function resolveOverallStatus(quorumMet, agendaTallies) {
   return "rejected";
 }
 
+/**
+ * Apura os votos de um item da pauta.
+ * @param {object} item Item da pauta.
+ * @param {object[]} itemVotes Votos desse item.
+ * @param {boolean} quorumMet Se o quórum foi atingido.
+ * @returns {object}
+ */
 function tallyAgendaItem(item, itemVotes, quorumMet) {
   const counts = { yes: 0, no: 0, abstain: 0, block: 0, total: 0 };
   const blockReasons = [];
@@ -205,20 +300,41 @@ function tallyAgendaItem(item, itemVotes, quorumMet) {
   };
 }
 
+/**
+ * Monta os registros de presença com o hash da assinatura, sem a assinatura em si.
+ * @param {object[]} attendance Presenças validadas.
+ * @returns {object[]}
+ */
 function buildAttendanceRecords(attendance) {
   return attendance.map((entry) => ({
     pubkey: entry.pubkey, displayName: entry.displayName || null, signedAt: entry.signedAt, sigHash: sha256Hex(entry.sig),
   }));
 }
 
+/**
+ * Reúne os motivos de bloqueio de todos os itens, marcando o item de origem.
+ * @param {object[]} agendaTallies Itens apurados.
+ * @returns {object[]}
+ */
 function collectAllBlockReasons(agendaTallies) {
   return agendaTallies.flatMap((item) => item.blockReasons.map((br) => ({ agendaId: item.id, ...br })));
 }
 
+/**
+ * Monta a lista de hashes de assinatura dos votos.
+ * @param {object[]} votes Votos validados.
+ * @returns {object[]}
+ */
 function buildVoteSigHashes(votes) {
   return votes.map((v) => ({ agendaId: v.agendaId, voterPubkey: v.voterPubkey, signedAt: v.signedAt, sigHash: sha256Hex(v.sig) }));
 }
 
+/**
+ * Monta o núcleo da ata (campos que entram no hash de integridade).
+ * @param {object} clean Pacote validado.
+ * @param {object[]} agendaTallies Itens apurados.
+ * @returns {object}
+ */
 function buildMinutesCore(clean, agendaTallies) {
   const attendanceCount = clean.attendance.length;
   const quorumMet = attendanceCount >= clean.quorumMin;
@@ -259,10 +375,20 @@ export function tallyAssembly(bundle) {
   return { ...core, minutesHash: sha256Hex(canonicalJson(core)) };
 }
 
+/**
+ * Formata um timestamp como `AAAA-MM-DD HH:MM:SS UTC`.
+ * @param {number} ms Timestamp em milissegundos.
+ * @returns {string}
+ */
 function formatUtc(ms) {
   return `${new Date(ms).toISOString().replace("T", " ").slice(0, 19)} UTC`;
 }
 
+/**
+ * Renderiza em Markdown a seção de presença.
+ * @param {object[]} attendance Registros de presença.
+ * @returns {string}
+ */
 function renderAttendanceSection(attendance) {
   if (attendance.length === 0) return "_Nenhuma assinatura de presença registrada._";
   const rows = attendance.map((entry) => {
@@ -272,6 +398,12 @@ function renderAttendanceSection(attendance) {
   return ["| Participante | Assinado em | Hash SHA-256 da assinatura |", "|---|---|---|", ...rows].join("\n");
 }
 
+/**
+ * Renderiza em Markdown a seção de um item da pauta.
+ * @param {object} item Item apurado.
+ * @param {number} index Posição do item (começa em 0).
+ * @returns {string}
+ */
 function renderAgendaItemSection(item, index) {
   const c = item.counts;
   const lines = [
@@ -289,6 +421,11 @@ function renderAgendaItemSection(item, index) {
   return lines.join("\n");
 }
 
+/**
+ * Renderiza em Markdown o cabeçalho da ata.
+ * @param {object} tally Apuração completa da assembleia.
+ * @returns {string}
+ */
 function renderMinutesHeader(tally) {
   return [
     `# Ata de Assembleia — ${tally.title}`,
@@ -301,6 +438,10 @@ function renderMinutesHeader(tally) {
   ].join("\n");
 }
 
+/**
+ * Renderiza o texto fixo sobre o que a verificação de assinaturas cobre e o que não cobre.
+ * @returns {string}
+ */
 function renderVerificationScope() {
   return [
     "## Escopo de verificação de assinaturas",
@@ -332,18 +473,35 @@ export function renderAssemblyMinutesMarkdown(tally) {
   ].join("\n");
 }
 
+/**
+ * Lê o valor que acompanha uma flag da linha de comando.
+ * @param {string[]} argv Argumentos.
+ * @param {number} index Posição da flag.
+ * @param {string} flag Nome da flag, usado na mensagem de erro.
+ * @returns {string}
+ */
 function readNextArg(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || value.startsWith("-")) throw new Error(`Falta valor para ${flag}.`);
   return value;
 }
 
+/**
+ * Valida o formato de saída pedido (`md` ou `json`).
+ * @param {unknown} raw Valor bruto.
+ * @returns {string}
+ */
 function parseFormat(raw) {
   const fmt = String(raw || "").trim().toLowerCase();
   if (!VALID_FORMATS.has(fmt)) throw new Error(`Formato inválido '${raw}'. Use 'md' ou 'json'.`);
   return fmt;
 }
 
+/**
+ * Interpreta os argumentos da linha de comando.
+ * @param {string[]} argv Argumentos sem `node` e o script.
+ * @returns {{input: string, format: string, out: string, help: boolean}}
+ */
 function parseCliArgs(argv) {
   const opts = { input: "", format: "md", out: "", help: false };
   for (let i = 0; i < argv.length; i++) {
@@ -360,6 +518,11 @@ function parseCliArgs(argv) {
   return opts;
 }
 
+/**
+ * Lê e interpreta um arquivo JSON (aceita BOM).
+ * @param {string} filePath Caminho do arquivo.
+ * @returns {unknown}
+ */
 function readJsonFile(filePath) {
   let rawText;
   try { rawText = fs.readFileSync(path.resolve(filePath), "utf8"); } catch (err) {
@@ -397,6 +560,10 @@ export function runCli(argv = process.argv.slice(2)) {
   return { tally, output, format: opts.format, outputPath };
 }
 
+/**
+ * Diz se este arquivo foi chamado direto pelo Node (e não importado).
+ * @returns {boolean}
+ */
 function isMainModule() {
   if (!process.argv[1]) return false;
   const entry = path.resolve(process.argv[1]);
