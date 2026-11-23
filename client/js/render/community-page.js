@@ -300,7 +300,7 @@ const TAB_RENDERERS = {
  */
 export function renderCommunityTabContent(tab = "posts", ctx = {}) {
   const activeTab = tab || "posts";
-  const renderer = TAB_RENDERERS[activeTab];
+  const renderer = Object.hasOwn(TAB_RENDERERS, activeTab) ? TAB_RENDERERS[activeTab] : null;
   if (renderer) return renderer(ctx);
   return `<div class="community-vox-posts-wrap">
     ${renderCommunityOrkutMembersBox(ctx.meta, ctx.communityId, ctx.recentPeople, ctx.memberCount)}
