@@ -21,7 +21,7 @@ Requisitos: Node 22+ (o CI roda 22 e 24) e Python 3.11+ (o CI roda 3.11 e 3.12).
 ## 2. Cliente (`tests/*.test.js`, `node:test`)
 
 - **Um arquivo por módulo ou fluxo**, com o nome do módulo: `tests/<modulo>.test.js`.
-- **Ambiente de navegador simulado:** comece com `import "../tests/setup.js";`. Ele define mocks globais (`window`, `localStorage`, `BroadcastChannel`, `navigator`, `location`) para que os ES modules de `client/js/` carreguem em Node. IndexedDB é exercitado pelos próprios módulos (`idb-store.test.js`).
+- **Ambiente de navegador simulado:** comece com `import "../tests/setup.js";`. Ele define mocks globais (`window`, `localStorage`, `BroadcastChannel`, `navigator`, `location`) para que os ES modules de `client/js/` carreguem em Node. IndexedDB é exercitado pelos próprios módulos (`cache-node.test.js`).
 - **Importe o módulo real** com `await import("../client/js/…")`. Prefira testar funções puras exportadas (ex.: `sumUnreadDms` em `render/shell.js`, o classificador em `civic-post.js`).
 - **Testes de integridade** leem arquivos do repo com `fs`: `entrypoint-integrity.test.js` (imports do entrypoint resolvem) e testes que conferem `SHELL_ASSETS` do `sw.js` (ex.: `voxels.test.js`). Módulo novo no shell = registrar em `SHELL_ASSETS` + bump de `CACHE_NAME`. `release-metadata-drift.test.js` falha se o `cache_name` de `docs/release-metadata.json` não bater com o `CACHE_NAME` do `sw.js` (REV-03): ao subir a versão do SW, rode `npm run release-line`.
 - **Esqueleto:**
