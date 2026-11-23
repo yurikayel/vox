@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/identity/local-account.js)
 [![Preservação](https://img.shields.io/badge/Preserva%C3%A7%C3%A3o-rede%20de%20seguidores-black.svg)](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2288%20passing%20%C2%B7%209%20skipped%20%C2%B7%2011%20todo-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.147--community--split-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-3467%20passing%20%C2%B7%206%20skipped-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.161--central--memory--split-informational.svg)](./client/sw.js)
 
 **Vox** é um PWA cívico *local-first* — sem bundler, sem servidor central de login e sem leilão de alcance — para ampliar a participação popular e a autonomia das comunidades. Conta, chaves e dados nascem no aparelho; o conteúdo circula pela **rede de seguidores** (você replica o que segue).
 
@@ -18,7 +18,7 @@ A ambição é ser um **bem comum aberto**: transparente, copiável, modificáve
 > - **Sem gravação no Arweave** (`arweaveUpload: false`, REV-07): a preservação passa pela rede de seguidores e pelo nó opcional **Vox Memoria**.
 > - **Sinalização frágil:** 1 nó Render mais o caminho Nostr em paralelo; sem TURN.
 > - **Infra extra adiada** até passar de 50 usuários ativos (INF-01…04).
-> - **`main` atrás de `develop`:** a `main` pública está no release 19/11 (#304); o hardening **#306–#317** aguarda merge `develop` → `main`.
+> - **`main` atrás de `develop`:** a `main` pública está no release de 20/11 (#372); a Onda 3 e o hardening **#373–#430** aguardam o release `develop` → `main` (#407).
 >
 > Detalhes em [ROADMAP.md](./docs/ROADMAP.md) e no [retrato do repositório](./docs/strategy/analise-repositorio-vox-2026-11.md).
 
@@ -106,6 +106,8 @@ Recuperação soberana: [ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md) (c
 
 ## 🆕 Novidades de novembro/2026
 
+- **Qualidade medida (23/11):** cobertura de testes de **95,3%** no cliente e **91,9%** no relay, com piso em catraca ([`scripts/coverage-floor.json`](./scripts/coverage-floor.json), [TESTES.md](./docs/TESTES.md)); JSDoc em todo export (`npm run audit:docs` sem achados).
+- **Módulos grandes viram fachadas:** `render/shell.js`, `app/screens-dm.js` e `central-memory.js` passam a reexportar a mesma API e dividem o código em módulos menores, sem ciclo de imports.
 - **Assinatura v2 vira padrão em 24/11/2026** (`SIGV2_FROM`, PM-85): `sigv: 2` cobre campos aninhados.
 - **Recuperação soberana:** frase de recuperação, guardiões e cofre na malha ([ADR-032](./docs/adr/032-login-perene-a-conta-nasce-com-saida.md), [ADR-037](./docs/adr/037-cofre-na-malha.md)).
 - **Cofre v2 e chaves em repouso** (PM-90, PM-93): Google e Meta não abrem cofre; abas sincronizam com segurança (`identity/tab-sync.js`).
@@ -121,6 +123,7 @@ Histórico integral em [CHANGELOG.md](./CHANGELOG.md) e [client/DEV.md §42–§
 - **Experiência e produto:** design system *Sovereign Agora* ([ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md)); feeds Social e Cívico; fluxos em etapas (entrada, compositor, proposta, comunidade, Feira); assistentes (`#/settings/network/guia`, `#/backup`, `#/wallet/guia`); modo Canal (PM-81); modo eleitoral automático (REV-24); contas vinculadas Bluesky e OAuth via `/oauth/exchange` quando configurado.
 - **Identidade, recuperação e segurança:** cofre v2 e chaves em repouso; frase de 12/24 palavras, guardiões e cofre na malha; assinatura v2 e integridade de mídia; relay autorizado por dono e origem; snapshot `compat`; CodeQL, Dependabot e catraca de camadas ([revisão DevSecOps](./docs/audits/revisao-devsecops-2026-11-10.md), [ADR-035](./docs/adr/035-camadas-e-contextos.md)).
 - **Malha e resiliência:** sync por inventário (PM-80); caixa de saída de DMs com reenvio por 7 dias (PM-78); denúncia assinada arquivada até a revisão de 48 h (PM-69); quarentena de chave nova com prova de trabalho de 14 bits (LAN-14); nó leve (100 MB) ou de apoio (512 MB a 1 GB no Wi-Fi); mensagens de erro honestas (LAN-21); convite com vínculo assinado (PM-82) e moderador natural em laboratório (PM-83).
+- **Qualidade e manutenção:** cobertura com piso em catraca (cliente 95,3%, relay 91,9%); JSDoc completo; fachadas para `render/shell.js`, `app/screens-dm.js` e `central-memory.js`; chave Pix do Perfil volta a salvar (#425); teste do relay isolado da rede (#423); orçamento de orquestração de agentes ([metodo-agentes-mutex-e-revisor.md](./docs/process/metodo-agentes-mutex-e-revisor.md)).
 - **Taxonomia:** um cliente (`Vox`) e dois nós opcionais, um por aparelho (`Vox Populi` ou `Vox Memoria`), com Kit steward como implantação do `Vox Memoria` em VPS (ADR-011, #289).
 
 </details>
@@ -209,13 +212,13 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `aa937b9` |
-| **Suíte de Testes** | **2341** (`2021` JS + `320` Python) |
-| **Service Worker** | `vox-pwa-v7.147-community-split` |
+| **Commit SHA** | `9f0edc2d` |
+| **Suíte de Testes** | **3473** (`3121` JS + `352` Python) |
+| **Service Worker** | `vox-pwa-v7.161-central-memory-split` |
 
 *Tabela regenerada por `npm run release-line` (grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
-*Medido em `develop`. O total **2309** inclui **9** testes pulados (8 JS + 1 Python) e **11** `todo` (JS) — testes que efetivamente passam: **2288** (1969 JS + 319 Python). Última Release de binários no GitHub: `v7.40` (09/11/2026), anterior ao Service Worker atual.*
+*Medido em `develop`. O total **3473** inclui **6** testes pulados (5 JS + 1 Python) — testes que efetivamente passam: **3467** (3116 JS + 351 Python). Última Release de binários no GitHub: `v7.40` (09/11/2026), anterior ao Service Worker atual.*
 
 O Service Worker pode manter a versão anterior em cache: depois de uma atualização, recarregue ou use `Ctrl+Shift+R`. Antes de tratar um build como validado, confira os checks do CI no commit exato.
 
