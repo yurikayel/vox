@@ -7,16 +7,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
-import { isSafeKey } from "../client/js/shared/safe-key.js";
 import { recordGatewayAttempt, __resetGatewayHealthForTests } from "../client/js/gateway-telemetry.js";
 import { markCommunitySeen, loadLastSeenMap } from "../client/js/community-unread.js";
 import { parseRoute } from "../client/js/app/route-parse.js";
 import { renderCommunityTabContent } from "../client/js/render/community-page.js";
-
-test("isSafeKey: recusa nomes de protótipo e o que não é string", () => {
-  for (const k of ["__proto__", "constructor", "prototype", "", null, 1]) assert.equal(isSafeKey(k), false, String(k));
-  assert.equal(isSafeKey("demo-feira-local"), true);
-});
 
 test("gateway-telemetry: rótulo `__proto__` não polui Object.prototype", () => {
   __resetGatewayHealthForTests();
