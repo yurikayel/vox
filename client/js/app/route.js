@@ -1,7 +1,7 @@
 /** @file Hash router — dispatches to screen modules. */
 import { closePostMoreMenu } from "./post-more-menu.js";
 import { parseRoute, routeTitle } from "./route-parse.js";
-import { setRoute } from "./navigation.js";
+import { getRouteScope, setRoute, setRouteScope } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
 import { showHome, showCommunities, showTagFeed } from "./screens-home.js";
 import { showCommunity } from "./screens-community.js";
@@ -20,18 +20,10 @@ import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-retu
 import { showNotFound } from "./screens-not-found.js";
 import { createScope } from "../shared/signals.js";
 
-/** Escopo reativo da rota atual; descartado antes de montar a próxima. */
-let currentRouteScope = null;
-
-/**
- * Escopo da rota **atual** no momento da chamada.
- * Em telas async, capture o 2º argumento do handler (`handler(route, scope)`) **antes** de qualquer
- * `await` — não chame `getRouteScope()` depois do await (pode já ser a rota seguinte).
- * @returns {ReturnType<typeof createScope>|null}
- */
-export function getRouteScope() {
-  return currentRouteScope;
-}
+// Escopo reativo da rota atual (descartado antes de montar a próxima) mora em `navigation.js`, onde as telas o
+// leem sem importar o roteador. Em telas async, capture o 2º argumento do handler (`handler(route, scope)`) ou
+// `getRouteScope()` **antes** de qualquer `await`.
+export { getRouteScope } from "./navigation.js";
 
 /** @type {Promise<typeof import("./screens-voxpedia.js")>|null} */
 let voxpediaRoute = null;
@@ -228,9 +220,9 @@ export async function routeImpl() {
 
   closePostMoreMenu();
   checkCantinaGate();
-  currentRouteScope?.dispose();
+  getRouteScope()?.dispose?.();
   const scope = createScope();
-  currentRouteScope = scope;
+  setRouteScope(scope);
   const r = parseRoute();
   const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
   const result = await handler(r, scope);
