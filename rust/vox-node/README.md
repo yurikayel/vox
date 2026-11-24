@@ -1,11 +1,11 @@
 # `rust/vox-node`
 
-> **Status:** em desenvolvimento (PR4.2b: paridade HTTP do relay com sidecars `.sha256`, `vox_core::genesis_guard`, purga TTL e sinalização WebSocket RFC 6455 em Rust `std` puro) · **Owner:** mantenedor relay / steward ops · **Revisado:** 2026-11-23  
+> **Status:** em desenvolvimento (PR4.3: modo `--mode memoria` na porta `3922` com `control.token`, paridade HTTP do relay, `vox_core::genesis_guard` e sinalização WebSocket RFC 6455 em Rust `std` puro) · **Owner:** mantenedor relay / steward ops · **Revisado:** 2026-11-23  
 > **Referências:** [ADR-039](../../docs/adr/039-rust-por-fases.md) · [Blueprint Fase 4](../../docs/specs/vox-node-rust-fase4.md) · [DEPENDENCIAS.md](../../docs/DEPENDENCIAS.md)
 
 Binário unificado da Fase 4 do [ADR-039](../../docs/adr/039-rust-por-fases.md), construído com `#![forbid(unsafe_code)]`, `#![deny(missing_docs)]` e zero dependências externas (apenas `vox-core` + `std`).
 
-## Escopo atual (PR4.2b)
+## Escopo atual (PR4.3)
 
 - `--help` / `-h`: exibe ajuda da linha de comando.
 - `--version` / `-V`: exibe a versão do pacote.
@@ -19,6 +19,12 @@ Binário unificado da Fase 4 do [ADR-039](../../docs/adr/039-rust-por-fases.md),
   - Memória central e cofres v2: `GET /memory`, `/memory/status`, `/memory/state`, `/memory/blob/<sha256>`, `POST /memory/ingest`, `POST /memory/sync`, `GET`/`POST /memory/vault/<chave>` — com corte real via `vox_core::genesis_guard` (rejeita contas de teste e posts pré-gênese em ingest, sync e carga de `state.json`), escrita atômica (`state.json`, `.bak`, `events.jsonl`) e verificação SHA-256 de blobs.
   - P2P Seeder e Beacon (`VOX-PEER-v1`): `GET /p2p/status`, `/p2p/blobs`, `/p2p/seed/<hash>`, `/peer/beacon`, `/p2p/peers`, `POST /p2p/seed` (auto-autorização de blobs da memória central, teto 64 seeds / 512 MiB), `DELETE /p2p/seed/<hash>`, `POST /peer/beacon` (TTL 60 s).
   - Purga TTL determinística (`purge_expired_at` + sweeper opcional via `VOX_RELAY_PURGE_INTERVAL_SECONDS`), guarda `Host`/`Origin`/`Content-Type`/CORS por allowlist, rate limit por IP (`429` + `Retry-After`) e dreno de corpo rejeitado (`T31`).
+- `--mode memoria [--host <ADDR>] [--port <PORT>] [--data-dir <DIR>]`: servidor local Vox Memória / Vox Populi (Cold Readiness: bind padrão `127.0.0.1:3922`) com:
+  - Geração e persistência automática de `control.token` em `<data-dir>/control.token`, validado em tempo constante via `X-Vox-Control-Token` ou `Authorization: Bearer`.
+  - Dashboard HTML embutido em `/` (`/dashboard`, `/monitor`), saúde e telemetria em `/health`, `/status`, `/api/status`, `/api/telemetry`, `/memory/telemetry`, `/memory/vaults` e `/memory/logs` (com CORS estritamente por allowlist, sem `*`).
+  - Rotas `/memory/*` (`/memory`, `/memory/status`, `/memory/state`, `/memory/blob/<sha256>`, `/memory/ingest`, `/memory/sync`, `/memory/vault/<chave>`) reutilizando `MemoryStore` + `vox_core::genesis_guard`.
+  - Controle autenticado por `control.token`: `POST /control/pause` (`/api/pause`, `/memory/pause`), `POST /control/resume` (`/api/resume`, `/memory/resume`), `POST /memory/checkpoint` e `POST /control/shutdown` (`/api/stop`), bloqueando escritas com `503 {"error":"node_paused"}` enquanto pausado.
+  - Empacotamento Windows em [`packaging/vox-memoria-windows/`](../../packaging/vox-memoria-windows/README.md).
 
 ## Gaps conhecidos (Rust `std` puro, zero dependências externas)
 
