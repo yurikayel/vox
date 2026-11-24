@@ -1,9 +1,9 @@
-# Ficha de personagem multi-sistema e HUD de jogo — brainstorm (v0)
+# Subversus VTT — Ficha de personagem multi-sistema e HUD de jogo (brainstorm v0)
 
-> **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-20
-> **Relacionados:** [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [STITCH-MESA-GUIA.md](../design/stitch-captures/STITCH-MESA-GUIA.md) · `client/js/dungeon/vtt-schema.js` · `client/js/dungeon/screen-sheet-levelup.js`
+> **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-24
+> **Relacionados:** [subversus-vtt-v0.md](./subversus-vtt-v0.md) · [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [STITCH-MESA-GUIA.md](../design/stitch-captures/STITCH-MESA-GUIA.md) · `client/js/dungeon/vtt-schema.js` · `client/js/dungeon/screen-sheet-levelup.js`
 
-Ideias para a ficha de personagem da Mesa (criar, salvar, editar, compartilhar e usar na partida) em **D&D 2024**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)**, e para a tela de jogo com HUD no estilo Diablo II. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
+Ideias para a ficha de personagem do **Subversus VTT** (rótulo na barra do Vox: **Subversus**) — criar, salvar, editar, compartilhar e usar na partida em **D&D 2024**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)** — e para a tela de jogo com HUD no estilo Diablo II. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
 
 ---
 
