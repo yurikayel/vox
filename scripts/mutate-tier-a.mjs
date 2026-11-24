@@ -471,6 +471,20 @@ export function formatTextReport(report) {
 }
 
 /**
+ * Formata o relatório consolidado em Markdown para `$GITHUB_STEP_SUMMARY`.
+ * @param {object} report Relatório retornado por `aggregateReports`.
+ * @returns {string} Resumo em Markdown.
+ */
+export function formatSummaryMarkdown(report) {
+  const score = report.score === null ? "n/a" : `${report.score}%`;
+  const cell = (v) => String(v).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
+  const header = `## Mutação Tier A (PM-112 — aviso)\n\nModo \`${report.mode}\`: **${report.killed}** mortos, **${report.survived}** sobreviventes, **${report.timeout}** timeouts / **${report.total}** total (score: **${score}**, ${report.durationMs}ms).`;
+  if (report.survivors.length === 0) return `${header}\n`;
+  const rows = report.survivors.map((s) => `| \`${cell(s.location)}\` | \`${cell(s.kind)}\` | \`${cell(s.description)}\` |`);
+  return [header, "", "| Local | Tipo | Mutação |", "|---|---|---|", ...rows, ""].join("\n");
+}
+
+/**
  * Resolve o commit-base do diff (`merge-base` com `HEAD`).
  * @param {string} baseRef Referência git da base.
  * @param {string} root Raiz do repositório.
@@ -523,17 +537,30 @@ function runSingleFileMode(opts, root) {
 }
 
 /**
+ * Escolhe a referência-base padrão quando nem `--file` nem `--base` são informados.
+ * @param {string} root Raiz do repositório.
+ * @returns {string|null} Referência git válida ou `null`.
+ */
+function defaultBaseRef(root) {
+  return [process.env.BASE_REF, "origin/develop", "develop"].filter(Boolean).find((ref) => {
+    try { git(["rev-parse", "--verify", "--quiet", ref], root); return true; } catch { return false; }
+  }) || null;
+}
+
+/**
  * Ponto de entrada: interpreta os argumentos, roda o modo escolhido e imprime o relatório.
  */
 function main() {
   const opts = parseArgs(process.argv.slice(2));
-  if (opts.help || (!opts.file && !opts.base)) {
+  const root = process.cwd();
+  const baseRef = opts.base || (!opts.file && !opts.help ? defaultBaseRef(root) : null);
+  if (opts.help || (!opts.file && !baseRef)) {
     console.log("Uso: node scripts/mutate-tier-a.mjs (--file <caminho> [--test <teste>] | --base <gitRef>) [--max <N>] [--timeout <ms>] [--json]");
     process.exit(opts.help ? 0 : 1);
   }
-  const root = process.cwd();
-  const report = opts.base ? runDiffMode(opts, root) : runSingleFileMode(opts, root);
+  const report = baseRef ? runDiffMode({ ...opts, base: baseRef }, root) : runSingleFileMode(opts, root);
   console.log(opts.json ? JSON.stringify(report, null, 2) : formatTextReport(report));
+  if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${formatSummaryMarkdown(report)}\n`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

@@ -129,6 +129,12 @@ export function renderComposeCommunity(main) {
         <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
         <p class="agora-composer-kicker">Nova Comunidade</p>
       </div>
+      <div class="community-kit-entry" style="margin-bottom:1rem;">
+        <button type="button" id="btn-open-kit-genesis" class="btn btn-sm btn-outline" aria-expanded="false" aria-controls="comm-kit-picker-panel">
+          Criar comunidade a partir de modelo (Bairro, Sindicato, Coletivo)
+        </button>
+        <div id="comm-kit-picker-panel" hidden></div>
+      </div>
       <form id="form-compose-community" novalidate>
         ${renderSteps(steps, nav)}
       </form>

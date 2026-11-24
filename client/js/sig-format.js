@@ -63,3 +63,35 @@ export function withSigv(payload, version = signingVersion()) {
   const { sigv: _old, ...rest } = payload;
   return version === 2 ? { ...rest, sigv: 2 } : rest;
 }
+
+/**
+ * Extrai o timestamp numérico de um item assinado, ou `null` quando ausente/inválido.
+ * @param {object} item Item assinado.
+ * @returns {number|null} Timestamp finito em ms, ou `null`.
+ */
+function extractItemTimestampMs(item) {
+  const rawTs = item.ts ?? item.createdAt ?? item.editedAt;
+  if (rawTs == null) return null;
+  const ts = Number(rawTs);
+  return Number.isFinite(ts) ? ts : null;
+}
+
+/**
+ * Confere se a versão da assinatura (`sigv`) do item é permitida na entrada (PM-102).
+ * Recusa `sigv` desconhecido; aceita `sigv: 2` sempre; para legado v1 (`sigv` ausente),
+ * aceita somente se o timestamp (`ts ?? createdAt ?? editedAt`, quando finito) for menor
+ * que `cutoverMs + graceMs` (ou quando não houver timestamp finito).
+ * @param {object|null|undefined} item Item assinado recebido.
+ * @param {{ cutoverMs?: number, graceMs?: number }} [opts={}] Janela de corte opcional.
+ * @returns {boolean} `true` se a versão da assinatura é aceita.
+ */
+export function isSigVersionAllowed(item, opts = {}) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+  if (!isKnownSigv(item)) return false;
+  if (item.sigv === 2) return true;
+  const ts = extractItemTimestampMs(item);
+  if (ts === null) return true;
+  const cutoverMs = Number.isFinite(opts?.cutoverMs) ? opts.cutoverMs : SIGV2_FROM;
+  const graceMs = Number.isFinite(opts?.graceMs) && opts.graceMs >= 0 ? opts.graceMs : 0;
+  return ts < cutoverMs + graceMs;
+}
