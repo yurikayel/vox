@@ -5,6 +5,7 @@
  */
 
 import { randomBase36 } from "../shared/html.js";
+import { withWebLock } from "../shared/lead-tab.js";
 
 const CHANNEL_NAME = "vox-tab-sync-v0";
 const MSG_VERSION = 1;
@@ -42,10 +43,8 @@ export const TAB_SYNC_CHANNEL = CHANNEL_NAME;
  * @param {() => Promise<T>} work criação ou leitura pós-lock
  * @returns {Promise<T>}
  */
-export async function withLocalAccountCreationLock(work) {
-  const locks = globalThis.navigator?.locks;
-  if (!locks?.request) return work();
-  return locks.request(LOCAL_ACCOUNT_CREATE_LOCK, { mode: "exclusive" }, () => work());
+export function withLocalAccountCreationLock(work) {
+  return withWebLock(LOCAL_ACCOUNT_CREATE_LOCK, work);
 }
 
 /**

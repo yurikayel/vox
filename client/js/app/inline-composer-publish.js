@@ -11,6 +11,8 @@ import * as postOwnership from "../post-ownership.js";
 import * as mediaBlob from "../media-blob.js";
 import * as photoTags from "../photo-tags.js";
 import { randomBase36 } from "../shared/html.js";
+import { scheduleCommit } from "../shared/schedule-commit.js";
+import { route } from "./navigation.js";
 import * as permanence from "../permanence-notice.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
@@ -96,9 +98,11 @@ export function showPublishToast(permawebResult) {
  * @param {string} title Título derivado.
  * @param {string} body Corpo do texto.
  * @param {string} commSlug Slug/id da comunidade.
- * @returns {Promise<object>} Post assinado salvo.
+ * @param {object} [options={}] Opções de propagação.
+ * @param {boolean} [options.deferBroadcast=false] Se `true`, deixa o broadcast P2P para o chamador.
+ * @returns {Promise<{ signed: object, permaResult: object|null, blob: object|null }>} Post assinado salvo e mídia destacada.
  */
-export async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
+export async function broadcastAndPersistInlineTopic(payload, title, body, commSlug, { deferBroadcast = false } = {}) {
   // LAN-14: comunidade com quarentena de chave nova recebe o post com PoW leve.
   const community = (await cacheNode.getLocalCommunities()).find((c) => c.id === commSlug);
   await attachPowIfWanted(payload, community, await localAccount.getRouteId());
@@ -108,9 +112,51 @@ export async function broadcastAndPersistInlineTopic(payload, title, body, commS
   if (blob) await mediaBlob.defaultBlobStorage.put(blob);
   await cacheNode.saveLocalPost(mediaBlob.withLocalMedia(signed, blob));
   if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
-  peers.broadcastGossip(signed, blob);
+  if (!deferBroadcast) peers.broadcastGossip(signed, blob);
   const permaResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob, aspectRatio: inlineComposerAspectRatio });
-  return { signed, permaResult };
+  return { signed, permaResult, blob };
+}
+
+/**
+ * Anexa botão "Desfazer" ao toast visível atual sem alterar `share.js`.
+ * @param {() => void} onUndo Ação de cancelamento ao clicar em Desfazer.
+ * @returns {void}
+ */
+function attachUndoButtonToToast(onUndo) {
+  const toast = document.querySelector?.(".vox-toast");
+  if (!toast || typeof toast.appendChild !== "function") return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "vox-toast-undo";
+  btn.textContent = "Desfazer";
+  btn.style.marginLeft = "0.75rem";
+  toast.style.pointerEvents = "auto";
+  toast.removeAttribute?.("aria-hidden");
+  btn.addEventListener("click", () => {
+    onUndo();
+    toast.remove?.();
+  });
+  toast.appendChild(btn);
+}
+
+/**
+ * Agenda o broadcast P2P com janela de 4 s para desfazer localmente antes de enviar aos pares.
+ * @param {{ signed: object, blob: object|null, bodyRaw: string }} params Dados da publicação.
+ * @returns {{ undo: () => void, flush: () => void, isPending: () => boolean }} Controles do agendamento.
+ */
+function scheduleInlineBroadcast({ signed, blob, bodyRaw }) {
+  return scheduleCommit({
+    delayMs: 4000,
+    onCommit: () => peers.broadcastGossip(signed, blob),
+    onUndo: async () => {
+      await cacheNode.deleteLocalPost(signed.id);
+      const bodyInput = document.getElementById("inline-topic-body");
+      if (bodyInput && !bodyInput.value) bodyInput.value = bodyRaw;
+      syncInlineComposerUi();
+      share.showToast("Publicação desfeita.");
+      await route();
+    },
+  });
 }
 
 /**
@@ -130,7 +176,7 @@ export async function executeInlinePublish(form, onPublished, state, shouldEcho 
 
   const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
   const payload = buildInlineTopicPayload({ title, body, commSlug });
-  const { signed, permaResult } = await broadcastAndPersistInlineTopic(payload, title, body, commSlug);
+  const { signed, permaResult, blob } = await broadcastAndPersistInlineTopic(payload, title, body, commSlug, { deferBroadcast: true });
 
   form.reset();
   clearMedia(state);
@@ -140,6 +186,9 @@ export async function executeInlinePublish(form, onPublished, state, shouldEcho 
   focusAfterComposePublish();
   if (typeof onPublished === "function") await onPublished(signed);
   else location.reload();
+
+  const { undo } = scheduleInlineBroadcast({ signed, blob, bodyRaw });
+  attachUndoButtonToToast(undo);
 
   if (shouldEcho) {
     const { openExplodeSheet } = await import("../explode-dispatch.js");

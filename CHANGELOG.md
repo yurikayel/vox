@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Refactor: primitiva `runButtonAction` / `bindActionDelegate` extraída para `client/js/shared/action-runner.js` (zero dependências de `app/`), mantendo `client/js/app/action-runner.js` com toast padrão e ligada em `submitCommunityLeave` (`screens-community.js`); SW `vox-pwa-v7.162-shared-action-runner`.
+
 - Segurança: os mapas locais (não lidas, DM, telemetria de gateway, chaves DM, handles) gravam por `withEntry` (`Map` + `Object.fromEntries`) em vez de escrita dinâmica em objeto, para o CodeQL reconhecer a proteção que o #435 já fazia com `isSafeKey`.
 - Segurança (CodeQL, release #407): ids vindos de fora não mexem mais no protótipo dos mapas locais (novo `shared/safe-key.js`, usado em não lidas, DM, telemetria de gateway, chaves DM e handles); rota e aba só escolhem funções da própria tabela (`Object.hasOwn`); `vox-embed.js` aceita só `data-base` http(s); o SW confere a origem da mensagem; relatório de complexidade escapa a barra invertida.
 - Comunidade: sair da rota enquanto a comunidade ainda carrega não deixa mais a página atrasada desenhar por cima da tela nova (ex.: `#/c/…` → `#/voxpedia` mostrava a comunidade). O escopo da rota passa a morar em `app/navigation.js` (`setRouteScope`/`getRouteScope`, sem ciclo) e `showCommunity` confere se ele foi abortado antes de desenhar. E2E: `test_03` abre os `<details>` da Mesa (mini-grade e Auditoria Técnica) fechados desde o redesenho.
