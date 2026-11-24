@@ -6,18 +6,20 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-*Lotes 8–9 em `develop` (`698a2461`, `#481`–`#486`).*
+*Lotes 8–10 em `develop` (`8923b5b4`, `#481`–`#489`).*
 
 ### Adicionado
 - **Aviso local preventivo v0 (`F11`, `#481`, `#484` via `#486`):** heurística local consultiva sem ML (`client/js/shared/local-advisory.js`), UI consultiva pré-publicação no compositor (`client/js/app/inline-composer-publish.js`), ocultação/borrão local em 1 toque (`client/js/moderation.js`, `client/js/app/post-more-actions.js`, `client/js/app/post-more-menu.js`) e testes (`tests/local-advisory.test.js`, `tests/f11-advisory-ui.test.js`).
+- **Renderização persistida do borrão local no feed (`F11`, `#487` via `#488`):** cartões borrados localmente renderizam estado `.is-locally-blurred` com banner discreto e revelação em 1 toque (**Mostrar conteúdo**) via delegação de eventos (`client/js/render/feed-post-item.js`, `client/js/app/dom-delegates.js`, `tests/f11-feed-blur-render.test.js`).
 - **Convergência multi-aparelho no restore (`PM-13`, `#485` via `#486`):** `followedCommunities` e `localLists` convergidos via `device-merge` no restore Tier A (`client/js/identity/inbox-backup.js`, `tests/pm13-communities-lists-merge.test.js`).
 
 ### Alterado / Performance
 - **Dieta do shell — 3º corte lazy (`PM-01`, `#486`):** tela `#/frase` carregada sob demanda (`client/js/app/screens-phrase-view.js`, `-16,2 KiB` no precache) + `tests/pm01-lazy-third-screen.test.js`.
+- **Dieta do shell — 4º corte lazy (`PM-01`, `#488`):** tela `#/guardioes` e seu renderizador carregados sob demanda (`client/js/app/screens-guardians-view.js`, `-11,4 KiB` no precache) + `tests/pm01-lazy-fourth-screen.test.js`.
 
 ### CI / Qualidade / Documentação
 - **Catraca de mutação AST Tier A (`PM-112` F3, `#482` via `#481`):** `scripts/mutate-tier-a.mjs` promovido para portão bloqueante no `ci.yml` com `--min-score 70` + `tests/mutate-tier-a.test.js`.
-- **Documentação (`#483` via `#481`, Lote 10):** promoção dos itens fechados pós-release `#480` no `docs/ROADMAP.md`, fechamento da entrada `#480` no `CHANGELOG.md` e sincronização de `docs/ROADMAP.md`, `docs/FEATURES.md` e `CHANGELOG.md` com os Lotes 8–9.
+- **Documentação (`#483` via `#481`, `#489` via `#488`):** promoção dos itens fechados pós-release `#480` no `docs/ROADMAP.md`, fechamento da entrada `#480` no `CHANGELOG.md`, sincronização de `docs/ROADMAP.md`, `docs/FEATURES.md` e `CHANGELOG.md` pós-Lotes 8–9 e adição dos roteiros `R-21` e `R-22` em `docs/process/roteiros-verificacao-v0.md`.
 
 ## [2026-11-24] — Release #480
 
