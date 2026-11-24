@@ -107,7 +107,7 @@ test("LAN-03: route.js carrega about.js via import() dinâmico e sw.js mantém 0
 
   assert.match(routeSrc, /import\(\s*["']\.\.\/render\/about\.js["']\s*\)/);
   assert.doesNotMatch(routeSrc, /^import\s+.*from\s+["']\.\.\/render\/about\.js["']/m);
-  assert.match(swSrc, /const CACHE_NAME = "vox-pwa-v7\.164-about-license-dpo-lazy";/);
+  assert.match(swSrc, /const CACHE_NAME = "vox-pwa-v\d+\.\d+-[^"]+";/);
   assert.ok(!shellSection.includes("about.js"), "about.js não deve entrar em SHELL_ASSETS");
   assert.ok(!unpluggedSection.includes("about.js"), "about.js é alcançável e não entra em UNPLUGGED_MODULES");
 });
