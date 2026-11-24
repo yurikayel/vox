@@ -85,6 +85,17 @@ export function addContact(routeId, label = "", now = Date.now()) {
 }
 
 /**
+ * Purga um contato da agenda local sem gravar tombstone (uso em limpeza de contas de teste).
+ * @param {string} routeId Identificador de rota a purgar.
+ * @returns {void}
+ */
+export function purgeContact(routeId) {
+  const id = String(routeId || "").trim();
+  if (!id) return;
+  saveRaw(loadRaw().filter((c) => c?.routeId !== id));
+}
+
+/**
  * Remove um contato da agenda local gravando tombstone datado para convergência multi-aparelho.
  * @param {string} routeId Identificador de rota a remover.
  * @param {number} [now=Date.now()] Timestamp opcional em ms.
@@ -93,11 +104,11 @@ export function addContact(routeId, label = "", now = Date.now()) {
 export function removeContact(routeId, now = Date.now()) {
   const id = String(routeId || "").trim();
   if (!id) return;
-  const raw = loadRaw();
   if (isTestRouteId(id)) {
-    saveRaw(raw.filter((c) => c?.routeId !== id));
+    purgeContact(id);
     return;
   }
+  const raw = loadRaw();
   const ts = nextLocalTs(raw, now);
   saveRaw(mergeContactLists(raw, [{ routeId: id, deleted: true, deletedAt: ts, editedAt: ts }]));
 }
