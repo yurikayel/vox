@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const statusScreenSrc = fs.readFileSync(path.join(here, "../client/js/app/screens-status.js"), "utf8");
+const statusScreenSrc = fs.readFileSync(path.join(here, "../client/js/app/screens-status-view.js"), "utf8");
 
 const JARGON = [
   /\bgossip\b/i,
