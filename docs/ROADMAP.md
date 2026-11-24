@@ -24,7 +24,7 @@ O cliente está maduro e a base técnica passou por uma rodada intensa de endure
 |---|---|---|
 | **24/11/2026 (`SIGV2_FROM`)** | Conferir no relógio real a virada automática para `sigv: 2` (`PM-85`) e validar rejeição de v1 novo (`PM-102`) | Data fixa (amanhã) |
 | **Catracas de CI desbloqueadas** | Ligar `scripts/shell-budget-check.mjs` no `ci.yml` (`LAN-23`), rodar `npm run lint:all` em `tests/` no CI (`PM-115`) e plugar mutação no diff do Tier A (`PM-112`) | Código pronto em `main`, sem dependência externa |
-| **Frente Rust `vox-node` (`ADR-039` F4)** | Executar `PR4.1`–`PR4.4` do [vox-node-rust-fase4.md](./specs/vox-node-rust-fase4.md) (unifica relay Python/PyInstaller, C# Windows e `.so` Android) | Blueprint em `main` (`#402`); respeitar orçamento de orquestração (`≤2` executores) |
+| **Frente Rust `vox-node` (`ADR-039` F4)** | Executar `PR4.1`–`PR4.4` do [vox-node-rust-fase4.md](./specs/vox-node-rust-fase4.md) (unifica relay Python/PyInstaller, C# Windows e `.so` Android) | Blueprint em `main` (`#402`); respeitar orçamento de orquestração (`≤3` executores em paralelo, mutex disjunto por onda) |
 | **Congelado / depende de decisão humana** | Piloto `V-P09` (`PIL-01..05`), jurídico (`REV-12`/`LAN-01`), ops de infra >50 ativos (`INF-01..04`, `REV-01/10`, `NET-02`), cripto nova e `.wasm` no PWA (`LAN-18`), split de `identity/local-account.js` (só se doer, sessão Opus) | Aguarda OK do mantenedor ou gatilho |
 
 ## Calendário 2027
@@ -41,7 +41,7 @@ Ideias, triagem e o porquê da ordem: [brainstorm do ano de 2027](./brainstorms/
 A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-roadmap-2027.md#1-o-norte-de-dezembro-de-2027).
 
 **Regras do ano:**
-- no máximo duas frentes de código ao mesmo tempo, com mutex de arquivos ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
+- no máximo **3 agentes/frentes de código em paralelo** por onda, com mutex disjunto de arquivos ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
 - tela nova paga os próprios bytes, e nada grande entra antes do PM-01;
 - código congelado nas 4 primeiras semanas de cada onda.
 
@@ -255,6 +255,7 @@ Mais 66 ideias (`PM-01`…`PM-66`), com a revisão de estado de 09/11: [brainsto
 | F8 | Selo de confiança por aval | anti-sybil | `civic-credential.js`, `identity-link.js` |
 | F9 | Pauta legislativa automática | conteúdo | `frames.js`, contrato LCP |
 | F10 | Resumo semanal + bot do Telegram | crescimento | `story-card.js`, `share.js` |
+| F11 | Aviso local preventivo (pré-publicação consultivo + ocultação/borrão em 1 toque, sem ML/pesos no v0) ([spec](./specs/aviso-local-preventivo-v0.md)) | moderação local (`PM-104`) | `moderation.js`, `report-review.js` (`PM-69`) |
 
 ## Concluído
 
