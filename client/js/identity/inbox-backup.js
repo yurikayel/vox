@@ -12,11 +12,16 @@ import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
 import * as accountExit from "./account-exit.js";
-import { readStoredRecord } from "./keystore.js";
+import { readStoredRecord, writeStoredJson } from "./keystore.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-meta.js";
+import { mergeFollowedCommunities, mergeLocalLists } from "../shared/device-merge.js";
 
 /** Marca do arquivo de backup do e-mail. */
 export const INBOX_BACKUP_TYPE = "vox-inbox-backup";
+/** Chave de armazenamento local de comunidades seguidas (PM-13). */
+export const FOLLOWED_COMMUNITIES_KEY = "vox-followed-communities-v1";
+/** Chave de armazenamento local de listas locais (PM-13). */
+export const LOCAL_LISTS_KEY = "vox-local-lists-v1";
 const STATE_PREFIX = "vox-inbox-backup-v1:";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -43,6 +48,59 @@ function readState() {
  */
 function writeState(next) {
   localStorage.setItem(stateKey(), JSON.stringify(next));
+}
+
+/**
+ * Lê uma lista JSON do `localStorage`, devolvendo array vazio se ausente ou inválida.
+ * @param {string} key Chave no `localStorage`.
+ * @returns {unknown[]} Lista lida.
+ */
+function readStoredList(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Lê e normaliza as comunidades seguidas (incluindo tombstones) armazenadas no aparelho.
+ * @returns {object[]} Registros normalizados de comunidades seguidas.
+ */
+export function readFollowedCommunities() {
+  return mergeFollowedCommunities(readStoredList(FOLLOWED_COMMUNITIES_KEY), []);
+}
+
+/**
+ * Mescla comunidades seguidas remotas com as locais de forma determinística e persiste o resultado.
+ * @param {Iterable<object|string>|null|undefined} remoteList Registros remotos de comunidades seguidas.
+ * @returns {object[]} Lista convergida de comunidades seguidas (incluindo tombstones).
+ */
+export function mergeStoredFollowedCommunities(remoteList) {
+  const merged = mergeFollowedCommunities(readStoredList(FOLLOWED_COMMUNITIES_KEY), remoteList);
+  writeStoredJson(FOLLOWED_COMMUNITIES_KEY, merged);
+  return merged;
+}
+
+/**
+ * Lê e normaliza as listas locais (incluindo tombstones) armazenadas no aparelho.
+ * @returns {object[]} Registros normalizados de listas locais.
+ */
+export function readLocalLists() {
+  return mergeLocalLists(readStoredList(LOCAL_LISTS_KEY), []);
+}
+
+/**
+ * Mescla listas locais remotas com as locais de forma determinística e persiste o resultado.
+ * @param {Iterable<object>|null|undefined} remoteLists Registros remotos de listas locais.
+ * @returns {object[]} Listas locais convergidas (incluindo tombstones).
+ */
+export function mergeStoredLocalLists(remoteLists) {
+  const merged = mergeLocalLists(readStoredList(LOCAL_LISTS_KEY), remoteLists);
+  writeStoredJson(LOCAL_LISTS_KEY, merged);
+  return merged;
 }
 
 /**
@@ -153,7 +211,15 @@ async function collectContent(from, to) {
     pix: localAccount.getPixKey(),
     identityMeta: getLocalIdentityMeta(me),
   };
-  return { profile, contacts: contacts.exportContactRecords(), postEntries, tombstones, dms };
+  return {
+    profile,
+    contacts: contacts.exportContactRecords(),
+    followedCommunities: readFollowedCommunities(),
+    localLists: readLocalLists(),
+    postEntries,
+    tombstones,
+    dms,
+  };
 }
 
 /**
@@ -210,6 +276,8 @@ function applyProfile(profile, me) {
 async function applyContent(c, me) {
   applyProfile(c.profile, me);
   if (c.contacts) contacts.mergeRemoteContacts(c.contacts);
+  if (Array.isArray(c.followedCommunities)) mergeStoredFollowedCommunities(c.followedCommunities);
+  if (Array.isArray(c.localLists)) mergeStoredLocalLists(c.localLists);
   // O arquivo vem de fora: cartão, citação e foto da DM passam pelo crivo do fio antes de ir para o aparelho.
   for (const m of c.dms || []) await cacheNode.saveDmMessage(sanitizeStoredDm(m));
   // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
