@@ -185,12 +185,17 @@ def build_env_overrides(peers: int, max_conns: int, default_limits: bool) -> dic
 
 
 def start_server_process(
-    port: int, env_overrides: dict[str, str]
+    port: int, env_overrides: dict[str, str], server_bin: str | None = None
 ) -> tuple[subprocess.Popen[str], int]:
-    """Inicia processo filho com `relay.signaling.ThreadedTCPServer` em 127.0.0.1."""
+    """Inicia processo filho com `relay.signaling` ou binário `--server-bin` em 127.0.0.1."""
     env = {**os.environ, **env_overrides}
+    cmd = (
+        [server_bin, "--mode", "signaling", "--host", "127.0.0.1", "--port", str(port)]
+        if server_bin
+        else [sys.executable, "-u", "-c", _SERVER_BOOT, str(port)]
+    )
     proc = subprocess.Popen(
-        [sys.executable, "-u", "-c", _SERVER_BOOT, str(port)],
+        cmd,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -221,15 +226,18 @@ def sample_memory(proc: subprocess.Popen[str]) -> dict[str, float]:
     return out
 
 
-def stop_server_process(proc: subprocess.Popen[str]) -> dict[str, float]:
+def stop_server_process(proc: subprocess.Popen[str], external: bool = False) -> dict[str, float]:
     """Encerra servidor filho de forma limpa e lê pico de tracemalloc."""
     mem = sample_memory(proc)
-    try:
-        if proc.stdin:
-            proc.stdin.write("\n")
-            proc.stdin.flush()
-    except OSError:
-        pass
+    if external:
+        proc.terminate()
+    else:
+        try:
+            if proc.stdin:
+                proc.stdin.write("\n")
+                proc.stdin.flush()
+        except OSError:
+            pass
     out, _ = proc.communicate(timeout=15)
     for line in out.splitlines():
         if line.startswith("TRACEMALLOC="):
@@ -365,7 +373,7 @@ def _phase_metrics(
 async def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     """Orquestra ciclo completo do benchmark em loopback local."""
     env_overrides = build_env_overrides(args.peers, args.max_connections, args.default_limits)
-    proc, actual_port = start_server_process(args.port, env_overrides)
+    proc, actual_port = start_server_process(args.port, env_overrides, args.server_bin)
     try:
         t_start = time.perf_counter()
         conn = await phase_connect(actual_port, args.peers, args.concurrency, args.timeout)
@@ -378,7 +386,7 @@ async def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         await asyncio.gather(*(c.close() for c in clients), return_exceptions=True)
         total_s = time.perf_counter() - t_start
     finally:
-        peak_mem.update(stop_server_process(proc))
+        peak_mem.update(stop_server_process(proc, external=bool(args.server_bin)))
     return {
         "target_peers": args.peers, "connected_peers": len(clients),
         "registered_peers": len(reg_ms), "rounds_per_pair": args.rounds,
@@ -434,6 +442,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max-connections", type=int, default=0, help="Override max conexões.")
     parser.add_argument("--timeout", type=float, default=20.0, help="Timeout por operação (s).")
     parser.add_argument("--default-limits", action="store_true", help="Usa limites padrão.")
+    parser.add_argument("--server-bin", default=None, help="Binário externo (ex.: vox-node).")
     parser.add_argument("--json", action="store_true", help="Imprime saída em JSON.")
     return parser.parse_args(argv)
 
