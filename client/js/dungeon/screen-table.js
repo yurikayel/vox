@@ -10,6 +10,7 @@ import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
+import { formatFairplayBadge } from "./vtt-fairplay-roll.js";
 import { projectInitiativeForPlayer } from "./vtt-tactics-reducer.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
 
@@ -30,6 +31,9 @@ function renderStatusChip(state, scene) {
   const tok = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
   const firstCond = tok?.conditions?.[0];
   if (firstCond?.label) return `<span class="dungeon-chip">${escapeHtml(firstCond.label)}</span>`;
+  const lastRoll = state.campaign?.rolls?.[state.campaign.rolls.length - 1];
+  const fairplay = formatFairplayBadge(lastRoll);
+  if (fairplay.label) return `<span class="dungeon-chip" title="${escapeHtml(fairplay.title)}">${escapeHtml(fairplay.label)}</span>`;
   return state.joinMode === "p2p_player" ? `<span class="dungeon-chip">Conectado P2P</span>` : `<span class="dungeon-chip">Pronto</span>`;
 }
 
@@ -77,6 +81,20 @@ function renderRoleToggleOrBadge(state, isGm) {
   return `<button type="button" class="dungeon-chip-btn${isGm ? " is-selected" : ""}" data-dungeon="toggle-viewer-role" aria-pressed="${isGm}">${roleLabel}</button>`;
 }
 
+function renderDioramaLensStrip(state) {
+  let flagOn = Boolean(state?.dioramaEnabled);
+  if (!flagOn) {
+    try { flagOn = globalThis.localStorage?.getItem?.("vox.lab.diorama") === "1"; } catch { flagOn = false; }
+  }
+  if (!flagOn) return "";
+  const active = state?.dioramaMode || "2d";
+  const modes = [["2d", "2D"], ["iso", "Iso"], ["3d", "3D"], ["fp", "1ª"]];
+  const btns = modes.map(([id, label]) => (
+    `<button type="button" class="dungeon-chip-btn${id === active ? " is-selected" : ""}" data-dungeon="diorama-mode" data-mode="${id}" aria-pressed="${id === active}">${label}</button>`
+  )).join("");
+  return `<div class="subversus-diorama-pill" role="group" aria-label="Modo de câmera do Subversus">${btns}</div>`;
+}
+
 function renderMapControlsBar(scene, floor, state, isGm) {
   const gridLabel = floor?.grid?.type === "hex" ? "Hex" : "Quadrada";
   const zoomPct = Math.round((state.camera?.zoom || 1) * 100);
@@ -86,10 +104,11 @@ function renderMapControlsBar(scene, floor, state, isGm) {
   return `
     <div class="dungeon-section-head">
       <div>
-        <span class="dungeon-eyebrow">Mapa 2D Interativo · Arraste Tokens · Ctrl+Roda ou Pinça para Zoom</span>
+        <span class="dungeon-eyebrow">Subversus · Arraste Tokens · Ctrl+Roda ou Pinça para Zoom</span>
         <h2>${escapeHtml(scene.name)} (${gridLabel} · <span data-dungeon-zoom-label>${zoomPct}%</span>)</h2>
       </div>
       <div class="dungeon-chips-row">
+        ${renderDioramaLensStrip(state)}
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-out" aria-label="Diminuir zoom">−</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-fit" aria-label="Enquadrar mapa inteiro">Ajustar</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-reset">100%</button>
