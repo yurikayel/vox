@@ -10,6 +10,8 @@ import {
   validateKitManifest,
   instantiateCommunityFromKit,
 } from "../client/js/labs/parado/kit-genesis.js";
+import * as kitData from "../client/js/labs/parado/kit-genesis-data.js";
+import * as kitValidate from "../client/js/labs/parado/kit-genesis-validate.js";
 
 test("kit-genesis - lista os 3 arquétipos oficiais de comunidade soberana", () => {
   const kits = listAvailableKits();
@@ -194,4 +196,50 @@ test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", ()
     securityPolicyOverrides: { allowGuestRead: false },
   });
   assert.equal(coletivoFechado.securityPolicy.allowGuestRead, false);
+});
+
+test("kit-genesis - cartridges/Webxdc são opcionais na validação (não exige .xdc)", () => {
+  const baseManifest = {
+    id: "kit-sem-xdc",
+    version: "1.0.0",
+    title: "Comunidade Sem Webxdc",
+    roles: { Admin: ["*"] },
+    channels: [{ id: "geral", title: "Geral", writeRole: "Admin" }],
+    securityPolicy: { allowGuestRead: true },
+  };
+  assert.equal(validateKitManifest(baseManifest), true);
+
+  assert.equal(
+    validateKitManifest({
+      ...baseManifest,
+      cartridges: [{ id: "mural", channelId: "geral", crdtStrategy: "id-lookup", epochThreshold: 25 }],
+    }),
+    true
+  );
+
+  assert.throws(
+    () => validateKitManifest({ ...baseManifest, cartridges: "nao-e-array" }),
+    /deve ser um array quando informado/
+  );
+});
+
+test("kit-genesis - instancia comunidade sem cartridges por padrão e permite opt-in", () => {
+  const semCartuchos = instantiateCommunityFromKit("kit-bairro", {
+    creatorAddr: "vx_p256_morador_01",
+  });
+  assert.deepEqual(semCartuchos.cartridges, []);
+
+  const comCartuchos = instantiateCommunityFromKit("kit-bairro", {
+    creatorAddr: "vx_p256_morador_01",
+    includeCartridges: true,
+  });
+  assert.equal(comCartuchos.cartridges.length, KIT_BAIRRO.cartridges.length);
+  assert.equal(comCartuchos.cartridges[0].communityId, comCartuchos.communityId);
+});
+
+test("kit-genesis - fachada reexporta submódulos data e validate sem quebra", () => {
+  assert.equal(kitData.KIT_BAIRRO, KIT_BAIRRO);
+  assert.equal(kitData.listAvailableKits, listAvailableKits);
+  assert.equal(kitData.getKitManifest, getKitManifest);
+  assert.equal(kitValidate.validateKitManifest, validateKitManifest);
 });

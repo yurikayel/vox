@@ -16,6 +16,7 @@ import * as profileDirectory from "./profile-directory.js";
 import { captureMemoryUrlFromLocation, postToFirstAvailable, registerDiscoveredMemoryUrl } from "./central-memory-urls.js";
 import { buildLocalSyncBundle, syncCursor } from "./central-memory-bundle.js";
 import { applyRemoteBundle, isHydratingFromCentralMemory } from "./central-memory-apply.js";
+import { isRehearsalMode, isRehearsalPayload } from "./rehearsal-mode.js";
 
 export {
   registerDiscoveredMemoryUrl, getDiscoveredPublicMemoryUrl, captureMemoryUrlFromLocation, getCentralMemoryUrls,
@@ -50,6 +51,7 @@ export function setCentralMemoryAutoPush(enabled) {
  * @param {*} [event] Evento Nostr.
  */
 export function notifyCentralMemory(event) {
+  if (isRehearsalMode() || isRehearsalPayload(event)) return;
   if (!autoPushEnabled || !event || isHydratingFromCentralMemory()) return;
   void pushEventToCentralMemory(event);
   const blob = event?.item?.mediaBlob || event?.mediaBlob;
@@ -63,6 +65,7 @@ export function notifyCentralMemory(event) {
  * @returns {*} Resultado da operação.
  */
 export async function pushEventToCentralMemory(event) {
+  if (isRehearsalMode() || isRehearsalPayload(event)) return null;
   if (!event || typeof event !== "object" || isHydratingFromCentralMemory()) {
     return null;
   }
@@ -88,6 +91,7 @@ function recordRemoteSyncWatermark(remote, syncStartedMs) {
  * @returns {*} Resultado da operação.
  */
 export async function syncWithCentralMemory({ onHydrated } = {}) {
+  if (isRehearsalMode()) return { ok: false, skipped: true, rehearsal: true };
   if (syncInFlight) return { ok: false, skipped: true };
   syncInFlight = true;
   try {

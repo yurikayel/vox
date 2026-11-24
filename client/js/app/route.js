@@ -222,6 +222,46 @@ export function __resetRouteScrollForTests() {
 }
 
 /**
+ * Indica se a navegação pode usar View Transitions (API presente e sem `prefers-reduced-motion`).
+ *
+ * @param {Document} [doc=globalThis.document] Documento alvo (injetável nos testes).
+ * @param {typeof globalThis} [env=globalThis] Ambiente com `matchMedia` (injetável nos testes).
+ * @returns {boolean}
+ */
+export function canUseViewTransition(doc = globalThis.document, env = globalThis) {
+  if (typeof doc?.startViewTransition !== "function") return false;
+  return !env?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+}
+
+/**
+ * Executa a troca de tela dentro de `document.startViewTransition` quando permitido,
+ * mantendo fallback imediato e seguro caso a API esteja indisponível ou lance erro.
+ *
+ * @template T
+ * @param {() => Promise<T>|T} update Callback que atualiza `#app-main`, `announceRoute` e scroll.
+ * @param {Document} [doc=globalThis.document] Documento alvo (injetável nos testes).
+ * @param {typeof globalThis} [env=globalThis] Ambiente com `matchMedia` (injetável nos testes).
+ * @returns {Promise<T>}
+ */
+export async function runWithViewTransition(update, doc = globalThis.document, env = globalThis) {
+  if (!canUseViewTransition(doc, env)) return await update();
+  let pending = null;
+  try {
+    const transition = doc.startViewTransition(() => {
+      pending = (async () => await update())();
+      return pending;
+    });
+    transition?.ready?.catch?.(() => {});
+    transition?.finished?.catch?.(() => {});
+    if (transition?.updateCallbackDone) await transition.updateCallbackDone;
+  } catch (err) {
+    if (pending) return await pending;
+    void err;
+  }
+  return pending ? await pending : await update();
+}
+
+/**
  * Aplica a rota atual: fecha menus, checa portão, despacha e restaura rolagem.
  *
  * @returns {Promise<void>}
@@ -239,11 +279,13 @@ export async function routeImpl() {
   setRouteScope(scope);
   const r = parseRoute();
   const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
-  const result = await handler(r, scope);
-  announceRoute(r);
-  lastRenderedHash = nextHash;
-  restoreRouteScroll(nextHash, isBack);
-  return result;
+  return await runWithViewTransition(async () => {
+    const result = await handler(r, scope);
+    announceRoute(r);
+    lastRenderedHash = nextHash;
+    restoreRouteScroll(nextHash, isBack);
+    return result;
+  });
 }
 
 /**
