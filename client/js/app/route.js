@@ -87,6 +87,19 @@ function loadComposeRoute() {
   return composeRoute;
 }
 
+/** @type {Promise<typeof import("./screens-posse-return.js")>|null} */
+let posseReturnRoute = null;
+
+/**
+ * Carrega sob demanda a tela read-first de caminho de volta POSSE (`PM-105`).
+ *
+ * @returns {Promise<object>}
+ */
+function loadPosseReturnRoute() {
+  posseReturnRoute ??= import("./screens-posse-return.js");
+  return posseReturnRoute;
+}
+
 const ROUTE_DISPATCH_TABLE = {
   home: (r) => showHome(r.feed),
   vote: () => showVote(),
@@ -116,6 +129,7 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-aviso": async (r) => { (await loadAvisoRoute()).showComposeAviso(r.communityId); },
   proposal: (r) => showProposal(r.communityId, r.proposalId),
   topic: (r) => showTopic(r.id, r.communityId),
+  "posse-return": async (r) => { (await loadPosseReturnRoute()).showPosseReturn(r); },
   profile: (r) => showProfile(r.address, r.tab),
   wallet: () => showWallet(),
   "wallet-wizard": () => showWalletWizard(),
