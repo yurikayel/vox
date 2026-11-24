@@ -287,9 +287,6 @@
     "js/profile-directory.js": {
       "id": "tx_js/profile-directory.js"
     },
-    "js/labs/parado/idb-store.js": {
-      "id": "tx_js/labs/parado/idb-store.js"
-    },
     "privacy.html": {
       "id": "tx_privacy.html"
     },

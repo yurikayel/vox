@@ -21,7 +21,7 @@ Requisitos: Node 22+ (o CI roda 22 e 24) e Python 3.11+ (o CI roda 3.11 e 3.12).
 ## 2. Cliente (`tests/*.test.js`, `node:test`)
 
 - **Um arquivo por módulo ou fluxo**, com o nome do módulo: `tests/<modulo>.test.js`.
-- **Ambiente de navegador simulado:** comece com `import "../tests/setup.js";`. Ele define mocks globais (`window`, `localStorage`, `BroadcastChannel`, `navigator`, `location`) para que os ES modules de `client/js/` carreguem em Node. IndexedDB é exercitado pelos próprios módulos (`idb-store.test.js`).
+- **Ambiente de navegador simulado:** comece com `import "../tests/setup.js";`. Ele define mocks globais (`window`, `localStorage`, `BroadcastChannel`, `navigator`, `location`) para que os ES modules de `client/js/` carreguem em Node. IndexedDB é exercitado pelos próprios módulos (`cache-node.test.js`).
 - **Importe o módulo real** com `await import("../client/js/…")`. Prefira testar funções puras exportadas (ex.: `sumUnreadDms` em `render/shell.js`, o classificador em `civic-post.js`).
 - **Testes de integridade** leem arquivos do repo com `fs`: `entrypoint-integrity.test.js` (imports do entrypoint resolvem) e testes que conferem `SHELL_ASSETS` do `sw.js` (ex.: `voxels.test.js`). Módulo novo no shell = registrar em `SHELL_ASSETS` + bump de `CACHE_NAME`. `release-metadata-drift.test.js` falha se o `cache_name` de `docs/release-metadata.json` não bater com o `CACHE_NAME` do `sw.js` (REV-03): ao subir a versão do SW, rode `npm run release-line`.
 - **Esqueleto:**
@@ -86,7 +86,7 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 | `security-audit` | Grep por chaves privadas (`BEGIN … PRIVATE KEY`) | Sim |
 | `pilot-freeze` (só PR) | Com `PILOT_FREEZE=1` ou `.github/pilot-freeze.flag`, falha PRs que tocam `client/js/**`, salvo label `pilot-hotfix` | Sim, quando ativo |
 | `codeql.yml` (PR e push em `main`/`develop`, e semanal) | Análise estática do GitHub CodeQL | Conforme o ruleset do repositório |
-| `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
+| `vox-populi-windows-smoke.yml` | PyInstaller + smoke do Vox Populi no Windows | Sim |
 | `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
 | `deps-mensal.yml` (dia 1 de cada mês, 09:00 UTC; também manual) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20); falha agendada abre issue `alerta-automatico` (PM-61). **Ainda sem execução registrada:** `gh run list --workflow deps-mensal.yml` não devolve nenhuma em 17/11, então o fluxo não foi observado de ponta a ponta | Não (agenda) |
 | `sentinel-keepalive.yml` (a cada 14 min; também manual) | `curl` em `/health` de cada nó sentinela (segredos `SENTINEL_NODE_1…3`; sem segredo, usa `vox-sentinel.onrender.com`); falha gera alerta | Não (agenda) |

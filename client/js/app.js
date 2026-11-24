@@ -28,9 +28,11 @@ import { startStorageDurability } from "./app/storage-durability-flow.js";
 import { startAccountExitBanner } from "./app/account-exit-banner.js";
 import { startMeshVault } from "./app/mesh-vault-ui.js";
 import { setNaturalHideLoader } from "./moderation.js";
+import { startRehearsalBanner } from "./rehearsal-mode.js";
 
 void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
+startRehearsalBanner();
 // PM-83: a base (moderation.js) não importa app/; o fluxo do moderador natural entra por aqui, sob demanda.
 setNaturalHideLoader(async (communityId, modActions) => {
   const flow = await import("./app/natural-mod-flow.js");

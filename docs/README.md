@@ -63,6 +63,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
+| Roteiros de verificação numerados (PM-73 / LAN-33, rascunho) | [roteiros-verificacao-v0.md](./process/roteiros-verificacao-v0.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
@@ -90,6 +91,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [midia-v2.md](./specs/midia-v2.md): mídia retrô: AVIF q70 em 540p, Opus 32 kbps e H.264 480p24, com pedaços abaixo de 100 KB (não implementada)
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
 - [moderador-natural-v0.md](./specs/moderador-natural-v0.md): vínculo assinado (implementado) e moderador natural nas denúncias (a implementar)
+- [aviso-local-preventivo-v0.md](./specs/aviso-local-preventivo-v0.md): **aviso local preventivo e ocultação em 1 toque (brainstorm, F11 / PM-104)** — heurísticas consultivas pré-publicação 100% locais (nunca bloqueia) + borrão/ocultação em 1 toque integrado a `moderation.js` e `PM-69`, sem ML/pesos e sem `'wasm-unsafe-eval'`
 - [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (implementado em laboratório, atrás da flag `vox.lab.aviso`): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
 - [modo-assembleia-v0.md](./specs/modo-assembleia-v0.md): **modo assembleia (stub PM-23)** — pauta, voto com `blockReason`, `decisionStatus`, rituais sobre aviso `convocacao`
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
@@ -123,7 +125,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [mapa-parceiras-e-concorrentes-2026-11.md](./strategy/mapa-parceiras-e-concorrentes-2026-11.md): **20 parceiras e 20 concorrentes** + anexo Fediverso BR e **§3.1 tracking de features** (fonte, Conf., pendências; rev. 2026-11-19)
 - [tese-praca-civica-militancia-pro-democratica-2026-10.md](./strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
 - [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
-- [POSITIONING.md](./product/POSITIONING.md) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
+- [POSITIONING.md](./product/POSITIONING.md) · [garantia-da-praca-pm104.md](./product/garantia-da-praca-pm104.md) (Garantia da Praça — rascunho pré-REV-12 espelhado na Voxpedia) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
 
 ### Rede pública (portões G1–G3)
 

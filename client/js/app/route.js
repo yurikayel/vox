@@ -18,6 +18,8 @@ import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showNotFound } from "./screens-not-found.js";
+import { getActiveUser, makeShellProps } from "./context.js";
+import { renderShell } from "../render/shell.js";
 import { createScope } from "../shared/signals.js";
 
 // Escopo reativo da rota atual (descartado antes de montar a próxima) mora em `navigation.js`, onde as telas o
@@ -87,6 +89,43 @@ function loadComposeRoute() {
   return composeRoute;
 }
 
+/** @type {Promise<typeof import("./screens-posse-return.js")>|null} */
+let posseReturnRoute = null;
+
+/**
+ * Carrega sob demanda a tela read-first de caminho de volta POSSE (`PM-105`).
+ *
+ * @returns {Promise<object>}
+ */
+function loadPosseReturnRoute() {
+  posseReturnRoute ??= import("./screens-posse-return.js");
+  return posseReturnRoute;
+}
+
+/** @type {Promise<typeof import("../render/about.js")>|null} */
+let aboutRoute = null;
+
+/**
+ * Carrega sob demanda a página Sobre & DPO (`#/sobre`, `LAN-03`).
+ *
+ * @returns {Promise<typeof import("../render/about.js")>}
+ */
+function loadAboutRoute() {
+  aboutRoute ??= import("../render/about.js");
+  return aboutRoute;
+}
+
+/**
+ * Monta a tela `#/sobre` dentro do shell, carregando `render/about.js` sob demanda.
+ *
+ * @returns {Promise<void>}
+ */
+async function showAbout() {
+  const [{ renderAboutPage }, user] = await Promise.all([loadAboutRoute(), getActiveUser()]);
+  const main = renderShell(makeShellProps(user, "", "Sobre & DPO"));
+  if (main) main.innerHTML = renderAboutPage();
+}
+
 const ROUTE_DISPATCH_TABLE = {
   home: (r) => showHome(r.feed),
   vote: () => showVote(),
@@ -103,6 +142,7 @@ const ROUTE_DISPATCH_TABLE = {
   "dm-list": () => showDmList(),
   "dm-thread": (r) => showDmThread(r.address),
   voxpedia: async () => { (await loadVoxpediaRoute()).showVoxpedia(); },
+  about: () => showAbout(),
   download: () => { window.location.href = "download.html"; },
   revolucao: () => { window.location.href = "revolucao.html"; },
   "ajuda-teste": async () => { (await loadAjudaTesteRoute()).showAjudaTeste(); },
@@ -116,6 +156,7 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-aviso": async (r) => { (await loadAvisoRoute()).showComposeAviso(r.communityId); },
   proposal: (r) => showProposal(r.communityId, r.proposalId),
   topic: (r) => showTopic(r.id, r.communityId),
+  "posse-return": async (r) => { (await loadPosseReturnRoute()).showPosseReturn(r); },
   profile: (r) => showProfile(r.address, r.tab),
   wallet: () => showWallet(),
   "wallet-wizard": () => showWalletWizard(),
@@ -208,6 +249,46 @@ export function __resetRouteScrollForTests() {
 }
 
 /**
+ * Indica se a navegação pode usar View Transitions (API presente e sem `prefers-reduced-motion`).
+ *
+ * @param {Document} [doc=globalThis.document] Documento alvo (injetável nos testes).
+ * @param {typeof globalThis} [env=globalThis] Ambiente com `matchMedia` (injetável nos testes).
+ * @returns {boolean}
+ */
+export function canUseViewTransition(doc = globalThis.document, env = globalThis) {
+  if (typeof doc?.startViewTransition !== "function") return false;
+  return !env?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+}
+
+/**
+ * Executa a troca de tela dentro de `document.startViewTransition` quando permitido,
+ * mantendo fallback imediato e seguro caso a API esteja indisponível ou lance erro.
+ *
+ * @template T
+ * @param {() => Promise<T>|T} update Callback que atualiza `#app-main`, `announceRoute` e scroll.
+ * @param {Document} [doc=globalThis.document] Documento alvo (injetável nos testes).
+ * @param {typeof globalThis} [env=globalThis] Ambiente com `matchMedia` (injetável nos testes).
+ * @returns {Promise<T>}
+ */
+export async function runWithViewTransition(update, doc = globalThis.document, env = globalThis) {
+  if (!canUseViewTransition(doc, env)) return await update();
+  let pending = null;
+  try {
+    const transition = doc.startViewTransition(() => {
+      pending = (async () => await update())();
+      return pending;
+    });
+    transition?.ready?.catch?.(() => {});
+    transition?.finished?.catch?.(() => {});
+    if (transition?.updateCallbackDone) await transition.updateCallbackDone;
+  } catch (err) {
+    if (pending) return await pending;
+    void err;
+  }
+  return pending ? await pending : await update();
+}
+
+/**
  * Aplica a rota atual: fecha menus, checa portão, despacha e restaura rolagem.
  *
  * @returns {Promise<void>}
@@ -225,11 +306,13 @@ export async function routeImpl() {
   setRouteScope(scope);
   const r = parseRoute();
   const handler = ROUTE_DISPATCH_TABLE[r.name] || ((_route, _scope) => showHome());
-  const result = await handler(r, scope);
-  announceRoute(r);
-  lastRenderedHash = nextHash;
-  restoreRouteScroll(nextHash, isBack);
-  return result;
+  return await runWithViewTransition(async () => {
+    const result = await handler(r, scope);
+    announceRoute(r);
+    lastRenderedHash = nextHash;
+    restoreRouteScroll(nextHash, isBack);
+    return result;
+  });
 }
 
 /**

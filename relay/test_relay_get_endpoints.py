@@ -1,11 +1,14 @@
-"""Endpoints GET: `/`, `/status`, `/ping` e `/peer/beacon`.
+"""Endpoints GET: `/`, `/status`, `/ping`, `/health`, `/inbox/<addr>` e `/peer/beacon`.
 
-`/`, `/status` e `/ping` respondem o health check de `signaling.handle_http_request`.
-`/peer/beacon` é servido por `server.VoxRelayHandler` a partir de `p2p_seeder.PEER_DISCOVERY`.
-Cada teste troca esse registro por uma instância nova para isolamento.
+Suporta modo padrão Python (`VOX_RELAY_TARGET=python`) e modo caixa-preta Rust
+(`VOX_RELAY_TARGET=rust`, usando `VOX_RELAY_BIN` ou `rust/target/debug/vox-node`).
 """
 
 import json
+import os
+import pathlib
+import subprocess
+import tempfile
 import threading
 import unittest
 import urllib.error
@@ -13,7 +16,7 @@ import urllib.request
 from http.server import HTTPServer
 from unittest import mock
 
-from relay import p2p_seeder, server
+from relay import inbox, p2p_seeder, server
 from relay.signaling import ThreadedTCPServer, WebSocketHandler
 
 HEALTH_FIELDS = {"status", "service", "version", "peers"}
@@ -29,6 +32,47 @@ BEACON_FIELDS = {
     "status",
 }
 TTL_EXPIRED_MS = 120_000
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+
+def _use_rust_target():
+    """True quando o harness caixa-preta deve apontar para o binário Rust `vox-node`."""
+    return os.environ.get("VOX_RELAY_TARGET", "python").strip().lower() == "rust"
+
+
+def _resolve_rust_bin():
+    """Localiza o binário `vox-node` via `VOX_RELAY_BIN` ou caminho padrão de debug."""
+    explicit = os.environ.get("VOX_RELAY_BIN", "").strip()
+    if explicit:
+        return pathlib.Path(explicit)
+    exe = "vox-node.exe" if os.name == "nt" else "vox-node"
+    return REPO_ROOT / "rust" / "target" / "debug" / exe
+
+
+def _spawn_rust_node(mode, extra_args=None):
+    """Inicia `vox-node --mode <mode>` em `127.0.0.1:0` e devolve `(proc, port)`."""
+    binary = _resolve_rust_bin()
+    if not binary.is_file():
+        raise unittest.SkipTest(f"Binário Rust vox-node ausente em {binary}")
+    cmd = [str(binary), "--mode", mode, "--host", "127.0.0.1", "--port", "0", *(extra_args or [])]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    line = proc.stdout.readline().strip() if proc.stdout else ""
+    if not line.startswith("PORT="):
+        proc.terminate()
+        raise RuntimeError(f"Saída inesperada do vox-node ({mode}): {line!r}")
+    return proc, int(line.split("=", 1)[1])
+
+
+def _stop_rust_node(proc):
+    """Encerra o processo `vox-node` com fallback para kill."""
+    if proc is None:
+        return
+    proc.terminate()
+    try:
+        proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=3)
 
 
 def _call(port, method, path, body=None):
@@ -52,6 +96,11 @@ class SignalingHealthGetTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.rust_proc = None
+        cls.server = None
+        if _use_rust_target():
+            cls.rust_proc, cls.port = _spawn_rust_node("signaling")
+            return
         cls.server = ThreadedTCPServer(("127.0.0.1", 0), WebSocketHandler)
         cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
@@ -59,8 +108,11 @@ class SignalingHealthGetTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.shutdown()
-        cls.server.server_close()
+        if cls.rust_proc is not None:
+            _stop_rust_node(cls.rust_proc)
+        if cls.server is not None:
+            cls.server.shutdown()
+            cls.server.server_close()
 
     def _assert_health_shape(self, path):
         status, ctype, raw = _call(self.port, "GET", path)
@@ -89,6 +141,57 @@ class SignalingHealthGetTest(unittest.TestCase):
         self.assertEqual(json.loads(raw)["status"], "ok")
 
 
+class RelayHealthAndInboxGetTest(unittest.TestCase):
+    """`GET /health` e `/inbox/<addr>` no relay HTTP (Python padrão ou `VOX_RELAY_TARGET=rust`)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.rust_proc = None
+        cls.httpd = None
+        cls.orig_dirs = None
+        if _use_rust_target():
+            cls.rust_proc, cls.port = _spawn_rust_node("relay", ["--data-dir", cls.tmp.name])
+            return
+        root = pathlib.Path(cls.tmp.name)
+        cls.orig_dirs = (server.CACHE_DIR, inbox.INBOX_DIR)
+        server.set_cache_dir(root / "cache")
+        server.ensure_cache_dir()
+        inbox.set_inbox_dir(root / "inbox")
+        cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
+        cls.port = cls.httpd.server_address[1]
+        cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.rust_proc is not None:
+            _stop_rust_node(cls.rust_proc)
+        if cls.httpd is not None:
+            cls.httpd.shutdown()
+            cls.httpd.server_close()
+        if cls.orig_dirs is not None:
+            server.set_cache_dir(cls.orig_dirs[0])
+            inbox.set_inbox_dir(cls.orig_dirs[1])
+        cls.tmp.cleanup()
+
+    def test_get_health_reports_ok_and_vox_relay(self):
+        status, ctype, raw = _call(self.port, "GET", "/health")
+        self.assertEqual(status, 200)
+        self.assertEqual(ctype.split(";")[0].strip(), "application/json")
+        data = json.loads(raw)
+        self.assertEqual(data.get("status"), "ok")
+        self.assertEqual(data.get("app"), "vox-relay")
+
+    def test_get_inbox_empty_returns_empty_envelopes(self):
+        status, _, raw = _call(self.port, "GET", "/inbox/vx_alice")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(raw), {"envelopes": []})
+
+
+@unittest.skipIf(
+    _use_rust_target(), "/peer/beacon está fora do recorte PR4.2a (previsto no PR4.2b)"
+)
 class PeerBeaconGetTest(unittest.TestCase):
     """`GET /peer/beacon` no relay completo, com registro de pares isolado por teste."""
 

@@ -432,4 +432,5 @@ export function bindCommunityHeaderEvents({ main, communityId, meta, user, peerS
   bindCommunityQuarantineToggle(communityId, meta);
   bindCommunityModHideButtons(communityId);
   bindCommunityTopicControls(main, communityId, filteredTopics);
+  void import("./assembly-ui.js").then((m) => m.bindAssemblyPanelHost(main, { communityId, meta })).catch(() => {});
 }

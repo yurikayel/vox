@@ -1,6 +1,6 @@
 # Dependências e cadeia de suprimentos (LAN-20)
 
-> **Status:** canônico (inventário; fonte de verdade das dependências) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** canônico (inventário; fonte de verdade das dependências) · **Owner:** mantenedor · **Revisado:** 2026-11-23
 
 > Inventário do código de terceiros que o Vox carrega ou usa para construir e publicar, e dos binários que o repositório distribui.
 > **Fonte de verdade:** este arquivo. `tests/dependencias-inventory.test.js` quebra o CI quando o código passa a carregar algo que não está aqui.
@@ -41,7 +41,7 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
-| `pyinstaller` | `windows-node-zero-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
+| `pyinstaller` | `vox-populi-windows-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
 | `ruff` | `ci.yml`, job do relay (só CI) | `0.17.4` | sem hash | Lint obrigatório desde 09/11/2026: pyflakes e complexidade (`ruff.toml`); estilo e tamanho de função só informados |
 
 ## 4. Imagens de contêiner
@@ -58,9 +58,9 @@ Desde o PM-95 toda action é fixada pelo **SHA do commit**, com a versão em com
 
 | Dependência | Versão | Onde | Situação |
 |---|---|---|---|
-| `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | todos os workflows | Oficial do GitHub. |
+| `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | todos os workflows (`ci.yml`, `rust-vox-node.yml`, etc.) | Oficial do GitHub. |
 | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1` | v7.1.0 | `ci.yml`, `deps-mensal.yml`, `nostr-smoke.yml` | Oficial do GitHub. |
-| `actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | v7.1.0 | `ci.yml`, `release-binarios.yml`, `windows-node-zero-smoke.yml` | Oficial do GitHub. |
+| `actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | v7.1.0 | `ci.yml`, `release-binarios.yml`, `vox-populi-windows-smoke.yml` | Oficial do GitHub. |
 | `actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | `ci.yml`, `nostr-smoke.yml`, `release-binarios.yml` | Oficial do GitHub. |
 | `actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d` | v6.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
 | `actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
@@ -91,6 +91,15 @@ Ficam no git só as DLLs do SDK do WebView2, que o build do `Vox.exe` precisa. O
 | `packaging/desktop-windows-native/lib/runtimes/win-x64/native/WebView2Loader.dll` | 161 864 | `eb5335edeaa6f2122c044e82aab2351dc8c9b4e0fe5e578c71922fb61be285e7` | SDK WebView2 da Microsoft (terceiro) | Idem |
 
 ✅ **T2, binários (PM-45):** a atestação prova que cada arquivo saiu deste workflow, a partir de um commit público. O build ainda não é reproduzível bit a bit (o PyInstaller grava data, e a chave dos APKs muda a cada build). Falta assinar os `.exe` do Windows (PM-46).
+
+## 7. Rust (workspace `rust/`)
+
+Política de licenças e fontes em [`rust/deny.toml`](../rust/deny.toml) (ADR-039). Nenhuma crate de terceiros entrou até aqui.
+
+| Crate | Onde | Versão / Dependências | Integridade | Situação |
+|---|---|---|---|---|
+| `rust/vox-core` | [`rust/Cargo.toml`](../rust/Cargo.toml), testado em `ci.yml` (`test-rust`) | `0.1.0` (`#![no_std]`, 0 dependências externas) | [`rust/Cargo.lock`](../rust/Cargo.lock) | Núcleo canônico de referência (ADR-039 Fase 1). |
+| `rust/vox-node` | [`rust/Cargo.toml`](../rust/Cargo.toml), verificado em [`rust-vox-node.yml`](../.github/workflows/rust-vox-node.yml) | `0.1.0` (depende só de `vox-core` + `std`, 0 crates externas) | [`rust/Cargo.lock`](../rust/Cargo.lock) | Scaffold CLI do PR4.1a (`--health-json` / `--check` consumindo `vox_core::genesis_guard`). |
 
 ## Rotina mensal
 
