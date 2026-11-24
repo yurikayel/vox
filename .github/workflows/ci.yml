@@ -199,6 +199,31 @@ jobs:
           git config user.name ci && git config user.email ci@localhost
           node scripts/red-on-base.mjs
 
+  mutate-tier-a:
+    name: Mutação Tier A — aviso (PM-112)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Mutação AST no diff Tier A (aviso, não bloqueia)
+        continue-on-error: true
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: npm run audit:mutate:tier-a -- --base "$BASE_REF" --max 20
+
   pilot-freeze:
     name: Piloto V-P09 — freeze client/js (opt-in)
     if: github.event_name == 'pull_request'
