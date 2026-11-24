@@ -5,10 +5,20 @@ import * as share from "../share.js";
 import * as wallet from "../wallet.js";
 import * as localAccount from "../identity/index.js";
 import * as pixKeyHelper from "../pix-key.js";
-import { renderNetworkWizard, renderBackupWizard, renderWalletWizard } from "../render/guided-setup.js";
+import { renderNetworkWizard, renderBackupWizard, renderWalletWizard, renderMobileGuideWizard } from "../render/guided-setup.js";
 import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
+import {
+  MOBILE_GUIDE_STEPS,
+  buildLocalFieldReport,
+  collectMobileEnvironment,
+  createGuideState,
+  formatLocalFieldReportJson,
+  formatLocalFieldReportMarkdown,
+  markGuideStep,
+  updateGuideEnv,
+} from "./mobile-test-guide.js";
 
 /**
  * Pura: aplica as escolhas do assistente sobre as configurações atuais.
@@ -226,4 +236,94 @@ export async function showWalletWizard() {
       share.showToast(err instanceof SyntaxError ? "JSON da chave inválido." : `Erro: ${err?.message || err}`, "error");
     }
   });
+}
+
+/**
+ * Copia texto do relatório local para a área de transferência (sem rede).
+ * @param {string} text Conteúdo formatado.
+ * @param {string} label Nome do formato para o aviso.
+ */
+async function copyLocalReport(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    share.showToast(`Relatório ${label} copiado localmente.`);
+  } catch {
+    share.showToast(`Não foi possível copiar o relatório ${label}.`, "error");
+  }
+}
+
+/**
+ * Baixa o relatório local como arquivo JSON ou Markdown (sem rede).
+ * @param {string} text Conteúdo formatado.
+ * @param {string} mime Tipo MIME.
+ * @param {string} filename Nome do arquivo.
+ */
+function downloadLocalReport(text, mime, filename) {
+  share.downloadBlob(new Blob([text], { type: mime }), filename);
+  share.showToast(`Arquivo ${filename} baixado localmente.`);
+}
+
+/**
+ * Conecta os eventos de entrada e exportação do guia de teste no celular (PM-73).
+ * @param {object} initialState Estado inicial do roteiro.
+ * @returns {{ getReport: () => object }}
+ */
+function bindMobileGuideControls(initialState) {
+  let state = initialState;
+  const preview = document.getElementById("mg-preview");
+  const syncPreview = () => {
+    const report = buildLocalFieldReport(state);
+    if (preview) preview.textContent = formatLocalFieldReportMarkdown(report);
+    return report;
+  };
+  document.getElementById("mg-device")?.addEventListener("input", (e) => {
+    state = updateGuideEnv(state, { deviceModel: e.target?.value });
+    syncPreview();
+  });
+  document.getElementById("mg-network")?.addEventListener("change", (e) => {
+    state = updateGuideEnv(state, { networkType: e.target?.value });
+    syncPreview();
+  });
+  document.querySelectorAll("[data-mobile-step]").forEach((el) => {
+    el.addEventListener("change", () => {
+      state = markGuideStep(state, el.dataset.mobileStep, Boolean(el.checked));
+      syncPreview();
+    });
+  });
+  syncPreview();
+  return { getReport: () => buildLocalFieldReport(state) };
+}
+
+/**
+ * Conecta botões de cópia/download e submit do guia de teste no celular.
+ * @param {() => object} getReport Gera o relatório local atual.
+ */
+function bindMobileGuideExport(getReport) {
+  document.getElementById("btn-mg-copy-json")?.addEventListener("click", () => void copyLocalReport(formatLocalFieldReportJson(getReport()), "JSON"));
+  document.getElementById("btn-mg-copy-md")?.addEventListener("click", () => void copyLocalReport(formatLocalFieldReportMarkdown(getReport()), "Markdown"));
+  document.getElementById("btn-mg-dl-json")?.addEventListener("click", () => downloadLocalReport(formatLocalFieldReportJson(getReport()), "application/json", "vox-teste-celular.json"));
+  document.getElementById("btn-mg-dl-md")?.addEventListener("click", () => downloadLocalReport(formatLocalFieldReportMarkdown(getReport()), "text/markdown", "vox-teste-celular.md"));
+}
+
+/**
+ * Monta assistente de teste de campo de 5 min no celular com relatório local (PM-73).
+ * @param {object} [nav] Fonte opcional de ambiente (`navigator`) para testes.
+ * @returns {Promise<{ getReport: () => object }>}
+ */
+export async function showMobileTestGuide(nav = globalThis.navigator) {
+  const user = await getActiveUser();
+  const env = collectMobileEnvironment(nav);
+  const main = render.renderShell(makeShellProps(user, "network", "Teste de campo no celular"));
+  renderMobileGuideWizard(main, { env, steps: MOBILE_GUIDE_STEPS });
+  const form = document.getElementById("form-mobile-guide");
+  bindComposeStepper(form);
+  const controller = bindMobileGuideControls(createGuideState(env));
+  bindMobileGuideExport(controller.getReport);
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const preview = document.getElementById("mg-preview");
+    if (preview) preview.textContent = formatLocalFieldReportMarkdown(controller.getReport());
+    share.showToast("Relatório local atualizado.");
+  });
+  return controller;
 }

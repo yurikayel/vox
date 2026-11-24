@@ -88,6 +88,7 @@ const SHELL_ASSETS = [
 
   "./js/app/compose-shared.js",
   "./js/app/compose-community.js",
+  "./js/app/compose-community-kit.js",
   "./js/app/compose-topic.js",
   "./js/app/compose-listing.js",
   "./js/app/compose-proposal.js",
@@ -524,7 +525,6 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/chunked-transfer.js",
   "./js/labs/parado/civic-credential.js",
   "./js/labs/parado/identity-link.js",
-  "./js/labs/parado/kit-genesis.js",
   "./js/labs/parado/node-health-api.js",
   "./js/labs/parado/node-health-evaluator.js",
   "./js/labs/parado/node-health-model.js",

@@ -153,3 +153,90 @@ export function renderWalletWizard(main, { hasWallet = false, pix = "" } = {}) {
   const nav = { backHref: "#/wallet", submitId: "btn-wallet-wizard-save", submitLabel: "Concluir" };
   main.innerHTML = wizardShell({ backHref: nav.backHref, kicker: "Configuração guiada da carteira", formId: "form-wallet-wizard", stepsHtml: renderSteps(steps, nav) });
 }
+
+const NETWORK_OPTIONS = [
+  { value: "wifi", label: "Wi-Fi" },
+  { value: "5g", label: "5G" },
+  { value: "4g", label: "4G" },
+  { value: "3g", label: "3G" },
+  { value: "2g", label: "2G" },
+  { value: "offline", label: "Offline (modo avião)" },
+  { value: "unknown", label: "Desconhecida" },
+];
+
+/**
+ * Seletor de tipo de rede para o guia de teste no celular (PM-73).
+ * @param {string} current Valor atual da rede.
+ * @returns {string}
+ */
+function networkSelect(current) {
+  const opts = NETWORK_OPTIONS.map((o) => `<option value="${escapeHtml(o.value)}"${current === o.value ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
+  return `<select id="mg-network" class="form-control" aria-label="Tipo de rede">${opts}</select>`;
+}
+
+/**
+ * Lista de checkboxes do roteiro de 5 minutos no celular.
+ * @param {Array<{id:string, title:string, hint:string}>} steps Passos do roteiro.
+ * @returns {string}
+ */
+function renderMobileChecklist(steps) {
+  return steps.map((s) => `
+      <label class="guided-check mobile-guide-step">
+        <input type="checkbox" data-mobile-step="${escapeHtml(s.id)}" />
+        <span><strong>${escapeHtml(s.title)}</strong> — ${escapeHtml(s.hint)}</span>
+      </label>`).join("");
+}
+
+/**
+ * Corpo da etapa de ambiente detectado do teste de campo no celular.
+ * @param {object} env Ambiente coletado.
+ * @returns {string}
+ */
+function renderMobileEnvStep(env) {
+  const ramText = env.ramGb ? `${env.ramGb} GB` : "n/d";
+  return `
+      <p class="compose-step-lead">Roteiro de 5 minutos para testar o Vox no celular. Tudo fica só neste aparelho — zero telemetria central.</p>
+      <dl class="compose-review">
+        <div><dt>Sistema</dt><dd id="mg-env-os">${escapeHtml(env.os || "desconhecido")}</dd></div>
+        <div><dt>Navegador</dt><dd id="mg-env-browser">${escapeHtml(env.browser || "desconhecido")}</dd></div>
+        <div><dt>RAM estimada</dt><dd id="mg-env-ram">${escapeHtml(ramText)}</dd></div>
+      </dl>
+      <label for="mg-device" class="agora-field-label">Classe ou aparelho (opcional)</label>
+      <input type="text" id="mg-device" class="form-control agora-inscription" maxlength="48" value="${escapeHtml(env.deviceModel || "desconhecido")}" />
+      <label for="mg-network" class="agora-field-label">Rede usada no teste</label>
+      ${networkSelect(env.networkType || "unknown")}`;
+}
+
+/**
+ * Corpo da etapa de exportação local do relatório (JSON e Markdown).
+ * @returns {string}
+ */
+function renderMobileReportStep() {
+  return `
+      <p class="compose-step-lead">Copie ou baixe o relatório em JSON (compatível com o agregador PM-73) ou Markdown. Nada é enviado pela rede.</p>
+      <div class="agora-composer-actions">
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-mg-copy-json">Copiar JSON</button>
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-mg-copy-md">Copiar Markdown</button>
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-mg-dl-json">Baixar JSON</button>
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-mg-dl-md">Baixar Markdown</button>
+      </div>
+      <pre id="mg-preview" class="guided-result" aria-live="polite"></pre>`;
+}
+
+/**
+ * Wizard guiado do teste de campo de 5 min no celular e relatório local (PM-73).
+ * @param {HTMLElement} main Contêiner da tela.
+ * @param {{ env?: object, steps?: Array<{id:string, title:string, hint:string}> }} [options={}]
+ * @returns {void}
+ */
+export function renderMobileGuideWizard(main, { env = {}, steps = [] } = {}) {
+  const wizardSteps = [
+    { key: "env", title: "Ambiente do aparelho", body: renderMobileEnvStep(env) },
+    { key: "checklist", title: "Passos do teste (5 min)", body: `
+      <p class="compose-step-lead">Marque cada etapa concluída neste aparelho.</p>
+      <div class="mobile-guide-checklist">${renderMobileChecklist(steps)}</div>` },
+    { key: "report", title: "Relatório local", body: renderMobileReportStep() },
+  ];
+  const nav = { backHref: "#/ajuda/teste", submitId: "btn-mg-generate", submitLabel: "Atualizar relatório" };
+  main.innerHTML = wizardShell({ backHref: nav.backHref, kicker: "Teste de campo no celular (5 min)", formId: "form-mobile-guide", stepsHtml: renderSteps(wizardSteps, nav) });
+}

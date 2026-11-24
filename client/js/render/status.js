@@ -1,5 +1,10 @@
 /** @file Página #/status — telemetria honesta local. */
 import { escapeHtml } from "./util.js";
+import {
+  DEFAULT_WINDOWS_HOURS,
+  formatAvailabilityNum,
+  formatAvailabilityPct,
+} from "../availability-metrics.js";
 
 /**
  * Linhas da tabela de gateways com estado e latência.
@@ -101,11 +106,20 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
  * @param {object|null} [options.mirrorExport=null]
  * @param {object} [options.rtcStatus={}]
  * @param {object|null} [options.signalingStats=null]
+ * @param {object|null} [options.availabilityReport=null]
  * @returns {void}
  */
 export function renderStatusPage(
   main,
-  { gatewayHealth = {}, relayStatus = {}, relayHttpUrl = "", mirrorExport = null, rtcStatus = {}, signalingStats = null } = {},
+  {
+    gatewayHealth = {},
+    relayStatus = {},
+    relayHttpUrl = "",
+    mirrorExport = null,
+    rtcStatus = {},
+    signalingStats = null,
+    availabilityReport = null,
+  } = {},
 ) {
   const state = gatewayHealth.state || "all_ok";
   const relayLabel = relayStatus?.online ? "Online" : "Offline";
@@ -117,6 +131,7 @@ export function renderStatusPage(
       ${renderStatusTilesHtml(state, relayStatus, rtcStatus)}
       ${renderStorageTabletHtml()}
       ${renderSignalingTelemetryTabletHtml(signalingStats)}
+      ${renderAvailabilityTabletHtml(availabilityReport)}
       ${renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirrorExport, gatewayHealth })}
     </div>`;
 }
@@ -247,6 +262,86 @@ function renderSignalingTelemetryTabletHtml(signalingStats) {
           </tbody>
         </table>
         <p class="desc" id="status-signaling-feedback" aria-live="polite"></p>
+      </section>`;
+}
+
+/**
+ * Normaliza as janelas de disponibilidade para renderização segura.
+ *
+ * @param {object|null|undefined} report Relatório PM-75.
+ * @returns {Array<{ windowHours: number, eligiblePosts: number, availablePosts: number, availabilityPct: number|null, avgReplicas: number|null }>}
+ */
+function normalizeAvailabilityWindows(report) {
+  if (Array.isArray(report?.windows) && report.windows.length > 0) {
+    return report.windows;
+  }
+  return DEFAULT_WINDOWS_HOURS.map((windowHours) => ({
+    windowHours,
+    eligiblePosts: 0,
+    availablePosts: 0,
+    availabilityPct: null,
+    avgReplicas: null,
+  }));
+}
+
+/**
+ * Linha da tabela de disponibilidade offline por janela (1 h / 6 h / 24 h).
+ *
+ * @param {object} win Dados da janela.
+ * @returns {string}
+ */
+function renderAvailabilityRowHtml(win) {
+  const hours = escapeHtml(`${Number(win?.windowHours) || 0} h`);
+  const eligible = escapeHtml(String(Number(win?.eligiblePosts) || 0));
+  const available = escapeHtml(String(Number(win?.availablePosts) || 0));
+  const pct = escapeHtml(formatAvailabilityPct(win?.availabilityPct));
+  const replicas = escapeHtml(formatAvailabilityNum(win?.avgReplicas));
+  return `<tr><td>${hours}</td><td>${eligible}</td><td>${available}</td><td>${pct}</td><td>${replicas}</td></tr>`;
+}
+
+/**
+ * Linha de resumo geral da disponibilidade offline.
+ *
+ * @param {object|null|undefined} report Relatório PM-75.
+ * @returns {string}
+ */
+function renderAvailabilitySummaryLineHtml(report) {
+  const totalPosts = Number(report?.totalPosts) || 0;
+  const eligible = Number(report?.summary?.totalEligibleEvaluations) || 0;
+  if (!totalPosts || !eligible) {
+    return "Sem posts elegíveis medidos neste aparelho ainda — as janelas 1 h, 6 h e 24 h aparecem conforme sondas locais são registradas.";
+  }
+  const pct = escapeHtml(formatAvailabilityPct(report?.summary?.overallAvailabilityPct));
+  const postsLabel = escapeHtml(String(totalPosts));
+  const probesLabel = escapeHtml(String(Number(report?.totalProbes) || 0));
+  return `<strong>${pct}</strong> no agregado · ${postsLabel} ${totalPosts === 1 ? "post" : "posts"} analisados · ${probesLabel} sondas locais.`;
+}
+
+/**
+ * Quadro local-only de disponibilidade offline de posts (PM-75: 1 h / 6 h / 24 h).
+ *
+ * @param {object|null|undefined} availabilityReport Relatório PM-75.
+ * @returns {string}
+ */
+function renderAvailabilityTabletHtml(availabilityReport) {
+  const windows = normalizeAvailabilityWindows(availabilityReport);
+  const rows = windows.map(renderAvailabilityRowHtml).join("");
+  return `
+      <section class="agora-tablet card" id="status-availability-card">
+        <div class="agora-tablet-head">
+          <h2 class="agora-section-title">Disponibilidade offline dos posts (PM-75)</h2>
+          <div class="agora-page-actions">
+            <button type="button" class="agora-btn agora-btn--secondary" id="status-copy-availability-btn">Copiar métricas</button>
+            <button type="button" class="agora-btn agora-btn--secondary" id="status-reset-availability-btn">Zerar</button>
+          </div>
+        </div>
+        <p class="desc">Medição 100% local (zero telemetria central): % de posts acessíveis com o autor offline nas janelas <strong>1 h</strong>, <strong>6 h</strong> e <strong>24 h</strong>.</p>
+        <p class="desc" id="status-availability-summary">${renderAvailabilitySummaryLineHtml(availabilityReport)}</p>
+        <table class="status-gw-table agora-table" id="status-availability-table">
+          <thead><tr><th>Janela</th><th>Elegíveis</th><th>Acessíveis</th><th>Disponibilidade</th><th>Média de réplicas</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="desc" id="status-availability-feedback" aria-live="polite"></p>
       </section>`;
 }
 
