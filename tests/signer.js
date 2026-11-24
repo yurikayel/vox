@@ -9,7 +9,8 @@ export async function person() {
   const pubKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
   const routeId = await computeRouteId(pubKey);
   const sign = async (payload) => {
-    const body = withSigv({ ...payload, author: routeId });
+    const base = { ...payload, author: routeId };
+    const body = payload.sigv === undefined ? withSigv(base) : base;
     const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, keys.privateKey, new TextEncoder().encode(canonicalString(body)));
     return { ...body, pubKey, sig: b64url(sig) };
   };
