@@ -153,7 +153,7 @@ async function collectContent(from, to) {
     pix: localAccount.getPixKey(),
     identityMeta: getLocalIdentityMeta(me),
   };
-  return { profile, contacts: contacts.listContacts(), postEntries, tombstones, dms };
+  return { profile, contacts: contacts.exportContactRecords(), postEntries, tombstones, dms };
 }
 
 /**
@@ -209,7 +209,7 @@ function applyProfile(profile, me) {
  */
 async function applyContent(c, me) {
   applyProfile(c.profile, me);
-  for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);
+  if (c.contacts) contacts.mergeRemoteContacts(c.contacts);
   // O arquivo vem de fora: cartão, citação e foto da DM passam pelo crivo do fio antes de ir para o aparelho.
   for (const m of c.dms || []) await cacheNode.saveDmMessage(sanitizeStoredDm(m));
   // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
