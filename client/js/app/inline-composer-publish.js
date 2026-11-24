@@ -12,6 +12,10 @@ import * as mediaBlob from "../media-blob.js";
 import * as photoTags from "../photo-tags.js";
 import { randomBase36 } from "../shared/html.js";
 import { scheduleCommit } from "../shared/schedule-commit.js";
+import {
+  analyzePrePublishAdvisory,
+  renderLocalAdvisoryBanner,
+} from "../shared/local-advisory.js";
 import { route } from "./navigation.js";
 import * as permanence from "../permanence-notice.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
@@ -160,6 +164,117 @@ function scheduleInlineBroadcast({ signed, blob, bodyRaw }) {
 }
 
 /**
+ * Combina título e corpo do rascunho sem duplicar o título quando já abre o corpo.
+ * @param {string|{ title?: string, body?: string }|null} draft Rascunho do compositor.
+ * @returns {string} Texto consolidado para inspeção local.
+ */
+function buildAdvisoryText(draft) {
+  if (typeof draft === "string") return draft;
+  const title = String(draft?.title || "").trim();
+  const body = String(draft?.body || "").trim();
+  if (title && body && !body.startsWith(title)) return `${title}\n${body}`;
+  return body || title;
+}
+
+/**
+ * Limpa o slot visual do aviso local preventivo e o marcador de dispensa.
+ * @param {HTMLElement|null} slotEl Elemento de slot do aviso.
+ * @returns {void}
+ */
+function clearAdvisorySlot(slotEl) {
+  if (!slotEl) return;
+  slotEl.innerHTML = "";
+  slotEl.hidden = true;
+  slotEl.removeAttribute?.("data-advisory-dismissed");
+  if (slotEl.dataset) delete slotEl.dataset.advisoryDismissed;
+}
+
+/**
+ * Verifica se o usuário já clicou em ignorar o aviso neste slot.
+ * @param {HTMLElement|null} slotEl Elemento de slot do aviso.
+ * @returns {boolean} Verdadeiro quando o aviso já foi dispensado.
+ */
+function isAdvisoryDismissed(slotEl) {
+  return slotEl?.getAttribute?.("data-advisory-dismissed") === "1"
+    || slotEl?.dataset?.advisoryDismissed === "1";
+}
+
+/**
+ * Conecta os botões de revisar e ignorar renderizados no banner consultivo.
+ * @param {HTMLElement} slotEl Elemento que contém o banner.
+ * @param {{ onIgnore?: () => void, onReview?: () => void }} [options={}] Callbacks de interação.
+ * @returns {void}
+ */
+function wireAdvisoryBannerActions(slotEl, { onIgnore, onReview } = {}) {
+  const ignoreBtn = slotEl.querySelector?.('[data-advisory-action="publish-anyway"]');
+  ignoreBtn?.addEventListener?.("click", () => {
+    slotEl.setAttribute?.("data-advisory-dismissed", "1");
+    if (slotEl.dataset) slotEl.dataset.advisoryDismissed = "1";
+    slotEl.innerHTML = "";
+    slotEl.hidden = true;
+    if (typeof onIgnore === "function") onIgnore();
+  });
+  const reviewBtn = slotEl.querySelector?.('[data-advisory-action="review"]');
+  reviewBtn?.addEventListener?.("click", () => {
+    slotEl.innerHTML = "";
+    slotEl.hidden = true;
+    document.getElementById?.("inline-topic-body")?.focus?.();
+    if (typeof onReview === "function") onReview();
+  });
+}
+
+/**
+ * Executa o aviso local preventivo sobre título e corpo do compositor.
+ * Nunca bloqueia publicação quando não há slot/interação ou após clique em ignorar (`data-advisory-dismissed`).
+ *
+ * @param {string|{ title?: string, body?: string }} draft Rascunho do compositor.
+ * @param {HTMLElement|null} [slotEl=null] Slot opcional onde o banner consultivo é exibido.
+ * @param {{ onIgnore?: () => void, onReview?: () => void }} [options={}] Callbacks dos botões do banner.
+ * @returns {{ proceed: boolean, advisoryOnly: true, blocksPublish: false, result: object, dismissed: boolean }}
+ * Resultado consultivo indicando se o fluxo deve seguir imediatamente.
+ */
+export function checkComposerAdvisory(draft, slotEl = null, options = {}) {
+  const result = analyzePrePublishAdvisory(buildAdvisoryText(draft));
+  if (!result.hasWarnings) {
+    clearAdvisorySlot(slotEl);
+    return { proceed: true, advisoryOnly: true, blocksPublish: false, result, dismissed: false };
+  }
+  if (!slotEl) {
+    return { proceed: true, advisoryOnly: true, blocksPublish: false, result, dismissed: false };
+  }
+  if (isAdvisoryDismissed(slotEl)) {
+    clearAdvisorySlot(slotEl);
+    return { proceed: true, advisoryOnly: true, blocksPublish: false, result, dismissed: true };
+  }
+  slotEl.innerHTML = renderLocalAdvisoryBanner(result);
+  slotEl.hidden = false;
+  wireAdvisoryBannerActions(slotEl, options);
+  return { proceed: false, advisoryOnly: true, blocksPublish: false, result, dismissed: false };
+}
+
+/**
+ * Localiza o slot opcional de aviso consultivo associado ao compositor inline.
+ * @param {HTMLElement|null} form Formulário do compositor.
+ * @returns {HTMLElement|null} Elemento do slot, ou `null` quando ausente.
+ */
+function resolveAdvisorySlot(form) {
+  return document.getElementById?.("inline-composer-advisory")
+    || form?.querySelector?.("[data-advisory-slot]")
+    || null;
+}
+
+/**
+ * Lê corpo, slug de comunidade e presença de mídia do compositor inline.
+ * @returns {{ bodyRaw: string, commSlug: string, hasMedia: boolean }} Dados atuais do formulário.
+ */
+function readInlineDraftInputs() {
+  const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
+  const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
+  const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+  return { bodyRaw, commSlug, hasMedia };
+}
+
+/**
  * Executa publicação de tópico com validação de canal, persistência e reset da UI.
  * @param {HTMLFormElement} form Elemento do formulário.
  * @param {((signed: object) => Promise<void>|void)|undefined} onPublished Callback pós publicação.
@@ -168,13 +283,17 @@ function scheduleInlineBroadcast({ signed, blob, bodyRaw }) {
  * @returns {Promise<void>}
  */
 export async function executeInlinePublish(form, onPublished, state, shouldEcho = false) {
-  const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
-  const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
-  const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+  const { bodyRaw, commSlug, hasMedia } = readInlineDraftInputs();
   if (!bodyRaw && !hasMedia) return;
   if (!(await assertCanPostTopic(commSlug))) return;
 
-  const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
+  const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw);
+  const slotEl = resolveAdvisorySlot(form);
+  const advisory = checkComposerAdvisory({ title, body }, slotEl, {
+    onIgnore: () => { void executeInlinePublish(form, onPublished, state, shouldEcho); },
+  });
+  if (!advisory.proceed) return;
+
   const payload = buildInlineTopicPayload({ title, body, commSlug });
   const { signed, permaResult, blob } = await broadcastAndPersistInlineTopic(payload, title, body, commSlug, { deferBroadcast: true });
 
