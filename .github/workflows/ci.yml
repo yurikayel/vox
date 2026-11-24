@@ -61,8 +61,11 @@ jobs:
       - name: Auditoria de camadas (import só para baixo, ADR-035; catraca)
         run: npm run audit:layers
 
-      - name: ESLint client (limites de função e complexidade bloqueiam)
-        run: npm run lint
+      - name: ESLint client, tests, scripts e tools (PM-115; limites de função e complexidade bloqueiam)
+        run: npm run lint:all
+
+      - name: Orçamento do shell PWA e boot Slow 3G (LAN-23)
+        run: node scripts/shell-budget-check.mjs
 
       - name: Executar testes unitários do cliente (node:test)
         if: matrix.node-version != '24'
@@ -198,6 +201,31 @@ jobs:
         run: |
           git config user.name ci && git config user.email ci@localhost
           node scripts/red-on-base.mjs
+
+  mutate-tier-a:
+    name: Mutação Tier A — aviso (PM-112)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Mutação AST no diff Tier A (aviso, não bloqueia)
+        continue-on-error: true
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: npm run audit:mutate:tier-a -- --base "$BASE_REF" --max 20
 
   pilot-freeze:
     name: Piloto V-P09 — freeze client/js (opt-in)

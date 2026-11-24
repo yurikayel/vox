@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.161-central-memory-split";
+const CACHE_NAME = "vox-pwa-v7.162-shared-action-runner";
 
 const SHELL_ASSETS = [
 
@@ -395,6 +395,7 @@ const SHELL_ASSETS = [
   "./js/shared/persisted-signal.js",
   "./js/shared/keyed-list.js",
   "./js/shared/post-speech.js",
+  "./js/shared/action-runner.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",
@@ -523,7 +524,6 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/bridging-rank.js",
   "./js/labs/parado/chunked-transfer.js",
   "./js/labs/parado/civic-credential.js",
-  "./js/labs/parado/idb-store.js",
   "./js/labs/parado/identity-link.js",
   "./js/labs/parado/node-health-api.js",
   "./js/labs/parado/node-health-evaluator.js",
@@ -535,7 +535,6 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/settings-guardian.js",
   "./js/labs/parado/seeder-guardian.js",
   "./js/labs/parado/testimonials.js",
-  "./js/labs/parado/vox-identity.js",
   "./js/labs/parado/webxdc-crdt.js",
   "./js/labs/parado/webxdc-host.js",
   "./js/labs/parado/webxdc-loader.js",

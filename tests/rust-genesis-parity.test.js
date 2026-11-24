@@ -50,9 +50,11 @@ test("rust/vox-core genesis_data.rs matches JS GENESIS_MS and TEST_ROUTE_IDS 100
   assert.deepEqual(extra, [], "IDs extras em Rust fora da lista JS");
 });
 
-test("rust/Cargo.lock contains zero external crate dependencies (only vox-core)", () => {
+test("rust/Cargo.lock contains zero external crate dependencies (only workspace crates)", () => {
   const lockText = readUtf8Direct("rust/Cargo.lock");
   const pkgs = parseLockPackageNames(lockText);
-  assert.deepEqual(pkgs, ["vox-core"], "rust/Cargo.lock deve conter apenas vox-core");
-  assert.ok(!/^dependencies\s*=/m.test(lockText), "vox-core não pode ter dependências externas");
+  assert.deepEqual(pkgs, ["vox-core", "vox-node"], "rust/Cargo.lock deve conter apenas crates do workspace");
+  assert.ok(!/^source\s*=/m.test(lockText), "workspace Rust não pode puxar crates externos sem revisão");
+  const coreBlock = lockText.split(/^\[\[package\]\]/m).find((b) => /name\s*=\s*"vox-core"/.test(b)) ?? "";
+  assert.ok(!/^dependencies\s*=/m.test(coreBlock), "vox-core não pode ter dependências");
 });

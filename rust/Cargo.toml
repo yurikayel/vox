@@ -1,5 +1,5 @@
 [workspace]
-members = ["vox-core"]
+members = ["vox-core", "vox-node"]
 resolver = "2"
 
 [workspace.package]
