@@ -1,11 +1,12 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-//! Binary entry point for `vox-node` (ADR-039 Phase 4, PR4.2a).
+//! Binary entry point for `vox-node` (ADR-039 Phase 4, PR4.3).
 //!
 //! Supports `--help`, `--version`, `--health-json` / `--check`,
-//! `--mode signaling [--host <addr>] [--port <port>]`, and
-//! `--mode relay [--host <addr>] [--port <port>] [--data-dir <dir>]`.
+//! `--mode signaling [--host <addr>] [--port <port>]`,
+//! `--mode relay [--host <addr>] [--port <port>] [--data-dir <dir>]`, and
+//! `--mode memoria [--host <addr>] [--port <port>] [--data-dir <dir>]`.
 
 use std::env;
 use std::io::{self, Write};
@@ -14,6 +15,7 @@ use std::process::ExitCode;
 
 use vox_core::genesis_data::GENESIS_MS;
 use vox_core::genesis_guard;
+use vox_node::memoria::{MemoriaConfig, MemoriaServer};
 use vox_node::relay::{RelayConfig, RelayServer};
 use vox_node::signaling::{SignalingConfig, SignalingServer};
 
@@ -34,22 +36,29 @@ enum Command {
         port: Option<u16>,
         data_dir: Option<PathBuf>,
     },
+    Memoria {
+        host: Option<String>,
+        port: Option<u16>,
+        data_dir: Option<PathBuf>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ServerMode {
     Signaling,
     Relay,
+    Memoria,
 }
 
 fn usage_text() -> String {
     format!(
-        "{PKG_NAME} {PKG_VERSION} — Vox unified node (ADR-039 PR4.2a)\n\
+        "{PKG_NAME} {PKG_VERSION} — Vox unified node (ADR-039 PR4.3)\n\
          \n\
          USAGE:\n\
          \t{PKG_NAME} [OPTIONS]\n\
          \t{PKG_NAME} --mode signaling [--host <ADDR>] [--port <PORT>]\n\
          \t{PKG_NAME} --mode relay [--host <ADDR>] [--port <PORT>] [--data-dir <DIR>]\n\
+         \t{PKG_NAME} --mode memoria [--host <ADDR>] [--port <PORT>] [--data-dir <DIR>]\n\
          \n\
          OPTIONS:\n\
          \t-h, --help                 Show this help message\n\
@@ -58,9 +67,10 @@ fn usage_text() -> String {
          \t    --check                Alias for --health-json\n\
          \t    --mode signaling       Run WebSocket signaling + HTTP health server\n\
          \t    --mode relay           Run HTTP relay server (/health, /status, /ping, /version, /inbox/*)\n\
-         \t    --host <ADDR>          Bind host (signaling: 0.0.0.0; relay: 127.0.0.1)\n\
-         \t    --port <PORT>          Bind port (signaling: 3921; relay: 3920; 0 = ephemeral)\n\
-         \t    --data-dir <DIR>       Base persistence directory for relay mode\n"
+         \t    --mode memoria         Run local Vox Memoria dashboard, memory store & control server\n\
+         \t    --host <ADDR>          Bind host (signaling: 0.0.0.0; relay/memoria: 127.0.0.1)\n\
+         \t    --port <PORT>          Bind port (signaling: 3921; relay: 3920; memoria: 3922; 0 = ephemeral)\n\
+         \t    --data-dir <DIR>       Base persistence directory for relay/memoria modes\n"
     )
 }
 
@@ -92,6 +102,11 @@ fn parse_single_arg(arg: &str) -> Result<Command, String> {
             port: None,
             data_dir: None,
         }),
+        "memoria" => Ok(Command::Memoria {
+            host: None,
+            port: None,
+            data_dir: None,
+        }),
         other => Err(format!("unknown argument: {other}")),
     }
 }
@@ -100,6 +115,7 @@ fn parse_mode_value(raw: &str) -> Result<ServerMode, String> {
     match raw {
         "signaling" => Ok(ServerMode::Signaling),
         "relay" => Ok(ServerMode::Relay),
+        "memoria" => Ok(ServerMode::Memoria),
         other => Err(format!("unsupported mode: {other}")),
     }
 }
@@ -115,6 +131,7 @@ fn parse_mode_args(items: &[String]) -> Result<Command, String> {
         match items[idx].as_str() {
             "signaling" => mode = Some(ServerMode::Signaling),
             "relay" => mode = Some(ServerMode::Relay),
+            "memoria" => mode = Some(ServerMode::Memoria),
             "--mode" => {
                 idx += 1;
                 let raw = items.get(idx).ok_or("missing value for --mode")?;
@@ -153,7 +170,7 @@ fn build_mode_command(
 ) -> Result<Command, String> {
     match mode {
         Some(ServerMode::Signaling) if data_dir.is_some() => {
-            Err("--data-dir is only supported in --mode relay".to_string())
+            Err("--data-dir is only supported in --mode relay|memoria".to_string())
         }
         Some(ServerMode::Signaling) => Ok(Command::Signaling { host, port }),
         Some(ServerMode::Relay) => Ok(Command::Relay {
@@ -161,7 +178,14 @@ fn build_mode_command(
             port,
             data_dir,
         }),
-        None => Err("too many arguments (expected --mode signaling|relay or a single flag)".into()),
+        Some(ServerMode::Memoria) => Ok(Command::Memoria {
+            host,
+            port,
+            data_dir,
+        }),
+        None => Err(
+            "too many arguments (expected --mode signaling|relay|memoria or a single flag)".into(),
+        ),
     }
 }
 
@@ -218,6 +242,26 @@ fn run_relay(
     Ok(())
 }
 
+fn run_memoria(
+    host: Option<String>,
+    port: Option<u16>,
+    data_dir: Option<PathBuf>,
+) -> Result<(), (u8, String)> {
+    let config = MemoriaConfig::from_env(host, port, data_dir);
+    let server = MemoriaServer::bind(config)
+        .map_err(|err| (1, format!("failed to bind memoria server: {err}")))?;
+    let addr = server.local_addr();
+    let _ = writeln!(io::stdout(), "PORT={}", addr.port());
+    let _ = io::stdout().flush();
+    eprintln!(
+        "{PKG_NAME} {PKG_VERSION} memoria listening on http://{}:{}",
+        addr.ip(),
+        addr.port()
+    );
+    server.serve_forever();
+    Ok(())
+}
+
 fn run<I>(args: I) -> Result<Option<String>, (u8, String)>
 where
     I: IntoIterator<Item = String>,
@@ -234,6 +278,11 @@ where
             port,
             data_dir,
         }) => run_relay(host, port, data_dir).map(|()| None),
+        Ok(Command::Memoria {
+            host,
+            port,
+            data_dir,
+        }) => run_memoria(host, port, data_dir).map(|()| None),
         Err(msg) => Err((2, format!("{msg}\n\n{}", usage_text()))),
     }
 }
@@ -311,6 +360,24 @@ mod tests {
                 data_dir: Some(PathBuf::from("/tmp/vox-relay")),
             })
         );
+        assert_eq!(
+            parse_args(args(&[
+                "vox-node",
+                "--mode",
+                "memoria",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "3922",
+                "--data-dir",
+                "/tmp/vox-memoria"
+            ])),
+            Ok(Command::Memoria {
+                host: Some("127.0.0.1".to_string()),
+                port: Some(3922),
+                data_dir: Some(PathBuf::from("/tmp/vox-memoria")),
+            })
+        );
     }
 
     #[test]
@@ -354,5 +421,6 @@ mod tests {
         assert!(help.contains("--health-json"));
         assert!(help.contains("--mode signaling"));
         assert!(help.contains("--mode relay"));
+        assert!(help.contains("--mode memoria"));
     }
 }
