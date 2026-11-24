@@ -21,6 +21,7 @@ import {
   validateCommunityAvatarFile,
 } from "../shared/community-avatar-image.js";
 import { leaveComposeAfterPublish, renderIfPaused } from "./compose-shared.js";
+import { bindCommunityKitPicker, buildCommunityFromKit } from "./compose-community-kit.js";
 
 /** @param {HTMLElement | null} previewEl @param {string} src @param {string} [initial] */
 export function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
@@ -136,9 +137,38 @@ function readCommunityInputs(state) {
     desc: document.getElementById("comm-desc")?.value.trim(),
     visibility: document.getElementById("comm-type")?.value || "open",
     newKeyQuarantine: Boolean(document.getElementById("comm-new-key-quarantine")?.checked),
+    kitId: state.kitId || "",
+    includeCartridges: Boolean(state.includeCartridges),
     image: acceptCommunityAvatarDataUrl(
       state.photoDataUrl || document.getElementById("comm-photo-url")?.value.trim() || ""
     ),
+  };
+}
+
+/**
+ * Monta os campos extras do kit-genesis quando a comunidade parte de um modelo.
+ *
+ * @param {object} data Campos lidos do formulário.
+ * @returns {Promise<object>}
+ */
+async function resolveKitMetadata(data) {
+  if (!data.kitId) return {};
+  const creatorAddr = await getActiveUser();
+  const kitPayload = await buildCommunityFromKit({
+    kitId: data.kitId,
+    creatorAddr,
+    id: data.id,
+    title: data.title,
+    desc: data.desc,
+    includeCartridges: data.includeCartridges,
+  });
+  return {
+    kitId: kitPayload.kitId,
+    kitVersion: kitPayload.kitVersion,
+    kitChannels: kitPayload.channels,
+    kitCartridges: kitPayload.cartridges,
+    kitRoles: kitPayload.roles,
+    kitSecurityPolicy: kitPayload.securityPolicy,
   };
 }
 
@@ -148,6 +178,7 @@ function readCommunityInputs(state) {
  * @param {object} data Campos lidos do formulário.
  */
 async function signAndBroadcastCommunity(data) {
+  const kitMeta = await resolveKitMetadata(data);
   const signed = await localAccount.signPayload({
     id: "c_" + data.id,
     type: "community",
@@ -159,6 +190,7 @@ async function signAndBroadcastCommunity(data) {
     avatar: data.image,
     visibility: data.visibility,
     ...(data.newKeyQuarantine ? { newKeyQuarantine: true } : {}),
+    ...kitMeta,
     language: "Português",
     createdAt: Date.now(),
   });
@@ -201,8 +233,9 @@ export async function showComposeCommunity() {
   if (renderIfPaused(main, "communityCreate")) return;
   render.renderComposeCommunity(main);
 
-  const state = { photoDataUrl: "" };
+  const state = { photoDataUrl: "", kitId: "", includeCartridges: false };
   bindCommunityPhotoInputs(state);
+  bindCommunityKitPicker(state);
   bindComposeStepper(document.getElementById("form-compose-community"));
   document.getElementById("form-compose-community")?.addEventListener("submit", (e) => handleCommunityCreate(state, e));
 }
