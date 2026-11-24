@@ -13,6 +13,7 @@ export const READ_FIRST_ROUTES = new Set([
   "connect",
   "sync",
   "topic",
+  "posse-return",
   "community",
   "communities",
   "profile",
