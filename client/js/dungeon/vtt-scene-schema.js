@@ -13,7 +13,84 @@ import {
 const SAFE_ID_RE = /^[a-z0-9][a-z0-9_-]{1,63}$/i;
 const VALID_LAYERS = new Set(["player", "gm"]);
 const VALID_HP_MODES = new Set(["exact", "bar", "status"]);
+const VALID_AMBIENTS = new Set(["day", "dusk", "night", "dungeon"]);
+const VALID_SHAPES = new Set(["box", "cylinder", "ramp"]);
+const VALID_DISPLAYS = new Set(["standee", "flat"]);
 const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i;
+
+function numOr(val, fallback) {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeDioramaConfig(raw = {}) {
+  const ambient = VALID_AMBIENTS.has(raw?.ambient) ? raw.ambient : "dungeon";
+  const wallDefaultHeight = Math.max(0.5, Math.min(8, numOr(raw?.wallDefaultHeight, 2.4)));
+  return { ambient, wallDefaultHeight, wallCutaway: raw?.wallCutaway !== false };
+}
+
+/**
+ * Cria uma parede estrutural 3D (`WallDoc`) sobre a grade 2D do piso.
+ * Portas permanecem exclusivamente em `floor.doors[]`.
+ * @param {object} [opts={}] Campos (`wallId`, `x1`, `y1`, `x2`, `y2`, `height`, `color`).
+ * @returns {object} `WallDoc` normalizada.
+ */
+export function createWallDoc(opts = {}) {
+  const color = HEX_COLOR_RE.test(String(opts.color || "")) ? opts.color : "#4a4e57";
+  return {
+    wallId: safeSceneId(opts.wallId, "wall"),
+    x1: Math.max(0, numOr(opts.x1, 0)),
+    y1: Math.max(0, numOr(opts.y1, 0)),
+    x2: Math.max(0, numOr(opts.x2, 1)),
+    y2: Math.max(0, numOr(opts.y2, 0)),
+    height: Math.max(0.25, Math.min(8, numOr(opts.height, 2.4))),
+    color,
+  };
+}
+
+/**
+ * Cria uma primitiva procedural (`box`, `cylinder` ou `ramp`) no piso com suporte à camada GM.
+ * @param {object} [opts={}] Campos do volume.
+ * @returns {object} `VolumeDoc` normalizado.
+ */
+export function createVolumeDoc(opts = {}) {
+  const shape = VALID_SHAPES.has(opts.shape) ? opts.shape : "box";
+  const layer = VALID_LAYERS.has(opts.layer) ? opts.layer : "player";
+  const color = HEX_COLOR_RE.test(String(opts.color || "")) ? opts.color : "#6b4f35";
+  return {
+    volumeId: safeSceneId(opts.volumeId, "vol"),
+    shape,
+    x: Math.max(0, numOr(opts.x, 0)),
+    y: Math.max(0, numOr(opts.y, 0)),
+    elevation: Math.max(-4, Math.min(16, numOr(opts.elevation, 0))),
+    w: Math.max(0.2, Math.min(16, numOr(opts.w, 1))),
+    d: Math.max(0.2, Math.min(16, numOr(opts.d, 1))),
+    h: Math.max(0.1, Math.min(8, numOr(opts.h, 1))),
+    r: Math.max(0.1, Math.min(8, numOr(opts.r, 0.4))),
+    rot: ((Math.round(numOr(opts.rot, 0)) % 360) + 360) % 360,
+    color,
+    layer,
+  };
+}
+
+/**
+ * Cria um portal de transição entre cenas/andares no piso (`PortalDoc`).
+ * @param {object} [opts={}] Campos do portal.
+ * @returns {object} `PortalDoc` normalizado.
+ */
+export function createPortalDoc(opts = {}) {
+  const layer = VALID_LAYERS.has(opts.layer) ? opts.layer : "player";
+  return {
+    portalId: safeSceneId(opts.portalId, "prt"),
+    x: Math.max(0, numOr(opts.x, 0)),
+    y: Math.max(0, numOr(opts.y, 0)),
+    radius: Math.max(0.25, Math.min(4, numOr(opts.radius, 0.8))),
+    targetSceneId: typeof opts.targetSceneId === "string" ? opts.targetSceneId.trim().slice(0, 64) : "",
+    targetFloorZ: intOr(opts.targetFloorZ, 0),
+    label: String(opts.label || "Portal").trim().slice(0, 64) || "Portal",
+    layer,
+  };
+}
 
 function safeSceneId(raw, prefix) {
   if (typeof raw === "string" && SAFE_ID_RE.test(raw)) return raw;
@@ -68,6 +145,10 @@ export function createFloorDoc(opts = {}) {
     doors: Array.isArray(opts.doors) ? opts.doors.map(createDoorDoc) : [],
     drawings: Array.isArray(opts.drawings) ? opts.drawings.map(createDrawingDoc) : [],
     aoes: Array.isArray(opts.aoes) ? opts.aoes.map(createAoeDoc) : [],
+    diorama: normalizeDioramaConfig(opts.diorama),
+    walls: Array.isArray(opts.walls) ? opts.walls.map(createWallDoc) : [],
+    volumes: Array.isArray(opts.volumes) ? opts.volumes.map(createVolumeDoc) : [],
+    portals: Array.isArray(opts.portals) ? opts.portals.map(createPortalDoc) : [],
   };
 }
 
@@ -105,6 +186,8 @@ export function createTokenDoc(opts = {}) {
     floorZ: intOr(opts.floorZ, 0),
     x: Math.max(0, intOr(opts.x, 0)),
     y: Math.max(0, intOr(opts.y, 0)),
+    elevation: Math.max(-4, Math.min(16, numOr(opts.elevation, 0))),
+    display: VALID_DISPLAYS.has(opts.display) ? opts.display : "standee",
     sizeCells: Math.max(1, Math.min(4, intOr(opts.sizeCells, 1))),
     layer,
     hpVisible: VALID_HP_MODES.has(opts.hpVisible) ? opts.hpVisible : "bar",

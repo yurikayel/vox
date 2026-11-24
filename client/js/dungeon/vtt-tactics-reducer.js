@@ -299,6 +299,8 @@ export function projectTacticsFloorForPlayer(floor) {
     doors: (floor.doors || []).filter((d) => d.state !== "secret"),
     drawings: (floor.drawings || []).filter((d) => d.layer !== "gm"),
     aoes: (floor.aoes || []).filter((a) => a.layer !== "gm"),
+    volumes: (floor.volumes || []).filter((v) => v.layer !== "gm"),
+    portals: (floor.portals || []).filter((p) => p.layer !== "gm"),
   };
 }
 

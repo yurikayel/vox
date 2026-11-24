@@ -20,10 +20,10 @@ export function buildDungeonTabs(tableId = "vila-nova", charId = "lyra") {
   const safeTable = encodeURIComponent(tableId || "vila-nova");
   const safeChar = encodeURIComponent(charId || "lyra");
   return [
-    { id: "acampamento", label: "Acampamento", shortLabel: "Campanhas", href: "#/dungeon", icon: "flame" },
-    { id: "mesa", label: "A Mesa", shortLabel: "A Mesa", href: `#/dungeon/mesa/${safeTable}`, icon: "sword" },
+    { id: "acampamento", label: "Acampamento", shortLabel: "Acampamento", href: "#/dungeon", icon: "flame" },
+    { id: "mesa", label: "Mapa", shortLabel: "Mapa", href: `#/dungeon/mesa/${safeTable}`, icon: "sword" },
     { id: "ficha", label: "Grimório", shortLabel: "Grimório", href: `#/dungeon/ficha/${safeChar}`, icon: "scroll" },
-    { id: "mestre", label: "Mestre", shortLabel: "Mestre", href: `#/dungeon/mestre/${safeTable}`, icon: "eye" },
+    { id: "mestre", label: "Escudo", shortLabel: "Escudo", href: `#/dungeon/mestre/${safeTable}`, icon: "eye" },
   ];
 }
 
@@ -40,16 +40,16 @@ function renderSanctumFrame({ activeTab, mode, variantClass, onlineCount, deskto
   return `
     <div class="dungeon-sanctum${variantClass}" data-dungeon-screen="${escapeHtml(activeTab)}" data-dungeon-ui-mode="${escapeHtml(mode)}">
       <div class="dungeon-segregation-strip" role="note">
-        <a class="dungeon-exit-link" href="#/">${dungeonIcon("arrowLeft", 15)}<span>Sair da Mesa · Voltar ao Vox</span></a>
+        <a class="dungeon-exit-link" href="#/">${dungeonIcon("arrowLeft", 15)}<span>Sair do Subversus · Voltar ao Vox</span></a>
         <span class="dungeon-fiction-badge">DEMONSTRAÇÃO · ROTEIRO FIXO, SEM IA E SEM REDE (ISOLADO DO FEED CÍVICO)</span>
-        <span class="sr-only">Lab AI Social Dungeon</span>
+        <span class="sr-only">Subversus VTT · Lab AI Social Dungeon</span>
       </div>
       <header class="dungeon-topbar">
         <div class="dungeon-brand-group">
-          <a class="dungeon-brand" href="#/dungeon">${dungeonIcon("flame", 20)}<span>VOX · AI SOCIAL DUNGEON</span></a>
+          <a class="dungeon-brand" href="#/dungeon">${dungeonIcon("flame", 20)}<span>SUBVERSUS</span></a>
           <span class="dungeon-guardians-pill" aria-live="polite">${onlineCount} guardiões de exemplo</span>
         </div>
-        <nav class="dungeon-topnav" aria-label="Navegação do RPG">${desktopNav}</nav>
+        <nav class="dungeon-topnav" aria-label="Navegação do Subversus">${desktopNav}</nav>
       </header>
       <main class="dungeon-main" id="dungeon-main">
         <p class="dungeon-demo-note" role="note">Laboratório: esta mesa é uma demonstração. A narração é um roteiro fixo (ainda não há IA), os outros jogadores e guardiões são de exemplo e nada sai desta aba.</p>
