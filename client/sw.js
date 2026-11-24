@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.165-device-merge";
+const CACHE_NAME = "vox-pwa-v7.166-pm01-lazy-second-screen";
 
 const SHELL_ASSETS = [
 
@@ -455,7 +455,6 @@ const SHELL_ASSETS = [
   "./js/render/compose-steps.js",
   "./js/app/compose-stepper.js",
   "./js/app/vote-confirm.js",
-  "./js/render/guided-setup.js",
   "./js/app/screens-guided.js",
   "./js/app/screens-sync.js",
   "./js/render/civic-block.js",
