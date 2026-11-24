@@ -9,8 +9,8 @@
  * conferido antes e depois de cada rodada.
  *
  * Uso:
- *   node scripts/mutate-tier-a.mjs --file client/js/sig-format.js --test tests/sig-format.test.js [--max 10] [--json]
- *   node scripts/mutate-tier-a.mjs --base origin/develop [--max 20] [--json]
+ *   node scripts/mutate-tier-a.mjs --file client/js/sig-format.js --test tests/sig-format.test.js [--max 10] [--min-score 70] [--json]
+ *   node scripts/mutate-tier-a.mjs --base origin/develop [--max 20] [--min-score 70] [--json]
  */
 
 import crypto from "node:crypto";
@@ -22,33 +22,25 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import * as espree from "espree";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const DEFAULT_TIER_A = Object.freeze([
-  "client/js/identity/", "client/js/vault/",
-  "client/js/crypto-dm.js", "client/js/sig-format.js", "client/js/inbox.js",
-]);
+const DEFAULT_TIER_A = Object.freeze(["client/js/identity/", "client/js/vault/", "client/js/crypto-dm.js", "client/js/sig-format.js", "client/js/inbox.js"]);
 
 const OPERATOR_SWAPS = Object.freeze({
-  "===": "!==", "!==": "===",
-  "==": "!=", "!=": "==",
-  "<": "<=", "<=": "<",
-  ">": ">=", ">=": ">",
-  "&&": "||", "||": "&&",
+  "===": "!==", "!==": "===", "==": "!=", "!=": "==",
+  "<": "<=", "<=": "<", ">": ">=", ">=": ">", "&&": "||", "||": "&&",
 });
 
-const HOOKS_SOURCE = [
-  'import fs from "node:fs";',
-  'import path from "node:path";',
-  'import { fileURLToPath } from "node:url";',
-  'const norm = (p) => (process.platform === "win32" ? path.resolve(p).toLowerCase() : path.resolve(p));',
-  'const target = norm(process.env.VOX_MUTATE_TARGET || "");',
-  'const sourceFile = process.env.VOX_MUTATE_SOURCE || "";',
-  'export async function load(url, context, nextLoad) {',
-  '  if (target && url.startsWith("file:") && norm(fileURLToPath(url)) === target) {',
-  '    return { format: "module", shortCircuit: true, source: fs.readFileSync(sourceFile, "utf8") };',
-  '  }',
-  '  return nextLoad(url, context);',
-  '}',
-].join("\n");
+const HOOKS_SOURCE = `import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const norm = (p) => (process.platform === "win32" ? path.resolve(p).toLowerCase() : path.resolve(p));
+const target = norm(process.env.VOX_MUTATE_TARGET || "");
+const sourceFile = process.env.VOX_MUTATE_SOURCE || "";
+export async function load(url, context, nextLoad) {
+  if (target && url.startsWith("file:") && norm(fileURLToPath(url)) === target) {
+    return { format: "module", shortCircuit: true, source: fs.readFileSync(sourceFile, "utf8") };
+  }
+  return nextLoad(url, context);
+}`;
 
 const REGISTER_SOURCE = 'import { register } from "node:module";\nregister("./hooks.mjs", import.meta.url);\n';
 
@@ -73,19 +65,37 @@ const toPosix = (filePath) => filePath.replace(/\\/g, "/");
 const git = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
 /**
+ * Converte e valida o piso percentual de mutação (`0` a `100`).
+ * @param {string|undefined} raw Valor textual recebido em `--min-score`.
+ * @returns {number} Piso numérico válido.
+ */
+function parseMinScore(raw) {
+  const value = raw === undefined || raw.trim() === "" ? Number.NaN : Number(raw);
+  if (!Number.isFinite(value) || value < 0 || value > 100) {
+    throw new Error(`Valor inválido para --min-score: "${raw ?? ""}" (esperado número entre 0 e 100).`);
+  }
+  return value;
+}
+
+const VALUE_FLAGS = Object.freeze({
+  "--file": (opts, v) => { opts.file = v ?? null; },
+  "--test": (opts, v) => { if (v) opts.tests.push(v); },
+  "--base": (opts, v) => { opts.base = v ?? null; },
+  "--max": (opts, v) => { opts.max = Number.parseInt(v, 10); },
+  "--timeout": (opts, v) => { opts.timeoutMs = Number.parseInt(v, 10) || DEFAULT_TIMEOUT_MS; },
+  "--min-score": (opts, v) => { opts.minScore = parseMinScore(v); },
+});
+
+/**
  * Faz o parse dos argumentos de linha de comando do mutador.
  * @param {string[]} argv Lista de argumentos (sem `node` e caminho do script).
- * @returns {{ file: string|null, tests: string[], base: string|null, max: number|null, timeoutMs: number, json: boolean, help: boolean }} Opções normalizadas.
+ * @returns {{ file: string|null, tests: string[], base: string|null, max: number|null, timeoutMs: number, minScore: number|null, json: boolean, help: boolean }} Opções normalizadas.
  */
 export function parseArgs(argv) {
-  const opts = { file: null, tests: [], base: null, max: null, timeoutMs: DEFAULT_TIMEOUT_MS, json: false, help: false };
+  const opts = { file: null, tests: [], base: null, max: null, timeoutMs: DEFAULT_TIMEOUT_MS, minScore: null, json: false, help: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--file") opts.file = argv[++i] ?? null;
-    else if (arg === "--test") { if (argv[i + 1]) opts.tests.push(argv[++i]); }
-    else if (arg === "--base") opts.base = argv[++i] ?? null;
-    else if (arg === "--max") opts.max = Number.parseInt(argv[++i], 10);
-    else if (arg === "--timeout") opts.timeoutMs = Number.parseInt(argv[++i], 10) || DEFAULT_TIMEOUT_MS;
+    if (Object.hasOwn(VALUE_FLAGS, arg)) VALUE_FLAGS[arg](opts, argv[++i]);
     else if (arg === "--json") opts.json = true;
     else if (arg === "--help" || arg === "-h") opts.help = true;
   }
@@ -197,6 +207,18 @@ function findOperatorToken(node, tokens) {
 }
 
 /**
+ * Monta o descritor canônico de um mutante a partir de um nó ou token AST.
+ * @param {object} target Nó ou token com `loc` e `range`.
+ * @param {{ kind: string, original: string, replacement: string, description?: string }} spec Dados da mutação.
+ * @returns {object}
+ */
+function makeMutant(target, { kind, original, replacement, description = `${original} -> ${replacement}` }) {
+  const { line, column } = target.loc.start;
+  const [start, end] = target.range;
+  return { kind, line, column: column + 1, start, end, original, replacement, description };
+}
+
+/**
  * Cria o mutante que troca o operador (por exemplo `===` por `!==`), ou `null` se não há troca.
  * @param {object} node Nó da expressão.
  * @param {object[]} tokens Tokens do arquivo.
@@ -204,23 +226,17 @@ function findOperatorToken(node, tokens) {
  */
 function operatorMutant(node, tokens) {
   const replacement = OPERATOR_SWAPS[node.operator];
-  if (!replacement) return null;
-  const token = findOperatorToken(node, tokens);
+  const token = replacement ? findOperatorToken(node, tokens) : null;
   if (!token) return null;
-  return {
+  return makeMutant(token, {
     kind: node.type === "LogicalExpression" ? "logical" : "binary",
-    line: token.loc.start.line,
-    column: token.loc.start.column + 1,
-    start: token.range[0],
-    end: token.range[1],
     original: node.operator,
     replacement,
-    description: `${node.operator} -> ${replacement}`,
-  };
+  });
 }
 
 /**
- * Cria o mutante que troca a condição do `if` por `false`.
+ * Cria o mutante que inverte a condição do `if`.
  * @param {object} node Nó do `if`.
  * @param {string} source Código-fonte do arquivo.
  * @returns {object}
@@ -229,16 +245,12 @@ function ifConditionMutant(node, source) {
   const [start, end] = node.test.range;
   const original = source.slice(start, end);
   const preview = original.replace(/\s+/g, " ").slice(0, 60);
-  return {
+  return makeMutant(node.test, {
     kind: "if-condition",
-    line: node.test.loc.start.line,
-    column: node.test.loc.start.column + 1,
-    start,
-    end,
     original,
     replacement: `!(${original})`,
     description: `if (${preview}) -> if (!(${preview}))`,
-  };
+  });
 }
 
 /**
@@ -248,17 +260,7 @@ function ifConditionMutant(node, source) {
  */
 function booleanMutant(node) {
   const original = node.value ? "true" : "false";
-  const replacement = node.value ? "false" : "true";
-  return {
-    kind: "boolean-literal",
-    line: node.loc.start.line,
-    column: node.loc.start.column + 1,
-    start: node.range[0],
-    end: node.range[1],
-    original,
-    replacement,
-    description: `${original} -> ${replacement}`,
-  };
+  return makeMutant(node, { kind: "boolean-literal", original, replacement: node.value ? "false" : "true" });
 }
 
 /**
@@ -454,14 +456,31 @@ export function aggregateReports(mode, fileReports) {
 }
 
 /**
+ * Avalia se o relatório de mutação atende ao piso mínimo configurado.
+ * Sem mutantes (`total === 0` ou `score === null`) ou sem piso (`minScore === null`),
+ * o gate aprova de forma determinística (no-op seguro para PRs fora do Tier A).
+ * @param {{ total: number, score: number|null }} report Relatório consolidado.
+ * @param {number|null} [minScore=null] Piso percentual mínimo (`0` a `100`) ou `null`.
+ * @returns {{ passed: boolean, status: "pass"|"fail"|"noop", minScore: number|null, reason: string }} Veredito do gate.
+ */
+export function evaluateGate(report, minScore = null) {
+  if (minScore === null || minScore === undefined) return { passed: true, status: "noop", minScore: null, reason: "Sem piso configurado." };
+  if (report.total === 0 || report.score === null) return { passed: true, status: "noop", minScore, reason: "Nenhum mutante Tier A no diff." };
+  if (report.score >= minScore) return { passed: true, status: "pass", minScore, reason: `Score ${report.score}% >= piso ${minScore}%.` };
+  return { passed: false, status: "fail", minScore, reason: `Score ${report.score}% abaixo do piso mínimo de ${minScore}%.` };
+}
+
+/**
  * Formata o relatório consolidado em texto legível para terminal.
  * @param {object} report Relatório retornado por `aggregateReports`.
+ * @param {number|null} [minScore=null] Piso mínimo opcional exibido no resumo.
  * @returns {string} Saída formatada.
  */
-export function formatTextReport(report) {
+export function formatTextReport(report, minScore = null) {
   const scoreLabel = report.score === null ? "n/a" : `${report.score}%`;
+  const floorPart = minScore === null || minScore === undefined ? "" : `, min: ${minScore}%`;
   const lines = [
-    `PM-112 AST Mutator (${report.mode}): ${report.killed} killed, ${report.survived} survived, ${report.timeout} timeout / ${report.total} total (score: ${scoreLabel}, ${report.durationMs}ms)`,
+    `PM-112 AST Mutator (${report.mode}): ${report.killed} killed, ${report.survived} survived, ${report.timeout} timeout / ${report.total} total (score: ${scoreLabel}${floorPart}, ${report.durationMs}ms)`,
   ];
   if (report.survivors.length > 0) {
     lines.push("Sobreviventes:");
@@ -473,12 +492,15 @@ export function formatTextReport(report) {
 /**
  * Formata o relatório consolidado em Markdown para `$GITHUB_STEP_SUMMARY`.
  * @param {object} report Relatório retornado por `aggregateReports`.
+ * @param {number|null} [minScore=null] Piso mínimo opcional para exibir status do gate.
  * @returns {string} Resumo em Markdown.
  */
-export function formatSummaryMarkdown(report) {
+export function formatSummaryMarkdown(report, minScore = null) {
   const score = report.score === null ? "n/a" : `${report.score}%`;
+  const gate = evaluateGate(report, minScore);
+  const gateLabel = gate.minScore === null ? "" : `, piso: **${gate.minScore}%**, gate: **${gate.status.toUpperCase()}**`;
   const cell = (v) => String(v).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
-  const header = `## Mutação Tier A (PM-112 — aviso)\n\nModo \`${report.mode}\`: **${report.killed}** mortos, **${report.survived}** sobreviventes, **${report.timeout}** timeouts / **${report.total}** total (score: **${score}**, ${report.durationMs}ms).`;
+  const header = `## Mutação Tier A (PM-112)\n\nModo \`${report.mode}\`: **${report.killed}** mortos, **${report.survived}** sobreviventes, **${report.timeout}** timeouts / **${report.total}** total (score: **${score}**${gateLabel}, ${report.durationMs}ms).`;
   if (report.survivors.length === 0) return `${header}\n`;
   const rows = report.survivors.map((s) => `| \`${cell(s.location)}\` | \`${cell(s.kind)}\` | \`${cell(s.description)}\` |`);
   return [header, "", "| Local | Tipo | Mutação |", "|---|---|---|", ...rows, ""].join("\n");
@@ -555,12 +577,19 @@ function main() {
   const root = process.cwd();
   const baseRef = opts.base || (!opts.file && !opts.help ? defaultBaseRef(root) : null);
   if (opts.help || (!opts.file && !baseRef)) {
-    console.log("Uso: node scripts/mutate-tier-a.mjs (--file <caminho> [--test <teste>] | --base <gitRef>) [--max <N>] [--timeout <ms>] [--json]");
+    console.log("Uso: node scripts/mutate-tier-a.mjs (--file <caminho> [--test <teste>] | --base <gitRef>) [--max <N>] [--min-score <0-100>] [--timeout <ms>] [--json]");
     process.exit(opts.help ? 0 : 1);
   }
   const report = baseRef ? runDiffMode({ ...opts, base: baseRef }, root) : runSingleFileMode(opts, root);
-  console.log(opts.json ? JSON.stringify(report, null, 2) : formatTextReport(report));
-  if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${formatSummaryMarkdown(report)}\n`);
+  const gate = evaluateGate(report, opts.minScore);
+  console.log(opts.json ? JSON.stringify({ ...report, gate }, null, 2) : formatTextReport(report, opts.minScore));
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${formatSummaryMarkdown(report, opts.minScore)}\n`);
+  }
+  if (!gate.passed) {
+    console.error(`PM-112 gate reprovado: ${gate.reason}`);
+    process.exit(1);
+  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
