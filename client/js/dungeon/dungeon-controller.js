@@ -157,11 +157,30 @@ function handleDungeonChange(container, viewOpts, ev) {
   return settleAndRedraw(job, container, viewOpts);
 }
 
+function handleDioramaModeClick(container, viewOpts, target) {
+  const state = viewOpts.state || getDungeonSession();
+  const nextMode = target.dataset.mode || "2d";
+  const job = import("./diorama/diorama-view.js").then((mod) => {
+    state.dioramaMode = mod.saveDioramaMode(nextMode);
+    const canvas = container.querySelector("#dungeon-vtt-canvas");
+    const scene = state.campaign?.scenesById?.[state.campaign?.activeSceneId];
+    const floor = scene?.floors?.find((f) => f.z === scene.activeFloorZ) || scene?.floors?.[0];
+    if (canvas && floor && state.dioramaMode !== "2d") {
+      mod.attachDioramaOverlay(canvas, floor, {
+        mode: state.dioramaMode,
+        onFallback2d: (msg) => { state.dioramaMode = "2d"; state.campaignNotice = msg; },
+      }).draw();
+    }
+  });
+  return settleAndRedraw(job, container, viewOpts);
+}
+
 function handleDungeonClick(container, viewOpts, ev) {
   const target = ev.target?.closest?.("[data-dungeon]");
   if (!target) return undefined;
   const action = target.dataset.dungeon;
   if (action === "chip") return handleChipClick(container, target);
+  if (action === "diorama-mode") return handleDioramaModeClick(container, viewOpts, target);
   const handler = ACTION_HANDLERS[action];
   if (!handler) return undefined;
   const state = viewOpts.state || getDungeonSession();
