@@ -90,6 +90,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [midia-v2.md](./specs/midia-v2.md): mídia retrô: AVIF q70 em 540p, Opus 32 kbps e H.264 480p24, com pedaços abaixo de 100 KB (não implementada)
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
 - [moderador-natural-v0.md](./specs/moderador-natural-v0.md): vínculo assinado (implementado) e moderador natural nas denúncias (a implementar)
+- [aviso-local-preventivo-v0.md](./specs/aviso-local-preventivo-v0.md): **aviso local preventivo e ocultação em 1 toque (brainstorm, F11 / PM-104)** — heurísticas consultivas pré-publicação 100% locais (nunca bloqueia) + borrão/ocultação em 1 toque integrado a `moderation.js` e `PM-69`, sem ML/pesos e sem `'wasm-unsafe-eval'`
 - [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (implementado em laboratório, atrás da flag `vox.lab.aviso`): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
 - [modo-assembleia-v0.md](./specs/modo-assembleia-v0.md): **modo assembleia (stub PM-23)** — pauta, voto com `blockReason`, `decisionStatus`, rituais sobre aviso `convocacao`
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
