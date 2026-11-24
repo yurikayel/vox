@@ -7,6 +7,7 @@ import { loadArweave } from "./arweave-lib.js";
 import { createSignedDataItem } from "./ans104.js";
 import { assertFeatureEnabled } from "./feature-flags.js";
 import { toHonestError } from "./honest-errors.js";
+import { isRehearsalMode, isRehearsalPayload } from "./rehearsal-mode.js";
 
 /** Endpoints Turbo usados em ordem para upload gratuito até `FREE_TIER_MAX_BYTES`. */
 export const TURBO_ENDPOINTS = Object.freeze([
@@ -76,6 +77,7 @@ async function parseTurboOkBody(res, text) {
  * @returns {Promise<{ ok: boolean, status?: number, body?: object, error?: Error }>} Resultado do upload.
  */
 export async function uploadToTurbo(itemBytes) {
+  if (isRehearsalMode()) return { ok: false, blocked: true, rehearsal: true };
   let lastErr = null;
   for (const url of TURBO_ENDPOINTS) {
     try {
@@ -120,21 +122,36 @@ async function postViaL1(payload, tags, jwk) {
 }
 
 /**
- * Publica JSON/texto no Arweave (via Turbo quando <= `FREE_TIER_MAX_BYTES` ou fallback L1).
- * @param {string|object} dataObj Conteúdo a publicar.
- * @param {{ name: string, value: string }[]} [tags=[]] Tags Arweave/ANS-104.
- * @param {{ jwk?: object, autoCreate?: boolean, forceL1?: boolean, fallbackL1?: boolean }} [options={}] Opções de carteira e rota.
- * @returns {Promise<{ success: boolean, id: string, status: number, via: string, size?: number }>} Recibo da publicação.
+ * Resolve a chave JWK a usar no upload (opção explícita, armazenada ou criação automática).
+ * @param {{ jwk?: object, autoCreate?: boolean }} options Opções de carteira.
+ * @param {string} missingMessage Mensagem de erro quando nenhuma carteira está disponível.
+ * @returns {Promise<object>} JWK pronta para assinatura.
  */
-export async function postData(dataObj, tags = [], options = {}) {
-  assertFeatureEnabled("arweaveUpload");
+async function resolveUploadJwk(options, missingMessage) {
   let jwk = options.jwk || getStoredJwk();
   if (!jwk && options.autoCreate) {
     jwk = await ensureWallet();
   }
-  if (!jwk) {
-    throw new Error("Nenhuma carteira encontrada. Conecte sua carteira em #/wallet antes de publicar.");
+  if (!jwk) throw new Error(missingMessage);
+  return jwk;
+}
+
+/**
+ * Publica JSON/texto no Arweave (via Turbo quando <= `FREE_TIER_MAX_BYTES` ou fallback L1).
+ * @param {string|object} dataObj Conteúdo a publicar.
+ * @param {{ name: string, value: string }[]} [tags=[]] Tags Arweave/ANS-104.
+ * @param {{ jwk?: object, autoCreate?: boolean, forceL1?: boolean, fallbackL1?: boolean }} [options={}] Opções de carteira e rota.
+ * @returns {Promise<{ success: boolean, id?: string, status?: number, via: string, size?: number, blocked?: boolean, rehearsal?: boolean }>} Recibo da publicação.
+ */
+export async function postData(dataObj, tags = [], options = {}) {
+  if (isRehearsalMode() || isRehearsalPayload(dataObj)) {
+    return { success: false, blocked: true, rehearsal: true, via: "rehearsal" };
   }
+  assertFeatureEnabled("arweaveUpload");
+  const jwk = await resolveUploadJwk(
+    options,
+    "Nenhuma carteira encontrada. Conecte sua carteira em #/wallet antes de publicar.",
+  );
 
   const payload = typeof dataObj === "string" ? dataObj : JSON.stringify(dataObj || {});
   const bytes = new TextEncoder().encode(payload);
@@ -143,13 +160,7 @@ export async function postData(dataObj, tags = [], options = {}) {
     const item = await createSignedDataItem(payload, tags, jwk);
     const turbo = await uploadToTurbo(item.bytes);
     if (turbo.ok) {
-      return {
-        success: true,
-        id: item.id,
-        status: turbo.status,
-        via: "turbo",
-        size: item.bytes.length,
-      };
+      return { success: true, id: item.id, status: turbo.status, via: "turbo", size: item.bytes.length };
     }
     if (options.fallbackL1 === false) {
       throw toHonestError(turbo.error || new Error("Falha no upload Turbo"));
@@ -164,15 +175,17 @@ export async function postData(dataObj, tags = [], options = {}) {
  * @param {Uint8Array} rawBytes Bytes brutos do arquivo.
  * @param {{ name: string, value: string }[]} [tags=[]] Tags Arweave/ANS-104.
  * @param {{ jwk?: object, autoCreate?: boolean }} [options={}] Opções de carteira.
- * @returns {Promise<{ success: boolean, id: string, status: number, via: string, size: number }>} Recibo do envio.
+ * @returns {Promise<{ success: boolean, id?: string, status?: number, via: string, size?: number, blocked?: boolean, rehearsal?: boolean }>} Recibo do envio.
  */
 export async function postBinary(rawBytes, tags = [], options = {}) {
-  assertFeatureEnabled("arweaveUpload");
-  let jwk = options.jwk || getStoredJwk();
-  if (!jwk && options.autoCreate) {
-    jwk = await ensureWallet();
+  if (isRehearsalMode()) {
+    return { success: false, blocked: true, rehearsal: true, via: "rehearsal" };
   }
-  if (!jwk) throw new Error("Nenhuma carteira encontrada. Conecte sua carteira em #/wallet.");
+  assertFeatureEnabled("arweaveUpload");
+  const jwk = await resolveUploadJwk(
+    options,
+    "Nenhuma carteira encontrada. Conecte sua carteira em #/wallet.",
+  );
 
   const item = await createSignedDataItem(rawBytes, tags, jwk);
   const turbo = await uploadToTurbo(item.bytes);

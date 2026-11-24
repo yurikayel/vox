@@ -260,6 +260,7 @@ vox/
 
 - **Licença:** **GNU AGPL-3.0-or-later** ([`LICENSE`](./LICENSE)) — fecha a brecha de SaaS e nuvem privada (Seção 13; [ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./docs/legal/licenca-e-contribuicoes.md)).
 - **Contribuição e segurança:** [`AUTHORS.md`](./AUTHORS.md) · [`CONTRIBUTORS.md`](./CONTRIBUTORS.md) (DCO) · [`SECURITY.md`](./SECURITY.md) (divulgação responsável) · PRs sempre para **`develop`** ([CONTRIBUTING.md](./CONTRIBUTING.md)) · **Operação sem o mantenedor:** [pacote anti-bus-factor](./docs/operations/pacote-anti-bus-factor.md).
+- **Apoio voluntário:** [GitHub Sponsors](https://github.com/sponsors/yurikayel) ([`.github/FUNDING.yml`](./.github/FUNDING.yml)) — conta de pessoa física no Brasil (sem CNPJ/OSC), opcional e sem contrapartida de alcance ou prioridade; custos e gatilhos em [INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 - **Estado real da governança:** a revisão e o controle administrativo estão concentrados em uma pessoa, e proposta pública não garante merge. Para deixar de depender de uma só pessoa (*bus factor* 1):
   1. ~~Publicar licença livre (AGPL-3.0-or-later) + `AUTHORS.md`, `CONTRIBUTORS.md`, `SECURITY.md` e ADR-015.~~ **Concluído.**
   2. Definir critérios públicos para adicionar, remover e substituir mantenedores (com sucessão).
