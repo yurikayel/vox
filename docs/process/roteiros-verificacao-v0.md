@@ -1,0 +1,80 @@
+# Roteiros de verificação numerados v0 (`PM-73` / `LAN-33`)
+
+> **Status:** rascunho · **Owner:** produto / QA e release ops · **Revisado:** 2026-11-24
+> **Relacionados:** [roteiro-teste-celular-5min-pm73.md](../product/roteiro-teste-celular-5min-pm73.md) · [qualidade-e-evidencia.md](./qualidade-e-evidencia.md) · [checklist-release-v1-lan33.md](../operations/checklist-release-v1-lan33.md) · [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) · [gatilho-infra-50-ativos.md](../operations/gatilho-infra-50-ativos.md)
+
+Catálogo de roteiros de verificação com **IDs numéricos estáveis** para uso por voluntários (Trilho A) e por manutenção/operação pré-piloto e release (Trilho B). Um ID nunca é reciclado para outro fluxo: se um roteiro for aposentado, fica marcado como descontinuado e o próximo fluxo recebe um número novo.
+
+> **Privacidade e evidência:** nunca registrar nome civil, e-mail, telefone, endereço IP, frase de recuperação real ou capturas de conversas privadas nos relatos. Classificar cada item executado conforme [qualidade-e-evidencia.md](./qualidade-e-evidencia.md): `PASS` (com evidência observável), `FAIL` (erro observado / causa confirmada / causa provável), `NOT RUN` (fora do escopo da rodada) ou `BLOCKED` (impedimento externo).
+
+---
+
+## Trilho A (`R-01`…`R-20`) — Voluntários · local e loopback
+
+Escopo restrito a fluxos **já disponíveis no cliente** (`develop`). Pode ser executado em servidor local/loopback ou numa instância publicada do PWA, em celular ou desktop, sem exigir privilégios de manutenção.
+
+| ID | Fluxo | Rota / ponto de entrada | O que executar e confirmar | Referência |
+| :---: | :--- | :--- | :--- | :--- |
+| **R-01** | Carregamento inicial do PWA e SW | `#/` e `#/status` | Abrir o PWA no navegador principal; confirmar renderização limpa da Ágora e registro ativo do Service Worker em `#/status`. | [roteiro 5 min](../product/roteiro-teste-celular-5min-pm73.md) |
+| **R-02** | Instalação na tela inicial (A2HS) | Menu do navegador (A2HS) | Adicionar o PWA à tela inicial e reabrir pelo ícone; confirmar abertura em tela limpa sem barra de endereço confusa. | `PM-73` |
+| **R-03** | Onboarding e identidade local | Porta da Cantina (`#/`) | Criar conta nova sem informar e-mail, telefone ou conta externa; confirmar geração de identidade local `vx_…` no aparelho. | [IDENTITY.md](../IDENTITY.md) |
+| **R-04** | Pacto de entrada e confirmação **18+** | Pacto de entrada | Tentar avançar sem marcar a caixa "tenho 18 anos ou mais" e confirmar que os botões permanecem desabilitados; marcar a caixa e concluir o aceite local. | [ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md) · `PM-67` |
+| **R-05** | Frase de recuperação (**12 palavras**) | `#/frase` | Abrir a tela da frase de recuperação, confirmar exibição legível das 12 palavras, sem corte horizontal em tela estreita, e sem envio de rede ao visualizar. | [IDENTITY.md](../IDENTITY.md) · `PM-73` |
+| **R-06** | Guia in-app de teste aberto | `#/ajuda/teste` | Abrir `#/ajuda/teste`, percorrer os passos exibidos e testar os links internos para `#/c/demo-aprenda-vox`, `#/c/demo-feira-local?tab=listings`, `#/settings/network` e `#/status`. | `PM-73` · [teste-aberto-demo.md](../pilot/teste-aberto-demo.md) |
+| **R-07** | Página Sobre, licença e canal DPO | `#/sobre` | Confirmar exibição da licença `AGPL-3.0-or-later`, link do código-fonte, link para `./proposta-vox.html`, link para `./privacy.html` e canal DPO / não-usuário com aviso explícito para **não enviar dados pessoais sensíveis** em issue pública. | `LAN-03` · [ADR-015](../adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) |
+| **R-08** | Política de Privacidade e rodapé | `./privacy.html` e rodapé do shell | Abrir `./privacy.html` a partir de `#/sobre` e validar carregamento sem erro; conferir no rodapé do shell os links ativos para **Teste aberto** (`#/ajuda/teste`) e **Sobre & DPO** (`#/sobre`). | `LAN-03` · [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md) |
+| **R-09** | Publicação local no feed | `#/compose` ou compositor em `#/` | Publicar um post curto de teste; confirmar exibição imediata no feed cronológico (sem ranking algorítmico nem erro no topo). | [roteiro 5 min](../product/roteiro-teste-celular-5min-pm73.md) |
+| **R-10** | Continuidade offline (modo avião) | `#/` (sem rede) | Ativar o modo avião (ou encerrar a rede local), fechar e reabrir o PWA; confirmar que o shell carrega do cache do SW e o post publicado em `R-09` continua visível. | `PM-73` |
+| **R-11** | Reconexão e saúde do nó | `#/status` | Religar a rede, abrir `#/status` e aguardar até 30 s; conferir estado de gateways, sinalização (WebSocket / Nostr) e origens de leitura registradas localmente. | `PM-73` |
+| **R-12** | Opt-out de ajuda à malha | `#/settings/network` | Marcar **Pausar ajuda à rede** em `#/settings/network`, recarregar a página e confirmar persistência da preferência local. | `#/ajuda/teste` |
+| **R-13** | Backup HTML standalone offline | `#/settings/network` | No cartão **Backup HTML offline**, acionar **Baixar backup HTML (offline)** (`#btn-export-html-backup`); abrir o arquivo `.html` baixado em aba offline e confirmar leitura dos posts sem servidor nem internet. | `EXP-04` |
+| **R-14** | Guia de backup e recuperação assistida | `#/backup` · `#/guardioes` · `#/voltar` | Abrir `#/backup` para conferir o fluxo guiado de cópia de segurança e verificar que `#/guardioes` e `#/voltar` carregam corretamente sem erros de console. | [guardioes-v0.md](../specs/guardioes-v0.md) · [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md) |
+| **R-15** | Restauração de conta em contexto limpo | `#/frase` → aba/perfil limpo | Exportar/anotar a frase de teste de `R-05`, abrir um perfil limpo do navegador (ou limpar o armazenamento local após backup) e restaurar a identidade; confirmar recuperação da mesma conta local. | [IDENTITY.md](../IDENTITY.md) |
+| **R-16** | Checagem de acessibilidade (a11y) | `#/`, `#/sobre`, `#/ajuda/teste`, `#/settings/network` | Navegar apenas com teclado (`Tab` / `Shift+Tab` / `Enter`), confirmar foco automático no `h1` ao trocar de rota, ausência de armadilhas de foco e leitura clara de botões e landmarks ARIA. | [sovereign-agora.md](../design/sovereign-agora.md) |
+| **R-17** | Checagem de escape e defesa contra XSS | `#/compose` e renderização em `#/` | Publicar texto contendo marcação HTML/script literal (ex.: `<img src=x onerror=alert(1)>`, `<script>alert(1)</script>`, aspas) e confirmar que aparece como texto escapado, sem execução de script nem quebra de layout. | [THREAT-MODEL.md](../THREAT-MODEL.md) |
+| **R-18** | Ativação e isolamento do **Modo Ensaio** | `client/js/rehearsal-mode.js` (`localStorage` `vox-rehearsal-mode = "1"`) | Ativar o Modo Ensaio localmente; confirmar exibição da faixa persistente **"Modo Ensaio — nada sai deste aparelho"** (`#rehearsalModeBanner`) e confirmar que ações no app permanecem contidas no aparelho (sem saída para gossip, memória central ou Arweave/Turbo). | `PM-100` |
+| **R-19** | Limpeza e saída do **Modo Ensaio** | Botão **Apagar ensaio e sair** (`#btnRehearsalWipeExit`) | Acionar **Apagar ensaio e sair** na faixa persistente; confirmar remoção das chaves `vox-rehearsal-mode` e `vox-rehearsal:*`, desaparecimento da faixa e retorno ao estado normal sem resíduos de ensaio. | `PM-100` |
+| **R-20** | Relato de campo sem PII | `node scripts/mobile-field-report.mjs` | Consolidar o JSON de teste de campo gerado no celular com `scripts/mobile-field-report.mjs` e conferir que a saída contém apenas valores de lista fechada (zero PII e zero texto livre). | [roteiro 5 min](../product/roteiro-teste-celular-5min-pm73.md) |
+
+---
+
+## Trilho B (`R-50`…`R-70`) — Manutenção · pré-piloto e ops
+
+Escopo voltado a mantenedores, revisores, stewards e operadores de release antes do piloto, durante a operação e no corte de versões.
+
+| ID | Fluxo | Comando / artefato | Critério de verificação | Referência |
+| :---: | :--- | :--- | :--- | :--- |
+| **R-50** | Portão local completo de qualidade | `npm run validate` | Executar `lint`, `lint:relay`, `audit:complexity`, `audit:docs`, `audit:layers` e `npm test` na raiz de `vox/` com 0 erros e sem arquivos `docs/metrics/baseline-*` não rastreados no `git status`. | [TESTES.md](../TESTES.md) · [HARDENING.md](../HARDENING.md) |
+| **R-51** | Paridade `CACHE_NAME` e `SHELL_ASSETS` | `client/sw.js` · `npm run release-metadata` | Confirmar 100% de paridade entre `SHELL_ASSETS` e arquivos reais em `client/`, espelhamento exato em `docs/release-metadata.json` (`tests/release-metadata-drift.test.js`) e ausência de string concreta de cache duplicada em docs. | [checklist-release-v1-lan33.md](../operations/checklist-release-v1-lan33.md) |
+| **R-52** | Verificação automatizada de espelhos A/B | `node scripts/verify-mirrors.mjs --strict` | Confirmar HTTP 200 em `/sw.js` nos espelhos A (GitHub Pages) e B (Cloudflare Pages) e igualdade de `CACHE_NAME` com `client/sw.js` (usar `--offline` em ambiente sem rede externa). | [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) |
+| **R-53** | Registro executável T2 dos espelhos | `docs/operations/ops-shell-mirrors.md` | Conferir se `base_url`, `git_sha`, `CACHE_NAME` e status `live` na tabela T2 correspondem aos últimos runs verdes de `deploy-pages.yml` e `deploy-shell-b.yml`. | [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) |
+| **R-54** | Virada `SIGV2_FROM` (**24/11/2026**) | `node --test tests/sig-format.test.js` · `node scripts/sigv2-cutover-check.mjs --input <itens.json>` | Validar emissão de `sigv: 2` a partir de `SIGV2_FROM` (2026-11-24T00:00:00Z), aceitação de `v1` apenas para legado anterior ao corte e recusa *fail-closed* de versões desconhecidas. | [ADR-021](../adr/021-integridade-na-entrada-forma-assinada.md) · `PM-85` · `PM-102` |
+| **R-55** | Auditoria de não-vazamento do Modo Ensaio | `node scripts/sigv2-cutover-check.mjs --input <itens.json> --check-rehearsal` | Inspecionar lotes de saída (gossip, memória central, POSSE) e confirmar 0 itens com `rehearsal: true`, `mode: "rehearsal"`, `TEST_ROUTE_IDS` ou prefixo `rehearsal_`. | `PM-100` |
+| **R-56** | Fechamento da convivência `v1` na borda | Cliente + relay (`PM-102`) | Antes de encerrar a convivência, confirmar em teste controlado que itens novos pós-`SIGV2_FROM` sem `sigv: 2` são rejeitados na entrada, preservando leitura do legado anterior à data de corte. | [ADR-021](../adr/021-integridade-na-entrada-forma-assinada.md) · `PM-102` |
+| **R-57** | Saúde do relay e sinalização | `npm run test:relay` · `GET /health` | Validar suíte Python do relay, resposta `200 OK` em `/health` e conferir margem frente à referência de loopback em `bench-sinalizacao-lan09.md`. | [relay-api.md](../specs/relay-api.md) · [bench-sinalizacao-lan09.md](../operations/bench-sinalizacao-lan09.md) |
+| **R-58** | Moderação **E1** — Trio inicial | Comunidade piloto | Confirmar nomeação de 2 co-facilitadores + 1 moderador reserva antes da semana 2 do piloto, garantindo que o fundador não atue como moderador único. | [direcionamento §4.3](../strategy/direcionamento-crescimento-rede-2026-11.md) |
+| **R-59** | Moderação **E2** — Carta de 1 página | Comunidade piloto | Confirmar publicação da carta de moderação adaptada na praça (escopo, ocultar vs. banir, proibições mínimas e aceite) antes de qualquer polêmica. | [teste-aberto-carta-moderacao-e2.md](../pilot/teste-aberto-carta-moderacao-e2.md) |
+| **R-60** | Moderação **E3** — Oficina `mod-action` | Oficina de 30 min | Conduzir exercício prático de ocultação local (`mod-action`) com os moderadores da comunidade, confirmando transparência na UI e separação entre ocultar e banir. | [direcionamento §4.3](../strategy/direcionamento-crescimento-rede-2026-11.md) |
+| **R-61** | Moderação **E4** — Rodízio e separação de papéis | Registro comunitário | Confirmar escala mensal de plantão (mandato sugerido ~90 dias) e separação estrita entre moderadores (`mod-action`) e steward/buddy de infraestrutura (`V-P08`). | [steward-relay-buddy.md](../operations/steward-relay-buddy.md) · [GOVERNANCE.md](../../GOVERNANCE.md) |
+| **R-62** | Moderação **E5** — Recurso comunitário | Thread pública / proposta local | Simular ou auditar pedido de revisão por **segundo moderador** em até 72 h úteis (ou proposta/voto cutoff), confirmando ausência de escalação para o mantenedor do repositório. | [teste-aberto-carta-moderacao-e2.md](../pilot/teste-aberto-carta-moderacao-e2.md) |
+| **R-63** | Avaliação do gatilho **`>50 ativos`** | `docs/operations/gatilho-infra-50-ativos.md` | Conferir se há evidência sustentada de >50 contas ativas em janela de 7 dias; abaixo do limiar, registrar `NOT RUN` para `R-64`…`R-66` e manter 1× relay sem TURN pago nem 2º nó. | [gatilho-infra-50-ativos.md](../operations/gatilho-infra-50-ativos.md) |
+| **R-64** | **`INF-01`** — TURN em produção | Worker TURN + `client/config/signaling.json` | Somente acima do gatilho: validar limites oficiais do plano, testar credenciais TURN com `curl`, atualizar `turnCredentialsUrl` com bump de SW e revisar nota de privacidade sobre exposição de IP ao TURN. | [turn-e-segundo-no.md](../operations/turn-e-segundo-no.md) · [INFRA-CUSTOS.md](../INFRA-CUSTOS.md) |
+| **R-65** | **`INF-02`** — Segundo nó de sinalização | `client/config/signaling.json` + 2º relay | Somente acima do gatilho: incluir o 2º nó em `signalingUrls`, validar `/health` e conexão WebSocket em ambos os nós e registrar evidência sem segredos. | [turn-e-segundo-no.md](../operations/turn-e-segundo-no.md) |
+| **R-66** | **`INF-03`** e **`INF-04`** — Proxy trust e snapshot autenticado | `relay/render.yaml` · `X-Vox-Snapshot-Proof` | Somente acima do gatilho: configurar `VOX_RELAY_TRUST_PROXY_HOPS` + pinger externo 5 min em `/health` (`INF-03`) e migrar snapshot autenticado do relay de `compat` para `enforce` (`INF-04`). | [RFC 0002](../rfc/0002-snapshot-autenticado-do-relay-cego.md) · [gatilho-infra-50-ativos.md](../operations/gatilho-infra-50-ativos.md) |
+| **R-67** | Ensaio datado de rollback e DR | `ops-pages-rollback.md` · `ops-dr-drill-checklist.md` | Executar 1 ensaio de rollback em janela controlada, validar paridade A ↔ B pós-rollback e registrar data, operador, SHA e resultado na tabela §3 de `checklist-release-v1-lan33.md`. | [ops-pages-rollback.md](../operations/ops-pages-rollback.md) · [ops-dr-drill-checklist.md](../operations/ops-dr-drill-checklist.md) |
+| **R-68** | Revisão dupla e anti-bus-factor (`LAN-30`) | `pacote-anti-bus-factor.md` | Confirmar revisão de segunda pessoa habilitada no fluxo de release/rollback e aderência ao acesso gradual sem compartilhamento inseguro de credenciais. | [pacote-anti-bus-factor.md](../operations/pacote-anti-bus-factor.md) · [segunda-pessoa-acesso-gradual.md](./segunda-pessoa-acesso-gradual.md) |
+| **R-69** | Corte de release SemVer (`LAN-33`) | PR `develop` → `main` · tag anotada | Conferir fechamento dos pré-requisitos do portão G3, CI 100% verde (incluindo `e2e-mesh` e CodeQL), atualizar `package.json` e `CHANGELOG.md`, fazer merge em `main` e publicar tag anotada `v1.0.0`. | [checklist-release-v1-lan33.md](../operations/checklist-release-v1-lan33.md) |
+| **R-70** | Smoke pós-deploy e encerramento da release | Workflows de deploy + `verify-mirrors.mjs` | Confirmar `success` em `deploy-pages.yml`, `deploy-shell-b.yml` e `release-binarios.yml` (`SHA256SUMS`), validar espelhos A/B via `R-52`, checar `GET /health` e publicar aviso de hard refresh se `CACHE_NAME` mudou. | [checklist-release-v1-lan33.md](../operations/checklist-release-v1-lan33.md) |
+
+---
+
+## Como registrar uma rodada de verificação
+
+Ao executar um subconjunto ou um trilho completo, anote em tabela simples (na retrospectiva do piloto ou na descrição do PR/release):
+
+| Campo | Exemplo |
+| :--- | :--- |
+| **Data e alvo** | `2026-11-24` · `develop` (`<SHA>`) ou URL do espelho |
+| **Ambiente** | `Android 12 / Chrome 130` ou `Windows 11 / Node 22 / Python 3.12` |
+| **IDs executados** | `R-01`…`R-12` (`PASS`), `R-13` (`FAIL` — detalhe), `R-64`…`R-66` (`NOT RUN` — abaixo de 50 ativos) |
+| **Evidência** | Saída resumida do comando, duração ou captura sem PII |
