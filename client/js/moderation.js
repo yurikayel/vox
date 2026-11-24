@@ -5,6 +5,7 @@
  */
 
 import { REVIEW_HIDE_ACTION } from "./report-review.js";
+export { analyzePrePublishAdvisory, renderLocalAdvisoryBanner } from "./shared/local-advisory.js";
 
 /**
  * Junta as ações de moderação de uma comunidade: as gravadas neste aparelho e as do índice remoto (GraphQL), sem
@@ -231,6 +232,8 @@ const BLOCKED_STORAGE = "vox-moderation-blocked-v1";
 const MUTED_STORAGE = "vox-moderation-muted-v1";
 /** Chave do `localStorage` com os ids de posts em quarentena local. */
 export const QUARANTINE_STORAGE_KEY = "vox-quarantine-posts-v1";
+/** Chave do `localStorage` com os ids de posts borrados localmente neste aparelho. */
+export const BLURRED_STORAGE_KEY = "vox-blurred-posts-v1";
 /** Rótulo da ação de quarentena local no menu do post. */
 export const QUARANTINE_ACTION_LABEL = "Quarentena local / não ecoar";
 /** Explicação curta do que a quarentena local faz (e do que não faz). */
@@ -427,6 +430,73 @@ export function unquarantinePost(postId) {
   const ids = getQuarantinedPostIds().filter((id) => id !== postId);
   saveStorage(QUARANTINE_STORAGE_KEY, ids);
   return true;
+}
+
+/**
+ * Ids dos posts marcados como borrados localmente neste aparelho.
+ * @returns {string[]} Ids guardados localmente.
+ */
+export function getBlurredPostIds() {
+  return asPostIdList(loadStorage(BLURRED_STORAGE_KEY));
+}
+
+/**
+ * Indica se o post está borrado localmente na visualização deste aparelho.
+ * @param {string} postId Id do post.
+ * @returns {boolean} Verdadeiro se o post estiver borrado localmente.
+ */
+export function isPostBlurredLocally(postId) {
+  if (!postId) return false;
+  return getBlurredPostIds().includes(postId);
+}
+
+/**
+ * Aplica borrão local imediato (1 toque) ao post apenas neste aparelho, sem tocar servidor ou relay.
+ * @param {string} postId Id do post.
+ * @returns {boolean} Falso só sem id.
+ */
+export function blurPostLocally(postId) {
+  if (!postId) return false;
+  const ids = getBlurredPostIds().filter((id) => id !== postId);
+  ids.push(postId);
+  saveStorage(BLURRED_STORAGE_KEY, ids);
+  return true;
+}
+
+/**
+ * Remove o borrão local do post neste aparelho ("Mostrar novamente").
+ * @param {string} postId Id do post.
+ * @returns {boolean} Falso só sem id.
+ */
+export function unblurPostLocally(postId) {
+  if (!postId) return false;
+  const ids = getBlurredPostIds().filter((id) => id !== postId);
+  saveStorage(BLURRED_STORAGE_KEY, ids);
+  return true;
+}
+
+/**
+ * Ação rápida local de 1 toque: borra e coloca o post em quarentena local neste aparelho
+ * (some do feed e deixa de ser ecoável pela malha P2P), sem tocar servidor ou relay.
+ * @param {string} postId Id do post.
+ * @param {string} [reason=""] Motivo opcional registrado apenas no resumo de retorno (até 100 caracteres).
+ * @returns {{ ok: boolean, postId: string, blurred: boolean, quarantined: boolean, localOnly: true, reason: string }}
+ * Resumo da ocultação local imediata.
+ */
+export function quickHidePost(postId, reason = "") {
+  if (!postId) {
+    return { ok: false, postId: "", blurred: false, quarantined: false, localOnly: true, reason: "" };
+  }
+  const blurred = blurPostLocally(postId);
+  const quarantined = quarantinePost(postId);
+  return {
+    ok: blurred && quarantined,
+    postId,
+    blurred,
+    quarantined,
+    localOnly: true,
+    reason: String(reason || "").slice(0, 100),
+  };
 }
 
 /**
