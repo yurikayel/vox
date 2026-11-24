@@ -1,17 +1,20 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-//! Binary entry point for `vox-node` (ADR-039 Phase 4, PR4.1b).
+//! Binary entry point for `vox-node` (ADR-039 Phase 4, PR4.2a).
 //!
-//! Supports `--help`, `--version`, `--health-json` / `--check`, and
-//! `--mode signaling [--host <addr>] [--port <port>]`.
+//! Supports `--help`, `--version`, `--health-json` / `--check`,
+//! `--mode signaling [--host <addr>] [--port <port>]`, and
+//! `--mode relay [--host <addr>] [--port <port>] [--data-dir <dir>]`.
 
 use std::env;
 use std::io::{self, Write};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 use vox_core::genesis_data::GENESIS_MS;
 use vox_core::genesis_guard;
+use vox_node::relay::{RelayConfig, RelayServer};
 use vox_node::signaling::{SignalingConfig, SignalingServer};
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -26,15 +29,27 @@ enum Command {
         host: Option<String>,
         port: Option<u16>,
     },
+    Relay {
+        host: Option<String>,
+        port: Option<u16>,
+        data_dir: Option<PathBuf>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ServerMode {
+    Signaling,
+    Relay,
 }
 
 fn usage_text() -> String {
     format!(
-        "{PKG_NAME} {PKG_VERSION} — Vox unified node (ADR-039 PR4.1b)\n\
+        "{PKG_NAME} {PKG_VERSION} — Vox unified node (ADR-039 PR4.2a)\n\
          \n\
          USAGE:\n\
          \t{PKG_NAME} [OPTIONS]\n\
          \t{PKG_NAME} --mode signaling [--host <ADDR>] [--port <PORT>]\n\
+         \t{PKG_NAME} --mode relay [--host <ADDR>] [--port <PORT>] [--data-dir <DIR>]\n\
          \n\
          OPTIONS:\n\
          \t-h, --help                 Show this help message\n\
@@ -42,8 +57,10 @@ fn usage_text() -> String {
          \t    --health-json          Emit JSON health report using vox_core::genesis_guard\n\
          \t    --check                Alias for --health-json\n\
          \t    --mode signaling       Run WebSocket signaling + HTTP health server\n\
-         \t    --host <ADDR>          Bind host (default: HOST env or 0.0.0.0)\n\
-         \t    --port <PORT>          Bind port (default: PORT env or 3921; 0 = ephemeral)\n"
+         \t    --mode relay           Run HTTP relay server (/health, /status, /ping, /version, /inbox/*)\n\
+         \t    --host <ADDR>          Bind host (signaling: 0.0.0.0; relay: 127.0.0.1)\n\
+         \t    --port <PORT>          Bind port (signaling: 3921; relay: 3920; 0 = ephemeral)\n\
+         \t    --data-dir <DIR>       Base persistence directory for relay mode\n"
     )
 }
 
@@ -56,59 +73,96 @@ where
         return Ok(Command::Help);
     };
     if items.len() == 1 {
-        return match first {
-            "-h" | "--help" => Ok(Command::Help),
-            "-V" | "--version" => Ok(Command::Version),
-            "--health-json" | "--check" | "health-json" | "check" => Ok(Command::HealthJson),
-            "signaling" => Ok(Command::Signaling {
-                host: None,
-                port: None,
-            }),
-            other => Err(format!("unknown argument: {other}")),
-        };
+        return parse_single_arg(first);
     }
-    parse_signaling_args(&items)
+    parse_mode_args(&items)
 }
 
-fn parse_signaling_args(items: &[String]) -> Result<Command, String> {
-    let mut mode_signaling = false;
+fn parse_single_arg(arg: &str) -> Result<Command, String> {
+    match arg {
+        "-h" | "--help" => Ok(Command::Help),
+        "-V" | "--version" => Ok(Command::Version),
+        "--health-json" | "--check" | "health-json" | "check" => Ok(Command::HealthJson),
+        "signaling" => Ok(Command::Signaling {
+            host: None,
+            port: None,
+        }),
+        "relay" => Ok(Command::Relay {
+            host: None,
+            port: None,
+            data_dir: None,
+        }),
+        other => Err(format!("unknown argument: {other}")),
+    }
+}
+
+fn parse_mode_value(raw: &str) -> Result<ServerMode, String> {
+    match raw {
+        "signaling" => Ok(ServerMode::Signaling),
+        "relay" => Ok(ServerMode::Relay),
+        other => Err(format!("unsupported mode: {other}")),
+    }
+}
+
+fn parse_mode_args(items: &[String]) -> Result<Command, String> {
+    let mut mode: Option<ServerMode> = None;
     let mut host = None;
     let mut port = None;
+    let mut data_dir = None;
     let mut idx = 0;
 
     while idx < items.len() {
         match items[idx].as_str() {
-            "signaling" => mode_signaling = true,
+            "signaling" => mode = Some(ServerMode::Signaling),
+            "relay" => mode = Some(ServerMode::Relay),
             "--mode" => {
                 idx += 1;
-                let mode = items.get(idx).ok_or("missing value for --mode")?;
-                if mode != "signaling" {
-                    return Err(format!("unsupported mode: {mode}"));
-                }
-                mode_signaling = true;
+                let raw = items.get(idx).ok_or("missing value for --mode")?;
+                mode = Some(parse_mode_value(raw)?);
             }
             "--host" => {
                 idx += 1;
-                let val = items.get(idx).ok_or("missing value for --host")?;
-                host = Some(val.clone());
+                host = Some(items.get(idx).ok_or("missing value for --host")?.clone());
             }
             "--port" => {
                 idx += 1;
-                let val = items.get(idx).ok_or("missing value for --port")?;
-                let parsed = val
+                let raw = items.get(idx).ok_or("missing value for --port")?;
+                let parsed = raw
                     .parse::<u16>()
-                    .map_err(|_| format!("invalid port value: {val}"))?;
+                    .map_err(|_| format!("invalid port value: {raw}"))?;
                 port = Some(parsed);
+            }
+            "--data-dir" => {
+                idx += 1;
+                let raw = items.get(idx).ok_or("missing value for --data-dir")?;
+                data_dir = Some(PathBuf::from(raw));
             }
             other => return Err(format!("unknown argument: {other}")),
         }
         idx += 1;
     }
 
-    if !mode_signaling {
-        return Err("too many arguments (expected --mode signaling or a single flag)".to_string());
+    build_mode_command(mode, host, port, data_dir)
+}
+
+fn build_mode_command(
+    mode: Option<ServerMode>,
+    host: Option<String>,
+    port: Option<u16>,
+    data_dir: Option<PathBuf>,
+) -> Result<Command, String> {
+    match mode {
+        Some(ServerMode::Signaling) if data_dir.is_some() => {
+            Err("--data-dir is only supported in --mode relay".to_string())
+        }
+        Some(ServerMode::Signaling) => Ok(Command::Signaling { host, port }),
+        Some(ServerMode::Relay) => Ok(Command::Relay {
+            host,
+            port,
+            data_dir,
+        }),
+        None => Err("too many arguments (expected --mode signaling|relay or a single flag)".into()),
     }
-    Ok(Command::Signaling { host, port })
 }
 
 fn genesis_guard_ready() -> bool {
@@ -144,6 +198,26 @@ fn run_signaling(host: Option<String>, port: Option<u16>) -> Result<(), (u8, Str
     Ok(())
 }
 
+fn run_relay(
+    host: Option<String>,
+    port: Option<u16>,
+    data_dir: Option<PathBuf>,
+) -> Result<(), (u8, String)> {
+    let config = RelayConfig::from_env(host, port, data_dir);
+    let server = RelayServer::bind(config)
+        .map_err(|err| (1, format!("failed to bind relay server: {err}")))?;
+    let addr = server.local_addr();
+    let _ = writeln!(io::stdout(), "PORT={}", addr.port());
+    let _ = io::stdout().flush();
+    eprintln!(
+        "{PKG_NAME} {PKG_VERSION} relay listening on http://{}:{}",
+        addr.ip(),
+        addr.port()
+    );
+    server.serve_forever();
+    Ok(())
+}
+
 fn run<I>(args: I) -> Result<Option<String>, (u8, String)>
 where
     I: IntoIterator<Item = String>,
@@ -155,6 +229,11 @@ where
             .map(|json| Some(format!("{json}\n")))
             .map_err(|err| (1, err.to_string())),
         Ok(Command::Signaling { host, port }) => run_signaling(host, port).map(|()| None),
+        Ok(Command::Relay {
+            host,
+            port,
+            data_dir,
+        }) => run_relay(host, port, data_dir).map(|()| None),
         Err(msg) => Err((2, format!("{msg}\n\n{}", usage_text()))),
     }
 }
@@ -214,6 +293,24 @@ mod tests {
                 port: Some(0)
             })
         );
+        assert_eq!(
+            parse_args(args(&[
+                "vox-node",
+                "--mode",
+                "relay",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "0",
+                "--data-dir",
+                "/tmp/vox-relay"
+            ])),
+            Ok(Command::Relay {
+                host: Some("127.0.0.1".to_string()),
+                port: Some(0),
+                data_dir: Some(PathBuf::from("/tmp/vox-relay")),
+            })
+        );
     }
 
     #[test]
@@ -221,6 +318,14 @@ mod tests {
         assert!(parse_args(args(&["vox-node", "--unknown"])).is_err());
         assert!(parse_args(args(&["vox-node", "--version", "--help"])).is_err());
         assert!(parse_args(args(&["vox-node", "--mode", "invalid"])).is_err());
+        assert!(parse_args(args(&[
+            "vox-node",
+            "--mode",
+            "signaling",
+            "--data-dir",
+            "/tmp/x"
+        ]))
+        .is_err());
     }
 
     #[test]
@@ -248,5 +353,6 @@ mod tests {
             .expect("output string");
         assert!(help.contains("--health-json"));
         assert!(help.contains("--mode signaling"));
+        assert!(help.contains("--mode relay"));
     }
 }
