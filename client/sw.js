@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.167-local-advisory";
+const CACHE_NAME = "vox-pwa-v7.168-pm01-lazy-third-screen";
 
 const SHELL_ASSETS = [
 
@@ -297,9 +297,7 @@ const SHELL_ASSETS = [
   "./js/app/mesh-vault-flow.js",
   "./js/app/mesh-vault-ui.js",
   "./js/app/screens-guardian-return.js",
-  "./js/render/recovery-phrase.js",
   "./js/app/screens-phrase.js",
-  "./js/app/phrase-print.js",
   "./js/identity/p256.js",
   "./js/data/bip39-pt.js",
   "./js/vault/vault-crypto.js",

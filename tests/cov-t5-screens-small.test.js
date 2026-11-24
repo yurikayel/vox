@@ -224,7 +224,7 @@ test("frase: revelar mostra as palavras; conferir errado avisa; certo conclui", 
   inputs.forEach((el, i) => { el.value = words[positions[i]]; });
   await ids["form-phrase-confirm"].fire("submit");
   assert.doesNotMatch(screen.innerHTML, /data-phrase-pos/, "a conferência deu lugar à conclusão");
-  assert.equal(phrase.printCard(), false, "sem cartão na tela não imprime");
+  assert.equal(await phrase.printCard(), false, "sem cartão na tela não imprime");
 });
 
 test("frase: 'voltar' da conferência mostra as palavras de novo", async () => {
