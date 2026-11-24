@@ -119,10 +119,8 @@ fn extract_hostname(value: &str) -> String {
 fn reconstruct_loopback_origin(text: &str) -> Option<String> {
     let (scheme, rest) = if let Some(r) = text.strip_prefix("http://") {
         ("http", r)
-    } else if let Some(r) = text.strip_prefix("https://") {
-        ("https", r)
     } else {
-        return None;
+        ("https", text.strip_prefix("https://")?)
     };
     if rest.contains('/') || rest.contains('@') || rest.contains('?') || rest.contains('#') {
         return None;
