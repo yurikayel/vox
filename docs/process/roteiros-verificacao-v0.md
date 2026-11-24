@@ -9,7 +9,7 @@ Catálogo de roteiros de verificação com **IDs numéricos estáveis** para uso
 
 ---
 
-## Trilho A (`R-01`…`R-20`) — Voluntários · local e loopback
+## Trilho A (`R-01`…`R-22`) — Voluntários · local e loopback
 
 Escopo restrito a fluxos **já disponíveis no cliente** (`develop`). Pode ser executado em servidor local/loopback ou numa instância publicada do PWA, em celular ou desktop, sem exigir privilégios de manutenção.
 
@@ -35,6 +35,8 @@ Escopo restrito a fluxos **já disponíveis no cliente** (`develop`). Pode ser e
 | **R-18** | Ativação e isolamento do **Modo Ensaio** | `client/js/rehearsal-mode.js` (`localStorage` `vox-rehearsal-mode = "1"`) | Ativar o Modo Ensaio localmente; confirmar exibição da faixa persistente **"Modo Ensaio — nada sai deste aparelho"** (`#rehearsalModeBanner`) e confirmar que ações no app permanecem contidas no aparelho (sem saída para gossip, memória central ou Arweave/Turbo). | `PM-100` |
 | **R-19** | Limpeza e saída do **Modo Ensaio** | Botão **Apagar ensaio e sair** (`#btnRehearsalWipeExit`) | Acionar **Apagar ensaio e sair** na faixa persistente; confirmar remoção das chaves `vox-rehearsal-mode` e `vox-rehearsal:*`, desaparecimento da faixa e retorno ao estado normal sem resíduos de ensaio. | `PM-100` |
 | **R-20** | Relato de campo sem PII | `node scripts/mobile-field-report.mjs` | Consolidar o JSON de teste de campo gerado no celular com `scripts/mobile-field-report.mjs` e conferir que a saída contém apenas valores de lista fechada (zero PII e zero texto livre). | [roteiro 5 min](../product/roteiro-teste-celular-5min-pm73.md) |
+| **R-21** | Aviso local preventivo e borrão local em 1 toque (`F11`) | Compositor em `#/` e menu `⋯` do post | Escrever rascunho fictício contendo e-mail ou telefone no compositor e confirmar o banner consultivo local; acionar **Ignorar e publicar assim mesmo** (nunca bloqueia); no menu `⋯` do post publicado, acionar **Borrar/ocultar aqui**, recarregar a página para confirmar persistência local do borrão e acionar **Mostrar conteúdo** em 1 toque (0 chamadas de rede). | [aviso-local-preventivo-v0.md](../specs/aviso-local-preventivo-v0.md) · `F11` |
+| **R-22** | Convergência multi-aparelho de contatos, comunidades e listas (`PM-13`) | `#/backup` (exportar/restaurar entre dois perfis ou abas) | Em dois perfis ou abas isoladas com a mesma identidade de teste, adicionar contatos, comunidades seguidas e listas locais, remover um item em um aparelho com timestamp mais novo e exportar/restaurar o backup entre eles; confirmar convergência sem ressuscitar remoções datadas mais novas. | [rotacao-revogacao-chave-pm13.md](../specs/rotacao-revogacao-chave-pm13.md) · `PM-13` |
 
 ---
 
