@@ -8,6 +8,7 @@ export const VOX_GITHUB_DOCS = {
   docsReadme: "https://github.com/yurikayel/vox/blob/main/docs/README.md",
   features: "https://github.com/yurikayel/vox/blob/main/docs/FEATURES.md",
   devGuide: "https://github.com/yurikayel/vox/blob/main/client/DEV.md",
+  garantiaDaPraca: "https://github.com/yurikayel/vox/blob/main/docs/product/garantia-da-praca-pm104.md",
 };
 
 /**
@@ -51,6 +52,7 @@ const SECTION_ORDER = [
   "voxpedia-comunidades",
   "voxpedia-rede",
   "voxpedia-privacidade",
+  "voxpedia-garantia",
   "voxpedia-tecnico",
 ];
 
@@ -291,6 +293,66 @@ function renderPrivacidade() {
   );
 }
 
+const GARANTIA_DRAFT_BANNER =
+  "Rascunho pré-REV-12 — texto informativo, não substitui revisão jurídica";
+
+const GARANTIA_NINGUEM_PODE = [
+  ["Apagar dados em aparelhos alheios", "publicações já replicadas em seguidores ou espelhos não são destruídas remotamente por um único servidor."],
+  ["Falsificar posts ou votos em seu nome", "toda publicação e ação comunitária leva assinatura local ECDSA P-256 (sigv: 2)."],
+  ["Ler DMs cifradas ponta a ponta", "mensagens diretas usam ECDH P-256 + AES-GCM-256; relay comunitário só guarda caixa postal cega temporária (TTL máx. 72 h)."],
+  ["Trancar você fora do protocolo", "o código é livre sob GNU AGPLv3; qualquer pessoa ou comunidade pode subir seu próprio espelho, relay ou nó."],
+];
+
+const GARANTIA_NIVEIS = [
+  ["Você (no aparelho)", "oculta posts, silencia/bloqueia localmente, pausa o cache P2P em #/settings/network, exporta backup assinado e HTML offline (EXP-04) e configura frase (12/24 palavras), cofre por senha e cofre na malha (ADR-037). Encerramento por lápide assinada (PM-101) e cartão de recuperação (PM-13) são planejados."],
+  ["Moderadores da comunidade", "assinam ações públicas (mod-action) só naquela comunidade, podem ativar modo Canal (PM-81) e recebem denúncias por DM cifrada com revisão em 48 h (PM-69). Não apagam sua chave nem leem DMs com terceiros."],
+  ["Instância PWA oficial (vox-app)", "prevê futura lista assinada de ocultação (hide-list, LAN-13, portão G2) apenas para conteúdo grave ou ordem judicial específica, com recurso público. Vale só na exibição da instância oficial e não apaga cópias de terceiros."],
+];
+
+const GARANTIA_LIMITES = [
+  ["Sem recuperação central de senha", "se perder o aparelho sem frase, cofre v2, cofre na malha ou guardiões, ninguém recupera sua conta."],
+  ["Visibilidade de IP no WebRTC", "conexões P2P diretas trocam IPs entre pares; o ajuste \"Esconder meu IP\" (só-TURN, LAN-19) ainda não tem efeito prático sem servidor TURN público configurado (REV-10 pendente)."],
+  ["Cópias já baixadas não somem à força", "ocultar na instância oficial ou excluir localmente não remove cópias já baixadas por outros aparelhos."],
+  ["Arweave pausado (arweaveUpload: false)", "nada é gravado automaticamente em blockchain ou Arweave hoje; a circulação ocorre pela rede de seguidores e nós opcionais (Vox Populi / Vox Memoria)."],
+  ["Prontidão Fria", "o Vox ainda não abriu ao público geral nem iniciou o piloto humano (V-P09); a abertura (G3) depende de parecer jurídico (REV-12), plantão de conteúdo grave (LAN-04) e descentralização operacional (LAN-30)."],
+];
+
+/**
+ * Lista de itens termo-descrição com escape seguro.
+ *
+ * @param {Array<[string, string]>} items
+ * @returns {string}
+ */
+function renderTermList(items) {
+  const lis = items.map(([term, desc]) =>
+    `<li><strong>${escapeHtml(term)}:</strong> ${escapeHtml(desc)}</li>`
+  ).join("");
+  return `<ul class="voxpedia-steps">${lis}</ul>`;
+}
+
+/**
+ * Seção Garantia da Praça (espelho curto PM-104, pré-REV-12).
+ *
+ * @returns {string}
+ */
+function renderGarantiaDaPraca() {
+  const banner = `<p class="desc voxpedia-draft-banner" role="note"><strong>${escapeHtml(GARANTIA_DRAFT_BANNER)}</strong></p>`;
+  const docLink = `<p class="desc">Leia o documento completo no repositório: <a class="voxpedia-gh-link" href="${escapeHtml(VOX_GITHUB_DOCS.garantiaDaPraca)}" target="_blank" rel="noopener noreferrer">Garantia da Praça — PM-104 (GitHub)</a>.</p>`;
+  const layers = [
+    banner,
+    layer("O que ninguém pode fazer com sua conta", renderTermList(GARANTIA_NINGUEM_PODE)),
+    layer("O que cada nível pode fazer", renderTermList(GARANTIA_NIVEIS)),
+    layer("Limites reais (o que o Vox não promete)", renderTermList(GARANTIA_LIMITES)),
+    docLink,
+  ].join("\n");
+  return section(
+    "voxpedia-garantia",
+    "Garantia da Praça (PM-104)",
+    "Espelho curto dos compromissos técnicos e limites reais do Vox hoje — sem promessas mágicas e sujeito à revisão jurídica do REV-12.",
+    layers
+  );
+}
+
 /**
  * Camada sobre leitura e publicação.
  *
@@ -366,6 +428,7 @@ const TOC_ITEMS = [
   ["#voxpedia-comunidades", "Comunidades"],
   ["#voxpedia-rede", "Rede cooperativa"],
   ["#voxpedia-privacidade", "Privacidade & dados"],
+  ["#voxpedia-garantia", "Garantia da Praça"],
   ["#voxpedia-tecnico", "Para curiosos (técnico)"],
   ["#/ajuda/teste", "Roteiro de teste"],
 ];
@@ -405,6 +468,7 @@ export function renderVoxpedia() {
         ${renderComunidades()}
         ${renderRede()}
         ${renderPrivacidade()}
+        ${renderGarantiaDaPraca()}
         ${renderTecnico()}
         <footer class="voxpedia-footer card">
           <p class="desc">
