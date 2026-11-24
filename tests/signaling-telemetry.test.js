@@ -105,7 +105,7 @@ test("PM-18: módulo está no precache do SW e ligado ao webrtc-peer e screens-s
   const sw = fs.readFileSync(path.join(ROOT, "client", "sw.js"), "utf8");
   const { readWebRtcPeerSource } = await import("./helpers/webrtc-peer-source.mjs");
   const peer = readWebRtcPeerSource(path.join(ROOT, "client"));
-  const statusScreen = fs.readFileSync(path.join(ROOT, "client", "js", "app", "screens-status.js"), "utf8");
+  const statusScreen = fs.readFileSync(path.join(ROOT, "client", "js", "app", "screens-status-view.js"), "utf8");
   assert.ok(sw.includes('"./js/signaling-telemetry.js"'));
   assert.ok(peer.includes("./signaling-telemetry.js"));
   assert.ok(statusScreen.includes("status-copy-signaling-btn"));
