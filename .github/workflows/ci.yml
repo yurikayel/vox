@@ -61,8 +61,11 @@ jobs:
       - name: Auditoria de camadas (import só para baixo, ADR-035; catraca)
         run: npm run audit:layers
 
-      - name: ESLint client (limites de função e complexidade bloqueiam)
-        run: npm run lint
+      - name: ESLint client, tests, scripts e tools (PM-115; limites de função e complexidade bloqueiam)
+        run: npm run lint:all
+
+      - name: Orçamento do shell PWA e boot Slow 3G (LAN-23)
+        run: node scripts/shell-budget-check.mjs
 
       - name: Executar testes unitários do cliente (node:test)
         if: matrix.node-version != '24'

@@ -116,6 +116,7 @@ export async function createIdentityLink({ routeId, arweaveAddress, jwk } = {}) 
     statement,
     vxPubKey: vxSigned.pubKey,
     vxSig: vxSigned.sig,
+    ...(vxSigned.sigv ? { vxSigv: vxSigned.sigv } : {}),
     arPubKey: { kty: currentJwk.kty, n: currentJwk.n, e: currentJwk.e },
     arSig,
   };
@@ -159,7 +160,7 @@ async function verifyRsaStatementSignature(statement, arPubKey, arSig) {
  */
 export async function verifyIdentityLink(link) {
   if (!hasValidLinkStructure(link)) return false;
-  const { statement, vxPubKey, vxSig, arPubKey, arSig } = link;
+  const { statement, vxPubKey, vxSig, vxSigv, arPubKey, arSig } = link;
 
   const computedRouteId = await localAccount.computeRouteId(vxPubKey);
   if (computedRouteId !== statement.routeId) return false;
@@ -172,6 +173,7 @@ export async function verifyIdentityLink(link) {
     author: statement.routeId,
     pubKey: vxPubKey,
     sig: vxSig,
+    ...(vxSigv ? { sigv: vxSigv } : {}),
   });
   if (!vxValid) return false;
 
