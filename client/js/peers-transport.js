@@ -4,6 +4,7 @@
 
 import { myPeerId } from "./peers-base.js";
 import * as webrtcPeer from "./webrtc-peer.js";
+import { isRehearsalMode, isRehearsalPayload } from "./rehearsal-mode.js";
 
 let broadcastChannel = null;
 
@@ -28,6 +29,7 @@ export function setBroadcastChannel(channel) {
  * @param {object} payload Mensagem a enviar.
  */
 export function postBroadcastChannel(payload) {
+  if (isRehearsalMode() || isRehearsalPayload(payload)) return;
   if (broadcastChannel) {
     try {
       broadcastChannel.postMessage(payload);
@@ -41,6 +43,7 @@ export function postBroadcastChannel(payload) {
  * @param {string} [source="rtc"] Origem da mensagem (`"rtc"` ou `"broadcast"`).
  */
 export function relayToMesh(payload, source = "rtc") {
+  if (isRehearsalMode() || isRehearsalPayload(payload)) return;
   if (source !== "broadcast") {
     postBroadcastChannel(payload);
   }
@@ -54,6 +57,7 @@ export function relayToMesh(payload, source = "rtc") {
  * @param {object} payload Mensagem a ser propagada.
  */
 export function broadcastToMesh(payload) {
+  if (isRehearsalMode() || isRehearsalPayload(payload)) return;
   postBroadcastChannel(payload);
   webrtcPeer.broadcastRtcMessage(payload);
 }
@@ -65,6 +69,7 @@ export function broadcastToMesh(payload) {
  * @returns {"rtc"|"broadcast"|null} Caminho usado, ou null se nenhum estava disponível.
  */
 export function sendDirectMessageTransport(toAddress, envelope) {
+  if (isRehearsalMode() || isRehearsalPayload(envelope)) return null;
   if (webrtcPeer.sendDmRtc(toAddress, envelope)) {
     return "rtc";
   }

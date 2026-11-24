@@ -60,7 +60,7 @@ function purgeOldProfileCards() {
 /** Contas de teste na agenda; a agenda é quem grava a chave dela. */
 function purgeTestContacts() {
   for (const c of contacts.listContacts()) {
-    if (isTestAccount(c?.routeId)) contacts.removeContact(c.routeId);
+    if (isTestAccount(c?.routeId)) contacts.purgeContact(c.routeId);
   }
 }
 

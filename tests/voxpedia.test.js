@@ -47,6 +47,7 @@ describe("renderVoxpedia headings & structure", () => {
     assert.match(html, /Comunidades/);
     assert.match(html, /Rede cooperativa/);
     assert.match(html, /Privacidade &amp; dados|Privacidade & dados/);
+    assert.match(html, /Garantia da Praça \(PM-104\)/);
     assert.match(html, /Para curiosos \(técnico\)/);
   });
 
@@ -163,6 +164,38 @@ describe("renderVoxpedia nov/2026 features", () => {
     assert.match(html, /mod-action/);
     assert.match(html, /quarentena preventiva de 48h/i);
     assert.match(html, /sigv:\s*2/);
+  });
+});
+
+describe("renderVoxpedia Garantia da Praça (PM-104)", () => {
+  const html = renderVoxpedia();
+
+  it("includes PM-104 section, TOC link and explicit pre-REV-12 draft banner", () => {
+    assert.match(html, /id="voxpedia-garantia"/);
+    assert.match(html, /href="#voxpedia-garantia"/);
+    assert.match(html, /Garantia da Praça \(PM-104\)/);
+    assert.match(html, /Rascunho pré-REV-12 — texto informativo, não substitui revisão jurídica/);
+  });
+
+  it("mirrors commitments, governance levels, honest limits and full doc link", () => {
+    assert.match(html, /ECDSA P-256/);
+    assert.match(html, /ECDH P-256 \+ AES-GCM-256/);
+    assert.match(html, /GNU AGPLv3/);
+    assert.match(html, /hide-list/);
+    assert.match(html, /TURN público configurado/);
+    assert.match(html, /Prontidão Fria/);
+    assert.match(
+      html,
+      new RegExp(`href="${VOX_GITHUB_DOCS.garantiaDaPraca.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`)
+    );
+  });
+
+  it("avoids misleading legal or technical promises", () => {
+    assert.doesNotMatch(html, /parecer jurídico definitivo/i);
+    assert.doesNotMatch(html, /REV-20/i);
+    assert.doesNotMatch(html, /anonimato total/i);
+    assert.doesNotMatch(html, /apagamento remoto garantido/i);
+    assert.doesNotMatch(html, /esqueci minha senha/i);
   });
 });
 

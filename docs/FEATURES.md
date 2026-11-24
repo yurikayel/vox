@@ -72,7 +72,6 @@
 | Cofre na malha (ADR-037, passo 4) | Já tenho conta, `#/backup` | `vault/mesh-vault.js`, `app/mesh-vault-flow.js`, `app/onboarding-email.js` | no ar (SW v7.141): cópias cifradas do cofre guardadas em laços mútuos, pedido cego no relay com espera de 24 h ou aprovação "Fui eu" e veto "Não fui eu" ([ADR-037](./adr/037-cofre-na-malha.md)) | `mesh-vault*`, `login-network-faults`, `login-rede-ruim` |
 | Seus posts num arquivo (PM-72) | `#/settings/network` | `own-posts.js`, `post-supersede.js`, `app/own-posts-ui.js` | no ar (baixa `.json` com os próprios posts assinados e a mídia; restaurar confere autor, assinatura, versão e hash; sem servidor) | `own-posts`, `inbox-backup` |
 | Cofre v2 por e-mail/Senha Soberana, sync por link/QR e backup no e-mail (ADR-025, ADR-032 §6) | `#/backup`, `#/sync`, `#/settings/network` | `vault/oauth-vault.js`, `vault/vault-crypto.js`, `email-kit.js`, `identity/inbox-backup.js` | no ar (preserva semente e DM; busca local/remota com anti-rollback ou colagem de `#/sync?b=…` / `VOX1:…`; backup `.txt` semanal/mensal sem servidor) | `vault-v2`, `email-kit`, `account-backup`, `wallet-encryption`, `inbox-backup` |
-| Identidade Ed25519/X25519 (cintura fina) | — | `labs/parado/vox-identity.js` | **escrito, não plugado** | `vox-identity` |
 | Credencial cívica / vínculo de identidade | — | `labs/parado/civic-credential.js`, `labs/parado/identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
 | Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
 | Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar; pares só com a chave `vx_…` (sem nome escolhido) ficam fora da lista, mas a busca pela chave os acha | `people-index`, `contacts` |
@@ -102,7 +101,7 @@
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
 | Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json` (3 testemunhas GraphQL: turbo, arweave.net, ardrive.net; o `ar-io.dev` só serve conteúdo `raw` porque não indexa o Vox — PM-50), tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
-| Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js` (`labs/parado/idb-store.js` **não plugado** de propósito — fila Arweave pausada por REV-07/PM-72) | no ar (`cache-node.js`) | `cache-node`, `idb-store` |
+| Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js` | no ar (`cache-node.js`) | `cache-node` |
 | Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo); eco de cartão de perfil corrigido no PM-84 | `peers*`, `webrtc`, `profile-card` |
 | Sincronização ao conectar por inventário | — | `peer-sync.js`, `post-wire.js`, `cache-node.js` | no ar (PM-80): manda hashes e só o que falta (≈ 157 KB → ≈ 7 KB por sentido). Os itens saem na forma assinada desde a correção #49; antes, quem recebia descartava tudo o que vinha por aqui. Troca entre dois aparelhos reais ainda não medida | `peer-sync`, `post-wire` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
@@ -120,7 +119,7 @@
 | Transferência em blocos | — | `labs/parado/chunked-transfer.js` | **escrito, não plugado** | `chunked-transfer` |
 | Configurações de rede, assistente, steward | `#/settings/network[/guia\|/steward]` | `app/screens-network.js`, `steward-wizard.js` | no ar | `steward-wizard`, `status-render` |
 | Espelho de comunidade no relay | comunidade | `community-mirror.js` | no ar, depende de relay | `community-mirror` |
-| Memória central (Modo 3) | — | `central-memory.js` + `relay/central_memory.py` | depende de Node Zero / relay | `central-memory` |
+| Memória central (Modo 3) | — | `central-memory.js` + `relay/central_memory.py` | depende de Vox Populi / Vox Memoria / relay | `central-memory` |
 | Atestação de contribuição (ADR-001) | `#/settings/network` | `contribution-attestation.js` | no ar (opt-in, export local) | `contribution-attestation` |
 | Saúde do nó | `#/status` (telemetria); cadeia `node-health-*` sem UI | `labs/parado/node-health-*.js` (todos fora do precache); `#/status` usa `render/status.js` + `signaling-telemetry.js` | **escrito, não plugado** (`node-health-*` em `UNPLUGGED_MODULES`); `#/status` **no ar** | `node-health-*`, `status-render` |
 | Nó dedicado Vox Populi | — | `android/`, `vox-populi/`, `tools/*` | no ar (loopback; seeder `not_implemented`) | `vox-populi` |
@@ -142,6 +141,6 @@
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
 4. **Gravação no Arweave pausada (`arweaveUpload: false`, 13/11/2026):** por enquanto **nada é salvo usando Arweave** (fica reservado para alguns recursos futuros e leitura de registros públicos). Toda circulação e preservação ocorre pela **rede de seguidores** (malha WebRTC + sync por inventário no ar; replicação por grau completa em `PM-74` pendente). Em código, `arweaveUpload` vem desligado por padrão em `client/config/flags.json` e em `client/js/feature-flags.js`, com bloqueio em `upload.js` e guardas nos fluxos de publicação/perfil/comunidade.
-5. **21 módulos** não são carregados por nenhuma tela; desde 17/11 ficam em [`client/js/labs/parado/`](../client/js/labs/parado/README.md) (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
+5. **19 módulos** não são carregados por nenhuma tela; desde 17/11 ficam em [`client/js/labs/parado/`](../client/js/labs/parado/README.md) (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~113 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).

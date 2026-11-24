@@ -370,27 +370,27 @@ test("voxels-passport: exportSignedVoxelPassport e verifySignedVoxelPassport val
   assert.equal(checkInvalid.reason, "signature-failed");
 });
 
-test("voxels-node: checkAndRecordNodeZeroReward bonifica nó ativo e respeita cooldown de 1h", async () => {
+test("voxels-node: checkAndRecordLocalNodeReward bonifica nó ativo e respeita cooldown de 1h", async () => {
   const storage = createMockStorage();
   const now = 10_000_000;
 
   // Nó offline não gera recompensa
-  const offlineCheck = await voxels.checkAndRecordNodeZeroReward("vx_node_host", false, now, storage);
+  const offlineCheck = await voxels.checkAndRecordLocalNodeReward("vx_node_host", false, now, storage);
   assert.equal(offlineCheck.rewarded, false);
   assert.equal(offlineCheck.reason, "node-offline");
 
   // Nó online gera 10 voxels de forja
-  const firstReward = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now, storage);
+  const firstReward = await voxels.checkAndRecordLocalNodeReward("vx_node_host", true, now, storage);
   assert.equal(firstReward.rewarded, true);
   assert.equal(firstReward.amount, 10);
 
   // Chamada repetida antes de 1h aciona cooldown
-  const cooldownCheck = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now + 1000, storage);
+  const cooldownCheck = await voxels.checkAndRecordLocalNodeReward("vx_node_host", true, now + 1000, storage);
   assert.equal(cooldownCheck.rewarded, false);
   assert.equal(cooldownCheck.reason, "cooldown-active");
 
   // Após 1h (3600_000 ms), nova recompensa é concedida
-  const secondReward = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now + 3600_001, storage);
+  const secondReward = await voxels.checkAndRecordLocalNodeReward("vx_node_host", true, now + 3600_001, storage);
   assert.equal(secondReward.rewarded, true);
   assert.equal(secondReward.amount, 10);
 });

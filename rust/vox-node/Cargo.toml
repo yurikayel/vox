@@ -1,0 +1,17 @@
+[package]
+name = "vox-node"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Unified Vox node/relay binary and C-ABI/JNI library in pure std (ADR-039 Phase 4, PR4.4)."
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+vox-core = { path = "../vox-core" }
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "deny"

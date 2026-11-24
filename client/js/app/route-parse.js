@@ -98,6 +98,14 @@ function resolveCommunityTab(subPath, rawQueryTab) {
 function parseCommunityRoute(parts, query) {
   if (parts[0] !== "c" || !parts[1]) return null;
   if (parts[2] === "avisos") return { name: "community-avisos", communityId: decodeURIComponent(parts[1]) };
+  if (parts[2] === "t" && parts[3]) {
+    return {
+      name: "posse-return",
+      communityId: decodeURIComponent(parts[1]),
+      topicId: decodeURIComponent(parts[3]),
+      rawUrl: "",
+    };
+  }
   if (parts[2] === "proposal" && parts[3]) {
     return {
       name: "proposal",
@@ -191,10 +199,17 @@ const STATIC_ROUTES = {
   guardiao: (_parts, query) => ({ name: "guardian-return", query }),
   voltar: () => ({ name: "guardian-recover" }),
   voxpedia: () => ({ name: "voxpedia" }),
+  sobre: () => ({ name: "about" }),
   download: () => ({ name: "download" }),
   downloads: () => ({ name: "download" }),
   revolucao: () => ({ name: "revolucao" }),
   "revolução": () => ({ name: "revolucao" }),
+  posse: (parts, query) => ({
+    name: "posse-return",
+    topicId: parts[1] ? decodeURIComponent(parts[1]) : (query.get("t") || ""),
+    communityId: query.get("c") || "",
+    rawUrl: query.get("url") || "",
+  }),
 };
 
 /**
@@ -284,6 +299,7 @@ const ROUTE_TITLES = {
   "dm-list": "Mensagens",
   "dm-thread": "Conversa",
   voxpedia: "Voxpedia",
+  about: "Sobre & DPO",
   "ajuda-teste": "Teste aberto",
   status: "Saúde do nó",
   "labs-frames": "Laboratório",
@@ -295,6 +311,7 @@ const ROUTE_TITLES = {
   "compose-aviso": "Novo aviso",
   proposal: "Proposta",
   topic: "Conversa",
+  "posse-return": "Publicação",
   wallet: "Carteira",
   "wallet-wizard": "Guia da carteira",
   "backup-wizard": "Guia do backup",

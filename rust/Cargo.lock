@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "vox-core"
 version = "0.1.0"
+
+[[package]]
+name = "vox-node"
+version = "0.1.0"
+dependencies = [
+ "vox-core",
+]

@@ -6,6 +6,35 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+*Entregas acumuladas em `develop` (`#437`–`#476`, Lotes 1–6 + Onda A) prontas para o próximo corte `develop → main`.*
+
+### Adicionado
+- **Rust `vox-node` (`ADR-039` PR4.1a–PR4.3, `#446`, `#462`, `#468`, `#469`, `#471`):** scaffold do crate `rust/vox-node` + `rust/deny.toml` no CI, sinalização WebSocket, paridade HTTP do relay (sidecars SHA-256 e `genesis_guard`) e modo `--mode memoria` (porta `3922`, `control.token`) para packaging Windows Vox Memória.
+- **Modo Assembleia (`PM-23`, `#456`, `#463`):** UI v0 (pauta, RSVP e ata assinada em `app/assembly-ui.js`, `assembly-minutes.js`, `render/assembly-panel.js`) e lista de presença assinável com voto com prazo (`assembly-presence.js`).
+- **Modo Ensaio (`PM-100`, `#459`):** runtime local-only (`client/js/rehearsal-mode.js`), faixa UI "Ensaio" e guardas anti-vazamento em gossip, memória central e upload.
+- **Caminho de volta POSSE (`PM-105`, `#467`):** rota read-first com verificação offline de assinatura (`app/screens-posse-return.js`, `render/posse-return.js`).
+- **Convergência multi-aparelho (`PM-13`, `#476`):** primitiva determinística Tier A em `client/js/shared/device-merge.js` integrada a `contacts.js` e `identity/inbox-backup.js`.
+- **Recuperação, disponibilidade, backup e verificação de campo:** QR SVG offline imprimível no cartão da frase (`REV-14`, `#451`), métrica local-only de disponibilidade em `#/status` (`PM-75`, `#454`), guia de teste de 5 min no celular com relatório local (`PM-73`, `#455`), botão de backup HTML standalone offline na tela de rede (`EXP-04`, `#466`) e rota lazy `#/sobre` com licença AGPL-3.0-or-later e canal DPO (`LAN-03`, `#473`).
+- **Primitivas `shared/` e navegação:** `lead-tab.js` (eleição de aba líder e `withWebLock`, `#444`), `schedule-commit.js` (janela Desfazer de 4 s, `#445`), `reduce-lww.js` (`#447`) e View Transition segura com `prefers-reduced-motion` (`#452`).
+- **Benchmark e apoio voluntário:** benchmark real Chromium IndexedDB startup (`LAN-23`, `scripts/idb-startup-bench.mjs`, `#475`) e `.github/FUNDING.yml` com nota honesta no README e `INFRA-CUSTOS.md` (`REV-22`, `#458`).
+
+### Alterado / Refatorado
+- **Dieta do shell (`PM-01`, `#460`):** lazy loading da pilha de devolução por guardiões (`app/screens-guardian-return-view.js`).
+- **Triagem `labs/parado/` (`REV-02`, `#450`, `#453`, `#461`):** arquivamento de `idb-store.js` e `vox-identity.js`, fatiamento de `kit-genesis.js` em `data`/`validate`/fachada e plug lazy na criação de comunidade (`app/compose-community-kit.js`).
+- **Primitiva `action-runner` (`#443`):** `runButtonAction` / `bindActionDelegate` extraída para `client/js/shared/action-runner.js` (zero dependências de `app/`) e ligada em `submitCommunityLeave` (`screens-community.js`).
+- **Branding (`ADR-011`, `#439`):** descontinuação do termo legado de nó em CI, packaging Windows, docs e código.
+- **Service Worker:** atualização do shell na série `v7.162`–`v7.165` (valor canônico em `client/sw.js` e `docs/release-metadata.json`).
+
+### Corrigido
+- **Virada `SIGV2_FROM` (24/11/2026) e portão v1 (`PM-85` / `PM-102`, `#449`, `#470`):** rejeição de itens novos assinados em v1 pós-`SIGV2_FROM` (`sig-format.js`, `central-memory-hydrate.js`), preservação de `vxSigv` em `identity-link.js` e alinhamento de teste pós-cutover no relógio real.
+- **Deploy Pages (`#441`):** separação entre build e deploy no `deploy-pages.yml` para evitar corrida de artefato.
+
+### CI / Qualidade / Documentação
+- **Catracas no CI (`PM-115`, `LAN-23`, `PM-112`, `#442`, `#448`):** `npm run lint:all` e `shell-budget` ativos no `ci.yml`, linhas PM-111/PM-112 no `.github/PULL_REQUEST_TEMPLATE.md` e aviso de mutação AST Tier A no diff de PR (fase F2).
+- **Documentação e specs (`#437`, `#464`, `#465`, `#472`, `#474`):** alinhamento do `ROADMAP.md` e `metodo-agentes-mutex-e-revisor.md` (teto de 3 agentes em paralelo), reescrita do rascunho NLnet NGI Zero (`LAN-36`), espelho curto da Garantia da Praça na Voxpedia (`PM-104`, pré-REV-12), spec de aviso local preventivo F11 (`docs/specs/aviso-local-preventivo-v0.md`) e roteiros de verificação numerados v0 (`docs/process/roteiros-verificacao-v0.md`).
+
+## [2026-11-23] — SW `v7.161-central-memory-split` (releases #407 e #440)
+
 - Segurança: os mapas locais (não lidas, DM, telemetria de gateway, chaves DM, handles) gravam por `withEntry` (`Map` + `Object.fromEntries`) em vez de escrita dinâmica em objeto, para o CodeQL reconhecer a proteção que o #435 já fazia com `isSafeKey`.
 - Segurança (CodeQL, release #407): ids vindos de fora não mexem mais no protótipo dos mapas locais (novo `shared/safe-key.js`, usado em não lidas, DM, telemetria de gateway, chaves DM e handles); rota e aba só escolhem funções da própria tabela (`Object.hasOwn`); `vox-embed.js` aceita só `data-base` http(s); o SW confere a origem da mensagem; relatório de complexidade escapa a barra invertida.
 - Comunidade: sair da rota enquanto a comunidade ainda carrega não deixa mais a página atrasada desenhar por cima da tela nova (ex.: `#/c/…` → `#/voxpedia` mostrava a comunidade). O escopo da rota passa a morar em `app/navigation.js` (`setRouteScope`/`getRouteScope`, sem ciclo) e `showCommunity` confere se ele foi abortado antes de desenhar. E2E: `test_03` abre os `<details>` da Mesa (mini-grade e Auditoria Técnica) fechados desde o redesenho.

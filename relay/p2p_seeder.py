@@ -159,7 +159,7 @@ class PeerDiscovery:
     """Protocolo de descoberta e registro de pares (VOX-PEER-v1) sem portas abertas."""
 
     def __init__(
-        self, local_node_id: str = "node-zero-argon18", ttl_seconds: int = DEFAULT_PEER_TTL_SECONDS
+        self, local_node_id: str = "vox-populi-local", ttl_seconds: int = DEFAULT_PEER_TTL_SECONDS
     ):
         """Cria o registro de pares com o id do nó local e o TTL de cada par."""
         self.local_node_id = local_node_id

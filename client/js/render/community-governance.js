@@ -8,6 +8,7 @@ import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
+import { renderAssemblyEntrySlot } from "./assembly-panel.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import {
   escapeHtml,
@@ -80,7 +81,8 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
       <p class="desc" style="margin:0; font-size:0.875rem;">
         🏛️ <strong>Rede como repo público:</strong> Mudanças de regras e moderação são propostas abertas com diff unificado, apuração estrita de <strong>1 membro = 1 voto</strong> e marco de corte anti-brigading.
       </p>
-    </div>`;
+    </div>
+    ${renderAssemblyEntrySlot(communityId)}`;
 
   if (!proposals.length) {
     return `${actions}

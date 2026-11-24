@@ -35,3 +35,30 @@ adb install -r "android/vox.apk"
 # Iniciar o cliente Vox
 adb shell am start -n org.vox.client/.MainActivity
 ```
+
+## 4. Biblioteca Nativa `libvox_node.so` no Vox Populi (ADR-039 PR4.4)
+
+Somente a variante de infraestrutura dedicada **`vox-populi.apk`** (`org.vox.populi`, [`VoxPopuliNodeService.java`](src/org/vox/populi/VoxPopuliNodeService.java)) carrega opcionalmente a biblioteca compartilhada `libvox_node.so` (gerada por [`rust/vox-node`](../rust/vox-node/README.md) com `crate-type = ["lib", "cdylib"]`). O micro-APK cidadão **`vox.apk`** (`org.vox.client`) permanece 100% Java puro sem nenhuma `.so`, preservando o limite abaixo de 100 KiB.
+
+Caso `libvox_node.so` não esteja empacotada no ambiente local, `VoxPopuliNodeService` captura `UnsatisfiedLinkError` e opera em modo fallback gracioso (Foreground Service + monitoramento Wi-Fi sem crash).
+
+### Cross-compile local com `cargo` + Android NDK (opcional, fora do CI padrão)
+
+Requisitos opcionais:
+- Rust toolchain com alvos Android (`rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android`);
+- Android NDK r26+ (`ANDROID_NDK_HOME` definido).
+
+```bash
+# Exemplo para arm64-v8a (API 24+) usando o linker do Android NDK
+export NDK_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDK_BIN/aarch64-linux-android24-clang"
+
+cargo build --manifest-path rust/Cargo.toml -p vox-node --release \
+  --lib --target aarch64-linux-android
+
+# Artefato gerado:
+# rust/target/aarch64-linux-android/release/libvox_node.so
+# Empacotar em lib/arm64-v8a/libvox_node.so apenas no APK vox-populi.
+```
+
+Para alvos adicionais (`armeabi-v7a` / `x86_64`), repita com `--target armv7-linux-androideabi` (`armv7a-linux-androideabi24-clang`) ou `--target x86_64-linux-android` (`x86_64-linux-android24-clang`). O CI padrão não exige o Android NDK instalado.

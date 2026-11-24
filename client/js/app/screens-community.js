@@ -22,6 +22,7 @@ import { computeCommunityNeighborStats } from "../render/community.js";
 import * as newKeyGuard from "../new-key-guard.js";
 import { markCommunitySeen } from "../community-unread.js";
 import { parseRoute } from "./route-parse.js";
+import { runButtonAction } from "./action-runner.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { getRouteScope, route } from "./navigation.js";
 import { resolveCommunityMetadata, checkCommunityMembership, dispatchCommunityModAction } from "./community-metadata.js";
@@ -110,9 +111,7 @@ async function submitCommunityJoin(communityId, user, btn) {
  * @param {HTMLElement} btn Botão de sair.
  */
 async function submitCommunityLeave(communityId, user, btn) {
-  btn.disabled = true;
-  btn.textContent = "Gravando…";
-  try {
+  await runButtonAction(btn, async () => {
     const signed = await localAccount.signPayload({ id: `mem_leave_${communityId}_${user}`, type: "membership_leave", communityId, leftAt: Date.now() });
     await cacheNode.saveLocalPost(signed);
     peers.broadcastGossip(signed);
@@ -121,11 +120,10 @@ async function submitCommunityLeave(communityId, user, btn) {
     }
     share.showToast(i18n.leftToast);
     route(parseRoute(location.hash.slice(1) || `/c/${communityId}`));
-  } catch (err) {
-    share.showToast(`Erro ao sair: ${err.message}`, "error");
-    btn.disabled = false;
-    btn.textContent = "Sair da Comunidade";
-  }
+  }, {
+    busyText: "Gravando…",
+    onError: (err) => share.showToast(`Erro ao sair: ${err.message}`, "error"),
+  });
 }
 
 /**

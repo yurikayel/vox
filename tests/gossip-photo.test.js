@@ -69,8 +69,11 @@ test("PM-87: blob trocado no caminho não entra nem segue adiante", async () => 
   peers.initPeerChannel();
   const [msg] = await publishPhoto("top_pm87_swap");
   const swapped = await mediaBlob.detachMedia({ image: OTHER });
-  // `mediaRef` é aninhado (fora da assinatura, PM-85): trocá-lo não invalida o post, mas `mediaHash` manda.
-  const forged = { ...msg, item: { ...msg.item, mediaRef: swapped.detachedPost.mediaRef }, blob: swapped.mediaBlob };
+  // Pós-PM-85 (sigv: 2), `mediaRef` aninhado é assinado: adulterá-lo invalida o post.
+  const forgedRef = { ...msg.item, mediaRef: swapped.detachedPost.mediaRef };
+  assert.equal(await localAccount.verifyPayload(forgedRef), false);
+  // Trocando apenas o blob no transporte, o post continua íntegro, mas `mediaHash` rejeita o blob adulterado.
+  const forged = { ...msg, blob: swapped.mediaBlob };
   assert.equal(await localAccount.verifyPayload(forged.item), true);
 
   await asFreshReceiver();
