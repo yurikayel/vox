@@ -228,13 +228,47 @@ function responsesToAttendance(responses, assemblyId) {
 }
 
 /**
- * Normaliza e valida um único voto contra a pauta; retorna `null` se inválido.
+ * Converte check-ins assinados `assembly-presence` em entradas de presença para a ata.
+ * @param {object[]} presences Registros `assembly-presence`.
+ * @param {string} assemblyId ID da convocação.
+ * @returns {Array<{pubkey: string, displayName: string, signedAt: number, sig: string}>}
+ */
+function presencesToAttendance(presences, assemblyId) {
+  return (presences || [])
+    .filter((p) => p?.type === "assembly-presence" && p.assemblyId === assemblyId && p.present !== false && cleanText(p.sig))
+    .map((p) => ({
+      pubkey: cleanText(p.author || p.owner || p.pubkey),
+      displayName: cleanText(p.authorDisplay || p.displayName),
+      signedAt: Number(p.signedAt || p.ts || 0),
+      sig: cleanText(p.sig),
+    }))
+    .filter((a) => a.pubkey && a.signedAt >= 0);
+}
+
+/**
+ * Confere se um voto pertence à assembleia e respeita o prazo (`closesAt`) quando informados.
+ * @param {object} vote Voto bruto.
+ * @param {{assemblyId?: string, closesAt?: number}} scope Escopo da assembleia.
+ * @param {number} signedAt Timestamp do voto em ms.
+ * @returns {boolean}
+ */
+function isVoteInScope(vote, scope, signedAt) {
+  const voteAsmId = cleanText(vote.assemblyId);
+  if (scope.assemblyId && voteAsmId && voteAsmId !== scope.assemblyId) return false;
+  return !(scope.closesAt > 0 && signedAt > scope.closesAt);
+}
+
+/**
+ * Normaliza e valida um único voto contra a pauta e prazo opcional; retorna `null` se inválido.
  * @param {object} vote Voto bruto.
  * @param {Set<string>} agendaIds Ids da pauta.
+ * @param {{assemblyId?: string, closesAt?: number}} [scope={}] Escopo opcional de assembleia e prazo.
  * @returns {object|null}
  */
-function normalizeSingleVote(vote, agendaIds) {
+function normalizeSingleVote(vote, agendaIds, scope = {}) {
   if (!isPlainObject(vote)) return null;
+  const signedAt = Number(vote.signedAt || vote.ts || 0);
+  if (!isVoteInScope(vote, scope, signedAt)) return null;
   const agendaId = cleanText(vote.agendaId);
   const voterPubkey = cleanText(vote.voterPubkey || vote.author || vote.owner);
   const choice = cleanText(vote.choice);
@@ -242,25 +276,26 @@ function normalizeSingleVote(vote, agendaIds) {
   if (!agendaIds.has(agendaId) || !voterPubkey || !VALID_VOTE_CHOICES.has(choice) || !sig) return null;
   const blockCheck = validateBlockReason(choice, vote.blockReason);
   if (!blockCheck.ok) return null;
-  return { agendaId, voterPubkey, choice, blockReason: blockCheck.reason, signedAt: Number(vote.signedAt || vote.ts || 0), sig };
+  return { agendaId, voterPubkey, choice, blockReason: blockCheck.reason, signedAt, sig };
 }
 
 /**
  * Converte votos locais em entradas válidas do bundle, rejeitando `block` sem `blockReason`.
  * @param {object[]} votes Votos recebidos.
  * @param {Set<string>} agendaIds Ids da pauta.
+ * @param {{assemblyId?: string, closesAt?: number}} [scope={}] Escopo opcional de assembleia e prazo.
  * @returns {Array<object>}
  */
-function normalizeAssemblyVotes(votes, agendaIds) {
-  return (votes || []).map((vote) => normalizeSingleVote(vote, agendaIds)).filter(Boolean);
+function normalizeAssemblyVotes(votes, agendaIds, scope = {}) {
+  return (votes || []).map((vote) => normalizeSingleVote(vote, agendaIds, scope)).filter(Boolean);
 }
 
 /**
  * Monta o bundle compatível com `scripts/assembly-minutes.mjs` a partir dos posts locais.
- * @param {{convocacao: object, responses?: object[], votes?: object[]}} input Dados da assembleia.
+ * @param {{convocacao: object, responses?: object[], presences?: object[], votes?: object[]}} input Dados da assembleia.
  * @returns {object}
  */
-export function buildAssemblyBundleFromPosts({ convocacao, responses = [], votes = [] }) {
+export function buildAssemblyBundleFromPosts({ convocacao, responses = [], presences = [], votes = [] }) {
   const parsedAgenda = parseAgendaLines(convocacao.assemblyAgenda);
   const agenda = parsedAgenda.length
     ? parsedAgenda
@@ -269,6 +304,11 @@ export function buildAssemblyBundleFromPosts({ convocacao, responses = [], votes
   const convenedAt = Number(convocacao.eventAt || convocacao.ts || 0);
   const closedAt = Math.max(convenedAt, Number(convocacao.assemblyClosesAt || convenedAt + DEFAULT_DURATION_MS));
   const quorumMin = Number.isInteger(convocacao.assemblyQuorumMin) ? convocacao.assemblyQuorumMin : Number(convocacao.quorumMin || 0);
+  const attendance = [
+    ...responsesToAttendance(responses, convocacao.id),
+    ...presencesToAttendance(presences, convocacao.id),
+  ];
+  const voteScope = { assemblyId: cleanText(convocacao.id), closesAt: Number(convocacao.assemblyClosesAt || 0) };
   return {
     assemblyId: cleanText(convocacao.id),
     communityId: cleanText(convocacao.communityId),
@@ -277,8 +317,8 @@ export function buildAssemblyBundleFromPosts({ convocacao, responses = [], votes
     closedAt,
     quorumMin,
     agenda,
-    attendance: responsesToAttendance(responses, convocacao.id),
-    votes: normalizeAssemblyVotes(votes, agendaIds),
+    attendance,
+    votes: normalizeAssemblyVotes(votes, agendaIds, voteScope),
   };
 }
 

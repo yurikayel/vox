@@ -1,11 +1,13 @@
 /**
  * @file PM-23 — Controlador de UI do Modo Assembleia (v0).
  * Publicação de convocação+pauta (estendendo aviso `convocacao`), RSVP via `aviso-resposta`,
- * atualização de status pós-decisão e exportação de ata assinada em Markdown/JSON.
+ * presença assinável (`assembly-presence`), voto com prazo (`vote` + `blockReason`),
+ * atualização de status pós-decisão e exportação de ata/presença em Markdown/JSON.
  *
  * @module app/assembly-ui
  * @see docs/specs/modo-assembleia-v0.md
  * @see client/js/assembly-minutes.js
+ * @see client/js/assembly-presence.js
  */
 import * as aviso from "../aviso.js";
 import * as cacheNode from "../cache-node.js";
@@ -24,6 +26,16 @@ import {
   tallyAssemblyClient,
   validatePostDecisionStatus,
 } from "../assembly-minutes.js";
+import {
+  buildAssemblyPresenceCheckin,
+  buildAssemblyVote,
+  buildPresenceExportData,
+  isAssemblyVotingOpen,
+  renderPresenceListMarkdown,
+  serializePresenceListJson,
+  summarizeAssemblyPresence,
+  tallyAssemblyAgendaVotes,
+} from "../assembly-presence.js";
 import { renderAssemblyPanel } from "../render/assembly-panel.js";
 
 /**
@@ -102,26 +114,62 @@ function latestDecisionStatus(statuses, assemblyId, meta) {
 }
 
 /**
+ * Conta participantes únicos somando presença assinada e RSVP (`vou`/`ciente`).
+ * @param {object} presence Resumo de `summarizeAssemblyPresence`.
+ * @param {object[]} responses Respostas `aviso-resposta`.
+ * @param {string} assemblyId ID da assembleia.
+ * @returns {number}
+ */
+function countUniqueParticipants(presence, responses, assemblyId) {
+  const pubkeys = new Set((presence.entries || []).map((e) => e.pubkey));
+  for (const r of responses || []) {
+    if (r?.avisoId === assemblyId && (r.choice === "vou" || r.choice === "ciente") && r.sig) {
+      const pk = String(r.author || r.owner || "").trim();
+      if (pk) pubkeys.add(pk);
+    }
+  }
+  return pubkeys.size;
+}
+
+/**
+ * Monta item de visão para uma convocação de assembleia.
+ * @param {object} convocacao Post de convocação.
+ * @param {object} state Dados locais da comunidade.
+ * @returns {object}
+ */
+function buildAssemblyViewItem(convocacao, state) {
+  const presence = summarizeAssemblyPresence(state.presences, convocacao.id);
+  const quorumMin = Number.isInteger(convocacao.assemblyQuorumMin) ? convocacao.assemblyQuorumMin : Number(convocacao.quorumMin || 0);
+  const quorumMet = countUniqueParticipants(presence, state.responses, convocacao.id) >= quorumMin;
+  return {
+    convocacao,
+    tally: aviso.tallyAvisoResponses(state.responses, convocacao.id, state.members),
+    myChoice: findMyChoice(state.responses, convocacao.id, state.routeId),
+    presence,
+    myPresence: presence.entries.some((e) => e.pubkey === state.routeId),
+    votingOpen: isAssemblyVotingOpen(convocacao, state.now),
+    voteSummary: tallyAssemblyAgendaVotes(convocacao, state.votes, { quorumMet, myRouteId: state.routeId }),
+    decisionStatus: latestDecisionStatus(state.statuses, convocacao.id, state.meta),
+  };
+}
+
+/**
  * Carrega contexto local de assembleias de uma comunidade.
  * @param {string} communityId Comunidade.
  * @param {object} [meta={}] Metadados da comunidade.
+ * @param {number} [now=Date.now()] Instante de referência em ms.
  * @returns {Promise<object>}
  */
-export async function loadAssemblyContext(communityId, meta = {}) {
-  const [topics, responses, votes, statuses, joins, leaves] = await Promise.all(
-    ["topic", "aviso-resposta", "vote", "assembly-status", "membership", "membership_leave"].map((t) => localOf(t, communityId)),
-  );
+export async function loadAssemblyContext(communityId, meta = {}, now = Date.now()) {
+  const types = ["topic", "aviso-resposta", "assembly-presence", "vote", "assembly-status", "membership", "membership_leave"];
+  const [topics, responses, presences, votes, statuses, joins, leaves] = await Promise.all(types.map((t) => localOf(t, communityId)));
   const routeId = await localAccount.getRouteId();
   const members = resolveMemberSet(joins, leaves, meta?.owner);
   const isMod = isModerator(routeId, meta?.owner, meta?.moderators);
   const convocacoes = aviso.classifyAvisos(topics, meta).filter(isAssemblyConvocacao);
-  const items = convocacoes.map((convocacao) => ({
-    convocacao,
-    tally: aviso.tallyAvisoResponses(responses, convocacao.id, members),
-    myChoice: findMyChoice(responses, convocacao.id, routeId),
-    decisionStatus: latestDecisionStatus(statuses, convocacao.id, meta),
-  }));
-  return { communityId, meta, routeId, isMod, canRespond: Boolean(routeId), responses, votes, items };
+  const state = { responses, presences, votes, statuses, members, routeId, meta, now };
+  const items = convocacoes.map((convocacao) => buildAssemblyViewItem(convocacao, state));
+  return { communityId, meta, routeId, isMod, canRespond: Boolean(routeId), responses, presences, votes, items };
 }
 
 /**
@@ -154,6 +202,40 @@ export async function submitAssemblyRsvp(convocacao, choice) {
 }
 
 /**
+ * Registra check-in assinado na lista de presença (`assembly-presence`).
+ * @param {{id: string, communityId: string}} convocacao Convocação alvo.
+ * @param {string} [note=""] Observação opcional.
+ * @returns {Promise<object>} Presença assinada.
+ */
+export async function submitAssemblyPresence(convocacao, note = "") {
+  const payload = buildAssemblyPresenceCheckin({
+    communityId: convocacao?.communityId,
+    assemblyId: convocacao?.id,
+    note,
+  });
+  return signAndBroadcast({
+    ...payload,
+    id: newId("apr"),
+    authorDisplay: localAccount.getDisplayName() || "",
+  });
+}
+
+/**
+ * Assina e publica um voto com prazo (`type: "vote"`) para um item da pauta.
+ * @param {{convocacao: object, agendaId: string, choice: string, blockReason?: string}} input Dados do voto.
+ * @param {number} [now=Date.now()] Instante em ms.
+ * @returns {Promise<object>} Voto assinado.
+ */
+export async function submitAssemblyVote(input, now = Date.now()) {
+  const payload = buildAssemblyVote(input, now);
+  return signAndBroadcast({
+    ...payload,
+    id: newId("avt"),
+    authorDisplay: localAccount.getDisplayName() || "",
+  });
+}
+
+/**
  * Publica atualização de status pós-decisão (`em_andamento`, `cumprida`, `arquivada`).
  * @param {{communityId: string, assemblyId: string, decisionStatus: string}} input Dados do status.
  * @returns {Promise<object>} Atualização assinada.
@@ -164,37 +246,62 @@ export async function updateAssemblyDecisionStatus(input) {
 }
 
 /**
+ * Dispara download de arquivo texto/JSON no navegador quando habilitado.
+ * @param {string} output Conteúdo serializado.
+ * @param {string} filename Nome do arquivo.
+ * @param {boolean} isJson Se o conteúdo é JSON.
+ * @param {boolean} download Se deve baixar.
+ * @returns {void}
+ */
+function triggerDownload(output, filename, isJson, download) {
+  if (!download || typeof Blob === "undefined") return;
+  const mime = isJson ? "application/json;charset=utf-8" : "text/markdown;charset=utf-8";
+  share.downloadBlob(new Blob([output], { type: mime }), filename);
+}
+
+/**
  * Gera e opcionalmente baixa a ata assinada em Markdown ou JSON.
- * @param {{convocacao: object, responses?: object[], votes?: object[], format?: "md"|"json", download?: boolean}} input Parâmetros de exportação.
+ * @param {{convocacao: object, responses?: object[], presences?: object[], votes?: object[], format?: "md"|"json", download?: boolean}} input Parâmetros.
  * @returns {Promise<{tally: object, output: string, filename: string}>}
  */
-export async function exportAssemblyMinutes({ convocacao, responses = [], votes = [], format = "md", download = true }) {
-  const bundle = buildAssemblyBundleFromPosts({ convocacao, responses, votes });
+export async function exportAssemblyMinutes({ convocacao, responses = [], presences = [], votes = [], format = "md", download = true }) {
+  const bundle = buildAssemblyBundleFromPosts({ convocacao, responses, presences, votes });
   const tally = await tallyAssemblyClient(bundle);
   const isJson = format === "json";
   const output = isJson ? serializeAssemblyMinutesJson(tally) : renderAssemblyMinutesMarkdownClient(tally);
-  const ext = isJson ? "json" : "md";
-  const filename = `ata-${bundle.assemblyId || "assembleia"}.${ext}`;
-  if (download && typeof Blob !== "undefined") {
-    const mime = isJson ? "application/json;charset=utf-8" : "text/markdown;charset=utf-8";
-    share.downloadBlob(new Blob([output], { type: mime }), filename);
-  }
+  const filename = `ata-${bundle.assemblyId || "assembleia"}.${isJson ? "json" : "md"}`;
+  triggerDownload(output, filename, isJson, download);
   return { tally, output, filename };
+}
+
+/**
+ * Gera e opcionalmente baixa a lista de presença assinada em Markdown ou JSON.
+ * @param {{convocacao: object, presences?: object[], format?: "md"|"json", download?: boolean}} input Parâmetros.
+ * @returns {Promise<{data: object, output: string, filename: string}>}
+ */
+export async function exportAssemblyPresence({ convocacao, presences = [], format = "md", download = true }) {
+  const data = await buildPresenceExportData({ convocacao, presences });
+  const isJson = format === "json";
+  const output = isJson ? serializePresenceListJson(data) : renderPresenceListMarkdown(data);
+  const filename = `presenca-${data.assemblyId || "assembleia"}.${isJson ? "json" : "md"}`;
+  triggerDownload(output, filename, isJson, download);
+  return { data, output, filename };
 }
 
 /**
  * Monta o painel do Modo Assembleia dentro do slot informado.
  * @param {HTMLElement} slot Elemento `[data-assembly-slot]`.
- * @param {{communityId: string, meta?: object}} options Contexto da comunidade.
+ * @param {{communityId: string, meta?: object, now?: number}} options Contexto da comunidade.
  * @returns {Promise<object>} Contexto carregado.
  */
-export async function mountAssemblyPanel(slot, { communityId, meta = {} }) {
-  const ctx = await loadAssemblyContext(communityId, meta);
+export async function mountAssemblyPanel(slot, { communityId, meta = {}, now = Date.now() }) {
+  const ctx = await loadAssemblyContext(communityId, meta, now);
   slot.innerHTML = renderAssemblyPanel({
     communityId,
     items: ctx.items,
     isMod: ctx.isMod,
     canRespond: ctx.canRespond,
+    now,
   });
   slot.dataset.assemblyMounted = "1";
   return ctx;
@@ -209,15 +316,44 @@ export async function mountAssemblyPanel(slot, { communityId, meta = {} }) {
 function readPublishForm(form, communityId) {
   const data = new FormData(form);
   const rawDate = String(data.get("eventAt") || "");
+  const rawCloses = String(data.get("assemblyClosesAt") || "");
   return {
     communityId,
     title: String(data.get("title") || ""),
     assemblyAgenda: String(data.get("assemblyAgenda") || ""),
     eventAt: rawDate ? new Date(rawDate).getTime() || 0 : 0,
+    assemblyClosesAt: rawCloses ? new Date(rawCloses).getTime() || 0 : 0,
     eventPlace: String(data.get("eventPlace") || ""),
     quorumMin: data.get("quorumMin"),
     ritualRule: data.get("ritualRule") ? String(data.get("ritualRule")) : "",
   };
+}
+
+/**
+ * Executa exportação de ata ou lista de presença a partir de ação do botão.
+ * @param {string} action Nome da ação.
+ * @param {object} item Item da assembleia.
+ * @param {object} ctx Contexto carregado.
+ * @returns {Promise<void>}
+ */
+async function runExportAction(action, item, ctx) {
+  if (action === "export-md" || action === "export-json") {
+    const format = action === "export-json" ? "json" : "md";
+    const { tally } = await exportAssemblyMinutes({
+      convocacao: item.convocacao,
+      responses: ctx.responses,
+      presences: ctx.presences,
+      votes: ctx.votes,
+      format,
+    });
+    share.showToast(`Ata exportada (${format.toUpperCase()}) · hash ${tally.minutesHash.slice(0, 10)}…`);
+    return;
+  }
+  if (action === "export-presence-md" || action === "export-presence-json") {
+    const format = action === "export-presence-json" ? "json" : "md";
+    const { data } = await exportAssemblyPresence({ convocacao: item.convocacao, presences: ctx.presences, format });
+    share.showToast(`Presença exportada (${format.toUpperCase()}) · hash ${data.presenceHash.slice(0, 10)}…`);
+  }
 }
 
 /**
@@ -242,17 +378,19 @@ async function runAssemblyAction(button, slot, { communityId, meta }) {
     await mountAssemblyPanel(slot, { communityId, meta });
     return;
   }
+  if (action === "checkin") {
+    await submitAssemblyPresence(item.convocacao);
+    share.showToast("Check-in de presença assinado.");
+    await mountAssemblyPanel(slot, { communityId, meta });
+    return;
+  }
   if (action === "status" && ctx.isMod) {
     await updateAssemblyDecisionStatus({ communityId, assemblyId: item.convocacao.id, decisionStatus: button.dataset.status });
     share.showToast("Status pós-decisão assinado.");
     await mountAssemblyPanel(slot, { communityId, meta });
     return;
   }
-  if (action === "export-md" || action === "export-json") {
-    const format = action === "export-json" ? "json" : "md";
-    const { tally } = await exportAssemblyMinutes({ convocacao: item.convocacao, responses: ctx.responses, votes: ctx.votes, format });
-    share.showToast(`Ata exportada (${format.toUpperCase()}) · hash ${tally.minutesHash.slice(0, 10)}…`);
-  }
+  await runExportAction(action, item, ctx);
 }
 
 /**
@@ -267,6 +405,37 @@ async function runPublishSubmit(form, slot, { communityId, meta }) {
   try {
     await publishAssemblyConvocacao(readPublishForm(form, communityId));
     share.showToast("Convocação e pauta assinadas e publicadas.");
+    await mountAssemblyPanel(slot, { communityId, meta });
+  } catch (err) {
+    if (errorEl) {
+      errorEl.textContent = err.message;
+      errorEl.hidden = false;
+    }
+    share.showToast(`Erro: ${err.message}`, "error");
+  }
+}
+
+/**
+ * Trata submissão do formulário de voto com prazo e `blockReason`.
+ * @param {HTMLFormElement} form Formulário submetido.
+ * @param {HTMLElement} slot Slot do painel.
+ * @param {{communityId: string, meta?: object}} opts Contexto da comunidade.
+ * @returns {Promise<void>}
+ */
+async function runVoteSubmit(form, slot, { communityId, meta }) {
+  const errorEl = form.querySelector("[data-vote-error]");
+  try {
+    const ctx = await loadAssemblyContext(communityId, meta);
+    const item = ctx.items.find((i) => i.convocacao.id === form.dataset.assemblyId);
+    if (!item) throw new Error("Assembleia não encontrada.");
+    const data = new FormData(form);
+    await submitAssemblyVote({
+      convocacao: item.convocacao,
+      agendaId: form.dataset.agendaId,
+      choice: String(data.get("choice") || ""),
+      blockReason: String(data.get("blockReason") || ""),
+    });
+    share.showToast("Voto assinado e registrado.");
     await mountAssemblyPanel(slot, { communityId, meta });
   } catch (err) {
     if (errorEl) {
@@ -298,10 +467,13 @@ export function bindAssemblyPanelHost(main, { communityId, meta = {} }) {
       .finally(() => { button.disabled = false; });
   });
   main.addEventListener("submit", (e) => {
-    const form = e.target?.closest?.('[data-assembly-form="publish"]');
+    const publishForm = e.target?.closest?.('[data-assembly-form="publish"]');
+    const voteForm = publishForm ? null : e.target?.closest?.('[data-assembly-form="vote"]');
+    const form = publishForm || voteForm;
     const slot = form?.closest?.("[data-assembly-slot]");
     if (!form || !slot) return;
     e.preventDefault();
-    void runPublishSubmit(form, slot, { communityId, meta });
+    if (publishForm) void runPublishSubmit(form, slot, { communityId, meta });
+    else void runVoteSubmit(form, slot, { communityId, meta });
   });
 }
