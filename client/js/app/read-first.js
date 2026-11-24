@@ -21,6 +21,7 @@ export const READ_FIRST_ROUTES = new Set([
   "tag-feed",
   "proposal",
   "voxpedia",
+  "about",
   "download",
   "revolucao",
   "guardian-recover",

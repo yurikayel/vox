@@ -18,6 +18,8 @@ import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showNotFound } from "./screens-not-found.js";
+import { getActiveUser, makeShellProps } from "./context.js";
+import { renderShell } from "../render/shell.js";
 import { createScope } from "../shared/signals.js";
 
 // Escopo reativo da rota atual (descartado antes de montar a próxima) mora em `navigation.js`, onde as telas o
@@ -100,6 +102,30 @@ function loadPosseReturnRoute() {
   return posseReturnRoute;
 }
 
+/** @type {Promise<typeof import("../render/about.js")>|null} */
+let aboutRoute = null;
+
+/**
+ * Carrega sob demanda a página Sobre & DPO (`#/sobre`, `LAN-03`).
+ *
+ * @returns {Promise<typeof import("../render/about.js")>}
+ */
+function loadAboutRoute() {
+  aboutRoute ??= import("../render/about.js");
+  return aboutRoute;
+}
+
+/**
+ * Monta a tela `#/sobre` dentro do shell, carregando `render/about.js` sob demanda.
+ *
+ * @returns {Promise<void>}
+ */
+async function showAbout() {
+  const [{ renderAboutPage }, user] = await Promise.all([loadAboutRoute(), getActiveUser()]);
+  const main = renderShell(makeShellProps(user, "", "Sobre & DPO"));
+  if (main) main.innerHTML = renderAboutPage();
+}
+
 const ROUTE_DISPATCH_TABLE = {
   home: (r) => showHome(r.feed),
   vote: () => showVote(),
@@ -116,6 +142,7 @@ const ROUTE_DISPATCH_TABLE = {
   "dm-list": () => showDmList(),
   "dm-thread": (r) => showDmThread(r.address),
   voxpedia: async () => { (await loadVoxpediaRoute()).showVoxpedia(); },
+  about: () => showAbout(),
   download: () => { window.location.href = "download.html"; },
   revolucao: () => { window.location.href = "revolucao.html"; },
   "ajuda-teste": async () => { (await loadAjudaTesteRoute()).showAjudaTeste(); },

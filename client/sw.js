@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.163-pm01-lazy-guardian-return";
+const CACHE_NAME = "vox-pwa-v7.164-about-license-dpo-lazy";
 
 const SHELL_ASSETS = [
 
