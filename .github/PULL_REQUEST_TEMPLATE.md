@@ -20,4 +20,6 @@
 - [ ] Se mudou comportamento visível: `CHANGELOG.md` (seção *Não lançado*) e doc afetado atualizados
 - [ ] Documentação conforme `docs/process/documentacao.md`: cabeçalho e JSDoc completo (`@param`, `@returns`, `@throws`) em todo export novo ou mudado; spec, FEATURES, ROADMAP, ADR e THREAT-MODEL quando a seção 3 pede; `npm run audit:docs` verde
 - [ ] Nenhum segredo, token ou caminho da máquina pessoal no diff
+- [ ] Se PR `fix:` (**PM-111**): teste novo ou alterado falha por asserção contra a base (ver `red-on-base`)
+- [ ] Se tocou função do Tier A (**PM-112**): conferida com `npm run audit:mutate:tier-a`
 - [ ] Se piloto V-P09 com **PILOT_FREEZE** ativo: este PR é **docs/hotfix** (`pilot-hotfix`) e não expande escopo do cliente
