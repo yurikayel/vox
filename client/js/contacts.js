@@ -2,6 +2,7 @@
  * @file Agenda local de contatos (V-DIS-12) com convergência multi-aparelho (PM-13).
  */
 
+import { isTestRouteId } from "./genesis.js";
 import { isDeviceTombstone, mergeContactLists } from "./shared/device-merge.js";
 
 const STORAGE_KEY = "vox-contacts-v1";
@@ -93,6 +94,10 @@ export function removeContact(routeId, now = Date.now()) {
   const id = String(routeId || "").trim();
   if (!id) return;
   const raw = loadRaw();
+  if (isTestRouteId(id)) {
+    saveRaw(raw.filter((c) => c?.routeId !== id));
+    return;
+  }
   const ts = nextLocalTs(raw, now);
   saveRaw(mergeContactLists(raw, [{ routeId: id, deleted: true, deletedAt: ts, editedAt: ts }]));
 }
