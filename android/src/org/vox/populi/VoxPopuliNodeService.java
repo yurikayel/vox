@@ -9,23 +9,52 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import java.io.File;
 
 /**
  * Foreground Service do Nó Dedicado Vox Populi: opera infraestrutura comunitária em segundo plano.
+ * Tenta carregar a biblioteca nativa {@code libvox_node.so} ({@code rust/vox-node}, ADR-039 PR4.4)
+ * e faz fallback gracioso caso a {@code .so} não esteja empacotada no ambiente local.
  */
 public class VoxPopuliNodeService extends Service {
 
     public static final String CHANNEL_ID = "vox_populi_node_channel";
     public static final int NOTIF_ID = 2001;
     public static final String ACTION_TOGGLE = "org.vox.populi.ACTION_TOGGLE";
+    public static final String DEFAULT_NODE_MODE = "memoria";
+    public static final int DEFAULT_NODE_PORT = 3921;
+
+    private static final boolean NATIVE_LOADED;
+
+    static {
+        boolean loaded = false;
+        try {
+            System.loadLibrary("vox_node");
+            loaded = true;
+        } catch (UnsatisfiedLinkError ignored) {
+            loaded = false;
+        }
+        NATIVE_LOADED = loaded;
+    }
+
+    private static native int nativeStart(String mode, String dataDir, int port);
+    private static native int nativePort();
+    private static native String nativeHealthJson();
+    private static native int nativeStop();
 
     private boolean isPaused = false;
+    private boolean nativeRunning = false;
+
+    public static boolean isNativeLoaded() {
+        return NATIVE_LOADED;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
         startInForeground();
+        startNativeNodeIfReady();
     }
 
     private void createNotificationChannel() {
@@ -84,9 +113,62 @@ public class VoxPopuliNodeService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_TOGGLE.equals(intent.getAction())) {
             isPaused = !isPaused;
+            if (isPaused) {
+                stopNativeNode();
+            } else {
+                startNativeNodeIfReady();
+            }
             updateNotification();
         }
         return START_STICKY;
+    }
+
+    private void startNativeNodeIfReady() {
+        if (!NATIVE_LOADED || nativeRunning || isPaused || !NodeNetworkGuard.isWifiConnected(this)) {
+            return;
+        }
+        try {
+            File dataDir = new File(getFilesDir(), "vox-node");
+            int rc = nativeStart(DEFAULT_NODE_MODE, dataDir.getAbsolutePath(), DEFAULT_NODE_PORT);
+            nativeRunning = (rc == 0);
+        } catch (UnsatisfiedLinkError ignored) {
+            nativeRunning = false;
+        }
+    }
+
+    private void stopNativeNode() {
+        if (!NATIVE_LOADED || !nativeRunning) {
+            return;
+        }
+        try {
+            nativeStop();
+        } catch (UnsatisfiedLinkError ignored) {
+            // Fallback gracioso caso o símbolo JNI não esteja disponível.
+        } finally {
+            nativeRunning = false;
+        }
+    }
+
+    public int getNativePort() {
+        if (!NATIVE_LOADED || !nativeRunning) {
+            return 0;
+        }
+        try {
+            return nativePort();
+        } catch (UnsatisfiedLinkError ignored) {
+            return 0;
+        }
+    }
+
+    public String getNativeHealthJson() {
+        if (!NATIVE_LOADED || !nativeRunning) {
+            return null;
+        }
+        try {
+            return nativeHealthJson();
+        } catch (UnsatisfiedLinkError ignored) {
+            return null;
+        }
     }
 
     private void updateNotification() {
@@ -98,6 +180,7 @@ public class VoxPopuliNodeService extends Service {
 
     @Override
     public void onDestroy() {
+        stopNativeNode();
         super.onDestroy();
     }
 
