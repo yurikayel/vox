@@ -1,16 +1,17 @@
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![deny(missing_docs)]
 
-//! Unified Vox node library (`vox-node`, ADR-039 Phase 4, PR4.3).
+//! Unified Vox node library (`vox-node`, ADR-039 Phase 4, PR4.4).
 //!
 //! Provides pure-`std` WebSocket RFC 6455 signaling, HTTP relay, and local
 //! Vox Memoria (`--mode memoria`) servers, atomic file-backed cache (`.sha256`
 //! sidecars), inbox, blind relay (RFC 0002), central memory (`vox_core::genesis_guard`)
-//! and v2 vaults, in-memory P2P seeder/beacon, Host/Origin/CORS guards, and
-//! per-IP token bucket rate limiting.
+//! and v2 vaults, in-memory P2P seeder/beacon, Host/Origin/CORS guards,
+//! per-IP token bucket rate limiting, and an embedded C-ABI/FFI facade (`ffi`).
 
 pub mod blind_store;
 pub mod cache_store;
+pub mod ffi;
 pub mod guard;
 pub mod http;
 pub mod json;

@@ -1,11 +1,11 @@
 # `rust/vox-node`
 
-> **Status:** em desenvolvimento (PR4.3: modo `--mode memoria` na porta `3922` com `control.token`, paridade HTTP do relay, `vox_core::genesis_guard` e sinalização WebSocket RFC 6455 em Rust `std` puro) · **Owner:** mantenedor relay / steward ops · **Revisado:** 2026-11-23  
+> **Status:** em desenvolvimento (PR4.4: biblioteca `cdylib` + fachada embarcada `EmbeddedNode` + exports C-ABI para Android/JNI, modo `--mode memoria` na porta `3922`, paridade HTTP do relay, `vox_core::genesis_guard` e sinalização WebSocket RFC 6455 em Rust `std` puro) · **Owner:** mantenedor relay / steward ops · **Revisado:** 2026-11-24  
 > **Referências:** [ADR-039](../../docs/adr/039-rust-por-fases.md) · [Blueprint Fase 4](../../docs/specs/vox-node-rust-fase4.md) · [DEPENDENCIAS.md](../../docs/DEPENDENCIAS.md)
 
-Binário unificado da Fase 4 do [ADR-039](../../docs/adr/039-rust-por-fases.md), construído com `#![forbid(unsafe_code)]`, `#![deny(missing_docs)]` e zero dependências externas (apenas `vox-core` + `std`).
+Binário unificado e biblioteca `cdylib` da Fase 4 do [ADR-039](../../docs/adr/039-rust-por-fases.md), construído com `#![deny(unsafe_code)]` (com `#[allow(unsafe_code)]` restrito às bordas FFI documentadas com `// SAFETY:`), `#![deny(missing_docs)]` e zero dependências externas (apenas `vox-core` + `std`).
 
-## Escopo atual (PR4.3)
+## Escopo atual (PR4.4)
 
 - `--help` / `-h`: exibe ajuda da linha de comando.
 - `--version` / `-V`: exibe a versão do pacote.
@@ -25,6 +25,9 @@ Binário unificado da Fase 4 do [ADR-039](../../docs/adr/039-rust-por-fases.md),
   - Rotas `/memory/*` (`/memory`, `/memory/status`, `/memory/state`, `/memory/blob/<sha256>`, `/memory/ingest`, `/memory/sync`, `/memory/vault/<chave>`) reutilizando `MemoryStore` + `vox_core::genesis_guard`.
   - Controle autenticado por `control.token`: `POST /control/pause` (`/api/pause`, `/memory/pause`), `POST /control/resume` (`/api/resume`, `/memory/resume`), `POST /memory/checkpoint` e `POST /control/shutdown` (`/api/stop`), bloqueando escritas com `503 {"error":"node_paused"}` enquanto pausado.
   - Empacotamento Windows em [`packaging/vox-memoria-windows/`](../../packaging/vox-memoria-windows/README.md).
+- **Fachada embarcada e C-ABI (`src/ffi.rs`, `crate-type = ["lib", "cdylib"]`):**
+  - `EmbeddedNode` seguro em Rust (`signaling`, `relay` ou `memoria` estritamente em `127.0.0.1`) com `start`, `port`, `health_json` e `stop`.
+  - Exports `extern "C"`: `vox_node_start`, `vox_node_port`, `vox_node_health_json`, `vox_node_stop` e `vox_node_free_string`, com integração opcional e fallback gracioso em [`android/src/org/vox/populi/VoxPopuliNodeService.java`](../../android/src/org/vox/populi/VoxPopuliNodeService.java) (ver [`android/README.md`](../../android/README.md)).
 
 ## Gaps conhecidos (Rust `std` puro, zero dependências externas)
 
