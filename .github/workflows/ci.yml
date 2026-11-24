@@ -203,7 +203,7 @@ jobs:
           node scripts/red-on-base.mjs
 
   mutate-tier-a:
-    name: Mutação Tier A — aviso (PM-112)
+    name: Mutação Tier A (PM-112)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -221,11 +221,10 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Mutação AST no diff Tier A (aviso, não bloqueia)
-        continue-on-error: true
+      - name: Mutação AST no diff Tier A (gate >= 70%)
         env:
           BASE_REF: origin/${{ github.base_ref }}
-        run: npm run audit:mutate:tier-a -- --base "$BASE_REF" --max 20
+        run: npm run audit:mutate:tier-a -- --base "$BASE_REF" --max 20 --min-score 70
 
   pilot-freeze:
     name: Piloto V-P09 — freeze client/js (opt-in)
