@@ -1,0 +1,13 @@
+[package]
+name = "vox-node"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Unified Vox node/relay binary scaffold reusing vox-core (ADR-039 Phase 4, PR4.1a)."
+
+[dependencies]
+vox-core = { path = "../vox-core" }
+
+[lints]
+workspace = true
