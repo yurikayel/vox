@@ -224,6 +224,102 @@ impl SignalingLimiter {
     }
 }
 
+/// Rate-limit configuration for HTTP relay write classes (`mailbox`, `write`).
+#[derive(Debug, Clone, Copy)]
+pub struct RelayLimitsConfig {
+    /// Policy for `/inbox`, `/memory/*`, `/relay/*` writes (`mailbox`, default 120/60).
+    pub mailbox: RatePolicy,
+    /// Policy for other HTTP writes (`write`, default 60/30).
+    pub write: RatePolicy,
+    /// Number of trusted reverse proxies (`VOX_RELAY_TRUST_PROXY_HOPS`).
+    pub trusted_hops: usize,
+    /// Maximum simultaneous connections (`VOX_RELAY_MAX_CONNECTIONS`).
+    pub max_connections: usize,
+}
+
+impl Default for RelayLimitsConfig {
+    fn default() -> Self {
+        Self {
+            mailbox: RatePolicy {
+                per_min: 120,
+                burst: 60,
+            },
+            write: RatePolicy {
+                per_min: 60,
+                burst: 30,
+            },
+            trusted_hops: 0,
+            max_connections: DEFAULT_MAX_CONNECTIONS,
+        }
+    }
+}
+
+impl RelayLimitsConfig {
+    /// Loads HTTP relay limits from environment variables (`relay/rate_limit.py` parity).
+    pub fn from_env() -> Self {
+        let legacy = env_opt_positive_u32("VOX_RELAY_WRITE_LIMIT_PER_MIN");
+        let mailbox = policy_from_env("MAILBOX", legacy.unwrap_or(120), 60);
+        let write = policy_from_env("WRITE", legacy.unwrap_or(60), 30);
+        let trusted_hops = env_positive_usize("VOX_RELAY_TRUST_PROXY_HOPS", 0);
+        let max_connections =
+            env_positive_usize("VOX_RELAY_MAX_CONNECTIONS", DEFAULT_MAX_CONNECTIONS);
+        Self {
+            mailbox,
+            write,
+            trusted_hops,
+            max_connections,
+        }
+    }
+}
+
+fn env_opt_positive_u32(name: &str) -> Option<u32> {
+    env::var(name)
+        .ok()
+        .and_then(|v| v.trim().parse::<u32>().ok())
+        .filter(|&n| n > 0)
+}
+
+/// Thread-safe token bucket limiter for HTTP relay write endpoints (`mailbox` and `write`).
+pub struct RelayLimiter {
+    mailbox: Mutex<BucketMap>,
+    write: Mutex<BucketMap>,
+    trusted_hops: usize,
+}
+
+impl RelayLimiter {
+    /// Creates a new HTTP relay limiter from [`RelayLimitsConfig`].
+    pub fn new(config: RelayLimitsConfig) -> Self {
+        Self {
+            mailbox: Mutex::new(BucketMap::new(config.mailbox, MAX_ENTRIES)),
+            write: Mutex::new(BucketMap::new(config.write, MAX_ENTRIES)),
+            trusted_hops: config.trusted_hops,
+        }
+    }
+
+    /// Consumes a token for a write request (`POST`/`DELETE`) on `path`.
+    ///
+    /// Returns `0` when allowed or the `Retry-After` wait in seconds when rate-limited.
+    pub fn check_http_write(&self, path: &str, ip: &str) -> u64 {
+        let bucket = if path.starts_with("/inbox")
+            || path.starts_with("/memory/")
+            || path.starts_with("/relay/")
+        {
+            &self.mailbox
+        } else {
+            &self.write
+        };
+        bucket
+            .lock()
+            .map(|mut map| map.take(ip, Instant::now()))
+            .unwrap_or(0)
+    }
+
+    /// Resolves the normalized client IP key respecting `VOX_RELAY_TRUST_PROXY_HOPS`.
+    pub fn resolve_client_ip(&self, peer_ip: IpAddr, forwarded_for: Option<&str>) -> String {
+        resolve_client_ip(peer_ip, forwarded_for, self.trusted_hops)
+    }
+}
+
 /// Normalizes an IP address for bucketing (IPv4-mapped -> IPv4, IPv6 -> `/64` prefix).
 pub fn normalize_bucket_ip(raw: &str) -> Option<String> {
     let cleaned = raw.trim().trim_start_matches('[').trim_end_matches(']');
