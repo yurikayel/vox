@@ -271,8 +271,10 @@ async function handleGmActionOp(ctx, msg) {
 
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
-    ctx.connectedPlayers.add(msg.from);
-    ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
+    if (!ctx.connectedPlayers.has(msg.from)) {
+      ctx.connectedPlayers.add(msg.from);
+      ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
+    }
     await admitJoiningPlayer(ctx, msg.from);
     await sendFilteredSnapshot(ctx, msg.from);
     return;
@@ -299,6 +301,7 @@ async function verifiedFairplayOps(raw) {
 /** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
   ctx.snapshotAsked = false;
+  stopHelloRetry(ctx);
   const ops = await verifiedFairplayOps(msg.fairplayOps);
   const saved = await ctx.store.saveCampaign(rebuildFairplayState(msg.campaign, ops));
   await requestMissingBlobs(ctx, saved, msg.from);
@@ -343,7 +346,10 @@ async function handlePlayerMessage(ctx, msg) {
     }
     return;
   }
-  if (msg.kind === "OP_REJECTED") ctx.onRejected?.(msg);
+  if (msg.kind === "OP_REJECTED") {
+    stopHelloRetry(ctx);
+    ctx.onRejected?.(msg);
+  }
 }
 
 async function dispatchSyncOp(ctx, rawOp) {
@@ -359,6 +365,47 @@ async function dispatchSyncOp(ctx, rawOp) {
   return op;
 }
 
+/** Reenvios do HELLO_SYNC quando o Mestre ainda não escuta (sob carga): 1 envio + até 4 reenvios, com espera dobrando. */
+export const HELLO_RETRY_LIMIT = 4;
+const HELLO_BACKOFF_MS = 400;
+
+function stopHelloRetry(ctx) {
+  if (ctx.helloTimer != null) ctx.cancel(ctx.helloTimer);
+  ctx.helloTimer = null;
+}
+
+function giveUpHello(ctx, reason) {
+  stopHelloRetry(ctx);
+  ctx.onHelloGaveUp?.({ reason });
+}
+
+function sendHello(ctx) {
+  try {
+    ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
+    return true;
+  } catch {
+    giveUpHello(ctx, "error");
+    return false;
+  }
+}
+
+function scheduleHelloRetry(ctx) {
+  ctx.helloTimer = ctx.schedule(() => {
+    ctx.helloTimer = null;
+    if (ctx.helloAttempts >= HELLO_RETRY_LIMIT) return giveUpHello(ctx, "no_response");
+    ctx.helloAttempts += 1;
+    if (sendHello(ctx)) scheduleHelloRetry(ctx);
+    return undefined;
+  }, HELLO_BACKOFF_MS * 2 ** ctx.helloAttempts);
+}
+
+/** Entra na mesa: envia o HELLO_SYNC e o repete, com limite, até o estado chegar, uma recusa final ou um erro. */
+function startHelloRetry(ctx) {
+  stopHelloRetry(ctx);
+  ctx.helloAttempts = 0;
+  if (sendHello(ctx)) scheduleHelloRetry(ctx);
+}
+
 function buildSyncContext(opts) {
   return {
     role: opts.role === "gm" ? "gm" : "player",
@@ -372,6 +419,11 @@ function buildSyncContext(opts) {
     pendingFairplay: new Set(),
     storage: opts.storage,
     snapshotAsked: false,
+    helloAttempts: 0,
+    helloTimer: null,
+    schedule: typeof opts.schedule === "function" ? opts.schedule : (fn, ms) => setTimeout(fn, ms),
+    cancel: typeof opts.cancel === "function" ? opts.cancel : (h) => clearTimeout(h),
+    onHelloGaveUp: opts.onHelloGaveUp,
     now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
     onUpdate: opts.onUpdate,
@@ -383,7 +435,7 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @param {object} opts Opções (`schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
  * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
@@ -396,7 +448,7 @@ export function createVttSyncPeer(opts) {
       .catch(() => {});
   });
   return {
-    join: () => { if (ctx.role === "player") ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey }); },
+    join: () => { if (ctx.role === "player") startHelloRetry(ctx); },
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
     routeId: ctx.keypair.routeId,
     getPendingFairplayPeers: () => [...ctx.pendingFairplay],
@@ -404,6 +456,6 @@ export function createVttSyncPeer(opts) {
     revokeFairplayPeer: (routeId) => revokeFairplayPeer(ctx, String(routeId)),
     getPeerCount: () => ctx.connectedPlayers.size,
     flush: () => chain,
-    close: () => { detach(); ctx.transport.close?.(); },
+    close: () => { stopHelloRetry(ctx); detach(); ctx.transport.close?.(); },
   };
 }
