@@ -23,7 +23,7 @@ test("pacote: dnd5e-2024 é válido, está registrado e traz 6 atributos, 18 per
   assert.deepEqual(listSystemPackIds(), ["dnd5e-2024"]);
   assert.equal(pack.abilities.length, 6);
   assert.equal(pack.skills.length, 18);
-  assert.deepEqual(pack.resources.map((r) => r.id), ["hp", "hit-dice", "spell-slots", "heroic-inspiration"]);
+  assert.deepEqual(pack.resources.map((r) => r.id), ["hp", "hit-dice", "spell-slots", "heroic-inspiration", "death-saves"]);
   assert.equal(pack.testKind, "d20_vs_cd");
   assert.ok(TEST_KINDS.includes(pack.testKind) && pack.resources.every((r) => RESOURCE_KINDS.includes(r.kind)));
 });

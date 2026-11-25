@@ -357,6 +357,9 @@
 #sheet-tab-about:focus-visible ~ .dungeon-sheet-tab-list [for="sheet-tab-about"] { outline: 2px solid var(--sa-primary, #78d6cf); outline-offset: -2px; }
 
 /* Números derivados do pacote de sistema (aba Jogar da ficha) */
+.dungeon-derived-saves { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 4px 12px; list-style: none; padding: 0; margin: 0 0 12px; }
+.dungeon-derived-save.is-trained { font-weight: 600; }
+.dungeon-death-saves { margin: 0 0 12px; }
 .dungeon-derived-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 0 0 12px; }
 .dungeon-derived-stat { padding: 8px 10px; border: 1px solid var(--sa-border, rgba(255, 255, 255, 0.14)); border-radius: 8px; }
 .dungeon-derived-stat dt { font-size: 0.75rem; opacity: 0.8; }
