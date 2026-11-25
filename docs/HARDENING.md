@@ -69,8 +69,9 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 
 ## CI
 
-- **Bloqueia** (`ci.yml`): `npm run audit:docs` ([process/documentacao.md](./process/documentacao.md)); `npm run audit:layers` ([ADR-035](./adr/035-camadas-e-contextos.md)); ESLint do `client/` (linhas por função, aninhamento, complexidade, parâmetros, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4).
-- **Só informa:** `max-lines` no `client/`; avisos de `scripts/`, `tools/` e `tests/` (`npm run lint:all`); Ruff `E`, `I` e `PLR0915` (`--exit-zero`).
+- **Bloqueia** (`ci.yml`): `npm run lint:all`; `node scripts/shell-budget-check.mjs` (`LAN-23`); `node scripts/secrets-audit.mjs`; `npm run audit:docs` ([process/documentacao.md](./process/documentacao.md)); `npm run audit:layers` ([ADR-035](./adr/035-camadas-e-contextos.md)); ESLint do `client/` (linhas por função, aninhamento, complexidade, parâmetros, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4); suíte JS (`node --test`) e relay Python; mutação Tier A no diff (`PM-112`); vermelho-na-base (`PM-111`).
+- **`npm run validate` local** espelha o núcleo dos gates acima: `lint:all` + `shell-budget-check` + `secrets-audit` + `lint:relay` + `audit:complexity` + `audit:docs` + `audit:layers` + `npm test`.
+- **Só informa / fora do CI:** `max-lines` no `client/`; avisos de `scripts/`, `tools/` e `tests/` já cobertos por `lint:all` no job; Ruff `E`, `I` e `PLR0915` (`--exit-zero`); **E2E Python** (`npm run test:e2e` / `e2e/`) — dívida explícita: não roda no `ci.yml` (depende de browser/stack local; promover quando houver job estável).
 - `audit:complexity` gera o artefato de baseline em `docs/metrics/` e não quebra o build.
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.
 - Não afrouxe limite nem teste para ficar verde: quebre a função com semântica própria (extract method) ou registre waiver acima com motivo, responsável e data.

@@ -10,7 +10,7 @@ Este documento consolida o diagnóstico comparativo realizado sobre iniciativas 
 
 | Iniciativa | Acertos a Preservar no Vox | Armadilha a Proibir no Design | Lição Operacional para o Vox |
 |---|---|---|---|
-| **A. rede P2P BR de referência** (Holepunch / P2P puro) | Identidade Ed25519 local; diários assinados (*append-only*); zero retenção de biometria/KYC; vocabulário cultural brasileiro (*A Rua*, *Cadeiras*). | Dependência de nós semeadores (*seeders*) sempre ativos; checagem paga de idade; bloqueios severos de NAT/CGNAT em redes móveis 4G/5G; encargo de controlador LGPD/Marco Civil. | **Herança do rede P2P BR de referência sem a armadilha P2P obrigatória:** Adotamos chaves locais e diários assinados. Para resiliência, permitimos **nós participativos opt-in de leitura e cache** (PWA leve enquanto aberto ou relay desktop local), mas **proibimos** transformar o celular em infraestrutura 24/7 de hospedagem da rede no 4G. Produto real ativo nov/2026: ver [mapa §3.1](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md). |
+| **A. rede P2P BR de referência** (Holepunch / P2P puro) | Identidade Ed25519 local; diários assinados (*append-only*); zero retenção de biometria/KYC; vocabulário cultural brasileiro (*A Rua*, *Cadeiras*). | Dependência de nós semeadores (*seeders*) sempre ativos; checagem paga de idade; bloqueios severos de NAT/CGNAT em redes móveis 4G/5G; encargo de controlador LGPD/Marco Civil. | **Herança da rede P2P BR de referência sem a armadilha P2P obrigatória:** Adotamos chaves locais e diários assinados. Para resiliência, permitimos **nós participativos opt-in de leitura e cache** (PWA leve enquanto aberto ou relay desktop local), mas **proibimos** transformar o celular em infraestrutura 24/7 de hospedagem da rede no 4G. Produto real ativo nov/2026: ver [POSITIONING](../product/POSITIONING.md). |
 | **B. Bluesky** (AT Protocol) | Forte efeito de rede inicial; protocolo aberto com APIs públicas de leitura; portabilidade de repositórios. | **Falsa soberania:** AppView centralizado e dependência da Bluesky PBC (empresa C-Corp nos EUA). Vulnerável a mudanças unilaterais de termos de uso e sanções/ordens estrangeiras. | **Desacoplamento corporativo:** Não depender de AppViews proprietários de empresas estrangeiras. O protocolo deve ser interoperável com múltiplos gateways neutros. |
 | **C. Mastodon** (Fediverso / ActivityPub) | Federação genuína; governança comunitária; ausência de algoritmos tóxicos de retenção. | **Fricção de entrada e custo ao voluntário:** Exigir que o usuário "escolha uma instância"; custo mensal de servidores/VPS nos ombros de administradores voluntários; perda de rede por defederação arbitrária. | **Descentralização invisível:** O usuário entra para participar de comunidades, não para escolher servidores. Zero custos fixos mensais de VPS para mantenedores do projeto. |
 | **D. Channel-01 / Arboard** (Arweave / Turbo Gateway) | **Prova do "servidor zero":** HTML/JS ultraleve (< 20 KB); leitura instantânea via GraphQL multi-gateway; resiliência distribuída com fallback automático. | **Unilateralidade:** Projetado apenas como canal unidirecional de transmissão (broadcast), sem interação social ou agregação comunitária. | **Evolução bidirecional:** Adotamos a mesma fundação de gateways GraphQL abertos, expandindo o modelo de canal individual para um ecossistema bidirecional de comunidades, fóruns e respostas via convenção de tags. |
@@ -70,7 +70,7 @@ O Vox posiciona-se em um espaço não ocupado por nenhuma outra iniciativa:
 1. **Orkut Moderno (em vez de microblog de dopamina):**
    Enquanto quase todos os protocolos alternativos tentam recriar o Twitter/X, o brasileiro valoriza o pertencimento. O Vox prioriza comunidades temáticas, tópicos organizados de discussão e a identidade do usuário expressa nas comunidades que exibe em seu perfil.
 2. **Serverless para Voluntários (Linhagem Channel-01):**
-   Diferente do rede P2P BR de referência (que afundou na complexidade de manter semeadores e intermediários) e do Mastodon (que sobrecarrega voluntários com contas de servidor), o Vox utiliza a arquitetura estática comprovada pelo `channel-01`: consultas diretas via GraphQL aberto a gateways neutros. Custo de manutenção de servidores para o projeto: **zero**.
+   Diferente da rede P2P BR de referência (que afundou na complexidade de manter semeadores e intermediários) e do Mastodon (que sobrecarrega voluntários com contas de servidor), o Vox utiliza a arquitetura estática comprovada pelo `channel-01`: consultas diretas via GraphQL aberto a gateways neutros. Custo de manutenção de servidores para o projeto: **zero**.
 3. **Ponte, não Ilha:**
    Projetos alternativos falham quando exigem que o usuário traga toda a sua rede de contatos para começar a ter valor. O Vox atua como o **arquivo soberano e centro de controle** do criador: ele registra a autoria permanente no Vox e reverbera instantaneamente para onde a audiência em massa já está (WhatsApp, Instagram, X e TikTok).
 
@@ -101,7 +101,7 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
 ### O Dilema do Opt-in vs Armadilha rede P2P BR de referência
 
 1. **O Fracasso do Opt-in Escondido:** Se a participação na infraestrutura for apenas uma caixa opcional escondida em menus avançados, menos de 1% dos usuários a ativam. O projeto continua vulnerável a quedas de gateways públicos e bloqueios de DNS.
-2. **A Armadilha do rede P2P BR de referência (P2P Obrigatório 24/7):** Exigir nós semeadores pesados no celular destrói a bateria, consome dados móveis tarifados no 4G/5G e cria problemas de NAT/CGNAT, gerando desinstalações em massa.
+2. **A Armadilha da rede P2P BR de referência (P2P Obrigatório 24/7):** Exigir nós semeadores pesados no celular destrói a bateria, consome dados móveis tarifados no 4G/5G e cria problemas de NAT/CGNAT, gerando desinstalações em massa.
 3. **A Síntese Vox 3.1 (Default-on com Pacto e Salvaguardas):**
    * **Inversão do Contrato Digital:** As Big Techs oferecem servidores "gratuitos" em troca de coletar, minerar e vender seus dados e direcionar algoritmos de retenção. O Vox garante soberania total (suas chaves, seus dados no permaweb) e, em troca, utiliza capacidade ociosa de cache e leitura do seu dispositivo como bem comum.
    * **Ativo por Padrão no App Aberto:** Ao abrir o app, o nó leve atua automaticamente servindo requisições de leitura de dados públicos e imutáveis já baixados, sem custo de servidores para o projeto.
@@ -112,9 +112,9 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
 
 ## 7. Lições de Conectividade entre Dispositivos (Fase 3.2 WebRTC)
 
-### WebRTC sob Demanda ≠ A Armadilha P2P do rede P2P BR de referência
+### WebRTC sob Demanda ≠ A Armadilha P2P da rede BR de referência
 
-1. **Por que o P2P do rede P2P BR de referência falha no celular:** Forçar o celular a ser um semeador contínuo em 4G/5G gera consumo desenfreado de bateria, esgota franquias de dados móveis e bate no muro de CGNATs de operadoras brasileiras.
+1. **Por que o P2P da rede BR de referência falha no celular:** Forçar o celular a ser um semeador contínuo em 4G/5G gera consumo desenfreado de bateria, esgota franquias de dados móveis e bate no muro de CGNATs de operadoras brasileiras.
 2. **Como o WebRTC do Vox 3.2 resolve com leveza:**
    * **Apenas leitura e cache local:** O canal `vox-peer-v0` via WebRTC DataChannel só transporta pequenos fragmentos públicos já cacheados (tópicos e respostas), sob demanda.
    * **Subordinação ao Pacto 3.1:** As mesmas salvaguardas (teto diário de 50 MB, bloqueio em redes móveis e botão de pausa) barram o envio de dados via WebRTC, eliminando qualquer risco de sobrecarga.
@@ -142,7 +142,7 @@ O repositório **[Arboard](https://github.com/rodrigopavezi/arboard)** (template
 
 ## 8b. Retenção por utilidade (mapa nov/2026)
 
-Redes que retêm sem algoritmo tóxico (Nextdoor, grupos locais, Kwai em aparelho barato) voltam por **aviso, feira, assembleia e ritual**, não por feed infinito. Na Vox, a trinca **PM-97 + Feira + PM-23** é o motor de hábito; soberania é o pacto, não o gancho semanal. Detalhe: [mapa §4.4](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md).
+Redes que retêm sem algoritmo tóxico (Nextdoor, grupos locais, Kwai em aparelho barato) voltam por **aviso, feira, assembleia e ritual**, não por feed infinito. Na Vox, a trinca **PM-97 + Feira + PM-23** é o motor de hábito; soberania é o pacto, não o gancho semanal. Detalhe: [POSITIONING](../product/POSITIONING.md).
 
 ---
 
@@ -153,7 +153,7 @@ Redes que retêm sem algoritmo tóxico (Nextdoor, grupos locais, Kwai em aparelh
 1. **A Armadilha de DMs on-chain (Permaweb):** Modelos ingênuos de web3 propõem gravar mensagens privadas cifradas na blockchain (`Type: dm`). No Vox, isso foi categoricamente **proibido**:
    * *Risco de quebra futura:* Ciphertexts imutáveis podem ser quebrados no futuro (avanços matemáticos ou computação quântica).
    * *Violação da LGPD:* A persistência forçada no permaweb impede o direito de eliminação e o esquecimento de conversas efêmeras.
-2. **Contraste com rede P2P BR de referência e P2P 24/7:** O rede P2P BR de referência exigia semeadores sempre online para entregar mensagens. No Vox, adotamos o modelo híbrido inteligente:
+2. **Contraste com rede P2P BR de referência e P2P 24/7:** a rede P2P BR de referência exigia semeadores sempre online para entregar mensagens. No Vox, adotamos o modelo híbrido inteligente:
    * Se ambos estiverem online: tráfego direto P2P via WebRTC DataChannel (`vox-dm-v0`), sem tocar em servidores.
    * Se o destinatário estiver offline: envelope cifrado depositado no relay comunitário com **TTL estrito de 72h**, sendo deletado imediatamente após a coleta ou expirado automaticamente.
 3. **Contraste com Big Techs e Redes Corporativas:**

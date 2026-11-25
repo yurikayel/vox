@@ -11,6 +11,17 @@
 /client/js/crypto-dm.js             @yurikayel
 /client/js/sig-format.js            @yurikayel
 /client/js/inbox.js                 @yurikayel
+/client/js/shared/device-merge.js   @yurikayel
+/client/js/dungeon/vtt-fairplay-admission.js @yurikayel
+/client/js/dungeon/vtt-fairplay-cipher.js @yurikayel
+/client/js/dungeon/vtt-fairplay-driver.js @yurikayel
+/client/js/dungeon/vtt-fairplay-log.js @yurikayel
+/client/js/dungeon/vtt-fairplay-rebuild.js @yurikayel
+/client/js/dungeon/vtt-fairplay-roll-flow.js @yurikayel
+/client/js/dungeon/vtt-fairplay-roll.js @yurikayel
+/client/js/dungeon/vtt-fairplay-selo.js @yurikayel
+/client/js/dungeon/vtt-fairplay-state.js @yurikayel
+/client/js/dungeon/vtt-fairplay-wire.js @yurikayel
 /client/sw.js                       @yurikayel
 /client/_headers                    @yurikayel
 /relay/                             @yurikayel
