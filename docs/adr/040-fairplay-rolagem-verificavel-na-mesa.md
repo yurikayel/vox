@@ -1,6 +1,6 @@
 # ADR-040: Fairplay — rolagem verificável na mesa em três fases, com o Mestre como hub que não pode forjar
 
-**Status:** proposed (só documentação; o código entra em dois PRs depois do aceite) · **Revisado:** 2026-11-25 · **Relacionados:** [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) (honestidade de segurança), [ADR-033](./033-ia-so-no-rpg-local-primeiro.md) (o RPG fica isolado do feed cívico), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [spec Subversus VTT §7 e §10](../specs/subversus-vtt-v0.md), [THREAT-MODEL](../THREAT-MODEL.md)
+**Status:** proposed (só documentação; o código entra em dois PRs depois do aceite) · **Revisado:** 2026-11-25 (revisão 2: partes depois dos compromissos, fechamento pelo log, veto do Mestre, compromisso amarrado) · **Relacionados:** [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) (honestidade de segurança), [ADR-033](./033-ia-so-no-rpg-local-primeiro.md) (o RPG fica isolado do feed cívico), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [spec Subversus VTT §7 e §10](../specs/subversus-vtt-v0.md), [THREAT-MODEL](../THREAT-MODEL.md)
 
 ## 1. Contexto
 
@@ -14,17 +14,29 @@ O repositório já tem as peças do protocolo Commit-Reveal² em `client/js/rpg-
 
 ## 2. Decisão
 
-### 2.1 Três fases, todas como operações assinadas no log da campanha
+### 2.1 Fases, todas como operações assinadas no log da campanha
 
 | Fase | Operação | Quem manda | Conteúdo |
 |---|---|---|---|
-| Abertura | `FAIRPLAY_OPEN` | quem pede a rolagem | `rollId` novo, fórmula, visibilidade, lista de participantes (os pares conectados naquele momento, no mínimo 2) e prazo de cada fase |
-| 1. Compromisso | `FAIRPLAY_COMMIT` | cada participante | só o `commit` (sem semente, sem partes) e uma parte de backup **cifrada** para cada um dos outros participantes |
-| 2. Revelação | `FAIRPLAY_REVEAL` | cada participante, só depois de ver o compromisso de todos | a semente |
+| Abertura | `FAIRPLAY_OPEN` | quem pede a rolagem | `rollId` novo, fórmula, visibilidade e prazo de cada fase. A lista de participantes **não é escolhida à mão**: é o conjunto dos pares da sala com `FAIRPLAY_KEY` válida no log naquele ponto (§2.3), ordenado por `peerId`. No mínimo 2 |
+| 1. Compromisso | `FAIRPLAY_COMMIT` | cada participante | só o `commit`, **sem semente e sem partes** |
+| 1b. Partes | `FAIRPLAY_SHARES` | cada participante | uma parte de backup **cifrada** para cada um dos outros. Só é aceita depois que **todos** os compromissos estão no log |
+| 2. Revelação | `FAIRPLAY_REVEAL` | cada participante | a semente. Só é aceita depois que a fase 1b fecha |
 | Recuperação | `FAIRPLAY_SHARE` | quem guarda parte de alguém que não revelou | a parte em claro (a fase de revelação já fechou) |
-| Fechamento | `ROLL_RECORDED` com `fairplay` | quem pediu | resultado e referência ao `rollId` |
+| Fechamento de fase | `FAIRPLAY_CLOSE` | quem abriu a rolagem, ou o Mestre se quem abriu sumiu | qual fase fecha. Só é aceito depois do prazo daquela fase |
+| Resultado | `ROLL_RECORDED` com `fairplay` | quem abriu | resultado e referência ao `rollId` |
 
-O sorteio sai de `resolveFairplayRoll` sobre o que está no log. A ordem das fases é imposta pelo próprio protocolo: revelação antes de todos os compromissos é recusada, e compromisso depois da primeira revelação também.
+As partes **não** podem ir junto com o compromisso: quem se compromete por último leria as partes dos outros antes de fixar a própria semente.
+
+O sorteio sai de `resolveFairplayRoll` sobre o que está no log. Cada operação só é aceita na sua fase; o resto é recusado.
+
+### 2.1a O que fecha uma fase é o log, não o relógio
+
+Cada aparelho tem seu relógio. Se cada um fechasse a fase "com o que chegou", dois aparelhos poderiam chegar a resultados diferentes. Por isso:
+
+- Uma fase termina quando todas as operações esperadas estão no log, ou quando aparece um `FAIRPLAY_CLOSE` assinado. O prazo só dá o direito de emitir o fechamento. A ordem do log é a que o Mestre-hub já impõe.
+- Operação daquela fase que entra no log depois do fechamento é ignorada em todos os aparelhos.
+- As sementes são combinadas na ordem da lista do `FAIRPLAY_OPEN`. Hoje `resolveCommitReveal2Roll` concatena na ordem em que recebe a lista; o PR-3a passa a ordem explicitamente.
 
 ### 2.2 Ninguém confia no selo de outro par
 
@@ -34,11 +46,20 @@ O campo `fairplay` do `ROLL_RECORDED` não é uma afirmação de verdade: **cada
 
 As partes de backup precisam ir cifradas para cada destinatário; senão o Mestre, que repassa tudo, juntaria o quórum e saberia a semente antes da revelação. Para isso cada par publica, ao entrar na sala, uma **chave ECDH P-256 efêmera da sessão** numa operação assinada (`FAIRPLAY_KEY`). As partes vão cifradas com ECDH + HKDF-SHA-256 + AES-GCM, com o `rollId` e os dois `peerId` como dados associados. A chave efêmera vive só na memória da sessão e não tem relação com a chave de identidade nem com a de DM: **não mexe em `identity/`**, que está congelada, nem no `crypto-dm.js`. O formato carrega o nome do algoritmo (`alg: "ecdh-p256+hkdf-sha256+aes-256-gcm"`), como pede o ADR-036.
 
+### 2.3a Compromisso amarrado à rolagem
+
+Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0:
+
+- Dentro da mesma rolagem, um `commitO` repetido é recusado: ninguém copia o compromisso de outro.
+- Compromisso sem `commitO` é recusado. Hoje a camada de baixo (`verifyRevealedSeed`) pula a verificação quando falta o `commitO`; o adaptador já exige o campo (#495), e o PR-3a fecha a lacuna também embaixo, com teste que falha na base.
+- Amarrar rolagem e pessoa dentro do hash (`SHA-256(rollId‖peerId‖semente)`) é o desenho mais firme, mas muda o formato. Entra com um `alg` novo (ADR-036), num PR próprio depois do PR-3b.
+
 ### 2.4 Escopo da v0
 
 - **Só rolagens públicas.** Rolagens "Somente Mestre" e "Cega" continuam locais, sem selo: os jogadores não veem o valor, então não teriam o que verificar. Uma versão com compromisso público e valor escondido fica para depois.
 - **Jogo sozinho e mesa de demonstração** seguem com a rolagem local, sem selo.
 - **Mínimo de 2 participantes.** O quórum Shamir é `M = ⌈N/2⌉ + 1` partes de `N − 1` (cada par guarda uma parte de cada outro), limitado a `N − 1`.
+- **Com 2 participantes, o quórum é 1.** O outro jogador lê a minha semente assim que recebe a parte dele, na fase 1b. O compromisso dele já está fixado, então ele não escolhe o número; só fica sabendo do resultado antes de revelar. Se desistir por isso, não adianta: a parte dele está comigo e a semente dele é recuperada.
 - **Prazo por fase:** 20 s por padrão, ajustável na abertura. Estourou o prazo, a fase fecha com o que chegou.
 
 ## 3. O que este desenho garante e o que não garante (ADR-024)
@@ -49,9 +70,13 @@ As partes de backup precisam ir cifradas para cada destinatário; senão o Mestr
 - Ninguém, nem o Mestre, transforma uma rolagem que não fecha em "verificada" na tela dos outros.
 
 **Não garante (limites honestos, visíveis na interface):**
-- **O Mestre pode censurar.** Como hub, ele pode não repassar revelações ou partes; a rolagem fica "não verificada". Isso aparece, mas não é impedido.
+- **O Mestre tem veto, e sabe o resultado antes de usá-lo.** Como hub, ele recebe as revelações antes de repassar. Se o número não agradar, pode segurar uma revelação ou uma parte, e a rolagem fica "não verificada". É mais que censura: é desistir seletivamente. Na v0 isso é exposto, não impedido:
+  - a Crônica mostra cada rolagem que não fechou e o motivo que o próprio aparelho viu ("a revelação de X não chegou");
+  - cada jogador sabe se mandou a própria revelação; se ela não aparece no log, o aparelho dele marca "segurada no caminho".
+  Tirar o veto exige rede direta entre jogadores (abaixo).
 - **Abortar e pedir de novo.** Quem não gosta do rumo pode deixar a rolagem não fechar e abrir outra. Mitigação: toda rolagem aberta fica no log, e a Crônica mostra quantas rolagens não fecharam por pessoa. A punição é social, não técnica.
 - **Conluio de quórum.** Se `M` participantes combinarem entre si, eles reconstroem a semente de um terceiro antes da revelação. Com 2 ou 3 pares, o quórum é quase todo mundo: a garantia real é contra **um** trapaceiro, não contra a maioria.
+- **Vários aparelhos da mesma pessoa.** A lista vem dos pares com chave na sala (§2.1), então quem abre não escolhe a dedo quem entra. Quem tem vários aparelhos na sala, porém, entra várias vezes. Contra isso, a defesa continua sendo o Mestre admitir os jogadores.
 - **Sem rede direta entre jogadores.** Tudo passa pelo Mestre. Uma malha completa entre jogadores tiraria o poder de censura, mas é outra decisão.
 
 ## 4. Alternativas descartadas
@@ -63,7 +88,7 @@ As partes de backup precisam ir cifradas para cada destinatário; senão o Mestr
 
 ## 5. Consequências e entrega
 
-- **PR-3a** — fases e verificação: `FAIRPLAY_OPEN/COMMIT/REVEAL/SHARE` no reducer e no filtro de sincronização, recálculo do selo em cada aparelho, prazos. Testes com 3 pares no hub em memória (`createInMemorySyncHub`): rolagem normal, semente adulterada, último revelador que some (com e sem quórum), `fairplay` forjado por outro par, Mestre que segura a revelação, revelação fora de ordem. Partes ainda em claro **só no hub de teste**; a flag fica desligada fora dos testes até o PR-3b.
+- **PR-3a** — fases e verificação: `FAIRPLAY_OPEN/COMMIT/SHARES/REVEAL/SHARE/CLOSE` no reducer e no filtro de sincronização, recálculo do selo em cada aparelho, fechamento pelo log (§2.1a), recusa de `commitO` ausente ou repetido (§2.3a). Testes com 2 e 3 pares no hub em memória (`createInMemorySyncHub`): rolagem normal, semente adulterada, último revelador que some (com e sem quórum), `fairplay` forjado por outro par, Mestre que segura a revelação, operação fora de fase, partes antes de todos os compromissos, e a mesma rolagem dando o mesmo número com as operações chegando em ordens diferentes. Partes ainda em claro **só no hub de teste**; a flag fica desligada fora dos testes até o PR-3b.
 - **PR-3b** — `FAIRPLAY_KEY` com chave efêmera, cifra das partes (§2.3), selo na Crônica, contagem de rolagens que não fecharam e textos leigos. A flag de laboratório liga só depois deste PR.
 - **Custo:** cada rolagem pública passa a esperar duas idas e voltas pela rede (compromisso e revelação). Na mesma rede local, isso é imperceptível; em 4G com TURN, alguns segundos. A interface mostra "rolando com a mesa…" enquanto isso.
 - **Revisão externa:** a cifra das partes e o quórum entram na lista de revisão de cripto (LAN-18) antes de a flag sair do laboratório.
