@@ -35,6 +35,7 @@ const GM_ONLY_OPS = new Set([
   "CALENDAR_ADVANCE",
   "NOTE_PIN",
   "NOTE_VISIBILITY",
+  "FAIRPLAY_ADMIT",
 ]);
 
 function isGmActor(state, actor) {
