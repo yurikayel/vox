@@ -17,6 +17,7 @@ import {
   buildFloorDioramaGeometry,
   describeTokenSurroundings,
 } from "../client/js/dungeon/diorama/diorama-geom.js";
+import { pickDioramaTarget } from "../client/js/dungeon/diorama/diorama-pick.js";
 import { createDioramaGlRenderer, STANDEE_FS_SOURCE } from "../client/js/dungeon/diorama/diorama-gl.js";
 import {
   floorPxToWorld,
@@ -26,7 +27,6 @@ import {
 } from "../client/js/dungeon/diorama/diorama-math.js";
 import {
   attachDioramaOverlay,
-  pickDioramaTarget,
   renderDioramaModePill,
 } from "../client/js/dungeon/diorama/diorama-view.js";
 import { buildDungeonTabs, renderDungeonChrome } from "../client/js/dungeon/dungeon-chrome.js";
