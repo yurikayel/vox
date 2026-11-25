@@ -101,3 +101,9 @@ test("deltas: remoção, troca de andar e entrada na área revelada pedem novo s
   assert.equal(send("TOKEN_CHANGE_FLOOR", { tokenId: "ogro-na-nevoa", floorZ: 0 })?.refreshSnapshot, true);
   assert.equal(send("TOKEN_MOVE", { tokenId: "heroi-visto", x: 2, y: 2 })?.refreshSnapshot, true, "token que pode ter entrado na área revelada");
 });
+
+test("FAIRPLAY_ADMIT chega intacta ao jogador, com a névoa ligada ou não", () => {
+  const op = { type: "FAIRPLAY_ADMIT", opId: "op-admit", actor: "vx_gm", payload: { actor: "vx_p1" } };
+  assert.equal(filterOpForPlayer(fogState(), op, "vx_p1"), op);
+  assert.deepEqual(filterOpForPlayer(fogState(), op, "vx_p2"), op);
+});
