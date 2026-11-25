@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Testes: o envio do Dado de Vida pelo painel Editar (d10 grava, em branco mantém o d8 padrão, valor fora de d4–d12 é ignorado, ficha sem o campo não quebra) passa a ter teste próprio (`tests/subversus-ficha-dado-de-vida-envio.test.js`).
 - Ficha: o Dado de Vida ganha campo no painel Editar (d4 a d12, inválido é ignorado) e a aba Jogar avisa que vale d8 até o jogador definir o seu; teste de que Exaustão 5 não é fatal (`system-rest.js`, `tests/subversus-ficha-dado-de-vida.test.js`).
 - Ficha: o painel Editar deixa de ajustar valores em silêncio; nome vazio, CA fora de 1–40, atributo fora de 1–30 ou não inteiro , sistema desconhecido, Deslocamento fora de 0–200 ou em branco, salvaguarda desconhecida e especialização em perícia não treinada recusam o Salvar com o motivo de cada campo, mantendo o que foi digitado e sem gravar nada (`sheet-edit-validate.js`, `tests/subversus-ficha-edicao-validacao.test.js`).
 - Ficha (D&D 2024): condições do SRD 5.2 como marcas (sem efeito automático), Exaustão em nível 0–6 com o efeito só informativo, Dados de Vida (dado digitado, um por nível) e descansos: o longo devolve PV, espaços de magia e todos os dados, baixa a Exaustão em 1 e zera os testes contra a morte; o curto só zera esses testes se os PV estão acima de 0, e cada Dado de Vida gasto cura dado + CON (`system-rest.js`, `dungeon-persistence-sheet-rest.js`, `screen-sheet-rest.js`).
