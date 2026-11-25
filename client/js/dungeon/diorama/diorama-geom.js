@@ -178,3 +178,34 @@ export function describeTokenSurroundings(floor = {}, tokens = [], activeToken =
   }
   return `${parts.join("; ")}.`;
 }
+
+const DOOR_STATE_LABEL = Object.freeze({ closed: "fechada", open: "aberta", locked: "trancada", secret: "secreta" });
+
+function describeDoors(floor, from) {
+  const unit = Number(floor?.grid?.unitMeters) || 1.5;
+  return (floor?.doors || []).map((d) => {
+    const dx = (d.x1 + d.x2) / 2 - from.x;
+    const dy = (d.y1 + d.y2) / 2 - from.y;
+    return `porta ${DOOR_STATE_LABEL[d.state] || d.state} a ${(Math.hypot(dx, dy) * unit).toFixed(1)}m ao ${cardinalDirection(dx, dy)}`;
+  });
+}
+
+/**
+ * Resumo em texto da cena que o observador vê (para `aria-live`): tokens e portas, a partir de
+ * uma visão já projetada por `projectDioramaView`, então nada que esteja na névoa, na camada do
+ * Mestre ou em porta secreta (para o jogador) aparece. Com token selecionado, dá distâncias e direções.
+ *
+ * @param {{floor: object, tokens: Array<object>}} view Visão do papel (`projectDioramaView`).
+ * @param {string} [selectedId=""] Token selecionado.
+ * @returns {string} Texto curto em português.
+ */
+export function describeDioramaView(view, selectedId = "") {
+  const tokens = view?.tokens || [];
+  const active = tokens.find((t) => t.tokenId === selectedId) || null;
+  if (!active) {
+    const names = tokens.map((t) => t.name).join(", ") || "nenhum";
+    return `Mapa 3D. Tokens visíveis: ${names}. Portas visíveis: ${(view?.floor?.doors || []).length}.`;
+  }
+  const doors = describeDoors(view.floor, active);
+  return [describeTokenSurroundings(view.floor, tokens, active).replace(/\.$/, ""), ...doors].join("; ") + ".";
+}
