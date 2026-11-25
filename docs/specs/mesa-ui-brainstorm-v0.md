@@ -9,8 +9,8 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 ## 1. Objetivo e escopo
 
-1. Decompor a lógica de UI de **Roll20**, **Owlbear Rodeo**, **Foundry VTT** e **Mini Kraken** em padrões reutilizáveis (hierarquia, navegação, GM vs jogador).
-2. Consolidar o **layout alvo** da Mesa: mapa como herói (Owlbear), fluxo campanha (Kraken), ferramentas de mestre em rota/gaveta (Foundry), hábitos de chat e dado (Roll20) **sem** clonar o layout tricoluna fixo.
+1. Decompor a lógica de UI de **Mesa C**, **Mesa hospedada A**, **Mesa hospedada B** e **Mesa hospedada D** em padrões reutilizáveis (hierarquia, navegação, GM vs jogador).
+2. Consolidar o **layout alvo** da Mesa: mapa como herói (Mesa A), fluxo campanha (Mesa D), ferramentas de mestre em rota/gaveta (Mesa B), hábitos de chat e dado (Mesa C) **sem** clonar o layout tricoluna fixo.
 3. Ligar implementação ao código existente: `dungeon-chrome.js`, `screen-table.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` (lazy).
 
 **Fora do escopo v0:** VTT 3D, áudio/mixer, marketplace, login Google, PDF como ficha principal.
@@ -19,7 +19,7 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 ## 2. Anatomia por referencial
 
-### 2.1 Roll20
+### 2.1 Mesa C
 
 | Zona típica | Função | Padrão de interação |
 | :--- | :--- | :--- |
@@ -35,9 +35,9 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 **Contras para evitar:** três colunas fixas em desktop estreito; dezenas de abas; journal como segundo app dentro do app; performance ruim em mobile.
 
-**Para a Mesa:** manter **crônica + bandeja de dados** (Z3) como satélites colapsáveis, não como colunas permanentes de 50% da viewport. Grimório permanece **rota dedicada** (`#/dungeon/ficha`), não sidebar direita tipo Roll20.
+**Para a Mesa:** manter **crônica + bandeja de dados** (Z3) como satélites colapsáveis, não como colunas permanentes de 50% da viewport. Grimório permanece **rota dedicada** (`#/dungeon/ficha`), não sidebar direita tipo Mesa C.
 
-### 2.2 Owlbear Rodeo
+### 2.2 Mesa hospedada A
 
 | Zona típica | Função | Padrão de interação |
 | :--- | :--- | :--- |
@@ -54,7 +54,7 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 **Para a Mesa:** **Z2 mapa hero** (mín. ~60vh em sessão jogador); ocultar formulários GM na rota Mesa quando `viewerRole !== 'gm'`. **Não** regredir a PDF-only: ficha CRDT no Grimório é diferencial.
 
-### 2.3 Foundry VTT
+### 2.3 Mesa hospedada B
 
 | Zona típica | Função | Padrão de interação |
 | :--- | :--- | :--- |
@@ -71,7 +71,7 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 **Para a Mesa:** concentrar poder tático em **`#/dungeon/mestre`** + toolbar em `screen-table-tactics.js`; jogador só vê `projectStateForPlayer` / camada `player`. E5 P0 sync: um `routeId` ativo (ver referenciais §2.2).
 
-### 2.4 Mini Kraken
+### 2.4 Mesa hospedada D
 
 | Zona típica | Função | Padrão de interação |
 | :--- | :--- | :--- |
@@ -98,11 +98,11 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 | Zona | Função | Inspiração | Código atual |
 | :---: | :--- | :--- | :--- |
 | Z0 | Segregação Vox ↔ Dungeon | Mesa | `.dungeon-segregation-strip` |
-| Z1 | Topbar, presença, nav | Foundry lite | `dungeon-chrome.js` |
-| Z2 | Mapa 2D hero | Owlbear | `#dungeon-vtt-canvas`, `.dungeon-map-hero` |
-| Z3 | Crônica, ação, dados | Roll20 + Kraken drawer | `.dungeon-z3-drawer`, `screen-table-layout.js` |
-| Z4 | Rail mestre (tático, notas) | Foundry + Kraken GM | `screen-dm.js`, `screen-notes.js`, tactics |
-| Z5 | Meta-campanha | Kraken hub | `screen-camp.js` |
+| Z1 | Topbar, presença, nav | Mesa B lite | `dungeon-chrome.js` |
+| Z2 | Mapa 2D hero | Mesa A | `#dungeon-vtt-canvas`, `.dungeon-map-hero` |
+| Z3 | Crônica, ação, dados | Mesa C + Mesa D drawer | `.dungeon-z3-drawer`, `screen-table-layout.js` |
+| Z4 | Rail mestre (tático, notas) | Mesa B + Mesa D GM | `screen-dm.js`, `screen-notes.js`, tactics |
+| Z5 | Meta-campanha | Mesa D hub | `screen-camp.js` |
 
 ### 3.2 Wireframe — sessão jogador (`#/dungeon/mesa`)
 
@@ -123,7 +123,7 @@ Documento de **anatomia de interface** dos referenciais de mercado e do **modelo
 
 ```text
 Z1 com aba Mestre · Z2 mapa + toolbar tática · Z4 painéis (iniciativa, notas, pins)
-Sem coluna direita Roll20: abas internas Tático | Tokens | Notas | Iniciativa
+Sem coluna direita Mesa C: abas internas Tático | Tokens | Notas | Iniciativa
 ```
 
 ### 3.4 Wireframe — mobile
@@ -149,7 +149,7 @@ Mestre: mesma regra — rota separada, não expor no dock do jogador (chrome con
 
 ## 4. Matriz decisões UI
 
-| Tema | Roll20 | Owlbear | Foundry | Kraken | Mesa v0 |
+| Tema | Mesa C | Mesa A | Mesa B | Mesa D | Mesa v0 |
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | Mapa hero na sessão | Parcial | Sim | Sim | Sim | **Sim** (E5.0) |
 | Chat/crônica integrada | Sim | Não | Sim | Sim | **Drawer Z3** |
@@ -240,5 +240,5 @@ Matriz feature×camada e lacunas UX: [`mesa-ui-audit-2026-11.md`](./mesa-ui-audi
 
 | Data | Nota |
 | :--- | :--- |
-| 2026-11-20 | v0: anatomia Roll20/Owlbear/Foundry/Kraken, zonas, wireframes, backlog E5.0 UI. |
+| 2026-11-20 | v0: anatomia Mesa C/Mesa A/Mesa B/Mesa D, zonas, wireframes, backlog E5.0 UI. |
 | 2026-11-20 | Auditoria UI/UX E5: [`mesa-ui-audit-2026-11.md`](./mesa-ui-audit-2026-11.md) (Z0–Z5, jornadas J1–J7, backlog P0–P3, E2E 12–15). |
