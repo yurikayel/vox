@@ -60,6 +60,28 @@ export function totalCarriedWeight(orset) {
   return listInventoryItems(orset).reduce((sum, it) => sum + it.weightLb * it.qty, 0);
 }
 
+/** Quilos por libra (definição internacional: 0,45359237 kg). @type {number} */
+export const KG_PER_LB = 0.45359237;
+
+/**
+ * Converte libras em quilos.
+ * @param {number} lb Peso em libras.
+ * @returns {number|null} Quilos, ou `null` quando `lb` não é um número finito e não negativo.
+ */
+export function lbToKg(lb) {
+  const n = typeof lb === "number" ? lb : Number.NaN;
+  return Number.isFinite(n) && n >= 0 ? n * KG_PER_LB : null;
+}
+
+/**
+ * Carga total em quilos (o inventário guarda libras).
+ * @param {object} orset Inventário.
+ * @returns {number} Soma peso × quantidade, em kg.
+ */
+export function totalCarriedKg(orset) {
+  return totalCarriedWeight(orset) * KG_PER_LB;
+}
+
 function addItem(sheet, payload, inv) {
   const item = normalizeItem({ ...payload, id: payload.itemId || undefined }, Object.keys(inv).length);
   if (!item) return { ...sheet, inventory_orset: inv };
