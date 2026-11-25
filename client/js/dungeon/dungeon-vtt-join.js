@@ -6,6 +6,7 @@ import { hydrateStateFromCampaign } from "./dungeon-persistence.js";
 import { createMemoryVttBackend, createVttStore } from "./vtt-store.js";
 import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
 import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
+import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
 /** @param {object} state @param {object} invite @param {object} keypair */
 function stampPlayerJoinState(state, invite, keypair) {
@@ -28,11 +29,12 @@ function createGuestStore(opts) {
 function wirePlayerSyncPeer(state, invite, opts) {
   if (state.syncPeer?.close) state.syncPeer.close();
   const transport = createBroadcastChannelTransport(invite.tableId, state.vttKeypair.routeId);
+  const store = createGuestStore(opts);
   state.syncPeer = createVttSyncPeer({
     role: "player",
     campaignId: invite.tableId,
     keypair: state.vttKeypair,
-    store: createGuestStore(opts),
+    store,
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
@@ -40,10 +42,15 @@ function wirePlayerSyncPeer(state, invite, opts) {
       hydrateStateFromCampaign(state, camp);
       state.campaignNotice = "Conectado à Mesa (visão de jogador).";
       (opts.onCampaign || state._onSyncUpdate)?.(camp);
+      state.fairplayDriver?.onUpdate(camp);
     },
-    onRejected: () => { state.rollError = "Ação recusada pelo Mestre ou assinatura inválida."; },
+    onRejected: (msg) => {
+      state.rollError = "Ação recusada pelo Mestre ou assinatura inválida.";
+      state.fairplayDriver?.onRejected(msg);
+    },
   });
   state.syncPeer.join();
+  wireFairplayDriver(state, { peer: state.syncPeer, peerId: state.vttKeypair.routeId, store, campaignId: invite.tableId });
 }
 
 /**
