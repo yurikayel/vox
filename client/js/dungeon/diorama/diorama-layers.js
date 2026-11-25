@@ -5,7 +5,7 @@
  * @module dungeon/diorama/diorama-layers
  */
 import { projectTacticsFloorForPlayer } from "../vtt-tactics-reducer.js";
-import { isDoorRevealedByFog, isTokenRevealedByFog } from "../vtt-tactics-geometry.js";
+import { isTokenRevealedByFog } from "../vtt-tactics-geometry.js";
 
 /** Lado (em texels) da máscara de névoa `R8`; a textura cobre todo o piso. */
 export const FOG_MASK_SIZE = 256;
@@ -28,9 +28,8 @@ export function projectDioramaView(floor, tokens, role) {
   const onFloor = (tokens || []).filter((t) => t.floorZ === floor?.z);
   if (role === "gm") return { floor, tokens: onFloor };
   const projected = projectTacticsFloorForPlayer(floor || {});
-  const fogged = Boolean(projected.fog?.enabled);
   return {
-    floor: fogged ? { ...projected, doors: projected.doors.filter((d) => isDoorRevealedByFog(d, projected)) } : projected,
+    floor: projected,
     tokens: onFloor.filter((t) => t.layer === "player" && isTokenRevealedByFog(t, projected)),
   };
 }
