@@ -11,7 +11,7 @@
 1. **E5 jogador (Z0–Z3)** está implementado e coberto por smoke + E2E 07/10: chrome sem aba Mestre, mapa herói, drawer Crônica/Dados/**Handouts** (`screen-table-layout.js`, #340).
 2. **Default GM** (`loadDungeonPrefs` → `viewerRole: "gm"`) obriga toggle ou E2E de alternância — risco de onboarding jogador (P1, UX-002).
 3. **Convite P2P** funciona em laboratório (codec + `attachVttPlayerJoin` + `BroadcastChannel`); UX de cópia ainda é `<pre>` na tela Mestre (P2, UX-004). Mensagem de falha BC foi reforçada no controller (UX-014).
-4. **Ruído demo** (grade 5×5, W-DRF, vignette) coexiste com VTT 2D real na Mesa GM/jogador — carga cognitiva acima do alvo Owlbear-speed para jogadores (P2, UX-003).
+4. **Ruído demo** (grade 5×5, W-DRF, vignette) coexiste com VTT 2D real na Mesa GM/jogador — carga cognitiva acima do alvo velocidade-de-mesa-leve para jogadores (P2, UX-003).
 5. **SLM / IA local / Maritaca no device do jogador:** fora do produto (ADR-033); testes permanecem **N/A** com asserts negativos (`ai-social-dungeon.test.js`).
 
 ---
@@ -48,7 +48,7 @@
 
 Critério: **OK** = comportamento confirmado (E2E ou code review + teste unitário); **FAIL** = violação spec; **N/A** = fora escopo.
 
-### J1 — Jogador first-time (Owlbear-speed)
+### J1 — Jogador first-time (velocidade-de-mesa-leve)
 
 | Passo | Resultado | Evidência |
 | :--- | :--- | :--- |
