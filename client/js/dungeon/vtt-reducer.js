@@ -24,6 +24,7 @@ import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-cam
 import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
 
 const GM_ONLY_OPS = new Set([
+  "FAIRPLAY_ADMIT",
   "SCENE_UPSERT",
   "SCENE_SELECT",
   "SCENE_MAP_SET",
@@ -35,7 +36,6 @@ const GM_ONLY_OPS = new Set([
   "CALENDAR_ADVANCE",
   "NOTE_PIN",
   "NOTE_VISIBILITY",
-  "FAIRPLAY_ADMIT",
 ]);
 
 function isGmActor(state, actor) {
