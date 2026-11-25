@@ -111,7 +111,14 @@ function standeeColor(tok, selectedId) {
   return tok.tokenId === selectedId ? rgb.map((c) => c * 0.5 + 0.5) : rgb;
 }
 
-function standeeCorners(tok, eye) {
+/**
+ * Cantos 3D do standee de um token (quad voltado à câmera, ou plano para `display: "flat"`).
+ *
+ * @param {object} tok Token.
+ * @param {number[]} [eye] Posição da câmera.
+ * @returns {number[][]} Quatro cantos `[x, y, z]`.
+ */
+export function standeeCorners(tok, eye) {
   const [cx, cy, cz] = tokenCenter3d(tok);
   const half = (Number(tok.sizeCells) || 1) * 0.4;
   if (tok.display === "flat") {

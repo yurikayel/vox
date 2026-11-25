@@ -39,6 +39,7 @@ import { renderDmScreen } from "./screen-dm.js";
 import { renderSheetScreen } from "./screen-sheet.js";
 import { renderTableScreen } from "./screen-table.js";
 import { refreshFairplaySeals } from "./vtt-fairplay-selo.js";
+import { getDefaultVttStore } from "./vtt-store.js";
 
 const SCREEN_RENDERERS = {
   acampamento: renderCampScreen,
@@ -199,6 +200,13 @@ function handleDungeonChange(container, viewOpts, ev) {
   return settleAndRedraw(job, container, viewOpts);
 }
 
+/** Carrega a imagem do mapa e os avatares em segundo plano e entrega ao overlay (falha = fica sem textura). */
+function loadDioramaTextures(mod, overlay, floor, tokens, viewOpts) {
+  const store = viewOpts.store || getDefaultVttStore();
+  const io = { getBlob: (hash) => store.getBlob(hash), decode: (bytes) => globalThis.createImageBitmap(new Blob([bytes])) };
+  mod.loadDioramaImages({ floor, tokens }, io).then((images) => overlay.setImages(images)).catch(() => {});
+}
+
 function syncDioramaOverlay(mod, container, state, viewOpts) {
   const overlay = DIORAMA_OVERLAYS.get(container);
   if (state.dioramaMode === "2d") { overlay?.destroy(); DIORAMA_OVERLAYS.delete(container); return; }
@@ -217,6 +225,7 @@ function syncDioramaOverlay(mod, container, state, viewOpts) {
   });
   DIORAMA_OVERLAYS.set(container, created);
   created.draw();
+  loadDioramaTextures(mod, created, floor, scene.tokens, viewOpts);
 }
 
 function handleDioramaModeClick(container, viewOpts, target) {
