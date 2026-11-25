@@ -1,4 +1,4 @@
-# Auditoria diária jurídica e técnica (03:00 BRT = 06:00 UTC).
+﻿# Auditoria diária jurídica e técnica (03:00 BRT = 06:00 UTC).
 # SHAs de actions: somente os pinados em ci.yml.
 name: Nightly legal & tech audit
 
@@ -40,8 +40,8 @@ jobs:
       - name: deps-check-cdn (LAN-20)
         run: node scripts/deps-check-cdn.mjs
 
-      - name: npm audit (moderate+)
-        run: npm audit --audit-level=moderate
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
 
       - name: cargo-deny (rust/deny.toml)
         working-directory: rust
