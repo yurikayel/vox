@@ -22,6 +22,7 @@ import { buildLevelUpPlan } from "./vtt-levelup.js";
 import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
+import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
@@ -121,6 +122,8 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
 export async function recordFormulaRoll(state, rawInput, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const mode = opts.mode || state.rollMode || "normal";
+  const viaTable = await tryStartFairplayRoll(state, rawInput, { ...opts, store, mode });
+  if (viaTable) return viaTable;
   const result = rollDiceFormula(rawInput, { sheet: state.sheet, mode, randomBytesFn: opts.randomBytesFn });
   if (!result.ok) {
     state.rollError = result.error;
