@@ -245,6 +245,19 @@ function mergePatchedAbilities(baseAbilities, patch) {
 }
 
 /**
+ * `system` e `system_choices` a gravar ao salvar a ficha: sistema escolhido (ou o atual), atributos editados e
+ * perícias treinadas relidas das ações vivas. Sistema desconhecido é ignorado.
+ */
+function systemFieldsForSave(base, requestedId, abilities) {
+  const pack = getSystemPack(requestedId) || getSystemPack(base.system?.id);
+  const trained = pack ? liveTrainedSkills(pack, base) : base.system_choices?.proficientSkills;
+  return {
+    system: pack ? { id: pack.id, version: pack.version } : base.system,
+    system_choices: { ...base.system_choices, abilities, proficientSkills: trained },
+  };
+}
+
+/**
  * Atualiza dados básicos da ficha ativa (nome, classe, CA e atributos FOR–CAR) via `SHEET_UPSERT`.
  * @param {object} state Estado da sessão.
  * @param {object} patch Campos editados na UI.
@@ -259,11 +272,9 @@ export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
   const nextClass = String(patch.class_name || attrs.class_name || "Aventureiro").trim().slice(0, 60);
   const nextAc = Math.max(1, Math.min(40, Math.trunc(Number(patch.armor_class) || attrs.armor_class || 10)));
   const abilities = mergePatchedAbilities(attrs.abilities, patch);
-  const pack = getSystemPack(patch.system) || getSystemPack(base.system?.id);
   const updated = ensureSheetMeta({
     ...base,
-    system: pack ? { id: pack.id, version: pack.version } : base.system,
-    system_choices: { ...base.system_choices, abilities, proficientSkills: pack ? liveTrainedSkills(pack, base) : base.system_choices?.proficientSkills },
+    ...systemFieldsForSave(base, patch.system, abilities),
     attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities },
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
