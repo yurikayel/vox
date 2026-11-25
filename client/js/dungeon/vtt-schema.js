@@ -89,7 +89,7 @@ export function ensureSheetMeta(sheet = {}) {
 
 /**
  * Cria uma entrada padronizada da crônica da mesa.
- * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`).
+ * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`).
  * @returns {object} Entrada normalizada da crônica.
  */
 export function createChronicleEntry(opts = {}) {
@@ -103,7 +103,16 @@ export function createChronicleEntry(opts = {}) {
     visibility,
     author: String(opts.author || ""),
     ts: Number.isFinite(Number(opts.ts)) ? Number(opts.ts) : Date.now(),
+    ...fairplayLink(opts),
   };
+}
+
+/** Vínculo com a rolagem Fairplay (só o id e o valor anunciado; nunca um "verificado" de outro par). */
+function fairplayLink(opts) {
+  const rollId = String(opts.fairplayRollId || "");
+  if (!VTT_ID_RE.test(rollId)) return {};
+  const value = Number(opts.fairplayValue);
+  return Number.isFinite(value) ? { fairplayRollId: rollId, fairplayValue: value } : { fairplayRollId: rollId };
 }
 
 function finiteOr(val, fallback) {
