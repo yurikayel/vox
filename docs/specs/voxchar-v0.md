@@ -1,9 +1,9 @@
 # Ficha portátil `.voxchar` (v0)
 
-> **Status:** rascunho (proposta; aguarda aceite do mantenedor, zero código antes) · **Owner:** mantenedor · **Revisado:** 2026-11-25
+> **Status:** parcial (aceita pelo mantenedor em 2026-11-25; exportar e importar `.voxchar` implementados em `client/js/dungeon/voxchar.js` e `voxchar-check.js`; link só de leitura fica fora do v1, §6) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§6) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
-Define o arquivo `.voxchar`, que leva a ficha-base de um personagem de uma instalação do Vox para outra. Nada aqui está implementado; o código só começa depois do aceite.
+Define o arquivo `.voxchar`, que leva a ficha-base de um personagem de uma instalação do Vox para outra. Aceita em 2026-11-25. O v1 (exportar e importar) está implementado; o link só de leitura (§6) e o item dentro do `.voxrpg.zip` não.
 
 ## 1. Escopo
 
@@ -23,7 +23,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
   "system": { "id": "dnd5e-2024", "version": 1 },
   "exportedAt": "2026-11-25T12:00:00.000Z",
   "sheet": {
-    "attributes_lww": { "name": "", "class_name": "", "armor_class": 10, "abilities": {}, "level": 1, "speed_ft": 30 },
+    "attributes_lww": { "name": "", "ancestry": "", "class_name": "", "armor_class": 10, "abilities": {}, "level": 1, "speed_ft": 30 },
     "system_choices": {},
     "inventory_orset": {},
     "sheet_meta": {
@@ -34,7 +34,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
 }
 ```
 
-- `name` e `class_name` ficam em `attributes_lww`, como na ficha real.
+- `name`, `ancestry` (ancestralidade, como "Humano") e `class_name` ficam em `attributes_lww`, como na ficha real; `ancestry` é da ficha-base, não identidade.
 - `format` é o inteiro da versão do arquivo; maior que o conhecido: recusa com o motivo. `system.version` maior que a do pacote instalado: recusa com o motivo.
 - `exportedAt` é informativo: validado como data ISO ou ignorado; nunca decide nada.
 - `system_choices` só leva o que o pacote de sistema declara (perícias, salvaguardas, especialização, Deslocamento, Dado de Vida).

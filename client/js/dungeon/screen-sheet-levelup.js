@@ -110,5 +110,10 @@ export function renderSheetEditPanel(sheet, edit = {}) {
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>
+      <div class="dungeon-input-row">
+        <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-voxchar">Exportar ficha (.voxchar)</button>
+        <label for="dungeon-import-voxchar" class="dungeon-btn dungeon-btn-ghost dungeon-file-trigger">Importar ficha</label>
+        <input id="dungeon-import-voxchar" class="sr-only" type="file" accept=".voxchar,application/json" data-dungeon="import-voxchar" />
+      </div>
     </details>`;
 }
