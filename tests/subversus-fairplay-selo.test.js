@@ -9,7 +9,7 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
 import { createFairplayRollOffer } from "../client/js/dungeon/vtt-fairplay-roll.js";
 import { fairplayQuorum, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
-import { createFairplaySessionKey, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
+import { createFairplaySessionKey, fairplayShareHash, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { renderChronicleColumn } from "../client/js/dungeon/screen-table-layout.js";
 import {
   FAIRPLAY_LAB_KEY, computeFairplaySeals, countUnclosedRolls, isFairplayLabEnabled,
@@ -51,7 +51,7 @@ async function toReveal(peers) {
     for (const [i, share] of t.offers[p].shares.entries()) {
       const to = others[i % others.length];
       const sealed = await sealFairplayShare({ share, rollId: ROLL, fromPeer: p, toPeer: to, privateKey: t.keys[p].privateKey, recipientJwk: t.keys[to].publicKeyJwk });
-      shares.push({ to, share: sealed });
+      shares.push({ to, share: sealed, shareHash: await fairplayShareHash(share) });
     }
     t.push("FAIRPLAY_SHARES", p, { rollId: ROLL, shares });
   }

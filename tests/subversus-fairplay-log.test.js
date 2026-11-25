@@ -9,7 +9,7 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { reduceCampaign, replayCampaignOps } from "../client/js/dungeon/vtt-reducer.js";
 import { createFairplayRollOffer } from "../client/js/dungeon/vtt-fairplay-roll.js";
 import { fairplayQuorum, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
-import { createFairplaySessionKey, openFairplayShare, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
+import { createFairplaySessionKey, fairplayShareHash, openFairplayShare, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 
 const ROLL = "roll-a";
 const hex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -35,7 +35,10 @@ async function makeTable(peers) {
   const release = async (holder, ofPeer) => {
     const mine = (roll().shares[ofPeer] || []).filter((s) => s.to === holder);
     const shares = [];
-    for (const s of mine) shares.push(await openFairplayShare({ envelope: s.share, rollId: ROLL, fromPeer: ofPeer, toPeer: holder, privateKey: keys[holder].privateKey, senderJwk: keys[ofPeer].publicKeyJwk }));
+    for (const s of mine) {
+      const plain = await openFairplayShare({ envelope: s.share, rollId: ROLL, fromPeer: ofPeer, toPeer: holder, privateKey: keys[holder].privateKey, senderJwk: keys[ofPeer].publicKeyJwk });
+      shares.push({ splitId: plain.splitId, x: plain.x, y: hex(plain.y) });
+    }
     return push("FAIRPLAY_SHARE", holder, { rollId: ROLL, ofPeer, shares });
   };
   return { state, log, push, roll, release, keys };
@@ -53,7 +56,7 @@ async function sharesFor(t, peers, offers, p) {
   const out = [];
   for (const [i, share] of offers[p].shares.entries()) {
     const to = others[i % others.length];
-    out.push({ to, share: await sealFairplayShare({ share, rollId: ROLL, fromPeer: p, toPeer: to, privateKey: t.keys[p].privateKey, recipientJwk: t.keys[to].publicKeyJwk }) });
+    out.push({ to, share: await sealFairplayShare({ share, rollId: ROLL, fromPeer: p, toPeer: to, privateKey: t.keys[p].privateKey, recipientJwk: t.keys[to].publicKeyJwk }), shareHash: await fairplayShareHash(share) });
   }
   return out;
 }
@@ -101,6 +104,8 @@ test("fairplay log: quem some na revelação é recuperado pelo quórum de parte
   assert.equal(await t.release("cris", "ana"), false, "só se recupera quem não revelou");
   const { threshold } = fairplayQuorum(peers.length);
   for (const holder of ["ana", "bia", "gm"].slice(0, threshold)) await t.release(holder, "cris");
+  assert.equal(t.roll().phase, "recovery", "a recuperação só fecha pelo FAIRPLAY_CLOSE, não por contagem de partes");
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   assert.equal(t.roll().phase, "done");
   const res = await verifyFairplayRecord(t.state.value, ROLL);
   assert.equal(res.status, "verified");
@@ -133,7 +138,8 @@ test("fairplay log: operações fora de fase, compromisso copiado e lamport atra
   assert.ok(t.push("FAIRPLAY_COMMIT", "bia", { rollId: ROLL, commit: offers.bia.commit }));
   assert.equal(t.push("FAIRPLAY_CLOSE", "bia", { rollId: ROLL, phase: "commit" }, 60_000), false, "só quem abriu ou o Mestre fecha");
   assert.ok(t.push("FAIRPLAY_CLOSE", "gm", { rollId: ROLL, phase: "commit" }, 60_000));
-  assert.deepEqual(t.roll().participants, ["ana", "bia"], "quem não se comprometeu sai da rolagem");
+  assert.equal(t.roll().phase, "aborted", "de 3 para 2 o quórum cairia a 1 pessoa: a rolagem não segue");
+  assert.equal((await verifyFairplayRecord(t.state.value, ROLL)).status, "unverified");
 });
 
 test("fairplay log: com 2 participantes e poucos compromissos a rolagem é abortada", async () => {
@@ -165,6 +171,7 @@ test("fairplay log: com 2 participantes quem some é recuperado pelas partes do 
   t.push("FAIRPLAY_REVEAL", "ana", { rollId: ROLL, seedHex: hex(t.offers.ana.secret.seedBytes) });
   t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "reveal" }, 60_000);
   assert.ok(await t.release("ana", "bia"));
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   const res = await verifyFairplayRecord(t.state.value, ROLL);
   assert.equal(res.status, "verified");
   assert.deepEqual(res.recoveredPeerIds, ["bia"]);
