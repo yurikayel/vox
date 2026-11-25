@@ -11,7 +11,11 @@ import { createFairplayDriver } from "../client/js/dungeon/vtt-fairplay-driver.j
 import { createFairplaySessionKey } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 
 const HEX64 = "a".repeat(64);
-const apply = (state, type, actor, payload, lamport = 100, ts = 0) => reduceCampaign(state, createVttOp({ type, actor, payload, lamport, ts }));
+const apply = (state, type, actor, payload, lamport = 100, ts = 0) => {
+  const admitted = type === "FAIRPLAY_KEY" ? reduceCampaign(state, createVttOp({ type: "FAIRPLAY_ADMIT", actor: "gm", payload: { actor }, lamport, ts })) : state;
+  const lam = type === "FAIRPLAY_KEY" ? lamport + 1 : lamport; // a admissão tem lamport menor que a chave
+  return reduceCampaign(admitted, createVttOp({ type, actor, payload, lamport: lam, ts }));
+};
 
 function rollDoc(over = {}) {
   const commit = (p, n) => ({ peerId: p, rollId: "r1", commitO: String(n).repeat(64), commitV: "", splitId: "s", threshold: 2, totalPeers: 2 });

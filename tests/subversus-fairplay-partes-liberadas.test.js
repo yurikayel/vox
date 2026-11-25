@@ -27,6 +27,7 @@ async function tableAtReveal(stopBeforeShares = false) {
   };
   for (const p of PEERS) {
     t.keys[p] = await createFairplaySessionKey();
+    t.push("FAIRPLAY_ADMIT", "gm", { actor: p });
     t.push("FAIRPLAY_KEY", p, { publicKeyJwk: t.keys[p].publicKeyJwk });
   }
   t.push("FAIRPLAY_OPEN", "ana", { rollId: ROLL }, 1000);
