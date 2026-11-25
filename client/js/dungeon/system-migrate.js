@@ -34,9 +34,21 @@ function mapSkillRefs(pack, refs) {
   return { mapped: [...new Set(mapped)], unmapped };
 }
 
+/** Ações de perícia que somam `@prof`: a fonte viva das perícias treinadas enquanto a ficha é legada. */
 function trainedActionLabels(meta) {
   const actions = Array.isArray(meta?.clickable_actions) ? meta.clickable_actions : [];
   return actions.filter((a) => a?.tag === "pericia" && /@prof(?![a-z])/.test(String(a.roll || ""))).map((a) => a.label);
+}
+
+/**
+ * Perícias treinadas hoje, lidas das fontes vivas da ficha (`skill_refs` e ações de perícia com `@prof`).
+ * É a única fonte das perícias treinadas: remover ou acrescentar a ação muda o resultado na hora.
+ * @param {object} pack Pacote de sistema.
+ * @param {object} sheet Ficha (legada ou migrada).
+ * @returns {string[]} Ids de perícia do pacote.
+ */
+export function liveTrainedSkills(pack, sheet) {
+  return mapSkillRefs(pack, [...(sheet?.sheet_meta?.skill_refs || []), ...trainedActionLabels(sheet?.sheet_meta)]).mapped;
 }
 
 /**

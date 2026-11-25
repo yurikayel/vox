@@ -13,7 +13,9 @@ const SCORE_MIN = 1;
 const SCORE_MAX = 30;
 const DEFAULT_SCORE = 10;
 
+/** Valor ausente (`null`, `undefined`, texto vazio) vira o padrão, e não o mínimo: `Number(null)` seria 0. */
 function clampInt(value, min, max, fallback) {
+  if (value === null || value === undefined || value === "") return fallback;
   const n = Math.trunc(Number(value));
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 }
