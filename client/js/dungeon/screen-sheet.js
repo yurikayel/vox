@@ -6,6 +6,7 @@ import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
+import { renderPlayTab, renderSheetTabs, splitSheetActions } from "./screen-sheet-tabs.js";
 import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 
 const ABILITY_META = [
@@ -54,6 +55,7 @@ function renderSheetHero(sheet) {
         <span class="dungeon-eyebrow">Ficha guardada neste aparelho, funciona sem internet · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
         <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
         <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
       </div>
     </section>`;
@@ -81,33 +83,33 @@ function renderRollStatusBanner(state) {
   return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
 }
 
-function renderClickableActionsPanel(state) {
-  const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+function renderRollModes(state) {
   const mode = state.rollMode || "normal";
-  const modesHtml = SHEET_ROLL_MODES.map((m) => {
+  const chips = SHEET_ROLL_MODES.map((m) => {
     const cls = m.id === mode ? " is-selected" : "";
     return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="roll-mode" data-mode="${m.id}" aria-pressed="${m.id === mode}">${escapeHtml(m.label)}</button>`;
   }).join("");
-  const buttonsHtml = actions.map((act) => {
-    const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
-    const id = escapeHtml(act.id);
-    return `
+  return `<div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${chips}</div>${renderRollStatusBanner(state)}`;
+}
+
+function renderActionCard(act) {
+  const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
+  const id = escapeHtml(act.id);
+  return `
       <div class="dungeon-action-card-wrap">
         <button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${id}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>
         <button type="button" class="dungeon-chip-btn dungeon-action-remove" data-dungeon="remove-action" data-action-id="${id}" aria-label="Remover ação ${escapeHtml(act.label)}">×</button>
       </div>`;
-  }).join("");
+}
+
+function renderAbilitiesPanel(state) {
+  const { abilities } = splitSheetActions(state.sheet?.sheet_meta?.clickable_actions || []);
+  const cards = abilities.map(renderActionCard).join("");
   return `
-    <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
-      <div class="dungeon-section-head">
-        <div>
-          <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
-          <h2>Ataques, Perícias e Atalhos</h2>
-        </div>
-        <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${modesHtml}</div>
-      </div>
-      <div class="dungeon-brain-grid">${buttonsHtml || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
-      ${renderRollStatusBanner(state)}
+    <section class="dungeon-panel" aria-label="Ataques e habilidades da ficha">
+      <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
+      <h2>Ataques e Habilidades</h2>
+      <div class="dungeon-brain-grid">${cards || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
       ${renderAddActionForm()}
     </section>`;
 }
@@ -223,16 +225,19 @@ function renderSheetAudit(orderedOpsCount) {
 export function renderSheetScreen(state) {
   const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+  const panels = {
+    play: renderPlayTab(actions),
+    abilities: renderAbilitiesPanel(state),
+    items: renderInventoryPanel(state),
+    about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
+  };
   return `
     ${noticeHtml}
-    ${renderSheetHero(state.sheet)}
-    ${renderSheetEditPanel(state.sheet)}
     ${renderLevelUpWizard(state)}
-    ${renderClickableActionsPanel(state)}
-    ${renderResourceMeters(state.sheet, projected)}
-    ${renderInventoryPanel(state)}
-    ${renderLedgerPanel(state.sheet)}
-    ${renderPublicNotesSection(state)}
-    ${renderLoreSection(state.loreNodes)}
-    ${renderSheetAudit(projected.orderedOpsCount)}`;
+    <section class="dungeon-sheet-roll-controls" aria-label="Modo e resultado das rolagens">${renderRollModes(state)}</section>
+    <div class="dungeon-sheet-layout">
+      <div class="dungeon-sheet-aside">${renderSheetHero(state.sheet)}${renderResourceMeters(state.sheet, projected)}</div>
+      <div class="dungeon-sheet-main">${renderSheetTabs(panels)}</div>
+    </div>`;
 }
