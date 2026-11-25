@@ -1,12 +1,12 @@
 /**
- * @file Estado orbital e presets de câmera (`2D`, `Iso`, `3D`) da lente Diorama
+ * @file Estado orbital e presets de câmera (`2D`, `Iso`, `3D`, `1ª` Pessoa) da lente Diorama
  * do Subversus VTT, com limites seguros de inclinação e suporte a `prefers-reduced-motion`.
  * @module dungeon/diorama/diorama-camera
  */
 import { mat4LookAt, mat4Multiply, mat4Ortho, mat4Perspective } from "./diorama-math.js";
 
 /** Modos de câmera suportados pela lente Diorama (preferência local por aparelho). */
-export const CAMERA_MODES = Object.freeze(["2d", "iso", "3d"]);
+export const CAMERA_MODES = Object.freeze(["2d", "iso", "3d", "fp"]);
 
 
 
@@ -43,15 +43,16 @@ export function createDioramaCamera(opts = {}) {
 }
 
 /**
- * Aplica um preset de câmera (`2d`, `iso`, `3d`) preservando o alvo atual.
+ * Aplica um preset de câmera (`2d`, `iso`, `3d`, `fp` = 1ª Pessoa) preservando o alvo atual.
  *
  * @param {object} cam Estado atual da câmera.
- * @param {"2d"|"iso"|"3d"} mode Modo desejado.
+ * @param {"2d"|"iso"|"3d"|"fp"} mode Modo desejado.
  * @returns {object} Novo estado de câmera.
  */
 export function applyCameraPreset(cam, mode) {
   const safeMode = CAMERA_MODES.includes(mode) ? mode : "2d";
   if (safeMode === "iso") return { ...cam, mode: "iso", yawDeg: 45, pitchDeg: 45 };
+  if (safeMode === "fp") return { ...cam, mode: "fp", pitchDeg: MIN_PITCH_DEG };
   if (safeMode === "3d") return { ...cam, mode: "3d", pitchDeg: clamp(cam.pitchDeg || 52, MIN_PITCH_DEG, MAX_PITCH_DEG) };
   return { ...cam, mode: "2d", pitchDeg: 89 };
 }
@@ -100,6 +101,14 @@ export function panCamera(cam, right, forward, bounds = {}) {
   return { ...cam, target: [cap(x, bounds.maxX), cam.target[1], cap(z, bounds.maxZ)] };
 }
 
+/** 1ª Pessoa: olhos em `target + eyeOffsetY`, olhando para o lado oposto ao da órbita; sem cutaway. */
+function firstPersonMatrices(cam, aspect, orbit) {
+  const eye = [cam.target[0], cam.target[1] + cam.eyeOffsetY, cam.target[2]];
+  const look = [eye[0] - orbit[0], eye[1] - orbit[1], eye[2] - orbit[2]];
+  const viewProj = mat4Multiply(mat4Perspective(45 * DEG2RAD, aspect, 0.1, 200), mat4LookAt(eye, look));
+  return { eye, target: look, viewProj, cutawayEnabled: false };
+}
+
 /**
  * Calcula posição `eye`, vetor `forward` e matriz `viewProj` para o viewport atual.
  *
@@ -116,6 +125,7 @@ export function computeCameraMatrices(cam, aspect = 1.5) {
     cam.target[1] + dist * Math.sin(pitch),
     cam.target[2] + dist * Math.cos(pitch) * Math.cos(yaw),
   ];
+  if (cam.mode === "fp") return firstPersonMatrices(cam, aspect, [dist * Math.cos(pitch) * Math.sin(yaw), dist * Math.sin(pitch), dist * Math.cos(pitch) * Math.cos(yaw)]);
   const proj = cam.mode === "iso"
     ? mat4Ortho(dist * 0.6 * aspect, dist * 0.6, -120, 120)
     : mat4Perspective(45 * DEG2RAD, aspect, 0.1, 200);

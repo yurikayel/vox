@@ -111,8 +111,15 @@ function nearestDoor(origin, dir, doors) {
   return best;
 }
 
+function pickPortal(origin, dir, portals) {
+  const hit = rayPlaneIntersect(origin, dir, 0);
+  if (!hit) return null;
+  const found = portals.find((p) => Math.hypot(hit.point[0] - p.x, hit.point[2] - p.y) <= (Number(p.radius) || 0.8));
+  return found ? { kind: "portal", portalId: found.portalId, label: found.label || "", t: hit.t ?? 0 } : null;
+}
+
 /**
- * Resolve o alvo de um raio: token (standee) ou porta, o que estiver mais perto; senão o chão.
+ * Resolve o alvo de um raio: token (standee), porta ou portal, o que estiver mais perto; senão o chão.
  * Só considera o que a visão do papel já deixou passar (tokens/portas projetados).
  *
  * @param {number[]} origin Origem do raio.
@@ -128,5 +135,6 @@ export function pickDioramaScene(origin, dir, view) {
   const tok = pickDioramaTarget(origin, dir, centered);
   const door = nearestDoor(origin, dir, view.floor?.doors || []);
   if (tok?.kind === "token" && (!door || tok.t <= door.t)) return tok;
-  return door || tok;
+  if (door || tok?.kind === "token") return door || tok;
+  return pickPortal(origin, dir, view.floor?.portals || []) || tok;
 }

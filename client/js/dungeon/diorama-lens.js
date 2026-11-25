@@ -7,7 +7,7 @@
 /** Chave de feature flag local que habilita a lente Diorama 2.5D/3D (única leitura no código). */
 export const DIORAMA_FLAG_KEY = "vox.lab.diorama";
 
-const DIORAMA_MODE_LABELS = Object.freeze([["2d", "2D"], ["iso", "Iso"], ["3d", "3D"]]);
+const DIORAMA_MODE_LABELS = Object.freeze([["2d", "2D"], ["iso", "Iso"], ["3d", "3D"], ["fp", "1ª"]]);
 
 /**
  * Verifica se a flag local `vox.lab.diorama` está ligada.
@@ -24,9 +24,9 @@ export function isDioramaFlagEnabled(storage = globalThis.localStorage) {
 }
 
 /**
- * Renderiza a pílula compacta `2D | Iso | 3D` (única definição) do canto do canvas do Subversus.
+ * Renderiza a pílula compacta `2D | Iso | 3D | 1ª` (única definição) do canto do canvas do Subversus.
  *
- * @param {"2d"|"iso"|"3d"} [activeMode="2d"] Modo de câmera atual.
+ * @param {"2d"|"iso"|"3d"|"fp"} [activeMode="2d"] Modo de câmera atual.
  * @returns {string} HTML da pílula de modos de câmera.
  */
 export function renderDioramaModePill(activeMode = "2d") {
