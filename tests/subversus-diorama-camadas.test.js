@@ -88,7 +88,7 @@ test("overlay: clique no canvas GL chama onPick com o token sob o ponto", () => 
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 500 }),
     addEventListener: (ev, fn) => { if (ev === "click") click = fn; }, removeEventListener() {}, remove() {} };
   const host = { style: {}, appendChild: (c) => { c.parentNode = host; }, querySelector: () => null };
-  const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: () => glCanvas } };
+  const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: (tag) => (tag === "div" ? { dataset: {}, style: {}, parentNode: null, setAttribute() {}, remove() {} } : glCanvas) } };
   const picks = [];
   const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "player", tokens: tokens(), storage: null, onPick: (h) => picks.push(h) });
   overlay.draw();
