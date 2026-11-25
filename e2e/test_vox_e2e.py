@@ -20,7 +20,7 @@ import time
 import unittest
 import urllib.request
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLIENT_DIR = ROOT / "client"
@@ -217,7 +217,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
 
     def _roll_until_at_least(self, page, minimum, tries=80):
         for _ in range(tries):
-            page.locator("button[data-dungeon='roll-d20']").click()
+            page.locator("button[data-dungeon='roll-d20']:not([data-hud-shortcut])").click()
             text = page.locator(".dungeon-dice-tray").inner_text()
             match = re.search(r"d20 = (\d+)", text)
             if match and int(match.group(1)) >= minimum:
@@ -260,13 +260,15 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
             self._run_dungeon_camp_and_table(page)
             external.clear()
             page.goto(f"{self.base_url}/#/dungeon/mesa/floresta-de-vidro", wait_until="domcontentloaded")
-            self.assertIn("Floresta de Vidro", page.locator(".dungeon-scene-caption h1").inner_text())
+            # Mudar só o hash não recarrega a página: esperar a rota remontar em vez de ler o título da mesa anterior.
+            expect(page.locator(".dungeon-scene-caption h1")).to_contain_text("Floresta de Vidro", timeout=10000)
             page.locator(".dungeon-topnav a[href^='#/dungeon/ficha/']").click()
             page.locator("button[data-dungeon='spend-10']").click()
-            # O teste de saldo negativo mora na "Auditoria Técnica", um <details> fechado por padrão.
+            page.locator("label[for='sheet-tab-about']").click()
+            # O teste de gasto além do saldo mora em "Para conferir: como a ficha é guardada", um <details> fechado por padrão.
             page.locator("details[data-dungeon-details='sheet-audit'] > summary").click()
             page.locator("button[data-dungeon='test-overdraft']").click()
-            self.assertIn("Saldo Negativo", page.locator(".dungeon-alert-warn").inner_text())
+            self.assertIn("gasto além do saldo", page.locator(".dungeon-alert-warn").inner_text())
             page.locator("button[data-dungeon='confirm-lore']").first.click()
             self.assertIn("Fato Confirmado", page.locator(".dungeon-lore-grid").inner_text())
             page.locator(".dungeon-topnav a[href^='#/dungeon/mestre/']").click()

@@ -6,9 +6,11 @@
  * - [data-click-target="seletor"]: clica no primeiro elemento que casar com o seletor.
  * - [data-focus-target="seletor"][data-focus-fallback="#/rota"]: foca o alvo ou navega para a rota.
  * - [data-app-feedback]: abre "Algo errado aqui?", carregando o modal só no clique (fora do boot).
+ * - [data-action="reveal-blurred-post"]: remove borrão local persistido e revela o cartão no feed.
  */
 
 import { showToast } from "../share.js";
+import * as moderation from "../moderation.js";
 
 /**
  * Fallback de avatar: esconde a imagem que falhou e mostra iniciais no irmão seguinte.
@@ -60,6 +62,40 @@ export function openFeedbackOnClick(target, load = () => import("./feedback-flow
   return true;
 }
 
+/**
+ * Limpa estado visual e banner de borrão local do cartão do post.
+ *
+ * @param {HTMLElement|null} card Cartão `.post` mais próximo.
+ * @param {HTMLElement} btn Botão acionado.
+ * @returns {void}
+ */
+function clearCardLocalBlur(card, btn) {
+  if (!card) {
+    btn.closest("[data-local-blur-banner]")?.remove();
+    return;
+  }
+  card.classList.remove("is-locally-blurred");
+  card.removeAttribute("data-locally-blurred");
+  card.querySelector("[data-local-blur-banner]")?.remove();
+}
+
+/**
+ * Revela localmente um post borrado ao clicar em `[data-action="reveal-blurred-post"]`.
+ * Remove o estado persistido neste aparelho, a classe/atributo de borrão e o banner do card `.post`.
+ *
+ * @param {EventTarget} target Alvo do evento de clique.
+ * @returns {boolean} `true` quando tratou o clique de revelação.
+ */
+export function handleRevealBlurredPostClick(target) {
+  const btn = target?.closest?.('[data-action="reveal-blurred-post"]');
+  if (!btn) return false;
+  const card = btn.closest(".post");
+  const postId = btn.dataset?.postId || card?.dataset?.id || "";
+  if (postId) moderation.unblurPostLocally(postId);
+  clearCardLocalBlur(card, btn);
+  return true;
+}
+
 let installed = false;
 
 /**
@@ -72,5 +108,9 @@ export function installDomDelegates(doc = globalThis.document) {
   if (installed || !doc?.addEventListener) return;
   installed = true;
   doc.addEventListener("error", (e) => handleImageFallback(e.target), true);
-  doc.addEventListener("click", (e) => openFeedbackOnClick(e.target) || handleDelegatedClick(e.target, doc));
+  doc.addEventListener("click", (e) => (
+    handleRevealBlurredPostClick(e.target)
+    || openFeedbackOnClick(e.target)
+    || handleDelegatedClick(e.target, doc)
+  ));
 }

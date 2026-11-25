@@ -13,6 +13,7 @@ import {
 } from "./vtt-schema.js";
 import { createFloorDoc, createSceneDoc, createTokenDoc, hpStatusLabel, normalizeSceneGrid } from "./vtt-scene-schema.js";
 import { clampTokenToFloor } from "./vtt-geometry.js";
+import { isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   isPlayerAuthorizedForTacticsOp,
   projectInitiativeForPlayer,
@@ -20,8 +21,11 @@ import {
   TACTICS_OP_HANDLERS,
 } from "./vtt-tactics-reducer.js";
 import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
+import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
 
 const GM_ONLY_OPS = new Set([
+  "FAIRPLAY_ADMIT",
+  "FAIRPLAY_REVOKE",
   "SCENE_UPSERT",
   "SCENE_SELECT",
   "SCENE_MAP_SET",
@@ -78,6 +82,7 @@ function applyChronicleAppend(state, op) {
 }
 
 function applyRollRecorded(state, op) {
+  const fairplay = (op.payload?.rollResult || op.payload)?.fairplay;
   const roll = createDiceRollEntry({
     id: op.payload?.id || `roll-${op.opId}`,
     author: op.payload?.author || op.actor,
@@ -94,6 +99,8 @@ function applyRollRecorded(state, op) {
     visibility: roll.visibility,
     author: roll.author,
     ts: roll.ts,
+    fairplayRollId: fairplay?.rollId,
+    fairplayValue: fairplay?.value,
   });
   return { ...state, rolls: [...state.rolls, roll], chronicle: [...state.chronicle, entry] };
 }
@@ -252,6 +259,7 @@ const OP_HANDLERS = {
   TOKEN_REMOVE: applyTokenRemove,
   ...TACTICS_OP_HANDLERS,
   ...CAMPAIGN_OP_HANDLERS,
+  ...FAIRPLAY_OP_HANDLERS,
 };
 
 /**
@@ -265,6 +273,7 @@ export function reduceCampaign(state, op) {
   if (state.appliedOpIds?.includes(op.opId)) return state;
   if (!isAuthorizedVttOp(state, op)) return state;
   const next = OP_HANDLERS[op.type](state, op);
+  if (next === state && op.type in FAIRPLAY_OP_HANDLERS) return state; // recusada: não entra no log (ADR-040 §2.1a)
   return {
     ...next,
     appliedOpIds: [...(state.appliedOpIds || []), op.opId],
@@ -300,10 +309,11 @@ function projectTokenForPlayer(tok, viewerRouteId) {
 }
 
 function projectSceneForPlayer(scene, viewerRouteId) {
-  const visibleTokens = (scene.tokens || [])
-    .filter((t) => t.layer === "player")
-    .map((t) => projectTokenForPlayer(t, viewerRouteId));
   const floors = (scene.floors || []).map(projectTacticsFloorForPlayer);
+  const floorOf = (t) => floors.find((f) => f.z === t.floorZ);
+  const visibleTokens = (scene.tokens || [])
+    .filter((t) => t.layer === "player" && isTokenRevealedByFog(t, floorOf(t)))
+    .map((t) => projectTokenForPlayer(t, viewerRouteId));
   return { ...scene, floors, tokens: visibleTokens };
 }
 

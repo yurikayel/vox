@@ -185,3 +185,28 @@ export function isPointRevealedByFog(wx, wy, fog) {
     (r) => wx >= r.x && wx <= r.x + r.w && wy >= r.y && wy <= r.y + r.h,
   );
 }
+
+/**
+ * Indica se o centro de um token está numa área revelada da névoa do piso (sem névoa, sempre `true`).
+ * @param {{x?: number, y?: number, sizeCells?: number}} tok Token (coordenadas em células).
+ * @param {{grid?: object, fog?: object}} floor Piso do token.
+ * @returns {boolean} `true` se o token pode ser visto pelo jogador.
+ */
+export function isTokenRevealedByFog(tok, floor) {
+  const grid = floor?.grid || {};
+  const cellPx = Math.max(1, num(grid.cellPx) || 64);
+  const half = (num(tok?.sizeCells) || 1) * 0.5;
+  return isPointRevealedByFog(num(grid.offsetX) + (num(tok?.x) + half) * cellPx, num(grid.offsetY) + (num(tok?.y) + half) * cellPx, floor?.fog);
+}
+
+/**
+ * Indica se algum ponto da porta (extremidades ou meio) está numa área revelada (sem névoa, sempre `true`).
+ * @param {object} door Porta (coordenadas em células).
+ * @param {{grid?: object, fog?: object}} floor Piso da porta.
+ * @returns {boolean} `true` se a porta pode ser vista pelo jogador.
+ */
+export function isDoorRevealedByFog(door, floor) {
+  const seg = doorSegmentWorld(door, floor?.grid);
+  const points = [[seg.x1, seg.y1], [seg.x2, seg.y2], [(seg.x1 + seg.x2) / 2, (seg.y1 + seg.y2) / 2]];
+  return points.some(([x, y]) => isPointRevealedByFog(x, y, floor?.fog));
+}

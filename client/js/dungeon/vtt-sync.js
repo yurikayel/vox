@@ -5,7 +5,11 @@
  * @module dungeon/vtt-sync
  */
 import { isAuthorizedVttOp, projectStateForPlayer } from "./vtt-reducer.js";
+import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./vtt-fairplay-log.js";
+import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
+import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { createVttOp } from "./vtt-schema.js";
+import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   createBlobAssembler,
   signVttOp,
@@ -83,10 +87,39 @@ function collectReferencedBlobHashes(campaign) {
   return hashes;
 }
 
-function filterTokenMove(campaign, op) {
+function findSceneToken(campaign, op) {
   const scene = campaign?.scenesById?.[op.payload?.sceneId || campaign.activeSceneId];
-  const tok = scene?.tokens?.find((t) => t.tokenId === op.payload?.tokenId);
-  return tok && tok.layer === "player" ? op : null;
+  const tokenId = op.payload?.tokenId || op.payload?.token?.tokenId;
+  const tok = scene?.tokens?.find((t) => t.tokenId === tokenId);
+  const floor = scene?.floors?.find((f) => f.z === tok?.floorZ);
+  return { tok, floor };
+}
+
+/** Token fora da névoa revelada não segue como delta: quem já o via recebe um novo snapshot sem ele. */
+function filterTokenMove(campaign, op) {
+  const { tok, floor } = findSceneToken(campaign, op);
+  if (!tok || tok.layer !== "player") return null;
+  if (floor?.fog?.enabled) return { refreshSnapshot: true };
+  return isTokenRevealedByFog(tok, floor) ? op : { refreshSnapshot: true };
+}
+
+function filterTokenChangeFloor(campaign, op) {
+  const { tok } = findSceneToken(campaign, op);
+  return tok?.layer === "gm" ? null : { refreshSnapshot: true };
+}
+
+function filterTokenUpsert(campaign, op) {
+  if (op.payload?.token?.layer === "gm") return null;
+  const { tok, floor } = findSceneToken(campaign, op);
+  return !tok || isTokenRevealedByFog(tok, floor) ? op : { refreshSnapshot: true };
+}
+
+function filterDoorUpsert(campaign, op) {
+  const door = op.payload?.door;
+  if (door?.state === "secret") return null;
+  const scene = campaign?.scenesById?.[op.payload?.sceneId || campaign.activeSceneId];
+  const floor = scene?.floors?.find((f) => f.z === (op.payload?.floorZ ?? scene.activeFloorZ));
+  return !door || !floor || isDoorRevealedByFog(door, floor) ? op : { refreshSnapshot: true };
 }
 
 function filterRollOp(_campaign, op, viewerRouteId) {
@@ -98,9 +131,12 @@ function filterRollOp(_campaign, op, viewerRouteId) {
 
 const OP_FILTERS = {
   TOKEN_LAYER_SET: () => ({ refreshSnapshot: true }),
-  TOKEN_UPSERT: (_c, op) => (op.payload?.token?.layer === "gm" ? null : op),
+  TOKEN_UPSERT: filterTokenUpsert,
   TOKEN_MOVE: filterTokenMove,
-  DOOR_UPSERT: (_c, op) => (op.payload?.door?.state === "secret" ? null : op),
+  TOKEN_REMOVE: () => ({ refreshSnapshot: true }),
+  TOKEN_CHANGE_FLOOR: filterTokenChangeFloor,
+  DOOR_UPSERT: filterDoorUpsert,
+  FOG_SET: () => ({ refreshSnapshot: true }),
   DOOR_STATE_SET: () => ({ refreshSnapshot: true }),
   DRAWING_ADD: (_c, op) => (op.payload?.drawing?.layer === "gm" ? null : op),
   AOE_UPSERT: (_c, op) => (op.payload?.aoe?.layer === "gm" ? null : op),
@@ -125,11 +161,15 @@ export function filterOpForPlayer(campaign, op, viewerRouteId) {
   return fn ? fn(campaign, op, viewerRouteId) : op;
 }
 
+function isAdmittedIn(ctx, campaign, actor) {
+  return actor === ctx.keypair.routeId || Object.hasOwn(campaign?.fairplay?.admitted || {}, actor);
+}
+
 async function sendFilteredSnapshot(ctx, toPeerId) {
   const full = await ctx.store.loadCampaign(ctx.campaignId);
   if (!full) return;
   const projected = projectStateForPlayer(full, "player", toPeerId);
-  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: projected });
+  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: { ...projected, fairplay: normalizeFairplayState(null) }, fairplayOps: collectFairplayOps(full.fairplay) });
 }
 
 async function broadcastCommittedOp(ctx, fullCampaign, op) {
@@ -155,24 +195,85 @@ async function handleGmWantBlob(ctx, msg) {
   }
 }
 
-async function handleGmActionOp(ctx, msg) {
-  const validSig = await verifyVttOpSignature(msg.op);
+/** Tolerância (ms) entre o relógio do autor de uma op Fairplay e o do Mestre; o prazo das fases não depende de um `ts` livre. */
+export const FAIRPLAY_TS_TOLERANCE_MS = 5000;
+
+function isFairplayOp(op) {
+  return String(op?.type || "").startsWith("FAIRPLAY_");
+}
+
+function tsOutOfRange(ctx, op) {
+  return isFairplayOp(op) && !(Math.abs(Number(op.ts) - ctx.now()) <= FAIRPLAY_TS_TOLERANCE_MS);
+}
+
+/**
+ * Registra no log a admissão de quem entra na mesa, antes de qualquer op dele: assim o `lamport` da admissão
+ * é menor que o das ops seguintes do jogador e a ordem do replay é a mesma da chegada.
+ */
+async function admitJoiningPlayer(ctx, peerId) {
   const current = await ctx.store.loadCampaign(ctx.campaignId);
-  if (!validSig || !isAuthorizedVttOp(current, msg.op)) {
-    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: validSig ? "unauthorized" : "invalid_signature" });
+  if (isAdmittedIn(ctx, current, peerId)) return;
+  if (isFairplayLabEnabled(ctx.storage)) {
+    ctx.pendingFairplay.add(peerId); // com a flag ligada, quem entra espera a aprovação do Mestre
     return;
   }
+  await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: peerId } });
+}
+
+/** Aprova um par pendente (só Mestre, só com a flag ligada): grava `FAIRPLAY_ADMIT` no log. */
+async function approveFairplayPeer(ctx, routeId) {
+  if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage) || !ctx.pendingFairplay.has(routeId)) return false;
+  ctx.pendingFairplay.delete(routeId);
+  await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: routeId } });
+  return true;
+}
+
+/** Revoga um par (só Mestre, só com a flag ligada): grava `FAIRPLAY_REVOKE`; o reducer ignora par desconhecido ou repetido. */
+async function revokeFairplayPeer(ctx, routeId) {
+  if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage)) return false;
+  ctx.pendingFairplay.delete(routeId);
+  await dispatchSyncOp(ctx, { type: "FAIRPLAY_REVOKE", payload: { actor: routeId } });
+  return true;
+}
+
+function isRevokedIn(campaign, actor) {
+  return Object.hasOwn(campaign?.fairplay?.revoked || {}, actor);
+}
+
+/** Motivo da recusa de uma op Fairplay com assinatura válida (par revogado ou não admitido), ou `null`. */
+function fairplayRefusal(ctx, current, op) {
+  if (isFairplayOp(op) && isRevokedIn(current, op.actor)) return "revoked";
+  if (op.type === "FAIRPLAY_KEY" && !isAdmittedIn(ctx, current, op.actor)) return "not_admitted";
+  return null;
+}
+
+function rejectOp(ctx, msg, reason) {
+  ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason });
+}
+
+async function handleGmActionOp(ctx, msg) {
+  if (tsOutOfRange(ctx, msg.op)) return rejectOp(ctx, msg, "ts_out_of_range");
+  const validSig = await verifyVttOpSignature(msg.op);
+  const current = await ctx.store.loadCampaign(ctx.campaignId);
+  const refusal = validSig ? fairplayRefusal(ctx, current, msg.op) : null;
+  if (refusal) return rejectOp(ctx, msg, refusal);
+  if (!validSig || !isAuthorizedVttOp(current, msg.op)) return rejectOp(ctx, msg, validSig ? "unauthorized" : "invalid_signature");
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op);
   if (!res.duplicate) {
     await broadcastCommittedOp(ctx, res.campaign, msg.op);
     ctx.onUpdate?.(res.campaign);
+  } else if (!current?.appliedOpIds?.includes(msg.op.opId)) {
+    // Recusada pelo reducer (ex.: Fairplay fora de fase ou com lamport atrasado): o par precisa saber para assinar de novo.
+    rejectOp(ctx, msg, "out_of_phase");
   }
+  return undefined;
 }
 
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
     ctx.connectedPlayers.add(msg.from);
     ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
+    await admitJoiningPlayer(ctx, msg.from);
     await sendFilteredSnapshot(ctx, msg.from);
     return;
   }
@@ -188,19 +289,50 @@ async function requestMissingBlobs(ctx, campaign, fromGm) {
   }
 }
 
+/** Aplica o teto do Mestre e confere a assinatura de cada op de Fairplay recebida. */
+async function verifiedFairplayOps(raw) {
+  const ok = [];
+  for (const op of limitFairplayOps(raw)) if (await verifyVttOpSignature(op)) ok.push(op);
+  return ok;
+}
+
+/** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
+async function applySnapshot(ctx, msg) {
+  ctx.snapshotAsked = false;
+  const ops = await verifiedFairplayOps(msg.fairplayOps);
+  const saved = await ctx.store.saveCampaign(rebuildFairplayState(msg.campaign, ops));
+  await requestMissingBlobs(ctx, saved, msg.from);
+  ctx.onUpdate?.(saved);
+}
+
+/** Op recusada na chegada (fora de ordem ou de fase): pede o estado do Mestre em vez de descartar em silêncio. */
+function askSnapshotOnce(ctx) {
+  if (ctx.snapshotAsked) return;
+  ctx.snapshotAsked = true;
+  ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
+}
+
+async function applyCommittedOp(ctx, msg) {
+  if (isFairplayOp(msg.op) && !(await verifyVttOpSignature(msg.op))) return;
+  const before = await ctx.store.loadCampaign(ctx.campaignId);
+  if (!before) return; // ainda sem campanha: o snapshot do Mestre traz esta op
+  const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
+  if (res?.campaign && !res.duplicate) {
+    await requestMissingBlobs(ctx, res.campaign, msg.from);
+    ctx.onUpdate?.(res.campaign);
+  } else if (res?.duplicate && !before?.appliedOpIds?.includes(msg.op.opId)) {
+    askSnapshotOnce(ctx);
+  }
+}
+
 async function handlePlayerMessage(ctx, msg) {
+  const fromGm = msg.from === ctx.gmRouteId;
   if (msg.kind === "SNAPSHOT_FILTERED" && msg.campaign) {
-    const saved = await ctx.store.saveCampaign(msg.campaign);
-    await requestMissingBlobs(ctx, saved, msg.from);
-    ctx.onUpdate?.(saved);
+    if (fromGm) await applySnapshot(ctx, msg);
     return;
   }
   if (msg.kind === "COMMIT_OP" && msg.op) {
-    const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
-    if (res?.campaign) {
-      await requestMissingBlobs(ctx, res.campaign, msg.from);
-      ctx.onUpdate?.(res.campaign);
-    }
+    if (fromGm) await applyCommittedOp(ctx, msg);
     return;
   }
   if (msg.kind === "BLOB_CHUNK") {
@@ -237,6 +369,10 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
+    pendingFairplay: new Set(),
+    storage: opts.storage,
+    snapshotAsked: false,
+    now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
     onUpdate: opts.onUpdate,
     onBlobReceived: opts.onBlobReceived,
@@ -247,8 +383,8 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`).
- * @returns {{ join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
+ * @param {object} opts Opções (`storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
   const ctx = buildSyncContext(opts);
@@ -262,6 +398,10 @@ export function createVttSyncPeer(opts) {
   return {
     join: () => { if (ctx.role === "player") ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey }); },
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
+    routeId: ctx.keypair.routeId,
+    getPendingFairplayPeers: () => [...ctx.pendingFairplay],
+    approveFairplayPeer: (routeId) => approveFairplayPeer(ctx, String(routeId)),
+    revokeFairplayPeer: (routeId) => revokeFairplayPeer(ctx, String(routeId)),
     getPeerCount: () => ctx.connectedPlayers.size,
     flush: () => chain,
     close: () => { detach(); ctx.transport.close?.(); },

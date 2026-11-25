@@ -5,6 +5,7 @@
 import * as social from "../social.js";
 import * as share from "../share.js";
 import * as repost from "../repost.js";
+import * as moderation from "../moderation.js";
 import { isSpeakingPost, togglePostSpeech } from "../shared/post-speech.js";
 import { beginTagMode } from "./photo-tag-ui.js";
 import { openZapModal } from "./zap-modal.js";
@@ -35,7 +36,25 @@ export function refreshListenLabel(sheet, postId) {
 }
 
 /**
- * Sincroniza rótulos e visibilidade de ações extras do sheet (tag, zap, repost, ouvir).
+ * Atualiza o rótulo e o `data-action` da ação local de borrão/ocultação em 1 toque.
+ *
+ * @param {HTMLElement} sheet Painel do menu.
+ * @param {string} postId Id do post.
+ * @returns {void}
+ */
+export function refreshBlurLabel(sheet, postId) {
+  const btn = sheet?.querySelector('[data-action="blur-post"]')
+    || sheet?.querySelector('[data-action="unblur-post"]');
+  if (!btn) return;
+  const blurred = moderation.isPostBlurredLocally(postId);
+  const nextAction = blurred ? "unblur-post" : "blur-post";
+  if (btn.dataset) btn.dataset.action = nextAction;
+  btn.setAttribute?.("data-action", nextAction);
+  btn.textContent = blurred ? "Mostrar novamente" : "Borrar/ocultar aqui";
+}
+
+/**
+ * Sincroniza rótulos e visibilidade de ações extras do sheet (tag, zap, repost, ouvir, borrão local).
  *
  * @param {HTMLElement} sheet Painel do menu.
  * @param {object} ctx Contexto do post (`postId`, `isOwn`, `hasImage`, `pix`, etc.).
@@ -44,12 +63,68 @@ export function refreshListenLabel(sheet, postId) {
 export function refreshSheetExtras(sheet, ctx) {
   refreshSaveLabel(sheet, ctx.postId);
   refreshListenLabel(sheet, ctx.postId);
+  refreshBlurLabel(sheet, ctx.postId);
   const tagBtn = sheet.querySelector('[data-action="tag"]');
   if (tagBtn) tagBtn.hidden = !(ctx.isOwn && ctx.hasImage);
   const zapBtn = sheet.querySelector('[data-action="zap"]');
   if (zapBtn) zapBtn.hidden = !ctx.pix;
   const rp = sheet.querySelector('[data-action="repost"]');
   if (rp) rp.textContent = repost.hasOwnRepost(ctx.postId) ? "Desfazer republicação" : repost.REPOST_LABEL;
+}
+
+/**
+ * Localiza o cartão `.post` correspondente ao `postId` no DOM atual.
+ *
+ * @param {string} postId Id do post.
+ * @returns {HTMLElement|null} Elemento do cartão ou `null` quando indisponível.
+ */
+function findPostCard(postId) {
+  if (!postId || typeof document === "undefined") return null;
+  const target = document.querySelector?.(`[data-post-id="${postId}"], [data-id="${postId}"]`);
+  return target?.closest?.(".post") || target || null;
+}
+
+/**
+ * Aplica ou remove a classe e o atributo de borrão local diretamente no cartão do post.
+ *
+ * @param {string} postId Id do post.
+ * @param {boolean} blurred Se o borrão local deve ficar ativo.
+ * @returns {boolean} `true` se o cartão foi encontrado e atualizado.
+ */
+export function applyLocalBlurStateToCard(postId, blurred) {
+  const card = findPostCard(postId);
+  if (!card) return false;
+  card.classList?.toggle?.("is-locally-blurred", Boolean(blurred));
+  if (blurred) {
+    card.setAttribute?.("data-locally-blurred", "true");
+  } else {
+    card.removeAttribute?.("data-locally-blurred");
+  }
+  return true;
+}
+
+/**
+ * Ação local de 1 toque para borrar/ocultar ou revelar um post apenas neste aparelho (sem tocar servidor/relay).
+ *
+ * @param {string} postId Id do post.
+ * @param {"blur-post"|"unblur-post"|""} [action=""] Ação explícita ou alternância automática.
+ * @returns {{ ok: boolean, blurred: boolean, localOnly: true }} Resultado da operação local.
+ */
+export function toggleBlurPostFromMenu(postId, action = "") {
+  if (!postId) return { ok: false, blurred: false, localOnly: true };
+  const shouldUnblur = action === "unblur-post"
+    || (!action && moderation.isPostBlurredLocally(postId));
+  const ok = shouldUnblur
+    ? moderation.unblurPostLocally(postId)
+    : moderation.blurPostLocally(postId);
+  const blurred = !shouldUnblur;
+  applyLocalBlurStateToCard(postId, blurred);
+  share.showToast(
+    blurred
+      ? "Post borrado/oculto só neste aparelho."
+      : "Borrão local removido deste aparelho."
+  );
+  return { ok, blurred, localOnly: true };
 }
 
 /**

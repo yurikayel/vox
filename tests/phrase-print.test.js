@@ -102,7 +102,7 @@ test("impressão da frase - printCard em screens-phrase limpa cópia e classe no
   const doc = fakeDoc();
   const win = fakeWin();
   const { printCard } = await import("../client/js/app/screens-phrase.js");
-  assert.equal(printCard({ doc, win }), true);
+  assert.equal(await printCard({ doc, win }), true);
   assert.equal(copies(doc), 1);
   assert.equal(doc.body.classList.has("printing-phrase"), true);
   win.fire("hashchange");

@@ -6,6 +6,9 @@ import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
+import { renderDerivedStrip } from "./screen-sheet-derived.js";
+import { renderPlayTab, renderSheetTabs, splitSheetActions } from "./screen-sheet-tabs.js";
+import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 
 const ABILITY_META = [
   { key: "str", short: "FOR", label: "Força" },
@@ -50,9 +53,10 @@ function renderSheetHero(sheet) {
     <section class="dungeon-sheet-hero">
       <div class="dungeon-portrait-box">${renderHeroPortraitSvg(derivePortraitCode(sheet))}</div>
       <div class="dungeon-hero-copy">
-        <span class="dungeon-eyebrow">Ficha Local Soberana (CRDT Offline) · Nível ${level} · CA ${ac}</span>
+        <span class="dungeon-eyebrow">Ficha guardada neste aparelho, funciona sem internet · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
         <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
         <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
       </div>
     </section>`;
@@ -80,33 +84,33 @@ function renderRollStatusBanner(state) {
   return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
 }
 
-function renderClickableActionsPanel(state) {
-  const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+function renderRollModes(state) {
   const mode = state.rollMode || "normal";
-  const modesHtml = SHEET_ROLL_MODES.map((m) => {
+  const chips = SHEET_ROLL_MODES.map((m) => {
     const cls = m.id === mode ? " is-selected" : "";
     return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="roll-mode" data-mode="${m.id}" aria-pressed="${m.id === mode}">${escapeHtml(m.label)}</button>`;
   }).join("");
-  const buttonsHtml = actions.map((act) => {
-    const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
-    const id = escapeHtml(act.id);
-    return `
+  return `<div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${chips}</div>${renderRollStatusBanner(state)}`;
+}
+
+function renderActionCard(act) {
+  const dmg = act.damage ? ` · Dano ${escapeHtml(act.damage)}` : "";
+  const id = escapeHtml(act.id);
+  return `
       <div class="dungeon-action-card-wrap">
         <button type="button" class="dungeon-choice-card" data-dungeon="roll-action" data-action-id="${id}"><strong>${escapeHtml(act.label)}</strong><span>${escapeHtml(act.roll)}${dmg}</span></button>
         <button type="button" class="dungeon-chip-btn dungeon-action-remove" data-dungeon="remove-action" data-action-id="${id}" aria-label="Remover ação ${escapeHtml(act.label)}">×</button>
       </div>`;
-  }).join("");
+}
+
+function renderAbilitiesPanel(state) {
+  const { abilities } = splitSheetActions(state.sheet?.sheet_meta?.clickable_actions || []);
+  const cards = abilities.map(renderActionCard).join("");
   return `
-    <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
-      <div class="dungeon-section-head">
-        <div>
-          <span class="dungeon-eyebrow">Ficha Clicável · Dados Sem Viés</span>
-          <h2>Ataques, Perícias e Atalhos</h2>
-        </div>
-        <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${modesHtml}</div>
-      </div>
-      <div class="dungeon-brain-grid">${buttonsHtml || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
-      ${renderRollStatusBanner(state)}
+    <section class="dungeon-panel" aria-label="Ataques e habilidades da ficha">
+      <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
+      <h2>Ataques e Habilidades</h2>
+      <div class="dungeon-brain-grid">${cards || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
       ${renderAddActionForm()}
     </section>`;
 }
@@ -116,7 +120,7 @@ function renderResourceMeters(sheet, projected) {
   const hpMax = sheet.pools_base?.hp_max || 24;
   const slotMax = Number(sheet.pools_base?.spell_slots_max?.l1) || 3;
   const conflictHtml = projected.overdraftConflicts.length
-    ? `<p class="dungeon-alert-warn" role="status"><strong>Proteção contra Saldo Negativo (CRDT):</strong> ${projected.overdraftConflicts.length} tentativa(s) de gasto acima do limite foram travadas com segurança em 0.</p>`
+    ? `<p class="dungeon-alert-warn" role="status"><strong>Proteção contra gasto além do saldo:</strong> ${projected.overdraftConflicts.length} tentativa(s) de gastar mais do que havia foram travadas em 0.</p>`
     : "";
   return `
     <section class="dungeon-panel">
@@ -163,43 +167,6 @@ function renderLoreCard(node) {
     </article>`;
 }
 
-function renderInventoryRow(it) {
-  const weightTag = it.weightLb ? ` (${(it.weightLb * it.qty).toFixed(1)} kg)` : "";
-  return `
-    <li class="dungeon-inventory-row">
-      ${dungeonIcon("backpack", 15)}
-      <span>${escapeHtml(it.label)} ×${it.qty}${weightTag}${it.equipped ? " · equipado" : ""}</span>
-      <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}">${it.equipped ? "Desequipar" : "Equipar"}</button>
-        <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
-      </div>
-    </li>`;
-}
-
-function renderInventoryPanel(state) {
-  const rows = (state.sheet?.inventoryItems || []).map(renderInventoryRow).join("");
-  const weight = Number(state.sheet?.carryWeight) || 0;
-  return `
-    <section class="dungeon-panel" aria-label="Inventário da ficha">
-      <div class="dungeon-section-head">
-        <div><span class="dungeon-eyebrow">Inventário CRDT (OR-Set)</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
-      </div>
-      <form class="dungeon-action-form" data-dungeon="add-item-form">
-        <div class="dungeon-input-row">
-          <label class="sr-only" for="dungeon-item-label">Nome do novo item</label>
-          <input id="dungeon-item-label" class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item (ex.: Tocha)" autocomplete="off" />
-          <label class="sr-only" for="dungeon-item-qty">Quantidade</label>
-          <input id="dungeon-item-qty" class="dungeon-input dungeon-input-qty" name="itemQty" type="number" min="1" max="99" value="1" aria-label="Quantidade" />
-          <label class="sr-only" for="dungeon-item-weight">Peso em kg</label>
-          <input id="dungeon-item-weight" class="dungeon-input dungeon-input-qty" name="itemWeight" type="number" min="0" max="500" step="0.5" value="0.5" aria-label="Peso em kg" />
-          <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar</button>
-        </div>
-      </form>
-      <ul class="dungeon-clean-list">${rows || "<li class=\"dungeon-muted\">Mochila vazia — adicione itens acima.</li>"}</ul>
-    </section>`;
-}
-
 function renderLedgerPanel(sheet) {
   const ops = (sheet.delta_ledger || []).slice(-6).reverse().map((op) => {
     const sign = op.delta >= 0 ? "+" : "";
@@ -241,17 +208,17 @@ function renderLoreSection(loreNodes) {
 function renderSheetAudit(orderedOpsCount) {
   return `
     <details class="dungeon-audit" data-dungeon-details="sheet-audit">
-      <summary>Auditoria Técnica (CRDT Delta-Ledger &amp; Hybrid RRF)</summary>
+      <summary>Para conferir: como a ficha é guardada</summary>
       <div class="dungeon-audit-body">
-        <p><strong>Operações assinadas:</strong> <code>${orderedOpsCount}</code> deltas ordenados por relógio lógico de Lamport + idempotência de <code>op_id</code>.</p>
-        <p><strong>Pesos RAG:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
-        <div class="dungeon-card-actions"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Proteção Contra Saldo Negativo</button></div>
+        <p><strong>Ações registradas:</strong> <code>${orderedOpsCount}</code>, em ordem, cada uma contada uma só vez.</p>
+        <p><strong>Confiança nas fontes:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
+        <div class="dungeon-card-actions"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar proteção contra gasto além do saldo</button></div>
       </div>
     </details>`;
 }
 
 /**
- * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT, mochila unificada e Assistente de Nível.
+ * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo protegido, mochila unificada e Assistente de Nível.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
@@ -259,16 +226,19 @@ function renderSheetAudit(orderedOpsCount) {
 export function renderSheetScreen(state) {
   const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+  const panels = {
+    play: `${renderDerivedStrip(state.sheet)}${renderPlayTab(actions)}`,
+    abilities: renderAbilitiesPanel(state),
+    items: renderInventoryPanel(state),
+    about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
+  };
   return `
     ${noticeHtml}
-    ${renderSheetHero(state.sheet)}
-    ${renderSheetEditPanel(state.sheet)}
     ${renderLevelUpWizard(state)}
-    ${renderClickableActionsPanel(state)}
-    ${renderResourceMeters(state.sheet, projected)}
-    ${renderInventoryPanel(state)}
-    ${renderLedgerPanel(state.sheet)}
-    ${renderPublicNotesSection(state)}
-    ${renderLoreSection(state.loreNodes)}
-    ${renderSheetAudit(projected.orderedOpsCount)}`;
+    <section class="dungeon-sheet-roll-controls" aria-label="Modo e resultado das rolagens">${renderRollModes(state)}</section>
+    <div class="dungeon-sheet-layout">
+      <div class="dungeon-sheet-aside">${renderSheetHero(state.sheet)}${renderResourceMeters(state.sheet, projected)}</div>
+      <div class="dungeon-sheet-main">${renderSheetTabs(panels)}</div>
+    </div>`;
 }
