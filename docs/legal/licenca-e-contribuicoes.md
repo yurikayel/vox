@@ -44,3 +44,15 @@ A **AGPLv3** foi concebida especificamente para fechar essa brecha. A **Seção 
 1. **Autoria e Crédito:** Todos os contribuidores mantêm a autoria moral de seus códigos e são creditados nos registros do repositório.
 2. **Copyleft Recíproco:** Ao submeter um Pull Request ao Vox, o autor concorda que suas contribuições serão integradas sob os termos da licença GNU AGPL-3.0-or-later.
 3. **Sem Cláusulas Proprietárias:** Nenhuma contribuição que exija dependências proprietárias ou imponha restrições que impeçam o cumprimento da AGPLv3 será aceita na árvore principal.
+
+---
+
+## 4. Material de terceiros embutido (SRD 5.2 / D&D)
+
+O pacote de sistema `client/js/dungeon/system-pack-dnd5e-2024.js` inclui **somente** estrutura, nomes e matemática do System Reference Document 5.2 (atributos, perícias, fórmulas). Não inclui descrições de magias, tabelas de classe nem texto de regra dos livros comerciais.
+
+- **Licença do material embutido:** Creative Commons Attribution 4.0 International (**CC-BY-4.0**).
+- **Atribuição canônica no código:** constante exportada `DND5E_2024_ATTRIBUTION` (e espelho em `DND5E_2024_PACK.license`).
+- **Fonte:** [SRD 5.2](https://www.dndbeyond.com/srd) · [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+Qualquer expansão desse pacote deve manter a atribuição visível e restringir-se ao que a SRD permite sob CC-BY-4.0.
