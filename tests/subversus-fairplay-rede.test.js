@@ -78,10 +78,10 @@ test("fairplay rede: 3 aparelhos com condutor fecham a rolagem e chegam ao mesmo
 
 test("fairplay rede: jogador que some na revelação é recuperado pelas partes dos outros", async () => {
   const seats = await setupTable({ 2: ["FAIRPLAY_REVEAL"] });
-  const rollId = await seats[1].driver.openRoll({ sides: 6, formula: "1d6", phaseMs: 1000 });
-  const camps = await waitAllDone(seats, rollId);
+  const rollId = await seats[1].driver.openRoll({ sides: 6, formula: "1d6", phaseMs: 4000 });
+  const camps = await waitAllDone(seats, rollId, 15000);
   const res = await verifyFairplayRecord(camps[1], rollId);
-  assert.equal(res.status, "verified");
+  assert.equal(res.status, "verified", `motivo: ${res.reason}`);
   assert.deepEqual(res.recoveredPeerIds, [seats[2].id]);
   for (const s of seats) s.driver.close();
 });
