@@ -306,7 +306,7 @@ Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cac
 O PWA adota uma experiência leve e intuitiva com padrões de mercado para leitura e engajamento:
 - **Chrome mínimo:** Barra superior fina (~52px) com logo e chip de status da rede; sem gradientes pesados.
 - **Navegação rápida:** TabBar inferior no mobile e Sidebar esquerda no desktop (≥768px).
-- **Para você (Feed):** Timeline cronológica com divisores sutis (1px), avatares redondos, título do post e ações rápidas (💬 Responder, ↗ Compartilhar). Sem termos herdados do rede P2P BR de referência (ex: "A Rua", "Cadeiras").
+- **Para você (Feed):** Timeline cronológica com divisores sutis (1px), avatares redondos, título do post e ações rápidas (💬 Responder, ↗ Compartilhar). Sem termos herdados da rede P2P BR de referência (ex: "A Rua", "Cadeiras").
 - **Descoberta de Comunidades:** Grade visual estilo IG com cartões compactos, faixa de cor derivada da comunidade e entrada direta via "Abrir →".
 - **DMs (Mensagens):** Inbox estilo chat mobile e conversa full-height com caixa de envio fixa.
 - **Modo Claro / Escuro / Automático:** Toggle no rodapé da sidebar (`vox-color-mode`); automático = `prefers-color-scheme` + paleta celeste por relógio (`data-sky-period`); claro/escuro forçam pergaminho/carbono.
@@ -331,7 +331,7 @@ Para manter a clareza e acolhimento para o usuário leigo, jargões técnicos s�
 | Empty states com parágrafos explicativos| **1 frase objetiva + 1 botão de ação**| Direto ao ponto           |
 
 > [!NOTE]
-> Termos do rede P2P BR de referência e análises de engenharia permanecem exclusivamente em `docs/process/LESSONS.md` e `README.md` como registro histórico. A interface e a cópia voltadas para o usuário são 100% limpas de jargões técnicos.
+> Termos da rede P2P BR de referência e análises de engenharia permanecem exclusivamente em `docs/process/LESSONS.md` e `README.md` como registro histórico. A interface e a cópia voltadas para o usuário são 100% limpas de jargões técnicos.
 
 Regra de ouro: frases curtas (≤ ~8 palavras na interface principal), contraste WCAG testado e zero dependências externas de ícones ou frameworks.
 
@@ -1090,7 +1090,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 - **Chrome compacto de foto:** Header sobre mídia enxuto (`post-overlay.js`), espaçamento harmonizado entre cards de foto e comentários borderless.
 - **Notas de perfil 24h (`profile-note.js`):** Nota curta opcional com expiração local de 24h no perfil e na faixa superior.
-- **Republicar sem impulsionar (`repost-draft.js`, `repost-cite.js`, `app/repost-ui.js`):** Citação honesta na rede sem algoritmo de boost; rótulo neutro **"Republicar"** / **"Republicação"** (sem jargões externos de "praça/rua/rede").
+- **Republicar sem impulsionar (`repost-draft.js`, `repost-cite.js`, `app/repost-ui.js`):** Citação honesta na rede sem algoritmo de boost; rótulo neutro **"Republicar"** / **"Republicação"** (sem jargões externos de "praça/rua/rede P2P BR de referência").
 - **Salvos & Marcação manual em fotos (`photo-tag-pins.js`):** Aba **Salvos** no perfil e marcação manual de perfis por coordenadas (`x%`, `y%`) sobre a foto — estritamente sem reconhecimento facial.
 - **Soberania & Segurança local:**
   - **T01 (`.voxid`):** Backup cifrado com senha via PBKDF2 + AES-GCM-256 (`voxid-crypto.js`).

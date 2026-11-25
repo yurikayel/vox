@@ -3,13 +3,13 @@
 > **Status:** canônico (produto) · **Owner:** mantenedor · **Revisado:** 2026-11-20
 > **Relacionados:** [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md) · `client/js/dungeon/`
 
-Este documento fixa **referenciais de mercado** (mesa hospedada C, mesa hospedada A, mesa hospedada B, mesa hospedada D) e o que a Mesa Soberana **copia, evita ou já entrega**, sem endorse comercial. **Anatomia de UI** consolidada em [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md). Roadmap de engenharia da Entrega 5 está na §5.
+Este documento fixa **referenciais de mercado** (Mesa C, Mesa hospedada A, Mesa hospedada B, Mesa hospedada D) e o que a Mesa Soberana **copia, evita ou já entrega**, sem endorse comercial. **Anatomia de UI** consolidada em [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md). Roadmap de engenharia da Entrega 5 está na §5.
 
 ---
 
 ## 1. Síntese comparativa
 
-| Dimensão | mesa hospedada C | mesa hospedada A | mesa hospedada B | mesa hospedada D | Mesa Soberana (alvo) |
+| Dimensão | Mesa C | Mesa hospedada A | Mesa hospedada B | Mesa hospedada D | Mesa Soberana (alvo) |
 | :--- | :--- | :--- | :--- | :--- |
 | Filosofia | Sala única SaaS; mapa + chat + sheets | Canvas minimalista; ficha em geral fora (PDF) | Self-host + módulos; GM “dono” do servidor | SaaS all-in-one no browser | **Local-first** + sync P2P Vox; cópia CRDT por participante |
 | UI sessão | Três colunas (chat, mapa, journal) | Canvas quase fullscreen | Dock + canvas + sidebar tabs | Hub → VTT + escudo mestre | **Mapa hero + drawer Z3** (ver UI brainstorm) |
@@ -19,10 +19,10 @@ Este documento fixa **referenciais de mercado** (mesa hospedada C, mesa hospedad
 | Performance | Denso em mobile | Pouca UI → menos lag | Risco de engasgo, F5, clone de jogador | Infra gerenciada; foco mobile | Canvas **0% CPU em repouso**; projeção Zero-Spoiler fail-closed |
 | Áudio / mídia | Integrações limitadas | Player de áudio do SO + mídia na conta | Depende de módulos/setup | Soundboard, mixer, storage na nuvem | **Fora do escopo civil v1** (sem áudio/vídeo no precache) |
 | Investigação | Journal / handouts | Fraca nativamente | Via módulos | Quadro cortiça, handouts visuais, wiki | `.canvas` Obsidian, pins no mapa, notas por pasta (E4) |
-| Ecossistema | Marketplace próprio | Extensões (ex.: Kraken → mesa hospedada A) | Marketplace grande | Discord, OBS, integração mesa hospedada A/mesa hospedada B | Malha **comunitária Vox** (futuro; não Discord Activity) |
+| Ecossistema | Marketplace próprio | Extensões (ex.: Mesa D → Mesa A) | Marketplace grande | Discord, OBS, integração Mesa A/Mesa B | Malha **comunitária Vox** (futuro; não Discord Activity) |
 | Brasil / idioma | EN-first | EN-first | EN-first | **PT-first**, BRL, sistemas BR | UI em PT; presets `libre` / `d20_fantasy` / `investigacao` (expandir Tormenta20) |
 
-### 1.0 mesa hospedada C (leitura de produto + UI)
+### 1.0 Mesa C (leitura de produto + UI)
 
 | | |
 | :--- | :--- |
@@ -30,7 +30,7 @@ Este documento fixa **referenciais de mercado** (mesa hospedada C, mesa hospedad
 | **Contras** | Layout tricoluna pesado; muitas abas; mobile fraco; ficha competindo com mapa por espaço. |
 | **Para a Mesa** | Copiar **hábito** crônica + rolagem (Z3), **não** o layout 3 colunas fixas. Grimório em rota própria. Detalhe: [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) §2.1. |
 
-### 1.1 mesa hospedada A (feedback da mesa + leitura de produto)
+### 1.1 Mesa hospedada A (feedback da mesa + leitura de produto)
 
 | | |
 | :--- | :--- |
@@ -38,7 +38,7 @@ Este documento fixa **referenciais de mercado** (mesa hospedada C, mesa hospedad
 | **Contras** | Sem ficha embutida — sessão com PDF e conta manual como no presencial. |
 | **Para a Mesa** | Adotar **simplicidade perceptiva** para o jogador (mapa como foco). **Não** regressar a “só PDF”: ficha local já é diferencial. **Não** copiar login Google nem nuvem de mídia no núcleo civil. |
 
-### 1.2 mesa hospedada B
+### 1.2 Mesa hospedada B
 
 | | |
 | :--- | :--- |
@@ -46,31 +46,31 @@ Este documento fixa **referenciais de mercado** (mesa hospedada C, mesa hospedad
 | **Contras** | Superfície enorme → engasgos; F5 nem sempre resolve; risco de **clone/trava** de jogador na sala ao reconectar. |
 | **Para a Mesa** | Manter poder tático (fog, AoE, portas, iniciativa) e automação de rolagem. **Evitar** marketplace infinito e estado pesado. **E5:** reconexão P2P com **um** `routeId` ativo, ops idempotentes por `opId` (`vtt-reducer.js`, `vtt-sync.js`). |
 
-### 1.3 mesa hospedada D ([erpg.app](https://erpg.app/pt/))
+### 1.3 Mesa hospedada D ([erpg.app](https://example.com/ref-mesa-d))
 
-Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OBS). Fontes: [guia do usuário](https://erpg.app/pt/docs/guide/), [planos](https://erpg.app/pricing/), material oficial de comparação com mesa hospedada A e mesa hospedada B.
+Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OBS). Fontes: [guia do usuário](https://example.com/ref-mesa-d), [planos](https://example.com/ref-mesa-d), material oficial de comparação com Mesa A e Mesa B.
 
 | | |
 | :--- | :--- |
-| **Prós** | Fluxo integrado (menos abas); quadro investigativo; escudo do mestre; som/mixer; mobile; PT/BRL; templates Tormenta, Ordem, D&D; free tier para começar; extensões que levam ficha/handout para mesa hospedada A ou mesa hospedada B. |
-| **Contras** | Mais complexo que mesa hospedada A; **hosted** (limites de cenas/storage no free); ecossistema menor que mesa hospedada B; produto mais novo; usar integração ainda depende de outra mesa para o mapa em alguns fluxos. |
+| **Prós** | Fluxo integrado (menos abas); quadro investigativo; escudo do mestre; som/mixer; mobile; PT/BRL; templates Tormenta, Ordem, D&D; free tier para começar; extensões que levam ficha/handout para Mesa A ou Mesa B. |
+| **Contras** | Mais complexo que Mesa A; **hosted** (limites de cenas/storage no free); ecossistema menor que Mesa B; produto mais novo; usar integração ainda depende de outra mesa para o mapa em alguns fluxos. |
 | **Para a Mesa** | Mesmo “pacote mental” (campanha + ficha + pistas + mapa), com **soberania**: dados no aparelho, backup `.voxrpg.zip`, sem servidor central obrigatório. **Não competir** no v1 com VTT 3D full, Discord Activity ou storage em nuvem. |
 
 ### 1.4 Links oficiais (consulta externa)
 
-- mesa hospedada C: [https://mesa-hospedada-c.net/](https://mesa-hospedada-c.net/)
-- mesa hospedada A: [https://www.mesa-hospedada-a.rodeo/](https://www.mesa-hospedada-a.rodeo/)
-- mesa hospedada B: [https://mesa-hospedada-bvtt.com/](https://mesa-hospedada-bvtt.com/)
-- mesa hospedada D: [https://erpg.app/pt/](https://erpg.app/pt/)
+- Mesa C: [https://example.com/ref-mesa-c](https://example.com/ref-mesa-c)
+- Mesa hospedada A: [https://example.com/ref-mesa-a](https://example.com/ref-mesa-a)
+- Mesa hospedada B: [https://example.com/ref-mesa-b](https://example.com/ref-mesa-b)
+- Mesa hospedada D: [https://example.com/ref-mesa-d](https://example.com/ref-mesa-d)
 
 ---
 
 ## 2. Princípios de produto (E5+)
 
-1. **mesa hospedada A-speed no jogador:** projeção fail-closed já existe; E5 reforça UI enxuta (mesa + atalhos de ficha).
-2. **mesa hospedada B-power só onde paga:** fórmulas, inventário, tático — **sem** loja de módulos no cliente cívico.
-3. **Kraken-workflow sem lock-in:** handouts, pistas e campanha num fluxo; portabilidade zip/Obsidian em vez de biblioteca proprietária.
-4. **Anti-sessão fantasma (mesa hospedada B):** uma presença P2P por `routeId`; reconexão idempotente.
+1. **velocidade-de-mesa-leve no jogador:** projeção fail-closed já existe; E5 reforça UI enxuta (mesa + atalhos de ficha).
+2. **Mesa B-power só onde paga:** fórmulas, inventário, tático — **sem** loja de módulos no cliente cívico.
+3. **Mesa D-workflow sem lock-in:** handouts, pistas e campanha num fluxo; portabilidade zip/Obsidian em vez de biblioteca proprietária.
+4. **Anti-sessão fantasma (Mesa B):** uma presença P2P por `routeId`; reconexão idempotente.
 5. **Performance como feature:** `client/js/dungeon/` lazy; precache civil **0 bytes** (`SHELL_ASSETS` sem entradas `dungeon/`, auditado 2026-11-20 pós-fila E2–E5); dados 3D opcionais e leves (E4).
 6. **BR como dados, não SaaS:** presets nomeados (Tormenta20, etc.) em schema/redutor, não dependência de template cloud.
 
@@ -80,28 +80,28 @@ Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OB
 
 | Tema | Referência | Decisão Mesa | Evidência no repo |
 | :--- | :--- | :--- | :--- |
-| Mapa 2D + tokens + fog | mesa hospedada A / mesa hospedada B / Kraken | **Já temos** (E2–E3) | `canvas-renderer.js`, `vtt-tactics-*` |
-| Ficha clicável + ledger | mesa hospedada B / Kraken | **Já temos** (E1) | `rpg-sheet-and-lore.js`, `screen-sheet.js` |
-| GM screen / segredos | mesa hospedada B / Kraken | **Já temos** | `projectStateForPlayer`, camada GM |
+| Mapa 2D + tokens + fog | Mesa A / Mesa B / Mesa D | **Já temos** (E2–E3) | `canvas-renderer.js`, `vtt-tactics-*` |
+| Ficha clicável + ledger | Mesa B / Mesa D | **Já temos** (E1) | `rpg-sheet-and-lore.js`, `screen-sheet.js` |
+| GM screen / segredos | Mesa B / Mesa D | **Já temos** | `projectStateForPlayer`, camada GM |
 | Backup portátil | — (diferencial) | **Já temos** | `vtt-portable.js`, `.voxrpg.zip` |
-| Quadro de pistas | Kraken | **Parcial** (E4) | `obsidian-bridge.js` (`.canvas`), `screen-notes.js` |
-| Pin no mapa | Kraken POI | **Parcial** (E4.1) | `NOTE_PIN`, `vtt-note-pins.js` |
-| Sync P2P real em sessão | mesa hospedada B world / Kraken sala | **Parcial (E5 P0)** | `vtt-sync.js` + `#/dungeon/entrar/…` via `BroadcastChannel` (2 abas, mesma origem); WebRTC/cross-device **fora do P0** |
-| UI jogador mínima | mesa hospedada A ✅ | **Já temos (E5.0)** | `screen-table.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` |
-| Login Google + mídia nuvem | mesa hospedada A ✅ | **Não fazer** (civil) | Identidade Vox local |
-| Marketplace de módulos | mesa hospedada B | **Não fazer** | — |
-| VTT 3D WebGL | Kraken | **Não v1** | ADR futuro se necessário |
-| Áudio / mixer | mesa hospedada A / Kraken | **Lab opt-in só** | Zero áudio no escopo atual |
-| Discord bot / Activity | Kraken | **Não fazer** | Malha Vox, não Discord |
-| PDF como ficha principal | mesa hospedada A ❌ | **Não fazer** | Obsidian/md preferido |
-| Preset Tormenta20 | Kraken ✅ | **Já temos (E5 P1)** | `vtt-levelup.js` · `dungeonPrefs.preset` |
-| Handout viewer rico | Kraken / PDF mesa hospedada A | **Parcial (E5 P1)** | drawer Z3 `renderHandoutViewer` · links `https?` externos; sem renderizador PDF embutido |
+| Quadro de pistas | Mesa D | **Parcial** (E4) | `obsidian-bridge.js` (`.canvas`), `screen-notes.js` |
+| Pin no mapa | Mesa D POI | **Parcial** (E4.1) | `NOTE_PIN`, `vtt-note-pins.js` |
+| Sync P2P real em sessão | Mesa B world / Mesa D sala | **Parcial (E5 P0)** | `vtt-sync.js` + `#/dungeon/entrar/…` via `BroadcastChannel` (2 abas, mesma origem); WebRTC/cross-device **fora do P0** |
+| UI jogador mínima | Mesa A ✅ | **Já temos (E5.0)** | `screen-table.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` |
+| Login Google + mídia nuvem | Mesa A ✅ | **Não fazer** (civil) | Identidade Vox local |
+| Marketplace de módulos | Mesa B | **Não fazer** | — |
+| VTT 3D WebGL | Mesa D | **Não v1** | ADR futuro se necessário |
+| Áudio / mixer | Mesa A / Mesa D | **Lab opt-in só** | Zero áudio no escopo atual |
+| Discord bot / Activity | Mesa D | **Não fazer** | Malha Vox, não Discord |
+| PDF como ficha principal | Mesa A ❌ | **Não fazer** | Obsidian/md preferido |
+| Preset Tormenta20 | Mesa D ✅ | **Já temos (E5 P1)** | `vtt-levelup.js` · `dungeonPrefs.preset` |
+| Handout viewer rico | Mesa D / PDF Mesa A | **Parcial (E5 P1)** | drawer Z3 `renderHandoutViewer` · links `https?` externos; sem renderizador PDF embutido |
 
 ---
 
 ## 4. Posicionamento (resumo executivo)
 
-A Mesa Soberana ocupa o quadrante **local soberano + complexidade média**: mais capacidade que mesa hospedada A (ficha + tático + backup), menos superfície e infraestrutura que mesa hospedada B/Kraken hosted, com honestidade sobre o que é demo (IA, guardiões — ADR-033).
+A Mesa Soberana ocupa o quadrante **local soberano + complexidade média**: mais capacidade que Mesa A (ficha + tático + backup), menos superfície e infraestrutura que Mesa B/Mesa D hosted, com honestidade sobre o que é demo (IA, guardiões — ADR-033).
 
 ---
 
@@ -111,14 +111,14 @@ Cada item = PR pequeno, `npm run validate`, **precache civil inalterado**.
 
 | P | Entrega | Inspiração | Módulos prováveis | Explicitamente não |
 | :---: | :--- | :--- | :--- | :--- |
-| **P0** | Sync P2P jogável (2 clientes, sem clone) | mesa hospedada B ❌ reconexão | `vtt-sync.js`, `vtt-sync-codec.js`, testes adversariais | Servidor VTT dedicado |
-| **P0** | Modo jogador enxuto (mapa hero + Z3 drawer) | mesa hospedada A ✅ simples | `screen-table.js`, `dungeon-chrome.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` | Esconder mecânica da ficha |
-| **P1** | Handout viewer (imagem / link PDF externo) | mesa hospedada A PDF + Kraken handouts | `screen-notes.js`, portable | Editor visual tipo Kraken |
-| **P1** | Preset **Tormenta20** (ficha + level-up) | Kraken ✅ BR | `vtt-levelup.js`, `vtt-schema.js` | Loja de templates |
-| **P2** | Pin de nota por clique no mapa | Kraken POI | `canvas-input.js`, `NOTE_PIN` | — |
-| **P2** | Wiki de campanha leve (páginas ligadas) | Kraken Worlds | notas + export Obsidian | CMS completo |
-| **P3** | Atmosfera áudio (somente lab, lazy) | mesa hospedada A/Kraken áudio | módulo fora do precache | Áudio no SW cívico |
-| — | VTT 3D | Kraken 3D | — | **Fora v2** até ADR |
+| **P0** | Sync P2P jogável (2 clientes, sem clone) | Mesa B ❌ reconexão | `vtt-sync.js`, `vtt-sync-codec.js`, testes adversariais | Servidor VTT dedicado |
+| **P0** | Modo jogador enxuto (mapa hero + Z3 drawer) | Mesa A ✅ simples | `screen-table.js`, `dungeon-chrome.js`, `dungeon-ui-contract.js`, `dungeon-layout.css` | Esconder mecânica da ficha |
+| **P1** | Handout viewer (imagem / link PDF externo) | Mesa A PDF + Mesa D handouts | `screen-notes.js`, portable | Editor visual tipo Mesa D |
+| **P1** | Preset **Tormenta20** (ficha + level-up) | Mesa D ✅ BR | `vtt-levelup.js`, `vtt-schema.js` | Loja de templates |
+| **P2** | Pin de nota por clique no mapa | Mesa D POI | `canvas-input.js`, `NOTE_PIN` | — |
+| **P2** | Wiki de campanha leve (páginas ligadas) | Mesa D Worlds | notas + export Obsidian | CMS completo |
+| **P3** | Atmosfera áudio (somente lab, lazy) | Mesa A/Mesa D áudio | módulo fora do precache | Áudio no SW cívico |
+| — | VTT 3D | Mesa D 3D | — | **Fora v2** até ADR |
 
 ### 5.1 Integração git (fila E1→E4, operacional)
 
@@ -130,4 +130,4 @@ E1 mergeado em `develop` via [#314](https://github.com/yurikayel/vox/pull/314). 
 
 | Data | Nota |
 | :--- | :--- |
-| 2026-11-20 | v0: referenciais mesa hospedada A/mesa hospedada B/mesa hospedada D + princípios + matriz + roadmap E5. |
+| 2026-11-20 | v0: referenciais Mesa A/Mesa B/Mesa hospedada D + princípios + matriz + roadmap E5. |
