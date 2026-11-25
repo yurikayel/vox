@@ -6,6 +6,7 @@
  */
 import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCamera } from "./diorama-camera.js";
 import { createDioramaGlRenderer } from "./diorama-gl.js";
+import { attachDioramaGestures, DIORAMA_KEYS_HELP } from "./diorama-input.js";
 import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
 import { pickDioramaScene, unprojectRay } from "./diorama-pick.js";
 
@@ -54,7 +55,7 @@ export function saveDioramaMode(mode, storage = globalThis.localStorage) {
  * @returns {void}
  */
 function layoutGlCanvas(gl, base) {
-  gl.style.cssText = `position:absolute;pointer-events:none;border-radius:6px;left:${base.offsetLeft || 0}px;top:${base.offsetTop || 0}px;width:${base.offsetWidth || 0}px;height:${base.offsetHeight || 0}px`;
+  gl.style.cssText = `position:absolute;pointer-events:none;touch-action:none;border-radius:6px;left:${base.offsetLeft || 0}px;top:${base.offsetTop || 0}px;width:${base.offsetWidth || 0}px;height:${base.offsetHeight || 0}px`;
   gl.width = base.width;
   gl.height = base.height;
 }
@@ -74,7 +75,9 @@ function ensureGlCanvas(base, existing = null) {
   if (!gl) {
     gl = base.ownerDocument.createElement("canvas");
     gl.dataset.dioramaGl = "1";
-    gl.setAttribute?.("aria-hidden", "true");
+    gl.setAttribute?.("tabindex", "0");
+    gl.setAttribute?.("role", "application");
+    gl.setAttribute?.("aria-label", DIORAMA_KEYS_HELP);
   }
   host.style.position = "relative";
   if (gl.parentNode !== host) host.appendChild(gl);
@@ -128,10 +131,36 @@ function pickAtClient(st, ev) {
   return ray ? pickDioramaScene(ray.origin, ray.dir, st.view) : null;
 }
 
+/** Redesenha no próximo quadro (vários eventos de gesto viram um único desenho). */
+function scheduleDraw(st) {
+  if (st.drawQueued) return;
+  st.drawQueued = true;
+  const run = () => { st.drawQueued = false; renderOverlayState(st); };
+  if (typeof globalThis.requestAnimationFrame === "function") globalThis.requestAnimationFrame(run);
+  else run();
+}
+
+function floorBounds(floor) {
+  const cellPx = Math.max(1, Number(floor?.grid?.cellPx) || 64);
+  return { maxX: (floor?.widthPx || 0) / cellPx, maxZ: (floor?.heightPx || 0) / cellPx };
+}
+
+/** Liga mouse, toque e teclado do canvas GL à câmera do overlay. */
+function bindGestures(st) {
+  return attachDioramaGestures({
+    el: st.gl,
+    getCam: () => st.cam,
+    setCam: (cam) => { st.cam = cam; scheduleDraw(st); },
+    bounds: () => floorBounds(st.view?.floor),
+    viewHeight: () => st.gl.height || 480,
+  });
+}
+
 /** Liga o clique no canvas GL ao `onPick`; devolve a função que remove o listener. */
-function bindPicking(st, opts) {
+function bindPicking(st, opts, gestures) {
   const gl = st.gl;
   const onClick = (ev) => {
+    if (gestures.wasDrag()) return;
     const hit = pickAtClient(st, ev);
     if (hit && hit.kind !== "floor") opts.onPick?.(hit);
   };
@@ -159,7 +188,8 @@ export function attachDioramaOverlay(canvas, floor, opts = {}) {
   };
   setScene(floor, { role: opts.viewerRole, tokens: opts.tokens, selectedId: opts.selectedId });
   if (mode !== "2d") ensureRenderer(st, opts);
-  const unbinds = [bindContextLoss(st, opts), bindPicking(st, opts)];
+  const gestures = st.gl ? bindGestures(st) : { wasDrag: () => false, destroy() {} };
+  const unbinds = [bindContextLoss(st, opts), bindPicking(st, opts, gestures), () => gestures.destroy()];
   return overlayApi(st, opts, setScene, unbinds);
 }
 
