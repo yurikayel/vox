@@ -81,7 +81,7 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
  */
 export function renderSystemEditFields(sheet) {
   const sys = resolveSheetSystem(sheet);
-  return sys ? renderSystemChoiceFields(sys.pack, sys.choices) : "";
+  return sys ? renderSystemChoiceFields(sys.pack, { ...sys.choices, hitDie: sys.rest.hitDie, hitDieSet: sys.rest.hitDieSet }) : "";
 }
 
 /**

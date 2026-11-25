@@ -264,6 +264,7 @@ function submitEditSheet(state, form, ctx) {
     armor_class: Number(valOf(form, "[name=armorClass]")),
     system: valOf(form, "[name=sheetSystem]"),
     speedFt: valOf(form, "[name=speedFt]", undefined),
+    hitDie: valOf(form, "[name=hitDie]"),
     ...checkedLists(form),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
