@@ -1,1 +1,0 @@
-"""Pipeline VTT refs v3 — imagens nativas de docs e frames YouTube para Stitch."""

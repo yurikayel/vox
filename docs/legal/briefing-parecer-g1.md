@@ -49,7 +49,7 @@ Já listado no REV-12, fora do G1 pelo ADR-020:
 
 ## 7. A quem enviar (três portas, em paralelo)
 
-Lista de categorias, não de pessoas. Antes de enviar, o mantenedor confere o contato na fonte oficial de cada organização. Pela regra do [mapa de parceiras](../strategy/mapa-parceiras-e-concorrentes-2026-11.md), ninguém é chamado de parceiro em público sem combinar antes.
+Lista de categorias, não de pessoas. Antes de enviar, o mantenedor confere o contato na fonte oficial de cada organização. Pela regra de comunicação do projeto, ninguém é chamado de parceiro em público sem combinar antes.
 
 | Porta | Quem | Como achar o contato | Situação |
 |---|---|---|---|

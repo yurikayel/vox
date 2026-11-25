@@ -7,7 +7,6 @@
 
 import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
-import * as accountExit from "../identity/index.js";
 import {
   VAULT_STORAGE_PREFIX,
   findVaultRecordWithStatus,
@@ -28,6 +27,9 @@ import {
 } from "./vault-crypto.js";
 import { clearLegacyRevokedNotice, markLegacyRevokedNotice, revokeLegacyVaults } from "./vault-legacy.js";
 import { rememberMine } from "./mesh-vault.js";
+
+/** Alias do namespace de identidade (substitui o import duplicado `accountExit`). */
+const accountExit = localAccount;
 
 /**
  * Depois de trocar de conta: apaga a conta descartável anterior e deixa um só cartão de perfil para a conta aberta.

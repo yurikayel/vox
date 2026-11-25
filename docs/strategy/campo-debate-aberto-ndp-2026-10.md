@@ -14,7 +14,7 @@ Em 26 de outubro de 2026, no rescaldo eleitoral e no contexto das tensões cont�
 As fontes primárias registradas nesta rodada foram:
 1. **Debate Aberto (WhatsApp):** Grupo cívico ativo. Observou-se a tensão permanente entre o filtro comunitário rápido contra notícias requentadas (ex.: vídeo antigo de mobilização desmentido em 2 minutos pelos próprios membros) e o impulso de manter mobilização contínua ("a luta não para") através de links do Instagram.
 2. **NDP - Núcleo Democracia e Participação (WhatsApp):** Grupo criado espontaneamente em 26/10/2026 às 09:30 por Túlio Freire (analista de dados governamentais na PB). Em menos de 1 hora, reuniu dezenas de voluntários, mapeando formalmente 14 profissionais técnicos (backend, infraestrutura de IA, dados, produto, QA e design) de 9 estados (PB, ES, SP, MT, PR, RN, MS, PE, RS) com alta disposição para codar e construir infraestrutura cívica.
-3. **Projeto Varanda (`bora.varanda.app`):** Apresentado no NDP por Rodrigo S. Pavezi (Staff Engineer, Curitiba). Proposta de rede social brasileira, de código aberto e sem dono, em reação direta ao controle algorítmico estrangeiro, trazendo o conceito da "Espiadinha" (feed de descoberta pública para contornar a necessidade de conhecer `@` antecipadamente).
+3. **Rede P2P BR de referência (apresentada no NDP):** Apresentada no NDP por Rodrigo S. Pavezi (Staff Engineer, Curitiba). Proposta de rede social brasileira, de código aberto e sem dono, em reação direta ao controle algorítmico estrangeiro, trazendo o conceito da "Espiadinha" (feed de descoberta pública para contornar a necessidade de conhecer `@` antecipadamente).
 
 ---
 
