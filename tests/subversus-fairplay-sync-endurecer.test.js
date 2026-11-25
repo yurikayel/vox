@@ -77,7 +77,7 @@ test("sync: op Fairplay do Mestre sem assinatura válida ou com autor trocado é
   send({ ...signed, actor: env.player.routeId });
   await wait();
   assert.deepEqual((await env.playerStore.loadCampaign(ID)).fairplay.keys, {});
-  send(signed);
+  gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: signed, admitted: [env.gm.routeId, env.other.routeId] });
   await wait();
   assert.deepEqual(Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys), [env.other.routeId], "op íntegra do Mestre entra");
   gmPeer.close();
