@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Limpeza de tip: removido radar de ecossistema aposentado; prosa de docs/CHANGELOG/LESSONS/POSITIONING/specs da Mesa neutralizada (sem nomes de referência de mercado); SW permanece `v7.171`.
+- Governança/CI (PTL): `CODEOWNERS` com paths exatos de `device-merge.js` e `vtt-fairplay-*.js`; `npm run validate` alinha a `lint:all` + `shell-budget-check` + `secrets-audit`; ROADMAP/HARDENING/método de agentes com teto **2**; documentado alias `client/revolução/`; metadata SW `v7.171`.
+- Relay: respostas 500 passam a ser genéricas (`{"error":"internal_error"}`) com detalhe só no log; `os.utime` no cache deixa de contar falha de permissão como integridade (TOCTOU `FileNotFoundError` segue contando).
+- Convergência multi-aparelho (`device-merge`): timestamp efetivo usa `Math.max` entre campos de data (não `editedAt ?? deletedAt`), evitando ressuscitar contato/comunidade/lista quando o tombstone tem `deletedAt` maior que o `editedAt` antigo; SW `vox-pwa-v7.171-device-merge-tombstone`; import único em `passphrase-vault.js`.
+- Limpeza de assets e scripts auxiliares: removidos do tip arquivos de referência de interface e scripts de coleta auxiliares; guia Stitch reduzido a capturas `dungeon-ui-2026-11-20__*`; crédito SRD 5.2 (CC-BY-4.0) registrado em `docs/legal/licenca-e-contribuicoes.md`.
 - Subversus (Zero-Spoiler): `FAIRPLAY_ADMIT` entra em `GM_ONLY_OPS`; o filtro de autoria recusa a admissão feita por jogador (antes só o reducer a ignorava).
 - Subversus (Zero-Spoiler): o estado e os deltas enviados ao jogador filtram pela névoa tokens, portas, desenhos, gabaritos, portais, volumes e a iniciativa; remoções, trocas de andar, movimentos sob névoa e `FOG_SET` pedem novo snapshot; o Mestre segue completo. A regra fica em `isTokenRevealedByFog`/`isDoorRevealedByFog`, também usada pelo Diorama.
 - Subversus (Fairplay, atrás de `vox.lab.fairplay`, sem mudança visível): o Mestre passa a aprovar a admissão (par pendente até `approveFairplayPeer`) e pode revogar (`FAIRPLAY_REVOKE`, op nova persistida); ops de par revogado são recusadas, readmitir exige novo `FAIRPLAY_ADMIT` de `lamport` maior, e o condutor só liga se `peerId` for o `routeId` do par. Com a flag desligada nada muda. A emenda está aceita (2026-11-25) na §3.1 do ADR-040 (`vtt-fairplay-log.js`, `vtt-sync.js`, `vtt-fairplay-wire.js`, `tests/subversus-fairplay-aprovacao.test.js`).
@@ -244,12 +249,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Matriz de testes em `mesa-ui-brainstorm-v0.md` §5.1.
 
 ### Docs + UI: Mesa Soberana E5.0 — brainstorm UI VTT e layout sessão
-- `docs/specs/mesa-ui-brainstorm-v0.md`: anatomia mesa hospedada C/mesa hospedada A/mesa hospedada B/Kraken, zonas Z0–Z5, wireframes, backlog UI.
+- `docs/specs/mesa-ui-brainstorm-v0.md`: anatomia de mesas hospedadas de referência, zonas Z0–Z5, wireframes, backlog UI.
 - `client/js/dungeon/dungeon-ui-contract.js`, `screen-table-layout.js`, `dungeon-layout-style.js`, `client/css/dungeon-layout.css`: modo jogador (mapa hero, drawer crônica/dados), cromo por papel, CSS lazy.
-- `mesa-referenciais-vtt-v0.md`: coluna mesa hospedada C + link ao brainstorm.
+- `mesa-referenciais-vtt-v0.md`: coluna de referência de mercado + link ao brainstorm.
 
 ### Docs: Mesa Soberana — referenciais VTT e roadmap E5
-- `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs mesa hospedada A, mesa hospedada B e mesa hospedada D; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
+- `docs/specs/mesa-referenciais-vtt-v0.md`: posicionamento vs mesas hospedadas de referência; princípios de produto; matriz fazer/não fazer; backlog E5 (P0–P3).
 - `docs/specs/ai-social-dungeon-v0.md`, `docs/FEATURES.md`: links para o spec de referenciais.
 
 ### Code: Mesa Soberana (Entrega 4) — campanha longa & polimento
@@ -359,15 +364,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `docs/brainstorms/brainstorm-enois-observacao-2026-11.md`: ondas 1–3 com IXV-01…14, §6 índice, §7 explicações (Salas Precisas, Nota de contexto, Coluna).
 - `docs/GLOSSARIO.md`: subseção candidatos IXV (**Ágora**, **Explorar**, **Coluna** = blog, Salas Precisas).
 - `docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md`: **Ágora** na aba do feed (duplo sentido grego + agora).
-- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 ponte ao catálogo IXV.
+- Notas de estratégia (radar de ecossistema): §4.2 ponte ao catálogo IXV.
 
 ### Docs: alavancas do mapa, observação Énóis, spec PM-23 (nov/2026)
-- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 Énóis expandido; §4.4 cinco alavancas; §4.5 top 5; §3.1 próxima checagem 2027-02-19; §8 fontes reordenadas.
+- Notas de estratégia (radar de ecossistema): §4.2 Énóis expandido; §4.4 cinco alavancas; §4.5 top 5; §3.1 próxima checagem 2027-02-19; §8 fontes reordenadas.
 - `docs/brainstorms/brainstorm-enois-observacao-2026-11.md` (novo): 11 rotas, não-copiar, ondas candidatas.
 - `docs/specs/modo-assembleia-v0.md` (novo): stub PM-23 (Loomio/Decidim, rituais, campos planos). Sem código nem bump de SW.
 
 ### Docs: mapa do tecido social digital BR (nov/2026)
-- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: rede P2P BR de referência reclassificado (concorrente P2P, Conf. A, PolyForm); §2.2 Fediverso BR; §2.3 cívico; §3.1–3.2 tracking; §4 radar de aprendizados; Énóis (GPL-3.0); **Sua Voz** mantida; notas POSITIONING/LESSONS. Sem código nem bump de SW.
+- Notas de estratégia (radar de ecossistema): rede P2P BR de referência reclassificada (Conf. A, PolyForm); §2.2 Fediverso BR; §2.3 cívico; §3.1–3.2 tracking; §4 radar de aprendizados; Énóis (GPL-3.0); **Sua Voz** mantida; notas POSITIONING/LESSONS. Sem código nem bump de SW.
 
 ### Code: D4 repost-index, ciclo onboarding, D5 SIGV2 ensaio e PM-01 passo 1 (SW `v7.144`)
 - `client/js/repost-index.js`: normaliza `localStorage` não-objeto; promove `2 todo` em `tests/repost-index.test.js`.

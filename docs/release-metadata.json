@@ -1,9 +1,9 @@
 {
-  "git_sha": "9f0edc2d",
-  "branch": "develop",
+  "git_sha": "2e60c2fc",
+  "branch": "main",
   "test_js": 3121,
   "test_python": 352,
   "test_total": 3473,
-  "cache_name": "vox-pwa-v7.170-pm01-lazy-fifth-screen",
-  "generated_at": "2026-11-23T13:51:34Z"
+  "cache_name": "vox-pwa-v7.171-device-merge-tombstone",
+  "generated_at": "2026-11-25T15:14:33Z"
 }
