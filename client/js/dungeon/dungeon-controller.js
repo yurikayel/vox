@@ -102,10 +102,26 @@ function activeFloor(state) {
   return scene?.floors?.find((f) => f.z === scene.activeFloorZ) || scene?.floors?.[0];
 }
 
+/** Cena que o overlay precisa: papel, tokens do mapa e seleção atuais. */
+function dioramaScene(state) {
+  const scene = state.campaign?.scenesById?.[state.campaign?.activeSceneId];
+  return { role: state.viewerRole, tokens: scene?.tokens || [], selectedId: state.selectedTokenId || "" };
+}
+
 function rebindDioramaOverlay(container, state) {
   const canvas = container.querySelector("#dungeon-vtt-canvas");
   const floor = activeFloor(state);
-  if (canvas && floor) DIORAMA_OVERLAYS.get(container)?.rebind(canvas, floor, state.viewerRole);
+  if (canvas && floor) DIORAMA_OVERLAYS.get(container)?.rebind(canvas, floor, dioramaScene(state));
+}
+
+/** Clique na lente 3D = a mesma ação do 2D: token seleciona, porta alterna. */
+function handleDioramaPick(container, viewOpts, hit) {
+  const state = viewOpts.state || getDungeonSession();
+  if (hit.kind === "token") {
+    state.selectedTokenId = hit.tokenId;
+    return redrawContainer(container, viewOpts);
+  }
+  return settleAndRedraw(toggleDoorInScene(state, hit.doorId, { store: viewOpts.store }), container, viewOpts);
 }
 
 function redrawContainer(container, opts, focusOverride = "", preserveDraft = false) {
@@ -183,16 +199,20 @@ function handleDungeonChange(container, viewOpts, ev) {
   return settleAndRedraw(job, container, viewOpts);
 }
 
-function syncDioramaOverlay(mod, container, state) {
+function syncDioramaOverlay(mod, container, state, viewOpts) {
   const overlay = DIORAMA_OVERLAYS.get(container);
   if (state.dioramaMode === "2d") { overlay?.destroy(); DIORAMA_OVERLAYS.delete(container); return; }
   const canvas = container.querySelector("#dungeon-vtt-canvas");
   const floor = activeFloor(state);
   if (!canvas || !floor) return;
-  if (overlay) { overlay.rebind(canvas, floor, state.viewerRole); overlay.setMode(state.dioramaMode); return; }
+  if (overlay) { overlay.rebind(canvas, floor, dioramaScene(state)); overlay.setMode(state.dioramaMode); return; }
+  const scene = dioramaScene(state);
   const created = mod.attachDioramaOverlay(canvas, floor, {
     mode: state.dioramaMode,
-    viewerRole: state.viewerRole,
+    viewerRole: scene.role,
+    tokens: scene.tokens,
+    selectedId: scene.selectedId,
+    onPick: (hit) => handleDioramaPick(container, viewOpts, hit),
     onFallback2d: (msg) => { state.dioramaMode = "2d"; state.campaignNotice = msg; },
   });
   DIORAMA_OVERLAYS.set(container, created);
@@ -204,7 +224,7 @@ function handleDioramaModeClick(container, viewOpts, target) {
   const nextMode = target.dataset.mode || "2d";
   const job = import("./diorama/diorama-view.js").then((mod) => {
     state.dioramaMode = mod.saveDioramaMode(nextMode);
-    syncDioramaOverlay(mod, container, state);
+    syncDioramaOverlay(mod, container, state, viewOpts);
   });
   return settleAndRedraw(job, container, viewOpts);
 }

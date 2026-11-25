@@ -3,11 +3,13 @@
  * com Vertex AO, cutaway automático, 3 primitivas `box`/`cylinder`/`ramp` e descrição acessível).
  * @module dungeon/diorama/diorama-geom
  */
+import { appendStandees } from "./diorama-layers.js";
 
 const FLOOR_AO = 0.62;
 const TOP_AO = 1.0;
 const CUTAWAY_HEIGHT = 0.25;
 const CYLINDER_SEGMENTS = 12;
+const OPEN_DOOR_HEIGHT = 0.3;
 
 /** Cores de iluminação ambiente por preset da cena. */
 export const AMBIENT_PRESETS = Object.freeze({
@@ -106,9 +108,9 @@ function appendWalls(out, walls, defaultH, cutawayCtx) {
 
 function appendDoors(out, doors, defaultH) {
   for (const d of doors) {
-    if (d.state === "open") continue;
-    const doorRgb = d.state === "locked" ? [0.72, 0.52, 0.25] : [0.55, 0.39, 0.24];
-    appendSegmentMesh(out, d, Math.min(2.2, defaultH), doorRgb);
+    const isOpen = d.state === "open";
+    const doorRgb = d.state === "locked" ? [0.72, 0.52, 0.25] : isOpen ? [0.8, 0.7, 0.45] : [0.55, 0.39, 0.24];
+    appendSegmentMesh(out, d, isOpen ? OPEN_DOOR_HEIGHT : Math.min(2.2, defaultH), doorRgb);
   }
 }
 
@@ -121,11 +123,18 @@ function appendVolumes(out, volumes) {
   }
 }
 
+function appendObjectLayers(out, floor, opts) {
+  appendStandees(out, opts.tokens || [], { eye: opts.eye, selectedId: opts.selectedId });
+  if (opts.b2 === true) appendVolumes(out, floor.volumes || []);
+}
+
 /**
  * Constrói o buffer de vértices intercalados (`x, y, z, r, g, b, ao`) para paredes, portas fechadas e volumes.
  *
- * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`eye`, `target`, `cutawayEnabled`, `b2` para volumes do escopo B2).
+ * Não filtra nada por papel: `floor` e `opts.tokens` devem vir já projetados por `projectDioramaView`.
+ *
+ * @param {object} floor Documento `FloorDoc` já projetado.
+ * @param {object} [opts={}] Opções (`eye`, `target`, `cutawayEnabled`, `tokens`, `selectedId`, `b2` para volumes do escopo B2).
  * @returns {{vertices: Float32Array, triangleCount: number, cutawayWalls: number}} Malha pronta para upload WebGL2.
  */
 export function buildFloorDioramaGeometry(floor = {}, opts = {}) {
@@ -134,7 +143,7 @@ export function buildFloorDioramaGeometry(floor = {}, opts = {}) {
   const enabled = opts.cutawayEnabled !== false && floor?.diorama?.wallCutaway !== false && Boolean(opts.eye && opts.target);
   const cutawayWalls = appendWalls(out, floor.walls || [], defaultH, { enabled, eye: opts.eye, target: opts.target });
   appendDoors(out, floor.doors || [], defaultH);
-  if (opts.b2 === true) appendVolumes(out, floor.volumes || []);
+  appendObjectLayers(out, floor, opts);
   return { vertices: new Float32Array(out), triangleCount: out.length / 21, cutawayWalls };
 }
 
