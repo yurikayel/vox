@@ -94,7 +94,7 @@ export function renderSheetEditPanel(sheet, edit = {}) {
   const issues = edit.issues || [];
   const ab = attrs.abilities || {};
   const abInputs = ABILITY_FIELDS.map((f) => {
-    const val = draftOr(draft, f.key, Number(ab[f.key]) || 10);
+    const val = escapeHtml(String(draftOr(draft, f.key, Number(ab[f.key]) || 10)));
     return `<label class="dungeon-field-mini"><span>${f.label}</span><input class="dungeon-input" name="${f.key}" type="number" min="1" max="30" value="${val}" /></label>`;
   }).join("");
   return `
@@ -106,7 +106,7 @@ export function renderSheetEditPanel(sheet, edit = {}) {
         <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "class_name", sheet?.role_title || attrs.class_name || ""))}" /></label>
         ${renderSystemSelect(sheet, draft.system)}
         ${renderSystemEditFields(sheet, draft)}
-        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)}" /></label>
+        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${escapeHtml(String(draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)))}" /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>

@@ -140,3 +140,11 @@ test("XSS: Deslocamento digitado com marcação não vira tag", () => {
   const html = renderSheetEditPanel({ name: "A", attributes_lww: {}, system: { id: "dnd5e-2024", version: 1 } }, { issues: [{ field: "speedFt", message: evil }], draft: { speedFt: evil } });
   assert.equal(html.includes("<img"), false);
 });
+
+test("painel: CA e atributos do rascunho (texto cru) são escapados no valor", () => {
+  const evil = '"><img src=x onerror=alert(1)>';
+  const sheet = { name: "A", attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
+  const html = renderSheetEditPanel(sheet, { issues: [{ field: "armorClass", message: "x" }], draft: { name: "A", armor_class: evil, str: evil, dex: evil } });
+  assert.equal(html.includes("<img"), false);
+  assert.match(html, /name="armorClass"[^>]*value="&quot;&gt;&lt;img/);
+});
