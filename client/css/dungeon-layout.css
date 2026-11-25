@@ -298,3 +298,8 @@
 .dungeon-fairplay-seal.is-unverified { color: var(--sa-warn, #e7c26b); }
 .dungeon-fairplay-seal.is-table_only { color: var(--sa-muted, #9aa5b1); border-left: 3px solid var(--sa-muted, #9aa5b1); padding-left: 0.5rem; }
 .dungeon-fairplay-unclosed, .dungeon-fairplay-reasons { font-size: 0.85rem; color: var(--sa-muted, #9aa5b1); }
+
+/* Tabela de salvaguardas em lote (Escudo do Mestre). */
+.dungeon-saves-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.9rem; }
+.dungeon-saves-table th, .dungeon-saves-table td { padding: 0.35rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.dungeon-saves-table tbody th { text-align: left; font-weight: 600; }
