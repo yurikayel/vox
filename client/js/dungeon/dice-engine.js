@@ -183,12 +183,12 @@ function markKeptRolls(entries, keepMode, keepCount) {
   return entries.map((e, i) => ({ ...e, kept: keptIndices.has(i) }));
 }
 
-function evaluateDiceTerm(term, randomBytesFn) {
+function evaluateDiceTerm(term, randomBytesFn, forcedValue) {
   const raw = [];
   let explosions = 0;
   let lastDigest = "";
   for (let i = 0; i < term.count; i += 1) {
-    let draw = drawUnbiasedDie(term.sides, randomBytesFn);
+    let draw = forcedValue ? { value: forcedValue, digestHex: "" } : drawUnbiasedDie(term.sides, randomBytesFn);
     lastDigest = draw.digestHex;
     raw.push({ sides: term.sides, value: draw.value, kept: true, exploded: false });
     while (term.explode && draw.value === term.sides && explosions < MAX_EXPLOSIONS) {
@@ -203,25 +203,25 @@ function evaluateDiceTerm(term, randomBytesFn) {
   return { dice, delta: term.sign * subtotal, lastDigest, explosions };
 }
 
-function evaluateTerm(term, vars, randomBytesFn) {
+function evaluateTerm(term, vars, randomBytesFn, forcedValue) {
   if (term.kind === "const") return { dice: [], delta: term.sign * term.value, text: `${term.value}`, lastDigest: "" };
   if (term.kind === "ref") {
     const val = Number.isFinite(Number(vars[term.ref])) ? Math.trunc(Number(vars[term.ref])) : 0;
     return { dice: [], delta: term.sign * val, text: `${val}`, lastDigest: "" };
   }
-  const rolled = evaluateDiceTerm(term, randomBytesFn);
+  const rolled = evaluateDiceTerm(term, randomBytesFn, forcedValue);
   const mod = term.keepMode ? `${term.keepMode}${term.keepCount}` : "";
   return { dice: rolled.dice, delta: rolled.delta, text: `${term.count}d${term.sides}${mod}${term.explode ? "!" : ""}`, lastDigest: rolled.lastDigest };
 }
 
-function evaluateAllTerms(terms, vars, rng) {
+function evaluateAllTerms(terms, vars, rng, forcedValue) {
   const rolls = [];
   const pieces = [];
   let total = 0;
   let digestHex = "";
   for (let i = 0; i < terms.length; i += 1) {
     const term = terms[i];
-    const res = evaluateTerm(term, vars, rng);
+    const res = evaluateTerm(term, vars, rng, term.kind === "dice" ? forcedValue : undefined);
     total += res.delta;
     rolls.push(...res.dice);
     if (res.lastDigest) digestHex = res.lastDigest;
@@ -248,9 +248,27 @@ function buildRollOutcome(parsed, evaluated) {
 }
 
 /**
+ * Diz se a fórmula é de um dado só, público e sem explosão ou escolha (o único caso em que a mesa pode decidir o dado).
+ * @param {string} rawInput Comando/fórmula.
+ * @param {string} [mode="normal"] Modo de rolagem (vantagem e desvantagem trocam o dado e ficam de fora).
+ * @returns {number} Faces do dado, ou `0` quando a fórmula não serve para o Fairplay.
+ */
+export function singleDieSides(rawInput, mode = "normal") {
+  if (mode && mode !== "normal") return 0;
+  try {
+    const parsed = parseDiceCommand(rawInput);
+    const dice = parsed.terms.filter((t) => t.kind === "dice");
+    const one = dice.length === 1 && dice[0].count === 1 && !dice[0].explode && !dice[0].keepMode && dice[0].sign > 0;
+    return parsed.visibility === "public" && one ? dice[0].sides : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Avalia e sorteia uma fórmula de dados completa usando WebCrypto sem viés.
  * @param {string} rawInput Comando/fórmula (ex.: `/gmroll 2d20kh1+@des # Furtividade`).
- * @param {object} [opts={}] Opções (`sheet`, `vars`, `mode`, `randomBytesFn`).
+ * @param {object} [opts={}] Opções (`sheet`, `vars`, `mode`, `randomBytesFn`, `fairplayValue` valor do dado decidido pela mesa, só para fórmula de um dado).
  * @returns {object} Resultado `{ ok, formula, resolvedFormula, visibility, label, rolls, total, crits, fumbles, digestHex, error? }`.
  */
 export function rollDiceFormula(rawInput, opts = {}) {
@@ -260,7 +278,7 @@ export function rollDiceFormula(rawInput, opts = {}) {
     const parsed = adjusted === base.formula ? base : { ...parseDiceCommand(adjusted), visibility: base.visibility, label: base.label };
     const vars = { ...resolveSheetVars(opts.sheet), ...(opts.vars || {}) };
     const rng = typeof opts.randomBytesFn === "function" ? opts.randomBytesFn : defaultRandomBytes;
-    return buildRollOutcome(parsed, evaluateAllTerms(parsed.terms, vars, rng));
+    return buildRollOutcome(parsed, evaluateAllTerms(parsed.terms, vars, rng, Number(opts.fairplayValue) || 0));
   } catch (err) {
     return { ok: false, error: err?.message || "Fórmula de dados inválida." };
   }
