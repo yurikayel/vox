@@ -9,8 +9,20 @@
  */
 import { abilityModifier, clampInt } from "./system-derive.js";
 
-const HIT_DIE_SIDES = Object.freeze([4, 6, 8, 10, 12]);
-const DEFAULT_HIT_DIE = 8;
+/** Lados de dado aceitos como Dado de Vida. @type {readonly number[]} */
+export const HIT_DIE_SIDES = Object.freeze([4, 6, 8, 10, 12]);
+/** Dado de Vida enquanto o jogador não define o seu. @type {number} */
+export const DEFAULT_HIT_DIE = 8;
+
+/**
+ * Dado de Vida válido (d4, d6, d8, d10 ou d12) ou `null`.
+ * @param {unknown} value Valor cru (número ou texto do formulário).
+ * @returns {number|null} Lados do dado, ou `null` se inválido ou vazio.
+ */
+export function validHitDie(value) {
+  const die = Number(value);
+  return value !== "" && value !== null && value !== undefined && HIT_DIE_SIDES.includes(die) ? die : null;
+}
 const SLOT_POOLS = Object.freeze(["l1", "l2", "l3"]);
 
 function exhaustionMax(pack) {
@@ -21,17 +33,18 @@ function exhaustionMax(pack) {
  * Normaliza condições, Exaustão e Dados de Vida das escolhas da ficha.
  * @param {object} pack Pacote de sistema.
  * @param {object} [choices] Escolhas cruas (`level`, `conditions`, `exhaustion`, `hitDie`, `hitDiceSpent`).
- * @returns {{conditions: string[], exhaustion: number, hitDie: number, hitDiceTotal: number, hitDiceSpent: number}} Valores seguros.
+ * @returns {{conditions: string[], exhaustion: number, hitDie: number, hitDieSet: boolean, hitDiceTotal: number, hitDiceSpent: number}} Valores seguros.
  */
 export function normalizeRestChoices(pack, choices = {}) {
   const known = new Set((pack.conditions || []).map((c) => c.id));
   const marks = (Array.isArray(choices.conditions) ? choices.conditions : []).filter((id) => known.has(id));
   const total = clampInt(choices.level, 1, 20, 1);
-  const die = Math.trunc(Number(choices.hitDie));
+  const die = validHitDie(choices.hitDie);
   return {
     conditions: [...new Set(marks)],
     exhaustion: clampInt(choices.exhaustion, 0, exhaustionMax(pack), 0),
-    hitDie: HIT_DIE_SIDES.includes(die) ? die : DEFAULT_HIT_DIE,
+    hitDie: die ?? DEFAULT_HIT_DIE,
+    hitDieSet: die !== null,
     hitDiceTotal: total,
     hitDiceSpent: clampInt(choices.hitDiceSpent, 0, total, 0),
   };

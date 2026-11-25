@@ -36,6 +36,7 @@ function renderRests(pack, rest) {
   return `
     <div class="dungeon-rests" role="group" aria-label="Descansos">
       <p>${escapeHtml(pack.labels.hitDice)}: ${left}/${rest.hitDiceTotal} (d${rest.hitDie})</p>
+      ${rest.hitDieSet ? "" : `<p class="dungeon-muted" role="note">O Dado de Vida está em d${rest.hitDie} até você definir o seu em Editar Dados da Ficha.</p>`}
       <div class="dungeon-card-actions">
         <button type="button" class="dungeon-chip-btn" data-dungeon="hit-die"${left <= 0 ? " disabled" : ""}>Gastar Dado de Vida</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="rest-short">${escapeHtml(pack.labels.shortRest)}</button>
@@ -47,7 +48,7 @@ function renderRests(pack, rest) {
 /**
  * Bloco de condições (marcas), Exaustão (nível e efeito) e descansos (Dados de Vida, curto, longo) da aba Jogar.
  * @param {object} pack Pacote de sistema.
- * @param {{conditions: string[], exhaustion: number, hitDie: number, hitDiceTotal: number, hitDiceSpent: number}} rest Escolhas normalizadas.
+ * @param {{conditions: string[], exhaustion: number, hitDie: number, hitDieSet: boolean, hitDiceTotal: number, hitDiceSpent: number}} rest Escolhas normalizadas.
  * @returns {string} HTML do bloco (vazio se o pacote não traz condições).
  */
 export function renderConditionsAndRests(pack, rest) {
