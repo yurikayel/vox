@@ -66,10 +66,15 @@ export async function fairplayShareHash(share) {
 const P256_P = 2n ** 256n - 2n ** 224n + 2n ** 192n + 2n ** 96n - 1n;
 const P256_B = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604bn;
 
+function toBase64Url(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Coordenada canônica: 32 bytes em base64url sem preenchimento, e só a escrita que o próprio `toBase64Url` produziria. */
 function coordinate(b64u) {
   if (typeof b64u !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(b64u)) return null;
   const bytes = Uint8Array.from(atob(b64u.replace(/-/g, "+").replace(/_/g, "/") + "="), (c) => c.charCodeAt(0));
-  return BigInt(`0x${toHex(bytes)}`);
+  return toBase64Url(bytes) === b64u ? BigInt(`0x${toHex(bytes)}`) : null;
 }
 
 /**

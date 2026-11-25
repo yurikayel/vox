@@ -104,6 +104,8 @@ test("fairplay log: quem some na revelação é recuperado pelo quórum de parte
   assert.equal(await t.release("cris", "ana"), false, "só se recupera quem não revelou");
   const { threshold } = fairplayQuorum(peers.length);
   for (const holder of ["ana", "bia", "gm"].slice(0, threshold)) await t.release(holder, "cris");
+  assert.equal(t.roll().phase, "recovery", "a recuperação só fecha pelo FAIRPLAY_CLOSE, não por contagem de partes");
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   assert.equal(t.roll().phase, "done");
   const res = await verifyFairplayRecord(t.state.value, ROLL);
   assert.equal(res.status, "verified");
@@ -169,6 +171,7 @@ test("fairplay log: com 2 participantes quem some é recuperado pelas partes do 
   t.push("FAIRPLAY_REVEAL", "ana", { rollId: ROLL, seedHex: hex(t.offers.ana.secret.seedBytes) });
   t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "reveal" }, 60_000);
   assert.ok(await t.release("ana", "bia"));
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   const res = await verifyFairplayRecord(t.state.value, ROLL);
   assert.equal(res.status, "verified");
   assert.deepEqual(res.recoveredPeerIds, ["bia"]);
