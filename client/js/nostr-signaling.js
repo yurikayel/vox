@@ -14,7 +14,7 @@ export const DEFAULT_NOSTR_RELAYS = [
 ];
 
 /**
- * Só `wss://` com host e sem credenciais embutidas: `ws://` em claro expõe hello e metadados da sala.
+ * Só `wss://` com host e sem credenciais embutidas: WebSocket em claro expõe hello e metadados da sala.
  * @param {string} url Endereço já aparado.
  * @returns {boolean} `true` se serve como relay de sinalização.
  */

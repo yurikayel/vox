@@ -628,7 +628,7 @@ def main():
 
     print("======================================================")
     print("  Vox Signaling Server — WebRTC Mesh (Fase 3.2)")
-    print(f"  Escutando em: ws://{host}:{port}")
+    print(f"  Escutando em: ws://{host}:{port}")  # nosemgrep: detect-insecure-websocket — banner de loopback/LAN local
     print("  Protocolo: WebSocket RFC 6455 (stdlib) + HTTP Health")
     print("  Pressione Ctrl+C para encerrar.")
     print("======================================================")
