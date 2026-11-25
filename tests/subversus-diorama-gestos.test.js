@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createDioramaCamera, orbitCamera, panCamera, zoomCamera } from "../client/js/dungeon/diorama/diorama-camera.js";
 import { attachDioramaGestures, DIORAMA_KEYS_HELP, keyboardCameraStep } from "../client/js/dungeon/diorama/diorama-input.js";
+import { loadDioramaExtras } from "../client/js/dungeon/diorama/diorama-extras.js";
 import { attachDioramaOverlay } from "../client/js/dungeon/diorama/diorama-view.js";
 import { createFloorDoc, createTokenDoc } from "../client/js/dungeon/vtt-scene-schema.js";
 
@@ -105,7 +106,7 @@ test("ponteiro: dois dedos fazem pinça (zoom) e giram; roda dá zoom e bloqueia
   assert.ok(state.cam.zoom > z2);
 });
 
-test("overlay: canvas GL focável e rotulado; arrasto não dispara o clique; tecla redesenha", () => {
+test("overlay: canvas GL focável e rotulado; arrasto não dispara o clique; tecla redesenha", async () => {
   const listeners = {};
   const attrs = {};
   const gl = new Proxy({}, { get: () => () => true });
@@ -116,7 +117,7 @@ test("overlay: canvas GL focável e rotulado; arrasto não dispara o clique; tec
   const host = { style: {}, appendChild: (c) => { c.parentNode = host; }, querySelector: () => null };
   const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: (tag) => (tag === "div" ? { dataset: {}, style: {}, parentNode: null, setAttribute() {}, remove() {} } : glCanvas) } };
   const picks = [];
-  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", tokens: [createTokenDoc({ tokenId: "heroi", x: 6, y: 4 })], storage: null, onPick: (h) => picks.push(h) });
+  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", tokens: [createTokenDoc({ tokenId: "heroi", x: 6, y: 4 })], storage: null, extras: await loadDioramaExtras(), onPick: (h) => picks.push(h) });
   overlay.draw();
   assert.equal(attrs.tabindex, "0");
   assert.equal(attrs["aria-label"], DIORAMA_KEYS_HELP);
