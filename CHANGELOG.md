@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Subversus (Fairplay): `createFairplayRollOffer` separa o compromisso público (`commit`), a semente que fica no aparelho (`secret`) e as partes de backup (`shares`, uma por par); `resolveFairplayRoll` recebe `commits`/`reveals`/`recoveries` e só aceita revelação de quem se comprometeu na mesma rolagem, verificando contra o compromisso da fase 1.
 *Lotes 8–10 em `develop` (`8923b5b4`, `#481`–`#489`).*
 
 ### Adicionado
