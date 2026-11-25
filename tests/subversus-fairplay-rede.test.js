@@ -13,6 +13,7 @@ import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/v
 import { createFairplayDriver } from "../client/js/dungeon/vtt-fairplay-driver.js";
 import { isFairplayShareEnvelope } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
+import { settlePeers } from "./helpers/wait-until.js";
 
 const CAMP = "mesa-rede";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -47,9 +48,9 @@ async function setupTable(drop = {}) {
   const seats = [];
   for (const kp of keys) seats.push(await makeSeat(hub, roomKey, kp, keys[0].routeId, new Set(drop[seats.length] || [])));
   for (const s of seats.slice(1)) s.peer.join();
-  await sleep(40);
+  await settlePeers(...seats.map((s) => s.peer));
   for (const s of seats) await s.driver.start();
-  await sleep(80);
+  await settlePeers(...seats.map((s) => s.peer));
   return seats;
 }
 
