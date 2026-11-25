@@ -229,4 +229,4 @@ Cada trilha entrega valor reversível sem bloquear o caminho crítico do Vox (`G
 1. **Priorização no `ROADMAP.md`:** confirmar **Trilha A (Fairplay 2D)** para a fila pós-G0 e **Trilhas B/C** como **Candidatas** pós-`LAN-36` (NLnet) / corte `develop → main`.
 2. **Flags padronizadas:** confirmar `vox.lab.diorama` e `vox.lab.slm` (alinhadas a `vox.lab.aviso` e `vox.lab.moderador`).
 3. **Renomeação em UI (pós-G0):** confirmar o rótulo **`Subversus`** na barra de navegação do Vox (com ícone de d20 + tooltip `"Mesa de RPG"`) quando o congelamento de código em `client/js/dungeon/` for liberado.
-4. **Aceite do [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md)** antes do PR-3a (Fairplay na rede da mesa).
+4. ~~**Aceite do [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md)** antes do PR-3a.~~ Aceito em 2026-11-25.
