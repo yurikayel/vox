@@ -92,7 +92,7 @@ function withDraft(choices, draft) {
  */
 export function renderSystemEditFields(sheet, draft = {}) {
   const sys = resolveSheetSystem(sheet);
-  return sys ? renderSystemChoiceFields(sys.pack, withDraft(sys.choices, draft)) : "";
+  return sys ? renderSystemChoiceFields(sys.pack, { ...withDraft(sys.choices, draft), hitDie: sys.rest.hitDie, hitDieSet: sys.rest.hitDieSet }) : "";
 }
 
 /**

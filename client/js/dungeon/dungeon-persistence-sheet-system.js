@@ -8,6 +8,7 @@
 import { dispatchCampaignOp } from "./dungeon-sync-bridge.js";
 import { markDeathSave, normalizeChoices } from "./system-derive.js";
 import { getSystemPack } from "./system-pack.js";
+import { validHitDie } from "./system-rest.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
@@ -22,7 +23,7 @@ function listOr(patchList, current) {
  * perícias treinadas relidas das ações vivas, salvaguardas treinadas e especialização (só em perícia treinada).
  * Sistema desconhecido é ignorado.
  * @param {object} base Ficha migrada.
- * @param {object} patch Campos do painel Editar (`system`, `proficientSaves`, `expertSkills`).
+ * @param {object} patch Campos do painel Editar (`system`, `proficientSaves`, `expertSkills`, `hitDie`; Dado de Vida inválido é ignorado).
  * @param {object} abilities Atributos já mesclados.
  * @returns {{system: object, system_choices: object}} Campos a mesclar na ficha.
  */
@@ -33,6 +34,8 @@ export function systemFieldsForSave(base, patch, abilities) {
   const next = { ...prev, abilities, proficientSkills: trained };
   next.proficientSaves = listOr(patch.proficientSaves, prev.proficientSaves);
   next.expertSkills = listOr(patch.expertSkills, prev.expertSkills);
+  const die = validHitDie(patch.hitDie);
+  if (die !== null) next.hitDie = die;
   const choices = pack ? { ...next, ...pickNormalized(pack, next) } : next;
   return { system: pack ? { id: pack.id, version: pack.version } : base.system, system_choices: choices };
 }
