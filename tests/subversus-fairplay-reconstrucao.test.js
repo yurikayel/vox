@@ -9,7 +9,7 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
 import { createFairplayRollOffer } from "../client/js/dungeon/vtt-fairplay-roll.js";
 import { createFairplaySessionKey, fairplayShareHash, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
-import { MAX_LOGGED_ROLLS, collectFairplayOps, fairplayQuorum, limitFairplayOps, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
+import { MAX_LOGGED_ROLLS, SNAPSHOT_OPS_BUDGET, collectFairplayOps, fairplayQuorum, limitFairplayOps, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
 import { rebuildFairplayState } from "../client/js/dungeon/vtt-fairplay-rebuild.js";
 import { packVoxRpg, unpackVoxRpg } from "../client/js/dungeon/vtt-portable.js";
 
@@ -134,17 +134,33 @@ async function tableWithOpenRolls(n) {
   return collectFairplayOps(t.doc.fairplay);
 }
 
-test("escala: refazer 10, 20 e 40 rolagens (abaixo do teto) cresce de forma linear, não quadrática", async () => {
+/**
+ * Conta os elementos de array percorridos ou copiados (spread, slice, filter, map) enquanto `fn` roda: trabalho, não relógio.
+ * Listas de ids (strings), como `appliedOpIds` do reducer geral, ficam de fora: medem o Fairplay, não o reducer.
+ */
+function countArrayWork(fn) {
+  const proto = Array.prototype;
+  const originals = { iter: proto[Symbol.iterator], slice: proto.slice, filter: proto.filter, map: proto.map };
+  let work = 0;
+  const add = (list) => { if (typeof list[0] !== "string") work += list.length; };
+  proto[Symbol.iterator] = function counted() { add(this); return originals.iter.call(this); };
+  proto.slice = function slice(...a) { const out = originals.slice.apply(this, a); add(out); return out; };
+  proto.filter = function filter(...a) { add(this); return originals.filter.apply(this, a); };
+  proto.map = function map(...a) { add(this); return originals.map.apply(this, a); };
+  try { fn(); } finally { Object.assign(proto, { slice: originals.slice, filter: originals.filter, map: originals.map }); proto[Symbol.iterator] = originals.iter; }
+  return work;
+}
+
+test("escala: o trabalho por op ao refazer é limitado pelo teto de rolagens, não cresce com o tamanho do log", async () => {
   assert.ok(40 <= MAX_LOGGED_ROLLS);
-  const timings = [];
+  const perOp = [];
   for (const n of [10, 20, 40]) {
     const ops = await tableWithOpenRolls(n);
     assert.ok(ops.filter((o) => o.type === "FAIRPLAY_OPEN").length === n, "nenhuma rolagem cortada");
-    const runs = [0, 1, 2, 3, 4].map(() => { const t0 = performance.now(); rebuildFairplayState(fresh(), ops); return performance.now() - t0; });
-    timings.push(Math.max(Math.min(...runs), 0.5));
+    perOp.push(countArrayWork(() => rebuildFairplayState(fresh(), ops)) / ops.length);
   }
-  const [t10, t20, t40] = timings;
-  assert.ok(t40 / t10 < 9, `10:${t10.toFixed(1)}ms 20:${t20.toFixed(1)}ms 40:${t40.toFixed(1)}ms (linear ~4x, quadrático ~16x)`);
+  const cap = MAX_LOGGED_ROLLS + 30;
+  assert.ok(perOp.every((w) => w <= cap), `elementos por op: ${perOp.map((w) => w.toFixed(1)).join(", ")} (teto ${cap}); acima disso a refeitura voltou a ser quadrática`);
 });
 
 test("reconstrução: mais de 8 trocas de chave do mesmo par, antes e durante a rolagem, não mudam o estado refeito", async () => {
@@ -162,15 +178,31 @@ test("reconstrução: mais de 8 trocas de chave do mesmo par, antes e durante a 
   assert.deepEqual(core(doc.fairplay), core(t.doc.fairplay));
 });
 
-const SNAPSHOT_OPS_BUDGET_BYTES = 500_000;
-
-test("snapshot: com o teto de rolagens cheias e 4 pares, as ops cabem no orçamento de tamanho", async () => {
+test("snapshot: 4 pares e 55 rolagens cheias cabem em 256 KiB, cortando as mais antigas e mantendo as mais novas inteiras", async () => {
   const t = await makeTable(["ana", "bia", "cris", "gm"]);
-  for (let i = 0; i < MAX_LOGGED_ROLLS + 5; i += 1) await runRoll(t, "done", `roll-${i}`);
+  const total = MAX_LOGGED_ROLLS + 5;
+  for (let i = 0; i < total; i += 1) await runRoll(t, "done", `roll-${i}`);
   const ops = collectFairplayOps(t.doc.fairplay);
   const bytes = JSON.stringify(ops).length;
-  assert.equal(new Set(ops.filter((o) => o.type === "FAIRPLAY_OPEN").map((o) => o.payload.rollId)).size, MAX_LOGGED_ROLLS);
-  assert.ok(bytes <= SNAPSHOT_OPS_BUDGET_BYTES, `${bytes} bytes (orçamento ${SNAPSHOT_OPS_BUDGET_BYTES})`);
+  assert.ok(bytes <= SNAPSHOT_OPS_BUDGET, `${bytes} bytes (orçamento ${SNAPSHOT_OPS_BUDGET})`);
+  const ids = ops.filter((o) => o.type === "FAIRPLAY_OPEN").map((o) => o.payload.rollId);
+  assert.ok(ids.length > 0 && ids.length <= MAX_LOGGED_ROLLS);
+  assert.ok(ids.includes(`roll-${total - 1}`), "a mais nova fica");
+  assert.equal(ids.includes("roll-0"), false, "a mais antiga sai");
+  const perRoll = ops.filter((o) => o.payload?.rollId === `roll-${total - 1}`).length;
+  assert.equal(perRoll, t.doc.fairplay.ops.rolls[`roll-${total - 1}`].ops.length, "rolagem mantida vai inteira");
+  assert.deepEqual(collectFairplayOps(t.doc.fairplay, 0).map((o) => o.type).filter((ty) => !["FAIRPLAY_ADMIT", "FAIRPLAY_KEY"].includes(ty)), []);
+});
+
+test("poda: trocas de chave que nenhuma rolagem guardada usa mais saem do log, a vigente fica", async () => {
+  const t = await makeTable();
+  for (let i = 0; i < 5; i += 1) {
+    t.keys.bia = await createFairplaySessionKey();
+    t.push("FAIRPLAY_KEY", "bia", { publicKeyJwk: t.keys.bia.publicKeyJwk });
+  }
+  for (let i = 0; i < MAX_LOGGED_ROLLS + 1; i += 1) await runRoll(t, "done", `p-${i}`);
+  assert.ok(t.doc.fairplay.ops.keys.bia.length < 6, `${t.doc.fairplay.ops.keys.bia.length} chaves guardadas`);
+  assert.equal(t.doc.fairplay.ops.keys.bia.at(-1).payload.publicKeyJwk.x, t.keys.bia.publicKeyJwk.x);
 });
 
 test("importação: o estado Fairplay de um backup de fora é descartado", async () => {
