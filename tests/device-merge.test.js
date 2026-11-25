@@ -85,14 +85,15 @@ test("isDeviceTombstone reconhece deleted, removed e deletedAt > 0 e ignora inv�
   assert.equal(isDeviceTombstone("deleted"), false);
 });
 
-test("mergeDeviceRecords: LWW (editedAt ?? ts ?? 0), desempate determinístico e ordem de chaves", () => {
+test("mergeDeviceRecords: LWW (Math.max de ts finitos), desempate determinístico e ordem de chaves", () => {
   const old = { id: "b", ts: 100, sig: "z", v: "old" };
   const newer = { id: "b", editedAt: 200, ts: 50, sig: "a", v: "new" };
-  const zeroEdit = { id: "a", editedAt: 0, ts: 9999, sig: "z", v: "zero" };
-  const tsOne = { id: "a", ts: 1, sig: "a", v: "one" };
-  const res = mergeDeviceRecords([old, zeroEdit], [newer, tsOne]);
-  assert.deepEqual(res.map((r) => [r.id, r.v]), [["a", "one"], ["b", "new"]]);
-  assert.deepEqual(mergeDeviceRecords([newer, tsOne], [old, zeroEdit]), res);
+  // Math.max(editedAt=0, ts=9999)=9999 vence Math.max(ts=1)=1
+  const highTs = { id: "a", editedAt: 0, ts: 9999, sig: "z", v: "zero" };
+  const lowTs = { id: "a", ts: 1, sig: "a", v: "one" };
+  const res = mergeDeviceRecords([old, highTs], [newer, lowTs]);
+  assert.deepEqual(res.map((r) => [r.id, r.v]), [["a", "zero"], ["b", "new"]]);
+  assert.deepEqual(mergeDeviceRecords([newer, lowTs], [old, highTs]), res);
 });
 
 test("mergeDeviceRecords: empate em timestamp decide por sig, tombstone e payload canônico independente da ordem", () => {
@@ -109,6 +110,17 @@ test("mergeDeviceRecords: empate em timestamp decide por sig, tombstone e payloa
   const p1 = { id: "z", editedAt: 500, data: { b: 2, a: 1 }, tags: ["x"] };
   const p2 = { id: "z", editedAt: 500, data: { a: 1, b: 3 }, tags: ["x"] };
   assert.deepEqual(mergeDeviceRecords([p1], [p2]), mergeDeviceRecords([p2], [p1]));
+});
+
+test("tombstone com deletedAt > editedAt vence vivo intermediário (não ressuscita)", () => {
+  const tomb = { routeId: "vx_a", editedAt: 1000, deleted: true, deletedAt: 2000 };
+  const live = { routeId: "vx_a", label: "Vivo", addedAt: 1500, editedAt: 1500, deleted: false };
+  const ab = mergeContactLists([tomb], [live]);
+  const ba = mergeContactLists([live], [tomb]);
+  assert.equal(ab.length, 1);
+  assert.equal(ab[0].deleted, true);
+  assert.equal(ab[0].deletedAt, 2000);
+  assert.deepEqual(ab, ba);
 });
 
 test("tombstones datados mais novos vencem adição antiga e re-adição mais nova vence tombstone antigo", () => {
