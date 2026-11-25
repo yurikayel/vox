@@ -13,6 +13,7 @@ import {
 } from "./vtt-schema.js";
 import { createFloorDoc, createSceneDoc, createTokenDoc, hpStatusLabel, normalizeSceneGrid } from "./vtt-scene-schema.js";
 import { clampTokenToFloor } from "./vtt-geometry.js";
+import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   isPlayerAuthorizedForTacticsOp,
   projectInitiativeForPlayer,
@@ -306,11 +307,13 @@ function projectTokenForPlayer(tok, viewerRouteId) {
 }
 
 function projectSceneForPlayer(scene, viewerRouteId) {
-  const visibleTokens = (scene.tokens || [])
-    .filter((t) => t.layer === "player")
-    .map((t) => projectTokenForPlayer(t, viewerRouteId));
   const floors = (scene.floors || []).map(projectTacticsFloorForPlayer);
-  return { ...scene, floors, tokens: visibleTokens };
+  const floorOf = (t) => floors.find((f) => f.z === t.floorZ);
+  const visibleTokens = (scene.tokens || [])
+    .filter((t) => t.layer === "player" && isTokenRevealedByFog(t, floorOf(t)))
+    .map((t) => projectTokenForPlayer(t, viewerRouteId));
+  const fogged = floors.map((f) => ({ ...f, doors: (f.doors || []).filter((d) => isDoorRevealedByFog(d, f)) }));
+  return { ...scene, floors: fogged, tokens: visibleTokens };
 }
 
 function projectNotesForPlayer(notesById, viewerRouteId) {
