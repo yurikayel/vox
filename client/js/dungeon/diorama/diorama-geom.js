@@ -125,7 +125,7 @@ function appendVolumes(out, volumes) {
  * Constrói o buffer de vértices intercalados (`x, y, z, r, g, b, ao`) para paredes, portas fechadas e volumes.
  *
  * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`eye`, `target`, `cutawayEnabled`).
+ * @param {object} [opts={}] Opções (`eye`, `target`, `cutawayEnabled`, `b2` para volumes do escopo B2).
  * @returns {{vertices: Float32Array, triangleCount: number, cutawayWalls: number}} Malha pronta para upload WebGL2.
  */
 export function buildFloorDioramaGeometry(floor = {}, opts = {}) {
@@ -134,7 +134,7 @@ export function buildFloorDioramaGeometry(floor = {}, opts = {}) {
   const enabled = opts.cutawayEnabled !== false && floor?.diorama?.wallCutaway !== false && Boolean(opts.eye && opts.target);
   const cutawayWalls = appendWalls(out, floor.walls || [], defaultH, { enabled, eye: opts.eye, target: opts.target });
   appendDoors(out, floor.doors || [], defaultH);
-  appendVolumes(out, floor.volumes || []);
+  if (opts.b2 === true) appendVolumes(out, floor.volumes || []);
   return { vertices: new Float32Array(out), triangleCount: out.length / 21, cutawayWalls };
 }
 
@@ -151,9 +151,10 @@ function cardinalDirection(dx, dy) {
  * @param {object} floor Documento `FloorDoc` (já projetado para o papel do usuário).
  * @param {Array<object>} tokens Tokens visíveis no andar.
  * @param {object} activeToken Token de referência.
+ * @param {{b2?: boolean}} [opts={}] `b2: true` inclui portais (escopo B2).
  * @returns {string} Resumo acessível com distâncias e direções cardeais.
  */
-export function describeTokenSurroundings(floor = {}, tokens = [], activeToken = null) {
+export function describeTokenSurroundings(floor = {}, tokens = [], activeToken = null, opts = {}) {
   if (!activeToken) return "Nenhum token selecionado no mapa.";
   const unit = Number(floor?.grid?.unitMeters) || 1.5;
   const parts = [`${activeToken.name} em (${activeToken.x}, ${activeToken.y})`];
@@ -162,7 +163,7 @@ export function describeTokenSurroundings(floor = {}, tokens = [], activeToken =
     const dist = (Math.hypot(tok.x - activeToken.x, tok.y - activeToken.y) * unit).toFixed(1);
     parts.push(`${tok.name} a ${dist}m ao ${cardinalDirection(tok.x - activeToken.x, tok.y - activeToken.y)}`);
   }
-  for (const p of floor.portals || []) {
+  for (const p of opts.b2 === true ? floor.portals || [] : []) {
     const dist = (Math.hypot(p.x - activeToken.x, p.y - activeToken.y) * unit).toFixed(1);
     parts.push(`portal ${p.label} a ${dist}m ao ${cardinalDirection(p.x - activeToken.x, p.y - activeToken.y)}`);
   }
