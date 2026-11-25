@@ -534,11 +534,6 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/webxdc-crdt.js",
   "./js/labs/parado/webxdc-host.js",
   "./js/labs/parado/webxdc-loader.js",
-  // Pacote de sistema da ficha multi-sistema: escrito e testado, ainda sem tela que o carregue.
-  "./js/dungeon/system-pack.js",
-  "./js/dungeon/system-pack-dnd5e-2024.js",
-  "./js/dungeon/system-derive.js",
-  "./js/dungeon/system-migrate.js",
 ];
 
 self.addEventListener("install", (event) => {

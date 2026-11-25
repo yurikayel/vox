@@ -23,6 +23,8 @@ import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } 
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
+import { getSystemPack } from "./system-pack.js";
+import { migrateLegacySheet } from "./system-migrate.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
@@ -251,14 +253,18 @@ function mergePatchedAbilities(baseAbilities, patch) {
  */
 export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
   const store = opts.store || getDefaultVttStore();
-  const base = ensureSheetMeta(state.sheet || {});
+  const base = migrateLegacySheet(ensureSheetMeta(state.sheet || {}));
   const attrs = base.attributes_lww || {};
   const nextName = String(patch.name || attrs.name || "Aventureiro").trim().slice(0, 60);
   const nextClass = String(patch.class_name || attrs.class_name || "Aventureiro").trim().slice(0, 60);
   const nextAc = Math.max(1, Math.min(40, Math.trunc(Number(patch.armor_class) || attrs.armor_class || 10)));
+  const abilities = mergePatchedAbilities(attrs.abilities, patch);
+  const pack = getSystemPack(patch.system) || getSystemPack(base.system?.id);
   const updated = ensureSheetMeta({
     ...base,
-    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities: mergePatchedAbilities(attrs.abilities, patch) },
+    system: pack ? { id: pack.id, version: pack.version } : base.system,
+    system_choices: { ...base.system_choices, abilities },
+    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities },
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
   state.campaignNotice = `Ficha "${updated.attributes_lww.name}" atualizada.`;
