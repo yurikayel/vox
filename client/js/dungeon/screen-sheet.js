@@ -6,6 +6,7 @@ import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
+import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 
 const ABILITY_META = [
   { key: "str", short: "FOR", label: "Força" },
@@ -161,43 +162,6 @@ function renderLoreCard(node) {
       <p class="dungeon-muted">${escapeHtml(node.summary)}</p>
       <div class="dungeon-lore-foot"><span class="dungeon-muted">Relator: ${escapeHtml(node.authorName)}</span>${actionsHtml}</div>
     </article>`;
-}
-
-function renderInventoryRow(it) {
-  const weightTag = it.weightLb ? ` (${(it.weightLb * it.qty).toFixed(1)} kg)` : "";
-  return `
-    <li class="dungeon-inventory-row">
-      ${dungeonIcon("backpack", 15)}
-      <span>${escapeHtml(it.label)} ×${it.qty}${weightTag}${it.equipped ? " · equipado" : ""}</span>
-      <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}">${it.equipped ? "Desequipar" : "Equipar"}</button>
-        <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
-      </div>
-    </li>`;
-}
-
-function renderInventoryPanel(state) {
-  const rows = (state.sheet?.inventoryItems || []).map(renderInventoryRow).join("");
-  const weight = Number(state.sheet?.carryWeight) || 0;
-  return `
-    <section class="dungeon-panel" aria-label="Inventário da ficha">
-      <div class="dungeon-section-head">
-        <div><span class="dungeon-eyebrow">Inventário compartilhado</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
-      </div>
-      <form class="dungeon-action-form" data-dungeon="add-item-form">
-        <div class="dungeon-input-row">
-          <label class="sr-only" for="dungeon-item-label">Nome do novo item</label>
-          <input id="dungeon-item-label" class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item (ex.: Tocha)" autocomplete="off" />
-          <label class="sr-only" for="dungeon-item-qty">Quantidade</label>
-          <input id="dungeon-item-qty" class="dungeon-input dungeon-input-qty" name="itemQty" type="number" min="1" max="99" value="1" aria-label="Quantidade" />
-          <label class="sr-only" for="dungeon-item-weight">Peso em kg</label>
-          <input id="dungeon-item-weight" class="dungeon-input dungeon-input-qty" name="itemWeight" type="number" min="0" max="500" step="0.5" value="0.5" aria-label="Peso em kg" />
-          <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar</button>
-        </div>
-      </form>
-      <ul class="dungeon-clean-list">${rows || "<li class=\"dungeon-muted\">Mochila vazia — adicione itens acima.</li>"}</ul>
-    </section>`;
 }
 
 function renderLedgerPanel(sheet) {

@@ -29,6 +29,7 @@ async function makeTable(peers) {
   const keys = {};
   for (const p of peers) {
     keys[p] = await createFairplaySessionKey();
+    push("FAIRPLAY_ADMIT", "gm", { actor: p });
     push("FAIRPLAY_KEY", p, { publicKeyJwk: keys[p].publicKeyJwk });
   }
   const roll = () => state.value.fairplay.rolls[ROLL];

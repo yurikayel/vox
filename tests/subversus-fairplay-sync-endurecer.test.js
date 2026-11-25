@@ -77,7 +77,9 @@ test("sync: op Fairplay do Mestre sem assinatura válida ou com autor trocado é
   send({ ...signed, actor: env.player.routeId });
   await wait();
   assert.deepEqual((await env.playerStore.loadCampaign(ID)).fairplay.keys, {});
-  gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: signed, admitted: [env.gm.routeId, env.other.routeId] });
+  const admit = await signVttOp(createVttOp({ type: "FAIRPLAY_ADMIT", actor: env.gm.routeId, payload: { actor: env.other.routeId }, lamport: 4 }), env.gm);
+  gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: admit });
+  gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: signed });
   await wait();
   assert.deepEqual(Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys), [env.other.routeId], "op íntegra do Mestre entra");
   gmPeer.close();
