@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { computeCameraMatrices, createDioramaCamera } from "../client/js/dungeon/diorama/diorama-camera.js";
 import { buildFloorDioramaGeometry } from "../client/js/dungeon/diorama/diorama-geom.js";
+import { loadDioramaExtras } from "../client/js/dungeon/diorama/diorama-extras.js";
 import { buildFogLayer, FOG_MASK_SIZE, projectDioramaView } from "../client/js/dungeon/diorama/diorama-layers.js";
 import { mat4Invert, pickDioramaScene, unprojectRay } from "../client/js/dungeon/diorama/diorama-pick.js";
 import { attachDioramaOverlay } from "../client/js/dungeon/diorama/diorama-view.js";
@@ -81,7 +82,7 @@ test("picking: inversa de matriz, standee e porta pelo mesmo identificador do 2D
   assert.equal(pickDioramaScene(secretRay.origin, secretRay.dir, gmView).doorId, "porta-s");
 });
 
-test("overlay: clique no canvas GL chama onPick com o token sob o ponto", () => {
+test("overlay: clique no canvas GL chama onPick com o token sob o ponto", async () => {
   let click = null;
   const gl = new Proxy({}, { get: () => () => true });
   const glCanvas = { dataset: {}, style: {}, width: 800, height: 500, parentNode: null, getContext: () => gl,
@@ -90,7 +91,7 @@ test("overlay: clique no canvas GL chama onPick com o token sob o ponto", () => 
   const host = { style: {}, appendChild: (c) => { c.parentNode = host; }, querySelector: () => null };
   const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: (tag) => (tag === "div" ? { dataset: {}, style: {}, parentNode: null, setAttribute() {}, remove() {} } : glCanvas) } };
   const picks = [];
-  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "player", tokens: tokens(), storage: null, onPick: (h) => picks.push(h) });
+  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "player", tokens: tokens(), storage: null, extras: await loadDioramaExtras(), onPick: (h) => picks.push(h) });
   overlay.draw();
   const mats = computeCameraMatrices(createDioramaCamera({ mode: "3d" }), 800 / 500);
   const p = [0, 1, 2, 3].map((r) => mats.viewProj[r] * 2.5 + mats.viewProj[4 + r] * 0.7 + mats.viewProj[8 + r] * 2.5 + mats.viewProj[12 + r]);
