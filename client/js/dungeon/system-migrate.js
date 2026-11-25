@@ -73,7 +73,7 @@ export function migrateLegacySheet(sheet) {
   if (!pack) throw new Error(`pacote ${LEGACY_SYSTEM_ID} não registrado`);
   const attrs = sheet.attributes_lww || {};
   const { mapped, unmapped } = mapSkillRefs(pack, [...(sheet.sheet_meta?.skill_refs || []), ...trainedActionLabels(sheet.sheet_meta)]);
-  const choices = normalizeChoices(pack, { level: attrs.level, abilities: attrs.abilities, proficientSkills: mapped });
+  const choices = normalizeChoices(pack, { level: attrs.level, abilities: attrs.abilities, proficientSkills: mapped, speedFt: attrs.speed_ft });
   return {
     ...sheet,
     system: { id: pack.id, version: pack.version },

@@ -4,6 +4,7 @@
  */
 import { attachCanvasInput } from "./canvas-input.js";
 import { renderSceneToCanvas } from "./canvas-renderer.js";
+import { loadTokenAvatars, tokenFichaRenderOpts } from "./canvas-token-layers.js";
 import {
   buildCampaignFromSession,
   dispatchCampaignOp,
@@ -329,7 +330,13 @@ function buildCanvasCallbacks(container, state, ov, draw, opts) {
     getViewerRole: () => (state.viewerRole === "gm" ? "gm" : "player"),
     getTool: () => state.activeTool || "select",
     onCameraChange: (cam) => { state.camera = cam; state._cameraTouched = true; syncZoomBadge(container, cam.zoom); draw(); },
-    onSelectToken: (tokId) => { state.selectedTokenId = tokId; draw(); },
+    onSelectToken: (tokId) => { state.selectedTokenId = tokId; ov.moveTarget = null; draw(); },
+    onFloorTap: (cell) => {
+      if (!tokenFichaRenderOpts(state, getActiveScene(state), ov).movePreview) return false;
+      ov.moveTarget = cell;
+      draw();
+      return true;
+    },
     onSelectCommitted: (tokId) => { state.selectedTokenId = tokId; refresh(); },
     onDragPreview: (prev) => { ov.dragPreview = prev; draw(); },
     onTokenMove: (tokId, x, y) => { moveTokenInScene(state, tokId, x, y, { store }).then(refresh); },
@@ -372,7 +379,7 @@ export function mountSceneCanvas(container, state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
   maybeApplyInitialFitCamera(container, canvas, state, scene);
-  const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, draftAoe: null, ruler: null };
+  const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, draftAoe: null, ruler: null, avatars: new Map(), moveTarget: null };
   /**
    * Redesenha a cena ativa no canvas com a câmera e o estado de sobreposição atuais.
    *
@@ -383,10 +390,12 @@ export function mountSceneCanvas(container, state, opts = {}) {
     viewerRole: state.viewerRole === "gm" ? "gm" : "player",
     selectedTokenId: state.selectedTokenId || "",
     notes: state.notes || [],
+    ...tokenFichaRenderOpts(state, getActiveScene(state), ov),
     ...ov,
   });
   draw();
   resolveMapBitmap(scene, store).then((bmp) => { if (bmp) { ov.mapImage = bmp; draw(); } }).catch(() => {});
+  loadTokenAvatars(scene, store, ov.avatars).then((n) => { if (n) draw(); }).catch(() => {});
   const detachInput = attachCanvasInput(canvas, buildCanvasCallbacks(container, state, ov, draw, opts));
   const detachResize = observeCanvasResize(canvas, draw);
   return () => {
