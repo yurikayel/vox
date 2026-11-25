@@ -1,7 +1,7 @@
 # Brainstorm — observação Énóis (`enois.ia.br`)
 
 > **Status:** brainstorm · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-19 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
-> **Fontes:** observação em `enois.ia.br` (nov/2026); repositórios públicos [`Rede-ENois/enois-frontend`](https://github.com/Rede-ENois/enois-frontend) (React 19, TanStack Start, `@rede-enois/design-system`) e [`Rede-ENois/enois-backend`](https://github.com/Rede-ENois/enois-backend) (Spring Boot 4, Java 25, MariaDB, **GPL-3.0**). Parceira de **observação**, não de parceria formal — ver [mapa §4.2](../strategy/mapa-parceiras-e-concorrentes-2026-11.md).
+> **Fontes:** observação em `enois.ia.br` (nov/2026); repositórios públicos [`Rede-ENois/enois-frontend`](https://github.com/Rede-ENois/enois-frontend) (React 19, TanStack Start, `@rede-enois/design-system`) e [`Rede-ENois/enois-backend`](https://github.com/Rede-ENois/enois-backend) (Spring Boot 4, Java 25, MariaDB, **GPL-3.0**). Parceira de **observação**, não de parceria formal.
 
 Tudo aqui é **candidato** até virar linha no ROADMAP ou spec. Não copiar código GPL na Vox AGPL: só *clean-room* de UX e processo.
 
