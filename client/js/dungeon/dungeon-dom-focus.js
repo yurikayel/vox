@@ -72,6 +72,7 @@ function captureDetailsMap(container) {
     const key = det.dataset?.dungeonDetails;
     if (key) detailsMap[key] = Boolean(det.open);
   }
+  for (const radio of container.querySelectorAll("input[data-dungeon-tab]")) detailsMap[`tab:${radio.id}`] = Boolean(radio.checked);
   return detailsMap;
 }
 
@@ -100,6 +101,10 @@ function restoreDetailsStates(container, detailsMap) {
   for (const det of container.querySelectorAll("details[data-dungeon-details]")) {
     const key = det.dataset?.dungeonDetails;
     if (key && key in detailsMap) det.open = detailsMap[key];
+  }
+  for (const radio of container.querySelectorAll("input[data-dungeon-tab]")) {
+    const key = `tab:${radio.id}`;
+    if (key in detailsMap) radio.checked = detailsMap[key];
   }
 }
 
