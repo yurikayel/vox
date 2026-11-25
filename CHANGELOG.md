@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha (D&D 2024): condições do SRD 5.2 como marcas (sem efeito automático), Exaustão em nível 0–6 com o efeito só informativo, Dados de Vida (dado digitado, um por nível) e descansos: o longo devolve PV, espaços de magia e todos os dados, baixa a Exaustão em 1 e zera os testes contra a morte; o curto só zera esses testes se os PV estão acima de 0, e cada Dado de Vida gasto cura dado + CON (`system-rest.js`, `dungeon-persistence-sheet-rest.js`, `screen-sheet-rest.js`).
 - Mesa 2D: o token ligado a uma ficha mostra o retrato (avatar), os PV da ficha e o selo "Sua vez" na iniciativa; com o token selecionado, o alcance do Deslocamento aparece na grade e tocar no chão traça o caminho (sem considerar paredes). SW permanece `v7.171`.
 - Auditoria diária jurídica/técnica: `scripts/legal-compliance-audit.mjs` (LEG-01..05) + testes; workflow `nightly-audit.yml` (cron 03h BRT) com supply-chain, SAST/Semgrep, `validate`+knip informativo, E2E Playwright e alerta por issue `auditoria-diaria`.
 - Limpeza de tip: removido radar de ecossistema aposentado; prosa de docs/CHANGELOG/LESSONS/POSITIONING/specs da Mesa neutralizada (sem nomes de referência de mercado); SW permanece `v7.171`.
