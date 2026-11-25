@@ -15,7 +15,7 @@ _E2E_DIR = pathlib.Path(__file__).resolve().parent
 if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
-from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_gm
+from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
 from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 SYNC_TIMEOUT = 12000
@@ -90,8 +90,7 @@ class MesaSyncPlaywrightE2ETests(PlaywrightE2EHarness):
         _set_viewer_gm(gm)
         player = ctx.new_page()
         _watch_errors(player, errors)
-        player.goto(invite, wait_until="domcontentloaded")
-        player.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+        _join_as_player(player, invite)
         return ctx, gm, player, errors
 
     def test_01_gm_creates_campaign_and_opens_table(self):
