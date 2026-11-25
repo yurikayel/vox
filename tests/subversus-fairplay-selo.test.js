@@ -9,6 +9,7 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
 import { createFairplayRollOffer } from "../client/js/dungeon/vtt-fairplay-roll.js";
 import { fairplayQuorum, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
+import { createFairplaySessionKey, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { renderChronicleColumn } from "../client/js/dungeon/screen-table-layout.js";
 import {
   FAIRPLAY_LAB_KEY, computeFairplaySeals, countUnclosedRolls, isFairplayLabEnabled,
@@ -19,19 +20,21 @@ const ROLL = "roll-a";
 const hex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 const fakeStorage = (value) => ({ getItem: (k) => (k === FAIRPLAY_LAB_KEY ? value : null) });
 
-function makeTable(peers) {
+async function makeTable(peers) {
   let lamport = 0;
   const box = { doc: createCampaign({ id: "mesa-fp", name: "Mesa", gmRouteId: "gm" }) };
+  const keys = {};
+  for (const p of peers) keys[p] = await createFairplaySessionKey();
   const push = (type, actor, payload, ts = 0) => {
     lamport += 1;
     box.doc = reduceCampaign(box.doc, createVttOp({ type, actor, payload, lamport, ts }));
   };
-  for (const p of peers) push("FAIRPLAY_KEY", p, { publicKeyJwk: { kty: "EC", x: p } });
-  return { box, push };
+  for (const p of peers) push("FAIRPLAY_KEY", p, { publicKeyJwk: keys[p].publicKeyJwk });
+  return { box, push, keys };
 }
 
 async function openAndCommit(peers, committing = peers) {
-  const t = makeTable(peers);
+  const t = await makeTable(peers);
   const q = fairplayQuorum(peers.length);
   const offers = {};
   for (const p of peers) offers[p] = await createFairplayRollOffer({ peerId: p, rollId: ROLL, ...q });
@@ -44,7 +47,13 @@ async function toReveal(peers) {
   const t = await openAndCommit(peers);
   for (const p of peers) {
     const others = peers.filter((o) => o !== p);
-    t.push("FAIRPLAY_SHARES", p, { rollId: ROLL, shares: t.offers[p].shares.map((share, i) => ({ to: others[i % others.length], share })) });
+    const shares = [];
+    for (const [i, share] of t.offers[p].shares.entries()) {
+      const to = others[i % others.length];
+      const sealed = await sealFairplayShare({ share, rollId: ROLL, fromPeer: p, toPeer: to, privateKey: t.keys[p].privateKey, recipientJwk: t.keys[to].publicKeyJwk });
+      shares.push({ to, share: sealed });
+    }
+    t.push("FAIRPLAY_SHARES", p, { rollId: ROLL, shares });
   }
   return t;
 }
@@ -146,10 +155,10 @@ test("crônica: com a flag ligada o selo aparece no cartão; desligada, a tela n
   assert.doesNotMatch(renderChronicleColumn(off), /fairplay/);
 });
 
-test("crônica: entrada sem rolagem Fairplay não ganha selo e id inválido é descartado", () => {
-  const plain = record(makeTable(["ana", "bia"]), undefined);
+test("crônica: entrada sem rolagem Fairplay não ganha selo e id inválido é descartado", async () => {
+  const plain = record(await makeTable(["ana", "bia"]), undefined);
   assert.equal("fairplayRollId" in plain.chronicle[0], false);
-  const bad = record(makeTable(["ana"]), { rollId: "../x y" });
+  const bad = record(await makeTable(["ana"]), { rollId: "../x y" });
   assert.equal("fairplayRollId" in bad.chronicle[0], false);
   assert.equal(renderEntrySeal(plain.chronicle[0], forState(plain)), "");
 });

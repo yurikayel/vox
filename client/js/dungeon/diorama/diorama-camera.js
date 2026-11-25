@@ -1,12 +1,14 @@
 /**
- * @file Estado orbital e presets de câmera (`2D`, `Iso`, `3D`, `1ª Pessoa`) da lente Diorama
+ * @file Estado orbital e presets de câmera (`2D`, `Iso`, `3D`) da lente Diorama
  * do Subversus VTT, com limites seguros de inclinação e suporte a `prefers-reduced-motion`.
  * @module dungeon/diorama/diorama-camera
  */
 import { mat4LookAt, mat4Multiply, mat4Ortho, mat4Perspective } from "./diorama-math.js";
 
 /** Modos de câmera suportados pela lente Diorama (preferência local por aparelho). */
-export const CAMERA_MODES = Object.freeze(["2d", "iso", "3d", "fp"]);
+export const CAMERA_MODES = Object.freeze(["2d", "iso", "3d"]);
+
+
 
 const MIN_PITCH_DEG = 15;
 const MAX_PITCH_DEG = 85;
@@ -39,23 +41,16 @@ export function createDioramaCamera(opts = {}) {
 }
 
 /**
- * Aplica um preset de câmera (`2d`, `iso`, `3d`, `fp`) preservando o alvo atual.
+ * Aplica um preset de câmera (`2d`, `iso`, `3d`) preservando o alvo atual.
  *
  * @param {object} cam Estado atual da câmera.
- * @param {"2d"|"iso"|"3d"|"fp"} mode Modo desejado.
- * @param {{x?: number, y?: number, elevation?: number}} [focusToken] Token ativo para 1ª Pessoa.
+ * @param {"2d"|"iso"|"3d"} mode Modo desejado.
  * @returns {object} Novo estado de câmera.
  */
-export function applyCameraPreset(cam, mode, focusToken = null) {
+export function applyCameraPreset(cam, mode) {
   const safeMode = CAMERA_MODES.includes(mode) ? mode : "2d";
   if (safeMode === "iso") return { ...cam, mode: "iso", yawDeg: 45, pitchDeg: 45 };
   if (safeMode === "3d") return { ...cam, mode: "3d", pitchDeg: clamp(cam.pitchDeg || 52, MIN_PITCH_DEG, MAX_PITCH_DEG) };
-  if (safeMode === "fp") {
-    const tx = Number(focusToken?.x ?? cam.target[0]);
-    const ty = Number(focusToken?.elevation ?? 0);
-    const tz = Number(focusToken?.y ?? cam.target[2]);
-    return { ...cam, mode: "fp", pitchDeg: 0, target: [tx, ty, tz] };
-  }
   return { ...cam, mode: "2d", pitchDeg: 89 };
 }
 
@@ -69,9 +64,6 @@ export function applyCameraPreset(cam, mode, focusToken = null) {
  */
 export function orbitCamera(cam, deltaYawDeg, deltaPitchDeg) {
   const yawDeg = ((cam.yawDeg + Number(deltaYawDeg || 0)) % 360 + 360) % 360;
-  if (cam.mode === "fp") {
-    return { ...cam, yawDeg, pitchDeg: clamp(cam.pitchDeg + Number(deltaPitchDeg || 0), -45, 45) };
-  }
   const pitchDeg = clamp(cam.pitchDeg + Number(deltaPitchDeg || 0), MIN_PITCH_DEG, MAX_PITCH_DEG);
   return { ...cam, yawDeg, pitchDeg };
 }
@@ -86,12 +78,6 @@ export function orbitCamera(cam, deltaYawDeg, deltaPitchDeg) {
 export function computeCameraMatrices(cam, aspect = 1.5) {
   const yaw = cam.yawDeg * DEG2RAD;
   const pitch = cam.pitchDeg * DEG2RAD;
-  if (cam.mode === "fp") {
-    const eye = [cam.target[0], cam.target[1] + cam.eyeOffsetY, cam.target[2]];
-    const look = [eye[0] + Math.sin(yaw) * Math.cos(pitch), eye[1] + Math.sin(pitch), eye[2] - Math.cos(yaw) * Math.cos(pitch)];
-    const viewProj = mat4Multiply(mat4Perspective(65 * DEG2RAD, aspect, 0.1, 120), mat4LookAt(eye, look));
-    return { eye, target: look, viewProj, cutawayEnabled: false };
-  }
   const dist = cam.zoom;
   const eye = [
     cam.target[0] + dist * Math.cos(pitch) * Math.sin(yaw),
