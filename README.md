@@ -5,7 +5,7 @@
 [![Preservação](https://img.shields.io/badge/Preserva%C3%A7%C3%A3o-rede%20de%20seguidores-black.svg)](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-3467%20passing%20%C2%B7%206%20skipped-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.161--central--memory--split-informational.svg)](./client/sw.js)
+[![Service Worker](https://img.shields.io/badge/SW-v7.171--device--merge--tombstone-informational.svg)](./client/sw.js)
 
 **Vox** é um PWA cívico *local-first* — sem bundler, sem servidor central de login e sem leilão de alcance — para ampliar a participação popular e a autonomia das comunidades. Conta, chaves e dados nascem no aparelho; o conteúdo circula pela **rede de seguidores** (você replica o que segue).
 
@@ -212,9 +212,9 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `9f0edc2d` |
-| **Suíte de Testes** | **3473** (`3121` JS + `352` Python) |
-| **Service Worker** | `vox-pwa-v7.161-central-memory-split` |
+| **Commit SHA** | `913ea00d` |
+| **Suíte de Testes** | **3886** (`3528` JS + `358` Python) |
+| **Service Worker** | `vox-pwa-v7.171-device-merge-tombstone` |
 
 *Tabela regenerada por `npm run release-line` (grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
