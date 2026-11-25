@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import logging
 import os
 import re
 import stat
@@ -20,6 +21,8 @@ import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+_LOG = logging.getLogger(__name__)
 
 from relay import (
     blind_relay,
@@ -325,7 +328,16 @@ def read_verified_cache_entry(cache_file):
             _count_integrity_failure()
             remove_cache_entry(cache_file)
             return None
-        os.utime(cache_file, None)
+        try:
+            os.utime(cache_file, None)
+        except FileNotFoundError:
+            # TOCTOU: payload sumiu após o hash — trata como integridade.
+            _count_integrity_failure()
+            remove_cache_entry(cache_file)
+            return None
+        except OSError:
+            # utime negado (permissão/lock) não é falha de integridade do conteúdo.
+            pass
         return data
     except (OSError, UnicodeError, ValueError, TypeError):
         _count_integrity_failure()
@@ -743,6 +755,11 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_internal_error(self, error):
+        """Responde 500 genérico e registra o detalhe só no log interno (sem vazar path/exceção)."""
+        _LOG.exception("relay internal_error: %s", error)
+        self._send_json({"error": "internal_error"}, 500)
+
     def _reply_not_found(self, message=b"Rota nao encontrada no Vox Relay", status=404):
         """Responde com status de erro (404 por padrão) e a mensagem em bytes."""
         self.send_response(status)
@@ -817,7 +834,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         except ValueError as err:
             self._send_json({"error": str(err)}, 400)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def _handle_blind_envelope_post(self, channel_id):
         """Recebe o envelope do relay cego do canal, com teto de tamanho."""
@@ -833,7 +850,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         except ValueError as err:
             self._send_json({"error": str(err)}, 400)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def _handle_blind_snapshot_post(self, channel_id):
         """Recebe o snapshot do relay cego do canal, com teto de tamanho."""
@@ -861,7 +878,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         except ValueError as err:
             self._send_json({"error": str(err)}, 400)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def _handle_mirror_post(self):
         """Recebe o espelho de índice de comunidade: valida o corpo e o guarda no cache."""
@@ -873,7 +890,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         try:
             body = self.rfile.read(content_length)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
             return
         ok, payload, error, status = mirror_validate.validate_mirror_body(body)
         if not ok:
@@ -891,7 +908,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 return
             self._send_json({"status": "mirrored", "communityId": comm_id})
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def _handle_inbox_post(self, to_addr):
         """Recebe um envelope cifrado para a caixa do endereço, com teto de tamanho."""
@@ -921,7 +938,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         except ValueError as err:
             self._send_json({"error": str(err)}, 400)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def _handle_p2p_seed_post(self):
         """Recebe o pedido de seed P2P, com teto de tamanho."""
@@ -938,7 +955,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         except OverflowError as err:
             self._send_json({"error": str(err)}, 413)
         except Exception as error:
-            self._send_json({"error": str(error)}, 500)
+            self._send_internal_error(error)
 
     def do_DELETE(self):
         """Roteia os DELETE do relay."""
