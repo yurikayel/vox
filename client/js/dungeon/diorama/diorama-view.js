@@ -6,14 +6,11 @@
  */
 import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCamera } from "./diorama-camera.js";
 import { createDioramaGlRenderer } from "./diorama-gl.js";
-import { attachDioramaGestures, DIORAMA_KEYS_HELP } from "./diorama-input.js";
 import { buildRasters, buildTexturedPass } from "./diorama-textures.js";
 import { describeDioramaView } from "./diorama-geom.js";
 import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
-import { pickDioramaScene, unprojectRay } from "./diorama-pick.js";
 
 export { loadDioramaImages } from "./diorama-textures.js";
-export { pickDioramaTarget } from "./diorama-pick.js";
 export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../diorama-lens.js";
 
 const MODE_STORAGE_KEY = "subversus.diorama.mode";
@@ -80,7 +77,6 @@ function ensureGlCanvas(base, existing = null) {
     gl.dataset.dioramaGl = "1";
     gl.setAttribute?.("tabindex", "0");
     gl.setAttribute?.("role", "application");
-    gl.setAttribute?.("aria-label", DIORAMA_KEYS_HELP);
   }
   host.style.position = "relative";
   if (gl.parentNode !== host) host.appendChild(gl);
@@ -148,10 +144,10 @@ function bindContextLoss(st, opts) {
 
 /** Resolve o alvo sob um clique (coordenadas de cliente) usando as matrizes do último quadro. */
 function pickAtClient(st, ev) {
-  if (!st.mats || !st.gl?.getBoundingClientRect) return null;
+  if (!st.extras || !st.mats || !st.gl?.getBoundingClientRect) return null;
   const r = st.gl.getBoundingClientRect();
-  const ray = unprojectRay(st.mats.viewProj, ((ev.clientX - r.left) / r.width) * 2 - 1, 1 - ((ev.clientY - r.top) / r.height) * 2);
-  return ray ? pickDioramaScene(ray.origin, ray.dir, st.view) : null;
+  const ray = st.extras.unprojectRay(st.mats.viewProj, ((ev.clientX - r.left) / r.width) * 2 - 1, 1 - ((ev.clientY - r.top) / r.height) * 2);
+  return ray ? st.extras.pickDioramaScene(ray.origin, ray.dir, st.view) : null;
 }
 
 /** Redesenha no próximo quadro (vários eventos de gesto viram um único desenho). */
@@ -170,7 +166,9 @@ function floorBounds(floor) {
 
 /** Liga mouse, toque e teclado do canvas GL à câmera do overlay. */
 function bindGestures(st) {
-  return attachDioramaGestures({
+  if (!st.extras || !st.gl) return { wasDrag: () => false, destroy() {} };
+  st.gl.setAttribute?.("aria-label", st.extras.DIORAMA_KEYS_HELP);
+  return st.extras.attachDioramaGestures({
     el: st.gl,
     getCam: () => st.cam,
     setCam: (cam) => { st.cam = cam; scheduleDraw(st); },
@@ -198,12 +196,12 @@ function bindPicking(st, opts, gestures) {
  *
  * @param {HTMLCanvasElement|object} canvas Canvas 2D do mapa (nunca recebe contexto WebGL).
  * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `tokens`, `selectedId`, `onPick`, `createCanvas`, `onFallback2d`, `storage`).
+ * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `tokens`, `selectedId`, `onPick`, `createCanvas`, `onFallback2d`, `storage`, `extras` de `loadDioramaExtras()`; sem eles não há gestos nem picking).
  * @returns {{active: boolean, setMode: Function, setScene: Function, setImages: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
  */
 export function attachDioramaOverlay(canvas, floor, opts = {}) {
   const mode = opts.mode || loadDioramaMode(opts.storage);
-  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, live: null, description: "", view: null, role: "player", mats: null, selectedId: "" };
+  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, live: null, extras: opts.extras || null, description: "", view: null, role: "player", mats: null, selectedId: "" };
   const setScene = (nextFloor, scene = {}) => {
     st.role = scene.role === "gm" ? "gm" : "player";
     st.selectedId = scene.selectedId || "";
@@ -213,7 +211,7 @@ export function attachDioramaOverlay(canvas, floor, opts = {}) {
   st.live = ensureLiveRegion(canvas);
   setScene(floor, { role: opts.viewerRole, tokens: opts.tokens, selectedId: opts.selectedId });
   if (mode !== "2d") ensureRenderer(st, opts);
-  const gestures = st.gl ? bindGestures(st) : { wasDrag: () => false, destroy() {} };
+  const gestures = bindGestures(st);
   const unbinds = [bindContextLoss(st, opts), bindPicking(st, opts, gestures), () => gestures.destroy()];
   return overlayApi(st, opts, setScene, unbinds);
 }
