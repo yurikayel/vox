@@ -15,11 +15,11 @@ _E2E_DIR = pathlib.Path(__file__).resolve().parent
 if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _complete_onboarding, _new_isolated_page
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _complete_onboarding, _goto_ready, _new_isolated_page
 
 
 def _goto_mesa(page, base_url, table_id="vila-nova"):
-    page.goto(f"{base_url}/#/dungeon/mesa/{table_id}", wait_until="domcontentloaded")
+    _goto_ready(page, f"{base_url}/#/dungeon/mesa/{table_id}")
     page.locator(".dungeon-sanctum[data-dungeon-screen='mesa']").wait_for(state="visible", timeout=15000)
     page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=10000)
 
@@ -47,7 +47,7 @@ def _set_viewer_gm(page):
 
 
 def _onboard_and_campaign(page, base_url, display_name, campaign_name="E2E Mesa Audit"):
-    page.goto(f"{base_url}/#/", wait_until="domcontentloaded")
+    _goto_ready(page, f"{base_url}/#/")
     _complete_onboarding(page, display_name)
     page.goto(f"{base_url}/#/dungeon", wait_until="domcontentloaded")
     page.locator(".dungeon-sanctum[data-dungeon-screen='acampamento']").wait_for(state="visible", timeout=15000)
@@ -253,7 +253,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             page_gm.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=10000)
             page_pl = ctx_gm.new_page()
             join_url = invite if invite.startswith("http") else f"{self.base_url}{invite}"
-            page_pl.goto(join_url, wait_until="domcontentloaded")
+            _goto_ready(page_pl, join_url)
             page_pl.locator(".dungeon-sanctum[data-dungeon-screen='mesa']").wait_for(state="visible", timeout=15000)
             expect(page_pl.locator(".dungeon-sanctum")).to_have_class(re.compile(r"\bis-session-player\b"))
             self.assertEqual(page_pl.locator(".dungeon-topnav a[href^='#/dungeon/mestre/']").count(), 0)
