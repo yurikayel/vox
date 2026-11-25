@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -19,15 +20,11 @@ const posse = await import("../client/js/posse-dispatch.js");
 const me = await account.getRouteId();
 const lastToast = () => toasts.at(-1)?.text;
 const main = () => doc.getElementById("app-main");
-const settle = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function until(check, label) {
-  for (let i = 0; i < 100; i++) {
-    const got = check();
-    if (got) return got;
-    await settle(30);
-  }
-  throw new Error(`tempo esgotado: ${label}`);
+  const got = await waitUntil(check, 3000);
+  if (!got) throw new Error(`tempo esgotado: ${label}`);
+  return got;
 }
 
 const PROPOSAL = {
@@ -79,7 +76,7 @@ test("votar na proposta: cancelar na confirmação não grava; confirmar assina 
   click(doc.querySelector('.vote-btn[data-choice="no"]'));
   const overlay = await until(() => doc.querySelector(".vote-confirm-overlay"), "overlay");
   click(overlay.querySelector("[data-vote-cancel]"));
-  await settle();
+  await waitUntil(() => !doc.querySelector(".vote-confirm-overlay"));
   assert.equal((await vote.loadProposalVotes("prop_1")).length, 1, "nada novo foi gravado");
   assert.equal(doc.querySelector(".vote-confirm-overlay"), null);
   click(doc.querySelector('.vote-btn[data-choice="no"]'));
@@ -97,19 +94,19 @@ test("botões da proposta: copiar resumo para o Discord e disparar webhook", asy
   assert.ok(discord && doc.getElementById("btn-proposal-webhook-echo"), "os dois botões existem");
   {
     click(discord);
-    await settle();
+    await waitUntil(() => copied.length);
     assert.match(copied[0], /Reformar a praça/);
     assert.equal(lastToast(), "Resumo da proposta copiado para Discord / Slack!");
   }
   const hook = doc.getElementById("btn-proposal-webhook-echo");
   {
     click(hook);
-    await settle();
+    await waitUntil(() => /Configure/.test(lastToast() || ""));
     assert.match(lastToast(), /Configure webhooks/);
     posse.savePosseWebhooks(["https://hooks.example.org/x"]);
     globalThis.fetch = async () => ({ ok: true });
     click(hook);
-    await settle();
+    await waitUntil(() => lastToast() === "Proposta enviada para 1 webhook(s)!");
     assert.equal(lastToast(), "Proposta enviada para 1 webhook(s)!");
   }
 });
