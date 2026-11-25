@@ -4,8 +4,9 @@
  * verificação ECDSA P-256 (`INV-7`) e replicação sob demanda de blobs (`WANT_BLOB`).
  * @module dungeon/vtt-sync
  */
-import { isAuthorizedVttOp, projectStateForPlayer, reduceCampaign } from "./vtt-reducer.js";
-import { collectFairplayOps, normalizeFairplayState } from "./vtt-fairplay-log.js";
+import { isAuthorizedVttOp, projectStateForPlayer } from "./vtt-reducer.js";
+import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./vtt-fairplay-log.js";
+import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
 import { createVttOp } from "./vtt-schema.js";
 import {
   createBlobAssembler,
@@ -134,7 +135,7 @@ async function sendFilteredSnapshot(ctx, toPeerId) {
   const full = await ctx.store.loadCampaign(ctx.campaignId);
   if (!full) return;
   const projected = projectStateForPlayer(full, "player", toPeerId);
-  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: projected, fairplayOps: collectFairplayOps(full.fairplay) });
+  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: { ...projected, fairplay: normalizeFairplayState(null) }, fairplayOps: collectFairplayOps(full.fairplay) });
 }
 
 async function broadcastCommittedOp(ctx, fullCampaign, op) {
@@ -226,26 +227,18 @@ async function requestMissingBlobs(ctx, campaign, fromGm) {
   }
 }
 
-const MAX_SNAPSHOT_FAIRPLAY_OPS = 5000;
-
-/** Mantém as ops mais NOVAS (o fim da lista) e só as de Fairplay com assinatura que confere. */
+/** Aplica o teto do Mestre e confere a assinatura de cada op de Fairplay recebida. */
 async function verifiedFairplayOps(raw) {
-  const newest = (Array.isArray(raw) ? raw : []).slice(-MAX_SNAPSHOT_FAIRPLAY_OPS);
-  const ordered = newest.filter((o) => isFairplayOp(o)).sort((a, b) => (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId).localeCompare(String(b.opId)));
   const ok = [];
-  for (const op of ordered) if (await verifyVttOpSignature(op)) ok.push(op);
+  for (const op of limitFairplayOps(raw)) if (await verifyVttOpSignature(op)) ok.push(op);
   return ok;
 }
 
-/** O estado Fairplay pronto do snapshot é descartado e refeito, de uma vez, a partir das ops assinadas e reverificadas. */
+/** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
   ctx.snapshotAsked = false;
   const ops = await verifiedFairplayOps(msg.fairplayOps);
-  const replayIds = new Set((Array.isArray(msg.fairplayOps) ? msg.fairplayOps : []).map((o) => o?.opId));
-  const applied = (msg.campaign.appliedOpIds || []).filter((id) => !replayIds.has(id));
-  const base = { ...msg.campaign, appliedOpIds: applied, fairplay: normalizeFairplayState(null) };
-  const rebuilt = ops.reduce((doc, op) => reduceCampaign(doc, op), base);
-  const saved = await ctx.store.saveCampaign(rebuilt);
+  const saved = await ctx.store.saveCampaign(rebuildFairplayState(msg.campaign, ops));
   await requestMissingBlobs(ctx, saved, msg.from);
   ctx.onUpdate?.(saved);
 }

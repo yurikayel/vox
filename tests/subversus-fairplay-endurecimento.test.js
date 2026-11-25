@@ -13,7 +13,8 @@ import { createFairplaySessionKey } from "../client/js/dungeon/vtt-fairplay-ciph
 const HEX64 = "a".repeat(64);
 const apply = (state, type, actor, payload, lamport = 100, ts = 0) => {
   const admitted = type === "FAIRPLAY_KEY" ? reduceCampaign(state, createVttOp({ type: "FAIRPLAY_ADMIT", actor: "gm", payload: { actor }, lamport, ts })) : state;
-  return reduceCampaign(admitted, createVttOp({ type, actor, payload, lamport, ts }));
+  const lam = type === "FAIRPLAY_KEY" ? lamport + 1 : lamport; // a admissão tem lamport menor que a chave
+  return reduceCampaign(admitted, createVttOp({ type, actor, payload, lamport: lam, ts }));
 };
 
 function rollDoc(over = {}) {
