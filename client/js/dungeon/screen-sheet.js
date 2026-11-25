@@ -6,6 +6,7 @@ import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
+import { renderDerivedStrip } from "./screen-sheet-derived.js";
 import { renderPlayTab, renderSheetTabs, splitSheetActions } from "./screen-sheet-tabs.js";
 import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 
@@ -227,7 +228,7 @@ export function renderSheetScreen(state) {
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const panels = {
-    play: renderPlayTab(actions),
+    play: `${renderDerivedStrip(state.sheet)}${renderPlayTab(actions)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
     about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
