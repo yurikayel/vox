@@ -36,7 +36,20 @@ test("reenvio da chave tem limite e uma recusa de outro motivo para o condutor",
   assert.equal(stops.length, 1);
   const other = makeDriver();
   await other.driver.start();
-  await other.driver.onRejected({ opId: "op-1", reason: "not_admitted" });
+  await other.driver.onRejected({ opId: "op-1", reason: "bad_signature" });
   assert.equal(other.sent.length, 1);
-  assert.equal(other.stops[0].reason, "not_admitted");
+  assert.equal(other.stops[0].reason, "bad_signature");
+});
+
+test("chave recusada por não admitido espera a aprovação do Mestre e é reenviada ao ser admitido", async () => {
+  const { driver, sent, stops } = makeDriver();
+  await driver.start();
+  await driver.onRejected({ opId: "op-1", reason: "not_admitted" });
+  assert.equal(stops.length, 0, "esperar a aprovação não é parar");
+  await driver.onUpdate({ fairplay: { admitted: {}, rolls: {} } });
+  assert.equal(sent.length, 1, "sem admissão no log, nada é reenviado");
+  await driver.onUpdate({ fairplay: { admitted: { vx_player: {} }, rolls: {} } });
+  await driver.onUpdate({ fairplay: { admitted: { vx_player: {} }, rolls: {} } });
+  assert.deepEqual(sent.map((o) => o.type), ["FAIRPLAY_KEY", "FAIRPLAY_KEY"], "reenvia uma única vez");
+  driver.close();
 });

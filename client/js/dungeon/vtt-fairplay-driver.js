@@ -171,8 +171,19 @@ async function advanceRoll(ctx, campaign, roll) {
   return undefined;
 }
 
+/**
+ * Com a flag ligada o Mestre aprova quem entra: a chave enviada antes disso volta como `not_admitted`. O condutor
+ * espera (sem parar) e reenvia a chave assim que a admissão aparece no log, uma única vez por recusa.
+ */
+async function resendKeyWhenAdmitted(ctx, campaign) {
+  if (!ctx.keyAwaitingAdmission || !Object.hasOwn(campaign.fairplay.admitted || {}, ctx.peerId)) return;
+  ctx.keyAwaitingAdmission = false;
+  await publishSessionKey(ctx);
+}
+
 async function handleUpdate(ctx, campaign) {
   if (!ctx.sessionKey || !campaign?.fairplay) return;
+  await resendKeyWhenAdmitted(ctx, campaign);
   for (const roll of Object.values(campaign.fairplay.rolls || {})) await advanceRoll(ctx, campaign, roll);
 }
 
@@ -195,6 +206,10 @@ async function publishSessionKey(ctx) {
 }
 
 async function handleRejectedKey(ctx, msg) {
+  if (msg.reason === "not_admitted") {
+    ctx.keyAwaitingAdmission = true;
+    return handleUpdate(ctx, await ctx.loadCampaign());
+  }
   ctx.keyResends = (ctx.keyResends || 0) + 1;
   if (msg.reason === "out_of_phase" && ctx.keyResends <= KEY_RESEND_LIMIT) return publishSessionKey(ctx);
   ctx.rejection = { reason: String(msg.reason || "unknown"), opId: msg.opId, stepKey: "key" };
