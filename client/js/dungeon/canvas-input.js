@@ -1,6 +1,6 @@
 /**
  * @file Máquina de estados unificada de `PointerEvents` (desktop + touch/pinça mobile) para o `<canvas>` 2D (E2 + E3):
- * seleção/arraste de tokens, clique em portas, pan/pinça, régua, desenho livre, corte de névoa e gabaritos AoE com preview ao vivo.
+ * seleção/arraste de tokens, clique duplo em portas (toque simples no touch), pan/pinça, régua, desenho livre, corte de névoa e gabaritos AoE com preview ao vivo.
  * @module dungeon/canvas-input
  */
 import {
@@ -11,7 +11,7 @@ import {
   snapWorldToCell,
   zoomCameraAt,
 } from "./vtt-geometry.js";
-import { hitTestDoors, simplifyPolyline } from "./vtt-tactics-geometry.js";
+import { hitTestDoors, isPointRevealedByFog, simplifyPolyline } from "./vtt-tactics-geometry.js";
 
 function pointerLocalPoint(canvas, ev) {
   const rect = typeof canvas.getBoundingClientRect === "function" ? canvas.getBoundingClientRect() : { left: 0, top: 0 };
@@ -66,6 +66,39 @@ function beginToolGesture(st, tool, worldPt, opts) {
   }
 }
 
+/** Eventos sem `pointerType` (testes, navegadores antigos) contam como mouse. */
+function isMousePointer(ev) {
+  return !ev.pointerType || ev.pointerType === "mouse";
+}
+
+/**
+ * Porta sob o clique duplo, ou `null`: só com a ferramenta de seleção, sem token no ponto e, para jogador,
+ * fora da névoa. A permissão de abrir (porta trancada ou secreta) segue com o redutor (`canPlayerToggleDoor`).
+ * @param {object} canvas Canvas 2D.
+ * @param {object} ev Evento `dblclick`.
+ * @param {object} opts Callbacks da mesa.
+ * @returns {object|null} Porta a alternar.
+ */
+function doorUnderDoubleClick(canvas, ev, opts) {
+  if ((opts.getTool?.() || "select") !== "select" || !isMousePointer(ev) || (ev.button || 0) !== 0) return null;
+  const scene = opts.getScene();
+  const floor = activeFloor(scene);
+  if (!floor) return null;
+  const role = opts.getViewerRole?.() || "player";
+  const pt = pointerLocalPoint(canvas, ev);
+  const world = screenToWorld(pt.sx, pt.sy, opts.getCamera());
+  const tokens = (scene.tokens || []).filter((t) => t.floorZ === floor.z);
+  if (hitTestTokens(world.wx, world.wy, tokens, floor.grid, role)) return null;
+  if (role !== "gm" && !isPointRevealedByFog(world.wx, world.wy, floor.fog)) return null;
+  return hitTestDoors(world.wx, world.wy, floor.doors || [], floor.grid, { viewerRole: role });
+}
+
+/** Clique duplo do mouse sobre uma porta alterna o estado dela (spec §3, U7); o clique simples só seleciona. */
+function toggleDoorOnDoubleClick(canvas, ev, opts) {
+  const door = doorUnderDoubleClick(canvas, ev, opts);
+  if (door) opts.onDoorToggle?.(door.doorId);
+}
+
 function beginSelectGesture(st, pt, worldPt, ev, opts) {
   const scene = opts.getScene();
   const floor = activeFloor(scene);
@@ -82,7 +115,8 @@ function beginSelectGesture(st, pt, worldPt, ev, opts) {
     opts.onSelectToken?.(hitTok.tokenId);
     return;
   }
-  const hitDoor = ev.button === 2 ? null : hitTestDoors(worldPt.wx, worldPt.wy, floor.doors || [], floor.grid, { viewerRole: role });
+  // No mouse a porta responde ao clique duplo (`onDoubleClick`); no toque o toque simples continua abrindo.
+  const hitDoor = ev.button === 2 || isMousePointer(ev) ? null : hitTestDoors(worldPt.wx, worldPt.wy, floor.doors || [], floor.grid, { viewerRole: role });
   if (hitDoor) {
     st.mode = "idle";
     opts.onDoorToggle?.(hitDoor.doorId);
@@ -260,13 +294,16 @@ export function attachCanvasInput(canvas, opts) {
     const cam = opts.getCamera();
     opts.onCameraChange?.(zoomCameraAt(cam, pt.sx, pt.sy, cam.zoom * ((Number(ev.deltaY) || 0) < 0 ? 1.12 : 0.89)));
   };
+  const onDblClick = (ev) => toggleDoorOnDoubleClick(canvas, ev, opts);
   canvas.addEventListener("pointerdown", onDown);
+  canvas.addEventListener("dblclick", onDblClick);
   canvas.addEventListener("pointermove", onMove);
   canvas.addEventListener("pointerup", onUp);
   canvas.addEventListener("pointercancel", onUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
   return () => {
     canvas.removeEventListener?.("pointerdown", onDown);
+    canvas.removeEventListener?.("dblclick", onDblClick);
     canvas.removeEventListener?.("pointermove", onMove);
     canvas.removeEventListener?.("pointerup", onUp);
     canvas.removeEventListener?.("pointercancel", onUp);
