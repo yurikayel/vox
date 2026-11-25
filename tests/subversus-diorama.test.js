@@ -52,7 +52,7 @@ function createFakeGl() {
     deleteTexture: () => { counts.deleteTexture++; },
     getUniformLocation: () => ({}), enable: () => {}, viewport: () => {},
     clearColor: () => {}, clear: () => {}, useProgram: () => {},
-    uniformMatrix4fv: () => {}, uniform3fv: () => {},
+    uniformMatrix4fv: () => {}, uniform3fv: () => {}, uniform1i: () => {}, uniform4fv: () => {}, uniform1f: () => {},
     drawArrays: () => { counts.drawCalls++; },
   };
   return { gl, counts };
@@ -118,7 +118,7 @@ test("diorama-gl & fallback: cache fogVersion, discard em standees e fallback em
   const floor = createFloorDoc({ walls: [createWallDoc({ x1: 0, y1: 0, x2: 4, y2: 0 })] });
   const renderer = createDioramaGlRenderer(canvas);
   const mats = computeCameraMatrices(createDioramaCamera({ mode: "iso" }));
-  const mask = new Uint8Array(512 * 512);
+  const mask = new Uint8Array(256 * 256);
   renderer.render(floor, mats, { mask, version: 1 });
   renderer.render(floor, mats, { mask, version: 1 });
   assert.equal(counts.texUploads, 1);
