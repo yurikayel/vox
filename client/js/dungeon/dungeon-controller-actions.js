@@ -121,6 +121,23 @@ function triggerBrowserDownload(artifact, onDownload) {
   return undefined;
 }
 
+/** Ações de arquivo tratadas no evento `change` (`dungeon-controller.js`), não no clique. */
+export const FILE_CHANGE_ACTIONS = new Set(["import-voxchar"]);
+
+/**
+ * Baixa o arquivo `.voxchar` da ficha ativa; o módulo é carregado só neste clique.
+ * @param {object} state Estado da sessão.
+ * @param {{onDownload?: Function}} opts Opções do controlador.
+ * @returns {Promise<void>} Conclui após o download ou o aviso de falha.
+ */
+export async function runVoxcharExport(state, opts = {}) {
+  const { exportVoxchar } = await import("./voxchar.js");
+  const artifact = exportVoxchar(state.sheet);
+  if (!artifact) { state.campaignNotice = "Esta ficha não tem pacote de sistema para exportar."; return; }
+  triggerBrowserDownload(artifact, opts.onDownload);
+  state.campaignNotice = `Ficha exportada: ${artifact.filename}.`;
+}
+
 async function runExportAction(state, container, format, opts) {
   try {
     const passphrase = container.querySelector("#dungeon-backup-passphrase")?.value || "";
@@ -180,6 +197,7 @@ export const ACTION_HANDLERS = {
   "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, { store: opts.store }),
   "roll-action": (state, el, _c, opts) => recordSheetActionRoll(state, el.dataset.actionId, { store: opts.store }),
   "remove-action": (state, el, _c, opts) => removeCustomSheetAction(state, el.dataset.actionId, { store: opts.store }),
+  "export-voxchar": (state, _el, _c, opts) => runVoxcharExport(state, opts),
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),

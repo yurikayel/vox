@@ -5,6 +5,7 @@ import { renderDungeonChrome } from "./dungeon-chrome.js";
 import {
   ACTION_HANDLERS,
   DICE3D_CLICK_ACTIONS,
+  FILE_CHANGE_ACTIONS,
   dispatchDungeonFormSubmit,
   SUBMIT_FORMS,
 } from "./dungeon-controller-actions.js";
@@ -189,12 +190,25 @@ async function readUploadedBytes(file) {
   return new TextEncoder().encode(String(file?.text || ""));
 }
 
+/** Importa um `.voxchar`: confere o tamanho antes de ler, carrega o módulo só agora e mostra os motivos da recusa no painel Editar. */
+async function importVoxcharFile(state, file, viewOpts) {
+  const { VOXCHAR_MAX_BYTES } = await import("./voxchar-check.js");
+  const fail = (issues) => { state.sheetEditIssues = issues.map((message) => ({ field: "voxchar", message })); };
+  if (file.size > VOXCHAR_MAX_BYTES) return fail([`Arquivo grande demais (${file.size} bytes; o limite é ${VOXCHAR_MAX_BYTES}).`]);
+  const { importVoxchar } = await import("./voxchar.js");
+  const out = await importVoxchar(state, { bytes: await readUploadedBytes(file) }, { store: viewOpts.store });
+  state.sheetEditIssues = [];
+  if (!out.ok) fail(out.issues);
+  return undefined;
+}
+
 function handleDungeonChange(container, viewOpts, ev) {
   const target = ev.target;
   const kind = target?.dataset?.dungeon;
   const file = target?.files?.[0];
-  if (!file || (kind !== "import-file" && kind !== "upload-map")) return undefined;
+  if (!file || (kind !== "import-file" && kind !== "upload-map" && !FILE_CHANGE_ACTIONS.has(kind))) return undefined;
   const state = viewOpts.state || getDungeonSession();
+  if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts);
   if (kind === "upload-map") {
     const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
     return settleAndRedraw(job, container, viewOpts);
