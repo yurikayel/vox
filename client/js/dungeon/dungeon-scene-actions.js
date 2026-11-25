@@ -14,6 +14,7 @@ import { createDefaultScene } from "./vtt-scene-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { buildRoomInviteHref, generateRoomKey, generateVttKeypair } from "./vtt-sync-codec.js";
 import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
+import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
 /**
  * Retorna a cena ativa da sessão, garantindo fallback para a cena padrão da Cripta.
@@ -242,6 +243,29 @@ async function ensurePersistedCampaignForHost(state, pair, store) {
   return saved.id;
 }
 
+/** Liga o par de sincronização do Mestre (e o condutor Fairplay, com a flag) à mesa recém-convidada. */
+function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
+  const transport = createBroadcastChannelTransport(tableId, pair.routeId);
+  state.syncPeer = createVttSyncPeer({
+    role: "gm",
+    campaignId: tableId,
+    keypair: pair,
+    store,
+    transport,
+    roomKey,
+    onUpdate: (camp) => {
+      hydrateStateFromCampaign(state, camp);
+      (state._onSyncUpdate || opts.onSyncUpdate)?.(camp);
+      state.fairplayDriver?.onUpdate(camp);
+    },
+    onPeerCountChange: (count) => {
+      state.connectedPeersCount = count;
+      (state._onSyncUpdate || opts.onSyncUpdate)?.();
+    },
+  });
+  wireFairplayDriver(state, { peer: state.syncPeer, peerId: pair.routeId, store, campaignId: tableId });
+}
+
 /**
  * Gera um convite P2P local (`#/dungeon/entrar/:id?gm=...#k=...`), garante campanha salva no `VttStore`
  * e ativa o par de sincronização GM com broadcast ao vivo via `BroadcastChannel`.
@@ -258,23 +282,7 @@ export async function generateTableInvite(state, opts = {}) {
   const tableId = await ensurePersistedCampaignForHost(state, pair, store);
   state.inviteHref = buildRoomInviteHref({ tableId, gmRouteId: pair.routeId, roomKey });
   if (!state.syncPeer && typeof globalThis.BroadcastChannel === "function") {
-    const transport = createBroadcastChannelTransport(tableId, pair.routeId);
-    state.syncPeer = createVttSyncPeer({
-      role: "gm",
-      campaignId: tableId,
-      keypair: pair,
-      store,
-      transport,
-      roomKey,
-      onUpdate: (camp) => {
-        hydrateStateFromCampaign(state, camp);
-        (state._onSyncUpdate || opts.onSyncUpdate)?.(camp);
-      },
-      onPeerCountChange: (count) => {
-        state.connectedPeersCount = count;
-        (state._onSyncUpdate || opts.onSyncUpdate)?.();
-      },
-    });
+    wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store });
   }
   state.campaignNotice = "Convite P2P ativo: a mesa sincroniza alterações com abas convidadas.";
   return state.inviteHref;
