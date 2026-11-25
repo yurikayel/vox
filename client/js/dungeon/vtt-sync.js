@@ -125,11 +125,23 @@ export function filterOpForPlayer(campaign, op, viewerRouteId) {
   return fn ? fn(campaign, op, viewerRouteId) : op;
 }
 
+function admittedList(ctx) {
+  return [ctx.keypair.routeId, ...ctx.connectedPlayers];
+}
+
+function isAdmittedAuthor(ctx, actor) {
+  return actor === ctx.keypair.routeId || ctx.connectedPlayers.has(actor);
+}
+
+function rememberFairplayOp(ctx, op) {
+  if (isFairplayOp(op)) ctx.fairplayOps.push(op);
+}
+
 async function sendFilteredSnapshot(ctx, toPeerId) {
   const full = await ctx.store.loadCampaign(ctx.campaignId);
   if (!full) return;
   const projected = projectStateForPlayer(full, "player", toPeerId);
-  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: projected });
+  ctx.transport.send(toPeerId, { kind: "SNAPSHOT_FILTERED", roomKey: ctx.roomKey, campaign: projected, fairplayOps: ctx.fairplayOps, admitted: admittedList(ctx) });
 }
 
 async function broadcastCommittedOp(ctx, fullCampaign, op) {
@@ -139,7 +151,7 @@ async function broadcastCommittedOp(ctx, fullCampaign, op) {
     if (filtered.refreshSnapshot) {
       await sendFilteredSnapshot(ctx, peerId);
     } else {
-      ctx.transport.send(peerId, { kind: "COMMIT_OP", roomKey: ctx.roomKey, op: filtered });
+      ctx.transport.send(peerId, { kind: "COMMIT_OP", roomKey: ctx.roomKey, op: filtered, admitted: admittedList(ctx) });
     }
   }
 }
@@ -171,6 +183,10 @@ async function handleGmActionOp(ctx, msg) {
     ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "ts_out_of_range" });
     return;
   }
+  if (msg.op.type === "FAIRPLAY_KEY" && !isAdmittedAuthor(ctx, msg.op.actor)) {
+    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "not_admitted" });
+    return;
+  }
   const validSig = await verifyVttOpSignature(msg.op);
   const current = await ctx.store.loadCampaign(ctx.campaignId);
   if (!validSig || !isAuthorizedVttOp(current, msg.op)) {
@@ -179,6 +195,7 @@ async function handleGmActionOp(ctx, msg) {
   }
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op);
   if (!res.duplicate) {
+    rememberFairplayOp(ctx, msg.op);
     await broadcastCommittedOp(ctx, res.campaign, msg.op);
     ctx.onUpdate?.(res.campaign);
   } else if (!current?.appliedOpIds?.includes(msg.op.opId)) {
@@ -206,9 +223,29 @@ async function requestMissingBlobs(ctx, campaign, fromGm) {
   }
 }
 
+const MAX_SNAPSHOT_FAIRPLAY_OPS = 5000;
+
+function rememberAdmitted(ctx, msg) {
+  if (Array.isArray(msg.admitted)) ctx.admitted = new Set([ctx.gmRouteId, ...msg.admitted.filter((id) => typeof id === "string")]);
+}
+
+/** Aplica uma op Fairplay assinada só se a assinatura confere e, para chaves, o autor foi admitido pelo Mestre. */
+async function applyVerifiedFairplayOp(ctx, op) {
+  if (!isFairplayOp(op) || !(await verifyVttOpSignature(op))) return;
+  if (op.type === "FAIRPLAY_KEY" && !ctx.admitted.has(op.actor)) return;
+  await ctx.store.appendOp(ctx.campaignId, op).catch(() => null);
+}
+
+/** O estado Fairplay pronto do snapshot é descartado e refeito a partir das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
   ctx.snapshotAsked = false;
-  const saved = await ctx.store.saveCampaign(msg.campaign);
+  rememberAdmitted(ctx, msg);
+  const ops = (Array.isArray(msg.fairplayOps) ? msg.fairplayOps : []).slice(0, MAX_SNAPSHOT_FAIRPLAY_OPS);
+  const replayIds = new Set(ops.map((o) => o?.opId));
+  const applied = (msg.campaign.appliedOpIds || []).filter((id) => !replayIds.has(id));
+  await ctx.store.saveCampaign({ ...msg.campaign, appliedOpIds: applied, fairplay: { keys: {}, rolls: {} } });
+  for (const op of [...ops].sort((a, b) => Number(a?.lamport) - Number(b?.lamport))) await applyVerifiedFairplayOp(ctx, op);
+  const saved = await ctx.store.loadCampaign(ctx.campaignId);
   await requestMissingBlobs(ctx, saved, msg.from);
   ctx.onUpdate?.(saved);
 }
@@ -221,7 +258,9 @@ function askSnapshotOnce(ctx) {
 }
 
 async function applyCommittedOp(ctx, msg) {
+  rememberAdmitted(ctx, msg);
   if (isFairplayOp(msg.op) && !(await verifyVttOpSignature(msg.op))) return;
+  if (msg.op.type === "FAIRPLAY_KEY" && !ctx.admitted.has(msg.op.actor)) return;
   const before = await ctx.store.loadCampaign(ctx.campaignId);
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
   if (res?.campaign && !res.duplicate) {
@@ -258,6 +297,7 @@ async function dispatchSyncOp(ctx, rawOp) {
   const op = await signVttOp(createVttOp({ ...rawOp, lamport: (cur?.lamport || 0) + 1 }), ctx.keypair);
   if (ctx.role === "gm") {
     const res = await ctx.store.appendOp(ctx.campaignId, op);
+    if (!res.duplicate) rememberFairplayOp(ctx, op);
     await broadcastCommittedOp(ctx, res.campaign, op);
     ctx.onUpdate?.(res.campaign);
     return res.campaign;
@@ -277,6 +317,8 @@ function buildSyncContext(opts) {
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
     snapshotAsked: false,
+    fairplayOps: [],
+    admitted: new Set([opts.gmRouteId || opts.keypair.routeId]),
     now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
     onUpdate: opts.onUpdate,

@@ -60,7 +60,7 @@ test("Diorama: detach + rebind reaproveita o mesmo canvas e contexto após o red
   const first = kids[0];
   overlay.detach();
   assert.equal(kids.length, 0);
-  overlay.rebind(base, createFloorDoc({}), "gm");
+  overlay.rebind(base, createFloorDoc({}), { role: "gm" });
   assert.equal(kids[0], first);
   assert.equal(counts.deleteProgram, 0, "nenhum contexto/programa novo");
 });
