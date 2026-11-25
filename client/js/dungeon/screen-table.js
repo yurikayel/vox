@@ -10,6 +10,7 @@ import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
+import { isDioramaFlagEnabled, renderDioramaModePill } from "./diorama-lens.js";
 import { formatFairplayBadge } from "./vtt-fairplay-roll.js";
 import { projectInitiativeForPlayer } from "./vtt-tactics-reducer.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
@@ -82,17 +83,8 @@ function renderRoleToggleOrBadge(state, isGm) {
 }
 
 function renderDioramaLensStrip(state) {
-  let flagOn = Boolean(state?.dioramaEnabled);
-  if (!flagOn) {
-    try { flagOn = globalThis.localStorage?.getItem?.("vox.lab.diorama") === "1"; } catch { flagOn = false; }
-  }
-  if (!flagOn) return "";
-  const active = state?.dioramaMode || "2d";
-  const modes = [["2d", "2D"], ["iso", "Iso"], ["3d", "3D"], ["fp", "1ª"]];
-  const btns = modes.map(([id, label]) => (
-    `<button type="button" class="dungeon-chip-btn${id === active ? " is-selected" : ""}" data-dungeon="diorama-mode" data-mode="${id}" aria-pressed="${id === active}">${label}</button>`
-  )).join("");
-  return `<div class="subversus-diorama-pill" role="group" aria-label="Modo de câmera do Subversus">${btns}</div>`;
+  if (!state?.dioramaEnabled && !isDioramaFlagEnabled()) return "";
+  return renderDioramaModePill(state?.dioramaMode || "2d");
 }
 
 function renderMapControlsBar(scene, floor, state, isGm) {

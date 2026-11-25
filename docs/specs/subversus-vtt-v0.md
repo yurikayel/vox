@@ -51,7 +51,7 @@ Esta proposta define a evolução do **Subversus VTT** em **3 trilhas desacoplad
 - **Fonte única de estado:** PV, recursos condicionais (`PM` / `Espaços` / `PF`), defesa do sistema (`CA` / `Defesa` / `Esquiva`) e nome do token são sempre derivados da ficha ativa — nenhuma tela mantém cópia própria.
 
 ### 3.2 Modos de Câmera (preferência local por aparelho, atrás de `vox.lab.diorama`)
-Pílula compacta `2D | Iso | 3D | 1ª` no canto do canvas, persistida em `localStorage`:
+Pílula compacta `2D | Iso | 3D` (`1ª` volta com a B2) no canto do canvas, persistida em `localStorage`:
 - **Topo (2D):** renderizador Canvas 2D tradicional (padrão seguro e fallback automático).
 - **Isométrico:** projeção ortográfica inclinada em 45° para leitura tática limpa.
 - **Diorama (3D):** câmera orbital livre com inclinação limitada (`15°` a `85°`) e rebaixamento automático (*cutaway*) de paredes frontais.
