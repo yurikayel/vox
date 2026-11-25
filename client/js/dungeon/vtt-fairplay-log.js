@@ -19,7 +19,14 @@ const MAX_PHASE_MS = 120_000;
 const MAX_KEYS = 64;
 /** Rolagens mais recentes cujas ops assinadas o log guarda para refazer o estado (as mais antigas saem primeiro). */
 export const MAX_LOGGED_ROLLS = 200;
-const MAX_OPS_PER_ROLL = 400;
+const MAX_KEY_OPS_PER_ACTOR = 8;
+const NORMALIZED = new WeakSet();
+
+/** Marca um bloco `fairplay` já normalizado, para não recopiá-lo a cada op (o bloco é imutável depois de selado). */
+function seal(fp) {
+  NORMALIZED.add(fp);
+  return fp;
+}
 const MAX_SIDES = 1000;
 const SHARE_HEX = /^(?:[0-9a-f]{2}){1,64}$/;
 
@@ -53,20 +60,32 @@ function pickMap(map) {
   return Object.fromEntries(Object.entries(map && typeof map === "object" ? map : {}).filter(([k, v]) => isSafeKey(k) && v && typeof v === "object"));
 }
 
+function normalizeKeyOps(map) {
+  return Object.fromEntries(Object.entries(pickMap(map)).filter(([, list]) => Array.isArray(list)).map(([actor, list]) => [actor, list.slice(-MAX_KEY_OPS_PER_ACTOR)]));
+}
+
+function normalizeRollOps(map) {
+  const entries = Object.entries(pickMap(map)).filter(([, e]) => Array.isArray(e.ops) && Number.isFinite(Number(e.seq)));
+  const newest = entries.sort((x, y) => Number(x[1].seq) - Number(y[1].seq)).slice(-MAX_LOGGED_ROLLS);
+  return Object.fromEntries(newest.map(([id, e]) => [id, { seq: Number(e.seq), ops: e.ops }]));
+}
+
 function normalizeLoggedOps(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
-  const rolls = Object.entries(pickMap(src.rolls)).filter(([, list]) => Array.isArray(list)).slice(-MAX_LOGGED_ROLLS);
-  return { admit: pickMap(src.admit), keys: pickMap(src.keys), rolls: Object.fromEntries(rolls.map(([id, list]) => [id, list.slice(-MAX_OPS_PER_ROLL)])) };
+  const rolls = normalizeRollOps(src.rolls);
+  const top = Math.max(0, Number(src.seq) || 0, ...Object.values(rolls).map((e) => e.seq));
+  return { seq: top, admit: pickMap(src.admit), keys: normalizeKeyOps(src.keys), rolls };
 }
 
 /**
  * Normaliza o bloco `fairplay` de um `CampaignDoc`: chaves da sessão, admitidos, rolagens e as ops assinadas guardadas.
  * @param {unknown} raw Bloco salvo ou ausente.
- * @returns {{keys: object, rolls: object, admitted: object, ops: {admit: object, keys: object, rolls: object}}} Bloco seguro para o estado.
+ * @returns {{keys: object, rolls: object, admitted: object, ops: {seq: number, admit: object, keys: object, rolls: object}}} Bloco seguro para o estado.
  */
 export function normalizeFairplayState(raw) {
+  if (raw && NORMALIZED.has(raw)) return raw;
   const src = raw && typeof raw === "object" ? raw : {};
-  return { keys: pickMap(src.keys), rolls: pickMap(src.rolls), admitted: pickMap(src.admitted), ops: normalizeLoggedOps(src.ops) };
+  return seal({ keys: pickMap(src.keys), rolls: pickMap(src.rolls), admitted: pickMap(src.admitted), ops: normalizeLoggedOps(src.ops) });
 }
 
 function fairplayOf(state) {
@@ -75,7 +94,7 @@ function fairplayOf(state) {
 
 function withRoll(state, roll) {
   const fp = fairplayOf(state);
-  return { ...state, fairplay: { ...fp, rolls: withEntry(fp.rolls, roll.rollId, roll) } };
+  return { ...state, fairplay: seal({ ...fp, rolls: withEntry(fp.rolls, roll.rollId, roll) }) };
 }
 
 function rollFor(state, op) {
@@ -97,9 +116,12 @@ function isEcP256PublicJwk(jwk) {
   return Boolean(jwk && jwk.kty === "EC" && jwk.crv === "P-256" && !("d" in jwk) && isFairplayPublicKeyOnCurve(jwk));
 }
 
-function isAdmitted(state, fp, actor) {
+/** O Mestre vale sempre; os demais só com uma admissão de `lamport` menor que o da chave (a ordem do replay é a da chegada). */
+function isAdmitted(state, fp, op) {
   const gm = String(state.gmRouteId || "");
-  return Boolean(actor && ((gm && actor === gm) || Object.hasOwn(fp.admitted, actor)));
+  if (gm && op.actor === gm) return true;
+  const entry = Object.hasOwn(fp.admitted, op.actor) ? fp.admitted[op.actor] : null;
+  return Boolean(entry && Number(entry.lamport) < Number(op.lamport));
 }
 
 function applyFairplayAdmit(state, op) {
@@ -107,18 +129,18 @@ function applyFairplayAdmit(state, op) {
   const target = String(op.payload?.actor || "");
   if (!gm || op.actor !== gm || !isSafeKey(target)) return state;
   const fp = fairplayOf(state);
-  if (!Object.hasOwn(fp.admitted, target) && Object.keys(fp.admitted).length >= MAX_KEYS) return state;
-  return { ...state, fairplay: { ...fp, admitted: withEntry(fp.admitted, target, { lamport: Number(op.lamport) }) } };
+  if (Object.hasOwn(fp.admitted, target) || Object.keys(fp.admitted).length >= MAX_KEYS) return state;
+  return { ...state, fairplay: seal({ ...fp, admitted: withEntry(fp.admitted, target, { lamport: Number(op.lamport) }) }) };
 }
 
 function applyFairplayKey(state, op) {
   const jwk = op.payload?.publicKeyJwk;
   if (!isSafeKey(op.actor) || !isEcP256PublicJwk(jwk)) return state;
   const fp = fairplayOf(state);
-  if (!isAdmitted(state, fp, op.actor)) return state;
+  if (!isAdmitted(state, fp, op)) return state;
   if (!Object.hasOwn(fp.keys, op.actor) && Object.keys(fp.keys).length >= MAX_KEYS) return state;
   const key = { alg: FAIRPLAY_SHARE_ALG, publicKeyJwk: { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }, keyLamport: Number(op.lamport) };
-  return { ...state, fairplay: { ...fp, keys: withEntry(fp.keys, op.actor, key) } };
+  return { ...state, fairplay: seal({ ...fp, keys: withEntry(fp.keys, op.actor, key) }) };
 }
 
 function openRollDoc(op, participants) {
@@ -276,14 +298,27 @@ function slimOp(op) {
   return { opId: op.opId, type: op.type, payload: op.payload, actor: op.actor, lamport: op.lamport, ts: op.ts, pubKeyJwk: op.pubKeyJwk, sig: op.sig };
 }
 
+function evictOldestRoll(rolls) {
+  const ids = Object.keys(rolls);
+  if (ids.length <= MAX_LOGGED_ROLLS) return rolls;
+  const oldest = ids.reduce((min, id) => (rolls[id].seq < rolls[min].seq ? id : min), ids[0]);
+  return Object.fromEntries(Object.entries(rolls).filter(([id]) => id !== oldest));
+}
+
+function addRollOp(ops, op, slim) {
+  const rollId = String(op.payload?.rollId || "");
+  if (!isSafeKey(rollId)) return ops;
+  const entry = Object.hasOwn(ops.rolls, rollId) ? ops.rolls[rollId] : null;
+  const seq = entry ? entry.seq : ops.seq + 1;
+  const rolls = evictOldestRoll(withEntry(ops.rolls, rollId, { seq, ops: [...(entry?.ops || []), slim] }));
+  return { ...ops, seq: Math.max(ops.seq, seq), rolls };
+}
+
 function addLoggedOp(ops, op) {
   const slim = slimOp(op);
   if (op.type === "FAIRPLAY_ADMIT") return { ...ops, admit: withEntry(ops.admit, String(op.payload.actor), slim) };
-  if (op.type === "FAIRPLAY_KEY") return { ...ops, keys: withEntry(ops.keys, op.actor, slim) };
-  const rollId = String(op.payload?.rollId || "");
-  if (!isSafeKey(rollId)) return ops;
-  const list = [...(ops.rolls[rollId] || []), slim].slice(-MAX_OPS_PER_ROLL);
-  return { ...ops, rolls: Object.fromEntries(Object.entries(withEntry(ops.rolls, rollId, list)).slice(-MAX_LOGGED_ROLLS)) };
+  if (op.type === "FAIRPLAY_KEY") return { ...ops, keys: withEntry(ops.keys, op.actor, [...(ops.keys[op.actor] || []), slim].slice(-MAX_KEY_OPS_PER_ACTOR)) };
+  return addRollOp(ops, op, slim);
 }
 
 /** Guarda a op assinada que o reducer aceitou, para o estado poder ser refeito (recarga do Mestre, quem entra tarde). */
@@ -292,19 +327,41 @@ function logged(handler) {
     const next = handler(state, op);
     if (next === state) return state;
     const fp = fairplayOf(next);
-    return { ...next, fairplay: { ...fp, ops: addLoggedOp(fp.ops, op) } };
+    return { ...next, fairplay: seal({ ...fp, ops: addLoggedOp(fp.ops, op) }) };
   };
 }
 
+function byLamport(a, b) {
+  return (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId).localeCompare(String(b.opId));
+}
+
 /**
- * Ops assinadas guardadas, na ordem em que devem ser reaplicadas: admissões, chaves vigentes e as rolagens mais recentes.
+ * Ops assinadas guardadas, na ordem de aplicação: todas as admissões e chaves vigentes e as rolagens mais novas, inteiras.
  * @param {object} [fairplay] Bloco `fairplay` do estado.
  * @returns {object[]} Ops ordenadas por `lamport` e `opId`.
  */
 export function collectFairplayOps(fairplay) {
   const { ops } = normalizeFairplayState(fairplay);
-  const all = [...Object.values(ops.admit), ...Object.values(ops.keys), ...Object.values(ops.rolls).flat()];
-  return all.sort((a, b) => (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId).localeCompare(String(b.opId)));
+  const rolls = Object.values(ops.rolls).flatMap((e) => e.ops);
+  return [...Object.values(ops.admit), ...Object.values(ops.keys).flat(), ...rolls].sort(byLamport);
+}
+
+/**
+ * Aplica o mesmo teto do Mestre a uma lista recebida: admissões e chaves ficam, e só as rolagens mais novas (inteiras).
+ * @param {unknown} list Ops recebidas (não confiáveis).
+ * @returns {object[]} Ops de Fairplay dentro do teto, ordenadas por `lamport` e `opId`.
+ */
+export function limitFairplayOps(list) {
+  const ops = (Array.isArray(list) ? list : []).filter((o) => o && typeof o === "object" && String(o.type).startsWith("FAIRPLAY_"));
+  const base = ops.filter((o) => o.type === "FAIRPLAY_ADMIT" || o.type === "FAIRPLAY_KEY").slice(0, MAX_KEYS * (MAX_KEY_OPS_PER_ACTOR + 1));
+  const groups = new Map();
+  for (const o of ops) {
+    const id = String(o.payload?.rollId || "");
+    if (!groups.has(id)) groups.set(id, []);
+    if (o.type !== "FAIRPLAY_ADMIT" && o.type !== "FAIRPLAY_KEY") groups.get(id).push(o);
+  }
+  const newest = [...groups.values()].filter((g) => g.length).sort((x, y) => Math.min(...x.map((o) => Number(o.lamport) || 0)) - Math.min(...y.map((o) => Number(o.lamport) || 0))).slice(-MAX_LOGGED_ROLLS);
+  return [...base, ...newest.flat()].sort(byLamport);
 }
 
 /** Manipuladores das operações Fairplay para o reducer da campanha (ADR-040 §2.1). */

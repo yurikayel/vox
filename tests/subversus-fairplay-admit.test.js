@@ -11,7 +11,15 @@ import { createFairplaySessionKey } from "../client/js/dungeon/vtt-fairplay-ciph
 import { generateRoomKey, generateVttKeypair } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
 
-const wait = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+async function until(check, ms = 5000) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (await check()) return;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  throw new Error("condição não atendida a tempo");
+}
+const keyCount = async (store) => Object.keys((await store.loadCampaign(ID))?.fairplay?.keys || {}).length;
 const ID = "mesa-admit";
 
 function makeStore() {
@@ -72,9 +80,11 @@ async function joinWithKey(env, kp) {
   const store = makeStore();
   const peer = player(env, kp, store);
   peer.join();
-  await wait();
+  await until(async () => Boolean(await store.loadCampaign(ID)));
+  await until(async () => Object.hasOwn((await store.loadCampaign(ID)).fairplay.admitted, kp.routeId));
+  const before = await keyCount(env.gmStore);
   await peer.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: (await createFairplaySessionKey()).publicKeyJwk } });
-  await wait();
+  await until(async () => (await keyCount(env.gmStore)) > before);
   return { peer, store };
 }
 
@@ -89,7 +99,7 @@ test("persistência: quem entra tarde, depois de o Mestre recarregar, recebe as 
   const late = makeStore();
   const peerB = player(env, env.b, late);
   peerB.join();
-  await wait(120);
+  await until(async () => (await keyCount(late)) === 1);
   const seen = await late.loadCampaign(ID);
   assert.deepEqual(Object.keys(seen.fairplay.keys), [env.a.routeId]);
   assert.deepEqual(Object.keys(seen.fairplay.admitted).sort(), [env.a.routeId, env.b.routeId].sort(), "quem entra também é admitido no log");
@@ -107,8 +117,26 @@ test("persistência: refazer o estado do snapshot grava uma vez, sem reaplicar o
   const counting = { ...lateStore, appendOp: (...args) => { appends += 1; return lateStore.appendOp(...args); } };
   const late = player(env, await generateVttKeypair(), counting);
   late.join();
-  await wait(150);
+  await until(async () => (await keyCount(lateStore)) === 2);
   assert.equal(appends, 0);
   assert.equal(Object.keys((await lateStore.loadCampaign(ID)).fairplay.keys).length, 2);
   for (const p of [gm, first.peer, second.peer, late]) p.close();
+});
+
+test("snapshot: o campaign enviado vem sem o estado Fairplay, só com a lista de ops", async () => {
+  const env = await setupTable();
+  const gm = gmPeer(env);
+  const first = await joinWithKey(env, env.a);
+  const spyKeys = await generateVttKeypair();
+  const wire = env.hub.connect(spyKeys.routeId);
+  const seen = [];
+  wire.onMessage((m) => { if (m.kind === "SNAPSHOT_FILTERED") seen.push(m); });
+  wire.send(env.gm.routeId, { kind: "HELLO_SYNC", roomKey: env.roomKey });
+  await until(() => seen.length > 0);
+  assert.deepEqual(seen[0].campaign.fairplay.keys, {});
+  assert.deepEqual(seen[0].campaign.fairplay.rolls, {});
+  assert.ok(seen[0].fairplayOps.length >= 2, "admissão e chave seguem como ops assinadas");
+  assert.ok(JSON.stringify(seen[0]).length < 200_000, "o snapshot de uma mesa nova é pequeno");
+  gm.close();
+  first.peer.close();
 });
