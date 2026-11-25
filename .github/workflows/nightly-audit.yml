@@ -149,6 +149,8 @@ jobs:
           python -m playwright install chromium --with-deps
 
       - name: npm run test:e2e
+        env:
+          VOX_E2E_WAIT_MS: "90000"
         run: npm run test:e2e
 
   alert-on-failure:

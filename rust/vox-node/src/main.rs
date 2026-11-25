@@ -213,6 +213,7 @@ fn run_signaling(host: Option<String>, port: Option<u16>) -> Result<(), (u8, Str
     let addr = server.local_addr();
     let _ = writeln!(io::stdout(), "PORT={}", addr.port());
     let _ = io::stdout().flush();
+    // nosemgrep: detect-insecure-websocket — banner de bind local (loopback/LAN)
     eprintln!(
         "{PKG_NAME} {PKG_VERSION} signaling listening on ws://{}:{}",
         addr.ip(),
