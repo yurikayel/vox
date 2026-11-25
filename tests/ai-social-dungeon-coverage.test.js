@@ -141,7 +141,7 @@ test("dungeon-state & renderers: fallbacks, bordas, ícones offline e abas vazia
   const sheetOverdraft = renderSheetScreen(s2);
   const dmUnlocked = renderDmScreen({ ...s2, aiBrainMode: "maritaca", vaultSecret: { ...s2.vaultSecret, unlocked: true, sharesSubmitted: 3 }, coDmWhispers: { silentToolCall: {}, sensoryOptionsPtBr: [], rumorAlertPtBr: "" } });
   const dmMinimal = renderDmScreen({ ...s2, coDmWhispers: null, activeRoute: null });
-  assert.ok(campEmpty.includes("CUSTOM_ROLE") && sheetRich.includes("Histórico da Mesa") && sheetEdge.includes("Contestado") && sheetEmptyProps.includes("H") && sheetOverdraft.includes("Saldo Negativo") && dmUnlocked.includes("Segredo Já Aberto") && dmMinimal.includes("Sussurros"));
+  assert.ok(campEmpty.includes("CUSTOM_ROLE") && sheetRich.includes("Histórico da Mesa") && sheetEdge.includes("Contestado") && sheetEmptyProps.includes("H") && sheetOverdraft.includes("gasto além do saldo") && dmUnlocked.includes("Segredo Já Aberto") && dmMinimal.includes("Sussurros"));
 });
 
 test("community-pillar-pool: todos os ramos de elegibilidade, W-DRF e failover sem backup", () => {

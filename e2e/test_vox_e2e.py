@@ -263,10 +263,10 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
             self.assertIn("Floresta de Vidro", page.locator(".dungeon-scene-caption h1").inner_text())
             page.locator(".dungeon-topnav a[href^='#/dungeon/ficha/']").click()
             page.locator("button[data-dungeon='spend-10']").click()
-            # O teste de saldo negativo mora na "Auditoria Técnica", um <details> fechado por padrão.
+            # O teste de gasto além do saldo mora em "Para conferir: como a ficha é guardada", um <details> fechado por padrão.
             page.locator("details[data-dungeon-details='sheet-audit'] > summary").click()
             page.locator("button[data-dungeon='test-overdraft']").click()
-            self.assertIn("Saldo Negativo", page.locator(".dungeon-alert-warn").inner_text())
+            self.assertIn("gasto além do saldo", page.locator(".dungeon-alert-warn").inner_text())
             page.locator("button[data-dungeon='confirm-lore']").first.click()
             self.assertIn("Fato Confirmado", page.locator(".dungeon-lore-grid").inner_text())
             page.locator(".dungeon-topnav a[href^='#/dungeon/mestre/']").click()
