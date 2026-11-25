@@ -24,6 +24,8 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { validateSheetEdit } from "./sheet-edit-validate.js";
+import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { markSheetDeathSave } from "./dungeon-persistence-sheet-system.js";
 import { longRestSheet, shortRestSheet, spendSheetHitDie, stepSheetExhaustion, toggleSheetCondition } from "./dungeon-persistence-sheet-rest.js";
 import {
@@ -261,15 +263,20 @@ function submitEditSheet(state, form, ctx) {
   const patch = {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
-    armor_class: Number(valOf(form, "[name=armorClass]")),
+    armor_class: valOf(form, "[name=armorClass]"),
     system: valOf(form, "[name=sheetSystem]"),
-    speedFt: valOf(form, "[name=speedFt]", undefined),
+    speedFt: form?.querySelector?.("[name=speedFt]") ? valOf(form, "[name=speedFt]") : undefined,
     ...checkedLists(form),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
     const raw = valOf(form, `[name=${k}]`);
     if (raw) patch[k] = Number(raw);
   }
+  const sys = resolveSheetSystem(state.sheet);
+  const { ok, issues } = validateSheetEdit(patch, { pack: sys?.pack, trainedSkills: sys?.choices.proficientSkills });
+  state.sheetEditIssues = issues;
+  state.sheetEditDraft = ok ? null : patch;
+  if (!ok) return ctx.settle(Promise.resolve());
   return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
 }
 

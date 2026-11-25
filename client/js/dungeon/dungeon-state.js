@@ -191,6 +191,8 @@ function createPersistenceDefaults() {
     lastFormulaRoll: null,
     rollError: "",
     campaignNotice: "",
+    sheetEditIssues: [],
+    sheetEditDraft: null,
     storageUsage: null,
     persistenceReady: false,
     localActor: "local",

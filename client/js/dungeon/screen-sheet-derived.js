@@ -74,23 +74,35 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
     </section>`;
 }
 
+/** Escolhas com o que o jogador digitou num Salvar recusado por cima das gravadas. */
+function withDraft(choices, draft) {
+  return {
+    ...choices,
+    speedFt: draft.speedFt ?? choices.speedFt,
+    proficientSaves: draft.proficientSaves ?? choices.proficientSaves,
+    expertSkills: draft.expertSkills ?? choices.expertSkills,
+  };
+}
+
 /**
  * Campos do pacote no painel Editar (salvaguardas, especialização, Deslocamento); vazio sem pacote.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {object} [draft] Valores digitados num Salvar recusado (`speedFt`, `proficientSaves`, `expertSkills`).
  * @returns {string} HTML dos campos.
  */
-export function renderSystemEditFields(sheet) {
+export function renderSystemEditFields(sheet, draft = {}) {
   const sys = resolveSheetSystem(sheet);
-  return sys ? renderSystemChoiceFields(sys.pack, sys.choices) : "";
+  return sys ? renderSystemChoiceFields(sys.pack, withDraft(sys.choices, draft)) : "";
 }
 
 /**
  * Seletor de sistema do painel Editar, com um campo para cada pacote registrado.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {string} [chosen] Sistema digitado num Salvar recusado; vence o da ficha quando existe na lista.
  * @returns {string} HTML do campo `sheetSystem`.
  */
-export function renderSystemSelect(sheet) {
-  const current = migrateLegacySheet(sheet || {})?.system?.id || "";
+export function renderSystemSelect(sheet, chosen = "") {
+  const current = chosen || migrateLegacySheet(sheet || {})?.system?.id || "";
   const options = listSystemPackIds().map((id) => {
     const pack = getSystemPack(id);
     return `<option value="${escapeHtml(id)}"${id === current ? " selected" : ""}>${escapeHtml(pack.name)}</option>`;
