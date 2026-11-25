@@ -9,6 +9,7 @@ import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./
 import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
 import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { createVttOp } from "./vtt-schema.js";
+import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   createBlobAssembler,
   signVttOp,
@@ -86,10 +87,39 @@ function collectReferencedBlobHashes(campaign) {
   return hashes;
 }
 
-function filterTokenMove(campaign, op) {
+function findSceneToken(campaign, op) {
   const scene = campaign?.scenesById?.[op.payload?.sceneId || campaign.activeSceneId];
-  const tok = scene?.tokens?.find((t) => t.tokenId === op.payload?.tokenId);
-  return tok && tok.layer === "player" ? op : null;
+  const tokenId = op.payload?.tokenId || op.payload?.token?.tokenId;
+  const tok = scene?.tokens?.find((t) => t.tokenId === tokenId);
+  const floor = scene?.floors?.find((f) => f.z === tok?.floorZ);
+  return { tok, floor };
+}
+
+/** Token fora da névoa revelada não segue como delta: quem já o via recebe um novo snapshot sem ele. */
+function filterTokenMove(campaign, op) {
+  const { tok, floor } = findSceneToken(campaign, op);
+  if (!tok || tok.layer !== "player") return null;
+  if (floor?.fog?.enabled) return { refreshSnapshot: true };
+  return isTokenRevealedByFog(tok, floor) ? op : { refreshSnapshot: true };
+}
+
+function filterTokenChangeFloor(campaign, op) {
+  const { tok } = findSceneToken(campaign, op);
+  return tok?.layer === "gm" ? null : { refreshSnapshot: true };
+}
+
+function filterTokenUpsert(campaign, op) {
+  if (op.payload?.token?.layer === "gm") return null;
+  const { tok, floor } = findSceneToken(campaign, op);
+  return !tok || isTokenRevealedByFog(tok, floor) ? op : { refreshSnapshot: true };
+}
+
+function filterDoorUpsert(campaign, op) {
+  const door = op.payload?.door;
+  if (door?.state === "secret") return null;
+  const scene = campaign?.scenesById?.[op.payload?.sceneId || campaign.activeSceneId];
+  const floor = scene?.floors?.find((f) => f.z === (op.payload?.floorZ ?? scene.activeFloorZ));
+  return !door || !floor || isDoorRevealedByFog(door, floor) ? op : { refreshSnapshot: true };
 }
 
 function filterRollOp(_campaign, op, viewerRouteId) {
@@ -101,9 +131,12 @@ function filterRollOp(_campaign, op, viewerRouteId) {
 
 const OP_FILTERS = {
   TOKEN_LAYER_SET: () => ({ refreshSnapshot: true }),
-  TOKEN_UPSERT: (_c, op) => (op.payload?.token?.layer === "gm" ? null : op),
+  TOKEN_UPSERT: filterTokenUpsert,
   TOKEN_MOVE: filterTokenMove,
-  DOOR_UPSERT: (_c, op) => (op.payload?.door?.state === "secret" ? null : op),
+  TOKEN_REMOVE: () => ({ refreshSnapshot: true }),
+  TOKEN_CHANGE_FLOOR: filterTokenChangeFloor,
+  DOOR_UPSERT: filterDoorUpsert,
+  FOG_SET: () => ({ refreshSnapshot: true }),
   DOOR_STATE_SET: () => ({ refreshSnapshot: true }),
   DRAWING_ADD: (_c, op) => (op.payload?.drawing?.layer === "gm" ? null : op),
   AOE_UPSERT: (_c, op) => (op.payload?.aoe?.layer === "gm" ? null : op),
