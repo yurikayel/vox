@@ -303,3 +303,23 @@
 .dungeon-saves-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.9rem; }
 .dungeon-saves-table th, .dungeon-saves-table td { padding: 0.35rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 .dungeon-saves-table tbody th { text-align: left; font-weight: 600; }
+
+/* Ficha em abas (spec da ficha §5.1/§5.2): uma coluna no celular, duas no desktop */
+.dungeon-sheet-layout { display: grid; gap: 1rem; }
+@media (min-width: 900px) {
+  .dungeon-sheet-layout { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); align-items: start; }
+  .dungeon-sheet-aside { position: sticky; top: 0.5rem; }
+}
+.dungeon-sheet-tab-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.dungeon-sheet-tab-list { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--sa-border, #2a3340); margin-bottom: 0.75rem; overflow-x: auto; }
+.dungeon-sheet-tab-label { padding: 0.6rem 0.9rem; min-height: 44px; display: inline-flex; align-items: center; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+.dungeon-sheet-tab-panel { display: none; }
+#sheet-tab-play:checked ~ .dungeon-sheet-tab-panels .is-play,
+#sheet-tab-abilities:checked ~ .dungeon-sheet-tab-panels .is-abilities,
+#sheet-tab-items:checked ~ .dungeon-sheet-tab-panels .is-items,
+#sheet-tab-about:checked ~ .dungeon-sheet-tab-panels .is-about { display: block; }
+#sheet-tab-play:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-play"],
+#sheet-tab-abilities:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-abilities"],
+#sheet-tab-items:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-items"],
+#sheet-tab-about:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-about"] { border-bottom-color: var(--sa-primary, #78d6cf); font-weight: 600; }
+.dungeon-sheet-tab-input:focus-visible ~ .dungeon-sheet-tab-list label { outline: 2px solid var(--sa-primary, #78d6cf); outline-offset: -2px; }
