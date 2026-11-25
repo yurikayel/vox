@@ -6,9 +6,10 @@
  */
 import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCamera } from "./diorama-camera.js";
 import { createDioramaGlRenderer } from "./diorama-gl.js";
-import { projectTacticsFloorForPlayer } from "../vtt-tactics-reducer.js";
-import { rayCylinderIntersect, rayPlaneIntersect } from "./diorama-math.js";
+import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
+import { pickDioramaScene, unprojectRay } from "./diorama-pick.js";
 
+export { pickDioramaTarget } from "./diorama-pick.js";
 export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../diorama-lens.js";
 
 const MODE_STORAGE_KEY = "subversus.diorama.mode";
@@ -43,32 +44,6 @@ export function saveDioramaMode(mode, storage = globalThis.localStorage) {
     // Modo privado sem escrita em localStorage.
   }
   return safe;
-}
-
-/**
- * Executa picking volumétrico de standees (`ray-cylinder`) com fallback para o chão (`ray-plane`).
- *
- * @param {[number, number, number]} origin Origem do raio 3D.
- * @param {[number, number, number]} dir Direção normalizada do raio 3D.
- * @param {Array<object>} [tokens=[]] Tokens visíveis no andar.
- * @returns {{kind: "token", tokenId: string, t: number}|{kind: "floor", point: [number, number, number]}|null} Alvo atingido.
- */
-export function pickDioramaTarget(origin, dir, tokens = []) {
-  let best = null;
-  for (const tok of tokens) {
-    const cyl = {
-      x: Number(tok.x) || 0,
-      y: Number(tok.elevation) || 0,
-      z: Number(tok.y) || 0,
-      radius: Math.max(0.35, (Number(tok.sizeCells) || 1) * 0.45),
-      height: tok.display === "flat" ? 0.15 : 1.4,
-    };
-    const t = rayCylinderIntersect(origin, dir, cyl);
-    if (t !== null && (!best || t < best.t)) best = { kind: "token", tokenId: tok.tokenId, t };
-  }
-  if (best) return best;
-  const hit = rayPlaneIntersect(origin, dir, 0);
-  return hit ? { kind: "floor", point: hit.point } : null;
 }
 
 /**
@@ -107,10 +82,18 @@ function ensureGlCanvas(base, existing = null) {
   return gl;
 }
 
+/** O canvas GL só captura toques (picking) enquanto a lente 3D está ativa; no 2D o mapa recebe tudo. */
+function syncPointer(st) {
+  if (st.gl) st.gl.style.pointerEvents = st.glRenderer && st.cam.mode !== "2d" ? "auto" : "none";
+}
+
 function renderOverlayState(st) {
+  syncPointer(st);
   if (!st.glRenderer || st.cam.mode === "2d") return null;
   const aspect = (st.gl.width || 768) / Math.max(1, st.gl.height || 576);
-  return st.glRenderer.render(st.floor, computeCameraMatrices(st.cam, aspect));
+  st.mats = computeCameraMatrices(st.cam, aspect);
+  const fog = buildFogLayer(st.view.floor, st.role) || {};
+  return st.glRenderer.render(st.view.floor, st.mats, { ...fog, tokens: st.view.tokens, selectedId: st.selectedId });
 }
 
 function triggerOverlayFallback(st, opts, reason) {
@@ -118,12 +101,8 @@ function triggerOverlayFallback(st, opts, reason) {
   st.glRenderer = null;
   st.cam = applyCameraPreset(st.cam, "2d");
   saveDioramaMode("2d", opts.storage);
+  syncPointer(st);
   opts.onFallback2d?.(reason);
-}
-
-/** Piso exibido: o Mestre vê tudo; qualquer outro papel recebe a projeção Zero-Spoiler. */
-function projectFloorForRole(floor, role) {
-  return role === "gm" ? floor : projectTacticsFloorForPlayer(floor || {});
 }
 
 function ensureRenderer(st, opts) {
@@ -141,39 +120,68 @@ function bindContextLoss(st, opts) {
   return () => gl?.removeEventListener?.("webglcontextlost", onLost);
 }
 
+/** Resolve o alvo sob um clique (coordenadas de cliente) usando as matrizes do último quadro. */
+function pickAtClient(st, ev) {
+  if (!st.mats || !st.gl?.getBoundingClientRect) return null;
+  const r = st.gl.getBoundingClientRect();
+  const ray = unprojectRay(st.mats.viewProj, ((ev.clientX - r.left) / r.width) * 2 - 1, 1 - ((ev.clientY - r.top) / r.height) * 2);
+  return ray ? pickDioramaScene(ray.origin, ray.dir, st.view) : null;
+}
+
+/** Liga o clique no canvas GL ao `onPick`; devolve a função que remove o listener. */
+function bindPicking(st, opts) {
+  const gl = st.gl;
+  const onClick = (ev) => {
+    const hit = pickAtClient(st, ev);
+    if (hit && hit.kind !== "floor") opts.onPick?.(hit);
+  };
+  gl?.addEventListener?.("click", onClick);
+  return () => gl?.removeEventListener?.("click", onClick);
+}
+
 /**
  * Conecta o renderizador WebGL2 sob demanda em um canvas próprio, com fallback automático em `webglcontextlost`.
- * O papel `gm` vê o piso completo; os demais recebem `projectTacticsFloorForPlayer` (portas secretas fora).
+ * A visibilidade segue o mapa 2D (`projectDioramaView`): o jogador não recebe portas secretas nem tokens da camada GM.
+ * Clique em standee/porta chama `opts.onPick({kind, tokenId|doorId})`, a mesma ação do 2D.
  *
  * @param {HTMLCanvasElement|object} canvas Canvas 2D do mapa (nunca recebe contexto WebGL).
  * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `onFallback2d`, `storage`).
- * @returns {{active: boolean, setMode: Function, setFloor: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
+ * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `tokens`, `selectedId`, `onPick`, `onFallback2d`, `storage`).
+ * @returns {{active: boolean, setMode: Function, setScene: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
  */
 export function attachDioramaOverlay(canvas, floor, opts = {}) {
   const mode = opts.mode || loadDioramaMode(opts.storage);
-  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, floor: null };
-  const setFloor = (next, role = opts.viewerRole) => { st.floor = projectFloorForRole(next, role); };
-  setFloor(floor);
+  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, view: null, role: "player", mats: null, selectedId: "" };
+  const setScene = (nextFloor, scene = {}) => {
+    st.role = scene.role === "gm" ? "gm" : "player";
+    st.selectedId = scene.selectedId || "";
+    st.view = projectDioramaView(nextFloor, scene.tokens, st.role);
+  };
+  setScene(floor, { role: opts.viewerRole, tokens: opts.tokens, selectedId: opts.selectedId });
   if (mode !== "2d") ensureRenderer(st, opts);
-  const unbindLost = bindContextLoss(st, opts);
+  const unbinds = [bindContextLoss(st, opts), bindPicking(st, opts)];
+  return overlayApi(st, opts, setScene, unbinds);
+}
+
+/** Monta a API pública do overlay sobre o estado interno `st`. */
+function overlayApi(st, opts, setScene, unbinds) {
   return {
     get active() { return Boolean(st.glRenderer && st.cam.mode !== "2d"); },
     setMode(nextMode) {
       st.cam = applyCameraPreset(st.cam, saveDioramaMode(nextMode, opts.storage));
-      if (st.cam.mode === "2d") { st.glRenderer?.destroy?.(); st.glRenderer = null; return null; }
+      if (st.cam.mode === "2d") { st.glRenderer?.destroy?.(); st.glRenderer = null; syncPointer(st); return null; }
       return ensureRenderer(st, opts) ? renderOverlayState(st) : null;
     },
-    setFloor,
+    setScene,
     draw: () => renderOverlayState(st),
     detach: () => st.gl?.remove?.(),
-    rebind(nextCanvas, nextFloor, role = opts.viewerRole) {
+    rebind(nextCanvas, nextFloor, scene) {
       st.gl = ensureGlCanvas(nextCanvas, st.gl);
-      setFloor(nextFloor, role);
+      setScene(nextFloor, scene);
       return renderOverlayState(st);
     },
     destroy() {
-      unbindLost();
+      for (const unbind of unbinds) unbind();
       st.glRenderer?.destroy?.();
       st.glRenderer = null;
       st.gl?.remove?.();
