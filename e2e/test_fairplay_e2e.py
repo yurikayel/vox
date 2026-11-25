@@ -113,7 +113,7 @@ def _diagnosis(page):
 class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
     """Rolagem verificável pela rede da mesa, com a flag de laboratório."""
 
-    def _open_trio(self, name, flags=(True, True, True)):
+    def _open_trio(self, name, flags=(True, True, True), admit=True):
         """Mestre com mesa aberta e dois jogadores já conectados; `flags` liga o Fairplay por aba (Mestre, J1, J2).
 
         Uma aba sem flag depois de abas com flag usa `_drop_shared_flag` (o `localStorage` é compartilhado).
@@ -136,7 +136,7 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             _watch_errors(page, errors)
             _join_as_player(page, invite)
             players.append(page)
-            if flag:
+            if flag and admit:
                 _admit_players(gm, sum(1 for f in flags[1:i + 1] if f))
         return ctx, gm, players, errors
 
@@ -215,6 +215,24 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             roll_peers = _roll_info(p1)["participants"]
             self.assertEqual((info["driver"], info["me"] in roll_peers, info["me"] in _roll_info(p1)["commits"]), (False, False, False))
             self.assertEqual(p2.locator(".dungeon-fairplay-seal").count(), 0)
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_02c_master_approves_and_refuses_entry_on_screen(self):
+        """SUB-03: o Mestre vê os pedidos, aprova um e recusa o outro; cada jogador vê o estado certo."""
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Aprovacao", admit=False)
+        try:
+            ids = [_roll_info(p)["me"] for p in (p1, p2)]
+            for page in (p1, p2):
+                expect(page.locator(".dungeon-fairplay-access.is-waiting")).to_have_text("Aguardando aprovação do Mestre", timeout=WAIT_MS)
+            expect(gm.locator("[data-dungeon='fairplay-approve']")).to_have_count(2, timeout=WAIT_MS)
+            gm.locator(f"[data-dungeon='fairplay-approve'][data-peer='{ids[0]}']").click()
+            gm.locator(f"[data-dungeon='fairplay-refuse'][data-peer='{ids[1]}']").click()
+            expect(p2.locator(".dungeon-fairplay-access.is-refused")).to_have_text("Entrada recusada", timeout=WAIT_MS)
+            expect(p1.locator(".dungeon-fairplay-access.is-waiting")).to_have_count(0, timeout=WAIT_MS)
+            _wait_state(gm, "keys", 2)
+            self.assertEqual(gm.evaluate("() => document.activeElement?.id"), "dungeon-fairplay-access", "foco previsível depois da ação")
             self.assertEqual(errors, [])
         finally:
             _close_ctx(ctx)

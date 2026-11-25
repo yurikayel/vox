@@ -25,6 +25,32 @@ function createGuestStore(opts) {
   return opts.store || createVttStore(createMemoryVttBackend());
 }
 
+/** Avisa a tela de que o estado mudou (a mesma saída para atualização, aviso e status do Fairplay). */
+function notifyJoin(state, opts, camp) {
+  (opts.onCampaign || state._onSyncUpdate)?.(camp);
+}
+
+/** Callbacks do par jogador: estado da mesa, recusa de ops e aviso de que o Mestre não respondeu. */
+function playerSyncCallbacks(state, opts) {
+  return {
+    onUpdate: (camp) => {
+      hydrateStateFromCampaign(state, camp);
+      state.campaignNotice = "Conectado à Mesa (visão de jogador).";
+      state.fairplayHelloGaveUp = false;
+      notifyJoin(state, opts, camp);
+      state.fairplayDriver?.onUpdate(camp);
+    },
+    onHelloGaveUp: () => {
+      state.fairplayHelloGaveUp = true;
+      notifyJoin(state, opts);
+    },
+    onRejected: (msg) => {
+      state.rollError = "Ação recusada pelo Mestre ou assinatura inválida.";
+      state.fairplayDriver?.onRejected(msg);
+    },
+  };
+}
+
 /** @param {object} state @param {object} invite @param {object} opts */
 function wirePlayerSyncPeer(state, invite, opts) {
   if (state.syncPeer?.close) state.syncPeer.close();
@@ -38,19 +64,14 @@ function wirePlayerSyncPeer(state, invite, opts) {
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
-    onUpdate: (camp) => {
-      hydrateStateFromCampaign(state, camp);
-      state.campaignNotice = "Conectado à Mesa (visão de jogador).";
-      (opts.onCampaign || state._onSyncUpdate)?.(camp);
-      state.fairplayDriver?.onUpdate(camp);
-    },
-    onRejected: (msg) => {
-      state.rollError = "Ação recusada pelo Mestre ou assinatura inválida.";
-      state.fairplayDriver?.onRejected(msg);
-    },
+    ...playerSyncCallbacks(state, opts),
   });
   state.syncPeer.join();
-  wireFairplayDriver(state, { peer: state.syncPeer, peerId: state.vttKeypair.routeId, store, campaignId: invite.tableId });
+  const onStatus = (status) => {
+    state.fairplayAccess = status;
+    notifyJoin(state, opts);
+  };
+  wireFairplayDriver(state, { peer: state.syncPeer, peerId: state.vttKeypair.routeId, store, campaignId: invite.tableId, onStatus });
 }
 
 /**
