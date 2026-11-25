@@ -143,3 +143,65 @@ export function renderEntrySeal(entry, state, storage) {
   if (!state?.fairplayLabEnabled && !isFairplayLabEnabled(storage)) return "";
   return renderFairplaySeal(state?.fairplaySeals?.[entry.id]);
 }
+
+function nameOf(state, peer) {
+  return state?.fairplayNames?.[peer] || peer;
+}
+
+function committedOf(roll) {
+  return (roll.participants || []).filter((p) => Object.hasOwn(roll.commits || {}, p));
+}
+
+function missingReasons(roll) {
+  const out = [];
+  if (roll.phase === "aborted") {
+    for (const p of roll.participants || []) if (!Object.hasOwn(roll.commits || {}, p)) out.push({ peer: p, kind: "commit" });
+  }
+  const afterReveal = ["recovery", "done", "aborted"].includes(roll.phase);
+  if (afterReveal && committedOf(roll).length) {
+    for (const p of committedOf(roll)) if (!Object.hasOwn(roll.reveals || {}, p)) out.push({ peer: p, kind: "reveal" });
+  }
+  return out;
+}
+
+/**
+ * Motivos, por pessoa, de uma rolagem não ter corrido limpa, como este aparelho a viu no log.
+ * @param {object} [fairplay] Bloco `fairplay` do estado.
+ * @param {string} [viewerId] Identidade deste aparelho (para o aviso "segurada no caminho").
+ * @returns {Array<{rollId: string, peer: string, kind: "commit"|"reveal", mine: boolean}>} Motivos por rolagem e pessoa.
+ */
+export function fairplayRollReasons(fairplay, viewerId = "") {
+  const list = [];
+  for (const [rollId, roll] of Object.entries(fairplay?.rolls || {})) {
+    for (const r of missingReasons(roll || {})) list.push({ rollId, ...r, mine: r.peer === viewerId });
+  }
+  return list;
+}
+
+function reasonText(state, r) {
+  if (r.kind === "commit") return `${r.mine ? "Você não entrou" : `${nameOf(state, r.peer)} não entrou`} a tempo na rolagem.`;
+  if (r.mine) return "Sua revelação foi segurada no caminho: ela não aparece no registro da mesa.";
+  return `A revelação de ${nameOf(state, r.peer)} não chegou.`;
+}
+
+/**
+ * Aviso de rolagem em andamento ("rolando com a mesa…"), uma linha só.
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML ou vazio.
+ */
+export function renderFairplayPending(state) {
+  if (!Object.keys(state?.fairplayPending || {}).length) return "";
+  return '<p class="dungeon-fairplay-seal is-pending" role="status">rolando com a mesa…</p>';
+}
+
+/**
+ * Painel da Crônica: rolagem em andamento, contagem por pessoa e motivo de cada rolagem que não correu limpa.
+ * @param {object} state Estado com `fairplay`, `fairplayPending` e identidade local.
+ * @returns {string} HTML ou vazio.
+ */
+export function renderFairplayStatus(state) {
+  const me = state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
+  const items = fairplayRollReasons(state?.fairplay, me).map((r) => `<li>${escapeHtml(reasonText(state, r))}</li>`).join("");
+  const reasons = items ? `<ul class="dungeon-fairplay-reasons">${items}</ul>` : "";
+  return `${renderFairplayPending(state)}${renderFairplayUnclosed(state)}${reasons}`;
+}
