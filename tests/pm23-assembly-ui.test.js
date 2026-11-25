@@ -36,6 +36,7 @@ import {
   renderAssemblyMinutesMarkdown,
   tallyAssembly,
 } from "../scripts/assembly-minutes.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const T0 = Date.UTC(2026, 10, 15, 14, 0, 0);
 
@@ -261,12 +262,12 @@ test("PM-23 UI: bindAssemblyPanelHost trata submit inválido e válido do formul
     let fields = { title: "", assemblyAgenda: "" };
     globalThis.FormData = class { get(k) { return fields[k] ?? ""; } };
     listeners.submit({ target: formStub, preventDefault() {} });
-    await new Promise((r) => setTimeout(r, 25));
+    await waitUntil(() => errorEl.hidden === false);
     assert.equal(errorEl.hidden, false);
 
     fields = { title: "Nova Convocação", assemblyAgenda: "1. Item único", eventAt: "2026-12-01T10:00", eventPlace: "Sede", quorumMin: "5", ritualRule: "monthly" };
     listeners.submit({ target: formStub, preventDefault() {} });
-    await new Promise((r) => setTimeout(r, 40));
+    await waitUntil(() => slot.innerHTML.includes("Nova Convocação"));
     assert.ok(slot.innerHTML.includes("Nova Convocação"));
   } finally {
     globalThis.FormData = origFormData;

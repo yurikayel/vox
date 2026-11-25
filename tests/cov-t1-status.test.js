@@ -8,6 +8,7 @@ import { installFakeDom } from "./helpers/cov-t1-dom.mjs";
 import * as localAccount from "../client/js/identity/index.js";
 import * as telemetry from "../client/js/signaling-telemetry.js";
 import { showStatus } from "../client/js/app/screens-status.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const dom = installFakeDom();
 const realNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
@@ -114,6 +115,6 @@ test("status — zerar telemetria apaga o resumo e remonta a tela", async () => 
   dom.main.innerHTML = "";
   els.reset.onclick();
   assert.equal(telemetry.getSignalingTelemetrySummary().channels.ws.attempts, 0);
-  await new Promise((r) => setTimeout(r, 20));
+  await waitUntil(()=> /Offline/.test(dom.main.innerHTML));
   assert.match(dom.main.innerHTML, /Offline/, "a tela foi montada de novo");
 });

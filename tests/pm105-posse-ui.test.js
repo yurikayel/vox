@@ -22,6 +22,7 @@ import {
   showPosseReturn,
   verifyPossePost,
 } from "../client/js/app/screens-posse-return.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 /**
  * Cria um post assinado com par de chaves ECDSA P-256 real em WebCrypto.
@@ -192,7 +193,7 @@ test("PM-105 UI: fallback para gateway, degradação honesta LAN-21 e recarga em
   assert.equal(failed.errorKind, "offline");
   assert.match(container.innerHTML, /Sem conexão com a internet/);
   container.trigger("#btn-posse-retry");
-  await new Promise((r) => setTimeout(r, 10));
+  await waitUntil(()=> calls === 2);
   assert.equal(calls, 2);
 });
 

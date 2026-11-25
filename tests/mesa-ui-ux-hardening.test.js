@@ -26,6 +26,7 @@ import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
 import { renderZ3SessionBlock } from "../client/js/dungeon/screen-table-layout.js";
 import { advanceTime, createDefaultCalendar, formatInWorldDate } from "../client/js/dungeon/vtt-calendar.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeCanvasMock() {
   const listeners = {};
@@ -60,7 +61,7 @@ test("P0-1: pointerdown no token ou fundo não destrói canvas (drag e pan sobre
   assert.equal(redraws, 0, "pointerdown no token nunca pode chamar redrawContainer");
   canvas.listeners.pointermove({ pointerId: 1, clientX: 5.5 * 64, clientY: 3.5 * 64 });
   canvas.listeners.pointerup({ pointerId: 1, clientX: 5.5 * 64, clientY: 3.5 * 64 });
-  await new Promise((r) => setTimeout(r, 15));
+  await waitUntil(()=> redraws >= 1);
   const lyra = state.scene.tokens.find((t) => t.tokenId === "tok-lyra");
   assert.equal(lyra.x, 5);
   assert.equal(redraws, 1);

@@ -32,6 +32,7 @@ import {
   submitAssemblyVote,
   updateAssemblyDecisionStatus,
 } from "../client/js/app/assembly-ui.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const T0 = Date.UTC(2026, 10, 15, 14, 0, 0);
 const T_CLOSE = T0 + 7_200_000;
@@ -298,13 +299,13 @@ test("PM-23 UI fluxo de voto: exige blockReason no submit e registra bloqueio vÃ
     let fields = { choice: "block", blockReason: "" };
     globalThis.FormData = class { get(k) { return fields[k] ?? ""; } };
     listeners.submit({ target: voteForm, preventDefault() {} });
-    await new Promise((r) => setTimeout(r, 30));
+    await waitUntil(() => errorEl.hidden === false);
     assert.equal(errorEl.hidden, false);
     assert.match(errorEl.textContent, /blockReason/);
 
     fields = { choice: "block", blockReason: "Precisa revisar drenagem." };
     listeners.submit({ target: voteForm, preventDefault() {} });
-    await new Promise((r) => setTimeout(r, 40));
+    await waitUntil(() => slot.innerHTML.includes("Precisa revisar drenagem."));
     assert.ok(slot.innerHTML.includes("Precisa revisar drenagem."));
   } finally {
     globalThis.FormData = origFormData;
