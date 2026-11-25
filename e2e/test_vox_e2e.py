@@ -263,6 +263,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
             self.assertIn("Floresta de Vidro", page.locator(".dungeon-scene-caption h1").inner_text())
             page.locator(".dungeon-topnav a[href^='#/dungeon/ficha/']").click()
             page.locator("button[data-dungeon='spend-10']").click()
+            page.locator("label[for='sheet-tab-about']").click()
             # O teste de gasto além do saldo mora em "Para conferir: como a ficha é guardada", um <details> fechado por padrão.
             page.locator("details[data-dungeon-details='sheet-audit'] > summary").click()
             page.locator("button[data-dungeon='test-overdraft']").click()

@@ -54,6 +54,7 @@ function renderSheetHero(sheet) {
         <span class="dungeon-eyebrow">Ficha guardada neste aparelho, funciona sem internet · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
         <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
         <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
       </div>
     </section>`;
@@ -184,7 +185,6 @@ function renderInventoryPanel(state) {
     <section class="dungeon-panel" aria-label="Inventário da ficha">
       <div class="dungeon-section-head">
         <div><span class="dungeon-eyebrow">Inventário compartilhado</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
       </div>
       <form class="dungeon-action-form" data-dungeon="add-item-form">
         <div class="dungeon-input-row">
@@ -262,7 +262,7 @@ export function renderSheetScreen(state) {
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const panels = {
-    play: `${renderRollModes(state)}${renderPlayTab(actions)}`,
+    play: renderPlayTab(actions),
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
     about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
@@ -270,6 +270,7 @@ export function renderSheetScreen(state) {
   return `
     ${noticeHtml}
     ${renderLevelUpWizard(state)}
+    <section class="dungeon-sheet-roll-controls" aria-label="Modo e resultado das rolagens">${renderRollModes(state)}</section>
     <div class="dungeon-sheet-layout">
       <div class="dungeon-sheet-aside">${renderSheetHero(state.sheet)}${renderResourceMeters(state.sheet, projected)}</div>
       <div class="dungeon-sheet-main">${renderSheetTabs(panels)}</div>

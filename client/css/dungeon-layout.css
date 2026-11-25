@@ -329,7 +329,7 @@
 
 /* Ficha em abas (spec da ficha §5.1/§5.2): uma coluna no celular, duas no desktop */
 .dungeon-sheet-layout { display: grid; gap: 1rem; }
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
   .dungeon-sheet-layout { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); align-items: start; }
   .dungeon-sheet-aside { position: sticky; top: 0.5rem; }
 }
@@ -345,4 +345,7 @@
 #sheet-tab-abilities:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-abilities"],
 #sheet-tab-items:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-items"],
 #sheet-tab-about:checked ~ .dungeon-sheet-tab-list [for="sheet-tab-about"] { border-bottom-color: var(--sa-primary, #78d6cf); font-weight: 600; }
-.dungeon-sheet-tab-input:focus-visible ~ .dungeon-sheet-tab-list label { outline: 2px solid var(--sa-primary, #78d6cf); outline-offset: -2px; }
+#sheet-tab-play:focus-visible ~ .dungeon-sheet-tab-list [for="sheet-tab-play"],
+#sheet-tab-abilities:focus-visible ~ .dungeon-sheet-tab-list [for="sheet-tab-abilities"],
+#sheet-tab-items:focus-visible ~ .dungeon-sheet-tab-list [for="sheet-tab-items"],
+#sheet-tab-about:focus-visible ~ .dungeon-sheet-tab-list [for="sheet-tab-about"] { outline: 2px solid var(--sa-primary, #78d6cf); outline-offset: -2px; }
