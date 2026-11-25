@@ -11,7 +11,7 @@
  */
 import { createFairplayRollOffer } from "./vtt-fairplay-roll.js";
 import { createFairplaySessionKey, fairplayShareHash, openFairplayShare, sealFairplayShare } from "./vtt-fairplay-cipher.js";
-import { fairplayQuorum } from "./vtt-fairplay-log.js";
+import { fairplayMinHolders, fairplayQuorum } from "./vtt-fairplay-log.js";
 
 const CLOSABLE = new Set(["commit", "shares", "reveal", "recovery"]);
 
@@ -37,6 +37,8 @@ function createDriverContext(opts) {
     cancel: opts.cancel || ((h) => clearTimeout(h)),
     onWarn: opts.onWarn || (() => {}),
     onError: opts.onError || (() => {}),
+    onStopped: opts.onStopped || (() => {}),
+    rejection: null,
     warnings: [],
     sessionKey: null,
     offers: new Map(),
@@ -67,40 +69,50 @@ async function send(ctx, stepKey, type, payload) {
   }
 }
 
+/** A oferta (semente e partes) de uma rolagem nasce uma vez: reenviar o compromisso reaproveita a mesma. */
 async function stepCommit(ctx, roll) {
-  const offer = await createFairplayRollOffer({ peerId: ctx.peerId, rollId: roll.rollId, ...fairplayQuorum(roll.participants.length) });
+  const offer = ctx.offers.get(roll.rollId) ?? await createFairplayRollOffer({ peerId: ctx.peerId, rollId: roll.rollId, ...fairplayQuorum(roll.participants.length) });
   ctx.offers.set(roll.rollId, offer);
   await send(ctx, `${roll.rollId}:commit`, "FAIRPLAY_COMMIT", { rollId: roll.rollId, commit: offer.commit });
 }
 
-async function sealedShares(ctx, campaign, roll, offer) {
-  const others = committed(roll).filter((p) => p !== ctx.peerId);
+async function sealedShares(ctx, campaign, roll, offer, holders) {
   const out = [];
   for (const [i, share] of offer.shares.entries()) {
-    const to = others[i % others.length];
+    const to = holders[i % holders.length];
     const envelope = await sealFairplayShare({ share, rollId: roll.rollId, fromPeer: ctx.peerId, toPeer: to, privateKey: ctx.sessionKey.privateKey, recipientJwk: keyOf(campaign, to) });
     out.push({ to, share: envelope, shareHash: await fairplayShareHash(share) });
   }
   return out;
 }
 
-/** Pares cuja chave pública não importa: não dá para cifrar para eles, e isso é dito, não engolido. */
-async function unusablePeers(ctx, campaign, roll) {
-  const bad = [];
+async function keyImports(jwk) {
+  if (!jwk) return "sem chave na mesa";
+  const err = await crypto.subtle.importKey("jwk", { ...jwk, ext: true }, { name: "ECDH", namedCurve: "P-256" }, false, []).then(() => null, (e) => e);
+  return err ? `chave não importa (${err.message || err})` : "";
+}
+
+/** Pares para os quais dá para cifrar; os demais ficam de fora, com aviso. */
+async function usableHolders(ctx, campaign, roll) {
+  const holders = [];
   for (const p of committed(roll).filter((o) => o !== ctx.peerId)) {
-    const jwk = keyOf(campaign, p);
-    const ok = jwk && await crypto.subtle.importKey("jwk", { ...jwk, ext: true }, { name: "ECDH", namedCurve: "P-256" }, false, []).then(() => true, (err) => (warn(ctx, `Fairplay: chave de ${p} não importa (${err?.message || err}); sem partes para ele.`), false));
-    if (!jwk) warn(ctx, `Fairplay: sem chave de ${p} na mesa; sem partes para ele.`);
-    if (!ok) bad.push(p);
+    const problem = await keyImports(keyOf(campaign, p));
+    if (problem) warn(ctx, `Fairplay: ${p}: ${problem}; sem partes para ele.`);
+    else holders.push(p);
   }
-  return bad;
+  return holders;
 }
 
 async function stepShares(ctx, campaign, roll) {
   const offer = ctx.offers.get(roll.rollId);
   if (!offer) return;
-  if ((await unusablePeers(ctx, campaign, roll)).length) return;
-  const shares = await sealedShares(ctx, campaign, roll, offer);
+  const mine = roll.commits[ctx.peerId];
+  const holders = await usableHolders(ctx, campaign, roll);
+  if (holders.length < fairplayMinHolders(mine.totalPeers, mine.threshold, roll.participants.length)) {
+    warn(ctx, `Fairplay: guardiões com chave utilizável insuficientes na rolagem ${roll.rollId}; as partes não foram enviadas e a rolagem não vai fechar.`);
+    return;
+  }
+  const shares = await sealedShares(ctx, campaign, roll, offer, holders);
   await send(ctx, `${roll.rollId}:shares`, "FAIRPLAY_SHARES", { rollId: roll.rollId, shares });
 }
 
@@ -120,6 +132,10 @@ async function openHeld(ctx, campaign, roll, ofPeer) {
   const shares = [];
   for (const s of mine) {
     const plain = await openFairplayShare({ envelope: s.share, rollId: roll.rollId, fromPeer: ofPeer, toPeer: ctx.peerId, privateKey: ctx.sessionKey.privateKey, senderJwk: keyOf(campaign, ofPeer) });
+    if (await fairplayShareHash(plain) !== s.shareHash) {
+      warn(ctx, `Fairplay: a parte de ${ofPeer} não bate com o hash publicado; não foi liberada.`);
+      continue;
+    }
     shares.push({ splitId: plain.splitId, x: plain.x, y: toHex(plain.y) });
   }
   return shares;
@@ -160,17 +176,28 @@ async function handleUpdate(ctx, campaign) {
   for (const roll of Object.values(campaign.fairplay.rolls || {})) await advanceRoll(ctx, campaign, roll);
 }
 
+/**
+ * Só `out_of_phase` (a ordem do log mudou sob o passo) merece nova tentativa com o estado atual. Qualquer
+ * outro motivo (assinatura, autorização, relógio fora da faixa) para o passo e é entregue à interface:
+ * insistir só repetiria a recusa.
+ */
 async function handleRejected(ctx, msg) {
-  if (!ctx.pending.has(msg?.opId)) return;
+  const stepKey = ctx.pending.get(msg?.opId);
+  if (!stepKey) return;
+  if (msg.reason !== "out_of_phase") {
+    ctx.rejection = { reason: String(msg.reason || "unknown"), opId: msg.opId, stepKey };
+    ctx.onStopped(ctx.rejection);
+    return;
+  }
   ctx.pending.delete(msg.opId);
   await handleUpdate(ctx, await ctx.loadCampaign());
 }
 
 /**
  * Cria o condutor Fairplay de um aparelho da mesa.
- * @param {{peerId: string, dispatchOp: (rawOp: object) => Promise<object>, loadCampaign: () => Promise<object>, now?: () => number, schedule?: Function, cancel?: Function, onWarn?: (message: string) => void, onError?: (err: unknown) => void}} opts
+ * @param {{peerId: string, dispatchOp: (rawOp: object) => Promise<object>, loadCampaign: () => Promise<object>, now?: () => number, schedule?: Function, cancel?: Function, onWarn?: (message: string) => void, onError?: (err: unknown) => void, onStopped?: (info: {reason: string, opId: string, stepKey: string}) => void}} opts
  *   `dispatchOp` é o do par de sincronização (`createVttSyncPeer`); `schedule`/`cancel` trocam o relógio nos testes.
- * @returns {{warnings: () => string[], start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
+ * @returns {{warnings: () => string[], lastRejection: () => ?object, start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
  */
 export function createFairplayDriver(opts) {
   const ctx = createDriverContext(opts);
@@ -189,6 +216,7 @@ export function createFairplayDriver(opts) {
     onUpdate: (campaign) => queue(() => handleUpdate(ctx, campaign)),
     onRejected: (msg) => queue(() => handleRejected(ctx, msg)),
     warnings: () => [...ctx.warnings],
+    lastRejection: () => ctx.rejection,
     close() {
       for (const h of ctx.timers.values()) ctx.cancel(h);
       ctx.timers.clear();

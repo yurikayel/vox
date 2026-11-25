@@ -63,6 +63,12 @@ Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0
 - **Fechamento do compromisso com menos participantes:** as partes de cada um são geradas no `FAIRPLAY_COMMIT`, para o N da abertura, e não dá para refazê-las depois (o compromisso fixa a divisão). Se o `FAIRPLAY_CLOSE` da fase de compromisso reduz a lista, a rolagem só segue se, repartidas as partes entre os que ficaram, nenhum par receber o mínimo para abrir a semente de outro. Do contrário a rolagem passa a `aborted` e aparece como não verificada. Na prática: de N ≥ 3 para N' ≥ 3 segue; de N ≥ 3 para N' = 2 aborta, porque o quórum cairia a 1 pessoa sem que a mesa tenha aceitado isso. O quórum de 1 pessoa continua valendo só para a mesa aberta com 2 participantes.
 - **Partes liberadas conferidas:** cada envelope de `FAIRPLAY_SHARES` leva o SHA-256 da parte codificada; na recuperação só entram na conta as partes cujo hash foi publicado para aquele guardião. A parte liberada viaja com `y` em hex.
 - **Admissão e limites:** participantes são os pares cuja `FAIRPLAY_KEY` tem `keyLamport` menor que o `lamport` da abertura; a chave precisa ser um ponto da curva P-256; no máximo 64 chaves por campanha, `sides` ≤ 1000, semente de exatamente 32 bytes em hex e envelope de no máximo 512 bytes cifrados.
+- **Vivacidade (custos aceitos desta versão):**
+  - Com N = 3, um par que não se compromete até o fechamento leva a lista a 2, e a rolagem aborta (quórum cairia a 1 pessoa, ver acima). A mesa abre outra rolagem.
+  - Uma fase de partes que fecha incompleta termina `unverified`: sem as partes de todos não há como recuperar quem sumir.
+  - A recuperação só fecha pelo `FAIRPLAY_CLOSE`, depois do prazo. O reducer é síncrono e não confere o hash das partes liberadas (SHA-256 é assíncrono); contar partes ali fecharia a fase com partes que a conferência descarta. O preço é esperar o prazo da recuperação.
+  - As partes só vão a pares cuja chave importa; precisam alcançar guardiões distintos em número suficiente para que nenhum tenha o mínimo para abrir a semente de outro. Se não alcançam, o aparelho avisa e não envia.
+  - O prazo de cada fase tem mínimo de 5 s; coordenadas das chaves precisam estar em base64url canônico.
 - **Prazo por fase:** 20 s por padrão, ajustável na abertura. Estourou o prazo, a fase fecha com o que chegou.
 
 ## 3. O que este desenho garante e o que não garante (ADR-024)

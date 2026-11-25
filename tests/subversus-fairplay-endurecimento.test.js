@@ -129,3 +129,33 @@ test("fairplay endurecimento: sem opId na resposta o Mestre pode reenviar o pass
   assert.equal(calls, 2);
   driver.close();
 });
+
+test("fairplay endurecimento: a recuperação não fecha por contagem de partes, só pelo fechamento", () => {
+  const env = { alg: "ecdh-p256+hkdf-sha256+aes-256-gcm", iv: "00".repeat(12), ct: "ab".repeat(40) };
+  const held = (to) => ({ to, share: env, shareHash: HEX64 });
+  const state = withRoll({
+    phase: "recovery", participants: ["ana", "bia", "gm"], reveals: { ana: HEX64, gm: HEX64 },
+    commits: { ana: { threshold: 2 }, bia: { threshold: 2 }, gm: { threshold: 2 } }, shares: { bia: [held("ana"), held("gm")] },
+  });
+  const part = [{ splitId: "s", x: 1, y: "ab".repeat(32) }];
+  const after = apply(apply(state, "FAIRPLAY_SHARE", "ana", { rollId: "r1", ofPeer: "bia", shares: part }, 10), "FAIRPLAY_SHARE", "gm", { rollId: "r1", ofPeer: "bia", shares: part }, 11);
+  assert.equal(Object.keys(after.fairplay.rolls.r1.released.bia).length, 2);
+  assert.equal(after.fairplay.rolls.r1.phase, "recovery");
+});
+
+test("fairplay endurecimento: o prazo de fase tem mínimo de 5 s", async () => {
+  const key = await createFairplaySessionKey();
+  let state = createCampaign({ id: "m", name: "M", gmRouteId: "gm" });
+  for (const [peer, lamport] of [["ana", 1], ["bia", 2]]) state = apply(state, "FAIRPLAY_KEY", peer, { publicKeyJwk: key.publicKeyJwk }, lamport);
+  assert.equal(apply(state, "FAIRPLAY_OPEN", "ana", { rollId: "r1", phaseMs: 100 }, 10).fairplay.rolls.r1.phaseMs, 5000);
+});
+
+test("fairplay endurecimento: coordenada da chave em base64url não canônico é recusada", async () => {
+  const { publicKeyJwk } = await createFairplaySessionKey();
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const twin = alphabet[alphabet.indexOf(publicKeyJwk.x.at(-1)) ^ 1];
+  const base = createCampaign({ id: "m", name: "M", gmRouteId: "gm" });
+  const sent = (jwk) => Object.keys(apply(base, "FAIRPLAY_KEY", "ana", { publicKeyJwk: jwk }).fairplay.keys).length;
+  assert.equal(sent(publicKeyJwk), 1);
+  assert.equal(sent({ ...publicKeyJwk, x: publicKeyJwk.x.slice(0, -1) + twin }), 0);
+});

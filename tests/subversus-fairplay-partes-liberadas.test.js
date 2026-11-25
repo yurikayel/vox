@@ -74,7 +74,8 @@ test("fairplay partes: a recuperação com partes que batem com o hash publicado
   const t = await tableAtReveal();
   await revealAllButBia(t);
   for (const h of ["ana", "gm"]) assert.ok(t.push("FAIRPLAY_SHARE", h, { rollId: ROLL, ofPeer: "bia", shares: asHex(await openFor(t, h, "bia")) }));
-  assert.equal(t.state.fairplay.rolls[ROLL].phase, "done");
+  assert.equal(t.state.fairplay.rolls[ROLL].phase, "recovery");
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   const res = await verifyFairplayRecord(t.state, ROLL);
   assert.equal(res.status, "verified");
   assert.deepEqual(res.recoveredPeerIds, ["bia"]);
@@ -86,6 +87,7 @@ test("fairplay partes: parte liberada que não bate com o hash publicado não co
   const forged = asHex(await openFor(t, "ana", "bia")).map((s) => ({ ...s, y: "00".repeat(s.y.length / 2) }));
   assert.ok(t.push("FAIRPLAY_SHARE", "ana", { rollId: ROLL, ofPeer: "bia", shares: forged }));
   assert.ok(t.push("FAIRPLAY_SHARE", "gm", { rollId: ROLL, ofPeer: "bia", shares: asHex(await openFor(t, "gm", "bia")) }));
+  assert.ok(t.push("FAIRPLAY_CLOSE", "ana", { rollId: ROLL, phase: "recovery" }, 200_000));
   const res = await verifyFairplayRecord(t.state, ROLL);
   assert.equal(res.status, "unverified");
   assert.match(res.reason, /há 1./, "só a parte conferida com o hash conta");

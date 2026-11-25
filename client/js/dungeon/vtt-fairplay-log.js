@@ -14,6 +14,7 @@ import { resolveFairplayRoll } from "./vtt-fairplay-roll.js";
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const DEFAULT_PHASE_MS = 20_000;
+const MIN_PHASE_MS = 5000;
 const MAX_PHASE_MS = 120_000;
 const MAX_KEYS = 64;
 const MAX_SIDES = 1000;
@@ -30,6 +31,19 @@ export function fairplayQuorum(n) {
   const count = Math.max(2, Math.trunc(Number(n) || 0));
   const totalPeers = Math.max(2, count - 1);
   return { threshold: Math.min(totalPeers, Math.ceil(count / 2) + 1), totalPeers };
+}
+
+/**
+ * Quantos guardiões distintos precisam receber partes para que nenhum deles tenha o mínimo (`threshold`)
+ * para abrir sozinho a semente de outro. Com 2 participantes o quórum de 1 pessoa é o aceito (ADR-040 §2.4).
+ * @param {number} totalPeers Partes geradas (`S`).
+ * @param {number} threshold Partes necessárias (`T`).
+ * @param {number} participants Participantes da rolagem.
+ * @returns {number} Mínimo de guardiões distintos.
+ */
+export function fairplayMinHolders(totalPeers, threshold, participants) {
+  if (participants <= 2) return 1;
+  return Math.ceil(Number(totalPeers) / Math.max(1, Number(threshold) - 1));
 }
 
 /**
@@ -81,7 +95,7 @@ function applyFairplayKey(state, op) {
 }
 
 function openRollDoc(op, participants) {
-  const phaseMs = Math.min(MAX_PHASE_MS, Math.max(1000, Math.trunc(Number(op.payload?.phaseMs) || DEFAULT_PHASE_MS)));
+  const phaseMs = Math.min(MAX_PHASE_MS, Math.max(MIN_PHASE_MS, Math.trunc(Number(op.payload?.phaseMs) || DEFAULT_PHASE_MS)));
   return {
     rollId: String(op.payload.rollId),
     opener: op.actor,
@@ -134,12 +148,21 @@ function committedPeers(roll) {
   return roll.participants.filter((p) => Object.hasOwn(roll.commits, p));
 }
 
+function spreadIsSafe(roll, list, commit) {
+  const perTarget = new Map();
+  for (const s of list) perTarget.set(s.to, (perTarget.get(s.to) || 0) + 1);
+  const n = roll.participants.length;
+  if (perTarget.size < fairplayMinHolders(commit.totalPeers, commit.threshold, n)) return false;
+  return n <= 2 || [...perTarget.values()].every((c) => c < Number(commit.threshold));
+}
+
 function validShareList(roll, op) {
   const list = Array.isArray(op.payload?.shares) ? op.payload.shares : [];
   const others = committedPeers(roll).filter((p) => p !== op.actor);
-  const targets = new Set(list.map((s) => s?.to));
-  const fits = others.every((p) => targets.has(p)) && [...targets].every((p) => others.includes(p)) && list.every((s) => isFairplayShareEnvelope(s?.share) && HEX64.test(String(s?.shareHash)));
-  return fits && list.length === Number(roll.commits[op.actor].totalPeers) ? list.map((s) => ({ to: s.to, share: s.share, shareHash: s.shareHash })) : null;
+  const wellFormed = list.every((s) => others.includes(s?.to) && isFairplayShareEnvelope(s?.share) && HEX64.test(String(s?.shareHash)));
+  const commit = roll.commits[op.actor];
+  if (!wellFormed || list.length !== Number(commit.totalPeers) || !spreadIsSafe(roll, list, commit)) return null;
+  return list.map((s) => ({ to: s.to, share: s.share, shareHash: s.shareHash }));
 }
 
 function applyFairplayShares(state, op) {
@@ -171,14 +194,6 @@ function heldShares(roll, holder, ofPeer) {
   return list.filter((s) => s.to === holder).map((s) => s.share);
 }
 
-function releasedShares(roll, ofPeer) {
-  return Object.values(roll.released[ofPeer] || {}).flat();
-}
-
-function quorumReached(roll) {
-  return missingRevealers(roll).every((p) => releasedShares(roll, p).length >= Number(roll.commits[p].threshold));
-}
-
 function isPlainShare(s) {
   return Boolean(s && typeof s.splitId === "string" && s.splitId.length <= 64 && Number.isInteger(s.x) && typeof s.y === "string" && SHARE_HEX.test(s.y));
 }
@@ -192,8 +207,9 @@ function applyFairplayShareRelease(state, op) {
   if (!held.length || Object.hasOwn(mine, op.actor)) return state;
   const sent = Array.isArray(op.payload?.shares) ? op.payload.shares.filter(isPlainShare).map((s) => ({ splitId: s.splitId, x: s.x, y: s.y })) : [];
   if (sent.length !== held.length) return state;
-  const next = touched(roll, op, { released: withEntry(roll.released, ofPeer, withEntry(mine, op.actor, sent)) });
-  return withRoll(state, quorumReached(next) ? enterPhase(next, op, "done") : next);
+  // A recuperação só fecha pelo `FAIRPLAY_CLOSE`: o reducer não confere o hash das partes (SHA-256 é assíncrono),
+  // então contar partes aqui fecharia a fase com partes que a conferência final pode descartar.
+  return withRoll(state, touched(roll, op, { released: withEntry(roll.released, ofPeer, withEntry(mine, op.actor, sent)) }));
 }
 
 /**
