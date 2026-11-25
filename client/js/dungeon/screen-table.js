@@ -81,18 +81,41 @@ function renderRoleToggleOrBadge(state, isGm) {
   return `<button type="button" class="dungeon-chip-btn${isGm ? " is-selected" : ""}" data-dungeon="toggle-viewer-role" aria-pressed="${isGm}">${roleLabel}</button>`;
 }
 
-function renderDioramaLensStrip(state) {
-  let flagOn = Boolean(state?.dioramaEnabled);
-  if (!flagOn) {
-    try { flagOn = globalThis.localStorage?.getItem?.("vox.lab.diorama") === "1"; } catch { flagOn = false; }
+/** Chave de feature flag local que habilita a lente Diorama 2.5D/3D (única leitura no código). */
+export const DIORAMA_FLAG_KEY = "vox.lab.diorama";
+
+const DIORAMA_MODE_LABELS = Object.freeze([["2d", "2D"], ["iso", "Iso"], ["3d", "3D"]]);
+
+/**
+ * Verifica se a flag local `vox.lab.diorama` está ligada.
+ *
+ * @param {Storage|null} [storage] Armazenamento local opcional (default `globalThis.localStorage`).
+ * @returns {boolean} `true` quando a lente Diorama está habilitada.
+ */
+export function isDioramaFlagEnabled(storage = globalThis.localStorage) {
+  try {
+    return storage?.getItem?.(DIORAMA_FLAG_KEY) === "1";
+  } catch {
+    return false;
   }
-  if (!flagOn) return "";
-  const active = state?.dioramaMode || "2d";
-  const modes = [["2d", "2D"], ["iso", "Iso"], ["3d", "3D"], ["fp", "1ª"]];
-  const btns = modes.map(([id, label]) => (
-    `<button type="button" class="dungeon-chip-btn${id === active ? " is-selected" : ""}" data-dungeon="diorama-mode" data-mode="${id}" aria-pressed="${id === active}">${label}</button>`
+}
+
+/**
+ * Renderiza a pílula compacta `2D | Iso | 3D` (única definição) do canto do canvas do Subversus.
+ *
+ * @param {"2d"|"iso"|"3d"} [activeMode="2d"] Modo de câmera atual.
+ * @returns {string} HTML da pílula de modos de câmera.
+ */
+export function renderDioramaModePill(activeMode = "2d") {
+  const btns = DIORAMA_MODE_LABELS.map(([id, label]) => (
+    `<button type="button" class="dungeon-chip-btn${id === activeMode ? " is-selected" : ""}" data-dungeon="diorama-mode" data-mode="${id}" aria-pressed="${id === activeMode}">${label}</button>`
   )).join("");
   return `<div class="subversus-diorama-pill" role="group" aria-label="Modo de câmera do Subversus">${btns}</div>`;
+}
+
+function renderDioramaLensStrip(state) {
+  if (!state?.dioramaEnabled && !isDioramaFlagEnabled()) return "";
+  return renderDioramaModePill(state?.dioramaMode || "2d");
 }
 
 function renderMapControlsBar(scene, floor, state, isGm) {
