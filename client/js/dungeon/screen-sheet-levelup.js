@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
+import { renderSystemSelect } from "./screen-sheet-derived.js";
 
 const LEVELUP_PRESETS = [
   { id: "d20_fantasy", label: "d20 Fantasia (+8 PV + CON, +1 slot)" },
@@ -87,6 +88,7 @@ export function renderSheetEditPanel(sheet) {
       <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form">
         <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(sheet?.name || "")}" /></label>
         <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(sheet?.role_title || attrs.class_name || "")}" /></label>
+        ${renderSystemSelect(sheet)}
         <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${Number(attrs.armor_class) || 10}" /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>

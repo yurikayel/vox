@@ -89,11 +89,11 @@ Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0
 - **Vários aparelhos da mesma pessoa.** A lista vem dos pares com chave na sala (§2.1), então quem abre não escolhe a dedo quem entra. Quem tem vários aparelhos na sala, porém, entra várias vezes. Contra isso, a defesa continua sendo o Mestre admitir os jogadores.
 - **Sem rede direta entre jogadores.** Tudo passa pelo Mestre. Uma malha completa entre jogadores tiraria o poder de censura, mas é outra decisão.
 - **Histórico limitado para quem entra tarde.** A campanha guarda as ops assinadas das 50 rolagens mais novas, mais todas as admissões e chaves. Quem entra depois (ou a mesa depois de recarregar) refaz o estado só dessas; rolagens mais antigas aparecem como "não verificada" para esse aparelho. O arquivo de backup importado não traz estado Fairplay: ele é descartado e refeito pelas ops da mesa.
-- **Admissão ainda automática (pendente).** Hoje o Mestre admite quem entra na mesa. A aprovação explícita e a revogação estão propostas na §3.1 e ainda não valem.
+- **Admissão ainda automática (pendente).** Hoje o Mestre admite quem entra na mesa. A aprovação explícita e a revogação estão aceitas na §3.1 e valem só com a flag de laboratório ligada.
 
-### 3.1 Emenda: aprovação de admissão e revogação (Proposto)
+### 3.1 Emenda: aprovação de admissão e revogação (Aceito)
 
-**Status:** Proposto. Só vale depois de o mantenedor aceitar esta emenda; até lá o texto acima (admissão automática) continua sendo a regra. Tudo abaixo existe apenas com a flag de laboratório `vox.lab.fairplay` ligada; com ela desligada, nada muda (o Mestre segue admitindo quem entra).
+**Status:** Aceito pelo mantenedor em 2026-11-25. Passa a valer com o merge deste PR; o texto da §3 sobre admissão automática descreve o comportamento com a flag desligada. Tudo abaixo existe apenas com a flag de laboratório `vox.lab.fairplay` ligada; com ela desligada, nada muda (o Mestre segue admitindo quem entra).
 
 - **Aprovação.** Com a flag ligada, quem entra na mesa fica **pendente** no aparelho do Mestre (estado local, fora do log). O Mestre aprova por `approveFairplayPeer(routeId)`, que grava `FAIRPLAY_ADMIT`. Sem aprovação, a `FAIRPLAY_KEY` do par é recusada (`not_admitted`) e ele não entra em nenhuma rolagem. Esta emenda não define tela de aprovação: só a API.
 - **Revogação.** Nova operação `FAIRPLAY_REVOKE { actor }`, persistida no log e assinada pelo Mestre. Só o Mestre revoga (de outro autor, é recusada). Revogar tira o par de `admitted` e de `keys` e o marca em `revoked` com o `lamport` da revogação. Revogação repetida, de par desconhecido ou do próprio Mestre não faz nada.
