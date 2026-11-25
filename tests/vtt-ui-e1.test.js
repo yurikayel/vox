@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderDungeonView, wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { createIdbVttBackend, createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
@@ -76,7 +77,7 @@ test("vtt-ui-e1: fluxo completo criar campanha, rolar ficha/chat e restaurar em 
   const state = createDungeonSessionState();
   const host = makeInteractiveHost();
   wireDungeonView(host, { screen: "acampamento", state, store });
-  await new Promise((r) => setTimeout(r, 10));
+  await waitUntil(() => state.persistenceReady);
 
   host.inputs["#dungeon-campaign-name"].value = "Crônicas da Pedra";
   await host.listeners.submit({ target: { dataset: { dungeon: "create-campaign-form" }, querySelector: (s) => host.inputs[s] }, preventDefault: () => {} });
@@ -95,7 +96,7 @@ test("vtt-ui-e1: fluxo completo criar campanha, rolar ficha/chat e restaurar em 
   const reloadedState = createDungeonSessionState();
   const host2 = makeInteractiveHost();
   wireDungeonView(host2, { screen: "ficha", state: reloadedState, store });
-  await new Promise((r) => setTimeout(r, 15));
+  await waitUntil(() => reloadedState.persistenceReady && reloadedState.tableName);
   assert.equal(reloadedState.tableName, "Crônicas da Pedra");
   assert.equal(reloadedState.rolls.length, 5);
   assert.match(host2.innerHTML, /data-dungeon="roll-ability" data-ability="str"/);
@@ -108,7 +109,7 @@ test("vtt-ui-e1: export/import .voxrpg.zip, .voxrpg.enc e .md via controller + p
   const downloads = [];
   const host = makeInteractiveHost();
   wireDungeonView(host, { screen: "acampamento", state, store, onDownload: (art) => downloads.push(art) });
-  await new Promise((r) => setTimeout(r, 10));
+  await waitUntil(() => state.persistenceReady);
 
   host.inputs["#dungeon-campaign-name"].value = "<img src=x onerror=alert(1)>";
   await host.listeners.submit({ target: { dataset: { dungeon: "create-campaign-form" }, querySelector: (s) => host.inputs[s] }, preventDefault: () => {} });
@@ -129,7 +130,7 @@ test("vtt-ui-e1: export/import .voxrpg.zip, .voxrpg.enc e .md via controller + p
   const dstState = createDungeonSessionState();
   const dstHost = makeInteractiveHost();
   wireDungeonView(dstHost, { screen: "acampamento", state: dstState, store: dstStore });
-  await new Promise((r) => setTimeout(r, 10));
+  await waitUntil(() => dstState.persistenceReady);
   dstHost.inputs["#dungeon-backup-passphrase"].value = "senha-soberana-e1-segura";
   await dstHost.listeners.change({ target: { dataset: { dungeon: "import-file" }, files: [{ name: downloads[2].filename, bytes: downloads[2].bytes }] } });
   assert.equal(dstState.tableName, "<img src=x onerror=alert(1)>");

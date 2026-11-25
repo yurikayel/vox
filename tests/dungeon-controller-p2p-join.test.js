@@ -5,6 +5,7 @@ import { wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { generateRoomKey } from "../client/js/dungeon/vtt-sync-codec.js";
 import { saveDungeonPrefs } from "../client/js/dungeon/dungeon-persistence.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeHost() {
   const host = {
@@ -29,7 +30,7 @@ test("wireDungeonView joinP2p: convite inválido define rollError", async () => 
   const host = makeHost();
   globalThis.location = { hash: "#/dungeon/entrar/mesa-sem-chave" };
   wireDungeonView(host, { screen: "mesa", state, joinP2p: true });
-  await new Promise((r) => setTimeout(r, 0));
+  await waitUntil(() => state.rollError);
   assert.match(state.rollError, /inválido|incompleto/i);
 });
 
