@@ -15,6 +15,7 @@ import {
 } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
 import { sha256Hex } from "../client/js/rpg-crypto-table.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
@@ -88,7 +89,7 @@ test("vtt-sync: mesa P2P 2 pares com Zero-Spoiler, WANT_BLOB, bloqueio de op nã
   const p1Peer = createVttSyncPeer({ role: "player", campaignId: "mesa-p2p", keypair: p1Keys, store: p1Store, transport: p1Transport, roomKey, gmRouteId: gmKeys.routeId, onRejected: (m) => rejected.push(m) });
 
   p1Peer.join();
-  await new Promise((r) => setTimeout(r, 40));
+  await waitUntil(async () => (await p1Store.loadCampaign("mesa-p2p")) && (await p1Store.getBlob(mapHash)));
   const p1Camp = await p1Store.loadCampaign("mesa-p2p");
   assert.equal(p1Camp.scenesById["sc-cripta"].tokens.some((t) => t.tokenId === "tok-hidden"), false);
   assert.equal(p1Camp.notesById.n1.gmSecretMarkdown, "");
@@ -98,19 +99,20 @@ test("vtt-sync: mesa P2P 2 pares com Zero-Spoiler, WANT_BLOB, bloqueio de op nã
   assert.deepEqual(await p1Store.getBlob(mapHash), mapBytes);
 
   p1Transport.send(gmKeys.routeId, { kind: "WANT_BLOB", roomKey, sha256: secretHash });
-  await new Promise((r) => setTimeout(r, 20));
+  await new Promise((r) => setTimeout(r, 150)); // ausência não tem sinal para esperar: janela larga, só pode dar falso verde, nunca vermelho
   assert.equal(await p1Store.getBlob(secretHash), null, "GM não pode servir blob de token oculto");
 
   await p1Peer.dispatchOp({ type: "TOKEN_MOVE", payload: { sceneId: "sc-cripta", tokenId: "tok-boss", x: 0, y: 0 } });
   await p1Peer.dispatchOp({ type: "TOKEN_MOVE", payload: { sceneId: "sc-cripta", tokenId: "tok-p1", x: 3, y: 4 } });
-  await new Promise((r) => setTimeout(r, 40));
+  const tokenOf = async (store, id) => (await store.loadCampaign("mesa-p2p")).scenesById["sc-cripta"].tokens.find((t) => t.tokenId === id);
+  await waitUntil(async () => rejected.length >= 1 && (await tokenOf(gmStore, "tok-p1")).x === 3 && (await tokenOf(p1Store, "tok-p1")).y === 4);
   assert.equal(rejected.length, 1);
   assert.equal(rejected[0].reason, "unauthorized");
   assert.equal((await gmStore.loadCampaign("mesa-p2p")).scenesById["sc-cripta"].tokens.find((t) => t.tokenId === "tok-p1").x, 3);
   assert.equal((await p1Store.loadCampaign("mesa-p2p")).scenesById["sc-cripta"].tokens.find((t) => t.tokenId === "tok-p1").y, 4);
 
   await gmPeer.dispatchOp({ type: "TOKEN_LAYER_SET", payload: { sceneId: "sc-cripta", tokenId: "tok-hidden", layer: "player" } });
-  await new Promise((r) => setTimeout(r, 40));
+  await waitUntil(async () => await tokenOf(p1Store, "tok-hidden"));
   assert.equal((await p1Store.loadCampaign("mesa-p2p")).scenesById["sc-cripta"].tokens.some((t) => t.tokenId === "tok-hidden"), true);
   gmPeer.close();
   p1Peer.close();

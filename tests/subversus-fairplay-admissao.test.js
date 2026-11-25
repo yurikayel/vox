@@ -8,6 +8,7 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 import { generateRoomKey, generateVttKeypair, signVttOp } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const wait = (ms = 40) => new Promise((r) => setTimeout(r, ms));
 const ID = "mesa-fp-adm";
@@ -82,8 +83,9 @@ test("snapshot: o estado Fairplay pronto do snapshot é descartado e refeito das
   const real = await signVttOp(createVttOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.player.publicJwk }, lamport: 2 }), env.player);
   const bad = { ...(await signVttOp(createVttOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.stranger.publicJwk }, lamport: 3 }), env.stranger)), sig: "AAAA" };
   gmWire.send(env.player.routeId, { kind: "SNAPSHOT_FILTERED", roomKey: env.roomKey, campaign: forged, fairplayOps: [...admits, real, bad], admitted: [env.gm.routeId, env.player.routeId, env.stranger.routeId] });
-  await wait();
-  assert.deepEqual(Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys), [env.player.routeId]);
+  const keysNow = async () => Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys);
+  await waitUntil(async () => (await keysNow()).length > 0);
+  assert.deepEqual(await keysNow(), [env.player.routeId]);
   wire.close?.();
   peer.close();
 });
