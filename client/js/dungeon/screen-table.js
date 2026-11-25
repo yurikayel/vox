@@ -34,7 +34,7 @@ function renderStatusChip(state, scene) {
   const tok = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
   const firstCond = tok?.conditions?.[0];
   if (firstCond?.label) return `<span class="dungeon-chip">${escapeHtml(firstCond.label)}</span>`;
-  const lastRoll = state.campaign?.rolls?.[state.campaign.rolls.length - 1];
+  const lastRoll = state.campaignDoc?.rolls?.[state.campaignDoc.rolls.length - 1];
   const fairplay = formatFairplayBadge(lastRoll);
   if (fairplay.label) return `<span class="dungeon-chip" title="${escapeHtml(fairplay.title)}">${escapeHtml(fairplay.label)}</span>`;
   return state.joinMode === "p2p_player" ? `<span class="dungeon-chip">Conectado P2P</span>` : `<span class="dungeon-chip">Pronto</span>`;
