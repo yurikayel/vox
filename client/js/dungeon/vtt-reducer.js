@@ -20,6 +20,7 @@ import {
   TACTICS_OP_HANDLERS,
 } from "./vtt-tactics-reducer.js";
 import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
+import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
 
 const GM_ONLY_OPS = new Set([
   "SCENE_UPSERT",
@@ -252,6 +253,7 @@ const OP_HANDLERS = {
   TOKEN_REMOVE: applyTokenRemove,
   ...TACTICS_OP_HANDLERS,
   ...CAMPAIGN_OP_HANDLERS,
+  ...FAIRPLAY_OP_HANDLERS,
 };
 
 /**
@@ -265,6 +267,7 @@ export function reduceCampaign(state, op) {
   if (state.appliedOpIds?.includes(op.opId)) return state;
   if (!isAuthorizedVttOp(state, op)) return state;
   const next = OP_HANDLERS[op.type](state, op);
+  if (next === state && op.type in FAIRPLAY_OP_HANDLERS) return state; // recusada: não entra no log (ADR-040 §2.1a)
   return {
     ...next,
     appliedOpIds: [...(state.appliedOpIds || []), op.opId],
