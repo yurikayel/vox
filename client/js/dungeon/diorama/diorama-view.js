@@ -8,6 +8,7 @@ import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCa
 import { createDioramaGlRenderer } from "./diorama-gl.js";
 import { attachDioramaGestures, DIORAMA_KEYS_HELP } from "./diorama-input.js";
 import { buildRasters, buildTexturedPass } from "./diorama-textures.js";
+import { describeDioramaView } from "./diorama-geom.js";
 import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
 import { pickDioramaScene, unprojectRay } from "./diorama-pick.js";
 
@@ -87,9 +88,28 @@ function ensureGlCanvas(base, existing = null) {
   return gl;
 }
 
+/** Região `aria-live` (visualmente oculta) que narra a cena visível; criada uma vez, ao lado do canvas GL. */
+function ensureLiveRegion(base, existing = null) {
+  const host = base?.parentNode;
+  if (!host || !base.ownerDocument) return null;
+  let el = existing || host.querySelector?.("[data-diorama-live]");
+  if (!el) {
+    el = base.ownerDocument.createElement("div");
+    el.dataset.dioramaLive = "1";
+    el.setAttribute?.("role", "status");
+    el.setAttribute?.("aria-live", "polite");
+    el.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
+  }
+  if (el.parentNode !== host) host.appendChild(el);
+  return el;
+}
+
 /** O canvas GL só captura toques (picking) enquanto a lente 3D está ativa; no 2D o mapa recebe tudo. */
 function syncPointer(st) {
-  if (st.gl) st.gl.style.pointerEvents = st.glRenderer && st.cam.mode !== "2d" ? "auto" : "none";
+  const active = Boolean(st.glRenderer && st.cam.mode !== "2d");
+  if (st.gl) st.gl.style.pointerEvents = active ? "auto" : "none";
+  const text = active ? st.description : "";
+  if (st.live && st.live.textContent !== text) st.live.textContent = text;
 }
 
 function renderOverlayState(st) {
@@ -183,12 +203,14 @@ function bindPicking(st, opts, gestures) {
  */
 export function attachDioramaOverlay(canvas, floor, opts = {}) {
   const mode = opts.mode || loadDioramaMode(opts.storage);
-  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, view: null, role: "player", mats: null, selectedId: "" };
+  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, live: null, description: "", view: null, role: "player", mats: null, selectedId: "" };
   const setScene = (nextFloor, scene = {}) => {
     st.role = scene.role === "gm" ? "gm" : "player";
     st.selectedId = scene.selectedId || "";
     st.view = projectDioramaView(nextFloor, scene.tokens, st.role);
+    st.description = describeDioramaView(st.view, st.selectedId);
   };
+  st.live = ensureLiveRegion(canvas);
   setScene(floor, { role: opts.viewerRole, tokens: opts.tokens, selectedId: opts.selectedId });
   if (mode !== "2d") ensureRenderer(st, opts);
   const gestures = st.gl ? bindGestures(st) : { wasDrag: () => false, destroy() {} };
@@ -203,6 +225,12 @@ function defaultCreateCanvas(w, h) {
   el.width = w;
   el.height = h;
   return el;
+}
+
+/** Tira o canvas GL e a região `aria-live` do DOM (o contexto e o texto ficam no estado). */
+function detachDom(st) {
+  st.gl?.remove?.();
+  st.live?.remove?.();
 }
 
 /** Monta a API pública do overlay sobre o estado interno `st`. */
@@ -221,9 +249,10 @@ function overlayApi(st, opts, setScene, unbinds) {
       return renderOverlayState(st);
     },
     draw: () => renderOverlayState(st),
-    detach: () => st.gl?.remove?.(),
+    detach: () => detachDom(st),
     rebind(nextCanvas, nextFloor, scene) {
       st.gl = ensureGlCanvas(nextCanvas, st.gl);
+      st.live = ensureLiveRegion(nextCanvas, st.live);
       setScene(nextFloor, scene);
       return renderOverlayState(st);
     },
@@ -231,7 +260,7 @@ function overlayApi(st, opts, setScene, unbinds) {
       for (const unbind of unbinds) unbind();
       st.glRenderer?.destroy?.();
       st.glRenderer = null;
-      st.gl?.remove?.();
+      detachDom(st);
     },
   };
 }

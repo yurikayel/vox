@@ -77,9 +77,11 @@ test("snapshot: o estado Fairplay pronto do snapshot é descartado e refeito das
   const gmWire = env.hub.connect(env.gm.routeId);
   const forged = createCampaign({ id: ID, name: "Mesa", gmRouteId: env.gm.routeId });
   forged.fairplay = { keys: { [env.stranger.routeId]: { alg: "x", publicKeyJwk: env.stranger.publicJwk, lamport: 1 } }, rolls: {} };
+  const admit = (who) => signVttOp(createVttOp({ type: "FAIRPLAY_ADMIT", actor: env.gm.routeId, payload: { actor: who.routeId }, lamport: 1 }), env.gm);
+  const admits = [await admit(env.player), await admit(env.stranger)];
   const real = await signVttOp(createVttOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.player.publicJwk }, lamport: 2 }), env.player);
   const bad = { ...(await signVttOp(createVttOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.stranger.publicJwk }, lamport: 3 }), env.stranger)), sig: "AAAA" };
-  gmWire.send(env.player.routeId, { kind: "SNAPSHOT_FILTERED", roomKey: env.roomKey, campaign: forged, fairplayOps: [real, bad], admitted: [env.gm.routeId, env.player.routeId, env.stranger.routeId] });
+  gmWire.send(env.player.routeId, { kind: "SNAPSHOT_FILTERED", roomKey: env.roomKey, campaign: forged, fairplayOps: [...admits, real, bad], admitted: [env.gm.routeId, env.player.routeId, env.stranger.routeId] });
   await wait();
   assert.deepEqual(Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys), [env.player.routeId]);
   wire.close?.();
