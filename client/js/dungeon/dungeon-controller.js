@@ -207,7 +207,7 @@ function loadDioramaTextures(mod, overlay, floor, tokens, viewOpts) {
   mod.loadDioramaImages({ floor, tokens }, io).then((images) => overlay.setImages(images)).catch(() => {});
 }
 
-function syncDioramaOverlay(mod, container, state, viewOpts) {
+function syncDioramaOverlay(mod, container, state, viewOpts, extras = null) {
   const overlay = DIORAMA_OVERLAYS.get(container);
   if (state.dioramaMode === "2d") { overlay?.destroy(); DIORAMA_OVERLAYS.delete(container); return; }
   const canvas = container.querySelector("#dungeon-vtt-canvas");
@@ -216,6 +216,7 @@ function syncDioramaOverlay(mod, container, state, viewOpts) {
   if (overlay) { overlay.rebind(canvas, floor, dioramaScene(state)); overlay.setMode(state.dioramaMode); return; }
   const scene = dioramaScene(state);
   const created = mod.attachDioramaOverlay(canvas, floor, {
+    extras,
     mode: state.dioramaMode,
     viewerRole: scene.role,
     tokens: scene.tokens,
@@ -231,9 +232,10 @@ function syncDioramaOverlay(mod, container, state, viewOpts) {
 function handleDioramaModeClick(container, viewOpts, target) {
   const state = viewOpts.state || getDungeonSession();
   const nextMode = target.dataset.mode || "2d";
-  const job = import("./diorama/diorama-view.js").then((mod) => {
+  const job = import("./diorama/diorama-view.js").then(async (mod) => {
+    const extras = nextMode === "2d" ? null : await (await import("./diorama/diorama-extras.js")).loadDioramaExtras();
     state.dioramaMode = mod.saveDioramaMode(nextMode);
-    syncDioramaOverlay(mod, container, state, viewOpts);
+    syncDioramaOverlay(mod, container, state, viewOpts, extras);
   });
   return settleAndRedraw(job, container, viewOpts);
 }
