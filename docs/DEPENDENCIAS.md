@@ -43,6 +43,9 @@
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
 | `pyinstaller` | `vox-populi-windows-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
 | `ruff` | `ci.yml`, job do relay (só CI) | `0.17.4` | sem hash | Lint obrigatório desde 09/11/2026: pyflakes e complexidade (`ruff.toml`); estilo e tamanho de função só informados |
+| `pip-audit` | `nightly-audit.yml` (só se `relay/requirements.txt` tiver deps) | móvel (PyPI) | sem hash | Auditoria de CVEs pip no nightly; tip atual é stdlib e o job só registra OK. |
+| `semgrep` | `nightly-audit.yml` (SAST) | móvel (PyPI) | sem hash | Gate `--severity ERROR --error` em `client/js`, `relay`, `rust`; SARIF como artifact. |
+| `playwright` | `nightly-audit.yml` (E2E Python) | móvel (PyPI) | sem hash | `npm run test:e2e` no nightly; Chromium via `python -m playwright install`. |
 
 ## 4. Imagens de contêiner
 
