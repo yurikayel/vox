@@ -5,6 +5,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, makeEl } from "./helpers/cov-t1-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import { renderShell } from "../client/js/render/shell.js";
 import { wireSidebarCirclesLive } from "../client/js/app/sidebar-circles-live.js";
@@ -74,7 +75,7 @@ test("círculos — comunidades locais viram linhas com contagem e o slot aparec
   const slot = makeSlot();
   renderShell({ walletAddress: "u", activeTab: "home" });
   dom.byId.set("agora-sidebar-circles", slot);
-  await settle();
+  await waitUntil(() => slot.hidden === false);
   assert.equal(slot.hidden, false);
   assert.match(slot.innerHTML, /Círculos territoriais/);
   assert.match(slot.innerHTML, /2 ativos/);
@@ -90,7 +91,7 @@ test("círculos — reidratar com o chrome pronto atualiza só a contagem e reap
   slot.innerHTML = "<x>";
   renderShell({ walletAddress: "u", activeTab: "home" });
   dom.byId.set("agora-sidebar-circles", slot);
-  await settle();
+  await waitUntil(() => slot.count.textContent === "2 ativos");
   assert.equal(slot.count.textContent, "2 ativos");
   assert.equal(slot.rows.nodes.length, 2);
   assert.equal(slot.innerHTML, "<x>", "cabeçalho não é refeito");

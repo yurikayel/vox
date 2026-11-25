@@ -4,6 +4,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { waitUntil } from "./helpers/wait-until.js";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
 
 const doc = installFakeDom();
@@ -122,7 +123,7 @@ test("executeInlinePublish — exibe aviso consultivo com dado pessoal e publica
   assert.ok(slot.querySelector('[data-advisory-action="publish-anyway"]'));
 
   click(slot.querySelector('[data-advisory-action="publish-anyway"]'));
-  await settle();
+  await waitUntil(() => published.length === 1);
   assert.equal(published.length, 1, "1 clique em ignorar libera publicação");
   assert.equal(slot.hidden, true);
   assert.ok(await cacheNode.getLocalPost(published[0].id));
@@ -211,7 +212,7 @@ test("post-more-menu — ação 1 toque Borrar/ocultar aqui e Mostrar novamente 
     assert.equal(blurBtn.textContent, "Borrar/ocultar aqui");
 
     click(blurBtn);
-    await settle();
+    await waitUntil(() => moderation.isPostBlurredLocally("p_sheet_blur"));
     assert.equal(moderation.isPostBlurredLocally("p_sheet_blur"), true);
     assert.equal(card.classList.contains("is-locally-blurred"), true);
     assert.equal(card.getAttribute("data-locally-blurred"), "true");
@@ -222,7 +223,7 @@ test("post-more-menu — ação 1 toque Borrar/ocultar aqui e Mostrar novamente 
     assert.equal(unblurBtn.textContent, "Mostrar novamente");
 
     click(unblurBtn);
-    await settle();
+    await waitUntil(() => !moderation.isPostBlurredLocally("p_sheet_blur"));
     assert.equal(moderation.isPostBlurredLocally("p_sheet_blur"), false);
     assert.equal(card.classList.contains("is-locally-blurred"), false);
     assert.equal(card.getAttribute("data-locally-blurred"), null);
