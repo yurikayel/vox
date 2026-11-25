@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Subversus (Fairplay, PR-3a do ADR-040): fases `FAIRPLAY_KEY/OPEN/COMMIT/SHARES/REVEAL/SHARE/CLOSE` no log da campanha (`client/js/dungeon/vtt-fairplay-log.js`), com recusa fora de fase, `commitO` ausente ou repetido e `lamport` atrasado; `verifyFairplayRecord` refaz a conta em cada aparelho. A camada de baixo (`rpg-crypto-table.js`) passa a exigir `commitO` na revelação e na recuperação. O Mestre devolve `OP_REJECTED` (`out_of_phase`) quando o reducer recusa uma op. Sem interface ainda: as partes vão em claro até o PR-3b.
 - Subversus (Fairplay): `createFairplayRollOffer` separa o compromisso público (`commit`), a semente que fica no aparelho (`secret`) e as partes de backup (`shares`, uma por par); `resolveFairplayRoll` recebe `commits`/`reveals`/`recoveries` e só aceita revelação de quem se comprometeu na mesma rolagem, verificando contra o compromisso da fase 1.
 *Lotes 8–10 em `develop` (`8923b5b4`, `#481`–`#489`).*
 

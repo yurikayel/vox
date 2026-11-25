@@ -168,9 +168,9 @@ test("rpg-crypto-table: rejeições de Commit-Reveal², cofre 3-de-5 e cegamento
   assert.throws(() => sampleUnbiasedDieFromDigest("abc", 20), RangeError);
   assert.ok(sampleUnbiasedDieFromDigest("ffffffffffffffffffffffff", 7) >= 1);
   await assert.rejects(() => resolveCommitReveal2Roll([]), RangeError);
-  await assert.rejects(() => resolveCommitReveal2Roll([{ peerId: "p1", seedBytes: new Uint8Array([9]), commitO: "00" }]), /inválida/);
+  await assert.rejects(() => resolveCommitReveal2Roll([{ peerId: "p1", seedBytes: new Uint8Array([9]), commitO: "0".repeat(64) }]), /inválida/);
   await assert.rejects(() => resolveCommitReveal2Roll([{ peerId: "p2", aborted: true }]), /sem semente/);
-  const recovered = await resolveCommitReveal2Roll([{ peerId: "p3", aborted: true, backupShares: slot.backupShares.slice(0, 3), threshold: 3 }], 20);
+  const recovered = await resolveCommitReveal2Roll([{ peerId: "p3", aborted: true, commitO: slot.commitO, backupShares: slot.backupShares.slice(0, 3), threshold: 3 }], 20);
   assert.deepEqual(recovered.recoveredPeerIds, ["p3"]);
   const failEval = evaluateVaultTrigger({ mapId: "x", gridX: 0, gridY: 0, lastRollTotal: 5, flags: [] }, { mapId: "y", gridX: 1, gridY: 2, minRollTotal: 10, requiredFlag: "chave" });
   assert.equal(failEval.failedChecks.length, 5);
@@ -292,7 +292,9 @@ test("branch-sweep 90+: desempates MoA, limites l1..l3/hp_temp e recover sem com
   const slot = await createCommitReveal2Slot(new Uint8Array([7, 8, 9]));
   const raw = await recoverAbortedSeed(slot.backupShares.slice(0, 3));
   assert.equal(raw.length, 3);
-  const directRoll = await resolveCommitReveal2Roll([{ peerId: "x", seedBytes: new Uint8Array([4, 5]) }], 2);
+  const directSeed = new Uint8Array([4, 5]);
+  const directCommit = (await createCommitReveal2Slot(directSeed)).commitO;
+  const directRoll = await resolveCommitReveal2Roll([{ peerId: "x", seedBytes: directSeed, commitO: directCommit }], 2);
   assert.ok(directRoll.rollValue >= 1 && directRoll.rollValue <= 2);
 });
 
