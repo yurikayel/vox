@@ -47,6 +47,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Service Worker:** atualização do shell na série `v7.162`–`v7.166` (valor canônico em `client/sw.js` e `docs/release-metadata.json`).
 
 ### Corrigido
+- **Fairplay da mesa (ADR-040):** chave da sessão conferida na curva P-256, partes liberadas amarradas ao hash publicado e com `y` em hex, admissão por `keyLamport` com limites de campos, fechamento do compromisso com menos participantes sem reduzir o quórum e condutor que só revela com o log completo e reenvia passos que falharam.
 - **Virada `SIGV2_FROM` (24/11/2026) e portão v1 (`PM-85` / `PM-102`, `#449`, `#470`):** rejeição de itens novos assinados em v1 pós-`SIGV2_FROM` (`sig-format.js`, `central-memory-hydrate.js`), preservação de `vxSigv` em `identity-link.js` e alinhamento de teste pós-cutover no relógio real.
 - **Deploy Pages (`#441`):** separação entre build e deploy no `deploy-pages.yml` para evitar corrida de artefato.
 
