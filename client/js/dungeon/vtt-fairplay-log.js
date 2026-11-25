@@ -20,6 +20,8 @@ const MAX_KEYS = 64;
 /** Rolagens mais recentes cujas ops assinadas o log guarda para refazer o estado (as mais antigas saem primeiro). */
 export const MAX_LOGGED_ROLLS = 50;
 const MAX_KEY_OPS_PER_ACTOR = 64;
+/** Orçamento (bytes de JSON) das ops Fairplay que vão no snapshot a quem entra. */
+export const SNAPSHOT_OPS_BUDGET = 256 * 1024;
 const NORMALIZED = new WeakSet();
 
 /** Marca um bloco `fairplay` já normalizado, para não recopiá-lo a cada op (o bloco é imutável depois de selado). */
@@ -310,8 +312,16 @@ function addRollOp(ops, op, slim) {
   if (!isSafeKey(rollId)) return ops;
   const entry = Object.hasOwn(ops.rolls, rollId) ? ops.rolls[rollId] : null;
   const seq = entry ? entry.seq : ops.seq + 1;
-  const rolls = evictOldestRoll(withEntry(ops.rolls, rollId, { seq, ops: [...(entry?.ops || []), slim] }));
-  return { ...ops, seq: Math.max(ops.seq, seq), rolls };
+  const all = withEntry(ops.rolls, rollId, { seq, ops: [...(entry?.ops || []), slim] });
+  const rolls = evictOldestRoll(all);
+  const next = { ...ops, seq: Math.max(ops.seq, seq), rolls };
+  return rolls === all ? next : { ...next, keys: pruneKeysInForce(next.keys, rolls) };
+}
+
+/** Descarta trocas de chave que nenhuma rolagem guardada mais usa (a vigente de cada par fica sempre). */
+function pruneKeysInForce(keys, rolls) {
+  const spans = rollSpans(Object.values(rolls));
+  return Object.fromEntries(Object.entries(keys).map(([actor, list]) => [actor, keyOpsInForce(list, spans)]));
 }
 
 function addLoggedOp(ops, op) {
@@ -355,13 +365,28 @@ function byLamport(a, b) {
 
 /**
  * Ops assinadas guardadas, na ordem de aplicação: todas as admissões e chaves vigentes e as rolagens mais novas, inteiras.
+ * Se passar do orçamento de bytes, as rolagens mais antigas saem primeiro (admissões e chaves vigentes ficam).
  * @param {object} [fairplay] Bloco `fairplay` do estado.
+ * @param {number} [maxBytes] Orçamento do JSON das ops (padrão: `SNAPSHOT_OPS_BUDGET`).
  * @returns {object[]} Ops ordenadas por `lamport` e `opId`.
  */
-export function collectFairplayOps(fairplay) {
+export function collectFairplayOps(fairplay, maxBytes = SNAPSHOT_OPS_BUDGET) {
   const { ops } = normalizeFairplayState(fairplay);
-  const entries = Object.values(ops.rolls);
-  const spans = entries.map((e) => ({ lo: Math.min(...e.ops.map((o) => Number(o.lamport) || 0)), hi: Math.max(...e.ops.map((o) => Number(o.lamport) || 0)) }));
+  const entries = Object.values(ops.rolls).sort((a, b) => a.seq - b.seq);
+  let list = opsFor(ops, entries);
+  while (entries.length && JSON.stringify(list).length > maxBytes) {
+    entries.shift();
+    list = opsFor(ops, entries);
+  }
+  return list;
+}
+
+function rollSpans(entries) {
+  return entries.map((e) => ({ lo: Math.min(...e.ops.map((o) => Number(o.lamport) || 0)), hi: Math.max(...e.ops.map((o) => Number(o.lamport) || 0)) }));
+}
+
+function opsFor(ops, entries) {
+  const spans = rollSpans(entries);
   const keys = Object.values(ops.keys).flatMap((list) => keyOpsInForce(list, spans));
   return [...Object.values(ops.admit), ...keys, ...entries.flatMap((e) => e.ops)].sort(byLamport);
 }
@@ -380,8 +405,9 @@ export function limitFairplayOps(list) {
     if (!groups.has(id)) groups.set(id, []);
     if (o.type !== "FAIRPLAY_ADMIT" && o.type !== "FAIRPLAY_KEY") groups.get(id).push(o);
   }
-  const newest = [...groups.values()].filter((g) => g.length).sort((x, y) => Math.min(...x.map((o) => Number(o.lamport) || 0)) - Math.min(...y.map((o) => Number(o.lamport) || 0))).slice(-MAX_LOGGED_ROLLS);
-  return [...base, ...newest.flat()].sort(byLamport);
+  const opened = [...groups.values()].filter((g) => g.length).map((g) => ({ g, first: Math.min(...g.map((o) => Number(o.lamport) || 0)) }));
+  const newest = opened.sort((x, y) => x.first - y.first).slice(-MAX_LOGGED_ROLLS);
+  return [...base, ...newest.flatMap((e) => e.g)].sort(byLamport);
 }
 
 /** Manipuladores das operações Fairplay para o reducer da campanha (ADR-040 §2.1). */

@@ -12,6 +12,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { renderDungeonView, wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { appendPoolDeltaOp, projectCharacterPools } from "../client/js/rpg-sheet-and-lore.js";
 import { sha256Hex } from "../client/js/rpg-crypto-table.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeStore(snapshotInterval = 50) {
   return createVttStore(createMemoryVttBackend(), {
@@ -123,7 +124,7 @@ test("adversarial E1: fila de escrita elimina perda em appendOp concorrente + pe
   };
   const host = { dataset: {}, innerHTML: "", addEventListener: (t, fn) => { listeners[t] = fn; }, querySelector: (s) => inputs[s] || null };
   wireDungeonView(host, { screen: "mesa", state, store });
-  await new Promise((r) => setTimeout(r, 15));
+  await waitUntil(() => state.persistenceReady);
   await listeners.submit({ target: { dataset: { dungeon: "action-form" }, querySelector: (s) => inputs[s] }, preventDefault: () => {} });
   await listeners.click({ target: { closest: () => ({ dataset: { dungeon: "roll-d20" } }) } });
   await listeners.click({ target: { closest: () => ({ dataset: { dungeon: "hp-minus" } }) } });
