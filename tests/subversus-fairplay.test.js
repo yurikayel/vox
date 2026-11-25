@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildFairplayReveal,
   createFairplayRollOffer,
   formatFairplayBadge,
   resolveFairplayRoll,
@@ -21,7 +22,12 @@ import { projectTacticsFloorForPlayer } from "../client/js/dungeon/vtt-tactics-r
 test("subversus fairplay: resolve rolagem Commit-Reveal² válida com selo leigo", async () => {
   const offerA = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-1" });
   const offerB = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-1" });
-  const res = await resolveFairplayRoll({ rollId: "r-1", sides: 20, participants: [offerA, offerB] });
+  const res = await resolveFairplayRoll({
+    rollId: "r-1",
+    sides: 20,
+    commits: [offerA.commit, offerB.commit],
+    reveals: [buildFairplayReveal(offerA.secret), buildFairplayReveal(offerB.secret)],
+  });
   assert.equal(res.ok, true);
   assert.equal(res.verified, true);
   assert.ok(res.value >= 1 && res.value <= 20);
@@ -33,12 +39,14 @@ test("subversus fairplay: resolve rolagem Commit-Reveal² válida com selo leigo
 test("subversus fairplay: detecta fraude quando semente revelada diverge do commitO", async () => {
   const offerA = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-fraud" });
   const offerB = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-fraud" });
-  const tampered = new Uint8Array(offerA.seedBytes);
+  const tampered = new Uint8Array(offerA.secret.seedBytes);
   tampered[0] ^= 0xff;
   const res = await resolveFairplayRoll({
     rollId: "r-fraud",
     sides: 20,
-    participants: [{ ...offerA, seedBytes: tampered }, offerB],
+    commits: [offerA.commit, offerB.commit],
+    // a fraude também tenta mandar um commitO novo junto da revelação: tem de ser ignorado
+    reveals: [{ ...buildFairplayReveal(offerA.secret), seedBytes: tampered, commitO: "0".repeat(64) }, buildFairplayReveal(offerB.secret)],
   });
   assert.equal(res.ok, false);
   assert.equal(res.verified, false);
@@ -48,14 +56,14 @@ test("subversus fairplay: detecta fraude quando semente revelada diverge do comm
 test("subversus fairplay: resiste a Last Revealer Attack recuperando semente via Shamir", async () => {
   const offerA = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-abort", threshold: 3, totalPeers: 4 });
   const offerB = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-abort", threshold: 3, totalPeers: 4 });
-  const abortedA = {
-    peerId: "gareth",
-    aborted: true,
-    commitO: offerA.commitO,
-    threshold: 3,
-    backupShares: offerA.backupShares.slice(0, 3),
-  };
-  const res = await resolveFairplayRoll({ rollId: "r-abort", sides: 20, participants: [abortedA, offerB] });
+  // gareth some depois de ver a revelação do Mestre; três pares juntam a parte que cada um recebeu
+  const res = await resolveFairplayRoll({
+    rollId: "r-abort",
+    sides: 20,
+    commits: [offerA.commit, offerB.commit],
+    reveals: [buildFairplayReveal(offerB.secret)],
+    recoveries: { gareth: offerA.shares.slice(0, 3) },
+  });
   assert.equal(res.ok, true);
   assert.deepEqual(res.recoveredPeerIds, ["gareth"]);
   assert.match(formatFairplayBadge(res).title, /recuperação automática/i);
@@ -84,4 +92,54 @@ test("subversus schema & zero-spoiler: FloorDoc retrocompatível e oculta volume
   const projected = projectTacticsFloorForPlayer(floor);
   assert.deepEqual(projected.volumes.map((v) => v.volumeId), ["v-pub"]);
   assert.deepEqual(projected.portals.map((p) => p.portalId), ["p-pub"]);
+});
+
+test("subversus fairplay: o compromisso público não carrega a semente nem as partes de backup", async () => {
+  const offer = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-pub" });
+  assert.equal(offer.seedBytes, undefined, "a semente não pode estar no objeto que vai para a mesa");
+  assert.equal(offer.backupShares, undefined, "as partes de backup não podem ir todas juntas para a mesa");
+  assert.equal(offer.commit?.seedBytes, undefined);
+  assert.equal(offer.commit?.backupShares, undefined);
+});
+
+test("subversus fairplay: revelação sem compromisso prévio é recusada", async () => {
+  const res = await resolveFairplayRoll({
+    rollId: "r-sem-commit",
+    sides: 20,
+    participants: [{ peerId: "intruso", seedBytes: new Uint8Array(32).fill(7) }],
+  });
+  assert.equal(res.ok, false, "semente sem compromisso não pode virar rolagem verificada");
+  assert.equal(res.verified, false);
+});
+
+test("subversus fairplay: uma parte de backup por par, e menos que o quórum não recupera", async () => {
+  const offer = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-q", threshold: 3, totalPeers: 4 });
+  const other = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-q", threshold: 3, totalPeers: 4 });
+  assert.equal(offer.shares.length, 4);
+  const res = await resolveFairplayRoll({
+    rollId: "r-q",
+    commits: [offer.commit, other.commit],
+    reveals: [buildFairplayReveal(other.secret)],
+    recoveries: { gareth: offer.shares.slice(0, 2) },
+  });
+  assert.equal(res.ok, false);
+});
+
+test("subversus fairplay: recusa revelação de outra rolagem e compromisso duplicado", async () => {
+  const a = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-x" });
+  const b = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-x" });
+  const outra = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-y" });
+  const trocada = await resolveFairplayRoll({
+    rollId: "r-x",
+    commits: [a.commit, b.commit],
+    reveals: [buildFairplayReveal(outra.secret), buildFairplayReveal(b.secret)],
+  });
+  assert.equal(trocada.ok, false);
+  const dup = await resolveFairplayRoll({
+    rollId: "r-x",
+    commits: [a.commit, a.commit],
+    reveals: [buildFairplayReveal(a.secret)],
+  });
+  assert.equal(dup.ok, false);
+  assert.match(dup.error, /duas vezes/);
 });
