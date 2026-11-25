@@ -171,8 +171,20 @@ async function advanceRoll(ctx, campaign, roll) {
   return undefined;
 }
 
+/**
+ * Com a flag ligada o Mestre aprova quem entra: a chave enviada antes disso volta como `not_admitted`. O condutor
+ * espera (sem parar) e reenvia a chave assim que a admissão aparece no log, uma única vez por recusa.
+ */
+async function resendKeyWhenAdmitted(ctx, campaign) {
+  if (!ctx.keyAwaitingAdmission || !Object.hasOwn(campaign.fairplay.admitted || {}, ctx.peerId)) return;
+  ctx.keyAwaitingAdmission = false;
+  ctx.keyAdmitResends = (ctx.keyAdmitResends || 0) + 1;
+  await publishSessionKey(ctx);
+}
+
 async function handleUpdate(ctx, campaign) {
   if (!ctx.sessionKey || !campaign?.fairplay) return;
+  await resendKeyWhenAdmitted(ctx, campaign);
   for (const roll of Object.values(campaign.fairplay.rolls || {})) await advanceRoll(ctx, campaign, roll);
 }
 
@@ -183,6 +195,9 @@ async function handleUpdate(ctx, campaign) {
  */
 /** Máximo de reenvios da chave de sessão quando o Mestre a recusa por `lamport` atrasado (entrou antes do snapshot). */
 const KEY_RESEND_LIMIT = 3;
+
+/** Máximo de reenvios da chave depois de admitido; ao estourar, o condutor para e entrega a recusa à interface. */
+const KEY_ADMIT_RESEND_LIMIT = 2;
 
 /**
  * Publica a chave de sessão deste aparelho e guarda o `opId` para reconhecer uma recusa por `lamport` atrasado.
@@ -195,6 +210,11 @@ async function publishSessionKey(ctx) {
 }
 
 async function handleRejectedKey(ctx, msg) {
+  if (ctx.rejection?.stepKey === "key") return undefined; // já parou: não repete a entrega à interface
+  if (msg.reason === "not_admitted" && (ctx.keyAdmitResends || 0) < KEY_ADMIT_RESEND_LIMIT) {
+    ctx.keyAwaitingAdmission = true;
+    return handleUpdate(ctx, await ctx.loadCampaign());
+  }
   ctx.keyResends = (ctx.keyResends || 0) + 1;
   if (msg.reason === "out_of_phase" && ctx.keyResends <= KEY_RESEND_LIMIT) return publishSessionKey(ctx);
   ctx.rejection = { reason: String(msg.reason || "unknown"), opId: msg.opId, stepKey: "key" };
