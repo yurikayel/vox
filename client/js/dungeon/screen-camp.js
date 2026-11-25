@@ -4,6 +4,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderCampfireSceneSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
+import { renderLootPanel, renderPartyPanel } from "./screen-party-panels.js";
 
 const ROLE_LABELS_PTBR = {
   STAGE1_JUDGE_RULES: { title: "Juiz de Regras", duty: "Valida acertos e danos", icon: "shield" },
@@ -283,6 +284,7 @@ export function renderCampScreen(state) {
   return `
     ${renderCampaignsSection(state)}
     ${state.campaignId ? renderNotesPanel(state) : ""}
+    ${state.campaignId ? renderPartyPanel(state) + renderLootPanel(state) : ""}
     ${renderCampHero(state)}
     ${renderTablesSection(state)}
     ${renderGuardiansPanel(state)}

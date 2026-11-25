@@ -6,6 +6,7 @@ import { buildFullInviteUrl } from "./dungeon-dom-focus.js";
 import { inspectPeerPromptForRole } from "./dungeon-state.js";
 import { dungeonIcon, renderShamirSealSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
+import { renderSavesPanel } from "./screen-party-panels.js";
 import { renderCompactWorldClock } from "./screen-table-panels.js";
 
 const INSPECT_ROLES = [
@@ -164,6 +165,7 @@ export function renderDmScreen(state) {
     </section>
     ${renderP2pInvitePanel(state)}
     ${renderCompactWorldClock(state, true)}
+    ${renderSavesPanel(state)}
     ${renderGmNotesPanel(state)}
     ${(state.notes || []).length ? renderNotesPanel(state) : ""}
     <div class="dungeon-two-col">
