@@ -17,6 +17,9 @@ const DEFAULT_PHASE_MS = 20_000;
 const MIN_PHASE_MS = 5000;
 const MAX_PHASE_MS = 120_000;
 const MAX_KEYS = 64;
+/** Rolagens mais recentes cujas ops assinadas o log guarda para refazer o estado (as mais antigas saem primeiro). */
+export const MAX_LOGGED_ROLLS = 200;
+const MAX_OPS_PER_ROLL = 400;
 const MAX_SIDES = 1000;
 const SHARE_HEX = /^(?:[0-9a-f]{2}){1,64}$/;
 
@@ -46,15 +49,24 @@ export function fairplayMinHolders(totalPeers, threshold, participants) {
   return Math.ceil(Number(totalPeers) / Math.max(1, Number(threshold) - 1));
 }
 
+function pickMap(map) {
+  return Object.fromEntries(Object.entries(map && typeof map === "object" ? map : {}).filter(([k, v]) => isSafeKey(k) && v && typeof v === "object"));
+}
+
+function normalizeLoggedOps(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const rolls = Object.entries(pickMap(src.rolls)).filter(([, list]) => Array.isArray(list)).slice(-MAX_LOGGED_ROLLS);
+  return { admit: pickMap(src.admit), keys: pickMap(src.keys), rolls: Object.fromEntries(rolls.map(([id, list]) => [id, list.slice(-MAX_OPS_PER_ROLL)])) };
+}
+
 /**
- * Normaliza o bloco `fairplay` de um `CampaignDoc` (chaves da sessão e rolagens em andamento).
+ * Normaliza o bloco `fairplay` de um `CampaignDoc`: chaves da sessão, admitidos, rolagens e as ops assinadas guardadas.
  * @param {unknown} raw Bloco salvo ou ausente.
- * @returns {{keys: object, rolls: object}} Bloco seguro para o estado.
+ * @returns {{keys: object, rolls: object, admitted: object, ops: {admit: object, keys: object, rolls: object}}} Bloco seguro para o estado.
  */
 export function normalizeFairplayState(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
-  const pick = (map) => Object.fromEntries(Object.entries(map && typeof map === "object" ? map : {}).filter(([k, v]) => isSafeKey(k) && v && typeof v === "object"));
-  return { keys: pick(src.keys), rolls: pick(src.rolls) };
+  return { keys: pickMap(src.keys), rolls: pickMap(src.rolls), admitted: pickMap(src.admitted), ops: normalizeLoggedOps(src.ops) };
 }
 
 function fairplayOf(state) {
@@ -85,10 +97,25 @@ function isEcP256PublicJwk(jwk) {
   return Boolean(jwk && jwk.kty === "EC" && jwk.crv === "P-256" && !("d" in jwk) && isFairplayPublicKeyOnCurve(jwk));
 }
 
+function isAdmitted(state, fp, actor) {
+  const gm = String(state.gmRouteId || "");
+  return Boolean(actor && ((gm && actor === gm) || Object.hasOwn(fp.admitted, actor)));
+}
+
+function applyFairplayAdmit(state, op) {
+  const gm = String(state.gmRouteId || "");
+  const target = String(op.payload?.actor || "");
+  if (!gm || op.actor !== gm || !isSafeKey(target)) return state;
+  const fp = fairplayOf(state);
+  if (!Object.hasOwn(fp.admitted, target) && Object.keys(fp.admitted).length >= MAX_KEYS) return state;
+  return { ...state, fairplay: { ...fp, admitted: withEntry(fp.admitted, target, { lamport: Number(op.lamport) }) } };
+}
+
 function applyFairplayKey(state, op) {
   const jwk = op.payload?.publicKeyJwk;
   if (!isSafeKey(op.actor) || !isEcP256PublicJwk(jwk)) return state;
   const fp = fairplayOf(state);
+  if (!isAdmitted(state, fp, op.actor)) return state;
   if (!Object.hasOwn(fp.keys, op.actor) && Object.keys(fp.keys).length >= MAX_KEYS) return state;
   const key = { alg: FAIRPLAY_SHARE_ALG, publicKeyJwk: { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }, keyLamport: Number(op.lamport) };
   return { ...state, fairplay: { ...fp, keys: withEntry(fp.keys, op.actor, key) } };
@@ -245,15 +272,51 @@ function applyFairplayClose(state, op) {
   return withRoll(state, enterPhase(closed, op, phase));
 }
 
+function slimOp(op) {
+  return { opId: op.opId, type: op.type, payload: op.payload, actor: op.actor, lamport: op.lamport, ts: op.ts, pubKeyJwk: op.pubKeyJwk, sig: op.sig };
+}
+
+function addLoggedOp(ops, op) {
+  const slim = slimOp(op);
+  if (op.type === "FAIRPLAY_ADMIT") return { ...ops, admit: withEntry(ops.admit, String(op.payload.actor), slim) };
+  if (op.type === "FAIRPLAY_KEY") return { ...ops, keys: withEntry(ops.keys, op.actor, slim) };
+  const rollId = String(op.payload?.rollId || "");
+  if (!isSafeKey(rollId)) return ops;
+  const list = [...(ops.rolls[rollId] || []), slim].slice(-MAX_OPS_PER_ROLL);
+  return { ...ops, rolls: Object.fromEntries(Object.entries(withEntry(ops.rolls, rollId, list)).slice(-MAX_LOGGED_ROLLS)) };
+}
+
+/** Guarda a op assinada que o reducer aceitou, para o estado poder ser refeito (recarga do Mestre, quem entra tarde). */
+function logged(handler) {
+  return (state, op) => {
+    const next = handler(state, op);
+    if (next === state) return state;
+    const fp = fairplayOf(next);
+    return { ...next, fairplay: { ...fp, ops: addLoggedOp(fp.ops, op) } };
+  };
+}
+
+/**
+ * Ops assinadas guardadas, na ordem em que devem ser reaplicadas: admissões, chaves vigentes e as rolagens mais recentes.
+ * @param {object} [fairplay] Bloco `fairplay` do estado.
+ * @returns {object[]} Ops ordenadas por `lamport` e `opId`.
+ */
+export function collectFairplayOps(fairplay) {
+  const { ops } = normalizeFairplayState(fairplay);
+  const all = [...Object.values(ops.admit), ...Object.values(ops.keys), ...Object.values(ops.rolls).flat()];
+  return all.sort((a, b) => (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId).localeCompare(String(b.opId)));
+}
+
 /** Manipuladores das operações Fairplay para o reducer da campanha (ADR-040 §2.1). */
 export const FAIRPLAY_OP_HANDLERS = {
-  FAIRPLAY_KEY: applyFairplayKey,
-  FAIRPLAY_OPEN: applyFairplayOpen,
-  FAIRPLAY_COMMIT: applyFairplayCommit,
-  FAIRPLAY_SHARES: applyFairplayShares,
-  FAIRPLAY_REVEAL: applyFairplayReveal,
-  FAIRPLAY_SHARE: applyFairplayShareRelease,
-  FAIRPLAY_CLOSE: applyFairplayClose,
+  FAIRPLAY_ADMIT: logged(applyFairplayAdmit),
+  FAIRPLAY_KEY: logged(applyFairplayKey),
+  FAIRPLAY_OPEN: logged(applyFairplayOpen),
+  FAIRPLAY_COMMIT: logged(applyFairplayCommit),
+  FAIRPLAY_SHARES: logged(applyFairplayShares),
+  FAIRPLAY_REVEAL: logged(applyFairplayReveal),
+  FAIRPLAY_SHARE: logged(applyFairplayShareRelease),
+  FAIRPLAY_CLOSE: logged(applyFairplayClose),
 };
 
 function hexToBytes(hex) {
