@@ -1,9 +1,9 @@
 {
-  "git_sha": "e8a284f1",
-  "branch": "fix/ptl-device-merge-tombstone",
+  "git_sha": "28a2e8e8",
+  "branch": "docs/ptl-gov-ci-sync",
   "test_js": 3121,
   "test_python": 352,
   "test_total": 3473,
   "cache_name": "vox-pwa-v7.171-device-merge-tombstone",
-  "generated_at": "2026-11-25T13:54:24Z"
+  "generated_at": "2026-11-25T14:10:49Z"
 }
