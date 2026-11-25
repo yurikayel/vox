@@ -123,9 +123,9 @@ test("diorama-gl & fallback: cache fogVersion, discard em standees e fallback em
   renderer.render(floor, mats, { mask, version: 1 });
   assert.equal(counts.texUploads, 1);
   renderer.destroy();
-  assert.equal(counts.deleteBuffer, 1);
+  assert.equal(counts.deleteBuffer, 2);
   assert.equal(counts.deleteTexture, 1);
-  assert.equal(counts.deleteProgram, 1);
+  assert.equal(counts.deleteProgram, 2);
 
   let fallbackMsg = "";
   const kids = [];

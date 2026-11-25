@@ -47,8 +47,8 @@ test("Diorama: GL próprio — destroy limpa, apaga programa/buffer e remove o c
   const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", storage: null });
   assert.equal(kids.length, 1);
   overlay.destroy();
-  assert.equal(counts.deleteProgram, 1);
-  assert.equal(counts.deleteBuffer, 1);
+  assert.equal(counts.deleteProgram, 2, "malha + texturas");
+  assert.equal(counts.deleteBuffer, 2);
   assert.ok(counts.clear >= 1);
   assert.equal(kids.length, 0, "canvas GL removido do DOM");
 });
