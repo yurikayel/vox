@@ -10,7 +10,7 @@
  * @module dungeon/vtt-fairplay-driver
  */
 import { createFairplayRollOffer } from "./vtt-fairplay-roll.js";
-import { createFairplaySessionKey, openFairplayShare, sealFairplayShare } from "./vtt-fairplay-cipher.js";
+import { createFairplaySessionKey, fairplayShareHash, openFairplayShare, sealFairplayShare } from "./vtt-fairplay-cipher.js";
 import { fairplayQuorum } from "./vtt-fairplay-log.js";
 
 const CLOSABLE = new Set(["commit", "shares", "reveal", "recovery"]);
@@ -35,6 +35,9 @@ function createDriverContext(opts) {
     now: opts.now || (() => Date.now()),
     schedule: opts.schedule || ((fn, ms) => setTimeout(fn, ms)),
     cancel: opts.cancel || ((h) => clearTimeout(h)),
+    onWarn: opts.onWarn || (() => {}),
+    onError: opts.onError || (() => {}),
+    warnings: [],
     sessionKey: null,
     offers: new Map(),
     pending: new Map(),
@@ -42,12 +45,26 @@ function createDriverContext(opts) {
   };
 }
 
+function warn(ctx, message) {
+  ctx.warnings.push(message);
+  ctx.onWarn(message);
+}
+
+/**
+ * Envia um passo uma vez. A marca `tmp:` sai sempre (inclusive se o envio lançar, para o passo poder ser
+ * tentado de novo); sem `opId` na resposta não há como reconhecer uma recusa, então não se grava marca
+ * e o próximo `onUpdate` reenvia se o log ainda não mostra o passo (o reducer recusa duplicata).
+ */
 async function send(ctx, stepKey, type, payload) {
   if ([...ctx.pending.values()].includes(stepKey)) return;
-  ctx.pending.set(`tmp:${stepKey}`, stepKey);
-  const res = await ctx.dispatchOp({ type, payload });
-  ctx.pending.delete(`tmp:${stepKey}`);
-  ctx.pending.set(res?.opId || `local:${stepKey}`, stepKey);
+  const tmp = `tmp:${stepKey}`;
+  ctx.pending.set(tmp, stepKey);
+  try {
+    const res = await ctx.dispatchOp({ type, payload });
+    if (res?.opId) ctx.pending.set(res.opId, stepKey);
+  } finally {
+    ctx.pending.delete(tmp);
+  }
 }
 
 async function stepCommit(ctx, roll) {
@@ -62,21 +79,39 @@ async function sealedShares(ctx, campaign, roll, offer) {
   for (const [i, share] of offer.shares.entries()) {
     const to = others[i % others.length];
     const envelope = await sealFairplayShare({ share, rollId: roll.rollId, fromPeer: ctx.peerId, toPeer: to, privateKey: ctx.sessionKey.privateKey, recipientJwk: keyOf(campaign, to) });
-    out.push({ to, share: envelope });
+    out.push({ to, share: envelope, shareHash: await fairplayShareHash(share) });
   }
   return out;
+}
+
+/** Pares cuja chave pública não importa: não dá para cifrar para eles, e isso é dito, não engolido. */
+async function unusablePeers(ctx, campaign, roll) {
+  const bad = [];
+  for (const p of committed(roll).filter((o) => o !== ctx.peerId)) {
+    const jwk = keyOf(campaign, p);
+    const ok = jwk && await crypto.subtle.importKey("jwk", { ...jwk, ext: true }, { name: "ECDH", namedCurve: "P-256" }, false, []).then(() => true, (err) => (warn(ctx, `Fairplay: chave de ${p} não importa (${err?.message || err}); sem partes para ele.`), false));
+    if (!jwk) warn(ctx, `Fairplay: sem chave de ${p} na mesa; sem partes para ele.`);
+    if (!ok) bad.push(p);
+  }
+  return bad;
 }
 
 async function stepShares(ctx, campaign, roll) {
   const offer = ctx.offers.get(roll.rollId);
   if (!offer) return;
+  if ((await unusablePeers(ctx, campaign, roll)).length) return;
   const shares = await sealedShares(ctx, campaign, roll, offer);
   await send(ctx, `${roll.rollId}:shares`, "FAIRPLAY_SHARES", { rollId: roll.rollId, shares });
 }
 
+/** Só revela quando o log mostra que todo participante se comprometeu e entregou as partes. */
+function logShowsEveryoneReady(roll) {
+  return roll.participants.every((p) => Object.hasOwn(roll.commits, p) && Object.hasOwn(roll.shares, p));
+}
+
 async function stepReveal(ctx, roll) {
   const offer = ctx.offers.get(roll.rollId);
-  if (!offer) return;
+  if (!offer || !logShowsEveryoneReady(roll)) return;
   await send(ctx, `${roll.rollId}:reveal`, "FAIRPLAY_REVEAL", { rollId: roll.rollId, seedHex: toHex(offer.secret.seedBytes) });
 }
 
@@ -84,7 +119,8 @@ async function openHeld(ctx, campaign, roll, ofPeer) {
   const mine = (roll.shares[ofPeer] || []).filter((s) => s.to === ctx.peerId);
   const shares = [];
   for (const s of mine) {
-    shares.push(await openFairplayShare({ envelope: s.share, rollId: roll.rollId, fromPeer: ofPeer, toPeer: ctx.peerId, privateKey: ctx.sessionKey.privateKey, senderJwk: keyOf(campaign, ofPeer) }));
+    const plain = await openFairplayShare({ envelope: s.share, rollId: roll.rollId, fromPeer: ofPeer, toPeer: ctx.peerId, privateKey: ctx.sessionKey.privateKey, senderJwk: keyOf(campaign, ofPeer) });
+    shares.push({ splitId: plain.splitId, x: plain.x, y: toHex(plain.y) });
   }
   return shares;
 }
@@ -104,7 +140,7 @@ function scheduleClose(ctx, campaign, roll) {
   if (!mayClose || !CLOSABLE.has(roll.phase) || ctx.timers.has(timerKey)) return;
   const wait = Math.max(0, Number(roll.phaseStartTs) + Number(roll.phaseMs) - ctx.now());
   ctx.timers.set(timerKey, ctx.schedule(() => {
-    send(ctx, `${timerKey}:close`, "FAIRPLAY_CLOSE", { rollId: roll.rollId, phase: roll.phase }).catch(() => {});
+    send(ctx, `${timerKey}:close`, "FAIRPLAY_CLOSE", { rollId: roll.rollId, phase: roll.phase }).catch((err) => ctx.onError(err));
   }, wait));
 }
 
@@ -132,14 +168,14 @@ async function handleRejected(ctx, msg) {
 
 /**
  * Cria o condutor Fairplay de um aparelho da mesa.
- * @param {{peerId: string, dispatchOp: (rawOp: object) => Promise<object>, loadCampaign: () => Promise<object>, now?: () => number, schedule?: Function, cancel?: Function}} opts
+ * @param {{peerId: string, dispatchOp: (rawOp: object) => Promise<object>, loadCampaign: () => Promise<object>, now?: () => number, schedule?: Function, cancel?: Function, onWarn?: (message: string) => void, onError?: (err: unknown) => void}} opts
  *   `dispatchOp` é o do par de sincronização (`createVttSyncPeer`); `schedule`/`cancel` trocam o relógio nos testes.
- * @returns {{start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
+ * @returns {{warnings: () => string[], start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
  */
 export function createFairplayDriver(opts) {
   const ctx = createDriverContext(opts);
   let chain = Promise.resolve();
-  const queue = (fn) => (chain = chain.then(fn).catch(() => {}));
+  const queue = (fn) => (chain = chain.then(fn).catch((err) => ctx.onError(err)));
   return {
     async start() {
       ctx.sessionKey = await createFairplaySessionKey();
@@ -152,6 +188,7 @@ export function createFairplayDriver(opts) {
     },
     onUpdate: (campaign) => queue(() => handleUpdate(ctx, campaign)),
     onRejected: (msg) => queue(() => handleRejected(ctx, msg)),
+    warnings: () => [...ctx.warnings],
     close() {
       for (const h of ctx.timers.values()) ctx.cancel(h);
       ctx.timers.clear();

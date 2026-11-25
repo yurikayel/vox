@@ -49,7 +49,40 @@ async function deriveShareKey(privateKey, peerJwk, label) {
 }
 
 function encodeShare(share) {
-  return new TextEncoder().encode(JSON.stringify({ splitId: share.splitId, x: share.x, y: toHex(share.y) }));
+  const y = typeof share.y === "string" ? share.y : toHex(share.y);
+  return new TextEncoder().encode(JSON.stringify({ splitId: share.splitId, x: share.x, y }));
+}
+
+/**
+ * SHA-256 (hex) da parte codificada: é o que quem divide publica junto de cada envelope, para que a
+ * parte liberada depois na recuperação possa ser conferida contra o que foi prometido.
+ * @param {{splitId: string, x: number, y: Uint8Array|string}} share Parte Shamir em claro (`y` em bytes ou hex).
+ * @returns {Promise<string>} Hash em hex minúsculo (64 caracteres).
+ */
+export async function fairplayShareHash(share) {
+  return toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", encodeShare(share))));
+}
+
+const P256_P = 2n ** 256n - 2n ** 224n + 2n ** 192n + 2n ** 96n - 1n;
+const P256_B = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604bn;
+
+function coordinate(b64u) {
+  if (typeof b64u !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(b64u)) return null;
+  const bytes = Uint8Array.from(atob(b64u.replace(/-/g, "+").replace(/_/g, "/") + "="), (c) => c.charCodeAt(0));
+  return BigInt(`0x${toHex(bytes)}`);
+}
+
+/**
+ * Confere, de forma síncrona, que (x, y) de um JWK P-256 é um ponto da curva (y² = x³ − 3x + b mod p).
+ * O reducer não pode importar a chave (WebCrypto é assíncrono); isto fecha o buraco só da forma.
+ * @param {{x?: string, y?: string}} jwk Chave pública em JWK.
+ * @returns {boolean} `true` quando as coordenadas têm 32 bytes, são menores que p e estão na curva.
+ */
+export function isFairplayPublicKeyOnCurve(jwk) {
+  const x = coordinate(jwk?.x);
+  const y = coordinate(jwk?.y);
+  if (x === null || y === null || x >= P256_P || y >= P256_P) return false;
+  return (y * y) % P256_P === (((x * x * x - 3n * x + P256_B) % P256_P) + P256_P) % P256_P;
 }
 
 function decodeShare(bytes) {
@@ -87,8 +120,8 @@ export async function openFairplayShare(opts) {
 /**
  * Confere a forma de um envelope sem abrir (o reducer não tem a chave de ninguém).
  * @param {unknown} env Candidato a envelope.
- * @returns {boolean} `true` quando tem algoritmo conhecido, IV de 12 bytes e texto cifrado em hex.
+ * @returns {boolean} `true` quando tem algoritmo conhecido, IV de 12 bytes e texto cifrado em hex de 17 a 512 bytes.
  */
 export function isFairplayShareEnvelope(env) {
-  return Boolean(env && env.alg === FAIRPLAY_SHARE_ALG && /^[0-9a-f]{24}$/.test(String(env.iv)) && /^(?:[0-9a-f]{2}){17,}$/.test(String(env.ct)));
+  return Boolean(env && env.alg === FAIRPLAY_SHARE_ALG && /^[0-9a-f]{24}$/.test(String(env.iv)) && /^(?:[0-9a-f]{2}){17,512}$/.test(String(env.ct)));
 }
