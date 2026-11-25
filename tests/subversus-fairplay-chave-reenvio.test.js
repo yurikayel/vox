@@ -54,16 +54,30 @@ test("chave recusada por não admitido espera a aprovação do Mestre e é reenv
   driver.close();
 });
 
-test("limita o reenvio da chave após admissão quando o Mestre segue recusando", async () => {
+const ADMITTED = { fairplay: { admitted: { vx_player: {} }, rolls: {} } };
+
+test("limita o reenvio da chave após admissão: Mestre que sempre recusa dá exatamente 3 envios e 1 parada", async () => {
   const { driver, sent, stops } = makeDriver();
-  const admitted = { fairplay: { admitted: { vx_player: {} }, rolls: {} } };
   await driver.start();
   for (let i = 1; i <= 50; i += 1) {
     await driver.onRejected({ opId: `op-${sent.length}`, reason: "not_admitted" });
-    await driver.onUpdate(admitted);
+    await driver.onUpdate(ADMITTED);
   }
-  assert.ok(sent.length <= 4, `${sent.length} envios`);
-  assert.equal(stops.length, 1);
-  assert.equal(stops[0].reason, "not_admitted");
+  assert.equal(sent.length, 3, "1 envio + 2 reenvios após a admissão");
+  assert.deepEqual(stops.map((s) => s.reason), ["not_admitted"]);
+  driver.close();
+});
+
+test("admissão que chega depois do 2º reenvio: a chave é aceita e não há parada", async () => {
+  const { driver, sent, stops } = makeDriver();
+  await driver.start();
+  await driver.onRejected({ opId: "op-1", reason: "not_admitted" });
+  await driver.onUpdate(ADMITTED);
+  await driver.onRejected({ opId: "op-2", reason: "not_admitted" });
+  await driver.onUpdate(ADMITTED);
+  assert.equal(sent.length, 3, "o 2º reenvio saiu");
+  await driver.onUpdate(ADMITTED);
+  assert.equal(sent.length, 3, "aceita: nada mais é enviado");
+  assert.equal(stops.length, 0);
   driver.close();
 });
