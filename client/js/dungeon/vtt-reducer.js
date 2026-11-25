@@ -13,6 +13,7 @@ import {
 } from "./vtt-schema.js";
 import { createFloorDoc, createSceneDoc, createTokenDoc, hpStatusLabel, normalizeSceneGrid } from "./vtt-scene-schema.js";
 import { clampTokenToFloor } from "./vtt-geometry.js";
+import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import { isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   isPlayerAuthorizedForTacticsOp,
