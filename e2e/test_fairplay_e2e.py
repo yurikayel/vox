@@ -25,16 +25,31 @@ WAIT_MS = 30000
 _SESSION = "(await import('/js/dungeon/dungeon-state.js')).getDungeonSession()"
 FLAG_ON = "localStorage.setItem('vox.lab.fairplay', '1')"
 
-_RECORD_JS = """async (rollId) => {
+_RECORD_JS = """async ({ rollId, offset }) => {
   const st = %s;
   const log = await import('/js/dungeon/vtt-fairplay-log.js');
   const verdict = await log.verifyFairplayRecord({ fairplay: st.fairplay }, rollId);
-  const value = verdict.value ?? 1;
+  const truth = verdict.value ?? 1;
+  const value = offset ? (truth + offset - 1) %% 20 + 1 : truth;
   const rollResult = { formula: '1d20', label: 'Fairplay', visibility: 'public', total: value,
     rolls: [{ sides: 20, value, kept: true }], fairplay: { rollId, value } };
   await st.syncPeer.dispatchOp({ type: 'ROLL_RECORDED', payload: { rollResult } });
-  return value;
+  return { truth, value };
 }""" % _SESSION
+
+
+_ROLL_INFO_JS = """async (rollId) => {
+  const st = %s;
+  const roll = st.fairplay?.rolls?.[rollId] || {};
+  return { me: st.vttKeypair?.routeId, driver: Boolean(st.fairplayDriver), phase: roll.phase,
+    commits: Object.keys(roll.commits || {}).sort(), participants: [...(roll.participants || [])].sort(),
+    openedCount: roll.openedCount, keys: Object.keys(st.fairplay?.keys || {}).sort() };
+}""" % _SESSION
+
+
+def _roll_info(page):
+    """Instantâneo da rolagem e da identidade neste aparelho, lido do estado em memória."""
+    return page.evaluate(_ROLL_INFO_JS, ROLL_ID)
 
 
 # A CSP da página proíbe `eval`/`new Function`: as condições são predicados nomeados, não texto.
@@ -59,6 +74,17 @@ def _wait_state(page, kind, arg):
         raise AssertionError(f"condição não ocorreu em {WAIT_MS} ms: {kind} {arg}")
 
 
+def _drop_shared_flag(pages):
+    """Desliga a flag só para quem entrar depois.
+
+    As abas do contexto dividem o `localStorage`, então uma aba "sem flag" só existe se a chave for removida
+    antes de ela entrar. As abas já ligadas mantêm o campo `fairplayLabEnabled` do próprio estado (o selo e
+    o condutor já estão montados).
+    """
+    for page in pages:
+        page.evaluate(f"async () => {{ {_SESSION}.fairplayLabEnabled = true; localStorage.removeItem('vox.lab.fairplay'); }}")
+
+
 def _diagnosis(page):
     """Estado dos selos e da rolagem neste aparelho, para mensagem de falha com o erro observado."""
     return page.evaluate(f"async () => {{ const st = {_SESSION}; return JSON.stringify({{ seals: st.fairplaySeals, phase: st.fairplay?.rolls?.['{ROLL_ID}']?.phase, chronicle: st.chronicle?.length }}); }}")
@@ -67,19 +93,26 @@ def _diagnosis(page):
 class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
     """Rolagem verificável pela rede da mesa, com a flag de laboratório."""
 
-    def _open_trio(self, name, flag):
-        """Mestre com mesa aberta e dois jogadores já conectados; `flag` liga o Fairplay em todas as abas."""
+    def _open_trio(self, name, flags=(True, True, True)):
+        """Mestre com mesa aberta e dois jogadores já conectados; `flags` liga o Fairplay por aba (Mestre, J1, J2).
+
+        Uma aba sem flag depois de abas com flag usa `_drop_shared_flag` (o `localStorage` é compartilhado).
+        """
         ctx, gm, errors, _ = _new_isolated_page(self.browser, self.base_url)
-        if flag:
-            ctx.add_init_script(FLAG_ON)
+        if flags[0]:
+            gm.add_init_script(FLAG_ON)
         _watch_errors(gm, errors)
         table_id = _onboard_and_campaign(gm, self.base_url, name)
         invite = _generate_invite(gm, self.base_url, table_id)
         _goto_mesa(gm, self.base_url, table_id)
         _set_viewer_gm(gm)
         players = []
-        for _ in range(2):
+        for i, flag in enumerate(flags[1:], start=1):
+            if not flag and any(flags[:i]):
+                _drop_shared_flag([gm, *players])
             page = ctx.new_page()
+            if flag:
+                page.add_init_script(FLAG_ON)
             _watch_errors(page, errors)
             page.goto(invite, wait_until="domcontentloaded")
             page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
@@ -89,51 +122,97 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
     def _open_roll(self, opener):
         opener.evaluate(f"async () => {_SESSION}.fairplayDriver.openRoll({{ rollId: '{ROLL_ID}', sides: 20, formula: '1d20', phaseMs: 5000 }})")
 
-    def test_01_player_opens_roll_and_three_tabs_show_same_verified_seal(self):
-        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Selo", flag=True)
+    def _run_verified_roll(self, gm, p1, p2):
+        """Abre a rolagem pelo J1 e espera as 3 abas chegarem a `done`."""
+        for page in (gm, p1, p2):
+            _wait_state(page, "keys", 3)
+        self._open_roll(p1)
+        for page in (gm, p1, p2):
+            _wait_state(page, "phase", [ROLL_ID, "done"])
+
+    def _expect_seal(self, page, css, text):
+        seal = page.locator(f".dungeon-fairplay-seal.{css}")
         try:
-            for page in (gm, p1, p2):
-                _wait_state(page, "keys", 3)
-            self._open_roll(p1)
-            for page in (gm, p1, p2):
-                _wait_state(page, "phase", [ROLL_ID, "done"])
-            value = p1.evaluate(_RECORD_JS, ROLL_ID)
+            expect(seal).to_contain_text(text, timeout=WAIT_MS)
+        except AssertionError as err:
+            raise AssertionError(f"sem selo {css}: {_diagnosis(page)}") from err
+        return seal
+
+    def test_01_player_opens_roll_and_three_tabs_show_same_verified_seal(self):
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Selo")
+        try:
+            self._run_verified_roll(gm, p1, p2)
+            result = p1.evaluate(_RECORD_JS, {"rollId": ROLL_ID, "offset": 0})
             values = []
             for page in (gm, p1, p2):
-                seal = page.locator(".dungeon-fairplay-seal.is-verified")
-                try:
-                    expect(seal).to_contain_text("✓ Verificada", timeout=WAIT_MS)
-                except AssertionError as err:
-                    raise AssertionError(f"sem selo verificado: {_diagnosis(page)}") from err
+                seal = self._expect_seal(page, "is-verified", "✓ Verificada")
                 values.append(page.locator(".dungeon-chronicle-list").filter(has=seal).inner_text())
-            self.assertTrue(all(f"= {value}" in text for text in values), values)
+            self.assertTrue(all(f"= {result['value']}" in text for text in values), values)
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_01b_wrong_recorded_value_is_not_verified_on_any_tab(self):
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Forjado")
+        try:
+            self._run_verified_roll(gm, p1, p2)
+            result = p1.evaluate(_RECORD_JS, {"rollId": ROLL_ID, "offset": 7})
+            self.assertNotEqual(result["value"], result["truth"])
+            for page in (gm, p1, p2):
+                self._expect_seal(page, "is-unverified", "não confere")
+                self.assertEqual(page.locator(".dungeon-fairplay-seal.is-verified").count(), 0)
             self.assertEqual(errors, [])
         finally:
             _close_ctx(ctx)
 
     def test_02_flag_off_creates_no_fairplay_ops(self):
-        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Off", flag=False)
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Off", flags=(False, False, False))
         try:
             _add_token(gm, "SinalDeVida", "player")
             for page in (p1, p2):
                 expect(page.locator(".dungeon-token-roster")).to_contain_text("SinalDeVida", timeout=WAIT_MS)
             for page in (gm, p1, p2):
-                state = page.evaluate(f"async () => {{ const st = {_SESSION}; return {{ driver: Boolean(st.fairplayDriver), keys: Object.keys(st.fairplay?.keys || {{}}).length, rolls: Object.keys(st.fairplay?.rolls || {{}}).length }}; }}")
-                self.assertEqual(state, {"driver": False, "keys": 0, "rolls": 0})
+                info = _roll_info(page)
+                self.assertEqual((info["driver"], info["keys"], info["phase"]), (False, [], None))
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_02b_tab_without_flag_stays_out_of_a_roll_opened_by_flagged_tabs(self):
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Misto", flags=(True, True, False))
+        try:
+            for page in (gm, p1):
+                _wait_state(page, "keys", 2)
+            self._open_roll(p1)
+            for page in (gm, p1):
+                _wait_state(page, "phase", [ROLL_ID, "done"])
+            p1.evaluate(_RECORD_JS, {"rollId": ROLL_ID, "offset": 0})
+            for page in (gm, p1):
+                self._expect_seal(page, "is-verified", "✓ Verificada")
+            expect(p2.locator(".dungeon-chronicle-list")).to_contain_text("Fairplay", timeout=WAIT_MS)
+            info = _roll_info(p2)
+            roll_peers = _roll_info(p1)["participants"]
+            self.assertEqual((info["driver"], info["me"] in roll_peers, info["me"] in _roll_info(p1)["commits"]), (False, False, False))
+            self.assertEqual(p2.locator(".dungeon-fairplay-seal").count(), 0)
             self.assertEqual(errors, [])
         finally:
             _close_ctx(ctx)
 
     def test_03_tab_closed_before_commit_ends_honestly_unverified(self):
-        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Saiu", flag=True)
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Saiu")
         try:
             for page in (gm, p1, p2):
                 _wait_state(page, "keys", 3)
+            gone = _roll_info(p2)["me"]
             p2.close()
             self._open_roll(p1)
             for page in (gm, p1):
                 _wait_state(page, "phase", [ROLL_ID, "aborted"])
-            p1.evaluate(_RECORD_JS, ROLL_ID)
+            alive = sorted([_roll_info(gm)["me"], _roll_info(p1)["me"]])
+            info = _roll_info(gm)
+            self.assertEqual(info["commits"], alive, "só os dois vivos se comprometeram")
+            self.assertEqual((info["openedCount"], gone in info["participants"], gone in info["commits"]), (3, True, False))
+            p1.evaluate(_RECORD_JS, {"rollId": ROLL_ID, "offset": 0})
             expect(gm.locator(".dungeon-fairplay-seal.is-unverified")).to_contain_text("faltaram compromissos", timeout=WAIT_MS)
             expect(gm.locator(".dungeon-fairplay-unclosed")).to_contain_text("Rolagens que não fecharam", timeout=WAIT_MS)
             self.assertEqual(errors, [])
