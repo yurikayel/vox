@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: exportar a ficha-base para um arquivo `.voxchar` e importar um `.voxchar` como ficha nova, no painel Editar; o arquivo não leva identidade, PV atual, condições nem notas do Mestre, e a importação recusa arquivo grande, malformado ou com número fora da faixa, com o motivo (`voxchar.js`, `voxchar-check.js`, `tests/subversus-voxchar.test.js`, spec `docs/specs/voxchar-v0.md`).
 - Testes: 10 esperas fixas (lead-tab, círculos da sidebar, aviso consultivo, explode) viram `waitUntil`; a catraca de `tests/sem-esperas-fixas.test.js` desce de 51 para 41. Sem mudança em código de produção.
 - Testes (relay): o smoke de carga de sinalização desliga o modo debug do asyncio só nele (o debug instrumenta cada tarefa e mede o harness, não o servidor: 3,0-3,4 s → 0,6 s sozinho) e assere que segue desligado; limite de 5 s intacto. Sem mudança em código de produção.
 - Testes: o envio do Dado de Vida pelo painel Editar (d10 grava, em branco mantém o d8 padrão, valor fora de d4–d12 é ignorado, ficha sem o campo não quebra) passa a ter teste próprio (`tests/subversus-ficha-dado-de-vida-envio.test.js`).

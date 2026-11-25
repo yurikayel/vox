@@ -1,9 +1,9 @@
 # Ficha portátil `.voxchar` (v0)
 
-> **Status:** rascunho (proposta; aguarda aceite do mantenedor, zero código antes) · **Owner:** mantenedor · **Revisado:** 2026-11-25
+> **Status:** parcial (aceita pelo mantenedor em 2026-11-25; exportar e importar `.voxchar` implementados em `client/js/dungeon/voxchar.js` e `voxchar-check.js`; link só de leitura fica fora do v1, §6) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§6) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
-Define o arquivo `.voxchar`, que leva a ficha-base de um personagem de uma instalação do Vox para outra. Nada aqui está implementado; o código só começa depois do aceite.
+Define o arquivo `.voxchar`, que leva a ficha-base de um personagem de uma instalação do Vox para outra. Aceita em 2026-11-25. O v1 (exportar e importar) está implementado; o link só de leitura (§6) e o item dentro do `.voxrpg.zip` não.
 
 ## 1. Escopo
 
