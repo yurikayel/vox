@@ -9,6 +9,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon } from "./rpg-illustrations.js";
+import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { buildItemWeightView, buildLoadView } from "./sheet-view-model.js";
 import { BACKPACK_COLS, BACKPACK_ROWS, organizeBackpack } from "./vtt-inventory.js";
 
@@ -54,7 +55,18 @@ function renderItemRow(it) {
     </li>`;
 }
 
-function renderAddItemForm() {
+/** Campo opcional Armadura do item: tipos e rótulos vêm do pacote do sistema da ficha; sem `armor` no pacote, não aparece. */
+function renderArmorFields(sheet) {
+  const kinds = resolveSheetSystem(sheet)?.pack.formulas.armor?.kinds;
+  if (!kinds) return "";
+  const opts = Object.entries(kinds).map(([id, k]) => `<option value="${escapeHtml(id)}">${escapeHtml(k.label)}</option>`).join("");
+  return `<label class="sr-only" for="dungeon-item-armor-kind">Armadura (opcional)</label>
+          <select id="dungeon-item-armor-kind" class="dungeon-input" name="itemArmorKind"><option value="">Sem armadura</option>${opts}</select>
+          <label class="sr-only" for="dungeon-item-armor-ac">CA da armadura</label>
+          <input id="dungeon-item-armor-ac" class="dungeon-input dungeon-input-qty" name="itemArmorAc" type="number" min="0" max="30" placeholder="CA" aria-label="CA da armadura" />`;
+}
+
+function renderAddItemForm(sheet) {
   return `
       <form class="dungeon-action-form" data-dungeon="add-item-form">
         <div class="dungeon-input-row">
@@ -64,6 +76,7 @@ function renderAddItemForm() {
           <input id="dungeon-item-qty" class="dungeon-input dungeon-input-qty" name="itemQty" type="number" min="1" max="99" value="1" aria-label="Quantidade" />
           <label class="sr-only" for="dungeon-item-weight">Peso em libras (lb)</label>
           <input id="dungeon-item-weight" class="dungeon-input dungeon-input-qty" name="itemWeight" type="number" min="0" max="500" step="0.5" value="0.5" aria-label="Peso em libras (lb)" />
+          ${renderArmorFields(sheet)}
           <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar</button>
         </div>
       </form>`;
@@ -85,7 +98,7 @@ export function renderInventoryPanel(state) {
         <div><span class="dungeon-eyebrow">Inventário compartilhado</span><h2>Mochila (${escapeHtml(load.text)})</h2></div>
       </div>
       ${renderLoadIndicator(load)}
-      ${renderAddItemForm()}
+      ${renderAddItemForm(state.sheet)}
       <h3 class="dungeon-eyebrow">Equipado</h3>
       ${renderEquipped(items)}
       <h3 class="dungeon-eyebrow">Mochila</h3>

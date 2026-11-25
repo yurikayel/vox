@@ -59,13 +59,25 @@ export const DND5E_2024_PACK = Object.freeze({
     { id: "hit-dice", label: "Dados de Vida", kind: "uses" },
     { id: "spell-slots", label: "Espaços de magia", kind: "slots" },
     { id: "heroic-inspiration", label: "Inspiração Heroica", kind: "flag" },
+    { id: "death-saves", label: "Testes contra a morte", kind: "uses" },
   ]),
-  labels: Object.freeze({ armorClass: "CA", initiative: "Iniciativa", proficiency: "Proficiência", passivePerception: "Percepção passiva" }),
+  labels: Object.freeze({ armorClass: "CA", initiative: "Iniciativa", proficiency: "Proficiência", passivePerception: "Percepção passiva", speed: "Deslocamento", saves: "Salvaguardas", deathSaves: "Testes contra a morte" }),
   formulas: Object.freeze({
     modifier: Object.freeze({ base: 10, step: 2 }),
     proficiency: Object.freeze({ base: 2, every: 4 }),
     armorClass: Object.freeze({ base: 10, ability: "dex" }),
     initiative: Object.freeze({ ability: "dex" }),
     passivePerception: Object.freeze({ base: 10, skill: "perception" }),
+    deathSaves: Object.freeze({ needed: 3 }),
+    speed: Object.freeze({ maxFt: 200, metersPerFt: 0.3 }),
+    armor: Object.freeze({
+      maxAc: 30,
+      kinds: Object.freeze({
+        leve: Object.freeze({ label: "Armadura leve", slot: "body", dexCap: null }),
+        media: Object.freeze({ label: "Armadura média", slot: "body", dexCap: 2 }),
+        pesada: Object.freeze({ label: "Armadura pesada", slot: "body", dexCap: 0 }),
+        escudo: Object.freeze({ label: "Escudo", slot: "shield", dexCap: 0 }),
+      }),
+    }),
   }),
 });

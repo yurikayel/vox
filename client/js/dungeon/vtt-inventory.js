@@ -31,6 +31,13 @@ function explicitSize(raw) {
   return w && h ? { w, h } : {};
 }
 
+/** Campo opcional `armor` ({kind, ac}) como digitado; o significado de `kind` e a matemática são do pacote de sistema. */
+function armorField(raw) {
+  const kind = String(raw.armor?.kind || "").trim().slice(0, 16);
+  const ac = Math.trunc(Number(raw.armor?.ac));
+  return kind && Number.isFinite(ac) && ac >= 0 && ac <= 40 ? { armor: { kind, ac } } : {};
+}
+
 function normalizeItem(raw = {}, idx = 0) {
   const label = String(raw.label || raw.name || "").trim().slice(0, 80);
   if (!label) return null;
@@ -42,6 +49,7 @@ function normalizeItem(raw = {}, idx = 0) {
     equipped: Boolean(raw.equipped),
     tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).slice(0, 24)) : [],
     ...explicitSize(raw),
+    ...armorField(raw),
   };
 }
 
