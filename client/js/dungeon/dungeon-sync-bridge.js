@@ -68,6 +68,7 @@ export function hydrateStateFromCampaign(state, campaign) {
   state.worldDateLabel = formatInWorldDate(campaign.calendar);
   if (Array.isArray(campaign.chronicle) && campaign.chronicle.length) state.chronicle = [...campaign.chronicle];
   state.rolls = [...(campaign.rolls || [])];
+  state.fairplay = campaign.fairplay;
   state.notes = Object.values(campaign.notesById || {});
   syncLastD20(state);
   return state;
@@ -96,6 +97,7 @@ export function buildCampaignFromSession(state) {
     notesById,
     chronicle: state.chronicle || [],
     rolls: state.rolls || [],
+    fairplay: state.fairplay,
   });
 }
 
@@ -111,6 +113,7 @@ function hydrateEphemeralReduction(state, reduced) {
   }
   state.chronicle = [...(reduced.chronicle || [])];
   state.rolls = [...(reduced.rolls || [])];
+  state.fairplay = reduced.fairplay;
   state.notes = Object.values(reduced.notesById || {});
   syncLastD20(state);
   return reduced;
