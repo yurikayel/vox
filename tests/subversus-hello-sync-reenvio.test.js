@@ -13,7 +13,6 @@ import * as sync from "../client/js/dungeon/vtt-sync.js";
 import { settlePeers, waitUntil } from "./helpers/wait-until.js";
 
 const { createInMemorySyncHub, createVttSyncPeer } = sync;
-const HELLO_RETRY_LIMIT = sync.HELLO_RETRY_LIMIT ?? 4;
 const ID = "mesa-hello";
 
 function makeStore() {
@@ -71,9 +70,9 @@ test("o Mestre nunca responde: os envios ficam no limite e há uma única parada
   const player = makePlayer(env, { schedule: (fn, ms) => clock.schedule(fn, ms), cancel: () => clock.cancel(), onHelloGaveUp: (info) => stops.push(info) });
   player.join();
   for (let i = 0; i < 30; i += 1) clock.fire();
-  assert.equal(sends.length, 1 + HELLO_RETRY_LIMIT);
+  assert.equal(sends.length, 5, "1 envio + 4 reenvios");
   assert.deepEqual(stops, [{ reason: "no_response" }]);
-  assert.ok(clock.delays.every((d, i) => i === 0 || d > clock.delays[i - 1]), "a espera cresce a cada reenvio");
+  assert.deepEqual(clock.delays, [400, 800, 1600, 3200, 6400], "espera dobrando, com a espera final antes de desistir");
   player.close();
 });
 
@@ -92,4 +91,55 @@ test("HELLO repetido no Mestre não duplica o par nem muda o estado", async () =
   assert.deepEqual(await env.gmStore.loadCampaign(ID), first, "o estado do Mestre ficou igual");
   gm.close();
   player.close();
+});
+
+function helloWire(env) {
+  const sends = [];
+  env.hub.connect(env.gm.routeId).onMessage((m) => { if (m.kind === "HELLO_SYNC") sends.push(m); });
+  return sends;
+}
+
+test("close() cancela o reenvio: nada é enviado depois e não há parada", async () => {
+  const env = await setup();
+  const clock = manualClock();
+  const sends = helloWire(env);
+  const stops = [];
+  const player = makePlayer(env, { schedule: (fn, ms) => clock.schedule(fn, ms), cancel: () => clock.cancel(), onHelloGaveUp: (i) => stops.push(i) });
+  player.join();
+  player.close();
+  for (let i = 0; i < 10; i += 1) clock.fire();
+  assert.equal(sends.length, 1);
+  assert.equal(stops.length, 0);
+});
+
+test("erro ao enviar o HELLO para o reenvio com uma parada de motivo error", async () => {
+  const env = await setup();
+  const clock = manualClock();
+  const stops = [];
+  const transport = env.hub.connect(env.player.routeId);
+  const failing = { ...transport, onMessage: transport.onMessage, send: () => { throw new Error("rede caiu"); } };
+  const player = createVttSyncPeer({ role: "player", campaignId: ID, keypair: env.player, store: env.playerStore, transport: failing, roomKey: env.roomKey, gmRouteId: env.gm.routeId, schedule: (fn, ms) => clock.schedule(fn, ms), cancel: () => clock.cancel(), onHelloGaveUp: (i) => stops.push(i) });
+  player.join();
+  for (let i = 0; i < 10; i += 1) clock.fire();
+  assert.deepEqual(stops, [{ reason: "error" }]);
+  assert.equal(clock.delays.length, 0, "nada foi reagendado");
+});
+
+async function rejectFromGm(env, player, reason) {
+  const gmWire = env.hub.connect(env.gm.routeId);
+  gmWire.send(env.player.routeId, { kind: "OP_REJECTED", roomKey: env.roomKey, opId: "x", reason });
+  await settlePeers(player);
+  gmWire.close();
+}
+
+test("só a recusa da entrada (revoked) para o reenvio; outra op recusada não", async () => {
+  for (const [reason, pending] of [["revoked", 0], ["out_of_phase", 1]]) {
+    const env = await setup();
+    const clock = manualClock();
+    const player = makePlayer(env, { schedule: (fn, ms) => clock.schedule(fn, ms), cancel: () => clock.cancel() });
+    player.join();
+    await rejectFromGm(env, player, reason);
+    assert.equal(clock.count(), pending, `motivo ${reason}`);
+    player.close();
+  }
 });

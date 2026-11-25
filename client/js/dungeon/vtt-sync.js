@@ -347,7 +347,7 @@ async function handlePlayerMessage(ctx, msg) {
     return;
   }
   if (msg.kind === "OP_REJECTED") {
-    stopHelloRetry(ctx);
+    if (msg.reason === "revoked") stopHelloRetry(ctx); // recusa da entrada: insistir não muda a resposta; outra op recusada não é isso
     ctx.onRejected?.(msg);
   }
 }
@@ -365,7 +365,11 @@ async function dispatchSyncOp(ctx, rawOp) {
   return op;
 }
 
-/** Reenvios do HELLO_SYNC quando o Mestre ainda não escuta (sob carga): 1 envio + até 4 reenvios, com espera dobrando. */
+/**
+ * Reenvios do HELLO_SYNC quando o Mestre ainda não escuta (sob carga): 1 envio + até 4 reenvios, com espera dobrando
+ * (400, 800, 1600, 3200 ms) e uma espera final de 6400 ms antes de desistir: ~12,4 s no total. Ao desistir, só
+ * chama `onHelloGaveUp`; o aviso ao jogador na interface fica para o SUB-03 (estado honesto do jogador).
+ */
 export const HELLO_RETRY_LIMIT = 4;
 const HELLO_BACKOFF_MS = 400;
 
