@@ -4,6 +4,7 @@
  * por `fogVersion` e descarte explícito de VRAM (teto 2048×2048).
  * @module dungeon/diorama/diorama-gl
  */
+import { FOG_MASK_SIZE } from "./diorama-layers.js";
 import { AMBIENT_PRESETS, buildFloorDioramaGeometry } from "./diorama-geom.js";
 
 /** Dimensão defensiva máxima de textura para proteger VRAM no Android/iOS Safari. */
@@ -17,7 +18,9 @@ layout(location=2) in float aAo;
 uniform mat4 uViewProj;
 out vec3 vCol;
 out float vAo;
+out vec2 vXz;
 void main() {
+  vXz = aPos.xz;
   vCol = aCol;
   vAo = aAo;
   gl_Position = uViewProj * vec4(aPos, 1.0);
@@ -27,10 +30,16 @@ const MESH_FS = `#version 300 es
 precision mediump float;
 in vec3 vCol;
 in float vAo;
+in vec2 vXz;
 uniform vec3 uAmbient;
+uniform sampler2D uFog;
+uniform vec4 uFogRect;
+uniform float uFogDim;
 out vec4 fragColor;
 void main() {
-  fragColor = vec4(vCol * uAmbient * vAo, 1.0);
+  float seen = texture(uFog, (vXz + uFogRect.xy) * uFogRect.zw).r;
+  if (uFogDim <= 0.0 && seen < 0.5) discard;
+  fragColor = vec4(vCol * uAmbient * vAo * mix(uFogDim, 1.0, seen), 1.0);
 }`;
 
 /** Fragment shader de standees 2.5D com recorte `discard` para dispensar alpha-sorting por frame. */
@@ -90,22 +99,32 @@ function syncFogTexture(gl, state, fogMask, fogVersion) {
   if (!fogMask || state.fogVersion === fogVersion) return false;
   if (!state.fogTex) state.fogTex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, state.fogTex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, 512, 512, 0, gl.RED, gl.UNSIGNED_BYTE, fogMask);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, FOG_MASK_SIZE, FOG_MASK_SIZE, 0, gl.RED, gl.UNSIGNED_BYTE, fogMask);
   state.fogVersion = fogVersion;
   return true;
 }
 
+function bindFogUniforms(ctx, fogOpts) {
+  const { gl, state, uFog, uFogRect, uFogDim } = ctx;
+  const on = Boolean(fogOpts.mask && state.fogTex);
+  if (on) gl.bindTexture(gl.TEXTURE_2D, state.fogTex);
+  gl.uniform1i(uFog, 0);
+  gl.uniform4fv(uFogRect, fogOpts.rect || [0, 0, 1, 1]);
+  gl.uniform1f(uFogDim, on ? fogOpts.dim : 1);
+}
+
 function drawDioramaFrame(ctx, floor, camMats, fogOpts) {
   const { gl, canvas, prog, meshBuf, uViewProj, uAmbient, state } = ctx;
-  const geom = buildFloorDioramaGeometry(floor, camMats);
+  const geom = buildFloorDioramaGeometry(floor, { ...camMats, tokens: fogOpts.tokens, selectedId: fogOpts.selectedId });
   if (syncFogTexture(gl, state, fogOpts.mask, fogOpts.version)) state.fogUploads++;
   gl.viewport(0, 0, canvas.width || 768, canvas.height || 576);
   gl.clearColor(0.067, 0.075, 0.086, 1);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.useProgram(prog);
   gl.uniformMatrix4fv(uViewProj, false, camMats.viewProj);
+  bindFogUniforms(ctx, fogOpts);
   gl.uniform3fv(uAmbient, AMBIENT_PRESETS[floor?.diorama?.ambient] || AMBIENT_PRESETS.dungeon);
   uploadMeshBuffer(gl, meshBuf, geom.vertices);
   if (geom.triangleCount > 0) gl.drawArrays(gl.TRIANGLES, 0, geom.triangleCount * 3);
@@ -131,6 +150,9 @@ export function createDioramaGlRenderer(canvas) {
     meshBuf: gl.createBuffer(),
     uViewProj: gl.getUniformLocation(prog, "uViewProj"),
     uAmbient: gl.getUniformLocation(prog, "uAmbient"),
+    uFog: gl.getUniformLocation(prog, "uFog"),
+    uFogRect: gl.getUniformLocation(prog, "uFogRect"),
+    uFogDim: gl.getUniformLocation(prog, "uFogDim"),
     state: { fogTex: null, fogVersion: -1, drawCalls: 0, fogUploads: 0 },
   };
   gl.enable(gl.DEPTH_TEST);
