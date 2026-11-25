@@ -60,10 +60,23 @@ test("frase da conta - sorteio de 3 posições distintas, em ordem", () => {
   assert.ok(picked.every((p) => p >= 0 && p < 12));
 });
 
+/** Palavra errada por construção: troca a 1ª letra, então nem a palavra nem seu prefixo de 4 letras casam com `expected`. */
+function wrongWordFor(expected) {
+  return (expected[0] === "z" ? "y" : "z") + expected.slice(1);
+}
+
+test("frase da conta - a palavra errada de teste nunca casa, mesmo com sorteio que começa igual a 'errada'", () => {
+  const words = Array.from({ length: 12 }, (_, i) => `palavra${i}`);
+  words[4] = "errante";
+  assert.equal(accountPhrase.confirmPhraseWords(words, { 0: words[0], 4: "errada", 9: words[9] }), true, "o literal antigo casa pelo prefixo de 4 letras");
+  assert.equal(accountPhrase.confirmPhraseWords(words, { 0: words[0], 4: wrongWordFor(words[4]), 9: words[9] }), false);
+  for (const w of ["abacate", "zebra", "zzzz", "errada"]) assert.notEqual(wrongWordFor(w).slice(0, 4), w.slice(0, 4), w);
+});
+
 test("frase da conta - só vale como saída quando as 3 palavras conferem", async () => {
   const acc = await freshAccount();
   const { words } = await accountPhrase.getAccountPhrase();
-  assert.equal(accountPhrase.confirmPhraseWords(words, { 0: words[0], 4: "errada", 9: words[9] }), false);
+  assert.equal(accountPhrase.confirmPhraseWords(words, { 0: words[0], 4: wrongWordFor(words[4]), 9: words[9] }), false);
   assert.equal(getAccountExits(acc.routeId).frase, undefined);
   assert.equal(accountPhrase.confirmPhraseWords(words, { 0: words[0] }), false, "menos de 3 não vale");
   const typed = { 0: words[0].toUpperCase(), 4: `${words[4].slice(0, 4)} `, 9: words[9] };
