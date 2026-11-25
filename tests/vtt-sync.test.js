@@ -15,7 +15,7 @@ import {
 } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
 import { sha256Hex } from "../client/js/rpg-crypto-table.js";
-import { waitUntil } from "./helpers/wait-until.js";
+import { settlePeers, waitUntil } from "./helpers/wait-until.js";
 
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
@@ -99,7 +99,7 @@ test("vtt-sync: mesa P2P 2 pares com Zero-Spoiler, WANT_BLOB, bloqueio de op nã
   assert.deepEqual(await p1Store.getBlob(mapHash), mapBytes);
 
   p1Transport.send(gmKeys.routeId, { kind: "WANT_BLOB", roomKey, sha256: secretHash });
-  await new Promise((r) => setTimeout(r, 150)); // ausência não tem sinal para esperar: janela larga, só pode dar falso verde, nunca vermelho
+  await settlePeers(gmPeer, p1Peer); // filas vazias: o pedido foi tratado e nada mais virá
   assert.equal(await p1Store.getBlob(secretHash), null, "GM não pode servir blob de token oculto");
 
   await p1Peer.dispatchOp({ type: "TOKEN_MOVE", payload: { sceneId: "sc-cripta", tokenId: "tok-boss", x: 0, y: 0 } });
