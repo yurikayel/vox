@@ -9,12 +9,12 @@
  * @module dungeon/vtt-fairplay-log
  */
 import { isSafeKey, withEntry } from "../shared/safe-key.js";
+import { FAIRPLAY_SHARE_ALG, isFairplayShareEnvelope } from "./vtt-fairplay-cipher.js";
 import { resolveFairplayRoll } from "./vtt-fairplay-roll.js";
 
 const COMMIT_HEX = /^[0-9a-f]{64}$/;
 const DEFAULT_PHASE_MS = 20_000;
 const MAX_PHASE_MS = 120_000;
-const KEY_ALG = "ecdh-p256+hkdf-sha256+aes-256-gcm";
 
 /**
  * Quórum Shamir para `n` participantes: cada um entrega uma parte a cada outro (ADR-040 §2.4).
@@ -64,11 +64,15 @@ function enterPhase(roll, op, phase) {
   return touched(roll, op, { phase, phaseStartTs: Number(op.ts) || 0 });
 }
 
+function isEcP256PublicJwk(jwk) {
+  return Boolean(jwk && jwk.kty === "EC" && jwk.crv === "P-256" && typeof jwk.x === "string" && typeof jwk.y === "string" && !("d" in jwk));
+}
+
 function applyFairplayKey(state, op) {
   const jwk = op.payload?.publicKeyJwk;
-  if (!isSafeKey(op.actor) || !jwk || typeof jwk !== "object") return state;
+  if (!isSafeKey(op.actor) || !isEcP256PublicJwk(jwk)) return state;
   const fp = fairplayOf(state);
-  const key = { alg: KEY_ALG, publicKeyJwk: { ...jwk }, lamport: Number(op.lamport) };
+  const key = { alg: FAIRPLAY_SHARE_ALG, publicKeyJwk: { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }, lamport: Number(op.lamport) };
   return { ...state, fairplay: { ...fp, keys: withEntry(fp.keys, op.actor, key) } };
 }
 
@@ -128,7 +132,7 @@ function validShareList(roll, op) {
   const list = Array.isArray(op.payload?.shares) ? op.payload.shares : [];
   const others = committedPeers(roll).filter((p) => p !== op.actor);
   const targets = new Set(list.map((s) => s?.to));
-  const fits = others.every((p) => targets.has(p)) && [...targets].every((p) => others.includes(p));
+  const fits = others.every((p) => targets.has(p)) && [...targets].every((p) => others.includes(p)) && list.every((s) => isFairplayShareEnvelope(s?.share));
   return fits && list.length === Number(roll.commits[op.actor].totalPeers) ? list.map((s) => ({ to: s.to, share: s.share })) : null;
 }
 
@@ -169,6 +173,10 @@ function quorumReached(roll) {
   return missingRevealers(roll).every((p) => releasedShares(roll, p).length >= Number(roll.commits[p].threshold));
 }
 
+function isPlainShare(s) {
+  return Boolean(s && typeof s.splitId === "string" && Number.isInteger(s.x) && s.y instanceof Uint8Array);
+}
+
 function applyFairplayShareRelease(state, op) {
   const roll = rollFor(state, op);
   const ofPeer = String(op.payload?.ofPeer || "");
@@ -176,7 +184,8 @@ function applyFairplayShareRelease(state, op) {
   const held = heldShares(roll, op.actor, ofPeer);
   const mine = { ...(roll.released[ofPeer] || {}) };
   if (!held.length || Object.hasOwn(mine, op.actor)) return state;
-  const sent = Array.isArray(op.payload?.shares) ? op.payload.shares : held;
+  const sent = Array.isArray(op.payload?.shares) ? op.payload.shares.filter(isPlainShare) : [];
+  if (sent.length !== held.length) return state;
   const next = touched(roll, op, { released: withEntry(roll.released, ofPeer, withEntry(mine, op.actor, sent)) });
   return withRoll(state, quorumReached(next) ? enterPhase(next, op, "done") : next);
 }

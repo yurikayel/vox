@@ -138,6 +138,7 @@ export function createDioramaGlRenderer(canvas) {
     render: (floor, camMats, fogOpts = {}) => drawDioramaFrame(ctx, floor, camMats, fogOpts),
     stats: () => ({ drawCalls: ctx.state.drawCalls, fogUploads: ctx.state.fogUploads, fogVersion: ctx.state.fogVersion }),
     destroy() {
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       if (ctx.state.fogTex) gl.deleteTexture(ctx.state.fogTex);
       gl.deleteBuffer(ctx.meshBuf);
       gl.deleteProgram(ctx.prog);

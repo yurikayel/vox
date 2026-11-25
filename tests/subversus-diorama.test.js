@@ -70,17 +70,14 @@ test("diorama-math: floorPxToWorld, worldTo3d e picking ray-cylinder prioriza st
   assert.equal(hit?.tokenId, "tok-gareth");
 });
 
-test("diorama-camera: limites 15°–85° e cutaway desligado em 1ª Pessoa", () => {
+test("diorama-camera: limites 15°–85° e modo fp (B2) removido", () => {
   let cam = createDioramaCamera({ mode: "3d" });
   cam = orbitCamera(cam, 90, -200);
   assert.equal(cam.pitchDeg, 15);
   cam = orbitCamera(cam, 0, 200);
   assert.equal(cam.pitchDeg, 85);
   assert.equal(computeCameraMatrices(cam).cutawayEnabled, true);
-  const fp = applyCameraPreset(cam, "fp", { x: 4, y: 3, elevation: 0.5 });
-  const fpMats = computeCameraMatrices(fp);
-  assert.equal(fpMats.cutawayEnabled, false);
-  assert.deepEqual(fpMats.eye, [4, 2, 3]);
+  assert.equal(applyCameraPreset(cam, "fp").mode, "2d");
 });
 
 test("diorama-geom: extrusão walls/doors fechadas, cutaway, 3 primitivas e descrição acessível", () => {
@@ -97,12 +94,12 @@ test("diorama-geom: extrusão walls/doors fechadas, cutaway, 3 primitivas e desc
     ],
     portals: [createPortalDoc({ x: 6, y: 3, label: "Escada" })],
   });
-  const geom = buildFloorDioramaGeometry(floor, { eye: [4, 5, 10], target: [4, 0, 3], cutawayEnabled: true });
+  const geom = buildFloorDioramaGeometry(floor, { eye: [4, 5, 10], target: [4, 0, 3], cutawayEnabled: true, b2: true });
   assert.ok(geom.triangleCount > 20);
   assert.equal(geom.cutawayWalls, 1);
   const gareth = createTokenDoc({ tokenId: "t1", name: "Gareth", x: 2, y: 3 });
   const lyra = createTokenDoc({ tokenId: "t2", name: "Lyra", x: 4, y: 3 });
-  const desc = describeTokenSurroundings(floor, [gareth, lyra], gareth);
+  const desc = describeTokenSurroundings(floor, [gareth, lyra], gareth, { b2: true });
   assert.match(desc, /Gareth em \(2, 3\)/);
   assert.match(desc, /Lyra a 3\.0m ao leste/);
   assert.match(desc, /portal Escada/);
@@ -131,7 +128,10 @@ test("diorama-gl & fallback: cache fogVersion, discard em standees e fallback em
   assert.equal(counts.deleteProgram, 1);
 
   let fallbackMsg = "";
-  const overlay = attachDioramaOverlay(canvas, floor, { mode: "3d", onFallback2d: (r) => { fallbackMsg = r; } });
+  const kids = [];
+  const host = { style: {}, appendChild: (c) => kids.push(c), querySelector: () => kids[0] || null };
+  const base = { width: 800, height: 600, parentNode: host, ownerDocument: { createElement: () => ({ ...canvas, dataset: {}, style: {} }) } };
+  const overlay = attachDioramaOverlay(base, floor, { mode: "3d", onFallback2d: (r) => { fallbackMsg = r; } });
   assert.equal(overlay.active, true);
   lostHandler({ preventDefault: () => {} });
   assert.equal(overlay.active, false);
