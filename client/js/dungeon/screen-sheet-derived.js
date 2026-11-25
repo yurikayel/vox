@@ -10,6 +10,8 @@ import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { normalizeChoices } from "./system-derive.js";
+import { normalizeRestChoices } from "./system-rest.js";
+import { renderConditionsAndRests } from "./screen-sheet-rest.js";
 import { renderDeathSaves, renderSavesList, renderSystemChoiceFields, signed } from "./screen-sheet-system-extras.js";
 import { escapeHtml } from "../shared/html.js";
 
@@ -31,7 +33,7 @@ export function resolveSheetSystem(sheet) {
   if (!pack) return null;
   const attrs = migrated.attributes_lww || {};
   const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities, proficientSkills: liveTrainedSkills(pack, migrated), speedFt: attrs.speed_ft ?? migrated.system_choices?.speedFt };
-  return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices) };
+  return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices), rest: normalizeRestChoices(pack, { ...migrated.system_choices, level: choices.level }) };
 }
 
 function stat(label, value) {
@@ -67,27 +69,40 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
       </dl>
       ${renderSavesList(pack, derived)}
       ${renderDeathSaves(pack, derived, hpCurrent)}
+      ${renderConditionsAndRests(pack, sys.rest)}
       ${renderCredits(pack)}
     </section>`;
+}
+
+/** Escolhas com o que o jogador digitou num Salvar recusado por cima das gravadas. */
+function withDraft(choices, draft) {
+  return {
+    ...choices,
+    speedFt: draft.speedFt ?? choices.speedFt,
+    proficientSaves: draft.proficientSaves ?? choices.proficientSaves,
+    expertSkills: draft.expertSkills ?? choices.expertSkills,
+  };
 }
 
 /**
  * Campos do pacote no painel Editar (salvaguardas, especialização, Deslocamento); vazio sem pacote.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {object} [draft] Valores digitados num Salvar recusado (`speedFt`, `proficientSaves`, `expertSkills`).
  * @returns {string} HTML dos campos.
  */
-export function renderSystemEditFields(sheet) {
+export function renderSystemEditFields(sheet, draft = {}) {
   const sys = resolveSheetSystem(sheet);
-  return sys ? renderSystemChoiceFields(sys.pack, sys.choices) : "";
+  return sys ? renderSystemChoiceFields(sys.pack, withDraft(sys.choices, draft)) : "";
 }
 
 /**
  * Seletor de sistema do painel Editar, com um campo para cada pacote registrado.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {string} [chosen] Sistema digitado num Salvar recusado; vence o da ficha quando existe na lista.
  * @returns {string} HTML do campo `sheetSystem`.
  */
-export function renderSystemSelect(sheet) {
-  const current = migrateLegacySheet(sheet || {})?.system?.id || "";
+export function renderSystemSelect(sheet, chosen = "") {
+  const current = chosen || migrateLegacySheet(sheet || {})?.system?.id || "";
   const options = listSystemPackIds().map((id) => {
     const pack = getSystemPack(id);
     return `<option value="${escapeHtml(id)}"${id === current ? " selected" : ""}>${escapeHtml(pack.name)}</option>`;

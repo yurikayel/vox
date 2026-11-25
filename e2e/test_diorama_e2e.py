@@ -211,13 +211,8 @@ class DioramaPlaywrightE2ETests(PlaywrightE2EHarness):
         finally:
             _close_ctx(ctx)
 
-    @unittest.expectedFailure
-    def test_04_known_gap_player_state_still_carries_token_and_door_inside_fog(self):
-        """ACHADO (falha hoje, de propósito): o estado do jogador ainda recebe o token e a porta fora da área revelada.
-
-        Só a projeção do Diorama os esconde. Quando o sync passar a filtrar por névoa, este teste vira
-        "unexpected success" e deve perder o `expectedFailure`.
-        """
+    def test_04_player_state_carries_no_token_or_door_inside_fog(self):
+        """Zero-Spoiler no sync: o estado do jogador não recebe o token nem a porta fora da área revelada."""
         ctx, gm, player, errors = self._open_pair("Diorama Estado")
         try:
             info = player.evaluate(_PLAYER_VIEW_JS)

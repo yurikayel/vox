@@ -85,8 +85,8 @@ test("Diorama: flag e pílula têm uma só definição em client/js/dungeon", ()
   assert.equal((all.match(/class="subversus-diorama-pill"/g) || []).length, 1);
 });
 
-test("Diorama: modo fp (B2) fora dos modos selecionáveis", () => {
-  assert.ok(!CAMERA_MODES.includes("fp"));
+test("Diorama: modo fp (1ª Pessoa, B2) entre os modos selecionáveis", () => {
+  assert.ok(CAMERA_MODES.includes("fp"));
 });
 
 test("Diorama: volumes e portais (B2) só entram com guarda explícita", () => {

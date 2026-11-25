@@ -66,7 +66,7 @@ export function renderSystemChoiceFields(pack, choices) {
   const saves = pack.abilities.map((a) => checkbox("saveProf", a.id, a.label, choices.proficientSaves.includes(a.id))).join("");
   const skills = pack.skills.map((s) => checkbox("expertSkill", s.id, s.label, choices.expertSkills.includes(s.id), !choices.proficientSkills.includes(s.id))).join("");
   return `
-    <label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.speed)} (pés)</span><input class="dungeon-input" name="speedFt" type="number" min="0" max="${pack.formulas.speed.maxFt}" value="${choices.speedFt}" /></label>
+    <label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.speed)} (pés)</span><input class="dungeon-input" name="speedFt" type="number" min="0" max="${pack.formulas.speed.maxFt}" value="${escapeHtml(String(choices.speedFt))}" /></label>
     <fieldset class="dungeon-field-wide"><legend>Salvaguardas treinadas</legend>${saves}</fieldset>
     <fieldset class="dungeon-field-wide"><legend>Especialização (só em perícia treinada)</legend>${skills}</fieldset>`;
 }

@@ -24,7 +24,10 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { validateSheetEdit } from "./sheet-edit-validate.js";
+import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { markSheetDeathSave } from "./dungeon-persistence-sheet-system.js";
+import { longRestSheet, shortRestSheet, spendSheetHitDie, stepSheetExhaustion, toggleSheetCondition } from "./dungeon-persistence-sheet-rest.js";
 import {
   addDoorToScene,
   addTokenToScene,
@@ -211,6 +214,11 @@ export const ACTION_HANDLERS = {
   "inv-equip": (state, el, _c, opts) => mutateSheetInventory(state, "toggle_equip", { itemId: el.dataset.itemId }, opts.store),
   "inv-remove": (state, el, _c, opts) => mutateSheetInventory(state, "remove", { itemId: el.dataset.itemId }, opts.store),
   "death-save": (state, el, _c, opts) => markSheetDeathSave(state, el.dataset.kind, { store: opts.store }),
+  "condition-toggle": (state, el, _c, opts) => toggleSheetCondition(state, el.dataset.conditionId, { store: opts.store }),
+  "exhaustion-step": (state, el, _c, opts) => stepSheetExhaustion(state, Number(el.dataset.step), { store: opts.store }),
+  "hit-die": (state, _el, _c, opts) => spendSheetHitDie(state, { store: opts.store }),
+  "rest-short": (state, _el, _c, opts) => shortRestSheet(state, { store: opts.store }),
+  "rest-long": (state, _el, _c, opts) => longRestSheet(state, { store: opts.store }),
   "level-up-open": (state) => { state.levelUpOpen = true; },
   "level-up-cancel": (state) => { state.levelUpOpen = false; },
   "select-levelup-preset": (state, el) => { state.levelUpPreset = el.dataset.preset || "d20_fantasy"; },
@@ -255,15 +263,20 @@ function submitEditSheet(state, form, ctx) {
   const patch = {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
-    armor_class: Number(valOf(form, "[name=armorClass]")),
+    armor_class: valOf(form, "[name=armorClass]"),
     system: valOf(form, "[name=sheetSystem]"),
-    speedFt: valOf(form, "[name=speedFt]", undefined),
+    speedFt: form?.querySelector?.("[name=speedFt]") ? valOf(form, "[name=speedFt]") : undefined,
     ...checkedLists(form),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
     const raw = valOf(form, `[name=${k}]`);
     if (raw) patch[k] = Number(raw);
   }
+  const sys = resolveSheetSystem(state.sheet);
+  const { ok, issues } = validateSheetEdit(patch, { pack: sys?.pack, trainedSkills: sys?.choices.proficientSkills });
+  state.sheetEditIssues = issues;
+  state.sheetEditDraft = ok ? null : patch;
+  if (!ok) return ctx.settle(Promise.resolve());
   return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
 }
 
