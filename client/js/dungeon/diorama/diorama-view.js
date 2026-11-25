@@ -8,7 +8,7 @@ import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCa
 import { createDioramaGlRenderer } from "./diorama-gl.js";
 import { buildRasters, buildTexturedPass } from "./diorama-textures.js";
 import { describeDioramaView } from "./diorama-geom.js";
-import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
+import { buildFogLayer, projectDioramaView, tokenCenter3d } from "./diorama-layers.js";
 
 export { loadDioramaImages } from "./diorama-textures.js";
 export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../diorama-lens.js";
@@ -16,10 +16,10 @@ export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from ".
 const MODE_STORAGE_KEY = "subversus.diorama.mode";
 
 /**
- * Lê o modo de câmera salvo localmente (`2d`|`iso`|`3d`).
+ * Lê o modo de câmera salvo localmente (`2d`|`iso`|`3d`|`fp`).
  *
  * @param {Storage|null} [storage] Armazenamento local opcional.
- * @returns {"2d"|"iso"|"3d"} Modo de câmera válido.
+ * @returns {"2d"|"iso"|"3d"|"fp"} Modo de câmera válido.
  */
 export function loadDioramaMode(storage = globalThis.localStorage) {
   try {
@@ -33,9 +33,9 @@ export function loadDioramaMode(storage = globalThis.localStorage) {
 /**
  * Salva o modo de câmera escolhido localmente sem afetar outros pares na mesa.
  *
- * @param {"2d"|"iso"|"3d"} mode Modo escolhido.
+ * @param {"2d"|"iso"|"3d"|"fp"} mode Modo escolhido.
  * @param {Storage|null} [storage] Armazenamento local opcional.
- * @returns {"2d"|"iso"|"3d"} Modo normalizado.
+ * @returns {"2d"|"iso"|"3d"|"fp"} Modo normalizado.
  */
 export function saveDioramaMode(mode, storage = globalThis.localStorage) {
   const safe = CAMERA_MODES.includes(mode) ? mode : "2d";
@@ -109,14 +109,21 @@ function syncPointer(st) {
   if (st.live && st.live.textContent !== text) st.live.textContent = text;
 }
 
+/** Em 1ª Pessoa o standee do próprio token fica de fora (a câmera está dentro dele). */
+function drawnView(st) {
+  if (st.cam.mode !== "fp") return st.view;
+  return { ...st.view, tokens: st.view.tokens.filter((t) => t.tokenId !== st.selectedId) };
+}
+
 function renderOverlayState(st) {
   syncPointer(st);
   if (!st.glRenderer || st.cam.mode === "2d") return null;
   const aspect = (st.gl.width || 768) / Math.max(1, st.gl.height || 576);
   st.mats = computeCameraMatrices(st.cam, aspect);
-  const fog = buildFogLayer(st.view.floor, st.role) || {};
-  const textured = st.rasters ? buildTexturedPass(st.rasters, st.view, st.mats.eye) : null;
-  return st.glRenderer.render(st.view.floor, st.mats, { ...fog, tokens: st.view.tokens, textured, selectedId: st.selectedId });
+  const view = drawnView(st);
+  const fog = buildFogLayer(view.floor, st.role) || {};
+  const textured = st.rasters ? buildTexturedPass(st.rasters, view, st.mats.eye) : null;
+  return st.glRenderer.render(view.floor, st.mats, { ...fog, tokens: view.tokens, textured, selectedId: st.selectedId });
 }
 
 function triggerOverlayFallback(st, opts, reason) {
@@ -211,6 +218,7 @@ export function attachDioramaOverlay(canvas, floor, opts = {}) {
   };
   st.live = ensureLiveRegion(canvas);
   setScene(floor, { role: opts.viewerRole, tokens: opts.tokens, selectedId: opts.selectedId });
+  st.cam = focusOnSelected(st, st.cam);
   if (mode !== "2d") ensureRenderer(st, opts);
   const gestures = bindGestures(st);
   const unbinds = [bindContextLoss(st, opts), bindPicking(st, opts, gestures), () => gestures.destroy()];
@@ -232,12 +240,18 @@ function detachDom(st) {
   st.live?.remove?.();
 }
 
+/** Em 1ª Pessoa, leva a câmera para os olhos do token selecionado (`worldX, elevation, worldY`). */
+function focusOnSelected(st, cam) {
+  const tok = cam.mode === "fp" ? st.view?.tokens?.find((t) => t.tokenId === st.selectedId) : null;
+  return tok ? { ...cam, target: tokenCenter3d(tok) } : cam;
+}
+
 /** Monta a API pública do overlay sobre o estado interno `st`. */
 function overlayApi(st, opts, setScene, unbinds) {
   return {
     get active() { return Boolean(st.glRenderer && st.cam.mode !== "2d"); },
     setMode(nextMode) {
-      st.cam = applyCameraPreset(st.cam, saveDioramaMode(nextMode, opts.storage));
+      st.cam = focusOnSelected(st, applyCameraPreset(st.cam, saveDioramaMode(nextMode, opts.storage)));
       if (st.cam.mode === "2d") { st.glRenderer?.destroy?.(); st.glRenderer = null; syncPointer(st); return null; }
       return ensureRenderer(st, opts) ? renderOverlayState(st) : null;
     },

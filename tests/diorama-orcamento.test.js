@@ -18,8 +18,10 @@ const CORE = ["math", "geom", "camera", "gl", "view"].map((n) => `diorama-${n}.j
  * Medido em 2026-11-25 (gzip nível 9). O gzip tem folga de 64 B para variação de build do zlib entre versões do Node.
  * A fonte subiu de 41.842 B para 41.874 B (+32 B): `aria-label` fixo no canvas GL, para o leitor de tela nomear a lente
  * mesmo quando os extras (gestos e picking) não carregam.
+ * Trilha B2 (1ª Pessoa, portais, WASD): fonte 41.874 B → 43.635 B (+1.761 B) e gzip 14.381 B → 14.927 B (+546 B): modo `fp`
+ * na câmera, geometria e picking dos portais e `b2` ligado no GL. Sobe ao medido (catraca), sem corte; extras seguem lazy.
  */
-const CEILING = { sourceBytes: 41_874, gzipBytes: 14_381 + 64 };
+const CEILING = { sourceBytes: 43_635, gzipBytes: 14_927 + 64 };
 const SPEC = { sourceBytes: 25 * 1024, gzipBytes: 12 * 1024 };
 
 function measure(files) {
