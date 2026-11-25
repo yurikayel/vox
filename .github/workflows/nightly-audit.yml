@@ -1,0 +1,183 @@
+# Auditoria diária jurídica e técnica (03:00 BRT = 06:00 UTC).
+# SHAs de actions: somente os pinados em ci.yml.
+name: Nightly legal & tech audit
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-audit
+  cancel-in-progress: true
+
+jobs:
+  legal-and-supply-chain:
+    name: Legal & supply chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: npm ci
+        run: npm ci
+
+      - name: LEG-01..05 legal-compliance-audit
+        run: node scripts/legal-compliance-audit.mjs
+
+      - name: secrets-audit (PM-95)
+        run: node scripts/secrets-audit.mjs
+
+      - name: deps-check-cdn (LAN-20)
+        run: node scripts/deps-check-cdn.mjs
+
+      - name: npm audit (moderate+)
+        run: npm audit --audit-level=moderate
+
+      - name: cargo-deny (rust/deny.toml)
+        working-directory: rust
+        run: |
+          rustup show
+          cargo install --locked cargo-deny
+          cargo deny check
+
+  sast-and-python:
+    name: SAST & Python
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: pip-audit (ou OK se só stdlib)
+        run: |
+          req=relay/requirements.txt
+          if [ -f "$req" ] && grep -vE '^\s*(#|$)' "$req" | grep -q .; then
+            pip install pip-audit
+            pip-audit -r "$req"
+          else
+            echo "relay/requirements.txt sem deps pip — tip stdlib. OK."
+          fi
+
+      - name: Semgrep (SARIF + gate ERROR)
+        run: |
+          pip install semgrep
+          mkdir -p artifacts
+          semgrep --config=auto --sarif --output=artifacts/semgrep.sarif \
+            client/js relay rust || true
+          semgrep --config=auto --severity ERROR --error client/js relay rust
+
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: semgrep-sarif
+          path: artifacts/semgrep.sarif
+          if-no-files-found: ignore
+
+  tech-hygiene-and-deadcode:
+    name: Tech hygiene & deadcode
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: npm ci
+        run: npm ci
+
+      - name: npm run validate
+        run: npm run validate
+
+      - name: knip (informativo)
+        run: |
+          {
+            echo "### knip (informativo, sem falhar o job)"
+            echo '```'
+            npx --yes knip --no-exit-code || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  e2e-full-nightly:
+    name: E2E full nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Playwright Chromium (Python)
+        run: |
+          pip install playwright
+          python -m playwright install chromium --with-deps
+
+      - name: npm run test:e2e
+        run: npm run test:e2e
+
+  alert-on-failure:
+    name: Alert on failure
+    needs:
+      - legal-and-supply-chain
+      - sast-and-python
+      - tech-hygiene-and-deadcode
+      - e2e-full-nightly
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Abrir ou reusar issue auditoria-diaria
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Alerta: auditoria diária jurídica/técnica falhou"
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh label create auditoria-diaria --repo "$repo" --color B60205 \
+            --description "Falha da auditoria diária (nightly-audit)" 2>/dev/null || true
+          existing=$(gh issue list --repo "$repo" --state open --label auditoria-diaria \
+            --search "\"$ALERT_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          body="A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ). Feche esta issue quando resolver; enquanto aberta, novas falhas só comentam."
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$repo" --body "$body"
+            exit 0
+          fi
+          gh issue create --repo "$repo" --label auditoria-diaria --title "$ALERT_TITLE" --body "$body"

@@ -18,5 +18,12 @@ Scripts de **manutenção do repositório** (desenvolvimento, CI e release). Nad
 | `generate_brand_icons.py` | Deriva ícones PWA a partir dos logos em `docs/branding/` | `python scripts/generate_brand_icons.py` |
 | `package_permaweb.py` | Valida e empacota o app shell para publicar no Arweave | `python scripts/package_permaweb.py` |
 | `test.bat` | Atalho Windows para `npm test` (JS + Python) | `scripts\test.bat` |
+| `legal-compliance-audit.mjs` | Auditoria jurídica/técnica LEG-01..05 (SPDX/LICENSE, mídia, flags BR/CSP/páginas legais, PII em logs, CDN fora do inventário) | `node scripts/legal-compliance-audit.mjs` · `--json` · workflow `nightly-audit.yml` (cron 03h BRT) |
+
+A revisão semântica semanal (diff de 7 dias) usa [`.agents/agents/vox-auditor.md`](../.agents/agents/vox-auditor.md) e o checklist das 5 perguntas hostis — não há arquivo de processo novo. Em PowerShell (manual, fora do cron):
+
+```powershell
+git log --since="7 days ago" --name-only --pretty=format: | Sort-Object -Unique
+```
 
 Limites de complexidade valem também aqui: [docs/HARDENING.md](../docs/HARDENING.md).
