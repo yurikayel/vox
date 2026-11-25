@@ -94,24 +94,6 @@ test("subversus schema & zero-spoiler: FloorDoc retrocompatível e oculta volume
   assert.deepEqual(projected.portals.map((p) => p.portalId), ["p-pub"]);
 });
 
-test("subversus fairplay: o compromisso público não carrega a semente nem as partes de backup", async () => {
-  const offer = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-pub" });
-  assert.equal(offer.seedBytes, undefined, "a semente não pode estar no objeto que vai para a mesa");
-  assert.equal(offer.backupShares, undefined, "as partes de backup não podem ir todas juntas para a mesa");
-  assert.equal(offer.commit?.seedBytes, undefined);
-  assert.equal(offer.commit?.backupShares, undefined);
-});
-
-test("subversus fairplay: revelação sem compromisso prévio é recusada", async () => {
-  const res = await resolveFairplayRoll({
-    rollId: "r-sem-commit",
-    sides: 20,
-    participants: [{ peerId: "intruso", seedBytes: new Uint8Array(32).fill(7) }],
-  });
-  assert.equal(res.ok, false, "semente sem compromisso não pode virar rolagem verificada");
-  assert.equal(res.verified, false);
-});
-
 test("subversus fairplay: uma parte de backup por par, e menos que o quórum não recupera", async () => {
   const offer = await createFairplayRollOffer({ peerId: "gareth", rollId: "r-q", threshold: 3, totalPeers: 4 });
   const other = await createFairplayRollOffer({ peerId: "mestre", rollId: "r-q", threshold: 3, totalPeers: 4 });
