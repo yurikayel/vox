@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica PNG citados em STITCH-MESA-GUIA.md (backticks)."""
+"""Verifica PNG citados em STITCH-MESA-GUIA.md (apenas capturas dungeon-ui próprias)."""
 
 from __future__ import annotations
 
@@ -14,14 +14,12 @@ GUIDE = CAPTURES / "STITCH-MESA-GUIA.md"
 
 def main() -> int:
     text = GUIDE.read_text(encoding="utf-8")
-    block = text.split("## 9. Prompts Stitch", 1)[-1]
+    block = text.split("## 3. Prompts Stitch", 1)[-1]
     pngs = re.findall(r"`([^`]*\.png)`", block)
     pngs = [
         p
         for p in pngs
-        if p.startswith(("dungeon-ui-", "vtt-references-"))
-        and "*" not in p
-        and "{" not in p
+        if p.startswith("dungeon-ui-") and "*" not in p and "{" not in p
     ]
     missing = [p for p in pngs if not (CAPTURES / p).is_file()]
     if missing:
