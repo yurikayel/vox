@@ -6,7 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: exportar a ficha-base para um arquivo `.voxchar` e importar um `.voxchar` como ficha nova, no painel Editar; o arquivo não leva identidade, PV atual, condições nem notas do Mestre, e a importação recusa arquivo grande, malformado ou com número fora da faixa, com o motivo (`voxchar.js`, `voxchar-check.js`, `tests/subversus-voxchar.test.js`, spec `docs/specs/voxchar-v0.md`).
 - Testes: 10 esperas fixas (lead-tab, círculos da sidebar, aviso consultivo, explode) viram `waitUntil`; a catraca de `tests/sem-esperas-fixas.test.js` desce de 51 para 41. Sem mudança em código de produção.
+- Testes (relay): o smoke de carga de sinalização desliga o modo debug do asyncio só nele (o debug instrumenta cada tarefa e mede o harness, não o servidor: 3,0-3,4 s → 0,6 s sozinho) e assere que segue desligado; limite de 5 s intacto. Sem mudança em código de produção.
 - Testes: o envio do Dado de Vida pelo painel Editar (d10 grava, em branco mantém o d8 padrão, valor fora de d4–d12 é ignorado, ficha sem o campo não quebra) passa a ter teste próprio (`tests/subversus-ficha-dado-de-vida-envio.test.js`).
 - Ficha: o Dado de Vida ganha campo no painel Editar (d4 a d12, inválido é ignorado) e a aba Jogar avisa que vale d8 até o jogador definir o seu; teste de que Exaustão 5 não é fatal (`system-rest.js`, `tests/subversus-ficha-dado-de-vida.test.js`).
 - Ficha: o painel Editar deixa de ajustar valores em silêncio; nome vazio, CA fora de 1–40, atributo fora de 1–30 ou não inteiro , sistema desconhecido, Deslocamento fora de 0–200 ou em branco, salvaguarda desconhecida e especialização em perícia não treinada recusam o Salvar com o motivo de cada campo, mantendo o que foi digitado e sem gravar nada (`sheet-edit-validate.js`, `tests/subversus-ficha-edicao-validacao.test.js`).

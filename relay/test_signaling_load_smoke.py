@@ -101,6 +101,15 @@ class _SmokePeer:
 class TestSignalingLoadSmoke(unittest.IsolatedAsyncioTestCase):
     """Conecta 50 pares simultâneos em loopback e valida registro + troca de sinais."""
 
+    async def asyncSetUp(self) -> None:
+        """Desliga o modo debug do loop só neste smoke de carga.
+
+        `IsolatedAsyncioTestCase` roda com `debug=True`, que instrumenta cada tarefa (pilha guardada em
+        `call_soon`/`create_task`, aviso de corrotina lenta). Com 50 pares isso mede o harness, não o servidor:
+        3,0-3,4 s sozinho e 4,1-4,5 s sob carga, contra 0,6 s e 0,6-1,1 s sem debug. Os demais testes seguem em debug.
+        """
+        asyncio.get_running_loop().set_debug(False)
+
     def setUp(self) -> None:
         self._clear_registry()
         policies = {name: rate_limit.Policy(60000, 10000) for name in rate_limit.DEFAULT_POLICIES}
@@ -144,6 +153,7 @@ class TestSignalingLoadSmoke(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(answer["from"], b.peer_id)
 
     async def test_fifty_concurrent_peers_register_and_signal_cleanly(self) -> None:
+        self.assertFalse(asyncio.get_running_loop().get_debug(), "debug ligado: a medição passaria a medir o harness")
         t0 = time.monotonic()
         peers = await asyncio.gather(*(self._open_and_register(i) for i in range(50)))
         try:
