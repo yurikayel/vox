@@ -38,6 +38,7 @@ uniform float uFogDim;
 out vec4 fragColor;
 void main() {
   float seen = texture(uFog, (vXz + uFogRect.xy) * uFogRect.zw).r;
+  if (uFogDim <= 0.0 && seen < 0.5) discard;
   fragColor = vec4(vCol * uAmbient * vAo * mix(uFogDim, 1.0, seen), 1.0);
 }`;
 
@@ -98,8 +99,8 @@ function syncFogTexture(gl, state, fogMask, fogVersion) {
   if (!fogMask || state.fogVersion === fogVersion) return false;
   if (!state.fogTex) state.fogTex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, state.fogTex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, FOG_MASK_SIZE, FOG_MASK_SIZE, 0, gl.RED, gl.UNSIGNED_BYTE, fogMask);
   state.fogVersion = fogVersion;
   return true;

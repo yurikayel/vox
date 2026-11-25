@@ -131,7 +131,9 @@ function appendObjectLayers(out, floor, opts) {
 /**
  * Constrói o buffer de vértices intercalados (`x, y, z, r, g, b, ao`) para paredes, portas fechadas e volumes.
  *
- * @param {object} floor Documento `FloorDoc`.
+ * Não filtra nada por papel: `floor` e `opts.tokens` devem vir já projetados por `projectDioramaView`.
+ *
+ * @param {object} floor Documento `FloorDoc` já projetado.
  * @param {object} [opts={}] Opções (`eye`, `target`, `cutawayEnabled`, `tokens`, `selectedId`, `b2` para volumes do escopo B2).
  * @returns {{vertices: Float32Array, triangleCount: number, cutawayWalls: number}} Malha pronta para upload WebGL2.
  */
