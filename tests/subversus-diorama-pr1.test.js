@@ -8,34 +8,78 @@ import test from "node:test";
 import { CAMERA_MODES } from "../client/js/dungeon/diorama/diorama-camera.js";
 import { buildFloorDioramaGeometry, describeTokenSurroundings } from "../client/js/dungeon/diorama/diorama-geom.js";
 import { attachDioramaOverlay } from "../client/js/dungeon/diorama/diorama-view.js";
+import { createDoorDoc } from "../client/js/dungeon/vtt-tactics-schema.js";
 import { createFloorDoc, createPortalDoc, createTokenDoc, createVolumeDoc } from "../client/js/dungeon/vtt-scene-schema.js";
 
-function fakeDom() {
-  const kids = [];
-  const mk = () => ({ dataset: {}, style: {}, getContext: () => null, addEventListener() {}, removeEventListener() {}, remove() {} });
-  const host = {
-    style: {},
-    appendChild: (c) => { kids.push(c); return c; },
-    querySelector: (sel) => kids.find((k) => sel.includes("data-diorama-gl") && k.dataset.dioramaGl) || null,
+/** GL falso: constantes/funções genéricas e contadores só do que o ciclo de vida precisa. */
+function countingGl() {
+  const counts = { deleteProgram: 0, deleteBuffer: 0, clear: 0, drawArrays: 0 };
+  const named = {
+    deleteProgram: () => { counts.deleteProgram++; },
+    deleteBuffer: () => { counts.deleteBuffer++; },
+    clear: () => { counts.clear++; },
+    drawArrays: () => { counts.drawArrays++; },
   };
-  const calls = [];
-  const base = { ...mk(), width: 768, height: 480, parentNode: host, ownerDocument: { createElement: () => mk() },
-    getContext: (kind) => { calls.push(kind); return null; } };
-  return { base, kids, calls };
+  const gl = new Proxy({}, { get: (_t, k) => named[k] || (() => true) });
+  return { gl, counts };
 }
 
-test("Diorama: não pede webgl2 ao canvas 2D e cria o canvas próprio uma única vez", () => {
-  const { base, kids, calls } = fakeDom();
-  const floor = createFloorDoc({});
-  attachDioramaOverlay(base, floor, { mode: "3d", storage: null }).draw();
-  attachDioramaOverlay(base, floor, { mode: "iso", storage: null }).draw();
-  assert.ok(!calls.includes("webgl2"), "canvas 2D não pode receber getContext('webgl2')");
-  assert.equal(kids.length, 1, "um único canvas WebGL2 reaproveitado");
+function domWithGl(gl) {
+  const kids = [];
+  const mk = () => {
+    const el = { dataset: {}, style: {}, parentNode: null, getContext: () => gl, addEventListener() {}, removeEventListener() {} };
+    el.remove = () => { const i = kids.indexOf(el); if (i >= 0) kids.splice(i, 1); el.parentNode = null; el.removed = true; };
+    return el;
+  };
+  const host = {
+    style: {},
+    appendChild: (c) => { c.parentNode = host; kids.push(c); return c; },
+    querySelector: () => kids[0] || null,
+  };
+  const base = { width: 768, height: 480, parentNode: host, ownerDocument: { createElement: mk },
+    getContext: () => { throw new Error("canvas 2D não pode ser consultado"); } };
+  return { base, kids };
+}
+
+test("Diorama: GL próprio — destroy limpa, apaga programa/buffer e remove o canvas", () => {
+  const { gl, counts } = countingGl();
+  const { base, kids } = domWithGl(gl);
+  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", storage: null });
+  assert.equal(kids.length, 1);
+  overlay.destroy();
+  assert.equal(counts.deleteProgram, 1);
+  assert.equal(counts.deleteBuffer, 1);
+  assert.ok(counts.clear >= 1);
+  assert.equal(kids.length, 0, "canvas GL removido do DOM");
+});
+
+test("Diorama: detach + rebind reaproveita o mesmo canvas e contexto após o redesenho", () => {
+  const { gl, counts } = countingGl();
+  const { base, kids } = domWithGl(gl);
+  const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", storage: null });
+  const first = kids[0];
+  overlay.detach();
+  assert.equal(kids.length, 0);
+  overlay.rebind(base, createFloorDoc({}), "gm");
+  assert.equal(kids[0], first);
+  assert.equal(counts.deleteProgram, 0, "nenhum contexto/programa novo");
+});
+
+test("Diorama: jogador não recebe geometria de porta secreta; Mestre recebe", () => {
+  const floor = createFloorDoc({ doors: [createDoorDoc({ x1: 0, y1: 0, x2: 3, y2: 0, state: "secret" })] });
+  const draws = (role) => {
+    const { gl, counts } = countingGl();
+    const { base } = domWithGl(gl);
+    attachDioramaOverlay(base, floor, { mode: "3d", viewerRole: role, storage: null }).draw();
+    return counts.drawArrays;
+  };
+  assert.equal(draws("player"), 0);
+  assert.equal(draws("gm"), 1);
 });
 
 test("Diorama: flag e pílula têm uma só definição em client/js/dungeon", () => {
   const dir = new URL("../client/js/dungeon/", import.meta.url);
-  const src = [".", "diorama"].flatMap((d) => ["screen-table.js", "diorama/diorama-view.js"].map((f) => readFileSync(new URL(f, dir), "utf8")));
+  const src = ["screen-table.js", "diorama-lens.js", "diorama/diorama-view.js"].map((f) => readFileSync(new URL(f, dir), "utf8"));
   const all = [...new Set(src)].join("\n");
   assert.equal((all.match(/"vox\.lab\.diorama"/g) || []).length, 1);
   assert.equal((all.match(/class="subversus-diorama-pill"/g) || []).length, 1);

@@ -6,9 +6,10 @@
  */
 import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCamera } from "./diorama-camera.js";
 import { createDioramaGlRenderer } from "./diorama-gl.js";
+import { projectTacticsFloorForPlayer } from "../vtt-tactics-reducer.js";
 import { rayCylinderIntersect, rayPlaneIntersect } from "./diorama-math.js";
 
-export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../screen-table.js";
+export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../diorama-lens.js";
 
 const MODE_STORAGE_KEY = "subversus.diorama.mode";
 
@@ -71,34 +72,45 @@ export function pickDioramaTarget(origin, dir, tokens = []) {
 }
 
 /**
+ * Posiciona o canvas GL sobre o canvas 2D e copia sua resolução (sem copiar classes do 2D).
+ *
+ * @param {HTMLCanvasElement|object} gl Canvas WebGL2 dedicado.
+ * @param {HTMLCanvasElement|object} base Canvas 2D do mapa.
+ * @returns {void}
+ */
+function layoutGlCanvas(gl, base) {
+  gl.style.cssText = `position:absolute;pointer-events:none;border-radius:6px;left:${base.offsetLeft || 0}px;top:${base.offsetTop || 0}px;width:${base.offsetWidth || 0}px;height:${base.offsetHeight || 0}px`;
+  gl.width = base.width;
+  gl.height = base.height;
+}
+
+/**
  * Obtém (criando uma única vez) o canvas WebGL2 próprio, irmão do canvas 2D do mapa.
  * Um canvas que já devolveu contexto 2D nunca entrega `webgl2`, por isso não se reaproveita o 2D.
  *
  * @param {HTMLCanvasElement|object} base Canvas 2D do mapa.
+ * @param {HTMLCanvasElement|object|null} [existing=null] Canvas GL já criado (rebind após redesenho).
  * @returns {HTMLCanvasElement|object|null} Canvas WebGL2 dedicado ou `null` sem DOM.
  */
-function ensureGlCanvas(base) {
+function ensureGlCanvas(base, existing = null) {
   const host = base?.parentNode;
   if (!host || !base.ownerDocument) return null;
-  let gl = host.querySelector?.("canvas[data-diorama-gl]");
+  let gl = existing || host.querySelector?.("canvas[data-diorama-gl]");
   if (!gl) {
     gl = base.ownerDocument.createElement("canvas");
     gl.dataset.dioramaGl = "1";
-    gl.className = base.className;
     gl.setAttribute?.("aria-hidden", "true");
-    host.style.position = "relative";
-    host.appendChild(gl);
   }
-  gl.style.cssText = `position:absolute;pointer-events:none;border-radius:6px;left:${base.offsetLeft || 0}px;top:${base.offsetTop || 0}px;width:${base.offsetWidth || 0}px;height:${base.offsetHeight || 0}px`;
-  gl.width = base.width;
-  gl.height = base.height;
+  host.style.position = "relative";
+  if (gl.parentNode !== host) host.appendChild(gl);
+  layoutGlCanvas(gl, base);
   return gl;
 }
 
-function renderOverlayState(st, canvas, floor) {
+function renderOverlayState(st) {
   if (!st.glRenderer || st.cam.mode === "2d") return null;
-  const aspect = (canvas.width || 768) / Math.max(1, canvas.height || 576);
-  return st.glRenderer.render(floor, computeCameraMatrices(st.cam, aspect));
+  const aspect = (st.gl.width || 768) / Math.max(1, st.gl.height || 576);
+  return st.glRenderer.render(st.floor, computeCameraMatrices(st.cam, aspect));
 }
 
 function triggerOverlayFallback(st, opts, reason) {
@@ -109,36 +121,62 @@ function triggerOverlayFallback(st, opts, reason) {
   opts.onFallback2d?.(reason);
 }
 
+/** Piso exibido: o Mestre vê tudo; qualquer outro papel recebe a projeção Zero-Spoiler. */
+function projectFloorForRole(floor, role) {
+  return role === "gm" ? floor : projectTacticsFloorForPlayer(floor || {});
+}
+
+function ensureRenderer(st, opts) {
+  if (!st.glRenderer && st.gl) st.glRenderer = createDioramaGlRenderer(st.gl);
+  if (st.glRenderer) return true;
+  triggerOverlayFallback(st, opts, "WebGL2 indisponível — usando mapa 2D.");
+  return false;
+}
+
+/** Liga o fallback 2D a `webglcontextlost`; devolve a função que remove o listener. */
+function bindContextLoss(st, opts) {
+  const gl = st.gl;
+  const onLost = (ev) => { ev?.preventDefault?.(); triggerOverlayFallback(st, opts, "Contexto WebGL perdido — alternado para mapa 2D."); };
+  gl?.addEventListener?.("webglcontextlost", onLost);
+  return () => gl?.removeEventListener?.("webglcontextlost", onLost);
+}
+
 /**
- * Conecta o renderizador WebGL2 sob demanda em um canvas, com fallback automático em `webglcontextlost`.
+ * Conecta o renderizador WebGL2 sob demanda em um canvas próprio, com fallback automático em `webglcontextlost`.
+ * O papel `gm` vê o piso completo; os demais recebem `projectTacticsFloorForPlayer` (portas secretas fora).
  *
- * @param {HTMLCanvasElement|object} canvas Canvas alvo.
+ * @param {HTMLCanvasElement|object} canvas Canvas 2D do mapa (nunca recebe contexto WebGL).
  * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`mode`, `onFallback2d`, `storage`).
- * @returns {{active: boolean, setMode: Function, draw: Function, destroy: Function}} Controlador da lente.
+ * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `onFallback2d`, `storage`).
+ * @returns {{active: boolean, setMode: Function, setFloor: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
  */
 export function attachDioramaOverlay(canvas, floor, opts = {}) {
   const mode = opts.mode || loadDioramaMode(opts.storage);
-  const glCanvas = ensureGlCanvas(canvas);
-  const makeRenderer = () => (glCanvas ? createDioramaGlRenderer(glCanvas) : null);
-  const st = { cam: createDioramaCamera({ mode }), glRenderer: mode === "2d" ? null : makeRenderer() };
-  if (st.cam.mode !== "2d" && !st.glRenderer) triggerOverlayFallback(st, opts, "WebGL2 indisponível — usando mapa 2D.");
-  const onLost = (ev) => { ev?.preventDefault?.(); triggerOverlayFallback(st, opts, "Contexto WebGL perdido — alternado para mapa 2D."); };
-  glCanvas?.addEventListener?.("webglcontextlost", onLost);
+  const st = { cam: createDioramaCamera({ mode }), gl: ensureGlCanvas(canvas), glRenderer: null, floor: null };
+  const setFloor = (next, role = opts.viewerRole) => { st.floor = projectFloorForRole(next, role); };
+  setFloor(floor);
+  if (mode !== "2d") ensureRenderer(st, opts);
+  const unbindLost = bindContextLoss(st, opts);
   return {
     get active() { return Boolean(st.glRenderer && st.cam.mode !== "2d"); },
     setMode(nextMode) {
       st.cam = applyCameraPreset(st.cam, saveDioramaMode(nextMode, opts.storage));
       if (st.cam.mode === "2d") { st.glRenderer?.destroy?.(); st.glRenderer = null; return null; }
-      if (!st.glRenderer) st.glRenderer = makeRenderer();
-      if (!st.glRenderer) { triggerOverlayFallback(st, opts, "WebGL2 indisponível — usando mapa 2D."); return null; }
-      return renderOverlayState(st, glCanvas || canvas, floor);
+      return ensureRenderer(st, opts) ? renderOverlayState(st) : null;
     },
-    draw: () => renderOverlayState(st, glCanvas || canvas, floor),
+    setFloor,
+    draw: () => renderOverlayState(st),
+    detach: () => st.gl?.remove?.(),
+    rebind(nextCanvas, nextFloor, role = opts.viewerRole) {
+      st.gl = ensureGlCanvas(nextCanvas, st.gl);
+      setFloor(nextFloor, role);
+      return renderOverlayState(st);
+    },
     destroy() {
-      glCanvas?.removeEventListener?.("webglcontextlost", onLost);
+      unbindLost();
       st.glRenderer?.destroy?.();
       st.glRenderer = null;
+      st.gl?.remove?.();
     },
   };
 }
