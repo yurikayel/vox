@@ -27,7 +27,7 @@ function withinBudget(value, depth = 0, budget = { nodes: 0 }) {
 function numberIssue(label, value, min, max, { decimal = false } = {}) {
   if (value === undefined) return null;
   const okType = decimal ? Number.isFinite(value) : Number.isInteger(value);
-  if (typeof value !== "number" || !okType || value < min || value > max) return `${label}: ${JSON.stringify(value)} está fora do intervalo ${min}–${max}.`;
+  if (typeof value !== "number" || !okType || value < min || value > max) return `${label}: ${String(JSON.stringify(value)).slice(0, 40)} está fora do intervalo ${min}–${max}.`;
   return null;
 }
 
@@ -54,8 +54,11 @@ function attributeIssues(attrs, pack) {
   ].filter(Boolean);
 }
 
-function itemIssues(it, i) {
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function itemIssues([key, it], i) {
   if (!isPlain(it)) return [`Item ${i + 1}: formato inválido.`];
+  if (UNSAFE_KEYS.has(key) || UNSAFE_KEYS.has(it.id)) return [`Item ${i + 1}: identificador não permitido.`];
   return [
     numberIssue(`Item ${i + 1}, quantidade`, it.qty, 0, VOXCHAR_LIMITS.qty),
     numberIssue(`Item ${i + 1}, peso`, it.weightLb, 0, VOXCHAR_LIMITS.weight, { decimal: true }),
@@ -65,9 +68,14 @@ function itemIssues(it, i) {
 function inventoryIssues(inv) {
   if (inv === undefined) return [];
   if (!isPlain(inv)) return ["Inventário: formato inválido."];
-  const items = Object.values(inv);
+  const items = Object.entries(inv);
   if (items.length > VOXCHAR_LIMITS.items) return [`Inventário: mais de ${VOXCHAR_LIMITS.items} itens.`];
   return items.flatMap(itemIssues);
+}
+
+function choicesIssues(choices) {
+  if (choices === undefined || isPlain(choices)) return [];
+  return ["Escolhas do sistema: formato inválido (esperado um objeto)."];
 }
 
 function metaIssues(meta) {
@@ -102,6 +110,6 @@ export function checkVoxchar(bytes) {
   if (head.length) return { ok: false, issues: head };
   const pack = getSystemPack(doc.system.id);
   const sheet = isPlain(doc.sheet) ? doc.sheet : {};
-  const issues = [...attributeIssues(sheet.attributes_lww, pack), ...inventoryIssues(sheet.inventory_orset), ...metaIssues(sheet.sheet_meta)];
+  const issues = [...attributeIssues(sheet.attributes_lww, pack), ...choicesIssues(sheet.system_choices), ...inventoryIssues(sheet.inventory_orset), ...metaIssues(sheet.sheet_meta)];
   return issues.length ? { ok: false, issues } : { ok: true, doc, pack };
 }

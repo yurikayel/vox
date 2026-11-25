@@ -23,7 +23,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
   "system": { "id": "dnd5e-2024", "version": 1 },
   "exportedAt": "2026-11-25T12:00:00.000Z",
   "sheet": {
-    "attributes_lww": { "name": "", "class_name": "", "armor_class": 10, "abilities": {}, "level": 1, "speed_ft": 30 },
+    "attributes_lww": { "name": "", "ancestry": "", "class_name": "", "armor_class": 10, "abilities": {}, "level": 1, "speed_ft": 30 },
     "system_choices": {},
     "inventory_orset": {},
     "sheet_meta": {
@@ -34,7 +34,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
 }
 ```
 
-- `name` e `class_name` ficam em `attributes_lww`, como na ficha real.
+- `name`, `ancestry` (ancestralidade, como "Humano") e `class_name` ficam em `attributes_lww`, como na ficha real; `ancestry` é da ficha-base, não identidade.
 - `format` é o inteiro da versão do arquivo; maior que o conhecido: recusa com o motivo. `system.version` maior que a do pacote instalado: recusa com o motivo.
 - `exportedAt` é informativo: validado como data ISO ou ignorado; nunca decide nada.
 - `system_choices` só leva o que o pacote de sistema declara (perícias, salvaguardas, especialização, Deslocamento, Dado de Vida).

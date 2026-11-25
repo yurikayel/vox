@@ -6,10 +6,11 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
-import { mutateSheetInventory, updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
+import { createAndSelectCampaign, mutateSheetInventory, updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
 import { markSheetDeathSave } from "../client/js/dungeon/dungeon-persistence-sheet-system.js";
 import { toggleSheetCondition } from "../client/js/dungeon/dungeon-persistence-sheet-rest.js";
 import { exportVoxchar, importVoxchar } from "../client/js/dungeon/voxchar.js";
+import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 import { checkVoxchar, VOXCHAR_MAX_BYTES } from "../client/js/dungeon/voxchar-check.js";
 import { renderSheetEditPanel } from "../client/js/dungeon/screen-sheet-levelup.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
@@ -140,4 +141,49 @@ test("importar cria ficha nova e não altera a existente; painel traz os dois bo
 
 test("exportar sem ficha não quebra", () => {
   assert.equal(exportVoxchar(null), null);
+});
+
+test("system_choices com tipo errado é recusado com motivo em português, sem TypeError", async () => {
+  const state = createDungeonSessionState();
+  for (const bad of [null, [], "x", 7]) {
+    const out = await importVoxchar(state, { bytes: enc(valid({ attributes_lww: { name: "A" }, system_choices: bad })) });
+    assert.equal(out.ok, false);
+    assert.match(out.issues[0], /Escolhas do sistema: formato inválido/);
+  }
+});
+
+test("valor longo em número fora da faixa aparece truncado no aviso", () => {
+  const out = checkVoxchar(enc(valid({ attributes_lww: { name: "A", armor_class: "9".repeat(500) } })));
+  assert.ok(out.issues[0].length < 120, out.issues[0].length);
+});
+
+test("item com id __proto__, constructor ou prototype é recusado", () => {
+  for (const key of ["__proto__", "constructor", "prototype"]) {
+    const byKey = checkVoxchar(enc(`{"kind":"voxchar","format":1,"system":{"id":"dnd5e-2024","version":1},"sheet":{"attributes_lww":{"name":"A"},"inventory_orset":{"${key}":{"label":"x"}}}}`));
+    assert.match(byKey.issues[0], /identificador não permitido/, key);
+    const byId = checkVoxchar(enc(valid({ attributes_lww: { name: "A" }, inventory_orset: { ok: { id: key, label: "x" } } })));
+    assert.match(byId.issues[0], /identificador não permitido/, key);
+  }
+});
+
+test("ancestralidade vai e volta (faz parte da ficha-base)", async () => {
+  const dst = createDungeonSessionState();
+  await importVoxchar(dst, { bytes: enc(valid({ attributes_lww: { name: "A", ancestry: "Elfa" } })) });
+  assert.equal(dst.sheet.attributes_lww.ancestry, "Elfa");
+  assert.equal(dec(exportVoxchar(dst.sheet).bytes).sheet.attributes_lww.ancestry, "Elfa");
+});
+
+test("ids: dois imports do mesmo arquivo geram ids diferentes entre si e do arquivo; campaign_id do arquivo é ignorado", async () => {
+  const file = enc({ ...valid(), sheet: { ...valid().sheet, character_id: "char_DOARQUIVO0001", campaign_id: "camp_FORJADA" }, character_id: "char_DOARQUIVO0001", campaign_id: "camp_FORJADA" });
+  const state = createDungeonSessionState();
+  const store = createVttStore(createMemoryVttBackend());
+  await createAndSelectCampaign(state, "Mesa local", { store });
+  const local = state.campaignId;
+  await importVoxchar(state, { bytes: file }, { store });
+  const first = state.sheet.character_id;
+  await importVoxchar(state, { bytes: file }, { store });
+  assert.notEqual(state.sheet.character_id, first);
+  for (const id of [first, state.sheet.character_id]) assert.notEqual(id, "char_DOARQUIVO0001");
+  assert.equal(state.sheet.campaign_id, local);
+  assert.notEqual(local, "camp_FORJADA");
 });
