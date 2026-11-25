@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: o painel Editar deixa de ajustar valores em silêncio; nome vazio, CA fora de 1–40, atributo fora de 1–30 ou não inteiro e sistema desconhecido recusam o Salvar com o motivo de cada campo, mantendo o que foi digitado e sem gravar nada (`sheet-edit-validate.js`, `tests/subversus-ficha-edicao-validacao.test.js`).
 - Auditoria diária jurídica/técnica: `scripts/legal-compliance-audit.mjs` (LEG-01..05) + testes; workflow `nightly-audit.yml` (cron 03h BRT) com supply-chain, SAST/Semgrep, `validate`+knip informativo, E2E Playwright e alerta por issue `auditoria-diaria`.
 - Limpeza de tip: removido radar de ecossistema aposentado; prosa de docs/CHANGELOG/LESSONS/POSITIONING/specs da Mesa neutralizada (sem nomes de referência de mercado); SW permanece `v7.171`.
 - Governança/CI (PTL): `CODEOWNERS` com paths exatos de `device-merge.js` e `vtt-fairplay-*.js`; `npm run validate` alinha a `lint:all` + `shell-budget-check` + `secrets-audit`; ROADMAP/HARDENING/método de agentes com teto **2**; documentado alias `client/revolução/`; metadata SW `v7.171`.

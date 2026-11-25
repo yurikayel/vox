@@ -24,6 +24,7 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { validateSheetEdit } from "./sheet-edit-validate.js";
 import {
   addDoorToScene,
   addTokenToScene,
@@ -253,6 +254,10 @@ function submitEditSheet(state, form, ctx) {
     const raw = valOf(form, `[name=${k}]`);
     if (raw) patch[k] = Number(raw);
   }
+  const { ok, issues } = validateSheetEdit(patch);
+  state.sheetEditIssues = issues;
+  state.sheetEditDraft = ok ? null : patch;
+  if (!ok) return ctx.settle(Promise.resolve());
   return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
 }
 

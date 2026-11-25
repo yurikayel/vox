@@ -70,26 +70,42 @@ export function renderLevelUpWizard(state) {
     </section>`;
 }
 
+/** Valor digitado no Salvar recusado, se houver; senão o da ficha. */
+function draftOr(draft, key, fallback) {
+  return draft[key] ?? fallback;
+}
+
+/** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. */
+function renderEditIssues(issues) {
+  if (!issues.length) return "";
+  const items = issues.map((i) => `<li>${escapeHtml(i.message)}</li>`).join("");
+  return `<div class="dungeon-alert-warn" role="alert"><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
+}
+
 /**
  * Renderiza o painel retrátil de edição básica da ficha (nome, classe, CA e atributos FOR–CAR).
  * @param {object} sheet Ficha ativa.
+ * @param {{issues?: Array<{field: string, message: string}>, draft?: object|null}} [edit] Avisos e valores digitados do último Salvar recusado.
  * @returns {string} HTML do formulário de edição.
  */
-export function renderSheetEditPanel(sheet) {
+export function renderSheetEditPanel(sheet, edit = {}) {
   const attrs = sheet?.attributes_lww || {};
+  const draft = edit.draft || {};
+  const issues = edit.issues || [];
   const ab = attrs.abilities || {};
   const abInputs = ABILITY_FIELDS.map((f) => {
-    const val = Number(ab[f.key]) || 10;
+    const val = draftOr(draft, f.key, Number(ab[f.key]) || 10);
     return `<label class="dungeon-field-mini"><span>${f.label}</span><input class="dungeon-input" name="${f.key}" type="number" min="1" max="30" value="${val}" /></label>`;
   }).join("");
   return `
-    <details class="dungeon-audit" data-dungeon-details="sheet-edit">
+    <details class="dungeon-audit" data-dungeon-details="sheet-edit"${issues.length ? " open" : ""}>
       <summary>Editar Dados da Ficha (Nome, Classe, CA e Atributos)</summary>
-      <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form">
-        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(sheet?.name || "")}" /></label>
+      ${renderEditIssues(issues)}
+      <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>
+        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "name", sheet?.name || ""))}" /></label>
         <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(sheet?.role_title || attrs.class_name || "")}" /></label>
         ${renderSystemSelect(sheet)}
-        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${Number(attrs.armor_class) || 10}" /></label>
+        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)}" /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>

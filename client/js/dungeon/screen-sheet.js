@@ -231,7 +231,7 @@ export function renderSheetScreen(state) {
     play: `${renderDerivedStrip(state.sheet)}${renderPlayTab(actions)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
-    about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
+    about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
   };
   return `
     ${noticeHtml}
