@@ -42,10 +42,10 @@ async function table(storage) {
 }
 
 const gmFairplay = async (env) => (await env.gmStore.loadCampaign(ID)).fairplay;
-const keyOp = async (env) => (await createFairplaySessionKey()).publicKeyJwk;
+const keyOp = async () => (await createFairplaySessionKey()).publicKeyJwk;
 
 async function sendKey(env) {
-  await env.anaPeer.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: await keyOp(env) }, ts: Date.now() });
+  await env.anaPeer.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: await keyOp() }, ts: Date.now() });
   await settlePeers(env.gmPeer, env.anaPeer);
 }
 

@@ -6,6 +6,7 @@ Fairplay nem para registrar o resultado: os dois passos são dados pelo condutor
 Execução: `python -m unittest e2e.test_fairplay_e2e -v` (ou `npm run test:e2e`). Sem esperas fixas.
 """
 
+import os
 import pathlib
 import sys
 import unittest
@@ -21,7 +22,7 @@ from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_g
 from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 ROLL_ID = "e2e-roll"
-WAIT_MS = 30000
+WAIT_MS = int(os.environ.get("VOX_E2E_WAIT_MS", "30000"))
 _SESSION = "(await import('/js/dungeon/dungeon-state.js')).getDungeonSession()"
 FLAG_ON = "localStorage.setItem('vox.lab.fairplay', '1')"
 
