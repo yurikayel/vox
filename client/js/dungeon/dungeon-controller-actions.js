@@ -247,7 +247,7 @@ function submitEditSheet(state, form, ctx) {
   const patch = {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
-    armor_class: Number(valOf(form, "[name=armorClass]")),
+    armor_class: valOf(form, "[name=armorClass]"),
     system: valOf(form, "[name=sheetSystem]"),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {

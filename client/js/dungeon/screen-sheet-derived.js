@@ -68,10 +68,11 @@ export function renderDerivedStrip(sheet) {
 /**
  * Seletor de sistema do painel Editar, com um campo para cada pacote registrado.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {string} [chosen] Sistema digitado num Salvar recusado; vence o da ficha quando existe na lista.
  * @returns {string} HTML do campo `sheetSystem`.
  */
-export function renderSystemSelect(sheet) {
-  const current = migrateLegacySheet(sheet || {})?.system?.id || "";
+export function renderSystemSelect(sheet, chosen = "") {
+  const current = chosen || migrateLegacySheet(sheet || {})?.system?.id || "";
   const options = listSystemPackIds().map((id) => {
     const pack = getSystemPack(id);
     return `<option value="${escapeHtml(id)}"${id === current ? " selected" : ""}>${escapeHtml(pack.name)}</option>`;

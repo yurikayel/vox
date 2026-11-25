@@ -28,7 +28,9 @@ test("validação: cada problema vem com campo e motivo em português", () => {
   assert.match(field(r.issues, "con"), /Constituição: use um número inteiro/);
   assert.match(field(r.issues, "int"), /Inteligência: use um número inteiro/);
   assert.match(field(r.issues, "sheetSystem"), /"t20" não está instalado/);
-  assert.equal(validateSheetEdit({ name: "A", armor_class: NaN }).ok, false, "CA em branco");
+  const blank = validateSheetEdit({ name: "A", armor_class: "" });
+  assert.match(field(blank.issues, "armorClass"), /em branco/);
+  assert.doesNotMatch(field(blank.issues, "armorClass"), /fora do intervalo/);
   assert.equal(validateSheetEdit(undefined).ok, false);
 });
 
@@ -53,10 +55,31 @@ test("Salvar com valor inválido: recusa, guarda avisos e rascunho e não grava 
   const form = fakeForm({ sheetName: "Kael", armorClass: "99", sheetSystem: "dnd5e-2024", str: "10" });
   await dispatchDungeonFormSubmit("edit-sheet-form", state, form, ctx);
   assert.equal(state.sheetEditIssues.length, 1);
-  assert.equal(state.sheetEditDraft.armor_class, 99);
+  assert.equal(state.sheetEditDraft.armor_class, "99");
   assert.equal(JSON.stringify(state.sheet), before, "nada gravado");
   await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "15", sheetSystem: "dnd5e-2024" }), ctx);
   assert.deepEqual(state.sheetEditIssues, []);
   assert.equal(state.sheetEditDraft, null);
   assert.equal(state.sheet.attributes_lww.armor_class, 15);
+});
+
+test("Salvar recusado: classe e sistema digitados continuam no formulário", () => {
+  const sheet = { name: "Lyra", role_title: "Paladina", attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
+  const html = renderSheetEditPanel(sheet, { issues: [{ field: "armorClass", message: "x" }], draft: { name: "Kael", class_name: "Bardo", armor_class: 99, system: "dnd5e-2024" } });
+  assert.match(html, /name="sheetClass"[^>]*value="Bardo"/);
+  assert.match(html, /<option value="dnd5e-2024" selected>/);
+});
+
+test("Salvar recusado pelo formulário: a classe digitada vai para o rascunho", async () => {
+  const state = createDungeonSessionState();
+  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", sheetClass: "Bardo", armorClass: "", sheetSystem: "dnd5e-2024" }), ctx);
+  assert.equal(state.sheetEditDraft.class_name, "Bardo");
+  assert.match(state.sheetEditIssues[0].message, /em branco/);
+});
+
+test("XSS: nome, classe e sistema com marcação não geram tag no painel", () => {
+  const evil = '"><img src=x onerror=alert(1)>';
+  const sheet = { name: evil, role_title: evil, attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
+  const draft = { name: evil, class_name: evil, system: evil };
+  for (const html of [renderSheetEditPanel(sheet), renderSheetEditPanel(sheet, { issues: [{ field: "sheetSystem", message: evil }], draft })]) assert.equal(html.includes("<img"), false);
 });

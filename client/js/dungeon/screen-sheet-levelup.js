@@ -103,8 +103,8 @@ export function renderSheetEditPanel(sheet, edit = {}) {
       ${renderEditIssues(issues)}
       <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>
         <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "name", sheet?.name || ""))}" /></label>
-        <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(sheet?.role_title || attrs.class_name || "")}" /></label>
-        ${renderSystemSelect(sheet)}
+        <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "class_name", sheet?.role_title || attrs.class_name || ""))}" /></label>
+        ${renderSystemSelect(sheet, draft.system)}
         <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)}" /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>

@@ -17,6 +17,11 @@ function rangeIssue(field, label, value, { min, max }) {
   return null;
 }
 
+function armorClassIssue(raw) {
+  if (String(raw ?? "").trim() === "") return { field: "armorClass", message: "CA: o campo está em branco; informe um número inteiro entre 1 e 40." };
+  return rangeIssue("armorClass", "CA", Number(raw), EDIT_LIMITS.armorClass);
+}
+
 function abilityIssues(patch) {
   return Object.entries(ABILITY_NAMES)
     .filter(([key]) => patch[key] !== undefined)
@@ -31,7 +36,7 @@ function abilityIssues(patch) {
 export function validateSheetEdit(patch = {}) {
   const issues = [];
   if (!String(patch.name ?? "").trim()) issues.push({ field: "sheetName", message: "Nome: a ficha precisa de um nome." });
-  issues.push(rangeIssue("armorClass", "CA", Number(patch.armor_class), EDIT_LIMITS.armorClass));
+  issues.push(armorClassIssue(patch.armor_class));
   issues.push(...abilityIssues(patch));
   if (patch.system && !getSystemPack(patch.system)) issues.push({ field: "sheetSystem", message: `Sistema: "${patch.system}" não está instalado; escolha um da lista.` });
   const found = issues.filter(Boolean);
