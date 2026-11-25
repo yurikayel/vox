@@ -38,7 +38,7 @@ Cinco a sete passos, cada um com "Voltar" e "Avançar", e um resumo antes de gra
 | 3 | Perícias | Perícias treinadas e, depois, especialização só nas treinadas | `system_choices.proficientSkills`, `expertSkills` | Só ids do pacote; especialização só em perícia treinada |
 | 4 | Salvaguardas | Salvaguardas treinadas | `system_choices.proficientSaves` | Só ids de atributos do pacote |
 | 5 | Defesa e movimento | CA, Deslocamento e Dado de Vida (o PV máximo fica fora do v1: vale o padrão 20 e o jogador ajusta depois) | `attributes_lww.armor_class`, `speed_ft`, `system_choices.hitDie` | CA 1–40; Deslocamento 0–200; Dado de Vida d4 a d12 |
-| 6 | Equipamento (opcional) | Itens e armadura, com os mesmos campos do formulário de itens; os itens ficam em `state.sheetWizard` até o resumo | `inventory_orset`, só no resumo | Mesmas regras do inventário (quantidade, peso, tipo de armadura do pacote) |
+| 6 | Equipamento (opcional) | Itens e armadura, com os mesmos campos do formulário de itens, mas montados em memória (sem usar o formulário que grava na hora); os itens ficam em `state.sheetWizard` até o resumo | `inventory_orset`, só no resumo | Mesmas regras do inventário (quantidade, peso, tipo de armadura do pacote) |
 | 7 | Resumo | Mostra o que será gravado, com os derivados do pacote (modificadores, CA, iniciativa) | grava tudo de uma vez, num único `SHEET_UPSERT` | Revalida a ficha inteira; qualquer aviso volta ao passo do campo |
 
 - O número de perícias e de salvaguardas **não** é limitado pelo assistente: depende da classe, e o pacote não tem classes (§7, D2).
@@ -65,7 +65,7 @@ Reaproveita o `.voxchar` ([voxchar-v0.md](./voxchar-v0.md)):
 
 - **D1. Rápido com personagem de verdade:** o pacote não tem classes. Opções: (a) Rápido só pede o nome e usa os padrões (proposta inicial, §3); (b) acrescentar ao pacote uma lista pequena de "modelos prontos" (dados: classe, atributos, perícias, salvaguardas, Dado de Vida) tirados do SRD 5.2, em PR próprio com a atribuição de licença.
 - **D2. Regras de criação:** compra de pontos ou lista padrão de atributos, e quantas perícias treinar por classe. Proposta: **fora do v1**; o Guiado aceita os valores dentro dos limites do Editar, sem impor regra de criação.
-- **D3. Equipamento no Guiado:** o passo 6 reaproveita o formulário de itens; confirmar se entra no v1 ou só depois.
+- **D3. Equipamento no Guiado:** o passo 6 usa os mesmos campos dos itens, montados em memória, sem reaproveitar o formulário que grava na hora; confirmar se entra no v1 ou só depois.
 
 ## 8. Testes de aceite
 
@@ -81,5 +81,5 @@ Reaproveita o `.voxchar` ([voxchar-v0.md](./voxchar-v0.md)):
 10. O módulo do assistente não está em `SHELL_ASSETS` e carrega só ao abrir o assistente.
 11. Nome e Ancestralidade acima de 60 caracteres e Dado de Vida fora de d4–d12 recusam o avanço com o motivo (regras novas da §2).
 12. Equipamento do passo 6 não grava nada antes do resumo (o teste espia o store e prova zero escritas); o resumo grava ficha e inventário num único `SHEET_UPSERT`.
-13. Abandonar o assistente (Cancelar, Esc confirmado ou recarregar) não deixa estado parcial: o teste espia o store e `localStorage` e prova zero escritas.
+13. Abandonar o assistente (Cancelar ou Esc confirmado) não deixa estado parcial: o teste de `node:test` espia o store e `localStorage` e prova zero escritas. A parte "recarregar (F5)" vai no teste e2e (Playwright, `page.reload`), não no `node:test`.
 14. Acessibilidade: cada passo anuncia "Passo X de Y", todo campo tem `label`, os avisos estão em `role="alert"` e o foco vai ao primeiro campo com erro; Esc pede confirmação de descarte.
