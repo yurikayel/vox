@@ -2,7 +2,7 @@
  * @file Painel de inventário da ficha (Subversus): mochila em grade 10×4 com "Organizar" automático, itens equipados à
  * parte e indicador de carga com o motivo por escrito (ficha-personagem-brainstorm §5.4).
  *
- * Só renderização: usa apenas as ações já existentes (`inv-equip`, `inv-remove`, `add-item-form`, `level-up-open`).
+ * Só renderização: usa apenas as ações já existentes (`inv-equip`, `inv-remove`, `add-item-form`).
  * A posição de cada item é calculada ao desenhar (`organizeBackpack`), sem guardar nada novo na ficha. Fora daqui
  * ficam o cinto, o boneco de equipamento e o arrastar, que pedem ações novas.
  * @module dungeon/screen-sheet-inventory
@@ -83,7 +83,6 @@ export function renderInventoryPanel(state) {
     <section class="dungeon-panel" aria-label="Inventário da ficha">
       <div class="dungeon-section-head">
         <div><span class="dungeon-eyebrow">Inventário compartilhado</span><h2>Mochila (${escapeHtml(load.text)})</h2></div>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
       </div>
       ${renderLoadIndicator(load)}
       ${renderAddItemForm()}

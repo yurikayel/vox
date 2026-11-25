@@ -195,6 +195,8 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             )
             self.assertIn("Lyra", page.locator(".dungeon-sheet-hero h1").inner_text())
             page.locator("button[data-dungeon='spend-10']").click()
+            # A Crônica @tag mora na aba "Sobre"; as abas são rádios estilizados.
+            page.locator("label[for='sheet-tab-about']").click()
             page.locator("button[data-dungeon='confirm-lore']").first.click()
             self.assertIn("Fato Confirmado", page.locator(".dungeon-lore-grid").inner_text())
             level_btn = page.locator("button[data-dungeon='level-up-open']")
@@ -206,6 +208,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             page.locator("button[data-dungeon='select-levelup-preset'][data-preset='tormenta20']").click()
             page.locator("button[data-dungeon='level-up']").click()
             expect(page.locator(".dungeon-sheet-hero")).to_contain_text("Nível 2")
+            page.locator("label[for='sheet-tab-items']").click()
             page.locator("#dungeon-item-label").fill("Tocha de Alquimia")
             page.locator("form[data-dungeon='add-item-form']").evaluate("f => f.requestSubmit()")
             expect(page.locator("section[aria-label='Inventário da ficha']")).to_contain_text("Tocha de Alquimia")
