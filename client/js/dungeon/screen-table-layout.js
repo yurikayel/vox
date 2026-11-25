@@ -5,7 +5,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderD20DieSvg } from "./rpg-illustrations.js";
 import { renderHandoutViewer } from "./screen-notes.js";
-import { renderEntrySeal, renderFairplayUnclosed, isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
+import { renderEntrySeal, renderFairplayStatus, isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 
 /** Atalhos de ação sugeridos na crônica da Mesa. */
 export const QUICK_CHIPS = [
@@ -116,7 +116,7 @@ function renderFormulaTray(state) {
 export function renderChronicleColumn(state) {
   const visibleTurns = (state.chronicle || []).filter((e) => canViewChronicleEntry(e, state));
   const turnsHtml = visibleTurns.map((e) => renderChronicleEntry(e, state)).join("");
-  const unclosedHtml = state.fairplayLabEnabled || isFairplayLabEnabled() ? renderFairplayUnclosed(state) : "";
+  const unclosedHtml = state.fairplayLabEnabled || isFairplayLabEnabled() ? renderFairplayStatus(state) : "";
   const chipsHtml = QUICK_CHIPS.map((txt) => `<button type="button" class="dungeon-chip-btn" data-dungeon="chip" data-text="${escapeHtml(txt)}">${escapeHtml(txt)}</button>`).join("");
   const actorFirst = String(state.sheet?.name || "seu personagem").split(/[,\s]+/)[0] || "seu personagem";
   return `
