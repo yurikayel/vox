@@ -304,3 +304,8 @@
 .dungeon-backpack-item { min-width: 0; padding: 2px 4px; overflow: hidden; font-size: 0.7rem; line-height: 1.1; text-align: left; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; background: rgba(120, 214, 207, 0.12); color: inherit; cursor: pointer; }
 .dungeon-load { margin: 0.5rem 0; }
 .dungeon-load.is-over { color: #ff8a8a; }
+
+/* Tabela de salvaguardas em lote (Escudo do Mestre). */
+.dungeon-saves-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.9rem; }
+.dungeon-saves-table th, .dungeon-saves-table td { padding: 0.35rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.dungeon-saves-table tbody th { text-align: left; font-weight: 600; }
