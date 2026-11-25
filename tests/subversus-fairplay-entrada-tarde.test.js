@@ -54,7 +54,7 @@ test("entrada tarde: depois de rolagens fechadas e 10 trocas de chave, o recepto
   const gmStore = makeStore();
   await gmStore.saveCampaign(createCampaign({ id: ID, name: "Mesa", gmRouteId: gm.routeId }));
   const members = [member(env, "gm", gm, gmStore), member(env, "player", a, makeStore()), member(env, "player", b, makeStore())];
-  const [mg, ma, mb] = members;
+  const [, ma, mb] = members;
   const gmDoc = () => gmStore.loadCampaign(ID);
   try {
     for (const m of [ma, mb]) {

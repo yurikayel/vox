@@ -10,7 +10,7 @@ description = "Unified Vox node/relay binary and C-ABI/JNI library in pure std (
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-vox-core = { path = "../vox-core" }
+vox-core = { path = "../vox-core", version = "0.1.0" }
 
 [lints.rust]
 unsafe_code = "deny"
