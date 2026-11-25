@@ -25,14 +25,24 @@ function sheetState() {
   return state;
 }
 
+const panel = (html, id) => {
+  const open = `<div class="dungeon-sheet-tab-panel is-${id}">`;
+  const start = html.indexOf(open);
+  assert.ok(start >= 0, `painel ${id} ausente`);
+  const next = html.indexOf('<div class="dungeon-sheet-tab-panel is-', start + open.length);
+  return html.slice(start, next === -1 ? html.length : next);
+};
+const beforeTabs = (html) => html.slice(0, html.indexOf('<div class="dungeon-sheet-tabs">'));
+
 test("abas: Jogar, Habilidades, Itens e Sobre, com Jogar aberta por padrão", () => {
   assert.deepEqual(SHEET_TABS.map((t) => t.label), ["Jogar", "Habilidades", "Itens", "Sobre"]);
   const html = renderSheetTabs({ play: "P", abilities: "H", items: "I", about: "S" });
-  assert.equal((html.match(/type="radio"/g) || []).length, 4);
-  assert.match(html, /id="sheet-tab-play"[^>]*checked/);
-  assert.doesNotMatch(html, /id="sheet-tab-items"[^>]*checked/);
-  assert.match(renderSheetTabs({}, "items"), /id="sheet-tab-items"[^>]*checked/);
-  assert.match(renderSheetTabs({}, "inexistente"), /id="sheet-tab-play"[^>]*checked/);
+  assert.equal((html.match(/<input type="radio"/g) || []).length, 4);
+  assert.match(html, /<input type="radio" class="dungeon-sheet-tab-input" name="sheet-tab" id="sheet-tab-play" data-dungeon-tab="play" checked \/>/);
+  assert.equal((html.match(/ checked \/>/g) || []).length, 1);
+  assert.match(renderSheetTabs({}, "items"), /id="sheet-tab-items" data-dungeon-tab="items" checked \/>/);
+  assert.match(renderSheetTabs({}, "inexistente"), /id="sheet-tab-play" data-dungeon-tab="play" checked \/>/);
+  for (const t of SHEET_TABS) assert.match(html, new RegExp(`<label class="dungeon-sheet-tab-label" for="sheet-tab-${t.id}">${t.label}</label>`));
 });
 
 test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' lista as perícias", () => {
@@ -40,11 +50,30 @@ test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' l
   assert.deepEqual(pickMostUsed(actions).map((a) => a.id), ["a1", "h1", "s1", "s2"]);
   assert.equal(pickMostUsed(actions, 2).length, 2);
   const html = renderSheetScreen(sheetState());
-  const play = html.slice(html.indexOf("is-play"), html.indexOf("is-abilities"));
-  assert.match(play, /Mais usados/);
-  assert.match(play, /Todos os testes/);
-  assert.match(play, /Furtividade/);
-  assert.match(html.slice(html.indexOf("is-abilities"), html.indexOf("is-items")), /Golpe Furioso/);
+  const play = panel(html, "play");
+  assert.match(play, /<h3 class="dungeon-eyebrow">Mais usados<\/h3>/);
+  assert.match(play, /<h3 class="dungeon-eyebrow">Todos os testes<\/h3>/);
+  assert.ok(play.indexOf("Mais usados") < play.indexOf("Todos os testes"));
+  assert.match(play, /data-dungeon="roll-action" data-action-id="s1"><strong>Furtividade<\/strong>/);
+  assert.doesNotMatch(play, /data-dungeon="remove-action"/);
+  assert.match(panel(html, "abilities"), /data-dungeon="roll-action" data-action-id="h1"><strong>Golpe Furioso<\/strong>/);
+  assert.match(panel(html, "abilities"), /data-dungeon="remove-action" data-action-id="h1"/);
+});
+
+test("abas: modo de rolagem, aviso de resultado ou erro e 'Subir de Nível' ficam fora das abas, sempre à vista", () => {
+  const html = renderSheetScreen({ ...sheetState(), rollError: "Fórmula inválida", lastFormulaRoll: null });
+  const top = beforeTabs(html);
+  assert.equal((top.match(/data-dungeon="roll-mode"/g) || []).length, 3);
+  assert.match(top, /<p class="dungeon-alert-warn" role="alert">Fórmula inválida<\/p>/);
+  assert.match(top, /<button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível<\/button>/);
+  for (const id of ["play", "abilities", "items", "about"]) {
+    const body = panel(html, id);
+    assert.doesNotMatch(body, /data-dungeon="roll-mode"/);
+    assert.doesNotMatch(body, /role="alert"/);
+    assert.doesNotMatch(body, /data-dungeon="level-up-open"/);
+  }
+  const ok = renderSheetScreen({ ...sheetState(), lastFormulaRoll: { ok: true, label: "Furtividade", total: 17 } });
+  assert.match(beforeTabs(ok), /<p class="dungeon-inline-status" role="status">Última rolagem \(Furtividade\): <strong>17<\/strong><\/p>/);
 });
 
 test("abas: só usa botões que o controlador já trata", () => {
@@ -69,7 +98,11 @@ test("abas: a aba escolhida sobrevive ao redesenho", () => {
 });
 
 test("abas: CSS com duas colunas no desktop e só o painel da aba marcada visível", () => {
-  assert.match(css, /@media \(min-width: 900px\)[^}]*\.dungeon-sheet-layout[^}]*grid-template-columns/s);
+  assert.match(css, /@media \(min-width: 1024px\) \{\s*\.dungeon-sheet-layout \{[^}]*grid-template-columns/);
   assert.match(css, /\.dungeon-sheet-tab-panel \{ display: none; \}/);
-  for (const t of SHEET_TABS) assert.match(css, new RegExp(`#sheet-tab-${t.id}:checked ~ \.dungeon-sheet-tab-panels \.is-${t.id}`));
+  for (const t of SHEET_TABS) {
+    assert.match(css, new RegExp(String.raw`#sheet-tab-${t.id}:checked ~ \.dungeon-sheet-tab-panels \.is-${t.id}`));
+    assert.match(css, new RegExp(String.raw`#sheet-tab-${t.id}:focus-visible ~ \.dungeon-sheet-tab-list \[for="sheet-tab-${t.id}"\]`));
+  }
+  assert.doesNotMatch(css, /\.dungeon-sheet-tab-input:focus-visible ~ \.dungeon-sheet-tab-list label/);
 });
