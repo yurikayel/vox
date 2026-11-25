@@ -28,17 +28,43 @@ function abilityIssues(patch) {
     .map(([key, label]) => rangeIssue(key, label, Number(patch[key]), EDIT_LIMITS.ability));
 }
 
+function speedIssue(raw, pack) {
+  const max = pack.formulas.speed?.maxFt ?? 200;
+  if (String(raw).trim() === "") return { field: "speedFt", message: `Deslocamento: o campo está em branco; informe os pés (0 a ${max}).` };
+  return rangeIssue("speedFt", "Deslocamento", Number(raw), { min: 0, max });
+}
+
+function listIssues(patch, { pack, trainedSkills = [] }) {
+  const abilityIds = pack.abilities.map((a) => a.id);
+  const skillLabel = (id) => pack.skills.find((s) => s.id === id)?.label || id;
+  const badSaves = (patch.proficientSaves || []).filter((id) => !abilityIds.includes(id));
+  const untrained = (patch.expertSkills || []).filter((id) => !trainedSkills.includes(id));
+  return [
+    ...badSaves.map((id) => ({ field: "saveProf", message: `Salvaguarda: "${id}" não existe neste sistema.` })),
+    ...untrained.map((id) => ({ field: "expertSkill", message: `Especialização em ${skillLabel(id)}: só vale em perícia treinada; treine a perícia primeiro.` })),
+  ];
+}
+
+/** Campos que só existem com o pacote de sistema da ficha (Deslocamento, salvaguardas, especialização). */
+function systemIssues(patch, ctx) {
+  if (!ctx.pack) return [];
+  const speed = patch.speedFt === undefined ? [] : [speedIssue(patch.speedFt, ctx.pack)];
+  return [...speed, ...listIssues(patch, ctx)];
+}
+
 /**
  * Confere os campos do painel Editar e explica cada problema em português.
- * @param {object} patch Campos do formulário (`name`, `armor_class`, `system`, `str`…`cha`).
+ * @param {object} patch Campos do formulário (`name`, `armor_class`, `system`, `str`…`cha`, `speedFt`, `proficientSaves`, `expertSkills`).
+ * @param {{pack?: object, trainedSkills?: string[]}} [ctx] Pacote da ficha e perícias treinadas, para validar Deslocamento, salvaguardas e especialização.
  * @returns {{ok: boolean, issues: Array<{field: string, message: string}>}} `ok` só sem avisos.
  */
-export function validateSheetEdit(patch = {}) {
+export function validateSheetEdit(patch = {}, ctx = {}) {
   const issues = [];
   if (!String(patch.name ?? "").trim()) issues.push({ field: "sheetName", message: "Nome: a ficha precisa de um nome." });
   issues.push(armorClassIssue(patch.armor_class));
   issues.push(...abilityIssues(patch));
   if (patch.system && !getSystemPack(patch.system)) issues.push({ field: "sheetSystem", message: `Sistema: "${patch.system}" não está instalado; escolha um da lista.` });
+  issues.push(...systemIssues(patch, ctx));
   const found = issues.filter(Boolean);
   return { ok: found.length === 0, issues: found };
 }

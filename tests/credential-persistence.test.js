@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import * as keystore from "../client/js/identity/keystore.js";
 import { saveBskySession, openBskySession, loadBskySession } from "../client/js/bsky-oauth.js";
 import * as linked from "../client/js/linked-accounts.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const SESSION = {
   did: "did:plc:x", handle: "x.bsky.social", pds: "https://pds.test", issuer: "https://bsky.social", clientId: "c",
@@ -64,7 +65,7 @@ test("contas vinculadas sem chave do aparelho: App Password e webhook não vão 
 test("contas vinculadas com chave do aparelho: segredos só cifrados e recuperados após hidratar", async () => {
   localStorage.clear();
   linked.saveLinkedAccount("bsky", { handle: "u.bsky.social", appPassword: "APP-PWD-CIFRADA", enabled: true });
-  await new Promise((r) => setTimeout(r, 50));
+  await waitUntil(() => localStorage.getItem("vox-linked-secrets"));
   assert.ok(!dump().includes("APP-PWD-CIFRADA"));
   assert.ok(localStorage.getItem("vox-linked-secrets"));
   await linked.hydrateLinkedAccounts();

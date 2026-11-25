@@ -5,6 +5,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const flow = await import("../client/js/app/contact-notify-flow.js");
 const notify = await import("../client/js/contact-notify.js");
@@ -52,7 +53,7 @@ test("adicionar contato: só o contato novo dispara aviso; repetido ou vazio nã
   assert.equal(flow.addContactAndNotify("   "), false);
   const first = sendDeps();
   assert.equal(flow.addContactAndNotify("vx_bia", "Bia", first), true);
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  await waitUntil(()=> first.sent.length === 1);
   assert.equal(first.sent.length, 1);
   assert.equal(contacts.hasContact("vx_bia"), true);
   const again = sendDeps();

@@ -38,6 +38,7 @@ import {
   syncWithCentralMemory,
 } from "../client/js/central-memory.js";
 import { uploadToTurbo, postData, postBinary } from "../client/js/upload.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 /** Cria par (banner, botão) para o mock mínimo de DOM. */
 function makeBannerNodes(html, byId, onRemove) {
@@ -187,7 +188,7 @@ test("PM-100: faixa UI monta, não duplica, reage a eventos e apaga tudo ao clic
   assert.ok(doc.getBanner());
 
   doc.getElementById(REHEARSAL_WIPE_BTN_ID).click();
-  await new Promise((r) => setTimeout(r, 10));
+  await waitUntil(() => !isRehearsalMode(storage) && cacheCleared);
 
   assert.equal(isRehearsalMode(storage), false);
   assert.equal(cacheCleared, true);

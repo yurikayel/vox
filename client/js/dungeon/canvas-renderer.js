@@ -5,6 +5,8 @@
  */
 import { cellToWorldCenter, createCamera, tokenBoundsWorld } from "./vtt-geometry.js";
 import { hpStatusLabel } from "./vtt-scene-schema.js";
+import { drawMovePreview, drawTokenPortrait, drawTurnBadge } from "./canvas-token-layers.js";
+import { tokenHp } from "./token-ficha.js";
 import {
   drawAoeLayer,
   drawDoorsLayer,
@@ -110,6 +112,7 @@ function drawSingleToken(ctx, token, floor, opts) {
   ctx.arc(b.cx, b.cy, b.radius, 0, Math.PI * 2);
   ctx.fillStyle = token.color || "#78d6cf";
   ctx.fill();
+  const portrait = drawTokenPortrait(ctx, opts.avatars?.get?.(token.avatarBlobHash), b);
   ctx.lineWidth = isSelected ? 3.5 : 2;
   ctx.strokeStyle = isSelected ? "#ffffff" : isGmTok ? "#e7c26b" : "#0c0e11";
   if (isGmTok && typeof ctx.setLineDash === "function") ctx.setLineDash([5, 4]);
@@ -118,12 +121,13 @@ function drawSingleToken(ctx, token, floor, opts) {
   ctx.font = "700 14px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(token.initials || "TK", b.cx, b.cy);
+  if (!portrait) ctx.fillText(token.initials || "TK", b.cx, b.cy);
   ctx.fillStyle = "#e2e2e6";
   ctx.font = "600 11px sans-serif";
   ctx.fillText(isGmTok ? `[GM] ${token.name}` : token.name, b.cx, b.top + b.height + 10);
   drawTokenHpBar(ctx, token, b);
   drawTokenConditionBadges(ctx, token, b);
+  if (opts.turnTokenId && opts.turnTokenId === token.tokenId) drawTurnBadge(ctx, b);
   ctx.restore();
 }
 
@@ -133,7 +137,8 @@ function resolveRenderedTokens(scene, floor, opts) {
   return (scene.tokens || [])
     .filter((t) => t.floorZ === floor.z && (viewerRole === "gm" || t.layer === "player"))
     .map((t) => {
-      const moved = preview && preview.tokenId === t.tokenId ? { ...t, x: preview.x, y: preview.y } : t;
+      const linked = opts.sheetsById?.[t.sheetId] ? { ...t, ...tokenHp(t, opts.sheetsById[t.sheetId]) } : t;
+      const moved = preview && preview.tokenId === t.tokenId ? { ...linked, x: preview.x, y: preview.y } : linked;
       if (viewerRole !== "gm" && moved.hpVisible === "status" && moved.hpCurrent !== null) {
         return { ...moved, hpCurrent: null, hpMax: null, hpStatus: hpStatusLabel(moved.hpCurrent, moved.hpMax) };
       }
@@ -184,6 +189,7 @@ function drawAllSceneLayers(ctx, scene, floor, opts) {
   const aoeHits = drawAoeLayer(ctx, floor, tokens, role, opts.draftAoe || null);
   const drawnDoors = drawDoorsLayer(ctx, floor, role);
   drawPinnedNotesLayer(ctx, scene, floor, opts.notes, role);
+  drawMovePreview(ctx, opts.movePreview || null, floor.grid);
   for (const tok of tokens) drawSingleToken(ctx, tok, floor, opts);
   const fogDrawn = drawFogLayer(ctx, floor, role, opts.draftFogRect || null);
   drawRulerLayer(ctx, opts.ruler || null, floor.grid);
@@ -194,7 +200,7 @@ function drawAllSceneLayers(ctx, scene, floor, opts) {
  * Renderiza a cena tática 2D num elemento `<canvas>` sob demanda (0% CPU em repouso).
  * @param {HTMLCanvasElement|object} canvas Elemento `<canvas>` (ou mock compatível em testes).
  * @param {object} scene Documento `SceneDoc`.
- * @param {object} [opts={}] Opções (`camera`, `viewerRole`, `selectedTokenId`, `mapImage`, `dragPreview`, `draftStroke`, `draftFogRect`, `ruler`, `dpr`).
+ * @param {object} [opts={}] Opções (`camera`, `viewerRole`, `selectedTokenId`, `sheetsById`, `turnTokenId`, `avatars`, `movePreview`, `mapImage`, `dragPreview`, `draftStroke`, `draftFogRect`, `ruler`, `dpr`).
  * @returns {object} Resumo da renderização.
  */
 export function renderSceneToCanvas(canvas, scene, opts = {}) {

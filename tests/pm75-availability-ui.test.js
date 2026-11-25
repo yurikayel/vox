@@ -19,6 +19,7 @@ import {
 import * as render from "../client/js/render.js";
 import * as localAccount from "../client/js/identity/index.js";
 import { buildStatusDiagnosticReport, showStatus } from "../client/js/app/screens-status.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const HOUR_MS = 3_600_000;
 const BASE_MS = Date.UTC(2026, 10, 1, 12, 0, 0);
@@ -188,6 +189,6 @@ test("PM-75 UI: showStatus renderiza métricas, copia diagnóstico e zera observ
 
   els.resetAvailability.onclick();
   assert.equal(getAvailabilityMetricsSummary().totalPosts, 0);
-  await new Promise((r) => setTimeout(r, 20));
+  await waitUntil(()=> /Sem posts elegíveis medidos/.test(dom.main.innerHTML));
   assert.match(dom.main.innerHTML, /Sem posts elegíveis medidos/);
 });

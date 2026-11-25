@@ -11,6 +11,7 @@ import * as bsky from "../client/js/bsky-feed.js";
 import * as unread from "../client/js/community-unread.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as home from "../client/js/app/screens-home.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const dom = installFakeDom();
 const realFetch = globalThis.fetch;
@@ -79,7 +80,7 @@ test("bluesky — importar sem @handle não faz nada; com handle importa os perf
   f.btn.fire("click");
   assert.equal(f.btn.disabled, true);
   assert.equal(f.btn.textContent, "Importando...");
-  await settle();
+  await waitUntil(() => f.input.value === "");
   const subs = bsky.loadBskySubscriptions();
   assert.ok(subs.includes("t1amiga.bsky.social") && subs.includes("t1amigo.bsky.social"));
   assert.equal(f.input.value, "");
@@ -96,7 +97,7 @@ test("bluesky — importação com a API fora do ar não quebra e devolve o bot�
   home.attachBskyManagerHandlers(() => {});
   f.input.value = "eu.bsky.social";
   f.btn.fire("click");
-  await settle();
+  await waitUntil(() => f.btn.disabled === false);
   assert.equal(f.btn.disabled, false);
   assert.match(f.btn.textContent, /Puxar quem eu sigo/);
 });
