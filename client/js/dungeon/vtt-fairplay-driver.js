@@ -181,7 +181,28 @@ async function handleUpdate(ctx, campaign) {
  * outro motivo (assinatura, autorização, relógio fora da faixa) para o passo e é entregue à interface:
  * insistir só repetiria a recusa.
  */
+/** Máximo de reenvios da chave de sessão quando o Mestre a recusa por `lamport` atrasado (entrou antes do snapshot). */
+const KEY_RESEND_LIMIT = 3;
+
+/**
+ * Publica a chave de sessão deste aparelho e guarda o `opId` para reconhecer uma recusa por `lamport` atrasado.
+ * Quem entra na mesa assina a chave antes de receber o snapshot: o `lamport` fica abaixo da admissão e o Mestre
+ * recusa como `out_of_phase`; reenviar depois do snapshot gera um `lamport` maior.
+ */
+async function publishSessionKey(ctx) {
+  const res = await ctx.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: ctx.sessionKey.publicKeyJwk } });
+  ctx.keyOpId = res?.opId || "";
+}
+
+async function handleRejectedKey(ctx, msg) {
+  ctx.keyResends = (ctx.keyResends || 0) + 1;
+  if (msg.reason === "out_of_phase" && ctx.keyResends <= KEY_RESEND_LIMIT) return publishSessionKey(ctx);
+  ctx.rejection = { reason: String(msg.reason || "unknown"), opId: msg.opId, stepKey: "key" };
+  return ctx.onStopped(ctx.rejection);
+}
+
 async function handleRejected(ctx, msg) {
+  if (msg?.opId && msg.opId === ctx.keyOpId) return handleRejectedKey(ctx, msg);
   const stepKey = ctx.pending.get(msg?.opId);
   if (!stepKey) return;
   if (msg.reason !== "out_of_phase") {
@@ -206,7 +227,7 @@ export function createFairplayDriver(opts) {
   return {
     async start() {
       ctx.sessionKey = await createFairplaySessionKey();
-      await ctx.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: ctx.sessionKey.publicKeyJwk } });
+      await publishSessionKey(ctx);
     },
     async openRoll(o = {}) {
       const rollId = o.rollId || `roll-${crypto.randomUUID().slice(0, 8)}`;
