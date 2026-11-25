@@ -96,7 +96,13 @@ function findSceneToken(campaign, op) {
 function filterTokenMove(campaign, op) {
   const { tok, floor } = findSceneToken(campaign, op);
   if (!tok || tok.layer !== "player") return null;
+  if (floor?.fog?.enabled) return { refreshSnapshot: true };
   return isTokenRevealedByFog(tok, floor) ? op : { refreshSnapshot: true };
+}
+
+function filterTokenChangeFloor(campaign, op) {
+  const { tok } = findSceneToken(campaign, op);
+  return tok?.layer === "gm" ? null : { refreshSnapshot: true };
 }
 
 function filterTokenUpsert(campaign, op) {
@@ -124,6 +130,8 @@ const OP_FILTERS = {
   TOKEN_LAYER_SET: () => ({ refreshSnapshot: true }),
   TOKEN_UPSERT: filterTokenUpsert,
   TOKEN_MOVE: filterTokenMove,
+  TOKEN_REMOVE: () => ({ refreshSnapshot: true }),
+  TOKEN_CHANGE_FLOOR: filterTokenChangeFloor,
   DOOR_UPSERT: filterDoorUpsert,
   FOG_SET: () => ({ refreshSnapshot: true }),
   DOOR_STATE_SET: () => ({ refreshSnapshot: true }),

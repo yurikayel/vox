@@ -47,9 +47,57 @@ test("snapshot do Mestre: continua completo com a névoa ligada", () => {
 test("deltas: alvo na névoa não segue como está e mudar a névoa pede novo snapshot", () => {
   const state = fogState();
   const move = (tokenId) => filterOpForPlayer(state, { type: "TOKEN_MOVE", payload: { sceneId: "sc-nevoa", tokenId, x: 9, y: 7 } }, "vx_p1");
-  assert.equal(move("heroi-visto")?.type, "TOKEN_MOVE");
+  assert.equal(move("heroi-visto")?.refreshSnapshot, true);
+  const open = { ...state, scenesById: { "sc-nevoa": { ...state.scenesById["sc-nevoa"], floors: [{ ...state.scenesById["sc-nevoa"].floors[0], fog: { enabled: false, revealedRects: [] } }] } } };
+  assert.equal(filterOpForPlayer(open, { type: "TOKEN_MOVE", payload: { sceneId: "sc-nevoa", tokenId: "heroi-visto", x: 2, y: 2 } }, "vx_p1").type, "TOKEN_MOVE");
   assert.notEqual(move("ogro-na-nevoa")?.type, "TOKEN_MOVE");
   const door = { type: "DOOR_UPSERT", payload: { sceneId: "sc-nevoa", floorZ: 0, door: state.scenesById["sc-nevoa"].floors[0].doors[1] } };
   assert.notEqual(filterOpForPlayer(state, door, "vx_p1")?.type, "DOOR_UPSERT");
   assert.equal(filterOpForPlayer(state, { type: "FOG_SET", payload: { sceneId: "sc-nevoa", floorZ: 0, enabled: true } }, "vx_p1")?.refreshSnapshot, true);
+});
+
+function fogStateExtras() {
+  const state = fogState();
+  const scene = state.scenesById["sc-nevoa"];
+  const floor = {
+    ...scene.floors[0],
+    drawings: [
+      { drawingId: "traco-visto", layer: "player", points: [{ wx: 70, wy: 70 }, { wx: 100, wy: 90 }] },
+      { drawingId: "traco-oculto", layer: "player", points: [{ wx: 600, wy: 450 }, { wx: 620, wy: 470 }] },
+    ],
+    aoes: [
+      { aoeId: "area-vista", layer: "player", kind: "circle", wx: 100, wy: 100 },
+      { aoeId: "area-oculta", layer: "player", kind: "circle", wx: 600, wy: 450 },
+    ],
+    portals: [
+      { portalId: "portal-visto", layer: "player", x: 1, y: 1, label: "Visto" },
+      { portalId: "portal-oculto", layer: "player", x: 9, y: 7, label: "Oculto" },
+    ],
+  };
+  return { ...state, scenesById: { "sc-nevoa": { ...scene, floors: [floor] } } };
+}
+
+test("snapshot do jogador: desenhos, AoE e portais fora da área revelada não são enviados", () => {
+  const floor = projectStateForPlayer(fogStateExtras(), "player", "vx_p1").scenesById["sc-nevoa"].floors[0];
+  assert.deepEqual(floor.drawings.map((d) => d.drawingId), ["traco-visto"]);
+  assert.deepEqual(floor.aoes.map((a) => a.aoeId), ["area-vista"]);
+  assert.deepEqual(floor.portals.map((p) => p.portalId), ["portal-visto"]);
+});
+
+test("iniciativa do jogador: entradas de token não revelado ficam de fora", () => {
+  const state = { ...fogState(), initiative: { active: true, entries: [
+    { id: "i1", tokenId: "heroi-visto", name: "Herói", roll: 15 },
+    { id: "i2", tokenId: "ogro-na-nevoa", name: "Ogro", roll: 10 },
+  ] } };
+  const init = projectStateForPlayer(state, "player", "vx_p1").initiative;
+  assert.deepEqual(init.entries.map((e) => e.tokenId), ["heroi-visto"]);
+  assert.equal(projectStateForPlayer(state, "gm", "vx_gm").initiative.entries.length, 2);
+});
+
+test("deltas: remoção, troca de andar e entrada na área revelada pedem novo snapshot", () => {
+  const state = fogState();
+  const send = (type, payload) => filterOpForPlayer(state, { type, payload: { sceneId: "sc-nevoa", ...payload } }, "vx_p1");
+  assert.equal(send("TOKEN_REMOVE", { tokenId: "ogro-na-nevoa" })?.refreshSnapshot, true);
+  assert.equal(send("TOKEN_CHANGE_FLOOR", { tokenId: "ogro-na-nevoa", floorZ: 0 })?.refreshSnapshot, true);
+  assert.equal(send("TOKEN_MOVE", { tokenId: "heroi-visto", x: 2, y: 2 })?.refreshSnapshot, true, "token que pode ter entrado na área revelada");
 });
