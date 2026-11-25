@@ -259,7 +259,8 @@ export async function unpackVoxRpg(zipBytes) {
       if (campaignNote) parsed.notesById[noteId] = { ...campaignNote, canvasJson: JSON.parse(DEC.decode(bytes)) };
     }
   }
-  return { campaign: createCampaign(parsed), blobs, manifest, markdownFiles };
+  // O estado Fairplay de um arquivo importado não é verificável: descartado (volta a ser refeito pelas ops da mesa).
+  return { campaign: createCampaign({ ...parsed, fairplay: null }), blobs, manifest, markdownFiles };
 }
 
 function bytesToBase64(bytes) {

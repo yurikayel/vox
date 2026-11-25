@@ -114,7 +114,7 @@ test("overlay: canvas GL focável e rotulado; arrasto não dispara o clique; tec
     setAttribute: (k, v) => { attrs[k] = v; }, setPointerCapture() {}, releasePointerCapture() {}, focus() {},
     addEventListener: (n, fn) => { listeners[n] = fn; }, removeEventListener() {}, remove() {} };
   const host = { style: {}, appendChild: (c) => { c.parentNode = host; }, querySelector: () => null };
-  const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: () => glCanvas } };
+  const base = { width: 800, height: 500, parentNode: host, ownerDocument: { createElement: (tag) => (tag === "div" ? { dataset: {}, style: {}, parentNode: null, setAttribute() {}, remove() {} } : glCanvas) } };
   const picks = [];
   const overlay = attachDioramaOverlay(base, createFloorDoc({}), { mode: "3d", viewerRole: "gm", tokens: [createTokenDoc({ tokenId: "heroi", x: 6, y: 4 })], storage: null, onPick: (h) => picks.push(h) });
   overlay.draw();
