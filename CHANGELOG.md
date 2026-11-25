@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Convergência multi-aparelho (`device-merge`): timestamp efetivo usa `Math.max` entre campos de data (não `editedAt ?? deletedAt`), evitando ressuscitar contato/comunidade/lista quando o tombstone tem `deletedAt` maior que o `editedAt` antigo; SW `vox-pwa-v7.171-device-merge-tombstone`; import único em `passphrase-vault.js`.
 - Higiene IP (PTL): removidos do tip dossiê/assets VTT de terceiros (`ui-reference-dossier`, `ui-references-*`), `docs/branding/vox-source-retired` e scrapers/testes de harvest (`e2e/harvest_*`, `e2e/ui_refs_retired/**`, `e2e/mesa-hospedada-a_*`, `e2e/capture_vtt_references.py`, `scripts/ingest_manual_aux.py`, etc.); guia Stitch reduzido a capturas `dungeon-ui-2026-11-20__*`; crédito SRD 5.2 (CC-BY-4.0) registrado em `docs/legal/licenca-e-contribuicoes.md`.
 - Subversus (Zero-Spoiler): `FAIRPLAY_ADMIT` entra em `GM_ONLY_OPS`; o filtro de autoria recusa a admissão feita por jogador (antes só o reducer a ignorava).
 - Subversus (Zero-Spoiler): o estado e os deltas enviados ao jogador filtram pela névoa tokens, portas, desenhos, gabaritos, portais, volumes e a iniciativa; remoções, trocas de andar, movimentos sob névoa e `FOG_SET` pedem novo snapshot; o Mestre segue completo. A regra fica em `isTokenRevealedByFog`/`isDoorRevealedByFog`, também usada pelo Diorama.

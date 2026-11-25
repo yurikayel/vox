@@ -39,13 +39,20 @@ export function isDeviceTombstone(record) {
 }
 
 /**
- * Extrai o timestamp efetivo de um registro (`editedAt ?? deletedAt ?? updatedAt ?? ts ?? addedAt ?? 0`).
+ * Extrai o timestamp efetivo de um registro: `Math.max` entre
+ * `editedAt`, `deletedAt`, `updatedAt`, `ts` e `addedAt` (valores inválidos viram 0).
+ * Assim um tombstone com `deletedAt` maior que o `editedAt` antigo não é ofuscado pelo `??`.
  * @param {object} record Registro válido.
  * @returns {number} Timestamp efetivo.
  */
 function recordTimestamp(record) {
-  const raw = record.editedAt ?? record.deletedAt ?? record.updatedAt ?? record.ts ?? record.addedAt ?? 0;
-  return toFiniteTs(raw);
+  return Math.max(
+    toFiniteTs(record.editedAt),
+    toFiniteTs(record.deletedAt),
+    toFiniteTs(record.updatedAt),
+    toFiniteTs(record.ts),
+    toFiniteTs(record.addedAt),
+  );
 }
 
 /**
