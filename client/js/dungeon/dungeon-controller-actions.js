@@ -247,6 +247,7 @@ function submitEditSheet(state, form, ctx) {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
     armor_class: Number(valOf(form, "[name=armorClass]")),
+    system: valOf(form, "[name=sheetSystem]"),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
     const raw = valOf(form, `[name=${k}]`);
