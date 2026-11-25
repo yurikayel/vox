@@ -38,7 +38,7 @@ test("condições: ligar, desligar e id desconhecido não muda nada", () => {
 
 test("normalização: lixo vira valor seguro", () => {
   const r = normalizeRestChoices(pack, { level: 3, conditions: ["prone", "prone", "x"], exhaustion: 99, hitDie: 7, hitDiceSpent: 50 });
-  assert.deepEqual(r, { conditions: ["prone"], exhaustion: 6, hitDie: 8, hitDiceTotal: 3, hitDiceSpent: 3 });
+  assert.deepEqual(r, { conditions: ["prone"], exhaustion: 6, hitDie: 8, hitDieSet: false, hitDiceTotal: 3, hitDiceSpent: 3 });
   assert.equal(normalizeRestChoices(pack, { exhaustion: -2, hitDie: 12 }).exhaustion, 0);
   assert.equal(normalizeRestChoices(pack, { hitDie: 12 }).hitDie, 12);
 });
@@ -46,6 +46,7 @@ test("normalização: lixo vira valor seguro", () => {
 test("Exaustão: efeito é −2 por nível nos d20 e −5 pés por nível; nível 6 é fatal; nada é aplicado aos números", () => {
   assert.deepEqual(exhaustionEffect(pack, 0), { level: 0, d20Penalty: 0, speedPenaltyFt: 0, fatal: false });
   assert.deepEqual(exhaustionEffect(pack, 3), { level: 3, d20Penalty: 6, speedPenaltyFt: 15, fatal: false });
+  assert.equal(exhaustionEffect(pack, 5).fatal, false, "só o nível máximo é fatal");
   assert.equal(exhaustionEffect(pack, 6).fatal, true);
 });
 

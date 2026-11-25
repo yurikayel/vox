@@ -4,6 +4,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { waitUntil } from "./helpers/wait-until.js";
 import { createScope } from "../client/js/shared/signals.js";
 import { createLeadTabSignal, leadTabSignal, withWebLock } from "../client/js/shared/lead-tab.js";
 import { createOutboxLeadPoll, enqueueEnvelope, flushOutbox } from "../client/js/dm-outbox.js";
@@ -66,14 +67,14 @@ test("lead-tab: apenas 1 aba vira líder e a segunda é promovida após stop()",
     locks,
     onPeerEvent: (ev) => peerEventsB.push(ev),
   });
-  await flushMicrotasks();
+  await waitUntil(() => tab1.isLead.get() && peerEventsB.some((e) => e.kind === "lead" && e.tabId === "tab-1"));
 
   assert.equal(tab1.isLead.get(), true);
   assert.equal(tab2.isLead.get(), false);
   assert.equal(peerEventsB.some((e) => e.kind === "lead" && e.tabId === "tab-1"), true);
 
   tab1.stop();
-  await flushMicrotasks();
+  await waitUntil(() => tab2.isLead.get() && peerEventsB.some((e) => e.kind === "release" && e.tabId === "tab-1"));
 
   assert.equal(tab1.isLead.get(), false);
   assert.equal(tab2.isLead.get(), true);
@@ -87,12 +88,12 @@ test("lead-tab: seguidora parada antes da promoção não sequestra liderança",
   const tab1 = createLeadTabSignal({ lockName: "vox-test-lead-2", locks, channelName: null });
   const tab2 = createLeadTabSignal({ lockName: "vox-test-lead-2", locks, channelName: null });
   const tab3 = createLeadTabSignal({ lockName: "vox-test-lead-2", locks, channelName: null });
-  await flushMicrotasks();
+  await waitUntil(() => tab1.isLead.get());
 
   assert.equal(tab1.isLead.get(), true);
   tab2.stop();
   tab1.stop();
-  await flushMicrotasks();
+  await waitUntil(() => tab3.isLead.get());
 
   assert.equal(tab2.isLead.get(), false);
   assert.equal(tab3.isLead.get(), true);

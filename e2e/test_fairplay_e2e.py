@@ -75,6 +75,25 @@ def _wait_state(page, kind, arg):
         raise AssertionError(f"condição não ocorreu em {WAIT_MS} ms: {kind} {arg}")
 
 
+_ADMIT_JS = """async ({ want, ms }) => {
+  const m = await import('/js/dungeon/dungeon-state.js');
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const st = m.getDungeonSession();
+    for (const id of st.syncPeer.getPendingFairplayPeers()) await st.syncPeer.approveFairplayPeer(id);
+    if (Object.keys(st.fairplay?.admitted || {}).length >= want) return true;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return false;
+}"""
+
+
+def _admit_players(gm, count):
+    """Aprova pelo Mestre os pares pendentes (com a flag ligada, quem entra espera a aprovação) até `count` admitidos."""
+    if not gm.evaluate(_ADMIT_JS, {"want": count, "ms": WAIT_MS}):
+        raise AssertionError(f"admissão não ocorreu em {WAIT_MS} ms: {count} jogadores")
+
+
 def _drop_shared_flag(pages):
     """Desliga a flag só para quem entrar depois.
 
@@ -117,6 +136,8 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             _watch_errors(page, errors)
             _join_as_player(page, invite)
             players.append(page)
+            if flag:
+                _admit_players(gm, sum(1 for f in flags[1:i + 1] if f))
         return ctx, gm, players, errors
 
     def _open_roll(self, opener):

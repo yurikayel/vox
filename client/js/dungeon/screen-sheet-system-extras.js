@@ -7,6 +7,7 @@
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
 import { escapeHtml } from "../shared/html.js";
+import { HIT_DIE_SIDES } from "./system-rest.js";
 
 /**
  * Soma com sinal explícito ("+3", "−1", "+0").
@@ -56,6 +57,14 @@ function checkbox(name, id, label, checked, disabled = false) {
   return `<label class="dungeon-field-check"><input type="checkbox" name="${name}" value="${escapeHtml(id)}"${checked ? " checked" : ""}${disabled ? " disabled" : ""} /> <span>${escapeHtml(label)}</span></label>`;
 }
 
+/** Seletor do Dado de Vida: só d4–d12; sem escolha gravada começa em "Definir…" (o padrão d8 vale até lá). */
+function hitDieSelect(pack, choices) {
+  const set = choices.hitDieSet === true;
+  const none = `<option value=""${set ? "" : " selected"}>Definir… (padrão d${choices.hitDie})</option>`;
+  const opts = HIT_DIE_SIDES.map((n) => `<option value="${n}"${set && n === choices.hitDie ? " selected" : ""}>d${n}</option>`).join("");
+  return `<label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.hitDice)}</span><select class="dungeon-input" name="hitDie">${none}${opts}</select></label>`;
+}
+
 /**
  * Campos do painel Editar ligados ao pacote: salvaguardas treinadas, especialização (só em perícia treinada) e Deslocamento.
  * @param {object} pack Pacote de sistema.
@@ -67,6 +76,7 @@ export function renderSystemChoiceFields(pack, choices) {
   const skills = pack.skills.map((s) => checkbox("expertSkill", s.id, s.label, choices.expertSkills.includes(s.id), !choices.proficientSkills.includes(s.id))).join("");
   return `
     <label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.speed)} (pés)</span><input class="dungeon-input" name="speedFt" type="number" min="0" max="${pack.formulas.speed.maxFt}" value="${escapeHtml(String(choices.speedFt))}" /></label>
+    ${hitDieSelect(pack, choices)}
     <fieldset class="dungeon-field-wide"><legend>Salvaguardas treinadas</legend>${saves}</fieldset>
     <fieldset class="dungeon-field-wide"><legend>Especialização (só em perícia treinada)</legend>${skills}</fieldset>`;
 }

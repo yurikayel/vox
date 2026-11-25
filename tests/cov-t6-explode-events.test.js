@@ -5,6 +5,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { waitUntil } from "./helpers/wait-until.js";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
 
 const doc = installFakeDom();
@@ -189,7 +190,7 @@ test("Shift+clique dispara rápido sem abrir a folha e copia a mensagem", async 
   const btn = mount(doc, buttonHtml("e10"));
   copied.length = 0;
   click(btn, { shiftKey: true });
-  await settle();
+  await waitUntil(() => copied.length > 0 && lastToast() === "📢 Mensagem copiada! Cole nos grupos ou redes.");
   assert.equal(sheet().classList.contains("is-open"), false);
   assert.match(copied[0], /Título e10/);
   assert.equal(lastToast(), "📢 Mensagem copiada! Cole nos grupos ou redes.");
