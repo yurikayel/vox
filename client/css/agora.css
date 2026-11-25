@@ -4444,7 +4444,8 @@ body,
   border-left: 3px solid var(--sa-tertiary, #69dba9);
 }
 .dungeon-unlocked-banner p { margin: 0.35rem 0 0; font-family: var(--font-epigraphic, Georgia, serif); }
-@media (max-width: 820px) {
+/* Mobile < 1024px (spec Subversus §3.1): mesma fronteira de dungeon-layout.css. */
+@media (max-width: 1023.98px) {
   .dungeon-hero-camp, .dungeon-sheet-hero, .dungeon-table-layout { grid-template-columns: minmax(0, 1fr); }
   .dungeon-topnav { display: none; }
   .dungeon-mobile-dock { display: flex; }
