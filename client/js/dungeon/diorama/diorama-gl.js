@@ -192,7 +192,7 @@ function drawTexturedPass(ctx, textured, fogOpts, ambient) {
 
 function drawDioramaFrame(ctx, floor, camMats, fogOpts) {
   const { gl, canvas, prog, meshBuf, uViewProj, uAmbient, state } = ctx;
-  const geom = buildFloorDioramaGeometry(floor, { ...camMats, tokens: fogOpts.textured ? fogOpts.textured.plainTokens : fogOpts.tokens, selectedId: fogOpts.selectedId });
+  const geom = buildFloorDioramaGeometry(floor, { ...camMats, tokens: fogOpts.textured ? fogOpts.textured.plainTokens : fogOpts.tokens, selectedId: fogOpts.selectedId, b2: true });
   if (syncFogTexture(gl, state, fogOpts.mask, fogOpts.version)) state.fogUploads++;
   gl.viewport(0, 0, canvas.width || 768, canvas.height || 576);
   gl.clearColor(0.067, 0.075, 0.086, 1);

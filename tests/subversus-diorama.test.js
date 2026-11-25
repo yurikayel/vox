@@ -70,14 +70,15 @@ test("diorama-math: floorPxToWorld, worldTo3d e picking ray-cylinder prioriza st
   assert.equal(hit?.tokenId, "tok-gareth");
 });
 
-test("diorama-camera: limites 15°–85° e modo fp (B2) removido", () => {
+test("diorama-camera: limites 15°–85° e modo fp (1ª Pessoa, B2)", () => {
   let cam = createDioramaCamera({ mode: "3d" });
   cam = orbitCamera(cam, 90, -200);
   assert.equal(cam.pitchDeg, 15);
   cam = orbitCamera(cam, 0, 200);
   assert.equal(cam.pitchDeg, 85);
   assert.equal(computeCameraMatrices(cam).cutawayEnabled, true);
-  assert.equal(applyCameraPreset(cam, "fp").mode, "2d");
+  assert.equal(applyCameraPreset(cam, "fp").mode, "fp");
+  assert.equal(computeCameraMatrices(applyCameraPreset(cam, "fp")).cutawayEnabled, false);
 });
 
 test("diorama-geom: extrusão walls/doors fechadas, cutaway, 3 primitivas e descrição acessível", () => {
