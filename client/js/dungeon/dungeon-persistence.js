@@ -24,7 +24,7 @@ import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js"
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 import { getSystemPack } from "./system-pack.js";
-import { migrateLegacySheet } from "./system-migrate.js";
+import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
@@ -263,7 +263,7 @@ export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
   const updated = ensureSheetMeta({
     ...base,
     system: pack ? { id: pack.id, version: pack.version } : base.system,
-    system_choices: { ...base.system_choices, abilities },
+    system_choices: { ...base.system_choices, abilities, proficientSkills: pack ? liveTrainedSkills(pack, base) : base.system_choices?.proficientSkills },
     attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities },
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });

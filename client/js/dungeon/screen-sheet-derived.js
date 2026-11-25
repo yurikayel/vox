@@ -8,7 +8,7 @@
  */
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
-import { migrateLegacySheet } from "./system-migrate.js";
+import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { escapeHtml } from "../shared/html.js";
 
 /** Soma com sinal explícito ("+3", "-1", "+0"). */
@@ -18,7 +18,7 @@ function signed(n) {
 
 /**
  * Pacote e derivados da ficha. Ficha legada (sem `system`) é migrada só para exibição; nada é gravado aqui.
- * Nível e atributos vêm sempre dos campos vivos da ficha (`attributes_lww`), para a edição e o Subir de Nível valerem na hora.
+ * Nível, atributos e perícias treinadas vêm sempre dos campos vivos da ficha (`attributes_lww` e as ações de perícia), para a edição, o Subir de Nível e a remoção de ações valerem na hora.
  * @param {object|null|undefined} sheet Ficha ativa.
  * @returns {{pack: object, derived: object}|null} `null` se o pacote da ficha não está registrado.
  */
@@ -28,12 +28,18 @@ export function resolveSheetSystem(sheet) {
   const pack = getSystemPack(migrated.system?.id);
   if (!pack) return null;
   const attrs = migrated.attributes_lww || {};
-  const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities };
+  const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities, proficientSkills: liveTrainedSkills(pack, migrated) };
   return { pack, derived: deriveSheet(pack, choices) };
 }
 
 function stat(label, value) {
   return `<div class="dungeon-derived-stat"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd></div>`;
+}
+
+/** Créditos da licença do conteúdo do pacote (CC-BY-4.0 exige a atribuição visível). */
+function renderCredits(pack) {
+  const lic = pack.license;
+  return `<details class="dungeon-derived-credits"><summary>Sobre este conteúdo</summary><p class="dungeon-muted">${escapeHtml(lic.attribution)} <a href="${escapeHtml(lic.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(lic.spdx)}</a></p></details>`;
 }
 
 /**
@@ -51,10 +57,11 @@ export function renderDerivedStrip(sheet) {
       <h3 class="dungeon-eyebrow">Números do personagem · ${escapeHtml(pack.name)}</h3>
       <dl class="dungeon-derived-list">
         ${stat(l.proficiency, signed(derived.proficiency))}
-        ${stat(`${l.armorClass} base`, derived.armorClass)}
+        ${stat(`${l.armorClass} sem armadura`, derived.armorClass)}
         ${stat(l.initiative, signed(derived.initiative))}
         ${stat(l.passivePerception, derived.passivePerception)}
       </dl>
+      ${renderCredits(pack)}
     </section>`;
 }
 
