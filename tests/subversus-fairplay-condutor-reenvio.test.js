@@ -20,6 +20,10 @@ function makeLocalTable(ids) {
   for (const id of ids) {
     // Como o Mestre: a resposta é o estado da campanha, sem `opId`.
     const dispatchOp = async (op) => {
+      if (op.type === "FAIRPLAY_KEY") {
+        table.lamport += 1;
+        table.state = reduceCampaign(table.state, createVttOp({ type: "FAIRPLAY_ADMIT", actor: "gm", payload: { actor: id }, lamport: table.lamport }));
+      }
       table.lamport += 1;
       table.state = reduceCampaign(table.state, createVttOp({ ...op, actor: id, lamport: table.lamport }));
       return table.state;

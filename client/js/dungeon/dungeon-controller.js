@@ -99,13 +99,13 @@ function bindActiveCanvas(container, opts) {
 const DIORAMA_OVERLAYS = new WeakMap();
 
 function activeFloor(state) {
-  const scene = state.campaign?.scenesById?.[state.campaign?.activeSceneId];
+  const scene = state.campaignDoc?.scenesById?.[state.campaignDoc?.activeSceneId];
   return scene?.floors?.find((f) => f.z === scene.activeFloorZ) || scene?.floors?.[0];
 }
 
 /** Cena que o overlay precisa: papel, tokens do mapa e seleção atuais. */
 function dioramaScene(state) {
-  const scene = state.campaign?.scenesById?.[state.campaign?.activeSceneId];
+  const scene = state.campaignDoc?.scenesById?.[state.campaignDoc?.activeSceneId];
   return { role: state.viewerRole, tokens: scene?.tokens || [], selectedId: state.selectedTokenId || "" };
 }
 

@@ -6,6 +6,7 @@ import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { resolveSessionMode, SESSION_MODES } from "./dungeon-ui-contract.js";
 import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
+import { renderMapHud } from "./screen-map-hud.js";
 import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
@@ -33,7 +34,7 @@ function renderStatusChip(state, scene) {
   const tok = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
   const firstCond = tok?.conditions?.[0];
   if (firstCond?.label) return `<span class="dungeon-chip">${escapeHtml(firstCond.label)}</span>`;
-  const lastRoll = state.campaign?.rolls?.[state.campaign.rolls.length - 1];
+  const lastRoll = state.campaignDoc?.rolls?.[state.campaignDoc.rolls.length - 1];
   const fairplay = formatFairplayBadge(lastRoll);
   if (fairplay.label) return `<span class="dungeon-chip" title="${escapeHtml(fairplay.title)}">${escapeHtml(fairplay.label)}</span>`;
   return state.joinMode === "p2p_player" ? `<span class="dungeon-chip">Conectado P2P</span>` : `<span class="dungeon-chip">Pronto</span>`;
@@ -151,6 +152,7 @@ function renderInteractiveMapSection(state, scene) {
       ${renderMapControlsBar(scene, floor, state, isGm)}
       ${renderTacticalToolbar(state, scene, floor, isGm)}
       <canvas id="dungeon-vtt-canvas" class="dungeon-vtt-canvas" width="768" height="480" tabindex="0" aria-label="Tabuleiro 2D da cena"></canvas>
+      ${renderMapHud(state, scene)}
       ${notice}
       <ul class="dungeon-clean-list dungeon-token-roster">${rosterHtml}</ul>
       ${renderSelectedTokenEditor(scene, state.selectedTokenId, isGm)}
