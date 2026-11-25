@@ -18,8 +18,8 @@ const MIN_PHASE_MS = 5000;
 const MAX_PHASE_MS = 120_000;
 const MAX_KEYS = 64;
 /** Rolagens mais recentes cujas ops assinadas o log guarda para refazer o estado (as mais antigas saem primeiro). */
-export const MAX_LOGGED_ROLLS = 200;
-const MAX_KEY_OPS_PER_ACTOR = 8;
+export const MAX_LOGGED_ROLLS = 50;
+const MAX_KEY_OPS_PER_ACTOR = 64;
 const NORMALIZED = new WeakSet();
 
 /** Marca um bloco `fairplay` já normalizado, para não recopiá-lo a cada op (o bloco é imutável depois de selado). */
@@ -331,6 +331,24 @@ function logged(handler) {
   };
 }
 
+/**
+ * Chaves de um par que as rolagens guardadas ainda usam: a vigente, a que valia na abertura de cada rolagem e as
+ * trocadas durante ela. Assim o estado refeito tem os mesmos participantes, por mais trocas que o par tenha feito.
+ */
+function keyOpsInForce(list, spans) {
+  const keep = new Set([list[list.length - 1]]);
+  for (const { lo, hi } of spans) {
+    let before = null;
+    for (const k of list) {
+      const lamport = Number(k.lamport) || 0;
+      if (lamport < lo) before = k;
+      else if (lamport <= hi) keep.add(k);
+    }
+    if (before) keep.add(before);
+  }
+  return list.filter((k) => keep.has(k));
+}
+
 function byLamport(a, b) {
   return (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId).localeCompare(String(b.opId));
 }
@@ -342,8 +360,10 @@ function byLamport(a, b) {
  */
 export function collectFairplayOps(fairplay) {
   const { ops } = normalizeFairplayState(fairplay);
-  const rolls = Object.values(ops.rolls).flatMap((e) => e.ops);
-  return [...Object.values(ops.admit), ...Object.values(ops.keys).flat(), ...rolls].sort(byLamport);
+  const entries = Object.values(ops.rolls);
+  const spans = entries.map((e) => ({ lo: Math.min(...e.ops.map((o) => Number(o.lamport) || 0)), hi: Math.max(...e.ops.map((o) => Number(o.lamport) || 0)) }));
+  const keys = Object.values(ops.keys).flatMap((list) => keyOpsInForce(list, spans));
+  return [...Object.values(ops.admit), ...keys, ...entries.flatMap((e) => e.ops)].sort(byLamport);
 }
 
 /**

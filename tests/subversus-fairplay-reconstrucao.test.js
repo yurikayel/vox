@@ -123,17 +123,54 @@ test("escala: aplicar uma op não recopia as ops já guardadas de outras rolagen
   assert.equal(t.doc.fairplay.ops.rolls.ra, before);
 });
 
-test("escala: refazer 4x mais ops custa bem menos que 16x o tempo", async () => {
-  const build = async (n) => {
-    const t = await makeTable();
-    for (let i = 0; i < n; i += 1) t.push("FAIRPLAY_OPEN", "ana", { rollId: `s${i}`, sides: 20 }, 1000);
-    return collectFairplayOps(t.doc.fairplay);
+async function tableWithOpenRolls(n) {
+  const t = await makeTable();
+  for (let i = 0; i < n; i += 1) {
+    const rollId = `s${i}`;
+    const q = fairplayQuorum(t.peers.length);
+    t.push("FAIRPLAY_OPEN", "ana", { rollId, sides: 20 }, 1000);
+    for (const p of t.peers) t.push("FAIRPLAY_COMMIT", p, { rollId, commit: (await createFairplayRollOffer({ peerId: p, rollId, ...q })).commit });
+  }
+  return collectFairplayOps(t.doc.fairplay);
+}
+
+test("escala: refazer 10, 20 e 40 rolagens (abaixo do teto) cresce de forma linear, não quadrática", async () => {
+  assert.ok(40 <= MAX_LOGGED_ROLLS);
+  const timings = [];
+  for (const n of [10, 20, 40]) {
+    const ops = await tableWithOpenRolls(n);
+    assert.ok(ops.filter((o) => o.type === "FAIRPLAY_OPEN").length === n, "nenhuma rolagem cortada");
+    const runs = [0, 1, 2, 3, 4].map(() => { const t0 = performance.now(); rebuildFairplayState(fresh(), ops); return performance.now() - t0; });
+    timings.push(Math.max(Math.min(...runs), 0.5));
+  }
+  const [t10, t20, t40] = timings;
+  assert.ok(t40 / t10 < 9, `10:${t10.toFixed(1)}ms 20:${t20.toFixed(1)}ms 40:${t40.toFixed(1)}ms (linear ~4x, quadrático ~16x)`);
+});
+
+test("reconstrução: mais de 8 trocas de chave do mesmo par, antes e durante a rolagem, não mudam o estado refeito", async () => {
+  const t = await makeTable();
+  const swap = async () => {
+    t.keys.bia = await createFairplaySessionKey();
+    assert.ok(t.push("FAIRPLAY_KEY", "bia", { publicKeyJwk: t.keys.bia.publicKeyJwk }));
   };
-  const [small, large] = [await build(MAX_LOGGED_ROLLS), await build(MAX_LOGGED_ROLLS * 4)];
-  const best = (ops) => Math.min(...[0, 1, 2].map(() => { const t0 = performance.now(); rebuildFairplayState(fresh(), ops); return performance.now() - t0; }));
-  assert.ok(large.length <= small.length + 10, "o teto limita o trabalho do receptor");
-  const [a, b] = [best(small), best(limitFairplayOps(large))];
-  assert.ok(b < Math.max(a * 6, 50), `${a.toFixed(1)}ms -> ${b.toFixed(1)}ms`);
+  for (let i = 0; i < 9; i += 1) await swap();
+  await runRoll(t, "reveal");
+  for (let i = 0; i < 10; i += 1) await swap();
+  const doc = rebuilt(t);
+  assert.deepEqual(doc.fairplay.rolls[ROLL].participants, ["ana", "bia", "gm"]);
+  assert.equal(doc.fairplay.rolls[ROLL].phase, t.doc.fairplay.rolls[ROLL].phase);
+  assert.deepEqual(core(doc.fairplay), core(t.doc.fairplay));
+});
+
+const SNAPSHOT_OPS_BUDGET_BYTES = 500_000;
+
+test("snapshot: com o teto de rolagens cheias e 4 pares, as ops cabem no orçamento de tamanho", async () => {
+  const t = await makeTable(["ana", "bia", "cris", "gm"]);
+  for (let i = 0; i < MAX_LOGGED_ROLLS + 5; i += 1) await runRoll(t, "done", `roll-${i}`);
+  const ops = collectFairplayOps(t.doc.fairplay);
+  const bytes = JSON.stringify(ops).length;
+  assert.equal(new Set(ops.filter((o) => o.type === "FAIRPLAY_OPEN").map((o) => o.payload.rollId)).size, MAX_LOGGED_ROLLS);
+  assert.ok(bytes <= SNAPSHOT_OPS_BUDGET_BYTES, `${bytes} bytes (orçamento ${SNAPSHOT_OPS_BUDGET_BYTES})`);
 });
 
 test("importação: o estado Fairplay de um backup de fora é descartado", async () => {
