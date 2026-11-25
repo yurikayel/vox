@@ -1,14 +1,14 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-24 · **`main`:** `14d8ab1b` (release **[#480](https://github.com/yurikayel/vox/pull/480)**) · **`develop`:** `698a2461` (Lotes 8–9, `#481`–`#486`) · versão de cache e contagem canônica de testes em [release-metadata.json](./release-metadata.json) · pisos de cobertura em [coverage-floor.json](../scripts/coverage-floor.json) (cliente **95,3%**, relay **91,9%**) · `SIGV2_FROM` **24/11/2026** (`PM-85` + portão `PM-102` em `main` via `#480`).
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-25 · **`main`:** `860bf3fd` (release **[#534](https://github.com/yurikayel/vox/pull/534)**) · **`develop`:** tip pós-PTL (`#536`–`#538`, SW **`vox-pwa-v7.171-device-merge-tombstone`**) · versão de cache e contagem canônica de testes em [release-metadata.json](./release-metadata.json) · pisos de cobertura em [coverage-floor.json](../scripts/coverage-floor.json) (cliente **95,3%**, relay **91,9%**) · `SIGV2_FROM` **24/11/2026** (`PM-85` + portão `PM-102` em `main` via `#480`).
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
-> Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) · Orquestração de agentes: [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md).
+> Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) · Orquestração de agentes: [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · Subversus/Mesa: [`client/js/dungeon/`](../client/js/dungeon/).
 
 **Tipo de DoD** ([CONTRIBUTING-DOCS §3](./CONTRIBUTING-DOCS.md)): `doc` = texto revisado e indexado · `code` = merge em `main` com `npm test` verde · `ops-humano` = evidência fora do git (URL, print, ata) citada na linha. Marque `[x]` só com a evidência.
 
-## Onde estamos (24/11/2026)
+## Onde estamos (25/11/2026)
 
-O cliente está maduro e a base técnica incorporou os Lotes 1–7 + Onda A (`#437`–`#479`, ver [CHANGELOG](../CHANGELOG.md)) em **`main`** (`14d8ab1b`, release **[#480](https://github.com/yurikayel/vox/pull/480)**). O que falta para a rede **se sustentar sem o mantenedor** é quase tudo **infra sob gatilho, validação jurídica e gente**:
+O cliente está maduro; **`main`** está em `860bf3fd` (release **[#534](https://github.com/yurikayel/vox/pull/534)**) e **`develop`** carrega a remediação PTL (`#536` higiene IP, `#537` device-merge/SW **v7.171**, `#538` relay 500/utime) além dos Lotes anteriores (ver [CHANGELOG](../CHANGELOG.md)). O bloco Subversus/Mesa vive em [`client/js/dungeon/`](../client/js/dungeon/). O que falta para a rede **se sustentar sem o mantenedor** é quase tudo **infra sob gatilho, validação jurídica e gente**:
 
 - **Qualidade e arquitetura em `main` (#407, #440 e #480):** cobertura de linhas em catraca no CI (**95,3%** cliente / **91,9%** relay, `#410` e `#417`–`#424`), JSDoc/docstrings com `audit:docs` zerado (`#409`, `#411`–`#416`), modularização das fachadas grandes (`#394`, `#427`, `#429`, `#430`; restando `identity/local-account.js` como P1 opcional em sessão dedicada), hardening CodeQL (`#435`, `#438`/`#440`), catracas de CI (`lint:all` + `shell-budget` `#442`, aviso de mutação AST Tier A `#448`, bench Chromium IDB `#475`), primitivas `shared/` (`#443`–`#445`/`#447`, `device-merge` Tier A `#476`) e lazy loading de rotas raras (`#460`, `#477`).
 - **Frente Rust ([ADR-039](./adr/039-rust-por-fases.md), aceito):** Fases 0 e 1a/1b em `main` (`#388`, `#399` — crate `rust/vox-core` `#![no_std]`, zero crates externas, validado no job `Rust Core (ADR-039)` do CI), blueprint da Fase 4 em [vox-node-rust-fase4.md](./specs/vox-node-rust-fase4.md) (`#402`) e `rust/vox-node` `PR4.1a`–`PR4.4` em `main` (`#480`, via `#446`, `#462`, `#468`, `#469`, `#471` e `#479`: crate + `deny.toml`, sinalização WS, paridade HTTP do relay + sidecars SHA-256/`genesis_guard`, `--mode memoria` Windows, fachada loopback embarcada, `cdylib` C-ABI e fallback JNI Android), restando empacotamento NDK/`.so` em CI e validação em campo.
@@ -22,7 +22,7 @@ O cliente está maduro e a base técnica incorporou os Lotes 1–7 + Onda A (`#4
 
 | Frente | O que fazer | Bloqueio / Critério |
 |---|---|---|
-| **Frente Rust `vox-node` (`ADR-039` F4)** | Empacotamento NDK/`.so` Android em CI, paridade final e benchmark de carga/memória pós-`PR4.4` (`#479`/`#480`) | `PR4.1a`–`PR4.4` já em `main` (`#480`); respeitar teto de `≤3` agentes/frentes em paralelo com mutex disjunto |
+| **Frente Rust `vox-node` (`ADR-039` F4)** | Empacotamento NDK/`.so` Android em CI, paridade final e benchmark de carga/memória pós-`PR4.4` (`#479`/`#480`) | `PR4.1a`–`PR4.4` já em `main` (`#480`); respeitar teto de `≤2` agentes/frentes em paralelo com mutex disjunto |
 | **Próximas frentes de código desbloqueadas** | Avançar dieta do shell (`PM-01`), promover aviso de mutação AST (`PM-112` F3) para catraca + rodada semanal, decidir demais módulos em `labs/parado/` (`REV-02`), medir `LAN-23` em Android 2 GB RAM e `PM-70` em celular barato/iPhone | Sem dependência jurídica/externa |
 | **Congelado / depende de decisão humana** | Piloto `V-P09` (`PIL-01..05`), jurídico (`REV-12`/`LAN-01`), ops de infra >50 ativos (`INF-01..04`, `REV-01/10`, `NET-02`), cripto nova e `.wasm` no PWA (`LAN-18`), envio real NLnet (`LAN-36`), ativação GitHub Sponsors (`REV-22`), split de `identity/local-account.js` (só se doer, sessão dedicada) | Aguarda OK do mantenedor ou gatilho |
 
@@ -40,7 +40,7 @@ Ideias, triagem e o porquê da ordem: [brainstorm do ano de 2027](./brainstorms/
 A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-roadmap-2027.md#1-o-norte-de-dezembro-de-2027).
 
 **Regras do ano:**
-- no máximo **3 agentes/frentes de código em paralelo** por onda, com mutex disjunto de arquivos ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
+- no máximo **2 agentes/frentes de código em paralelo** por onda, com mutex disjunto de arquivos ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
 - tela nova paga os próprios bytes, e nada grande entra antes do PM-01;
 - código congelado nas 4 primeiras semanas de cada onda.
 

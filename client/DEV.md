@@ -1152,6 +1152,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Data:** 2026-11-05 · **Arquivos:** `client/revolucao.html`, `client/revolucao/index.html`, `client/revolução/index.html`, `client/js/app/route-parse.js`, `client/js/app/route.js`, `client/404.html`.
 
+- **Alias estático `client/revolução/`:** conteúdo **idêntico** a `client/revolucao/index.html` (mesmo SHA). Mantido de propósito para hospedagem estática servir a URL com acento (`/revolução/`) sem redirect; não é lixo de harvest — refs em `404.html`, `route-parse.js` e `tests/rotulos-algoritmo-assinatura.test.js`.
 - **Canal de Diálogo com a Vanguarda Revolucionária:**
   - Rota dedicada `vox/revolução` (e `vox/revolucao`) para apresentar o viés marxista-leninista do Vox: ferramenta como andaime (*Iskra* moderna de Lênin) para organização da voz operária, sem solucionismo tecnológico.
   - Crítica materialista das Big Techs como monopólios do imperialismo digital, superexploração de dados e precarização (escala 6x1).
