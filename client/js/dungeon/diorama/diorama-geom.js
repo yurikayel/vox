@@ -19,6 +19,8 @@ export const AMBIENT_PRESETS = Object.freeze({
   dungeon: [0.76, 0.82, 0.84],
 });
 
+const PORTAL_RGB = [0.62, 0.42, 0.92];
+
 function parseHexRgb(hex) {
   const clean = String(hex || "#4a4e57").replace("#", "");
   if (clean.length !== 6) return [0.3, 0.32, 0.35];
@@ -123,9 +125,14 @@ function appendVolumes(out, volumes) {
   }
 }
 
+function appendPortals(out, portals) {
+  for (const p of portals) appendCylinderVolume(out, { x: p.x, y: p.y, r: Number(p.radius) || 0.8, h: 0.08, elevation: 0 }, PORTAL_RGB);
+}
+
 function appendObjectLayers(out, floor, opts) {
   appendStandees(out, opts.tokens || [], { eye: opts.eye, selectedId: opts.selectedId });
   if (opts.b2 === true) appendVolumes(out, floor.volumes || []);
+  if (opts.b2 === true) appendPortals(out, floor.portals || []);
 }
 
 /**
@@ -207,5 +214,5 @@ export function describeDioramaView(view, selectedId = "") {
     return `Mapa 3D. Tokens visíveis: ${names}. Portas visíveis: ${(view?.floor?.doors || []).length}.`;
   }
   const doors = describeDoors(view.floor, active);
-  return [describeTokenSurroundings(view.floor, tokens, active).replace(/\.$/, ""), ...doors].join("; ") + ".";
+  return [describeTokenSurroundings(view.floor, tokens, active, { b2: true }).replace(/\.$/, ""), ...doors].join("; ") + ".";
 }

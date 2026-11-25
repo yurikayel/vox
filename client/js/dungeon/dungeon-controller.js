@@ -122,6 +122,10 @@ function handleDioramaPick(container, viewOpts, hit) {
     state.selectedTokenId = hit.tokenId;
     return redrawContainer(container, viewOpts);
   }
+  if (hit.kind === "portal") {
+    state.campaignNotice = `Portal: ${hit.label || "passagem"}`;
+    return redrawContainer(container, viewOpts);
+  }
   return settleAndRedraw(toggleDoorInScene(state, hit.doorId, { store: viewOpts.store }), container, viewOpts);
 }
 
