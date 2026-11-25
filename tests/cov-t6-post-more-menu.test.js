@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -212,7 +213,7 @@ test("Republicar cria a republicação, avisa e volta ao início", async () => {
   globalThis.location.hash = "#/t/m13";
   openFrom("m13");
   click(sheet().querySelector('[data-action="repost"]'));
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  await waitUntil(()=> lastToast() === "Republicado (sem impulsionar).");
   assert.equal(lastToast(), "Republicado (sem impulsionar).");
   assert.equal(globalThis.location.hash, "#/");
   openFrom("m13");

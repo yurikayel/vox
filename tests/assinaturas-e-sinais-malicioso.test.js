@@ -16,6 +16,7 @@ import {
 } from "../client/js/nostr-event.js";
 import { createNostrTransport, encryptFor, SIGNAL_KIND, DEFAULT_ROOM } from "../client/js/nostr-transport.js";
 import { person } from "./signer.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const troca = (s) => (s[0] === "A" ? "B" : "A") + s.slice(1);
 
@@ -376,10 +377,10 @@ test("nostr-transport - hello assinado e fresco registra o par; o primeiro pubke
     const golpista = novoPar();
     await t._handleEvent(await helloDe(real, "peer_vitima"));
     await t._handleEvent(await helloDe(golpista, "peer_vitima"));
-    await new Promise((r) => setTimeout(r, 50));
+    await waitUntil(() => t.knows("peer_vitima"));
     assert.equal(t.knows("peer_vitima"), true);
     assert.equal(t.send({ to: "peer_vitima", type: "answer", sdp: "y" }), true);
-    await new Promise((r) => setTimeout(r, 50));
+    await waitUntil(() => enviados.some((f) => f[0] === "EVENT" && f[1].tags.some((x) => x[0] === "p")));
     const dirigidos = enviados.filter((f) => f[0] === "EVENT").map((f) => f[1]).filter((ev) => ev.tags.some((x) => x[0] === "p"));
     assert.ok(dirigidos.length >= 1);
     assert.ok(dirigidos.every((ev) => ev.tags.find((x) => x[0] === "p")[1] === real.pub), "tudo vai para a chave do primeiro, nunca a do golpista");

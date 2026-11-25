@@ -24,6 +24,7 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { markSheetDeathSave } from "./dungeon-persistence-sheet-system.js";
 import {
   addDoorToScene,
   addTokenToScene,
@@ -209,6 +210,7 @@ export const ACTION_HANDLERS = {
   "calendar-long-rest": (state, _el, _c, opts) => advanceCampaignCalendar(state, "long_rest", opts.store),
   "inv-equip": (state, el, _c, opts) => mutateSheetInventory(state, "toggle_equip", { itemId: el.dataset.itemId }, opts.store),
   "inv-remove": (state, el, _c, opts) => mutateSheetInventory(state, "remove", { itemId: el.dataset.itemId }, opts.store),
+  "death-save": (state, el, _c, opts) => markSheetDeathSave(state, el.dataset.kind, { store: opts.store }),
   "level-up-open": (state) => { state.levelUpOpen = true; },
   "level-up-cancel": (state) => { state.levelUpOpen = false; },
   "select-levelup-preset": (state, el) => { state.levelUpPreset = el.dataset.preset || "d20_fantasy"; },
@@ -242,12 +244,21 @@ function submitActionForm(state, form, ctx) {
   return ctx.settle(persistTableTurnIfActive(state, addedEntries, addedDeltas, ctx.viewOpts.store));
 }
 
+/** Salvaguardas e especializações marcadas no painel Editar; sem esses campos no formulário, não vêm listas (nada muda). */
+function checkedLists(form) {
+  if (!form?.querySelector?.("[name=saveProf]")) return {};
+  const checked = (name) => [...form.querySelectorAll(`[name=${name}]:checked`)].map((el) => el.value);
+  return { proficientSaves: checked("saveProf"), expertSkills: checked("expertSkill") };
+}
+
 function submitEditSheet(state, form, ctx) {
   const patch = {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
     armor_class: Number(valOf(form, "[name=armorClass]")),
     system: valOf(form, "[name=sheetSystem]"),
+    speedFt: valOf(form, "[name=speedFt]", undefined),
+    ...checkedLists(form),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
     const raw = valOf(form, `[name=${k}]`);
@@ -280,12 +291,20 @@ function submitAddDoor(state, form, ctx) {
   return ctx.settle(addDoorToScene(state, doorSpec, { store: ctx.viewOpts.store }));
 }
 
+/** Campo opcional Armadura do formulário de item: tipo e CA digitados pelo jogador; vazio vira `null`. */
+function armorFromForm(form) {
+  const kind = valOf(form, "[name=itemArmorKind]");
+  const ac = Number(valOf(form, "[name=itemArmorAc]"));
+  return kind && Number.isFinite(ac) ? { kind, ac } : null;
+}
+
 function submitAddItem(state, form, ctx) {
   const label = valOf(form, "[name=itemLabel]");
   if (!label) return undefined;
   const qty = Math.max(1, Math.trunc(Number(valOf(form, "[name=itemQty]", "1")) || 1));
   const weightLb = Math.max(0, Number(valOf(form, "[name=itemWeight]", "0.5")) || 0);
-  return ctx.settle(mutateSheetInventory(state, "add", { label, qty, weightLb }, ctx.viewOpts.store));
+  const armor = armorFromForm(form);
+  return ctx.settle(mutateSheetInventory(state, "add", { label, qty, weightLb, ...(armor ? { armor } : {}) }, ctx.viewOpts.store));
 }
 
 const FORM_DISPATCHERS = {
