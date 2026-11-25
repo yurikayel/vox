@@ -27,6 +27,7 @@ import {
 import { validateSheetEdit } from "./sheet-edit-validate.js";
 import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { markSheetDeathSave } from "./dungeon-persistence-sheet-system.js";
+import { longRestSheet, shortRestSheet, spendSheetHitDie, stepSheetExhaustion, toggleSheetCondition } from "./dungeon-persistence-sheet-rest.js";
 import {
   addDoorToScene,
   addTokenToScene,
@@ -213,6 +214,11 @@ export const ACTION_HANDLERS = {
   "inv-equip": (state, el, _c, opts) => mutateSheetInventory(state, "toggle_equip", { itemId: el.dataset.itemId }, opts.store),
   "inv-remove": (state, el, _c, opts) => mutateSheetInventory(state, "remove", { itemId: el.dataset.itemId }, opts.store),
   "death-save": (state, el, _c, opts) => markSheetDeathSave(state, el.dataset.kind, { store: opts.store }),
+  "condition-toggle": (state, el, _c, opts) => toggleSheetCondition(state, el.dataset.conditionId, { store: opts.store }),
+  "exhaustion-step": (state, el, _c, opts) => stepSheetExhaustion(state, Number(el.dataset.step), { store: opts.store }),
+  "hit-die": (state, _el, _c, opts) => spendSheetHitDie(state, { store: opts.store }),
+  "rest-short": (state, _el, _c, opts) => shortRestSheet(state, { store: opts.store }),
+  "rest-long": (state, _el, _c, opts) => longRestSheet(state, { store: opts.store }),
   "level-up-open": (state) => { state.levelUpOpen = true; },
   "level-up-cancel": (state) => { state.levelUpOpen = false; },
   "select-levelup-preset": (state, el) => { state.levelUpPreset = el.dataset.preset || "d20_fantasy"; },

@@ -10,6 +10,8 @@ import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { normalizeChoices } from "./system-derive.js";
+import { normalizeRestChoices } from "./system-rest.js";
+import { renderConditionsAndRests } from "./screen-sheet-rest.js";
 import { renderDeathSaves, renderSavesList, renderSystemChoiceFields, signed } from "./screen-sheet-system-extras.js";
 import { escapeHtml } from "../shared/html.js";
 
@@ -31,7 +33,7 @@ export function resolveSheetSystem(sheet) {
   if (!pack) return null;
   const attrs = migrated.attributes_lww || {};
   const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities, proficientSkills: liveTrainedSkills(pack, migrated), speedFt: attrs.speed_ft ?? migrated.system_choices?.speedFt };
-  return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices) };
+  return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices), rest: normalizeRestChoices(pack, { ...migrated.system_choices, level: choices.level }) };
 }
 
 function stat(label, value) {
@@ -67,6 +69,7 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
       </dl>
       ${renderSavesList(pack, derived)}
       ${renderDeathSaves(pack, derived, hpCurrent)}
+      ${renderConditionsAndRests(pack, sys.rest)}
       ${renderCredits(pack)}
     </section>`;
 }
