@@ -98,6 +98,8 @@ test("vtt-tactics: render 8 camadas (névoa/portas/AoE/régua/condições) e fer
   });
   c2.listeners.pointerdown({ pointerId: 1, clientX: 4 * 64, clientY: 2.5 * 64, button: 0 });
   c2.listeners.pointerup({ pointerId: 1, clientX: 4 * 64, clientY: 2.5 * 64 });
+  assert.deepEqual(events.doors, [], "clique simples com o mouse só seleciona");
+  c2.listeners.dblclick({ clientX: 4 * 64, clientY: 2.5 * 64, button: 0 });
   tool = "draw";
   c2.listeners.pointerdown({ pointerId: 2, clientX: 10, clientY: 10, button: 0 });
   c2.listeners.pointermove({ pointerId: 2, clientX: 40, clientY: 10 });
