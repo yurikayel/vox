@@ -4444,9 +4444,174 @@ body,
   border-left: 3px solid var(--sa-tertiary, #69dba9);
 }
 .dungeon-unlocked-banner p { margin: 0.35rem 0 0; font-family: var(--font-epigraphic, Georgia, serif); }
-@media (max-width: 820px) {
+/* Mobile < 1024px (spec Subversus §3.1): mesma fronteira de dungeon-layout.css. */
+@media (max-width: 1023.98px) {
   .dungeon-hero-camp, .dungeon-sheet-hero, .dungeon-table-layout { grid-template-columns: minmax(0, 1fr); }
   .dungeon-topnav { display: none; }
   .dungeon-mobile-dock { display: flex; }
   .dungeon-input-row { flex-direction: column; }
+}
+
+/* ── F11: Borrão local de post e aviso local consultivo (WCAG 2.2 AA) ── */
+.post.is-locally-blurred,
+.post[data-locally-blurred="1"] {
+  position: relative;
+}
+
+.post.is-locally-blurred > :not([data-local-blur-banner]),
+.post[data-locally-blurred="1"] > :not([data-local-blur-banner]) {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 180ms ease;
+}
+
+.post-local-blur-banner,
+[data-local-blur-banner] {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: var(--sa-surface-low);
+  color: var(--sa-on-surface);
+  border: 1px solid var(--sa-hairline);
+  border-left: 3px solid var(--sa-secondary);
+  border-radius: var(--radius-sm, 0.25rem);
+  filter: none;
+  user-select: auto;
+  pointer-events: auto;
+}
+
+.post-local-blur-text {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--sa-on-surface);
+}
+
+.post-local-blur-reveal {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--sa-primary);
+  border-radius: var(--radius-sm, 0.25rem);
+  background: var(--sa-primary);
+  color: var(--sa-on-primary-fixed);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.post-local-blur-reveal:hover {
+  background: var(--sa-primary-container);
+  border-color: var(--sa-primary-container);
+}
+
+.post-local-blur-reveal:focus-visible {
+  outline: 2px solid var(--sa-primary);
+  outline-offset: 2px;
+}
+
+.vox-local-advisory,
+[data-advisory-only="true"] {
+  margin: 0.75rem 0;
+  padding: 0.9rem 1rem;
+  background: var(--sa-surface-low);
+  color: var(--sa-on-surface);
+  border: 1px solid var(--sa-hairline);
+  border-left: 3px solid var(--sa-secondary);
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+.vox-local-advisory-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--sa-on-surface);
+}
+
+.vox-local-advisory-list {
+  margin: 0 0 0.85rem;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--sa-on-surface-variant);
+}
+
+.vox-local-advisory-list strong {
+  color: var(--sa-on-surface);
+}
+
+.vox-local-advisory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vox-advisory-review,
+.vox-advisory-ignore {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.vox-advisory-review {
+  background: var(--sa-primary);
+  color: var(--sa-on-primary-fixed);
+  border: 1px solid var(--sa-primary);
+}
+
+.vox-advisory-review:hover {
+  background: var(--sa-primary-container);
+  border-color: var(--sa-primary-container);
+}
+
+.vox-advisory-ignore {
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface);
+  border: 1px solid var(--sa-outline);
+}
+
+.vox-advisory-ignore:hover {
+  background: var(--sa-surface-highest);
+  border-color: var(--sa-secondary);
+}
+
+.vox-advisory-review:focus-visible,
+.vox-advisory-ignore:focus-visible {
+  outline: 2px solid var(--sa-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .post-local-blur-banner,
+  [data-local-blur-banner],
+  .vox-local-advisory-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post.is-locally-blurred > :not([data-local-blur-banner]),
+  .post[data-locally-blurred="1"] > :not([data-local-blur-banner]),
+  .post-local-blur-reveal,
+  .vox-advisory-review,
+  .vox-advisory-ignore {
+    transition: none;
+  }
 }

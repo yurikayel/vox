@@ -15,6 +15,7 @@ import * as mod from "../moderation.js";
 import {
   refreshSheetExtras,
   toggleSaveFromMenu,
+  toggleBlurPostFromMenu,
   republicarFromMenu,
   apoiarFromMenu,
   marcarFromMenu,
@@ -29,6 +30,7 @@ const SHEET_ITEMS_HTML = `
   <button type="button" class="post-more-sheet-item post-more-sheet-item--destructive" data-action="report">Denunciar</button>
   <button type="button" class="post-more-sheet-item" data-action="mediation">Pedir mediação</button>
   <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
+  <button type="button" class="post-more-sheet-item" data-action="blur-post">Borrar/ocultar aqui</button>
   <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
   <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
   <button type="button" class="post-more-sheet-item" data-action="listen">Ouvir post</button>
@@ -160,6 +162,10 @@ async function shareSheetPost(ctx) {
  * @returns {Promise<boolean>}
  */
 async function onSocialSheetAction(action, ctx) {
+  if (action === "blur-post" || action === "unblur-post") {
+    toggleBlurPostFromMenu(ctx.postId, action);
+    return true;
+  }
   if (action === "listen") {
     ouvirFromMenu(ctx);
     return true;

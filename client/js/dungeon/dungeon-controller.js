@@ -38,6 +38,8 @@ import { refreshFavoriteSlider, renderCampScreen } from "./screen-camp.js";
 import { renderDmScreen } from "./screen-dm.js";
 import { renderSheetScreen } from "./screen-sheet.js";
 import { renderTableScreen } from "./screen-table.js";
+import { refreshFairplaySeals } from "./vtt-fairplay-selo.js";
+import { getDefaultVttStore } from "./vtt-store.js";
 
 const SCREEN_RENDERERS = {
   acampamento: renderCampScreen,
@@ -93,11 +95,52 @@ function bindActiveCanvas(container, opts) {
   CANVAS_DETACHERS.set(container, detach);
 }
 
+/** Overlay Diorama vivo por container (o `innerHTML` do redesenho apaga o DOM, não o overlay). */
+const DIORAMA_OVERLAYS = new WeakMap();
+
+function activeFloor(state) {
+  const scene = state.campaignDoc?.scenesById?.[state.campaignDoc?.activeSceneId];
+  return scene?.floors?.find((f) => f.z === scene.activeFloorZ) || scene?.floors?.[0];
+}
+
+/** Cena que o overlay precisa: papel, tokens do mapa e seleção atuais. */
+function dioramaScene(state) {
+  const scene = state.campaignDoc?.scenesById?.[state.campaignDoc?.activeSceneId];
+  return { role: state.viewerRole, tokens: scene?.tokens || [], selectedId: state.selectedTokenId || "" };
+}
+
+function rebindDioramaOverlay(container, state) {
+  const canvas = container.querySelector("#dungeon-vtt-canvas");
+  const floor = activeFloor(state);
+  if (canvas && floor) DIORAMA_OVERLAYS.get(container)?.rebind(canvas, floor, dioramaScene(state));
+}
+
+/** Clique na lente 3D = a mesma ação do 2D: token seleciona, porta alterna. */
+function handleDioramaPick(container, viewOpts, hit) {
+  const state = viewOpts.state || getDungeonSession();
+  if (hit.kind === "token") {
+    state.selectedTokenId = hit.tokenId;
+    return redrawContainer(container, viewOpts);
+  }
+  return settleAndRedraw(toggleDoorInScene(state, hit.doorId, { store: viewOpts.store }), container, viewOpts);
+}
+
 function redrawContainer(container, opts, focusOverride = "", preserveDraft = false) {
   const snap = captureUiViewState(container);
+  const state = opts.state || getDungeonSession();
+  DIORAMA_OVERLAYS.get(container)?.detach();
   container.innerHTML = renderDungeonView(opts);
   bindActiveCanvas(container, opts);
+  rebindDioramaOverlay(container, state);
   restoreUiViewState(container, snap, focusOverride, preserveDraft);
+  refreshSealsAfterDraw(container, opts);
+}
+
+function refreshSealsAfterDraw(container, opts) {
+  const state = opts.state || getDungeonSession();
+  refreshFairplaySeals(state)
+    .then((changed) => { if (changed && container.isConnected) redrawContainer(container, opts, "", true); })
+    .catch(() => {});
 }
 
 function settleAndRedraw(promise, container, viewOpts, extra = {}) {
@@ -157,11 +200,52 @@ function handleDungeonChange(container, viewOpts, ev) {
   return settleAndRedraw(job, container, viewOpts);
 }
 
+/** Carrega a imagem do mapa e os avatares em segundo plano e entrega ao overlay (falha = fica sem textura). */
+function loadDioramaTextures(mod, overlay, floor, tokens, viewOpts) {
+  const store = viewOpts.store || getDefaultVttStore();
+  const io = { getBlob: (hash) => store.getBlob(hash), decode: (bytes) => globalThis.createImageBitmap(new Blob([bytes])) };
+  mod.loadDioramaImages({ floor, tokens }, io).then((images) => overlay.setImages(images)).catch(() => {});
+}
+
+function syncDioramaOverlay(mod, container, state, viewOpts, extras = null) {
+  const overlay = DIORAMA_OVERLAYS.get(container);
+  if (state.dioramaMode === "2d") { overlay?.destroy(); DIORAMA_OVERLAYS.delete(container); return; }
+  const canvas = container.querySelector("#dungeon-vtt-canvas");
+  const floor = activeFloor(state);
+  if (!canvas || !floor) return;
+  if (overlay) { overlay.rebind(canvas, floor, dioramaScene(state)); overlay.setMode(state.dioramaMode); return; }
+  const scene = dioramaScene(state);
+  const created = mod.attachDioramaOverlay(canvas, floor, {
+    extras,
+    mode: state.dioramaMode,
+    viewerRole: scene.role,
+    tokens: scene.tokens,
+    selectedId: scene.selectedId,
+    onPick: (hit) => handleDioramaPick(container, viewOpts, hit),
+    onFallback2d: (msg) => { state.dioramaMode = "2d"; state.campaignNotice = msg; },
+  });
+  DIORAMA_OVERLAYS.set(container, created);
+  created.draw();
+  loadDioramaTextures(mod, created, floor, scene.tokens, viewOpts);
+}
+
+function handleDioramaModeClick(container, viewOpts, target) {
+  const state = viewOpts.state || getDungeonSession();
+  const nextMode = target.dataset.mode || "2d";
+  const job = import("./diorama/diorama-view.js").then(async (mod) => {
+    const extras = nextMode === "2d" ? null : await (await import("./diorama/diorama-extras.js")).loadDioramaExtras();
+    state.dioramaMode = mod.saveDioramaMode(nextMode);
+    syncDioramaOverlay(mod, container, state, viewOpts, extras);
+  });
+  return settleAndRedraw(job, container, viewOpts);
+}
+
 function handleDungeonClick(container, viewOpts, ev) {
   const target = ev.target?.closest?.("[data-dungeon]");
   if (!target) return undefined;
   const action = target.dataset.dungeon;
   if (action === "chip") return handleChipClick(container, target);
+  if (action === "diorama-mode") return handleDioramaModeClick(container, viewOpts, target);
   const handler = ACTION_HANDLERS[action];
   if (!handler) return undefined;
   const state = viewOpts.state || getDungeonSession();

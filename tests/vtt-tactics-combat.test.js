@@ -9,6 +9,7 @@ import { createDefaultScene } from "../client/js/dungeon/vtt-scene-schema.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderDungeonView, wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeCanvasMock() {
   const texts = [];
@@ -98,6 +99,8 @@ test("vtt-tactics: render 8 camadas (névoa/portas/AoE/régua/condições) e fer
   });
   c2.listeners.pointerdown({ pointerId: 1, clientX: 4 * 64, clientY: 2.5 * 64, button: 0 });
   c2.listeners.pointerup({ pointerId: 1, clientX: 4 * 64, clientY: 2.5 * 64 });
+  assert.deepEqual(events.doors, [], "clique simples com o mouse só seleciona");
+  c2.listeners.dblclick({ clientX: 4 * 64, clientY: 2.5 * 64, button: 0 });
   tool = "draw";
   c2.listeners.pointerdown({ pointerId: 2, clientX: 10, clientY: 10, button: 0 });
   c2.listeners.pointermove({ pointerId: 2, clientX: 40, clientY: 10 });
@@ -130,7 +133,7 @@ test("vtt-tactics controller: iniciativa, condições, névoa, andares e Zero-Sp
   const listeners = {};
   const host = { dataset: {}, innerHTML: "", addEventListener: (k, fn) => { listeners[k] = fn; }, querySelector: () => null };
   wireDungeonView(host, { screen: "mesa", state, store });
-  await new Promise((r) => setTimeout(r, 15));
+  await waitUntil(() => state.persistenceReady);
 
   await listeners.click({ target: { closest: () => ({ dataset: { dungeon: "roll-initiative" } }) } });
   assert.equal(state.initiative.entries.length, 2);

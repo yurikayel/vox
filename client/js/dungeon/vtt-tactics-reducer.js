@@ -4,6 +4,7 @@
  * @module dungeon/vtt-tactics-reducer
  */
 import { createFloorDoc } from "./vtt-scene-schema.js";
+import { isDoorRevealedByFog, isPointRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   createAoeDoc,
   createDoorDoc,
@@ -294,11 +295,16 @@ export function isPlayerAuthorizedForTacticsOp(state, op) {
  * @returns {object} Piso sanitizado (Zero-Spoiler).
  */
 export function projectTacticsFloorForPlayer(floor) {
+  const seen = (x, y) => isPointRevealedByFog(x, y, floor.fog);
+  const cell = Math.max(1, Number(floor.grid?.cellPx) || 64);
+  const cellCenter = (o) => seen((Number(floor.grid?.offsetX) || 0) + (Number(o.x) + 0.5) * cell, (Number(floor.grid?.offsetY) || 0) + (Number(o.y) + 0.5) * cell);
   return {
     ...floor,
-    doors: (floor.doors || []).filter((d) => d.state !== "secret"),
-    drawings: (floor.drawings || []).filter((d) => d.layer !== "gm"),
-    aoes: (floor.aoes || []).filter((a) => a.layer !== "gm"),
+    doors: (floor.doors || []).filter((d) => d.state !== "secret" && isDoorRevealedByFog(d, floor)),
+    drawings: (floor.drawings || []).filter((d) => d.layer !== "gm" && (d.points || []).every((p) => seen(p.wx, p.wy))),
+    aoes: (floor.aoes || []).filter((a) => a.layer !== "gm" && seen(a.wx, a.wy)),
+    volumes: (floor.volumes || []).filter((v) => v.layer !== "gm" && cellCenter(v)),
+    portals: (floor.portals || []).filter((p) => p.layer !== "gm" && cellCenter(p)),
   };
 }
 
@@ -312,7 +318,10 @@ export function projectInitiativeForPlayer(initiative, scenesById = {}) {
   const init = createInitiativeState(initiative);
   const gmTokenIds = new Set();
   for (const sc of Object.values(scenesById || {})) {
-    for (const t of sc.tokens || []) if (t.layer === "gm") gmTokenIds.add(t.tokenId);
+    for (const t of sc.tokens || []) {
+      const floor = (sc.floors || []).find((f) => f.z === t.floorZ);
+      if (t.layer === "gm" || !isTokenRevealedByFog(t, floor)) gmTokenIds.add(t.tokenId);
+    }
   }
   const activeEntryId = init.entries[init.turnIndex]?.id || "";
   const visible = init.entries.filter((e) => !e.hidden && !gmTokenIds.has(e.tokenId));

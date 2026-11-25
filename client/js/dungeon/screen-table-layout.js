@@ -5,6 +5,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderD20DieSvg } from "./rpg-illustrations.js";
 import { renderHandoutViewer } from "./screen-notes.js";
+import { renderEntrySeal, renderFairplayStatus, isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 
 /** Atalhos de ação sugeridos na crônica da Mesa. */
 export const QUICK_CHIPS = [
@@ -51,7 +52,7 @@ function canViewChronicleEntry(entry, state) {
   return false;
 }
 
-function renderChronicleEntry(entry) {
+function renderChronicleEntry(entry, state) {
   const isDm = entry.speaker.includes("Narrador") || entry.speaker.includes("Guardião");
   const isSecret = entry.visibility === "gm" || entry.visibility === "blind";
   const secretCls = isSecret ? " is-secret-roll" : "";
@@ -64,6 +65,7 @@ function renderChronicleEntry(entry) {
         <span class="dungeon-code-tag">${escapeHtml(metaText || "")}</span>
       </header>
       <p class="dungeon-turn-prose">${escapeHtml(entry.text)}</p>
+      ${renderEntrySeal(entry, state)}
     </article>`;
 }
 
@@ -113,11 +115,13 @@ function renderFormulaTray(state) {
  */
 export function renderChronicleColumn(state) {
   const visibleTurns = (state.chronicle || []).filter((e) => canViewChronicleEntry(e, state));
-  const turnsHtml = visibleTurns.map(renderChronicleEntry).join("");
+  const turnsHtml = visibleTurns.map((e) => renderChronicleEntry(e, state)).join("");
+  const unclosedHtml = state.fairplayLabEnabled || isFairplayLabEnabled() ? renderFairplayStatus(state) : "";
   const chipsHtml = QUICK_CHIPS.map((txt) => `<button type="button" class="dungeon-chip-btn" data-dungeon="chip" data-text="${escapeHtml(txt)}">${escapeHtml(txt)}</button>`).join("");
   const actorFirst = String(state.sheet?.name || "seu personagem").split(/[,\s]+/)[0] || "seu personagem";
   return `
     <section class="dungeon-chronicle-col" aria-label="Crônica da Mesa">
+      ${unclosedHtml}
       <div class="dungeon-chronicle-list">${turnsHtml}</div>
       <form class="dungeon-action-form" data-dungeon="action-form">
         <div class="dungeon-chips-row">${chipsHtml}</div>

@@ -22,6 +22,9 @@ import { buildLevelUpPlan } from "./vtt-levelup.js";
 import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
+import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
+import { getSystemPack } from "./system-pack.js";
+import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
@@ -121,6 +124,8 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
 export async function recordFormulaRoll(state, rawInput, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const mode = opts.mode || state.rollMode || "normal";
+  const viaTable = await tryStartFairplayRoll(state, rawInput, { ...opts, store, mode });
+  if (viaTable) return viaTable;
   const result = rollDiceFormula(rawInput, { sheet: state.sheet, mode, randomBytesFn: opts.randomBytesFn });
   if (!result.ok) {
     state.rollError = result.error;
@@ -240,6 +245,19 @@ function mergePatchedAbilities(baseAbilities, patch) {
 }
 
 /**
+ * `system` e `system_choices` a gravar ao salvar a ficha: sistema escolhido (ou o atual), atributos editados e
+ * perícias treinadas relidas das ações vivas. Sistema desconhecido é ignorado.
+ */
+function systemFieldsForSave(base, requestedId, abilities) {
+  const pack = getSystemPack(requestedId) || getSystemPack(base.system?.id);
+  const trained = pack ? liveTrainedSkills(pack, base) : base.system_choices?.proficientSkills;
+  return {
+    system: pack ? { id: pack.id, version: pack.version } : base.system,
+    system_choices: { ...base.system_choices, abilities, proficientSkills: trained },
+  };
+}
+
+/**
  * Atualiza dados básicos da ficha ativa (nome, classe, CA e atributos FOR–CAR) via `SHEET_UPSERT`.
  * @param {object} state Estado da sessão.
  * @param {object} patch Campos editados na UI.
@@ -248,14 +266,16 @@ function mergePatchedAbilities(baseAbilities, patch) {
  */
 export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
   const store = opts.store || getDefaultVttStore();
-  const base = ensureSheetMeta(state.sheet || {});
+  const base = migrateLegacySheet(ensureSheetMeta(state.sheet || {}));
   const attrs = base.attributes_lww || {};
   const nextName = String(patch.name || attrs.name || "Aventureiro").trim().slice(0, 60);
   const nextClass = String(patch.class_name || attrs.class_name || "Aventureiro").trim().slice(0, 60);
   const nextAc = Math.max(1, Math.min(40, Math.trunc(Number(patch.armor_class) || attrs.armor_class || 10)));
+  const abilities = mergePatchedAbilities(attrs.abilities, patch);
   const updated = ensureSheetMeta({
     ...base,
-    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities: mergePatchedAbilities(attrs.abilities, patch) },
+    ...systemFieldsForSave(base, patch.system, abilities),
+    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities },
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
   state.campaignNotice = `Ficha "${updated.attributes_lww.name}" atualizada.`;

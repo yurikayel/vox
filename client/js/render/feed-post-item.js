@@ -7,6 +7,7 @@ import * as hashtags from "../hashtags.js";
 import * as frames from "../frames.js";
 import * as postOwnership from "../post-ownership.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
+import * as moderation from "../moderation.js";
 import { escapeHtml, resolvePostAuthorLabels } from "./util.js";
 import { renderPostBodyMarkdown } from "./markdown-body.js";
 import { renderIgToolbar } from "./ig-toolbar.js";
@@ -206,6 +207,37 @@ function renderPostPinnedRibbon(t, isPinned) {
 }
 
 /**
+ * Aviso discreto de borrão local com botão de 1 toque para revelar o conteúdo.
+ *
+ * @param {string} postId Id da publicação.
+ * @returns {string} HTML do banner de borrão local.
+ */
+function renderLocalBlurBanner(postId) {
+  const safeId = escapeHtml(postId || "");
+  return `<div class="post-local-blur-banner" data-local-blur-banner role="note" aria-label="Conteúdo borrado localmente">
+    <span class="post-local-blur-text">Conteúdo ocultado só neste aparelho.</span>
+    <button type="button" class="btn btn-sm post-local-blur-reveal" data-action="reveal-blurred-post" data-post-id="${safeId}" aria-label="Mostrar conteúdo ocultado localmente">Mostrar conteúdo</button>
+  </div>`;
+}
+
+/**
+ * Classe, atributo e banner de borrão local para o cartão de post.
+ *
+ * @param {object} t Publicação.
+ * @returns {{ cls: string, attr: string, banner: string }}
+ */
+function getLocalBlurMarkup(t) {
+  if (!moderation.isPostBlurredLocally(t?.id)) {
+    return { cls: "", attr: "", banner: "" };
+  }
+  return {
+    cls: " is-locally-blurred",
+    attr: ' data-locally-blurred="1"',
+    banner: renderLocalBlurBanner(t.id),
+  };
+}
+
+/**
  * Item de post com foto.
  *
  * @param {object} t
@@ -221,10 +253,11 @@ function renderPhotoPostItem(t, author, labels) {
   const textHtml = renderPostText(t);
   const captionHtml = textHtml ? `<div class="post-photo-caption post-photo-message"><strong class="post-photo-caption-author">${escapeHtml(labels.authorDisplay)}</strong> ${textHtml}${renderRepostCiteHtml(t)}</div>` : "";
   const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
+  const blur = getLocalBlurMarkup(t);
 
   return `
-    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
-      ${igHead}
+    <article class="post insta-post post-layout-photo post-photo-bleed${blur.cls}" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}${blur.attr}>
+      ${blur.banner}${igHead}
       ${media}
       ${igBar}
       ${captionHtml}
@@ -253,10 +286,11 @@ function renderTextOrGithubPostItem(t, author, labels, layout, isPinned) {
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
   const toolbar = renderPostToolbar(t, author, labels.authorDisplay, labels.authorHandle);
   const comments = renderPostComments(t.id, t.communityId);
+  const blur = getLocalBlurMarkup(t);
 
   return `
-    <article class="post insta-post post-layout-${layout}${isPostPinned ? " post-pinned-highlight" : ""}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
-      ${pinnedRibbon}
+    <article class="post insta-post post-layout-${layout}${isPostPinned ? " post-pinned-highlight" : ""}${blur.cls}" data-id="${escapeHtml(t.id)}" data-layout="${layout}"${blur.attr}>
+      ${blur.banner}${pinnedRibbon}
       ${header}
       ${caption}
       ${gist}

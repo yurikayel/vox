@@ -6,10 +6,14 @@ import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { resolveSessionMode, SESSION_MODES } from "./dungeon-ui-contract.js";
 import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
+import { renderMapHud } from "./screen-map-hud.js";
 import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
+import { buildCoinsView, buildVitalsView } from "./sheet-view-model.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
+import { isDioramaFlagEnabled, renderDioramaModePill } from "./diorama-lens.js";
+import { formatFairplayBadge } from "./vtt-fairplay-roll.js";
 import { projectInitiativeForPlayer } from "./vtt-tactics-reducer.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
 
@@ -30,13 +34,15 @@ function renderStatusChip(state, scene) {
   const tok = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet?.character_id);
   const firstCond = tok?.conditions?.[0];
   if (firstCond?.label) return `<span class="dungeon-chip">${escapeHtml(firstCond.label)}</span>`;
+  const lastRoll = state.campaignDoc?.rolls?.[state.campaignDoc.rolls.length - 1];
+  const fairplay = formatFairplayBadge(lastRoll);
+  if (fairplay.label) return `<span class="dungeon-chip" title="${escapeHtml(fairplay.title)}">${escapeHtml(fairplay.label)}</span>`;
   return state.joinMode === "p2p_player" ? `<span class="dungeon-chip">Conectado P2P</span>` : `<span class="dungeon-chip">Pronto</span>`;
 }
 
 function renderPlayerStatusStrip(state, pools, scene) {
-  const hp = pools.hp_current ?? 24;
-  const hpMax = state.sheet.pools_base?.hp_max || 24;
-  const pct = Math.max(0, Math.min(100, Math.round((hp / hpMax) * 100)));
+  const vitals = buildVitalsView(state.sheet, pools);
+  const coins = buildCoinsView(pools);
   const charHref = `#/dungeon/ficha/${encodeURIComponent(state.sheet.char_id)}`;
   return `
     <section class="dungeon-status-strip" aria-label="Resumo do personagem na mesa">
@@ -49,10 +55,10 @@ function renderPlayerStatusStrip(state, pools, scene) {
       </div>
       <div class="dungeon-vital-meters">
         <div class="dungeon-hp-wrap">
-          <div class="dungeon-hp-label"><span>Vitalidade</span><strong>${hp} / ${hpMax} PV</strong></div>
-          <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${pct}%"></div></div>
+          <div class="dungeon-hp-label"><span>Vitalidade</span><strong>${vitals.text}</strong></div>
+          <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${vitals.pct}%"></div></div>
         </div>
-        <span class="dungeon-coin-pill">${pools.currency_gp ?? 50} Moedas</span>
+        <span class="dungeon-coin-pill">${coins.text}</span>
         ${renderStatusChip(state, scene)}
         <a class="dungeon-btn dungeon-btn-ghost" href="${charHref}">Abrir Ficha →</a>
       </div>
@@ -77,6 +83,11 @@ function renderRoleToggleOrBadge(state, isGm) {
   return `<button type="button" class="dungeon-chip-btn${isGm ? " is-selected" : ""}" data-dungeon="toggle-viewer-role" aria-pressed="${isGm}">${roleLabel}</button>`;
 }
 
+function renderDioramaLensStrip(state) {
+  if (!state?.dioramaEnabled && !isDioramaFlagEnabled()) return "";
+  return renderDioramaModePill(state?.dioramaMode || "2d");
+}
+
 function renderMapControlsBar(scene, floor, state, isGm) {
   const gridLabel = floor?.grid?.type === "hex" ? "Hex" : "Quadrada";
   const zoomPct = Math.round((state.camera?.zoom || 1) * 100);
@@ -86,10 +97,11 @@ function renderMapControlsBar(scene, floor, state, isGm) {
   return `
     <div class="dungeon-section-head">
       <div>
-        <span class="dungeon-eyebrow">Mapa 2D Interativo · Arraste Tokens · Ctrl+Roda ou Pinça para Zoom</span>
+        <span class="dungeon-eyebrow">Subversus · Arraste Tokens · Ctrl+Roda ou Pinça para Zoom</span>
         <h2>${escapeHtml(scene.name)} (${gridLabel} · <span data-dungeon-zoom-label>${zoomPct}%</span>)</h2>
       </div>
       <div class="dungeon-chips-row">
+        ${renderDioramaLensStrip(state)}
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-zoom-out" aria-label="Diminuir zoom">−</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-fit" aria-label="Enquadrar mapa inteiro">Ajustar</button>
         <button type="button" class="dungeon-chip-btn" data-dungeon="canvas-reset">100%</button>
@@ -140,6 +152,7 @@ function renderInteractiveMapSection(state, scene) {
       ${renderMapControlsBar(scene, floor, state, isGm)}
       ${renderTacticalToolbar(state, scene, floor, isGm)}
       <canvas id="dungeon-vtt-canvas" class="dungeon-vtt-canvas" width="768" height="480" tabindex="0" aria-label="Tabuleiro 2D da cena"></canvas>
+      ${renderMapHud(state, scene)}
       ${notice}
       <ul class="dungeon-clean-list dungeon-token-roster">${rosterHtml}</ul>
       ${renderSelectedTokenEditor(scene, state.selectedTokenId, isGm)}
