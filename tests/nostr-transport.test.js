@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createNostrTransport, encryptFor, decryptFrom } from "../client/js/nostr-transport.js";
 import { generateSecretKey, getPublicKey, bytesToHex } from "../client/js/nostr-event.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 /** Relay Nostr em memória: repassa EVENT aos assinantes cujo filtro #t casa (efêmero, não guarda). */
 function createFakeRelay() {
@@ -41,12 +42,7 @@ const settle = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
 /** Espera a condição em vez de um tempo fixo: com a suíte inteira no mesmo processo, a cripto em JS puro fica lenta. */
 async function waitFor(cond, timeoutMs = 10000) {
-  const end = Date.now() + timeoutMs;
-  while (!cond()) {
-    if (Date.now() > end) return false;
-    await settle(20);
-  }
-  return true;
+  return Boolean(await waitUntil(cond, timeoutMs));
 }
 
 test("nostr-transport - REV-09: cifra/decifra só entre os dois pares", async () => {
