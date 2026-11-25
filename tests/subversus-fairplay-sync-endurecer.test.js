@@ -9,8 +9,8 @@ import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js"
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 import { generateRoomKey, generateVttKeypair, signVttOp } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
+import { settlePeers } from "./helpers/wait-until.js";
 
-const wait = (ms = 40) => new Promise((r) => setTimeout(r, ms));
 const ID = "mesa-fp-sync";
 
 function makeStore() {
@@ -35,7 +35,7 @@ async function joinedPlayer(env, extra = {}) {
   const gmPeer = createVttSyncPeer({ role: "gm", campaignId: ID, keypair: env.gm, store: env.gmStore, transport: env.hub.connect(env.gm.routeId), roomKey: env.roomKey, ...extra.gm });
   const peer = createVttSyncPeer({ role: "player", campaignId: ID, keypair: env.player, store: env.playerStore, transport: env.hub.connect(env.player.routeId), roomKey: env.roomKey, gmRouteId: env.gm.routeId, ...extra.player });
   peer.join();
-  await wait();
+  await settlePeers(gmPeer, peer);
   return { gmPeer, peer };
 }
 
@@ -47,7 +47,7 @@ test("sync: snapshot de quem não é o Mestre não substitui a campanha do jogad
   const forged = createCampaign({ id: ID, name: "Falsa", gmRouteId: env.other.routeId });
   forged.fairplay = { keys: { [env.other.routeId]: { alg: "x", publicKeyJwk: env.other.publicJwk, lamport: 1 } }, rolls: {} };
   env.hub.connect(env.other.routeId).send(env.player.routeId, { kind: "SNAPSHOT_FILTERED", roomKey: env.roomKey, campaign: forged });
-  await wait();
+  await settlePeers(gmPeer, peer);
   const saved = await env.playerStore.loadCampaign(ID);
   assert.equal(saved.name, "Mesa");
   assert.deepEqual(saved.fairplay.keys, {});
@@ -60,7 +60,7 @@ test("sync: COMMIT_OP de quem não é o Mestre não chega ao log do jogador", as
   const { gmPeer, peer } = await joinedPlayer(env);
   const signed = await signVttOp(keyOp(env.other), env.other);
   env.hub.connect(env.other.routeId).send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: signed });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.deepEqual((await env.playerStore.loadCampaign(ID)).fairplay.keys, {});
   gmPeer.close();
   peer.close();
@@ -75,12 +75,12 @@ test("sync: op Fairplay do Mestre sem assinatura válida ou com autor trocado é
   const { sig: _sig, ...unsigned } = signed;
   send(unsigned);
   send({ ...signed, actor: env.player.routeId });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.deepEqual((await env.playerStore.loadCampaign(ID)).fairplay.keys, {});
   const admit = await signVttOp(createVttOp({ type: "FAIRPLAY_ADMIT", actor: env.gm.routeId, payload: { actor: env.other.routeId }, lamport: 4 }), env.gm);
   gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: admit });
   gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: signed });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.deepEqual(Object.keys((await env.playerStore.loadCampaign(ID)).fairplay.keys), [env.other.routeId], "op íntegra do Mestre entra");
   gmPeer.close();
   peer.close();
@@ -91,12 +91,12 @@ test("sync: o Mestre recusa op Fairplay com relógio do autor fora da tolerânci
   const rejected = [];
   const { gmPeer, peer } = await joinedPlayer(env, { player: { onRejected: (m) => rejected.push(m) } });
   await peer.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.player.publicJwk }, ts: Date.now() + 60_000 });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.equal(rejected.length, 1);
   assert.equal(rejected[0].reason, "ts_out_of_range");
   assert.deepEqual((await env.gmStore.loadCampaign(ID)).fairplay.keys, {});
   await peer.dispatchOp({ type: "FAIRPLAY_KEY", payload: { publicKeyJwk: env.player.publicJwk }, ts: Date.now() });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.deepEqual(Object.keys((await env.gmStore.loadCampaign(ID)).fairplay.keys), [env.player.routeId]);
   gmPeer.close();
   peer.close();
@@ -111,7 +111,7 @@ test("sync: op recusada na chegada ao jogador vira pedido de novo snapshot, sem 
   gmWire.onMessage((m) => asked.push(m.kind));
   const open = await signVttOp(createVttOp({ type: "FAIRPLAY_OPEN", payload: { rollId: "roll-x", sides: 20 }, lamport: 9 }), env.other);
   gmWire.send(env.player.routeId, { kind: "COMMIT_OP", roomKey: env.roomKey, op: open });
-  await wait();
+  await settlePeers(gmPeer, peer);
   assert.deepEqual(asked, ["HELLO_SYNC"]);
   peer.close();
 });
