@@ -6,6 +6,7 @@ import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { resolveSessionMode, SESSION_MODES } from "./dungeon-ui-contract.js";
 import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
+import { renderMapHud } from "./screen-map-hud.js";
 import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
@@ -151,6 +152,7 @@ function renderInteractiveMapSection(state, scene) {
       ${renderMapControlsBar(scene, floor, state, isGm)}
       ${renderTacticalToolbar(state, scene, floor, isGm)}
       <canvas id="dungeon-vtt-canvas" class="dungeon-vtt-canvas" width="768" height="480" tabindex="0" aria-label="Tabuleiro 2D da cena"></canvas>
+      ${renderMapHud(state, scene)}
       ${notice}
       <ul class="dungeon-clean-list dungeon-token-roster">${rosterHtml}</ul>
       ${renderSelectedTokenEditor(scene, state.selectedTokenId, isGm)}
