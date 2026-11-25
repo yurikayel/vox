@@ -5,25 +5,13 @@
  * @module dungeon/diorama/diorama-layers
  */
 import { projectTacticsFloorForPlayer } from "../vtt-tactics-reducer.js";
-import { doorSegmentWorld, isPointRevealedByFog } from "../vtt-tactics-geometry.js";
+import { isDoorRevealedByFog, isTokenRevealedByFog } from "../vtt-tactics-geometry.js";
 
 /** Lado (em texels) da máscara de névoa `R8`; a textura cobre todo o piso. */
 export const FOG_MASK_SIZE = 256;
 
 const STANDEE_HEIGHT = 1.4;
 const FLAT_LIFT = 0.02;
-
-function tokenCenterPx(tok, grid) {
-  const cellPx = Math.max(1, Number(grid?.cellPx) || 64);
-  const half = (Number(tok.sizeCells) || 1) * 0.5;
-  return { x: (Number(grid?.offsetX) || 0) + (tok.x + half) * cellPx, y: (Number(grid?.offsetY) || 0) + (tok.y + half) * cellPx };
-}
-
-function doorTouchesFog(door, floor) {
-  const seg = doorSegmentWorld(door, floor.grid);
-  const mid = { x: (seg.x1 + seg.x2) / 2, y: (seg.y1 + seg.y2) / 2 };
-  return [{ x: seg.x1, y: seg.y1 }, { x: seg.x2, y: seg.y2 }, mid].some((p) => isPointRevealedByFog(p.x, p.y, floor.fog));
-}
 
 /**
  * Aplica ao piso e aos tokens a mesma visibilidade do mapa 2D: o Mestre vê tudo; o jogador
@@ -41,13 +29,9 @@ export function projectDioramaView(floor, tokens, role) {
   if (role === "gm") return { floor, tokens: onFloor };
   const projected = projectTacticsFloorForPlayer(floor || {});
   const fogged = Boolean(projected.fog?.enabled);
-  const seen = (t) => {
-    const c = tokenCenterPx(t, projected.grid);
-    return !fogged || isPointRevealedByFog(c.x, c.y, projected.fog);
-  };
   return {
-    floor: fogged ? { ...projected, doors: projected.doors.filter((d) => doorTouchesFog(d, projected)) } : projected,
-    tokens: onFloor.filter((t) => t.layer === "player" && seen(t)),
+    floor: fogged ? { ...projected, doors: projected.doors.filter((d) => isDoorRevealedByFog(d, projected)) } : projected,
+    tokens: onFloor.filter((t) => t.layer === "player" && isTokenRevealedByFog(t, projected)),
   };
 }
 
