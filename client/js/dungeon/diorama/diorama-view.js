@@ -7,9 +7,11 @@
 import { applyCameraPreset, CAMERA_MODES, computeCameraMatrices, createDioramaCamera } from "./diorama-camera.js";
 import { createDioramaGlRenderer } from "./diorama-gl.js";
 import { attachDioramaGestures, DIORAMA_KEYS_HELP } from "./diorama-input.js";
+import { buildRasters, buildTexturedPass } from "./diorama-textures.js";
 import { buildFogLayer, projectDioramaView } from "./diorama-layers.js";
 import { pickDioramaScene, unprojectRay } from "./diorama-pick.js";
 
+export { loadDioramaImages } from "./diorama-textures.js";
 export { pickDioramaTarget } from "./diorama-pick.js";
 export { DIORAMA_FLAG_KEY, isDioramaFlagEnabled, renderDioramaModePill } from "../diorama-lens.js";
 
@@ -96,7 +98,8 @@ function renderOverlayState(st) {
   const aspect = (st.gl.width || 768) / Math.max(1, st.gl.height || 576);
   st.mats = computeCameraMatrices(st.cam, aspect);
   const fog = buildFogLayer(st.view.floor, st.role) || {};
-  return st.glRenderer.render(st.view.floor, st.mats, { ...fog, tokens: st.view.tokens, selectedId: st.selectedId });
+  const textured = st.rasters ? buildTexturedPass(st.rasters, st.view, st.mats.eye) : null;
+  return st.glRenderer.render(st.view.floor, st.mats, { ...fog, tokens: st.view.tokens, textured, selectedId: st.selectedId });
 }
 
 function triggerOverlayFallback(st, opts, reason) {
@@ -175,8 +178,8 @@ function bindPicking(st, opts, gestures) {
  *
  * @param {HTMLCanvasElement|object} canvas Canvas 2D do mapa (nunca recebe contexto WebGL).
  * @param {object} floor Documento `FloorDoc`.
- * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `tokens`, `selectedId`, `onPick`, `onFallback2d`, `storage`).
- * @returns {{active: boolean, setMode: Function, setScene: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
+ * @param {object} [opts={}] Opções (`mode`, `viewerRole`, `tokens`, `selectedId`, `onPick`, `createCanvas`, `onFallback2d`, `storage`).
+ * @returns {{active: boolean, setMode: Function, setScene: Function, setImages: Function, draw: Function, detach: Function, rebind: Function, destroy: Function}} Controlador da lente.
  */
 export function attachDioramaOverlay(canvas, floor, opts = {}) {
   const mode = opts.mode || loadDioramaMode(opts.storage);
@@ -193,6 +196,15 @@ export function attachDioramaOverlay(canvas, floor, opts = {}) {
   return overlayApi(st, opts, setScene, unbinds);
 }
 
+/** Fábrica padrão de canvas para o atlas e o chão (OffscreenCanvas quando existir). */
+function defaultCreateCanvas(w, h) {
+  if (typeof OffscreenCanvas === "function") return new OffscreenCanvas(w, h);
+  const el = globalThis.document.createElement("canvas");
+  el.width = w;
+  el.height = h;
+  return el;
+}
+
 /** Monta a API pública do overlay sobre o estado interno `st`. */
 function overlayApi(st, opts, setScene, unbinds) {
   return {
@@ -203,6 +215,11 @@ function overlayApi(st, opts, setScene, unbinds) {
       return ensureRenderer(st, opts) ? renderOverlayState(st) : null;
     },
     setScene,
+    setImages(images) {
+      const rasters = buildRasters(images, opts.createCanvas || defaultCreateCanvas);
+      st.rasters = { ...rasters, version: (st.rasters?.version || 0) + 1 };
+      return renderOverlayState(st);
+    },
     draw: () => renderOverlayState(st),
     detach: () => st.gl?.remove?.(),
     rebind(nextCanvas, nextFloor, scene) {

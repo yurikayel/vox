@@ -9,6 +9,7 @@ import { dungeonIcon, renderCavernArchSvg } from "./rpg-illustrations.js";
 import { renderZ3SessionBlock } from "./screen-table-layout.js";
 import { renderAddDoorForm, renderCompactWorldClock, renderSelectedTokenEditor } from "./screen-table-panels.js";
 import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tactics.js";
+import { buildCoinsView, buildVitalsView } from "./sheet-view-model.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { isDioramaFlagEnabled, renderDioramaModePill } from "./diorama-lens.js";
 import { formatFairplayBadge } from "./vtt-fairplay-roll.js";
@@ -39,9 +40,8 @@ function renderStatusChip(state, scene) {
 }
 
 function renderPlayerStatusStrip(state, pools, scene) {
-  const hp = pools.hp_current ?? 24;
-  const hpMax = state.sheet.pools_base?.hp_max || 24;
-  const pct = Math.max(0, Math.min(100, Math.round((hp / hpMax) * 100)));
+  const vitals = buildVitalsView(state.sheet, pools);
+  const coins = buildCoinsView(pools);
   const charHref = `#/dungeon/ficha/${encodeURIComponent(state.sheet.char_id)}`;
   return `
     <section class="dungeon-status-strip" aria-label="Resumo do personagem na mesa">
@@ -54,10 +54,10 @@ function renderPlayerStatusStrip(state, pools, scene) {
       </div>
       <div class="dungeon-vital-meters">
         <div class="dungeon-hp-wrap">
-          <div class="dungeon-hp-label"><span>Vitalidade</span><strong>${hp} / ${hpMax} PV</strong></div>
-          <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${pct}%"></div></div>
+          <div class="dungeon-hp-label"><span>Vitalidade</span><strong>${vitals.text}</strong></div>
+          <div class="dungeon-bar"><div class="dungeon-bar-fill" style="width:${vitals.pct}%"></div></div>
         </div>
-        <span class="dungeon-coin-pill">${pools.currency_gp ?? 50} Moedas</span>
+        <span class="dungeon-coin-pill">${coins.text}</span>
         ${renderStatusChip(state, scene)}
         <a class="dungeon-btn dungeon-btn-ghost" href="${charHref}">Abrir Ficha →</a>
       </div>
