@@ -290,3 +290,11 @@
     flex: 1 1 auto;
   }
 }
+
+/* Selo Fairplay na Crônica (flag vox.lab.fairplay) */
+.dungeon-fairplay-seal { margin: 0.35rem 0 0; font-size: 0.85rem; }
+.dungeon-fairplay-seal summary { cursor: pointer; font-weight: 600; color: var(--sa-primary, #78d6cf); }
+.dungeon-fairplay-seal.is-pending { color: var(--sa-muted, #9aa5b1); font-style: italic; }
+.dungeon-fairplay-seal.is-unverified { color: var(--sa-warn, #e7c26b); }
+.dungeon-fairplay-seal.is-table_only { color: var(--sa-muted, #9aa5b1); border-left: 3px solid var(--sa-muted, #9aa5b1); padding-left: 0.5rem; }
+.dungeon-fairplay-unclosed, .dungeon-fairplay-reasons { font-size: 0.85rem; color: var(--sa-muted, #9aa5b1); }
