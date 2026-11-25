@@ -155,7 +155,22 @@ async function handleGmWantBlob(ctx, msg) {
   }
 }
 
+/** Tolerância (ms) entre o relógio do autor de uma op Fairplay e o do Mestre; o prazo das fases não depende de um `ts` livre. */
+export const FAIRPLAY_TS_TOLERANCE_MS = 5000;
+
+function isFairplayOp(op) {
+  return String(op?.type || "").startsWith("FAIRPLAY_");
+}
+
+function tsOutOfRange(ctx, op) {
+  return isFairplayOp(op) && !(Math.abs(Number(op.ts) - ctx.now()) <= FAIRPLAY_TS_TOLERANCE_MS);
+}
+
 async function handleGmActionOp(ctx, msg) {
+  if (tsOutOfRange(ctx, msg.op)) {
+    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "ts_out_of_range" });
+    return;
+  }
   const validSig = await verifyVttOpSignature(msg.op);
   const current = await ctx.store.loadCampaign(ctx.campaignId);
   if (!validSig || !isAuthorizedVttOp(current, msg.op)) {
@@ -191,19 +206,40 @@ async function requestMissingBlobs(ctx, campaign, fromGm) {
   }
 }
 
+async function applySnapshot(ctx, msg) {
+  ctx.snapshotAsked = false;
+  const saved = await ctx.store.saveCampaign(msg.campaign);
+  await requestMissingBlobs(ctx, saved, msg.from);
+  ctx.onUpdate?.(saved);
+}
+
+/** Op recusada na chegada (fora de ordem ou de fase): pede o estado do Mestre em vez de descartar em silêncio. */
+function askSnapshotOnce(ctx) {
+  if (ctx.snapshotAsked) return;
+  ctx.snapshotAsked = true;
+  ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
+}
+
+async function applyCommittedOp(ctx, msg) {
+  if (isFairplayOp(msg.op) && !(await verifyVttOpSignature(msg.op))) return;
+  const before = await ctx.store.loadCampaign(ctx.campaignId);
+  const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
+  if (res?.campaign && !res.duplicate) {
+    await requestMissingBlobs(ctx, res.campaign, msg.from);
+    ctx.onUpdate?.(res.campaign);
+  } else if (res?.duplicate && !before?.appliedOpIds?.includes(msg.op.opId)) {
+    askSnapshotOnce(ctx);
+  }
+}
+
 async function handlePlayerMessage(ctx, msg) {
+  const fromGm = msg.from === ctx.gmRouteId;
   if (msg.kind === "SNAPSHOT_FILTERED" && msg.campaign) {
-    const saved = await ctx.store.saveCampaign(msg.campaign);
-    await requestMissingBlobs(ctx, saved, msg.from);
-    ctx.onUpdate?.(saved);
+    if (fromGm) await applySnapshot(ctx, msg);
     return;
   }
   if (msg.kind === "COMMIT_OP" && msg.op) {
-    const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
-    if (res?.campaign) {
-      await requestMissingBlobs(ctx, res.campaign, msg.from);
-      ctx.onUpdate?.(res.campaign);
-    }
+    if (fromGm) await applyCommittedOp(ctx, msg);
     return;
   }
   if (msg.kind === "BLOB_CHUNK") {
@@ -240,6 +276,8 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
+    snapshotAsked: false,
+    now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
     onUpdate: opts.onUpdate,
     onBlobReceived: opts.onBlobReceived,
@@ -250,7 +288,7 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`).
+ * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
  * @returns {{ join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
