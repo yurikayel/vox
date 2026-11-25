@@ -7,6 +7,7 @@
 import { isAuthorizedVttOp, projectStateForPlayer } from "./vtt-reducer.js";
 import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./vtt-fairplay-log.js";
 import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
+import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { createVttOp } from "./vtt-schema.js";
 import {
   createBlobAssembler,
@@ -179,32 +180,60 @@ function tsOutOfRange(ctx, op) {
 async function admitJoiningPlayer(ctx, peerId) {
   const current = await ctx.store.loadCampaign(ctx.campaignId);
   if (isAdmittedIn(ctx, current, peerId)) return;
+  if (isFairplayLabEnabled(ctx.storage)) {
+    ctx.pendingFairplay.add(peerId); // com a flag ligada, quem entra espera a aprovação do Mestre
+    return;
+  }
   await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: peerId } });
 }
 
+/** Aprova um par pendente (só Mestre, só com a flag ligada): grava `FAIRPLAY_ADMIT` no log. */
+async function approveFairplayPeer(ctx, routeId) {
+  if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage) || !ctx.pendingFairplay.has(routeId)) return false;
+  ctx.pendingFairplay.delete(routeId);
+  await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: routeId } });
+  return true;
+}
+
+/** Revoga um par (só Mestre, só com a flag ligada): grava `FAIRPLAY_REVOKE`; o reducer ignora par desconhecido ou repetido. */
+async function revokeFairplayPeer(ctx, routeId) {
+  if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage)) return false;
+  ctx.pendingFairplay.delete(routeId);
+  await dispatchSyncOp(ctx, { type: "FAIRPLAY_REVOKE", payload: { actor: routeId } });
+  return true;
+}
+
+function isRevokedIn(campaign, actor) {
+  return Object.hasOwn(campaign?.fairplay?.revoked || {}, actor);
+}
+
+/** Motivo da recusa de uma op Fairplay com assinatura válida (par revogado ou não admitido), ou `null`. */
+function fairplayRefusal(ctx, current, op) {
+  if (isFairplayOp(op) && isRevokedIn(current, op.actor)) return "revoked";
+  if (op.type === "FAIRPLAY_KEY" && !isAdmittedIn(ctx, current, op.actor)) return "not_admitted";
+  return null;
+}
+
+function rejectOp(ctx, msg, reason) {
+  ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason });
+}
+
 async function handleGmActionOp(ctx, msg) {
-  if (tsOutOfRange(ctx, msg.op)) {
-    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "ts_out_of_range" });
-    return;
-  }
+  if (tsOutOfRange(ctx, msg.op)) return rejectOp(ctx, msg, "ts_out_of_range");
   const validSig = await verifyVttOpSignature(msg.op);
   const current = await ctx.store.loadCampaign(ctx.campaignId);
-  if (validSig && msg.op.type === "FAIRPLAY_KEY" && !isAdmittedIn(ctx, current, msg.op.actor)) {
-    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "not_admitted" });
-    return;
-  }
-  if (!validSig || !isAuthorizedVttOp(current, msg.op)) {
-    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: validSig ? "unauthorized" : "invalid_signature" });
-    return;
-  }
+  const refusal = validSig ? fairplayRefusal(ctx, current, msg.op) : null;
+  if (refusal) return rejectOp(ctx, msg, refusal);
+  if (!validSig || !isAuthorizedVttOp(current, msg.op)) return rejectOp(ctx, msg, validSig ? "unauthorized" : "invalid_signature");
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op);
   if (!res.duplicate) {
     await broadcastCommittedOp(ctx, res.campaign, msg.op);
     ctx.onUpdate?.(res.campaign);
   } else if (!current?.appliedOpIds?.includes(msg.op.opId)) {
     // Recusada pelo reducer (ex.: Fairplay fora de fase ou com lamport atrasado): o par precisa saber para assinar de novo.
-    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "out_of_phase" });
+    rejectOp(ctx, msg, "out_of_phase");
   }
+  return undefined;
 }
 
 async function handleGmMessage(ctx, msg) {
@@ -307,6 +336,8 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
+    pendingFairplay: new Set(),
+    storage: opts.storage,
     snapshotAsked: false,
     now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
@@ -319,8 +350,8 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
- * @returns {{ join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
+ * @param {object} opts Opções (`storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
   const ctx = buildSyncContext(opts);
@@ -334,6 +365,10 @@ export function createVttSyncPeer(opts) {
   return {
     join: () => { if (ctx.role === "player") ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey }); },
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
+    routeId: ctx.keypair.routeId,
+    getPendingFairplayPeers: () => [...ctx.pendingFairplay],
+    approveFairplayPeer: (routeId) => approveFairplayPeer(ctx, String(routeId)),
+    revokeFairplayPeer: (routeId) => revokeFairplayPeer(ctx, String(routeId)),
     getPeerCount: () => ctx.connectedPlayers.size,
     flush: () => chain,
     close: () => { detach(); ctx.transport.close?.(); },

@@ -24,6 +24,7 @@ import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
 
 const GM_ONLY_OPS = new Set([
   "FAIRPLAY_ADMIT",
+  "FAIRPLAY_REVOKE",
   "SCENE_UPSERT",
   "SCENE_SELECT",
   "SCENE_MAP_SET",
