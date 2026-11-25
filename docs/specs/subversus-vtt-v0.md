@@ -154,6 +154,7 @@ Uma cena típica (1 mapa + 80 paredes + 20 primitivas + 25 tokens) totaliza **< 
 1. **Dados verificáveis via `rpg-crypto-table.js` (Commit-Reveal²):** reutiliza o duplo compromisso SHA-256 + backup Shamir GF(256) (que neutraliza desconexão oportunista / *Last Revealer Attack*) + *Rejection Sampling* sem viés modular. Na Crônica, aparece apenas um selo discreto `✓` tocável para ver o resumo em linguagem leiga.
 2. **Zero-Spoiler via `projectStateForPlayer`:** o Mestre mantém o estado completo localmente e projeta o subconjunto visível por jogador antes do WebRTC. Tokens `gm`, portas `secret`, `volumes`/`portals` da camada `gm` e `notes_gm` nunca saem da máquina do Mestre.
 3. **Log assinado:** eventos críticos seguem o encadeamento assinado (`sigv: 2`).
+4. **Protocolo de rede do Fairplay:** fases, escopo da v0 e limites (o Mestre-hub pode censurar, não forjar) estão no [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md).
 4. **CGNAT em redes móveis:** em 4G/5G restritivo, conectividade P2P plena depende do TURN (`REV-10` / `INF-01`), exibindo diagnóstico honesto (`LAN-21`) enquanto o TURN não estiver ativo.
 
 ---
@@ -228,3 +229,4 @@ Cada trilha entrega valor reversível sem bloquear o caminho crítico do Vox (`G
 1. **Priorização no `ROADMAP.md`:** confirmar **Trilha A (Fairplay 2D)** para a fila pós-G0 e **Trilhas B/C** como **Candidatas** pós-`LAN-36` (NLnet) / corte `develop → main`.
 2. **Flags padronizadas:** confirmar `vox.lab.diorama` e `vox.lab.slm` (alinhadas a `vox.lab.aviso` e `vox.lab.moderador`).
 3. **Renomeação em UI (pós-G0):** confirmar o rótulo **`Subversus`** na barra de navegação do Vox (com ícone de d20 + tooltip `"Mesa de RPG"`) quando o congelamento de código em `client/js/dungeon/` for liberado.
+4. **Aceite do [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md)** antes do PR-3a (Fairplay na rede da mesa).
