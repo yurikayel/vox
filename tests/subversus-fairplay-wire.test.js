@@ -5,6 +5,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { wireFairplayDriver } from "../client/js/dungeon/vtt-fairplay-wire.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function memStorage(v) {
   return { getItem: (k) => (k === "vox.lab.fairplay" ? v : null) };
@@ -18,7 +19,7 @@ test("fairplay wire: com a flag desligada não cria condutor nem manda nada", as
   const sent = [];
   const state = {};
   const out = wireFairplayDriver(state, { peer: fakePeer(sent), peerId: "p1", store: {}, campaignId: "c", storage: memStorage(null) });
-  await new Promise((r) => setTimeout(r, 20));
+  await Promise.resolve(); // sem flag nada é agendado: não há o que esperar
   assert.equal(out, null);
   assert.equal(state.fairplayDriver, null);
   assert.deepEqual(sent, []);
@@ -28,7 +29,7 @@ test("fairplay wire: com a flag ligada cria o condutor e publica a chave da sess
   const sent = [];
   const state = {};
   const out = wireFairplayDriver(state, { peer: fakePeer(sent), peerId: "p1", store: {}, campaignId: "c", storage: memStorage("1") });
-  await new Promise((r) => setTimeout(r, 50));
+  await waitUntil(() => sent.length > 0);
   assert.equal(state.fairplayDriver, out);
   assert.deepEqual(sent, ["FAIRPLAY_KEY"]);
   out.close();

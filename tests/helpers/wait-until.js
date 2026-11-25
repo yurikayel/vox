@@ -18,3 +18,14 @@ export async function waitUntil(probe, timeoutMs = 5000) {
   }
   return value;
 }
+
+/**
+ * Barreira determinística para pares `createVttSyncPeer`: o hub em memória entrega na hora e cada par enfileira os
+ * tratadores em `flush()`; repetir as passadas cobre respostas que um par manda a outro (op → recusa → pedido de snapshot).
+ * Serve também para provar ausência: quando todas as cadeias esvaziam, nada mais vai chegar.
+ * @param {...{flush: () => Promise<void>}} peers Pares a esperar.
+ * @returns {Promise<void>} Resolve quando todas as filas esvaziaram.
+ */
+export async function settlePeers(...peers) {
+  for (let pass = 0; pass < 5; pass += 1) await Promise.all(peers.map((p) => p.flush()));
+}
