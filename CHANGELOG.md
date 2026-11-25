@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Mesa 2D: o token ligado a uma ficha mostra o retrato (avatar), os PV da ficha e o selo "Sua vez" na iniciativa; com o token selecionado, o alcance do Deslocamento aparece na grade e tocar no chão traça o caminho (sem considerar paredes). SW permanece `v7.171`.
 - Auditoria diária jurídica/técnica: `scripts/legal-compliance-audit.mjs` (LEG-01..05) + testes; workflow `nightly-audit.yml` (cron 03h BRT) com supply-chain, SAST/Semgrep, `validate`+knip informativo, E2E Playwright e alerta por issue `auditoria-diaria`.
 - Limpeza de tip: removido radar de ecossistema aposentado; prosa de docs/CHANGELOG/LESSONS/POSITIONING/specs da Mesa neutralizada (sem nomes de referência de mercado); SW permanece `v7.171`.
 - Governança/CI (PTL): `CODEOWNERS` com paths exatos de `device-merge.js` e `vtt-fairplay-*.js`; `npm run validate` alinha a `lint:all` + `shell-budget-check` + `secrets-audit`; ROADMAP/HARDENING/método de agentes com teto **2**; documentado alias `client/revolução/`; metadata SW `v7.171`.
