@@ -13,6 +13,24 @@ function itemIdFrom(label, fallback) {
   return clean || fallback;
 }
 
+/** Colunas da mochila em grade (ficha, spec §5.4). @type {number} */
+export const BACKPACK_COLS = 10;
+
+/** Linhas da mochila em grade. @type {number} */
+export const BACKPACK_ROWS = 4;
+
+function sizeField(value, max) {
+  const n = Math.trunc(Number(value));
+  return Number.isFinite(n) && n >= 1 && n <= max ? n : undefined;
+}
+
+/** Tamanho `w`/`h` só entra no item quando a ficha o informou; sem eles vale o padrão por nome (`defaultItemSize`). */
+function explicitSize(raw) {
+  const w = sizeField(raw.w, BACKPACK_COLS);
+  const h = sizeField(raw.h, BACKPACK_ROWS);
+  return w && h ? { w, h } : {};
+}
+
 function normalizeItem(raw = {}, idx = 0) {
   const label = String(raw.label || raw.name || "").trim().slice(0, 80);
   if (!label) return null;
@@ -23,6 +41,7 @@ function normalizeItem(raw = {}, idx = 0) {
     weightLb: Math.max(0, Number(raw.weightLb) || 0),
     equipped: Boolean(raw.equipped),
     tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).slice(0, 24)) : [],
+    ...explicitSize(raw),
   };
 }
 
@@ -143,4 +162,82 @@ export function applyCurrencyDelta(sheet, delta = {}, opMeta = {}) {
       reason: String(opMeta.reason || "Moedas").slice(0, 80),
     }),
   };
+}
+const SIZE_RULES = Object.freeze([
+  [1, 4, /montante|alabarda|lanca|arco longo|cajado longo/],
+  [2, 3, /armadura|escudo de corpo|escudo torre|besta pesada/],
+  [2, 2, /escudo|elmo|botas|manopla|grimorio|tomo|kit de aventura/],
+  [1, 3, /espada|maca|machado|cajado|arco/],
+  [1, 2, /adaga|varinha|tocha|algibeira|instrumento|ferramenta/],
+  [1, 1, /pocao|elixir|anel|amuleto|pergaminho|municao|foco|chave|insignia/],
+]);
+
+function plainText(text) {
+  return String(text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/**
+ * Tamanho padrão na grade pelo nome do item (tabela do ficha-personagem-brainstorm §5.4). Nome desconhecido ocupa 1×1.
+ * @param {{label?: string}} item Item do inventário.
+ * @returns {{w: number, h: number}} Largura e altura em células.
+ */
+export function defaultItemSize(item) {
+  const name = plainText(item?.label);
+  const rule = SIZE_RULES.find(([, , pattern]) => pattern.test(name));
+  return rule ? { w: rule[0], h: rule[1] } : { w: 1, h: 1 };
+}
+
+/**
+ * Tamanho do item na grade: o informado na ficha (`w`, `h`) ou o padrão pelo nome.
+ * @param {{label?: string, w?: number, h?: number}} item Item do inventário.
+ * @returns {{w: number, h: number}} Largura e altura em células.
+ */
+export function itemSize(item) {
+  return item?.w && item?.h ? { w: item.w, h: item.h } : defaultItemSize(item);
+}
+
+function byAreaThenHeightThenName(a, b) {
+  return b.w * b.h - a.w * a.h || b.h - a.h || a.label.localeCompare(b.label, "pt-BR") || a.id.localeCompare(b.id);
+}
+
+function newGrid(cols, rows) {
+  return { cols, rows, cells: Array.from({ length: rows }, () => Array(cols).fill(false)) };
+}
+
+function fits(grid, x, y, size) {
+  if (x + size.w > grid.cols || y + size.h > grid.rows) return false;
+  for (let dy = 0; dy < size.h; dy += 1) for (let dx = 0; dx < size.w; dx += 1) if (grid.cells[y + dy][x + dx]) return false;
+  return true;
+}
+
+function occupy(grid, x, y, size) {
+  for (let dy = 0; dy < size.h; dy += 1) for (let dx = 0; dx < size.w; dx += 1) grid.cells[y + dy][x + dx] = true;
+}
+
+function firstFreeSpot(grid, size) {
+  for (let y = 0; y < grid.rows; y += 1) for (let x = 0; x < grid.cols; x += 1) if (fits(grid, x, y, size)) return { x, y };
+  return null;
+}
+
+/**
+ * Arruma a mochila em grade, de forma determinística (spec §5.4, "Organizar"): maior área primeiro, desempate por maior
+ * altura e depois por nome, preenchendo da esquerda para a direita e de cima para baixo (first-fit). Cada item ocupa uma
+ * vez o seu tamanho, qualquer que seja a quantidade. Itens equipados não entram na grade.
+ * @param {Array<{id: string, label: string, equipped?: boolean, w?: number, h?: number}>} items Itens listados.
+ * @param {{cols?: number, rows?: number}} [options={}] Tamanho da grade (padrão 10×4).
+ * @returns {{placements: Array<{id: string, x: number, y: number, w: number, h: number}>, overflow: string[]}} Posições e ids que não couberam.
+ */
+export function organizeBackpack(items, options = {}) {
+  const cols = options.cols || BACKPACK_COLS;
+  const rows = options.rows || BACKPACK_ROWS;
+  const grid = newGrid(cols, rows);
+  const sized = (items || []).filter((it) => !it.equipped).map((it) => ({ ...it, ...itemSize(it) })).sort(byAreaThenHeightThenName);
+  const placements = [];
+  const overflow = [];
+  for (const it of sized) {
+    const spot = firstFreeSpot(grid, it);
+    if (!spot) overflow.push(it.id);
+    else { occupy(grid, spot.x, spot.y, it); placements.push({ id: it.id, x: spot.x, y: spot.y, w: it.w, h: it.h }); }
+  }
+  return { placements, overflow };
 }
