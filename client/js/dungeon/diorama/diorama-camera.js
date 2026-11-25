@@ -10,6 +10,8 @@ export const CAMERA_MODES = Object.freeze(["2d", "iso", "3d"]);
 
 
 
+const MIN_ZOOM = 3;
+const MAX_ZOOM = 40;
 const MIN_PITCH_DEG = 15;
 const MAX_PITCH_DEG = 85;
 const DEG2RAD = Math.PI / 180;
@@ -31,7 +33,7 @@ export function createDioramaCamera(opts = {}) {
       mode,
       yawDeg: 45,
       pitchDeg: 45,
-      zoom: clamp(Number(opts.zoom) || 12, 3, 40),
+      zoom: clamp(Number(opts.zoom) || 12, MIN_ZOOM, MAX_ZOOM),
       target: [Number(opts.targetX) || 6, 0, Number(opts.targetZ) || 4.5],
       eyeOffsetY: 1.5,
       reducedMotion: Boolean(opts.reducedMotion),
@@ -64,8 +66,38 @@ export function applyCameraPreset(cam, mode) {
  */
 export function orbitCamera(cam, deltaYawDeg, deltaPitchDeg) {
   const yawDeg = ((cam.yawDeg + Number(deltaYawDeg || 0)) % 360 + 360) % 360;
-  const pitchDeg = clamp(cam.pitchDeg + Number(deltaPitchDeg || 0), MIN_PITCH_DEG, MAX_PITCH_DEG);
+  const tilt = cam.mode === "iso" ? 0 : Number(deltaPitchDeg || 0);
+  const pitchDeg = clamp(cam.pitchDeg + tilt, MIN_PITCH_DEG, MAX_PITCH_DEG);
   return { ...cam, yawDeg, pitchDeg };
+}
+
+/**
+ * Aproxima ou afasta a câmera multiplicando a distância, dentro de `3..40`.
+ *
+ * @param {object} cam Estado atual da câmera.
+ * @param {number} factor Fator multiplicativo (`< 1` aproxima, `> 1` afasta).
+ * @returns {object} Novo estado de câmera.
+ */
+export function zoomCamera(cam, factor) {
+  return { ...cam, zoom: clamp(cam.zoom * (Number(factor) || 1), MIN_ZOOM, MAX_ZOOM) };
+}
+
+/**
+ * Desloca o alvo no chão em células, no referencial da câmera (`right`/`forward` pelo `yaw`),
+ * mantendo-o dentro de `bounds` quando informado.
+ *
+ * @param {object} cam Estado atual da câmera.
+ * @param {number} right Células para a direita da tela.
+ * @param {number} forward Células para longe da câmera.
+ * @param {{maxX?: number, maxZ?: number}} [bounds={}] Limites do piso em células.
+ * @returns {object} Novo estado de câmera.
+ */
+export function panCamera(cam, right, forward, bounds = {}) {
+  const yaw = cam.yawDeg * DEG2RAD;
+  const x = cam.target[0] + right * Math.cos(yaw) - forward * Math.sin(yaw);
+  const z = cam.target[2] - right * Math.sin(yaw) - forward * Math.cos(yaw);
+  const cap = (v, max) => (Number.isFinite(max) ? clamp(v, 0, max) : v);
+  return { ...cam, target: [cap(x, bounds.maxX), cam.target[1], cap(z, bounds.maxZ)] };
 }
 
 /**

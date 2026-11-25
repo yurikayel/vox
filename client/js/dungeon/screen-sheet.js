@@ -50,7 +50,7 @@ function renderSheetHero(sheet) {
     <section class="dungeon-sheet-hero">
       <div class="dungeon-portrait-box">${renderHeroPortraitSvg(derivePortraitCode(sheet))}</div>
       <div class="dungeon-hero-copy">
-        <span class="dungeon-eyebrow">Ficha Local Soberana (CRDT Offline) · Nível ${level} · CA ${ac}</span>
+        <span class="dungeon-eyebrow">Ficha guardada neste aparelho, funciona sem internet · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
         <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
         <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
@@ -100,7 +100,7 @@ function renderClickableActionsPanel(state) {
     <section class="dungeon-panel" aria-label="Ações clicáveis da ficha">
       <div class="dungeon-section-head">
         <div>
-          <span class="dungeon-eyebrow">Ficha Clicável · Dados Sem Viés</span>
+          <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
           <h2>Ataques, Perícias e Atalhos</h2>
         </div>
         <div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${modesHtml}</div>
@@ -116,7 +116,7 @@ function renderResourceMeters(sheet, projected) {
   const hpMax = sheet.pools_base?.hp_max || 24;
   const slotMax = Number(sheet.pools_base?.spell_slots_max?.l1) || 3;
   const conflictHtml = projected.overdraftConflicts.length
-    ? `<p class="dungeon-alert-warn" role="status"><strong>Proteção contra Saldo Negativo (CRDT):</strong> ${projected.overdraftConflicts.length} tentativa(s) de gasto acima do limite foram travadas com segurança em 0.</p>`
+    ? `<p class="dungeon-alert-warn" role="status"><strong>Proteção contra gasto além do saldo:</strong> ${projected.overdraftConflicts.length} tentativa(s) de gastar mais do que havia foram travadas em 0.</p>`
     : "";
   return `
     <section class="dungeon-panel">
@@ -182,7 +182,7 @@ function renderInventoryPanel(state) {
   return `
     <section class="dungeon-panel" aria-label="Inventário da ficha">
       <div class="dungeon-section-head">
-        <div><span class="dungeon-eyebrow">Inventário CRDT (OR-Set)</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
+        <div><span class="dungeon-eyebrow">Inventário compartilhado</span><h2>Mochila (${weight.toFixed(1)} kg)</h2></div>
         <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
       </div>
       <form class="dungeon-action-form" data-dungeon="add-item-form">
@@ -241,17 +241,17 @@ function renderLoreSection(loreNodes) {
 function renderSheetAudit(orderedOpsCount) {
   return `
     <details class="dungeon-audit" data-dungeon-details="sheet-audit">
-      <summary>Auditoria Técnica (CRDT Delta-Ledger &amp; Hybrid RRF)</summary>
+      <summary>Para conferir: como a ficha é guardada</summary>
       <div class="dungeon-audit-body">
-        <p><strong>Operações assinadas:</strong> <code>${orderedOpsCount}</code> deltas ordenados por relógio lógico de Lamport + idempotência de <code>op_id</code>.</p>
-        <p><strong>Pesos RAG:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
-        <div class="dungeon-card-actions"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar Proteção Contra Saldo Negativo</button></div>
+        <p><strong>Ações registradas:</strong> <code>${orderedOpsCount}</code>, em ordem, cada uma contada uma só vez.</p>
+        <p><strong>Confiança nas fontes:</strong> <code>DM_CANON = 1.0</code> · <code>BILATERAL_VERIFIED = 0.85</code> · <code>UNCORROBORATED_CLAIM = 0.35</code>.</p>
+        <div class="dungeon-card-actions"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="test-overdraft">Testar proteção contra gasto além do saldo</button></div>
       </div>
     </details>`;
 }
 
 /**
- * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo CRDT, mochila unificada e Assistente de Nível.
+ * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo protegido, mochila unificada e Assistente de Nível.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
