@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "character_id": "lyra",
+  "campaign_id": "mesa-legado",
+  "owner_pubkey_p256": "",
+  "attributes_lww": {
+    "name": "Lyra, A Espada da Vila",
+    "ancestry": "Humano",
+    "class_name": "Paladina de Vigília",
+    "level": 1,
+    "armor_class": 10,
+    "speed_ft": 30,
+    "abilities": {
+      "str": 16,
+      "dex": 12,
+      "con": 14,
+      "int": 11,
+      "wis": 14,
+      "cha": 15
+    },
+    "conditions": []
+  },
+  "pools_base": {
+    "hp_max": 24,
+    "hp_temp_max": 20,
+    "gold_initial": 50,
+    "spell_slots_max": {
+      "l1": 3,
+      "l2": 1,
+      "l3": 0
+    }
+  },
+  "delta_ledger": [],
+  "inventory_orset": {},
+  "spatial_state": {
+    "map_id": "taverna_01",
+    "grid_x": 0,
+    "grid_y": 0,
+    "elevation_z": 0
+  },
+  "sheet_meta": {
+    "clickable_actions": [
+      {
+        "id": "act-ataque",
+        "label": "Espada Longa",
+        "roll": "1d20+@for+@prof",
+        "damage": "1d8+@for",
+        "tag": "ataque"
+      },
+      {
+        "id": "act-investigacao",
+        "label": "Investigação",
+        "roll": "1d20+@int+@prof",
+        "damage": "",
+        "tag": "pericia"
+      },
+      {
+        "id": "act-percepcao",
+        "label": "Percepção",
+        "roll": "1d20+@sab+@prof",
+        "damage": "",
+        "tag": "pericia"
+      },
+      {
+        "id": "act-furtividade",
+        "label": "Furtividade",
+        "roll": "1d20+@des",
+        "damage": "",
+        "tag": "pericia"
+      }
+    ],
+    "skill_refs": [],
+    "notes_public": "",
+    "notes_gm": "",
+    "level_milestones": []
+  }
+}
