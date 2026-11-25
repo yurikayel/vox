@@ -1,6 +1,6 @@
 # ADR-040: Fairplay — rolagem verificável na mesa em três fases, com o Mestre como hub que não pode forjar
 
-**Status:** proposed (só documentação; o código entra em dois PRs depois do aceite) · **Revisado:** 2026-11-25 (revisão 2: partes depois dos compromissos, fechamento pelo log, veto do Mestre, compromisso amarrado) · **Relacionados:** [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) (honestidade de segurança), [ADR-033](./033-ia-so-no-rpg-local-primeiro.md) (o RPG fica isolado do feed cívico), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [spec Subversus VTT §7 e §10](../specs/subversus-vtt-v0.md), [THREAT-MODEL](../THREAT-MODEL.md)
+**Status:** accepted (aceito pelo mantenedor em 2026-11-25; PR-3a em #498, PR-3b a seguir) · **Revisado:** 2026-11-25 (revisão 2: partes depois dos compromissos, fechamento pelo log, veto do Mestre, compromisso amarrado) · **Relacionados:** [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) (honestidade de segurança), [ADR-033](./033-ia-so-no-rpg-local-primeiro.md) (o RPG fica isolado do feed cívico), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [spec Subversus VTT §7 e §10](../specs/subversus-vtt-v0.md), [THREAT-MODEL](../THREAT-MODEL.md)
 
 ## 1. Contexto
 
