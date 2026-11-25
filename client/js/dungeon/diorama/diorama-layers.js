@@ -5,6 +5,7 @@
  * @module dungeon/diorama/diorama-layers
  */
 import { projectTacticsFloorForPlayer } from "../vtt-tactics-reducer.js";
+import { doorSegmentWorld, isPointRevealedByFog } from "../vtt-tactics-geometry.js";
 
 /** Lado (em texels) da máscara de névoa `R8`; a textura cobre todo o piso. */
 export const FOG_MASK_SIZE = 256;
@@ -12,9 +13,23 @@ export const FOG_MASK_SIZE = 256;
 const STANDEE_HEIGHT = 1.4;
 const FLAT_LIFT = 0.02;
 
+function tokenCenterPx(tok, grid) {
+  const cellPx = Math.max(1, Number(grid?.cellPx) || 64);
+  const half = (Number(tok.sizeCells) || 1) * 0.5;
+  return { x: (Number(grid?.offsetX) || 0) + (tok.x + half) * cellPx, y: (Number(grid?.offsetY) || 0) + (tok.y + half) * cellPx };
+}
+
+function doorTouchesFog(door, floor) {
+  const seg = doorSegmentWorld(door, floor.grid);
+  const mid = { x: (seg.x1 + seg.x2) / 2, y: (seg.y1 + seg.y2) / 2 };
+  return [{ x: seg.x1, y: seg.y1 }, { x: seg.x2, y: seg.y2 }, mid].some((p) => isPointRevealedByFog(p.x, p.y, floor.fog));
+}
+
 /**
  * Aplica ao piso e aos tokens a mesma visibilidade do mapa 2D: o Mestre vê tudo; o jogador
- * recebe o piso projetado (sem portas secretas/camada GM) e só tokens da camada `player`.
+ * recebe o piso projetado (sem portas secretas/camada GM), só tokens da camada `player` e,
+ * com a névoa ligada, só tokens e portas dentro de alguma área revelada (nada some no
+ * shader: o que está na névoa nem vira geometria nem alvo de picking).
  *
  * @param {object} floor Documento `FloorDoc`.
  * @param {Array<object>} tokens Tokens da cena.
@@ -22,28 +37,45 @@ const FLAT_LIFT = 0.02;
  * @returns {{floor: object, tokens: Array<object>}} Piso e tokens visíveis no andar.
  */
 export function projectDioramaView(floor, tokens, role) {
-  const isGm = role === "gm";
-  const visible = (tokens || []).filter((t) => t.floorZ === floor?.z && (isGm || t.layer === "player"));
-  return { floor: isGm ? floor : projectTacticsFloorForPlayer(floor || {}), tokens: visible };
+  const onFloor = (tokens || []).filter((t) => t.floorZ === floor?.z);
+  if (role === "gm") return { floor, tokens: onFloor };
+  const projected = projectTacticsFloorForPlayer(floor || {});
+  const fogged = Boolean(projected.fog?.enabled);
+  const seen = (t) => {
+    const c = tokenCenterPx(t, projected.grid);
+    return !fogged || isPointRevealedByFog(c.x, c.y, projected.fog);
+  };
+  return {
+    floor: fogged ? { ...projected, doors: projected.doors.filter((d) => doorTouchesFog(d, projected)) } : projected,
+    tokens: onFloor.filter((t) => t.layer === "player" && seen(t)),
+  };
 }
 
-function fogSignature(rects) {
-  let hash = rects.length;
-  for (const r of rects) hash = (Math.imul(hash, 31) + r.x * 7 + r.y * 13 + r.w * 17 + r.h * 19) | 0;
-  return hash;
+/** FNV-1a de 32 bits sobre inteiros de 4 bytes (little-endian). */
+function fnv1a(hash, value) {
+  let h = hash;
+  const v = Math.round(Number(value) || 0) | 0;
+  for (let i = 0; i < 4; i++) h = Math.imul(h ^ ((v >>> (i * 8)) & 255), 16777619);
+  return h;
+}
+
+function fogSignature(floor, rects) {
+  let h = [floor.z, floor.widthPx, floor.heightPx, rects.length].reduce(fnv1a, 2166136261);
+  for (const r of rects) h = [r.x, r.y, r.w, r.h].reduce(fnv1a, h);
+  return h >>> 0;
 }
 
 function paintRect(mask, r, view) {
-  const x0 = Math.max(0, Math.floor(r.x / view.spanX * FOG_MASK_SIZE));
-  const x1 = Math.min(FOG_MASK_SIZE, Math.ceil((r.x + r.w) / view.spanX * FOG_MASK_SIZE));
-  const y0 = Math.max(0, Math.floor(r.y / view.spanY * FOG_MASK_SIZE));
-  const y1 = Math.min(FOG_MASK_SIZE, Math.ceil((r.y + r.h) / view.spanY * FOG_MASK_SIZE));
+  const x0 = Math.max(0, Math.ceil(r.x / view.spanX * FOG_MASK_SIZE));
+  const x1 = Math.min(FOG_MASK_SIZE, Math.floor((r.x + r.w) / view.spanX * FOG_MASK_SIZE));
+  const y0 = Math.max(0, Math.ceil(r.y / view.spanY * FOG_MASK_SIZE));
+  const y1 = Math.min(FOG_MASK_SIZE, Math.floor((r.y + r.h) / view.spanY * FOG_MASK_SIZE));
   for (let y = y0; y < y1; y++) mask.fill(255, y * FOG_MASK_SIZE + x0, y * FOG_MASK_SIZE + Math.max(x0, x1));
 }
 
 /**
  * Converte `floor.fog` na máscara `R8` (255 = revelado) e nos parâmetros do shader.
- * Sem névoa ligada devolve `null`. O Mestre enxerga a névoa a 50%, o jogador a 0% (preto), como no 2D.
+ * Sem névoa ligada devolve `null`. O Mestre enxerga a névoa a 50%; para o jogador (`dim` 0) o shader descarta o fragmento (fundo, não preto). A máscara arredonda para dentro.
  *
  * @param {object} floor Documento `FloorDoc` (já projetado para o papel).
  * @param {"gm"|"player"} role Papel do observador.
@@ -59,7 +91,7 @@ export function buildFogLayer(floor, role) {
   const rects = floor.fog.revealedRects || [];
   for (const r of rects) paintRect(mask, r, view);
   const rect = [ox / cellPx, oy / cellPx, cellPx / view.spanX, cellPx / view.spanY];
-  return { mask, version: fogSignature(rects), rect, dim: role === "gm" ? 0.5 : 0 };
+  return { mask, version: fogSignature(floor, rects), rect, dim: role === "gm" ? 0.5 : 0 };
 }
 
 /**
