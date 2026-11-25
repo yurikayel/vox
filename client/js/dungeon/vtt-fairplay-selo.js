@@ -16,6 +16,7 @@ const KNOWN_REASONS = new Set([
   "o valor registrado não confere com a conta",
 ]);
 const GENERIC_REASON = "a conta não fechou neste aparelho";
+const TABLE_ONLY_DETAIL = "A mesa conferiu esta rolagem, mas você não participou dela, então este aparelho não pode confirmar por conta própria.";
 const SUMMARY = "Cada pessoa da mesa escondeu um número antes de qualquer um abrir o seu. O dado saiu da soma de todos, e este aparelho refez a conta e chegou ao mesmo resultado.";
 const SUMMARY_RECOVERED = `${SUMMARY} Alguém saiu no meio, e a mesa recuperou o número dessa pessoa sem precisar dela.`;
 
@@ -35,9 +36,13 @@ export function isFairplayLabEnabled(storage = globalThis.localStorage) {
 /**
  * Converte o veredito local em selo para exibir.
  * @param {{status?: string, reason?: string, recoveredPeerIds?: string[]}} verdict Resultado de `verifyFairplayRecord`.
+ * @param {boolean} [tookPart=true] Se este aparelho é participante da rolagem e tem o próprio compromisso no log.
  * @returns {{status: "verified"|"pending"|"unverified", label: string, detail: string}} Selo leigo.
  */
-export function sealFromVerdict(verdict) {
+export function sealFromVerdict(verdict, tookPart = true) {
+  if (verdict?.status === "verified" && !tookPart) {
+    return { status: "table_only", label: "verificada pela mesa, sem você", detail: TABLE_ONLY_DETAIL };
+  }
   if (verdict?.status === "verified") {
     const recovered = Array.isArray(verdict.recoveredPeerIds) && verdict.recoveredPeerIds.length > 0;
     return { status: "verified", label: "✓ Verificada", detail: recovered ? SUMMARY_RECOVERED : SUMMARY };
@@ -47,6 +52,11 @@ export function sealFromVerdict(verdict) {
   return { status: "unverified", label: "não verificada", detail: reason };
 }
 
+function tookPartIn(state, rollId, me) {
+  const roll = state?.fairplay?.rolls?.[rollId];
+  return Boolean(me && roll?.participants?.includes(me) && Object.hasOwn(roll.commits || {}, me));
+}
+
 /**
  * Refaz a conta de cada rolagem Fairplay da crônica neste aparelho.
  * @param {{fairplay?: object, chronicle?: object[]}} state Estado com o bloco `fairplay` e a crônica.
@@ -54,10 +64,11 @@ export function sealFromVerdict(verdict) {
  */
 export async function computeFairplaySeals(state) {
   const seals = {};
+  const me = state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
   for (const entry of state?.chronicle || []) {
     if (!entry?.fairplayRollId) continue;
     const verdict = await verifyFairplayRecord(state, entry.fairplayRollId, entry.fairplayValue);
-    seals[entry.id] = sealFromVerdict(verdict);
+    seals[entry.id] = sealFromVerdict(verdict, tookPartIn(state, entry.fairplayRollId, me));
   }
   return seals;
 }

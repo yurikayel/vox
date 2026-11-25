@@ -71,7 +71,7 @@ function record(t, fairplay) {
   return t.box.doc;
 }
 
-const forState = (doc, extra = {}) => ({ ...doc, fairplayLabEnabled: true, ...extra });
+const forState = (doc, extra = {}) => ({ ...doc, fairplayLabEnabled: true, fairplayViewerId: "ana", ...extra });
 
 test("selo: rolagem fechada ganha '✓ Verificada' com resumo leigo, só pela conta local", async () => {
   const t = await closed(["ana", "bia", "gm"]);
@@ -161,4 +161,16 @@ test("crônica: entrada sem rolagem Fairplay não ganha selo e id inválido é d
   const bad = record(await makeTable(["ana"]), { rollId: "../x y" });
   assert.equal("fairplayRollId" in bad.chronicle[0], false);
   assert.equal(renderEntrySeal(plain.chronicle[0], forState(plain)), "");
+});
+
+test("selo: quem não participou da rolagem vê 'verificada pela mesa, sem você'", async () => {
+  const t = await closed(["ana", "bia", "gm"]);
+  const doc = record(t, { rollId: ROLL });
+  const outsider = await computeFairplaySeals({ ...doc, fairplayViewerId: "intruso" });
+  assert.equal(outsider[doc.chronicle[0].id].status, "table_only");
+  assert.match(outsider[doc.chronicle[0].id].label, /verificada pela mesa, sem você/);
+  const noViewer = await computeFairplaySeals(doc);
+  assert.equal(noViewer[doc.chronicle[0].id].status, "table_only", "sem identidade local não há selo próprio");
+  const member = await computeFairplaySeals({ ...doc, fairplayViewerId: "bia" });
+  assert.equal(member[doc.chronicle[0].id].status, "verified");
 });
