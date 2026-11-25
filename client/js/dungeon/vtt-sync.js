@@ -166,6 +166,9 @@ async function handleGmActionOp(ctx, msg) {
   if (!res.duplicate) {
     await broadcastCommittedOp(ctx, res.campaign, msg.op);
     ctx.onUpdate?.(res.campaign);
+  } else if (!current?.appliedOpIds?.includes(msg.op.opId)) {
+    // Recusada pelo reducer (ex.: Fairplay fora de fase ou com lamport atrasado): o par precisa saber para assinar de novo.
+    ctx.transport.send(msg.from, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId: msg.op.opId, reason: "out_of_phase" });
   }
 }
 

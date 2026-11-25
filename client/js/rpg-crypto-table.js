@@ -159,13 +159,25 @@ export function sampleUnbiasedDieFromDigest(digestHex, dieSides = 20) {
 }
 
 /**
+ * Sem o compromisso da fase 1 não há o que conferir: a semente seria aceita como veio (ADR-040 §2.3a).
+ * @param {object} participant Participante
+ * @returns {void}
+ */
+function requireCommitO(participant) {
+  if (!/^[0-9a-f]{64}$/.test(String(participant?.commitO || ""))) {
+    throw new Error(`Par ${participant?.peerId || "?"} sem commitO da fase de compromisso.`);
+  }
+}
+
+/**
  * Confere se a semente revelada bate com o compromisso do participante.
  * @param {object} participant Participante
  * @returns {Promise<object>} Semente verificada.
  */
 async function verifyRevealedSeed(participant) {
+  requireCommitO(participant);
   const commitO = await sha256Hex(participant.seedBytes);
-  if (participant.commitO && commitO !== participant.commitO) {
+  if (commitO !== participant.commitO) {
     throw new Error(`Revelação inválida do par ${participant.peerId || "desconhecido"}.`);
   }
   return { peerId: participant.peerId || "", seedBytes: participant.seedBytes, commitO, recovered: false };
@@ -177,10 +189,10 @@ async function verifyRevealedSeed(participant) {
  * @returns {Promise<object>} Semente recuperada.
  */
 async function recoverParticipantSeed(participant) {
+  requireCommitO(participant);
   const threshold = Number(participant.threshold) || DEFAULT_SHAMIR_THRESHOLD;
-  const seedBytes = await recoverAbortedSeed(participant.backupShares, participant.commitO || "", threshold);
-  const commitO = participant.commitO || (await sha256Hex(seedBytes));
-  return { peerId: participant.peerId || "", seedBytes, commitO, recovered: true };
+  const seedBytes = await recoverAbortedSeed(participant.backupShares, participant.commitO, threshold);
+  return { peerId: participant.peerId || "", seedBytes, commitO: participant.commitO, recovered: true };
 }
 
 /**

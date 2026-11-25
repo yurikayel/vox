@@ -7,6 +7,7 @@ import { createCharacterSheetDoc } from "../rpg-sheet-and-lore.js";
 import { createDefaultScene, createSceneDoc } from "./vtt-scene-schema.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
 import { createDefaultCalendar } from "./vtt-calendar.js";
+import { normalizeFairplayState } from "./vtt-fairplay-log.js";
 
 /** Versão canônica do schema de campanha da Mesa Soberana. */
 export const VTT_SCHEMA_VERSION = "1.0.0";
@@ -271,6 +272,7 @@ export function createCampaign(opts = {}) {
     notesById: normalizeRecordMap(opts.notesById, (n) => createNoteDoc(n)),
     chronicle: Array.isArray(opts.chronicle) ? opts.chronicle.map(createChronicleEntry) : [],
     rolls: Array.isArray(opts.rolls) ? opts.rolls.map((r) => ({ ...r })) : [],
+    fairplay: normalizeFairplayState(opts.fairplay),
     appliedOpIds: Array.isArray(opts.appliedOpIds) ? [...opts.appliedOpIds] : [],
     lamport: nonNegInt(opts.lamport),
     createdAt: finiteOr(opts.createdAt, now),
