@@ -53,3 +53,17 @@ test("chave recusada por não admitido espera a aprovação do Mestre e é reenv
   assert.deepEqual(sent.map((o) => o.type), ["FAIRPLAY_KEY", "FAIRPLAY_KEY"], "reenvia uma única vez");
   driver.close();
 });
+
+test("limita o reenvio da chave após admissão quando o Mestre segue recusando", async () => {
+  const { driver, sent, stops } = makeDriver();
+  const admitted = { fairplay: { admitted: { vx_player: {} }, rolls: {} } };
+  await driver.start();
+  for (let i = 1; i <= 50; i += 1) {
+    await driver.onRejected({ opId: `op-${sent.length}`, reason: "not_admitted" });
+    await driver.onUpdate(admitted);
+  }
+  assert.ok(sent.length <= 4, `${sent.length} envios`);
+  assert.equal(stops.length, 1);
+  assert.equal(stops[0].reason, "not_admitted");
+  driver.close();
+});
