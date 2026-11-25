@@ -38,6 +38,7 @@ import { refreshFavoriteSlider, renderCampScreen } from "./screen-camp.js";
 import { renderDmScreen } from "./screen-dm.js";
 import { renderSheetScreen } from "./screen-sheet.js";
 import { renderTableScreen } from "./screen-table.js";
+import { refreshFairplaySeals } from "./vtt-fairplay-selo.js";
 
 const SCREEN_RENDERERS = {
   acampamento: renderCampScreen,
@@ -98,6 +99,14 @@ function redrawContainer(container, opts, focusOverride = "", preserveDraft = fa
   container.innerHTML = renderDungeonView(opts);
   bindActiveCanvas(container, opts);
   restoreUiViewState(container, snap, focusOverride, preserveDraft);
+  refreshSealsAfterDraw(container, opts);
+}
+
+function refreshSealsAfterDraw(container, opts) {
+  const state = opts.state || getDungeonSession();
+  refreshFairplaySeals(state)
+    .then((changed) => { if (changed && container.isConnected) redrawContainer(container, opts, "", true); })
+    .catch(() => {});
 }
 
 function settleAndRedraw(promise, container, viewOpts, extra = {}) {
