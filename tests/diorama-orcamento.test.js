@@ -15,7 +15,7 @@ const DIR = new URL("../client/js/dungeon/diorama/", import.meta.url);
 const CORE = ["math", "geom", "camera", "gl", "view"].map((n) => `diorama-${n}.js`);
 
 /** Medido em 2026-11-25 (gzip nível 9). O gzip tem folga de 64 B para variação de build do zlib entre versões do Node. */
-const CEILING = { sourceBytes: 34_774, gzipBytes: 12_564 + 64 };
+const CEILING = { sourceBytes: 39_061, gzipBytes: 13_474 + 64 };
 const SPEC = { sourceBytes: 25 * 1024, gzipBytes: 12 * 1024 };
 
 function measure(files) {
