@@ -89,7 +89,19 @@ Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0
 - **Vários aparelhos da mesma pessoa.** A lista vem dos pares com chave na sala (§2.1), então quem abre não escolhe a dedo quem entra. Quem tem vários aparelhos na sala, porém, entra várias vezes. Contra isso, a defesa continua sendo o Mestre admitir os jogadores.
 - **Sem rede direta entre jogadores.** Tudo passa pelo Mestre. Uma malha completa entre jogadores tiraria o poder de censura, mas é outra decisão.
 - **Histórico limitado para quem entra tarde.** A campanha guarda as ops assinadas das 50 rolagens mais novas, mais todas as admissões e chaves. Quem entra depois (ou a mesa depois de recarregar) refaz o estado só dessas; rolagens mais antigas aparecem como "não verificada" para esse aparelho. O arquivo de backup importado não traz estado Fairplay: ele é descartado e refeito pelas ops da mesa.
-- **Admissão ainda automática (pendente).** Hoje o Mestre admite quem entra na mesa. Admissão por aprovação explícita e revogação ficam para uma próxima mudança.
+- **Admissão ainda automática (pendente).** Hoje o Mestre admite quem entra na mesa. A aprovação explícita e a revogação estão aceitas na §3.1 e valem só com a flag de laboratório ligada.
+
+### 3.1 Emenda: aprovação de admissão e revogação (Aceito)
+
+**Status:** Aceito pelo mantenedor em 2026-11-25. Passa a valer com o merge deste PR; o texto da §3 sobre admissão automática descreve o comportamento com a flag desligada. Tudo abaixo existe apenas com a flag de laboratório `vox.lab.fairplay` ligada; com ela desligada, nada muda (o Mestre segue admitindo quem entra).
+
+- **Aprovação.** Com a flag ligada, quem entra na mesa fica **pendente** no aparelho do Mestre (estado local, fora do log). O Mestre aprova por `approveFairplayPeer(routeId)`, que grava `FAIRPLAY_ADMIT`. Sem aprovação, a `FAIRPLAY_KEY` do par é recusada (`not_admitted`) e ele não entra em nenhuma rolagem. Esta emenda não define tela de aprovação: só a API.
+- **Revogação.** Nova operação `FAIRPLAY_REVOKE { actor }`, persistida no log e assinada pelo Mestre. Só o Mestre revoga (de outro autor, é recusada). Revogar tira o par de `admitted` e de `keys` e o marca em `revoked` com o `lamport` da revogação. Revogação repetida, de par desconhecido ou do próprio Mestre não faz nada.
+- **Efeito sobre as ops.** Toda operação Fairplay de um par revogado com `lamport` maior que o da revogação é recusada, em qualquer fase; o Mestre avisa o par com o motivo `revoked`. Rolagens já fechadas continuam verificáveis. Numa rolagem em andamento o revogado deixa de agir: se ainda não se comprometeu, cai pela regra do fechamento da fase de compromisso; se já se comprometeu, a rolagem segue ou aborta pelas regras de recuperação e de quórum já descritas.
+- **Readmissão.** Só com um novo `FAIRPLAY_ADMIT` de `lamport` maior que o da revogação; um `FAIRPLAY_ADMIT` antigo reaplicado não readmite.
+- **Log e replay.** Admissões e revogações de cada par entram no snapshot e no replay (até 16 eventos por par); o estado refeito é o mesmo, inclusive com ops duplicadas ou fora de ordem. Logs gravados antes desta emenda (uma admissão por par, sem `revoked`) continuam válidos.
+- **`peerId` e `routeId`.** O autor de uma operação já é amarrado à chave que a assina (o `routeId` deriva da chave pública). Passa a valer também no condutor: ele só liga se o `peerId` recebido for o `routeId` do par de sincronização.
+- **Limites (ADR-024).** Revogar não desfaz o que o par já viu e não impede quem tem outra identidade de pedir entrada de novo; a defesa continua sendo o Mestre aprovar quem entra. O Mestre segue podendo aprovar ou revogar de forma seletiva: isso é poder dele, visível no log, e não é impedido.
 
 ## 4. Alternativas descartadas
 
