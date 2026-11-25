@@ -9,6 +9,7 @@ import { createDefaultScene } from "../client/js/dungeon/vtt-scene-schema.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderDungeonView, wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 function makeCanvasMock() {
   const texts = [];
@@ -132,7 +133,7 @@ test("vtt-tactics controller: iniciativa, condições, névoa, andares e Zero-Sp
   const listeners = {};
   const host = { dataset: {}, innerHTML: "", addEventListener: (k, fn) => { listeners[k] = fn; }, querySelector: () => null };
   wireDungeonView(host, { screen: "mesa", state, store });
-  await new Promise((r) => setTimeout(r, 15));
+  await waitUntil(() => state.persistenceReady);
 
   await listeners.click({ target: { closest: () => ({ dataset: { dungeon: "roll-initiative" } }) } });
   assert.equal(state.initiative.entries.length, 2);
