@@ -77,6 +77,7 @@ function ensureGlCanvas(base, existing = null) {
     gl.dataset.dioramaGl = "1";
     gl.setAttribute?.("tabindex", "0");
     gl.setAttribute?.("role", "application");
+    gl.setAttribute?.("aria-label", "Mapa em 3D");
   }
   host.style.position = "relative";
   if (gl.parentNode !== host) host.appendChild(gl);
