@@ -41,6 +41,7 @@ async function buildDoc(stage, peers = ["ana", "bia", "gm"]) {
   const keys = {};
   for (const p of peers) {
     keys[p] = await createFairplaySessionKey();
+    push("FAIRPLAY_ADMIT", "gm", { actor: p });
     push("FAIRPLAY_KEY", p, { publicKeyJwk: keys[p].publicKeyJwk });
   }
   if (stage === "keys") return doc;

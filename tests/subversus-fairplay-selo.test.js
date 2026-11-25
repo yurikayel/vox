@@ -29,7 +29,10 @@ async function makeTable(peers) {
     lamport += 1;
     box.doc = reduceCampaign(box.doc, createVttOp({ type, actor, payload, lamport, ts }));
   };
-  for (const p of peers) push("FAIRPLAY_KEY", p, { publicKeyJwk: keys[p].publicKeyJwk });
+  for (const p of peers) {
+    push("FAIRPLAY_ADMIT", "gm", { actor: p });
+    push("FAIRPLAY_KEY", p, { publicKeyJwk: keys[p].publicKeyJwk });
+  }
   return { box, push, keys };
 }
 
