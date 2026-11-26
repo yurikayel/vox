@@ -5,17 +5,21 @@
  * @module dungeon/vtt-fairplay-acesso
  */
 import { escapeHtml } from "../shared/html.js";
+import { duplicatePeerIds, fairplayPeerLabel } from "./vtt-fairplay-nome.js";
 
 /** Seletor do contêiner de acesso (recebe o foco depois de uma ação, para o foco ser previsível). */
 export const FAIRPLAY_ACCESS_ID = "dungeon-fairplay-access";
 
 function peerName(state, id) {
-  return state?.fairplayNames?.[id] || id;
+  return fairplayPeerLabel(id, state?.fairplayNames?.[id]);
 }
 
-function requestRow(state, id) {
+const DUP_WARNING = `<strong class="dungeon-fairplay-dup" role="alert">Atenção: outro par tem o mesmo nome ou identificador. Confira o identificador.</strong>`;
+
+function requestRow(state, id, dups) {
   const name = escapeHtml(peerName(state, id));
-  return `<li class="dungeon-fairplay-request"><span>${name} pede para entrar</span>
+  const warning = dups.has(id) ? DUP_WARNING : "";
+  return `<li class="dungeon-fairplay-request"><span>${name} pede para entrar</span>${warning}
     <button type="button" class="dungeon-btn" data-dungeon="fairplay-approve" data-peer="${escapeHtml(id)}" aria-label="Aprovar a entrada de ${name}">Aprovar</button>
     <button type="button" class="dungeon-btn" data-dungeon="fairplay-refuse" data-peer="${escapeHtml(id)}" aria-label="Recusar a entrada de ${name}">Recusar</button></li>`;
 }
@@ -28,7 +32,9 @@ function requestRow(state, id) {
 export function renderFairplayRequests(state) {
   const ids = state?.fairplayPendingPeers || [];
   if (!ids.length) return "";
-  return `<ul class="dungeon-fairplay-requests" aria-label="Pedidos de entrada no Fairplay">${ids.map((id) => requestRow(state, id)).join("")}</ul>`;
+  const admitted = Object.keys(state?.campaign?.fairplay?.admitted || {});
+  const dups = duplicatePeerIds([...ids, ...admitted], state?.fairplayNames);
+  return `<ul class="dungeon-fairplay-requests" aria-label="Pedidos de entrada no Fairplay">${ids.map((id) => requestRow(state, id, dups)).join("")}</ul>`;
 }
 
 const PLAYER_TEXT = { waiting: "Aguardando aprovação do Mestre", refused: "Entrada recusada" };
