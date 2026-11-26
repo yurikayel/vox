@@ -82,7 +82,7 @@ export const T20_PACK = Object.freeze({
   display: Object.freeze({
     derived: Object.freeze([
       Object.freeze({ id: "armorClass", label: "Defesa", source: Object.freeze({ formula: "armorClass" }) }),
-      Object.freeze({ id: "initiative", label: "Iniciativa (atributo)", source: Object.freeze({ formula: "initiative" }) }),
+      Object.freeze({ id: "initiative", label: "Iniciativa", source: Object.freeze({ formula: "initiative" }) }),
       Object.freeze({ id: "speed", label: "Deslocamento", source: Object.freeze({ formula: "speed" }) }),
       Object.freeze({ id: "hp", label: "PV", source: Object.freeze({ resource: "hp" }) }),
       Object.freeze({ id: "mp", label: "PM", source: Object.freeze({ resource: "mp" }) }),
@@ -96,7 +96,8 @@ export const T20_PACK = Object.freeze({
     /** Treino (meio nível mais treino por perícia) ainda não é calculado pelo motor: o bônus fica em zero. */
     proficiency: Object.freeze({ base: 0, every: 20 }),
     armorClass: Object.freeze({ base: 10, ability: "dex" }),
-    initiative: Object.freeze({ ability: "dex" }),
+    /** Iniciativa é a perícia `iniciativa`; o atributo é reserva. */
+    initiative: Object.freeze({ skill: "iniciativa", ability: "dex" }),
     passivePerception: Object.freeze({ base: 10, skill: "percepcao" }),
   }),
 });
