@@ -35,7 +35,7 @@ test("jogar: a faixa mostra proficiência, CA base, iniciativa e percepção pas
 
 test("jogar: ficha sem pacote registrado ou vazia não quebra a tela e não mostra a faixa", () => {
   assert.equal(renderDerivedStrip(null), "");
-  const odd = { ...legacy(), system: { id: "t20", version: 1 } };
+  const odd = { ...legacy(), system: { id: "sistema-inexistente", version: 1 } };
   assert.equal(resolveSheetSystem(odd), null);
   assert.equal(renderDerivedStrip(odd), "");
 });
@@ -57,7 +57,7 @@ test("exibir uma ficha legada não grava nada nela", () => {
 });
 
 test("editar: o seletor de sistema lista o pacote, vem marcado e vai dentro do formulário de edição", () => {
-  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem"><option value="dnd5e-2024" selected>D&amp;D 2024<\/option><\/select>/);
+  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem"><option value="dnd5e-2024" selected>D&amp;D 2024<\/option><option value="t20">Tormenta20 \(estrutura\)<\/option><\/select>/);
   const about = panel(renderSheetScreen({ ...createDungeonSessionState(), sheet: legacy() }), "about");
   assert.match(about, /<form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>[\s\S]*name="sheetSystem"[\s\S]*<\/form>/);
 });
@@ -112,6 +112,6 @@ test("migração: atributo ausente (null, vazio, indefinido) vale 10 e não 1; o
 
 test("editar: sistema desconhecido no formulário é ignorado e o atual permanece", async () => {
   const state = createDungeonSessionState();
-  await updateSheetBasicInfo(state, { system: "t20" });
+  await updateSheetBasicInfo(state, { system: "sistema-inexistente" });
   assert.equal(state.sheet.system.id, "dnd5e-2024");
 });

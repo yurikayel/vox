@@ -2,12 +2,13 @@
  * @file Formato do pacote de sistema da ficha multi-sistema (spec brainstorm v0, §4): dados, não telas.
  * Um pacote define atributos, testes, recursos e os parâmetros das fórmulas; as funções puras de
  * `system-derive.js` calculam os derivados a partir dele e das escolhas do jogador. A ficha nunca grava derivado.
- * Este módulo valida o formato e guarda o registro dos pacotes conhecidos (hoje: `dnd5e-2024`).
+ * Este módulo valida o formato e guarda o registro dos pacotes conhecidos (hoje: `dnd5e-2024` e `t20`).
  *
  * @module dungeon/system-pack
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
 import { DND5E_2024_PACK } from "./system-pack-dnd5e-2024.js";
+import { T20_PACK } from "./system-pack-t20.js";
 
 /** Tipos de resolução de teste aceitos pelo formato (a spec §4 lista também `3d6_sob_nh`, ainda sem pacote). @type {readonly string[]} */
 export const TEST_KINDS = Object.freeze(["d20_vs_cd", "3d6_sob_nh"]);
@@ -105,3 +106,4 @@ export function listSystemPackIds() {
 }
 
 registerSystemPack(DND5E_2024_PACK);
+registerSystemPack(T20_PACK);
