@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Docs: ROADMAP de 26/11 refeito — `REV-16` encerrado, `EXP-02`/`EXP-05` marcados, estado de `main`/`develop` e referências atualizados, e itens novos `SUB-19`, `SUB-20`, `PM-116`…`PM-118` e a regra da nightly verde antes do corte.
 - Processo: orquestração passa a "ler é livre, escrever pede caneta" — leitura, análise e revisão em paralelo; no máximo 3 agentes escrevendo no repositório, com mutex de arquivos, arquivos quentes com um portador, merge serial e no máximo 2 execuções pesadas ao mesmo tempo (AGENTS.md, metodo-agentes-mutex-e-revisor.md).
 
 ## [2026-11-26] — SW `v7.173-mesa-canvas-mobile` (corte `develop → main`)
