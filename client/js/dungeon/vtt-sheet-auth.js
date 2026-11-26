@@ -58,7 +58,7 @@ export function isPlayerAuthorizedForSheetOp(state, op) {
 }
 
 /**
- * Dono que a ficha gravada deve ter: o Mestre grava o que quiser; jogador mantém o dono atual ou assume a ficha nova.
+ * Dono que a ficha gravada deve ter: o Mestre grava o dono declarado, ou preserva o atual se o campo vier vazio; jogador mantém o dono atual ou assume a ficha nova.
  * @param {object} state Estado da campanha.
  * @param {string} sheetId Id da ficha.
  * @param {string} actor Autor da operação.
@@ -67,6 +67,7 @@ export function isPlayerAuthorizedForSheetOp(state, op) {
  * @returns {string} Valor de `owner_pubkey_p256`.
  */
 export function ownerForUpsert(state, sheetId, actor, isGm, declared) {
-  if (isGm) return String(declared || "");
-  return state.sheetsById?.[sheetId]?.owner_pubkey_p256 || actor;
+  const current = state.sheetsById?.[sheetId]?.owner_pubkey_p256;
+  if (isGm) return String(declared || current || "");
+  return current || actor;
 }
