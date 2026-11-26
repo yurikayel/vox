@@ -8,6 +8,13 @@ import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.j
 import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
 import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
+/**
+ * Carrega sob demanda o transporte da Mesa pela rede (SUB-08); nenhum byte dele entra no shell. Ainda sem chamador na
+ * tela: a escolha entre `BroadcastChannel` e rede vem na próxima fatia.
+ * @returns {Promise<typeof import("./vtt-rtc-transport.js")>} Módulo do transporte WebRTC.
+ */
+export const loadRtcVttTransport = () => import("./vtt-rtc-transport.js");
+
 /** @param {object} state @param {object} invite @param {object} keypair */
 function stampPlayerJoinState(state, invite, keypair) {
   state.vttKeypair = keypair;
