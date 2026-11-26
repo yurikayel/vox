@@ -86,8 +86,10 @@ O teste com pessoas e redes reais é o `SUB-14` e fica fora.
   - Decidido em 25/11/2026: opção A (WebRTC) (opção recomendada; autorização geral do mantenedor).
 - **D2. Endereço do Mestre:** o `routeId` do Mestre como identidade na sinalização, ou o convite passa a levar outro dado?
   - Decidido em 25/11/2026: o `routeId` do Mestre é a identidade na sinalização e o convite não muda (opção recomendada; autorização geral do mantenedor).
+  - **Emenda (26/11/2026):** a identidade vale com prova de posse no canal, não no nó: ao abrir o canal, Mestre e jogador assinam com a chave da mesa quem são, com quem falam e as impressões DTLS das duas pontas, e cada lado confere que a chave deriva o `routeId` do elo. Sem a prova, nada da mesa passa e o elo cai (`auth_failed`).
 - **D3. Cifra de mensagem da mesa:** exigir cifra de mensagem da mesa (derivada da `roomKey` ou outra) já no v1, ou só se a opção B entrar?
   - Decidido em 25/11/2026: sem cifra própria de mensagem no v1; as ops seguem assinadas. **Condição:** o código prova, por teste, que a mesa usa só `RTCDataChannel`; se a opção B entrar, a cifra volta a ser exigida (opção recomendada; autorização geral do mantenedor).
+  - **Emenda (26/11/2026):** a D3 deixa de se apoiar em "o DTLS autentica o par": a autenticação é a prova do canal descrita na D2. Fora do escopo desta emenda: o registro no nó continua sem prova e o limite de elos simultâneos (`VTT_MAX_LINKS`) segue, agora atenuado pelo prazo de 10 s da prova.
 - **D4. TURN:** não há TURN hoje; a operação de TURN e o 2º nó (`INF-01…04`) ficam adiados até passar de 50 usuários ativos (decisão de 19/11/2026). Confirmar que a mesa em rede aceita, no v1, só conectar onde STUN basta, e que o TURN entra depois do gatilho.
   - Decidido em 25/11/2026: confirmado: só STUN no v1 e TURN depois do gatilho (opção recomendada; autorização geral do mantenedor).
 - **D5. Sinalização:** a mesa usa o nó de sinalização público atual ou espera o caminho Nostr (REV-09)?
@@ -104,3 +106,4 @@ O teste com pessoas e redes reais é o `SUB-14` e fica fora.
 - **Estado na tela:** `connecting`, `waiting_peer`, `open` e `error`, em região `aria-live="polite"` (`renderVttConnection`).
 - **Liveness:** esgotadas as 4 ofertas por elo, um Mestre que reinicia só é reofertado quando o app cria um elo novo para ele.
 - **STUN:** sem configuração o padrão do produto segue o decidido (STUN público). `vox.lab.mesa-rede.ice` aceita até 4 entradas `stun:host[:porta]`; texto vazio = só candidatos locais (nenhum tráfego externo, o que os testes usam); entrada inválida também vira lista vazia.
+- **Prova de posse no canal:** com `auth` (par de chaves da mesa), o transporte manda um `VTT_AUTH` ao abrir o canal e só libera a mesa depois de conferir o do outro lado; prazo de 10 s. O `chooseVttTransport` sempre passa o par de chaves; sem ele a rede não abre e a Mesa usa `BroadcastChannel`. Estado novo na tela do jogador: `auth_failed` ("Não foi possível confirmar que este é o Mestre da Mesa.").
