@@ -20,7 +20,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 test("pacote: dnd5e-2024 é válido, está registrado e traz 6 atributos, 18 perícias e os recursos da spec", () => {
   assert.deepEqual(validateSystemPack(pack), { ok: true, errors: [] });
   assert.equal(getSystemPack("dnd5e-2024"), pack);
-  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024"]);
+  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024", "t20"]);
   assert.equal(pack.abilities.length, 6);
   assert.equal(pack.skills.length, 18);
   assert.deepEqual(pack.resources.map((r) => r.id), ["hp", "hit-dice", "spell-slots", "heroic-inspiration", "death-saves"]);

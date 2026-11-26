@@ -80,7 +80,7 @@ test("malformado, tipo errado, formato e sistema inválidos são recusados com m
     [enc("{não é json"), /JSON válido/],
     [enc({ ...valid(), kind: "outro" }), /Não é um arquivo \.voxchar/],
     [enc({ ...valid(), format: 2 }), /formato 2/],
-    [enc({ ...valid(), system: { id: "t20", version: 1 } }), /não está instalado/],
+    [enc({ ...valid(), system: { id: "gurps4e", version: 1 } }), /não está instalado/],
     [enc({ ...valid(), system: { id: "dnd5e-2024", version: 99 } }), /versão 99/],
     [new Uint8Array(0), /vazio/],
   ];

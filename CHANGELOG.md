@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: novo sistema "Tormenta20 (estrutura)" no seletor, com 6 atributos, 29 perícias básicas, PV, PM e Defesa; sem nenhum texto do livro. A tela de derivados ainda é a do D&D (spec `pacote-t20-v0`).
+
 - HUD da Mesa: cinto de 4 consumíveis (itens com a tag `consumivel`; clicar gasta 1), indicador de magia no rótulo do sistema (só com espaços de magia), favoritos (até 6, marcados em "Favoritar" na mochila) que ocupam as vagas de atalhos, e o PV próprio passa a ser anunciado por uma região viva fixa. Painéis em meia tela ficam para o próximo PR.
 - Ficha: criar ou salvar ficha como jogador não troca mais a ficha ativa da mesa, que é decisão do Mestre; o jogador remoto continua vendo a própria ficha. Para o Mestre e no modo local nada muda.
 - HUD da Mesa: abaixo do mapa aparecem o retrato (iniciais e cor do token), nome, PV, CA e condições da ficha própria (até 4, com "+N"), os retratos do grupo com PV e, no celular, a linha "Nome · PV · CA". De outras pessoas só aparece o que a projeção do jogador entrega (PV em número ou rótulo de estado, conforme o modo do token).
