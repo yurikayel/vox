@@ -22,6 +22,14 @@ function channelFactory(log) {
   };
 }
 
+/** SDP falso com a impressão `a=fingerprint:` que o navegador real põe (hex aleatório por conexão). */
+function fakeSdp() {
+  const hex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0").toUpperCase());
+  return `v=0
+a=fingerprint:sha-256 ${hex.join(":")}
+`;
+}
+
 /**
  * Cria uma "rede" de `RTCPeerConnection` falsas ligadas entre si pela oferta/resposta.
  * @returns {{ createPeerConnection: () => object, log: { labels: string[], sent: string[], channels: object[] }, last: () => object }} Fábrica e registro.
@@ -45,10 +53,12 @@ export function createFakeRtcNetwork() {
     pcs.set(pc.id, pc);
     lastPc = pc;
     pc.createDataChannel = (label) => { const ch = makeChannel(label); pc.channels.push(ch); log.labels.push(label); return ch; };
-    pc.createOffer = async () => ({ type: "offer", pcId: pc.id });
-    pc.createAnswer = async () => ({ type: "answer", pcId: pc.id });
+    pc.sdp = fakeSdp();
+    pc.createOffer = async () => ({ type: "offer", pcId: pc.id, sdp: pc.sdp });
+    pc.createAnswer = async () => ({ type: "answer", pcId: pc.id, sdp: pc.sdp });
     pc.setLocalDescription = async (desc) => { pc.localDescription = desc; };
     pc.setRemoteDescription = async (desc) => {
+      pc.remoteDescription = desc;
       const other = pcs.get(desc.pcId);
       if (desc.type === "offer") link(other, pc);
       else queueMicrotask(() => pc.channels.forEach((ch) => { ch.open(); ch.peer?.open(); }));
