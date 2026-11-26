@@ -98,3 +98,72 @@ JSON comprimido (`CompressionStream` nativo, sem dependência) e codificado em b
 8. Importar não altera a ficha existente.
 9. Número fora da faixa e itens em excesso são recusados com o campo e o motivo.
 10. Exportar uma ficha com `notes_gm` e `owner_pubkey_p256` preenchidos não os leva ao arquivo.
+
+## 9. Emenda (rascunho): link só de leitura e cópia-modelo (SUB-04, parte 2)
+
+> **Status desta emenda:** rascunho; aguarda as decisões da §9.6. Zero código antes do aceite. O que não está no código nem nos docs vai marcado **(proposta)**.
+
+### 9.1 O que já existe
+
+- **Arquivo e importação (parte 1):** `exportVoxchar` (`client/js/dungeon/voxchar.js:80`), `importVoxchar` (`voxchar.js:115`) e `checkVoxchar` (`client/js/dungeon/voxchar-check.js:103`), com limite de 256 KiB (`voxchar-check.js:12`) e lista branca. `importVoxchar` já cria a ficha **com id novo e sem estado de jogo** (PV, espaços, condições, Exaustão e dados gastos nunca entram no arquivo, §3).
+- **Cópia-modelo hoje:** a §5 diz que ela é o próprio import. Não existe botão nem marca de "modelo" no código; a ficha importada é uma ficha comum.
+- **Link:** só a opção descrita na §6 (fragmento comprimido), sem código. Sem `CompressionStream` em `client/js`; `DecompressionStream` (deflate-raw) só em `client/js/labs/parado/webxdc-loader.js:5,57`, que confere o suporte. Sem suporte no navegador: não gera link, oferece só o arquivo e explica o motivo.
+- **Convites da mesa** usam fragmento (`#k=`) fora da query (`client/js/dungeon/vtt-sync-codec.js:48`), precedente de como o app trata segredo em URL. O aviso de que o fragmento fica no navegador de quem abre **não está no código** **(proposta:** passa a existir na tela de geração, §9.3).
+- **Modo só leitura:** não existe tela de ficha "somente leitura" para dados de fora; a ficha do jogador na mesa (`viewerRole` em `screen-sheet.js:186`) é outra coisa.
+
+### 9.2 O que a spec ainda não define
+
+Formato do link (esquema, compressão, versão), de onde vem o conteúdo, onde o link abre, validade, revogação, o que a cópia-modelo leva ou zera, e como o app avisa que o dado é de outra pessoa.
+
+### 9.3 Link só de leitura **(proposta)**
+
+- **Formato:** `#/ficha/ver#voxchar=<base64url>`, em que o valor é o mesmo JSON do `.voxchar` comprimido (deflate pelo `CompressionStream` nativo, com suporte conferido) e depois codificado em base64url. Rota e nome são proposta (D2).
+- **Transporte:** o fragmento não vai ao servidor. Funciona sem infraestrutura, mas fica no histórico do navegador e com quem recebe o link (já dito na §6).
+- **Limite:** compressão antes do limite; o link só é gerado quando o resultado cabe em cerca de 8 KB (D3); ficha maior só por arquivo, com mensagem explicando.
+- **Abertura:** (a) recusa o fragmento acima de ~12 KB de base64 **antes** de decodificar (os ~8 KB da D3 valem só para gerar); (b) descomprime lendo o stream em pedaços e **aborta ao passar de 256 KiB**, sem ler tudo para depois medir (proteção contra "bomba de compressão"); (c) **(proposta)** depois de ler o fragmento, troca a URL por `#/ficha/ver` com `history.replaceState` (precedente: `client/js/app/screens-sync.js:17` e `client/js/app/screens-dm-draft.js:91`); passa o resultado pelo **mesmo `checkVoxchar`** e só então mostra. Não grava nada, nem em `localStorage`, nem no store.
+- **Dado de outra pessoa é não confiável:** mesmas defesas da §4 (lista branca, faixas, nenhum `innerHTML`, `__proto__` e `constructor` ignorados). A tela diz que o conteúdo veio de um link e não foi conferido por ninguém; o app não afirma autoria nem integridade (o `.voxchar` não é assinado, §2).
+- **Validade e revogação:** **não existem e não podem existir sem servidor.** O link é uma cópia do conteúdo no momento da geração: quem o tem continua a vê-lo para sempre e a ficha original não pode "tirar" o acesso. A tela de geração deve dizer isso. Revogar de verdade exigiria servidor ou id com consulta (fora do v1, D4).
+- **Privacidade:** o link fica no histórico e na sincronização do navegador e com quem o receber; a tela de geração avisa isso. O link contém a ficha-base inteira (nome, itens, notas públicas). Antes de gerar, a tela mostra o que vai e pede confirmação (D5). Notas do Mestre nunca vão (§3).
+
+### 9.4 Cópia-modelo **(proposta)**
+
+- **O que leva:** a ficha-base do arquivo (a mesma lista branca da §2), exatamente como o import de hoje.
+- **O que zera:** o estado de jogo (já ausente do arquivo): PV no máximo do padrão, espaços no máximo, sem condições, Exaustão 0, Dados de Vida inteiros, sem marcas de morte, `delta_ledger` vazio.
+- **O que a distingue do import comum:** a única diferença é o ponto de partida: abrir o link de visualização e tocar em "Usar como modelo" cria a ficha nova com o mesmo código do import; não há marca de "modelo" gravada na ficha (D6).
+- **Id, campanha e dono** vêm da instalação que cria, nunca do link (§3).
+- **Origem de dados:** mesmos limites e `checkVoxchar` da importação.
+
+### 9.5 Código e interface **(proposta)**
+
+- Módulo `client/js/dungeon/voxchar-link.js` com `buildVoxcharLink(sheet)` e `parseVoxcharLink(hash)`, por `import()` dinâmico; nenhum byte em `SHELL_ASSETS`.
+- Botão "Copiar link da ficha" no painel Editar, ao lado de Exportar/Importar (`screen-sheet-levelup.js`).
+- Tela de visualização somente leitura renderizada pelos renderizadores existentes, que escapam o texto, com os botões "Usar como modelo" e "Baixar .voxchar".
+- Funções com no máximo 30 LLOC e JSDoc em todo export.
+- Não toca em Fairplay, `vtt-sync.js` nem no harness E2E.
+
+### 9.6 Decisões abertas para o mantenedor
+
+- **D1.** Aceita o link por fragmento comprimido como forma de compartilhar a ficha?
+- **D2.** Rota e nome do link (proposta: `#/ficha/ver#voxchar=…`)?
+- **D3.** Limite de tamanho do link (proposta: ~8 KB) e o que fazer acima dele (proposta: só arquivo).
+- **D4.** Revogação: aceitar que não existe no v1 (proposta) ou adiar o link até haver servidor?
+- **D5.** Confirmação antes de gerar o link, mostrando o que vai.
+- **D6.** Cópia-modelo sem marca gravada na ficha (proposta) ou com marca de "modelo"?
+- **D7.** O botão de gerar entra no mesmo PR da tela de visualização, ou atrás de flag?
+
+### 9.7 Testes previstos e o que falharia na base
+
+| # | Teste | Falha na base? |
+| :-- | :--- | :--- |
+| 1 | `buildVoxcharLink` e `parseVoxcharLink` fazem ida e volta e o resultado passa no `checkVoxchar` | Sim: o módulo não existe |
+| 2 | Link acima do limite não é gerado, com o motivo | Sim |
+| 3 | Descompressão que passa de 256 KiB é interrompida e recusada (bomba de compressão) | Sim |
+| 4 | Link malformado, truncado, base64 inválido ou de `format` maior é recusado com motivo e nada é gravado (espiar store e `localStorage`) | Sim |
+| 5 | Conteúdo hostil (`__proto__`, `constructor`, número fora da faixa, texto com marcação) é recusado ou escapado, igual à §4 | Parcial: `checkVoxchar` já cobre o conteúdo; falha pelo caminho do link |
+| 6 | A visualização não grava nada ao abrir | Sim |
+| 7 | "Usar como modelo" cria ficha com id novo, campanha da instalação e estado de jogo no padrão | Sim: depende do link |
+| 8 | O link gerado não contém `notes_gm`, `owner_pubkey_p256`, `campaign_id`, `character_id` nem retrato | Sim |
+| 9 | Entrada acima de ~12 KB de base64 é recusada antes de decodificar | Sim |
+| 10 | Sem `CompressionStream`/`DecompressionStream`, cai para o arquivo com o motivo e não gera link | Sim |
+| 11 | Abrir o link não dispara fetch nem XHR (espiar a rede) e a URL é trocada por `#/ficha/ver` | Sim |
+| 12 | O módulo do link não está em `SHELL_ASSETS` e só carrega ao gerar ou abrir link | Parcial: a parte "fora de `SHELL_ASSETS`" passa na base; "só carrega ao gerar ou abrir" falha |

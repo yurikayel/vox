@@ -18,8 +18,8 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_sync_e2e import _add_token, _generate_invite, _watch_errors
-from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_gm
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _goto_ready, _new_isolated_page
+from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 ROLL_ID = "e2e-roll"
 WAIT_MS = int(os.environ.get("VOX_E2E_WAIT_MS", "30000"))
@@ -134,8 +134,7 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             if flag:
                 page.add_init_script(FLAG_ON)
             _watch_errors(page, errors)
-            _goto_ready(page, invite)
-            page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+            _join_as_player(page, invite)
             players.append(page)
             if flag:
                 _admit_players(gm, sum(1 for f in flags[1:i + 1] if f))

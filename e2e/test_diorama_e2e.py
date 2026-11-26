@@ -20,8 +20,8 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_sync_e2e import _add_token, _drag_cell, _generate_invite, _watch_errors
-from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_gm
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _goto_ready, _new_isolated_page
+from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 WAIT_MS = 30000
 GL_MS = 10000
@@ -145,8 +145,7 @@ class DioramaPlaywrightE2ETests(PlaywrightE2EHarness):
         _drag_cell(gm, (1, 1), (9, 6))
         player = ctx.new_page()
         _watch_errors(player, errors)
-        _goto_ready(player, invite)
-        player.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+        _join_as_player(player, invite)
         expect(player.locator(".dungeon-token-roster")).to_contain_text("Lyra", timeout=WAIT_MS)
         return ctx, gm, player, errors
 

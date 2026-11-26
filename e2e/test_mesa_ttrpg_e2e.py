@@ -18,6 +18,13 @@ if str(_E2E_DIR) not in sys.path:
 from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _complete_onboarding, _goto_ready, _new_isolated_page
 
 
+def _join_as_player(page, invite):
+    """Abre o convite e espera o app ter subido (a Mesa montada) antes da etapa de entrada na mesa; sem prazo maior."""
+    page.goto(invite, wait_until="domcontentloaded")
+    page.locator(".dungeon-sanctum").wait_for(state="attached", timeout=15000)
+    page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+
+
 def _goto_mesa(page, base_url, table_id="vila-nova"):
     _goto_ready(page, f"{base_url}/#/dungeon/mesa/{table_id}")
     page.locator(".dungeon-sanctum[data-dungeon-screen='mesa']").wait_for(state="visible", timeout=15000)
