@@ -42,14 +42,30 @@ export function isMesaRedeLabEnabled(storage = globalThis.localStorage) {
   return readKey(storage, MESA_REDE_LAB_KEY) === "1";
 }
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/** Protocolo `ws:`/`wss:` com host e sem credenciais, consulta ou fragmento; `ws:` (sem TLS) só em endereço local. */
+function isAllowedNodeUrl(url) {
+  if (url.protocol !== "ws:" && url.protocol !== "wss:") return false;
+  if (!url.hostname || url.username || url.password || url.search || url.hash) return false;
+  return url.protocol === "wss:" || LOCAL_HOSTS.has(url.hostname);
+}
+
 /**
- * Endereço do nó de sinalização salvo para a Mesa (só `ws:` ou `wss:`).
+ * Endereço do nó de sinalização salvo para a Mesa, validado e normalizado: `wss:` (ou `ws:` só em localhost, 127.0.0.1 e
+ * [::1]), com host, sem usuário, senha, `?` nem `#` (tokens) e sem barra invertida ou caracteres de controle.
  * @param {Storage|null} [storage] Armazenamento local (padrão `globalThis.localStorage`).
- * @returns {string} URL válida ou texto vazio.
+ * @returns {string} `href` normalizado ou texto vazio.
  */
 export function readMesaRedeUrl(storage = globalThis.localStorage) {
   const raw = String(readKey(storage, MESA_REDE_URL_KEY) || "").trim();
-  return /^wss?:\/\/[^\s]+$/i.test(raw) && raw.length <= 512 ? raw : "";
+  if (!raw || raw.length > 512 || /[\\?#\s\x00-\x1f]|%00/i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    return isAllowedNodeUrl(url) ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
 /**
@@ -103,18 +119,29 @@ function broadcastResult(opts, fallback) {
   return { kind: "mesma_origem", transport: make(opts.tableId, opts.peerId), fallback };
 }
 
+/** Cria sinalização e transporte; se o transporte não nascer, fecha a sinalização (e o que existir) antes de repassar o erro. */
+function openNetwork(opts, url, { rtc, sig, onSignaling, onLink, onAbort }) {
+  const signaling = sig.createVttSignalingClient({ url, peerId: opts.peerId, WebSocketImpl: opts.WebSocketImpl, onStatus: onSignaling });
+  try {
+    const transport = rtc.createRtcVttTransport({ peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection, onStatus: onLink });
+    return { signaling, transport };
+  } catch (err) {
+    onAbort();
+    signaling.close();
+    throw err;
+  }
+}
+
 async function buildNetwork(opts, url) {
   const [rtc, sig] = await Promise.all([(opts.loadRtc || loadRtcVttTransport)(), (opts.loadSignaling || loadVttSignalingClient)()]);
   const parts = { signaling: "connecting", links: {}, initiate: Boolean(opts.initiate) };
-  const publish = () => opts.onConnection?.({ transport: "rede", status: summarizeConnection(parts) });
-  const signaling = sig.createVttSignalingClient({ url, peerId: opts.peerId, WebSocketImpl: opts.WebSocketImpl, onStatus: (s) => { parts.signaling = s; publish(); } });
-  const transport = rtc.createRtcVttTransport({
-    peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection,
-    onStatus: (id, s) => { parts.links[id] = s; publish(); },
-  });
+  let live = true;
+  const publish = () => { if (live) opts.onConnection?.({ transport: "rede", status: summarizeConnection(parts) }); };
+  const hooks = { rtc, sig, onSignaling: (s) => { parts.signaling = s; publish(); }, onLink: (id, s) => { parts.links[id] = s; publish(); }, onAbort: () => { live = false; } };
+  const net = openNetwork(opts, url, hooks);
   publish();
-  const close = () => { transport.close(); signaling.close(); };
-  return { kind: "rede", transport: Object.assign(Object.create(transport), { close }), fallback: false };
+  const close = () => { live = false; net.transport.close(); net.signaling.close(); };
+  return { kind: "rede", transport: Object.assign(Object.create(net.transport), { close }), fallback: false };
 }
 
 /**

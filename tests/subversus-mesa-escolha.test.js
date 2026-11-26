@@ -138,3 +138,38 @@ test("o Mestre gera o convite pela rede com a flag e vê o estado open quando o 
   st.syncPeer.close();
   assert.equal(sockets[0].closed, true);
 });
+
+test("endereço do nó: só ws/wss com host, sem credenciais, consulta ou fragmento; ws só em localhost", () => {
+  const url = (v) => readMesaRedeUrl(store("1", v));
+  for (const bad of [
+    "wss://user@no.exemplo/", "wss://user:senha@no.exemplo/", "wss://no.exemplo\@outro.exemplo/", "wss://?", "wss://#x", "wss://:80",
+    "wss://no%00.exemplo/", "wss://no.exemplo/?token=1", "wss://no.exemplo/#t", "wss://no.exemplo/?", "wss://no.exemplo/#",
+    "ws://no.exemplo/ws", "ws://127.0.0.2/", "wss:", "ftp://no.exemplo/",
+  ]) assert.equal(url(bad), "", bad);
+  assert.equal(url("WSS://No.Exemplo/WS"), "wss://no.exemplo/WS", "protocolo e host em minúsculas");
+  assert.equal(url("ws://localhost:3921"), "ws://localhost:3921/");
+  assert.equal(url("ws://127.0.0.1:3921"), "ws://127.0.0.1:3921/");
+  assert.equal(url("ws://[::1]:3921"), "ws://[::1]:3921/");
+});
+
+test("queda sem vazamento: o transporte que lança fecha a sinalização, cancela o prazo e não gera mais eventos de rede", async () => {
+  const { FakeWebSocket, sockets } = fakeWs();
+  const cancelled = [];
+  const events = [];
+  const sigMod = await import("../client/js/dungeon/vtt-signaling-client.js");
+  const loadSignaling = async () => ({
+    createVttSignalingClient: (o) => sigMod.createVttSignalingClient({ ...o, schedule: () => "prazo", cancel: (h) => cancelled.push(h) }),
+  });
+  const loadRtc = async () => ({ createRtcVttTransport: () => { throw new Error("sem RTCPeerConnection"); } });
+  const out = await chooseVttTransport(base({ storage: ON, WebSocketImpl: FakeWebSocket, loadSignaling, loadRtc, onConnection: (c) => events.push(c) }));
+  assert.equal(out.kind, "mesma_origem");
+  assert.equal(out.fallback, true);
+  assert.equal(sockets[0].closed, true, "sinalização fechada");
+  assert.deepEqual(cancelled, ["prazo"], "prazo do registro cancelado");
+  const after = events.length;
+  sockets[0].onopen?.();
+  sockets[0].receive({ type: "registered", peerId: "me", peers: [] });
+  sockets[0].onclose?.();
+  assert.equal(events.length, after, "o descartado não publica mais");
+  assert.ok(events.every((e) => e.transport === "mesma_origem"), "nenhum evento de rede");
+});
