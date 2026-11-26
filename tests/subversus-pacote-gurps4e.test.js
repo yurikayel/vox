@@ -96,7 +96,7 @@ test("gurps4e: nenhum texto de livro no pacote (sem chaves de descrição, perí
   const keys = new Set(json.match(/"[a-zA-Z]+":/g));
   for (const forbidden of ['"description":', '"text":', '"rules":', '"advantages":', '"disadvantages":', '"spells":', '"tables":']) assert.equal(keys.has(forbidden), false, forbidden);
   const long = [...json.matchAll(/"([^"]{41,})"/g)].map((m) => m[1]);
-  assert.deepEqual(long.filter((t) => t !== GURPS4E_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Nomes de mecânica")), []);
+  assert.deepEqual(long.filter((t) => t !== GURPS4E_ATTRIBUTION && t !== GURPS4E_PACK.license.notice && !t.startsWith("https://") && !t.startsWith("Nomes de mecânica")), []);
   assert.notEqual(GURPS4E_PACK.license.spdx, "CC-BY-4.0");
 });
 

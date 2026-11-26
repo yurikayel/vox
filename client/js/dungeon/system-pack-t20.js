@@ -16,9 +16,13 @@
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
 
+/** Aviso curto de não afiliação, mostrado no seletor de sistema. @type {string} */
+const T20_NOTICE =
+  "Tormenta20 é publicado pela Jambô Editora. O Vox não tem vínculo com a Jambô Editora nem com os titulares da marca, e não é endossado por eles.";
+
 /** Aviso de conteúdo do pacote, mostrado em "Sobre este conteúdo". @type {string} */
 export const T20_ATTRIBUTION =
-  "Este pacote traz só estrutura e matemática próprias do Vox e nomes curtos de atributos e perícias como termos de jogo. Nenhum texto do livro (poderes, magias, classes, raças, divindades, descrições) está incluído; descrições são escritas ou importadas por você. Tormenta20 é marca de seus titulares, sem vínculo com o Vox.";
+  "Este pacote traz só estrutura e matemática próprias do Vox e nomes curtos de atributos e perícias como termos de jogo. Nenhum texto do livro (poderes, magias, classes, raças, divindades, descrições) está incluído; descrições são escritas ou importadas por você. " + T20_NOTICE;
 
 const ability = (id, label, short) => Object.freeze({ id, label, short });
 const skill = (id, label, abilityId) => Object.freeze({ id, label, ability: abilityId });
@@ -31,6 +35,7 @@ export const T20_PACK = Object.freeze({
   license: Object.freeze({
     spdx: "LicenseRef-Vox-Estrutura-Propria",
     attribution: T20_ATTRIBUTION,
+    notice: T20_NOTICE,
     source: "Nomes e ligações de mecânica de jogo; estrutura e matemática do Vox",
     url: "https://github.com/yurikayel/vox/blob/develop/docs/legal/licenca-e-contribuicoes.md",
   }),
