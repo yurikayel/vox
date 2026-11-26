@@ -101,7 +101,7 @@ function newContext(opts, ws) {
   const ctx = {
     opts, handlers: new Set(), joinHandlers: new Set(), online: new Set(), pending: [], state: "connecting",
     transmit: (data) => ws.send(JSON.stringify(pickFields(data))),
-    cancel: opts.cancel || clearTimeout,
+    cancel: opts.cancel || ((handle) => clearTimeout(handle)),
   };
   ctx.setState = (next) => {
     if (ctx.state === next || ctx.state === "closed") return;
