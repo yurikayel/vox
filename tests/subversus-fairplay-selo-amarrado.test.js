@@ -128,7 +128,8 @@ test("i) sem @ na fórmula, a conta resolvida não pode trazer bônus inventado"
 
 test("j) o que aparece na entrada (dados, críticos e total) tem de bater com a conta refeita", async () => {
   const t = await closedTable(["ana", "bia", "gm"]);
-  recordAs(t, "ana", "roll-1", { crits: 1 });
+  const honestCrits = rollDiceFormula("1d20", { fairplayValue: t.value }).crits;
+  recordAs(t, "ana", "roll-1", { crits: honestCrits + 1 });
   const seals = await sealsOf(t);
   assert.equal(seals[t.box.doc.chronicle[0].id].status, "unverified");
 });
