@@ -15,6 +15,8 @@ const MAX_PENDING = 32;
 /** Quanto esperar o `registered` do nó antes de declarar erro de conexão. */
 export const VTT_REGISTER_TIMEOUT_MS = 10_000;
 const MAX_PEER_ID = 256;
+/** Teto de ppares lembrados como presentes (16 enlaces × 4). */
+const MAX_ONLINE = 64;
 
 function parseFrame(raw) {
   if (typeof raw !== "string" || raw.length > VTT_MAX_SIGNAL_CHARS) return null;
@@ -33,14 +35,26 @@ function pickFields(data) {
 
 const validId = (id) => typeof id === "string" && id.length > 0 && id.length <= MAX_PEER_ID;
 
+function notifyJoined(ctx, id) {
+  ctx.joinHandlers.forEach((fn) => { try { fn(id); } catch { /* ouvinte ruim */ } });
+}
+
+/** `registered`: quem já estava no nó conta como presente e os ouvintes são avisados (o nó não manda `peer-joined` deles). */
+function trackRegistered(ctx, data) {
+  const ids = (Array.isArray(data.peers) ? data.peers : []).filter((id) => validId(id) && id !== ctx.opts.peerId).slice(0, MAX_ONLINE);
+  ctx.online = new Set(ids);
+  ids.forEach((id) => notifyJoined(ctx, id));
+}
+
 /** Presença no nó: quem já estava (`registered`), quem entrou e quem saiu; avisa os ouvintes de `onPeerJoined`. */
 function trackPresence(ctx, data) {
-  if (data.type === "registered" && data.peerId === ctx.opts.peerId) {
-    ctx.online = new Set((Array.isArray(data.peers) ? data.peers : []).filter(validId));
-  } else if (data.type === "peer-joined" && validId(data.peerId)) {
+  if (data.type === "registered" && data.peerId === ctx.opts.peerId) trackRegistered(ctx, data);
+  else if (data.type === "peer-left") ctx.online.delete(data.peerId);
+  else if (data.type === "peer-joined" && validId(data.peerId) && data.peerId !== ctx.opts.peerId) {
+    if (!ctx.online.has(data.peerId) && ctx.online.size >= MAX_ONLINE) return;
     ctx.online.add(data.peerId);
-    ctx.joinHandlers.forEach((fn) => { try { fn(data.peerId); } catch { /* ouvinte ruim */ } });
-  } else if (data.type === "peer-left") ctx.online.delete(data.peerId);
+    notifyJoined(ctx, data.peerId);
+  }
 }
 
 /** O nó confirmou o registro: o enlace abre e a fila sai. */
@@ -52,6 +66,7 @@ function confirmRegistration(ctx, data) {
 }
 
 function onFrame(ctx, raw) {
+  if (ctx.state === "closed" || ctx.state === "error") return;
   const data = parseFrame(raw);
   if (!data) return;
   confirmRegistration(ctx, data);

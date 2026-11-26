@@ -48,6 +48,7 @@ function resolveFactory(opts) {
  * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`).
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
  * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
+ * @param {() => number} [opts.now] Relógio em ms (testes); padrão `Date.now`.
  * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full` ou `link_limit`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
@@ -135,7 +136,7 @@ function deliver(ctx, remoteId, raw) {
 
 function newLink(ctx, remoteId) {
   const pc = ctx.factory();
-  const link = { pc, channel: null, queue: [] };
+  const link = { pc, channel: null, queue: [], offers: 0, awaiting: false, offerAt: 0 };
   ctx.links.set(remoteId, link);
   pc.onicecandidate = (ev) => {
     if (ev.candidate) ctx.opts.signaling.send({ type: "ice", to: remoteId, candidate: ev.candidate });
@@ -151,6 +152,9 @@ function newLink(ctx, remoteId) {
 }
 
 async function startOffer(ctx, remoteId, link) {
+  link.offers += 1;
+  link.awaiting = true;
+  link.offerAt = nowOf(ctx);
   const offer = await link.pc.createOffer();
   await link.pc.setLocalDescription(offer);
   ctx.opts.signaling.send({ type: "offer", to: remoteId, sdp: link.pc.localDescription });
@@ -173,10 +177,17 @@ function ensureLink(ctx, remoteId, initiator) {
   return link;
 }
 
+/** Ofertas por elo (a primeira mais as reofertas) e quanto tempo uma oferta sem resposta ainda conta como em voo. */
+const MAX_OFFERS_PER_LINK = 4;
+const OFFER_TTL_MS = 15_000;
+const nowOf = (ctx) => (ctx.opts.now ? ctx.opts.now() : Date.now());
+
 /** O par registrou-se no nó (ou voltou): quem ainda não tem canal aberto oferta de novo; a oferta antes disso se perderia no nó. */
 function resumeOffer(ctx, remoteId) {
   const link = ctx.links.get(remoteId);
   if (ctx.closed || !ctx.opts.initiate || !link || link.channel?.readyState === "open") return;
+  if (link.awaiting && nowOf(ctx) - link.offerAt < OFFER_TTL_MS) return;
+  if (link.offers >= MAX_OFFERS_PER_LINK) return;
   startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
 }
 
@@ -195,7 +206,10 @@ async function applySignal(ctx, data) {
   if (type === "offer" && !ctx.opts.initiate) return answerOffer(ctx, from, data.sdp);
   const link = ctx.links.get(from);
   if (!link) return undefined;
-  if (type === "answer") return link.pc.setRemoteDescription(data.sdp);
+  if (type === "answer") {
+    link.awaiting = false;
+    return link.pc.setRemoteDescription(data.sdp);
+  }
   if (type === "ice" && data.candidate) return link.pc.addIceCandidate(data.candidate);
   return undefined;
 }
