@@ -45,7 +45,7 @@ function stepBody(wz, pack) {
     2: () => pack.abilities.map((a) => numberField(wz, a.id, esc(a.label || a.id), d.abilities[a.id], { min: 1, max: 30 })).join(""),
     3: () => `${checkGroup(wz, "skill", "Perícias treinadas", pack.skills, d.proficientSkills)}${checkGroup(wz, "expertSkill", "Especialização (só em perícia treinada)", pack.skills.filter((s) => d.proficientSkills.includes(s.id)), d.expertSkills)}`,
     4: () => checkGroup(wz, "saveProf", "Salvaguardas treinadas", pack.abilities.map((a) => ({ id: a.id, label: a.label || a.id })), d.proficientSaves),
-    5: () => `${numberField(wz, "armorClass", "CA", d.armor_class, { min: 1, max: 40 })}${numberField(wz, "speedFt", "Deslocamento (pés)", d.speed_ft, { min: 0, max: 200 })}${hitDieField(wz, d)}`,
+    5: () => `${numberField(wz, "armorClass", "CA", d.armor_class, { min: 1, max: 40 })}${numberField(wz, "speedFt", "Deslocamento (pés)", d.speed_ft, { min: 0, max: 200 })}${pack.formulas.hitDice ? hitDieField(wz, d) : ""}`,
     6: () => itemsBody(wz, pack),
     7: () => summaryBody(wz, pack),
   };
@@ -76,7 +76,7 @@ function summaryBody(wz, pack) {
   const view = deriveSheet(pack, { level: 1, abilities: d.abilities, proficientSkills: d.proficientSkills, expertSkills: d.expertSkills, proficientSaves: d.proficientSaves }, {});
   const mods = pack.abilities.map((a) => `<li>${esc(a.label || a.id)} ${esc(d.abilities[a.id])} (mod. ${esc(view.abilities.find((x) => x.id === a.id)?.modifier ?? "")})</li>`).join("");
   return `<p><strong>${esc(d.name)}</strong> · ${esc(d.class_name)} ${esc(d.ancestry)} · nível 1</p>
-    <p>CA ${esc(d.armor_class)} · Deslocamento ${esc(d.speed_ft)} pés · Dado de Vida d${esc(d.hitDie)} · ${d.items.length} item(ns)</p><ul>${mods}</ul>
+    <p>CA ${esc(d.armor_class)} · Deslocamento ${esc(d.speed_ft)} pés${pack.formulas.hitDice ? ` · Dado de Vida d${esc(d.hitDie)}` : ""} · ${d.items.length} item(ns)</p><ul>${mods}</ul>
     <p>Bônus de proficiência +${esc(view.proficiency)} · Iniciativa ${esc(view.initiative)} · Percepção passiva ${esc(view.passivePerception)}</p>
     <p class="dungeon-muted">Nada foi salvo ainda. "Criar ficha" grava tudo de uma vez.</p>`;
 }
@@ -89,7 +89,7 @@ function navHtml(wz) {
 }
 
 function guidedHtml(wz) {
-  const pack = getSystemPack(WIZARD_SYSTEM_ID);
+  const pack = getSystemPack(wz.systemId || WIZARD_SYSTEM_ID);
   const title = `Passo ${wz.step} de ${WIZARD_STEPS.length}: ${WIZARD_STEPS[wz.step - 1]}`;
   const focus = wz.issues.length ? "" : " data-wizard-focus";
   return `<h3 tabindex="-1"${focus}>${title}</h3>${alertHtml(wz.issues)}<div data-wizard-form>${stepBody(wz, pack)}</div>${navHtml(wz)}`;

@@ -6,6 +6,7 @@
 import { rollDiceFormula } from "./dice-engine.js";
 import { getActiveScene } from "./dungeon-scene-actions.js";
 import { dispatchCampaignOp } from "./dungeon-sync-bridge.js";
+import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { normalizeTokenConditions } from "./vtt-tactics-schema.js";
 
@@ -14,7 +15,21 @@ function getActiveFloor(scene) {
 }
 
 /**
- * Rola iniciativa (`1d20+@des` p/ ficha ativa ou `1d20` p/ NPCs) para todos os tokens do piso ativo.
+ * Fórmula de iniciativa da ficha ativa: o mesmo número que a faixa de derivados mostra quando o pacote
+ * é conhecido; sem pacote, o modificador de Destreza do D&D (`@des`).
+ * @param {object|null} sheet Ficha ativa.
+ * @returns {string} Fórmula de dados (`1d20+4`, `1d20-1`, `1d20` ou `1d20+@des`).
+ */
+function initiativeFormulaFor(sheet) {
+  const sys = resolveSheetSystem(sheet);
+  if (!sys) return "1d20+@des";
+  const n = Math.trunc(sys.derived.initiative);
+  if (!n) return "1d20";
+  return n > 0 ? `1d20+${n}` : `1d20-${Math.abs(n)}`;
+}
+
+/**
+ * Rola iniciativa (ficha ativa pelo derivado do pacote ou `1d20` p/ NPCs) para todos os tokens do piso ativo.
  * @param {object} state Estado da sessão.
  * @param {object} [opts={}] Opções (`store`, `randomBytesFn`).
  * @returns {Promise<object>} Estado de iniciativa atualizado.
@@ -24,7 +39,7 @@ export async function rollInitiativeForScene(state, opts = {}) {
   const scene = getActiveScene(state);
   const tokens = (scene.tokens || []).filter((t) => t.floorZ === scene.activeFloorZ);
   for (const tok of tokens) {
-    const formula = tok.sheetId && tok.sheetId === state.sheet?.character_id ? "1d20+@des" : "1d20";
+    const formula = tok.sheetId && tok.sheetId === state.sheet?.character_id ? initiativeFormulaFor(state.sheet) : "1d20";
     const rolled = rollDiceFormula(formula, { sheet: state.sheet, randomBytesFn: opts.randomBytesFn });
     const rollVal = rolled.ok ? rolled.total : 10;
     await dispatchCampaignOp(state, "INITIATIVE_SET_ENTRY", {

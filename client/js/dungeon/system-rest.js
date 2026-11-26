@@ -83,6 +83,7 @@ export function exhaustionEffect(pack, level) {
  * @returns {{ok: boolean, heal?: number, hitDiceSpent?: number, error?: string}} Cura e novo total gasto, ou o motivo da recusa.
  */
 export function spendHitDie(pack, choices, roll) {
+  if (!pack.formulas.hitDice) return { ok: false, error: "Este sistema não usa Dado de Vida." };
   const rest = normalizeRestChoices(pack, choices);
   if (rest.hitDiceSpent >= rest.hitDiceTotal) return { ok: false, error: "Sem Dados de Vida disponíveis; só um descanso longo os devolve." };
   const mod = abilityModifier(pack, choices.abilities?.[pack.formulas.hitDice.healAbility]);
