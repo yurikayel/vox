@@ -31,5 +31,5 @@ export function renderMapHud(state, scene) {
   const own = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet.character_id);
   const items = buildHudShortcuts(state.sheet, { ownTokenId: own?.tokenId, favorites: resolveHudFavorites(state.sheet) });
   const shortcuts = `<nav class="dungeon-hud dungeon-chips-row" aria-label="Atalhos rápidos" data-dungeon-zone="mapHud">${items.map(renderShortcut).join("")}</nav>`;
-  return `${renderHudPanel(state, scene)}${status}${shortcuts}${renderHudPanelButtons(state)}`;
+  return `<div class="dungeon-hud-dock">${renderHudPanel(state, scene)}${status}${shortcuts}${renderHudPanelButtons(state)}</div>`;
 }
