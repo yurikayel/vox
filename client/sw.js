@@ -534,6 +534,8 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/webxdc-crdt.js",
   "./js/labs/parado/webxdc-host.js",
   "./js/labs/parado/webxdc-loader.js",
+  // GURPS: matemática pronta e testada; a tela de derivados ainda não a usa (spec pacote-gurps4e-v0, §3).
+  "./js/dungeon/system-gurps-math.js",
 ];
 
 self.addEventListener("install", (event) => {
