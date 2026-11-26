@@ -1,7 +1,7 @@
 # Derivados e HUD por sistema — spec v0 (SUB-17)
 
-> **Status:** rascunho · **Owner:** mantenedor / revisor · **Escopo:** módulo `dungeon/` (ficha e HUD do **Subversus VTT**) · **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§4, §7, §9), [hud-jogo-v0.md](./hud-jogo-v0.md), [pacote-t20-v0.md](./pacote-t20-v0.md), [pacote-gurps4e-v0.md](./pacote-gurps4e-v0.md), [voxchar-v0.md](./voxchar-v0.md)
-> **Nota de governança (`ADR-017`):** este documento especifica contratos e critérios de aceite; as caixas `[ ]` de acompanhamento ficam só no `ROADMAP.md`. As decisões da §8 trazem a opção recomendada marcada; valem como aceitas pela autorização geral do mantenedor, salvo aviso.
+> **Status:** aceita em 26/11/2026 (opções recomendadas; autorização geral do mantenedor) · **Owner:** mantenedor / revisor · **Escopo:** módulo `dungeon/` (ficha e HUD do **Subversus VTT**) · **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§4, §7, §9), [hud-jogo-v0.md](./hud-jogo-v0.md), [pacote-t20-v0.md](./pacote-t20-v0.md), [pacote-gurps4e-v0.md](./pacote-gurps4e-v0.md), [voxchar-v0.md](./voxchar-v0.md)
+> **Nota de governança (`ADR-017`):** este documento especifica contratos e critérios de aceite; as caixas `[ ]` de acompanhamento ficam só no `ROADMAP.md`. As decisões da §8 foram tomadas em 26/11/2026 com a opção recomendada (autorização geral do mantenedor).
 
 ## 1. Problema (o que o código faz hoje)
 
@@ -92,18 +92,25 @@ Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo
 
 - **D1.** Onde o pacote declara os derivados: campo `display` de dado puro (recomendado), ou código por sistema no lugar do pacote?
   - **Recomendado: `display` de dado puro**, com `computed` só por nome de função registrada. Mantém o pacote como dado e o registro fechado.
+  - **Decidido em 26/11/2026:** campo `display` de dado puro (opção recomendada; autorização geral do mantenedor).
 - **D2.** Tornar `armorClass`, `initiative` e `passivePerception` opcionais no motor quando nenhuma entrada os usa?
   - **Recomendado: sim**, na fatia 1; os pacotes `t20` e `gurps4e` deixam de carregar valores que não são regra.
+  - **Decidido em 26/11/2026:** sim, opcionais na fatia 1 (opção recomendada; autorização geral do mantenedor).
 - **D3.** Blocos opcionais (salvaguardas, testes contra a morte, descansos, Dados de Vida, Exaustão): lista `display.blocks` por pacote, ou esconder por regra no código?
   - **Recomendado: lista `display.blocks`**, com o conjunto atual do D&D como padrão quando ausente (§5).
+  - **Decidido em 26/11/2026:** lista `display.blocks` (opção recomendada; autorização geral do mantenedor).
 - **D4.** Indicador de magia no GURPS: mostrar PF sempre, ou só se a ficha tiver magias (spec brainstorm §7)?
   - **Recomendado: só se tiver magias**, e enquanto não existir marca de "tem magias" na ficha GURPS o HUD não mostra PF como magia (PF continua na faixa).
+  - **Decidido em 26/11/2026:** só se tiver magias (opção recomendada; autorização geral do mantenedor).
 - **D5.** Nível de carga do GURPS na faixa: peso do inventário somado pela ficha (recomendado), ou valor digitado?
   - **Recomendado: somado pelo inventário** (`totalCarriedWeight`, já existente), com aviso quando algum item não tem peso.
+  - **Decidido em 26/11/2026:** somado pelo inventário (opção recomendada; autorização geral do mantenedor).
 - **D6.** Ordem das fatias: D&D idêntico → T20 → GURPS (recomendado), ou GURPS antes do T20?
   - **Recomendado: D&D idêntico, T20, GURPS**, pela mesma ordem dos pacotes e porque a fatia 1 prova a não regressão.
+  - **Decidido em 26/11/2026:** D&D idêntico, T20, GURPS (opção recomendada; autorização geral do mantenedor).
 - **D7.** Tela de **editar** (campos de salvaguardas, especialização e dado de vida) acompanha `display` na mesma fatia, ou fica para depois?
   - **Recomendado: depois**, em item próprio; a faixa de leitura e o HUD vêm primeiro, e a edição só some o que o pacote não declara.
+  - **Decidido em 26/11/2026:** depois, em item próprio (opção recomendada; autorização geral do mantenedor).
 
 ## 9. Fora de escopo
 

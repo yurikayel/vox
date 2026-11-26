@@ -150,7 +150,7 @@ Arquitetura e critérios: [subversus-vtt-v0.md](./specs/subversus-vtt-v0.md) (tr
 | [ ] | **SUB-14** | ops-humano | **Mesa entre aparelhos na prática:** CGNAT 4G/5G, TURN, latência do Fairplay com 3 ou mais pares | depende de `SUB-08`, `REV-10`/`INF-01` e da volta do uso por pessoas |
 | [ ] | **SUB-15** | ops-humano | **Revisão visual e de acessibilidade:** contraste do selo de demonstração, HUD em 390 px, leitor de tela nas abas e rádios da ficha, foco por teclado | print ou ata citada aqui |
 | [ ] | **SUB-16** | ops-humano | **COMPLIANCE-BR da Trilha C** e parecer sobre a atribuição CC-BY do SRD 5.2 | junto do `REV-12`, quando houver |
-| [ ] | **SUB-17** | code | **Derivados e HUD por sistema:** o pacote declara o que a faixa e o HUD mostram (D&D: CA e Percepção passiva; T20: Defesa, PV e PM; GURPS: PV, PF, Esquiva, Deslocamento e carga), sem texto de livro; fallback para pacote sem declaração e `.voxchar` sem mudança de formato | depende de `SUB-10` e `SUB-11` (em develop) · spec: [derivados-por-sistema-v0](./specs/derivados-por-sistema-v0.md) com decisões D1 a D7 e opção recomendada em cada uma; 3 fatias (modelo com D&D idêntico, T20, GURPS) |
+| [ ] | **SUB-17** | code | **Derivados e HUD por sistema:** o pacote declara o que a faixa e o HUD mostram (D&D: CA e Percepção passiva; T20: Defesa, PV e PM; GURPS: PV, PF, Esquiva, Deslocamento e carga), sem texto de livro; fallback para pacote sem declaração e `.voxchar` sem mudança de formato | depende de `SUB-10` e `SUB-11` (em develop) · spec: [derivados-por-sistema-v0](./specs/derivados-por-sistema-v0.md) com decisões D1 a D7 e opção recomendada em cada uma; 3 fatias (modelo com D&D idêntico, T20, GURPS): **decidido, pronto para código** |
 
 ### Decisões pendentes do mantenedor
 
