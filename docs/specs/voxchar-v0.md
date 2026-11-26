@@ -41,7 +41,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
 
 ## 3. O que fica de fora
 
-- **Do documento da ficha:** `owner_pubkey_p256`, `campaign_id`, `character_id`, `spatial_state`, `sheet_meta.notes_gm`, `pools_base` e `delta_ledger`.
+- **Do documento da ficha:** `owner_pubkey_p256`, `campaign_id`, `character_id`, `spatial_state`, `sheet_meta.notes_gm`, `pools_base` (a emenda da §10 propõe levar só `hp_max` e `<id>_max`) e `delta_ledger`.
 - **Identidade e conta:** chaves, guardiões, e-mail, cofre e qualquer dado de conta (identidade congelada).
 - **Retrato**, nem como URL: URL externa faz o app buscar conteúdo de fora e permite rastreio. Reavaliar em outra versão com imagem embutida e limitada.
 - **Estado de jogo:** PV atual, espaços de magia, condições, Exaustão, Dados de Vida gastos e marcas de morte.
@@ -174,3 +174,80 @@ Formato do link (esquema, compressão, versão), de onde vem o conteúdo, onde o
 | 10 | Sem `CompressionStream`/`DecompressionStream`, cai para o arquivo com o motivo e não gera link | Sim |
 | 11 | Abrir o link não dispara fetch nem XHR (espiar a rede) e a URL é trocada por `#/ficha/ver` | Sim |
 | 12 | O módulo do link não está em `SHELL_ASSETS` e só carrega ao gerar ou abrir link | Parcial: a parte "fora de `SHELL_ASSETS`" passa na base; "só carrega ao gerar ou abrir" falha |
+
+## 10. Emenda (rascunho): `pools_base` no `.voxchar` (SUB-18)
+
+> **Status desta emenda:** proposta, para decisão do mantenedor (§10.8). Só docs: nenhum código muda até as decisões. O que não está no código vai marcado **(proposta)**. Esta emenda **substitui, só para `hp_max` e `<id>_max`,** a exclusão de `pools_base` da §3 e do teste 2 da §8.
+
+### 10.1 Problema
+
+Hoje o `.voxchar` não leva `pools_base` (§3). `importVoxchar` cria a ficha sem PV máximo nem reservas, e `projectReserves` (`client/js/dungeon/sheet-reserves.js`) só mostra o recurso com máximo maior que zero. Resultado: um personagem de Tormenta20 ou GURPS exportado chega **sem PM/PF/PV**; o jogador tem de redigitar cada máximo. O máximo é parte da ficha-base (muda no nível, não a cada rolagem); o atual é estado de jogo.
+
+### 10.2 O que já existe
+
+- `pools_base.hp_max` e `pools_base.<id>_max`, lidos por `projectReserves`, `reserveMax` e `reserveIds` (`sheet-reserves.js`); `RESERVE_CAP = 9999` (mesmo teto de `qty` do `.voxchar`, `VOXCHAR_LIMITS.qty`); máximo ausente, negativo ou inválido vale 0, e **ficha antiga sem o campo continua válida** (a reserva não existe).
+- O atual é derivado: máximo mais a soma do `delta_ledger`, entre 0 e o máximo. Sem ledger, atual = máximo.
+- `VOXCHAR_FORMAT = 1`; `checkVoxchar` recusa `format` maior com "Atualize o Vox" (`voxchar-check.js:37`). Campos fora da lista branca são **descartados**, não recusados (§4).
+- `pools_base` tem outras chaves na ficha de demonstração (`gold_initial`, `spell_slots_max`, `dungeon-state.js:121`): **não** entram.
+
+### 10.3 Formato **(proposta)**
+
+Campo opcional `sheet.pools_base`, objeto plano só com:
+
+```json
+"pools_base": { "hp_max": 24, "mp_max": 12 }
+```
+
+- **Chaves aceitas:** `hp_max` (se o pacote declarado tem recurso `hp`) e `<id>_max` para cada `id` de `reserveIds(pack)` (recursos `pool` que não são PV). Qualquer outra chave é **descartada** (lista branca), inclusive `gold_initial`, `spell_slots_max`, `hp_current`, `*_current`, `__proto__`, `constructor`.
+- **Valores:** inteiro de 0 a 9999 (`RESERVE_CAP`); mesmas regras da ficha (`reserveMax`). Fora da faixa, não inteiro ou não numérico: **recusa com o campo e o motivo** (igual a `qty`, §4), não trunca em silêncio. 0 é aceito e equivale a "sem o recurso".
+- **Só ids do pacote declarado:** `mp_max` num arquivo de `dnd5e-2024` (que não declara `mp`) é descartado, não recusado (o arquivo continua válido). Pacote desconhecido já recusa o arquivo inteiro (§4).
+- **Limites:** o campo tem no máximo `1 + nº de reservas` chaves e conta nos limites existentes (`maxNodes`, 256 KiB). Nenhum limite novo.
+
+### 10.4 Versão e compatibilidade **(proposta)**
+
+- **`format` continua 1 (D1).** O campo é opcional e aditivo; não muda o significado de nada existente.
+- **Arquivo antigo (sem `pools_base`) em leitor novo:** continua válido; a ficha importada nasce sem máximos, como hoje.
+- **Arquivo novo em leitor antigo (format 1 sem a emenda):** o leitor antigo **descarta** `pools_base` (campo fora da lista branca, §4) e importa o resto: o personagem chega sem PV/reservas, que é o comportamento de hoje. Não há erro nem alteração do arquivo em disco. Por isso não precisa subir `format` (subir faria leitores antigos recusarem o arquivo inteiro, pior).
+- **Risco aceito:** o leitor antigo não avisa que descartou o campo. Mitigação **(proposta, D3)**: o leitor novo, ao importar de um sistema que declara reservas um arquivo sem `pools_base`, avisa "sem máximos no arquivo; defina PV/reservas na ficha".
+- `system.version` segue como hoje (maior que a do pacote: recusa).
+- Nota: a linha `SUB-17` do ROADMAP diz ".voxchar sem mudança de formato"; vale, porque o `format` não muda. O campo novo é desta emenda, não do `SUB-17`.
+
+### 10.5 O que NÃO vai
+
+- **Atual** (`hp_current`, `<id>_current`) e **`delta_ledger`**: estado de jogo (§3). O atual da ficha importada = máximo.
+- `gold_initial` e `spell_slots_max`: espaços de magia e ouro continuam fora (D2); reavaliar em emenda própria.
+- Condições, Exaustão, Dados de Vida gastos, marcas de morte, `spatial_state`.
+- Máximos de outro sistema (descartados, §10.3) e qualquer chave não listada.
+
+### 10.6 Exportar, importar, link e cópia-modelo **(proposta)**
+
+- **Exportar:** `portableSheet` inclui `pools_base` só com as chaves da lista do pacote da ficha, com valores normalizados por `reserveMax`; máximo 0 ou ausente **não** é gravado.
+- **Importar:** `checkVoxchar` valida o campo (§10.3) e `buildImportedSheet` grava `pools_base` na ficha nova; `ensureSheetMeta` e `migrateLegacySheet` seguem depois. O `delta_ledger` nasce vazio.
+- **Link só leitura (§9):** o mesmo JSON, então o link passa a carregar os máximos; a visualização (somente leitura) mostra PV e reservas **no máximo**, sem gravar nada. Sem mudança de formato do link; o limite de ~8 KB (D3 da §9) praticamente não muda.
+- **Cópia-modelo (§9.4):** leva os máximos (são ficha-base) e zera o estado: atual = máximo, `delta_ledger` vazio. Sem marca de "modelo" (D6 da §9).
+- **Privacidade:** máximos são dado de ficha pública; nenhum campo de Mestre ou de identidade entra.
+
+### 10.7 Testes de aceite **(proposta)**
+
+| # | Teste | Falha na base? |
+| :-- | :--- | :--- |
+| 1 | Round-trip: exportar ficha T20 com `hp_max` e `mp_max` e importar devolve os mesmos máximos, id novo, atual = máximo, `delta_ledger` vazio | Sim |
+| 2 | Arquivo antigo (sem `pools_base`) importa como hoje, sem erro | Não (regressão) |
+| 3 | O arquivo exportado não contém `*_current`, `delta_ledger`, `gold_initial`, `spell_slots_max` nem as demais exclusões da §3 (o teste 2 da §8 passa a excluir só essas) | Parcial |
+| 4 | Valor fora de 0–9999, fracionário, negativo, texto ou `NaN` é recusado com campo e motivo; 9999 e 0 são aceitos; 10000 é recusado | Sim |
+| 5 | `mp_max` em arquivo de pacote sem `mp` é descartado e o resto importa; chave desconhecida e `__proto__`/`constructor` são descartadas sem efeito | Sim |
+| 6 | Leitor format 1 sem a emenda (simulado com o `checkVoxchar` da base) importa arquivo novo ignorando `pools_base`, sem recusar | Não (documenta a compatibilidade) |
+| 7 | `format: 2` continua recusado com "Atualize o Vox" | Não (regressão) |
+| 8 | Link ida e volta leva os máximos; a visualização não grava nada | Sim |
+| 9 | Cópia-modelo: máximos presentes, atual = máximo, ledger vazio | Sim |
+| 10 | Aviso de "sem máximos no arquivo" ao importar de sistema com reservas sem `pools_base` | Sim (se D3 = sim) |
+
+Funções novas com no máximo 30 LLOC e JSDoc em todo export; não toca em Fairplay, `vtt-sync.js` nem na identidade.
+
+### 10.8 Decisões abertas para o mantenedor
+
+- **D1.** Manter `format: 1` (campo opcional, descartado por leitor antigo) ou subir para `format: 2`? **Recomendada: manter 1.** Subir faria leitores antigos recusarem o arquivo inteiro, sem ganho: o campo é aditivo.
+- **D2.** Levar só `hp_max` e `<id>_max` ou também `gold_initial` e `spell_slots_max`? **Recomendada: só os máximos de PV e reservas;** ouro e espaços em emenda própria.
+- **D3.** Avisar na importação quando o arquivo não traz máximos de um sistema com reservas? **Recomendada: sim** (texto curto, sem bloquear).
+- **D4.** Valor inválido recusa o arquivo com campo e motivo ou descarta só o campo? **Recomendada: recusar** (igual a `qty`); descartar deixaria a ficha sem PV em silêncio.
+- **D5.** Máximo 0 no arquivo: aceitar e tratar como "sem o recurso" ou recusar? **Recomendada: aceitar.**
