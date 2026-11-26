@@ -6,13 +6,15 @@
  * @module dungeon/screen-sheet-derived
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
+import { derivedStats, showBlock } from "./system-display.js";
+import { totalCarriedWeight } from "./vtt-inventory.js";
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { normalizeChoices } from "./system-derive.js";
 import { normalizeRestChoices } from "./system-rest.js";
 import { renderConditionsAndRests } from "./screen-sheet-rest.js";
-import { renderDeathSaves, renderSavesList, renderSystemChoiceFields, signed } from "./screen-sheet-system-extras.js";
+import { renderDeathSaves, renderSavesList, renderSystemChoiceFields } from "./screen-sheet-system-extras.js";
 import { escapeHtml } from "../shared/html.js";
 
 /** Itens do inventário da ficha (já normalizados na sessão ou o mapa bruto `inventory_orset`). */
@@ -36,6 +38,13 @@ export function resolveSheetSystem(sheet) {
   return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices), rest: normalizeRestChoices(pack, { ...migrated.system_choices, level: choices.level }) };
 }
 
+/** Peso carregado e quantos itens não informam peso, para os números de carga do GURPS. */
+function carryContext(sheet) {
+  const items = sheetItems(sheet);
+  const unweighed = items.filter((it) => it?.weightLb == null || it.weightLb === "" || Number.isNaN(Number(it.weightLb))).length;
+  return { weightLb: totalCarriedWeight(sheet.inventory_orset), unweighed };
+}
+
 function stat(label, value) {
   return `<div class="dungeon-derived-stat"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd></div>`;
 }
@@ -56,20 +65,15 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
   const sys = resolveSheetSystem(sheet);
   if (!sys) return "";
   const { pack, derived } = sys;
-  const l = pack.labels;
   return `
     <section class="dungeon-derived" aria-label="Números do personagem (${escapeHtml(pack.name)})">
       <h3 class="dungeon-eyebrow">Números do personagem · ${escapeHtml(pack.name)}</h3>
       <dl class="dungeon-derived-list">
-        ${stat(l.proficiency, signed(derived.proficiency))}
-        ${stat(derived.armored ? l.armorClass : `${l.armorClass} sem armadura`, derived.armorClass)}
-        ${stat(l.initiative, signed(derived.initiative))}
-        ${stat(l.passivePerception, derived.passivePerception)}
-        ${stat(l.speed, `${derived.speed.meters.toString().replace(".", ",")} m`)}
+        ${derivedStats(pack, derived, undefined, carryContext(sheet)).map((s) => stat(s.label, s.value)).join("\n        ")}
       </dl>
-      ${renderSavesList(pack, derived)}
-      ${renderDeathSaves(pack, derived, hpCurrent)}
-      ${renderConditionsAndRests(pack, sys.rest)}
+      ${showBlock(pack, "saves") ? renderSavesList(pack, derived) : ""}
+      ${showBlock(pack, "deathSaves") ? renderDeathSaves(pack, derived, hpCurrent) : ""}
+      ${showBlock(pack, "conditions") ? renderConditionsAndRests(pack, sys.rest) : ""}
       ${renderCredits(pack)}
     </section>`;
 }

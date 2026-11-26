@@ -79,6 +79,15 @@ export const T20_PACK = Object.freeze({
     Object.freeze({ id: "mp", label: "PM", kind: "pool" }),
   ]),
   labels: Object.freeze({ armorClass: "Defesa", initiative: "Iniciativa", proficiency: "Proficiência", passivePerception: "Percepção passiva", speed: "Deslocamento", saves: "Salvaguardas", deathSaves: "Testes contra a morte", conditions: "Condições", exhaustion: "Exaustão", hitDice: "Dados de Vida", shortRest: "Descanso curto", longRest: "Descanso longo" }),
+  display: Object.freeze({
+    derived: Object.freeze([
+      Object.freeze({ id: "armorClass", label: "Defesa", source: Object.freeze({ formula: "armorClass" }) }),
+      Object.freeze({ id: "initiative", label: "Iniciativa (atributo)", source: Object.freeze({ formula: "initiative" }) }),
+      Object.freeze({ id: "speed", label: "Deslocamento", source: Object.freeze({ formula: "speed" }) }),
+    ]),
+    blocks: Object.freeze([]),
+    hud: Object.freeze({ defense: "armorClass" }),
+  }),
   formulas: Object.freeze({
     /** Valor guardado = 10 + modificador (o cartão mostra só o modificador). */
     modifier: Object.freeze({ base: 10, step: 1 }),

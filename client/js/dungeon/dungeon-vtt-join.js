@@ -1,25 +1,15 @@
 /**
- * @file Entrada P2P do jogador via convite `#/dungeon/entrar/:id?gm=...#k=...` (BroadcastChannel, mesma origem).
+ * @file Entrada P2P do jogador via convite `#/dungeon/entrar/:id?gm=...#k=...` (BroadcastChannel na mesma origem, ou rede atrás da flag de laboratório).
  * @module dungeon/dungeon-vtt-join
  */
 import { hydrateStateFromCampaign } from "./dungeon-persistence.js";
 import { createMemoryVttBackend, createVttStore } from "./vtt-store.js";
-import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
+import { createVttSyncPeer } from "./vtt-sync.js";
+import { chooseVttTransport, loadRtcVttTransport, loadVttSignalingClient } from "./vtt-rede-escolha.js";
 import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
 import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
-/**
- * Carrega sob demanda o transporte da Mesa pela rede (SUB-08); nenhum byte dele entra no shell. Ainda sem chamador na
- * tela: a escolha entre `BroadcastChannel` e rede vem na próxima fatia.
- * @returns {Promise<typeof import("./vtt-rtc-transport.js")>} Módulo do transporte WebRTC.
- */
-export const loadRtcVttTransport = () => import("./vtt-rtc-transport.js");
-
-/**
- * Carrega sob demanda o cliente de sinalização da Mesa (SUB-08); fora do shell, como o transporte.
- * @returns {Promise<typeof import("./vtt-signaling-client.js")>} Módulo do cliente de sinalização.
- */
-export const loadVttSignalingClient = () => import("./vtt-signaling-client.js");
+export { loadRtcVttTransport, loadVttSignalingClient };
 
 /**
  * Texto de aviso para cada código de falha da entrada P2P.
@@ -78,9 +68,8 @@ function playerSyncCallbacks(state, opts) {
 }
 
 /** @param {object} state @param {object} invite @param {object} opts */
-function wirePlayerSyncPeer(state, invite, opts) {
+function wirePlayerSyncPeer(state, invite, opts, transport) {
   if (state.syncPeer?.close) state.syncPeer.close();
-  const transport = createBroadcastChannelTransport(invite.tableId, state.vttKeypair.routeId);
   const store = createGuestStore(opts);
   state.syncPeer = createVttSyncPeer({
     role: "player",
@@ -105,20 +94,22 @@ function wirePlayerSyncPeer(state, invite, opts) {
  * Conecta a sessão como jogador P2P em store isolado (sem sobrescrever o IndexedDB do Mestre na mesma origem).
  * @param {object} state Estado da sessão dungeon.
  * @param {string} locationHash `location.hash` com query `gm` e fragmento `#k=`.
- * @param {{ store?: object, displayName?: string, onCampaign?: (campaign: object) => void }} [opts] `displayName`: nome anunciado ao Mestre (vem da camada de app).
+ * @param {{ store?: object, displayName?: string, onCampaign?: (campaign: object) => void, network?: object }} [opts] `displayName`: nome anunciado ao Mestre (vem da camada de app); `network`: ajustes do transporte (testes).
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 export async function attachVttPlayerJoin(state, locationHash, opts = {}) {
   const invite = parseRoomInviteHref(locationHash || "");
   if (!invite) return { ok: false, error: "invalid_invite" };
-  if (typeof globalThis.BroadcastChannel !== "function") {
-    return { ok: false, error: "broadcast_channel_unavailable" };
-  }
   if (state.joinMode === "p2p_player" && state.syncPeer && state.campaignId === invite.tableId && state.roomKey === invite.roomKey) {
     return { ok: true };
   }
   const keypair = state.vttKeypair || await generateVttKeypair();
+  const chosen = await chooseVttTransport({
+    tableId: invite.tableId, peerId: keypair.routeId, initiate: true, ...opts.network,
+    onConnection: (conn) => { state.vttConnection = conn; notifyJoin(state, opts); },
+  });
+  if (!chosen) return { ok: false, error: "broadcast_channel_unavailable" };
   stampPlayerJoinState(state, invite, keypair);
-  wirePlayerSyncPeer(state, invite, opts);
+  wirePlayerSyncPeer(state, invite, opts, chosen.transport);
   return { ok: true };
 }

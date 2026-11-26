@@ -78,6 +78,16 @@ export const DND5E_2024_PACK = Object.freeze({
     { id: "unconscious", label: "Inconsciente" },
   ]),
   labels: Object.freeze({ armorClass: "CA", initiative: "Iniciativa", proficiency: "Proficiência", passivePerception: "Percepção passiva", speed: "Deslocamento", saves: "Salvaguardas", deathSaves: "Testes contra a morte", conditions: "Condições", exhaustion: "Exaustão", hitDice: "Dados de Vida", shortRest: "Descanso curto", longRest: "Descanso longo" }),
+  display: Object.freeze({
+    derived: Object.freeze([
+      Object.freeze({ id: "proficiency", label: "Proficiência", source: Object.freeze({ formula: "proficiency" }) }),
+      Object.freeze({ id: "armorClass", label: "CA", source: Object.freeze({ formula: "armorClass" }) }),
+      Object.freeze({ id: "initiative", label: "Iniciativa", source: Object.freeze({ formula: "initiative" }) }),
+      Object.freeze({ id: "passivePerception", label: "Percepção passiva", source: Object.freeze({ formula: "passivePerception" }) }),
+      Object.freeze({ id: "speed", label: "Deslocamento", source: Object.freeze({ formula: "speed" }) }),
+    ]),
+    hud: Object.freeze({ defense: "armorClass" }),
+  }),
   formulas: Object.freeze({
     modifier: Object.freeze({ base: 10, step: 2 }),
     proficiency: Object.freeze({ base: 2, every: 4 }),
