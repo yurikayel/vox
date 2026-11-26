@@ -212,8 +212,8 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `9a46a94a` |
-| **Suíte de Testes** | **3886** (`3528` JS + `358` Python) |
+| **Commit SHA** | `69d81e0f` |
+| **Suíte de Testes** | **4358** (`3999` JS + `359` Python) |
 | **Service Worker** | `vox-pwa-v7.172-subversus-sistemas` |
 
 *Tabela regenerada por `npm run release-line` (grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
