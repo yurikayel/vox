@@ -85,10 +85,10 @@ function applyChronicleAppend(state, op) {
 }
 
 function applyRollRecorded(state, op) {
-  const fairplay = (op.payload?.rollResult || op.payload)?.fairplay;
+  const fairplay = (op.payload?.rollResult || op.payload)?.fairplay || {};
   const roll = createDiceRollEntry({
     id: op.payload?.id || `roll-${op.opId}`,
-    author: op.payload?.author || op.actor,
+    author: fairplay.rollId ? op.actor : op.payload?.author || op.actor,
     speaker: op.payload?.speaker,
     rollResult: op.payload?.rollResult || op.payload,
     ts: op.ts,
@@ -102,8 +102,8 @@ function applyRollRecorded(state, op) {
     visibility: roll.visibility,
     author: roll.author,
     ts: roll.ts,
-    fairplayRollId: fairplay?.rollId,
-    fairplayValue: fairplay?.value,
+    fairplayRollId: fairplay.rollId,
+    fairplayValue: fairplay.value,
   });
   return { ...state, rolls: [...state.rolls, roll], chronicle: [...state.chronicle, entry] };
 }

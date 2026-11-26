@@ -10,6 +10,7 @@ import { reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
 import { createFairplayRollOffer } from "../client/js/dungeon/vtt-fairplay-roll.js";
 import { fairplayQuorum, verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
 import { createFairplaySessionKey, fairplayShareHash, sealFairplayShare } from "../client/js/dungeon/vtt-fairplay-cipher.js";
+import { rollDiceFormula } from "../client/js/dungeon/dice-engine.js";
 import { renderChronicleColumn } from "../client/js/dungeon/screen-table-layout.js";
 import {
   FAIRPLAY_LAB_KEY, computeFairplaySeals, countUnclosedRolls, isFairplayLabEnabled,
@@ -69,7 +70,8 @@ async function closed(peers) {
 
 /** Registra a rolagem na crônica como o app faz, com campos extras que um par malicioso poderia mandar. */
 function record(t, fairplay) {
-  const rollResult = { formula: "1d20", total: 7, rolls: [], visibility: "public", fairplay };
+  const dado = fairplay?.value === undefined ? { formula: "1d20", total: 7, rolls: [], visibility: "public" } : rollDiceFormula("1d20", { fairplayValue: fairplay.value });
+  const rollResult = { ...dado, fairplay };
   t.box.doc = reduceCampaign(t.box.doc, createVttOp({ type: "ROLL_RECORDED", actor: "ana", payload: { id: "roll-1", speaker: "Ana", rollResult }, lamport: 99 }));
   return t.box.doc;
 }
@@ -168,7 +170,8 @@ test("crônica: entrada sem rolagem Fairplay não ganha selo e id inválido é d
 
 test("selo: quem não participou da rolagem vê 'verificada pela mesa, sem você'", async () => {
   const t = await closed(["ana", "bia", "gm"]);
-  const doc = record(t, { rollId: ROLL });
+  const value = (await verifyFairplayRecord(t.box.doc, ROLL)).value;
+  const doc = record(t, { rollId: ROLL, value });
   const outsider = await computeFairplaySeals({ ...doc, fairplayViewerId: "intruso" });
   assert.equal(outsider[doc.chronicle[0].id].status, "table_only");
   assert.match(outsider[doc.chronicle[0].id].label, /verificada pela mesa, sem você/);

@@ -5,6 +5,7 @@
  * @module dungeon/vtt-fairplay-selo
  */
 import { escapeHtml } from "../shared/html.js";
+import { parseDiceCommand, rollDiceFormula, singleDieSides } from "./dice-engine.js";
 import { verifyFairplayRecord } from "./vtt-fairplay-log.js";
 
 /** Chave local da flag de laboratório (desligada por padrão). */
@@ -14,7 +15,12 @@ const KNOWN_REASONS = new Set([
   "rolagem desconhecida neste aparelho",
   "rolagem não fechou: faltaram compromissos",
   "o valor registrado não confere com a conta",
+  "o autor do registro não é quem abriu a rolagem",
+  "esta rolagem já foi registrada",
+  "a fórmula registrada não é a da rolagem",
+  "o número mostrado não confere com a conta",
 ]);
+const BONUS_NOTE = "O dado foi conferido; o bônus vem da ficha de quem rolou.";
 const GENERIC_REASON = "a conta não fechou neste aparelho";
 const TABLE_ONLY_DETAIL = "A mesa conferiu esta rolagem, mas você não participou dela, então este aparelho não pode confirmar por conta própria.";
 const SUMMARY = "Cada pessoa da mesa escondeu um número antes de qualquer um abrir o seu. O dado saiu da soma de todos, e este aparelho refez a conta e chegou ao mesmo resultado.";
@@ -57,6 +63,49 @@ function tookPartIn(state, rollId, me) {
   return Boolean(me && roll?.participants?.includes(me) && Object.hasOwn(roll.commits || {}, me));
 }
 
+/** Mesma fórmula da abertura e mesmo dado: o registro não troca a conta que a mesa fechou. */
+function sameFormula(roll, rec) {
+  try {
+    return parseDiceCommand(roll.formula).formula === rec.formula && singleDieSides(rec.resolvedFormula) === roll.sides;
+  } catch {
+    return false;
+  }
+}
+
+/** O número exibido é o refeito aqui: mesmo dado do veredito e mesmo total do registro. */
+function sameNumber(rec, verdict) {
+  const redo = rollDiceFormula(rec.resolvedFormula, { fairplayValue: verdict.value });
+  return redo.ok && redo.total === rec.total && redo.rolls?.[0]?.value === rec.rolls?.[0]?.value;
+}
+
+/**
+ * Amarra a entrada da Crônica à rolagem Fairplay: autor assinado, uma vez só, mesma fórmula e número refeito aqui.
+ * @param {object} state Estado com `fairplay`, `rolls` e a crônica.
+ * @param {object} entry Entrada da crônica com `fairplayRollId`.
+ * @param {object} verdict Veredito local de `verifyFairplayRecord` (já `verified`).
+ * @param {Set<string>} seen Rolagens que já tiveram uma entrada na crônica (muda o conjunto).
+ * @returns {string} Motivo da recusa do selo, ou vazio quando a entrada se amarra à rolagem.
+ */
+export function bindsToRoll(state, entry, verdict, seen) {
+  const roll = state.fairplay.rolls[entry.fairplayRollId];
+  const rec = (state.rolls || []).find((r) => `turn-${r.id}` === entry.id);
+  const first = !seen.has(entry.fairplayRollId);
+  seen.add(entry.fairplayRollId);
+  if (entry.author !== roll.opener) return "o autor do registro não é quem abriu a rolagem";
+  if (!first) return "esta rolagem já foi registrada";
+  if (!rec || !sameFormula(roll, rec)) return "a fórmula registrada não é a da rolagem";
+  return sameNumber(rec, verdict) ? "" : "o número mostrado não confere com a conta";
+}
+
+async function sealForEntry(state, entry, me, seen) {
+  const verdict = await verifyFairplayRecord(state, entry.fairplayRollId, entry.fairplayValue);
+  const fault = verdict.status === "verified" ? bindsToRoll(state, entry, verdict, seen) : "";
+  if (fault) return sealFromVerdict({ status: "unverified", reason: fault });
+  const seal = sealFromVerdict(verdict, tookPartIn(state, entry.fairplayRollId, me));
+  const bonus = seal.status === "verified" && String(state.fairplay.rolls[entry.fairplayRollId].formula).includes("@");
+  return bonus ? { ...seal, detail: `${seal.detail} ${BONUS_NOTE}` } : seal;
+}
+
 /**
  * Refaz a conta de cada rolagem Fairplay da crônica neste aparelho.
  * @param {{fairplay?: object, chronicle?: object[]}} state Estado com o bloco `fairplay` e a crônica.
@@ -64,11 +113,10 @@ function tookPartIn(state, rollId, me) {
  */
 export async function computeFairplaySeals(state) {
   const seals = {};
+  const seen = new Set();
   const me = state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
   for (const entry of state?.chronicle || []) {
-    if (!entry?.fairplayRollId) continue;
-    const verdict = await verifyFairplayRecord(state, entry.fairplayRollId, entry.fairplayValue);
-    seals[entry.id] = sealFromVerdict(verdict, tookPartIn(state, entry.fairplayRollId, me));
+    if (entry?.fairplayRollId) seals[entry.id] = await sealForEntry(state, entry, me, seen);
   }
   return seals;
 }

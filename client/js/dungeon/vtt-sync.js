@@ -330,6 +330,7 @@ async function verifiedFairplayOps(raw) {
 
 /** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
+  if (msg.campaign?.gmRouteId !== ctx.gmRouteId) return; // estado de uma mesa com outro Mestre nunca é salvo
   ctx.snapshotAsked = false;
   stopHelloRetry(ctx);
   const ops = await verifiedFairplayOps(msg.fairplayOps);
@@ -345,8 +346,15 @@ function askSnapshotOnce(ctx) {
   ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
 }
 
+/** Op que o jogador só aceita com assinatura válida: as `FAIRPLAY_*`, a rolagem Fairplay e a falta registrada. */
+function needsSignature(op) {
+  if (isFairplayOp(op)) return true;
+  if (op.type === "ROLL_RECORDED") return Boolean((op.payload?.rollResult || op.payload)?.fairplay);
+  return op.type === "CHRONICLE_APPEND" && Boolean(op.payload?.fairplayFault);
+}
+
 async function applyCommittedOp(ctx, msg) {
-  if (isFairplayOp(msg.op) && !(await verifyVttOpSignature(msg.op))) return;
+  if (needsSignature(msg.op) && !(await verifyVttOpSignature(msg.op))) return;
   const before = await ctx.store.loadCampaign(ctx.campaignId);
   if (!before) return; // ainda sem campanha: o snapshot do Mestre traz esta op
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op).catch(() => null);
