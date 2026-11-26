@@ -3,17 +3,21 @@
 Escopo **somente** o sub-repo [`vox/`](.). Não escrever roteiro Matrix/vídeo aqui nem promover conteúdo de `politica/` para `~/.gemini/config/AGENTS.md`.
 - **Hardening v3.2:** [docs/HARDENING.md](docs/HARDENING.md) (limites e o que o CI bloqueia) · **Evidência de testes e auditoria:** [docs/process/qualidade-e-evidencia.md](docs/process/qualidade-e-evidencia.md). Este repositório é autossuficiente: não dependa de arquivos de `politica/`.
 
-## Mutex e Ownership
+## Ler é livre, escrever pede caneta
 
-- **Um agente por arquivo** (ou por **§N** se o markdown tiver **>200 linhas**).
-- **Ownership & Handoff:** Registrar locks ativos e encerrar todo turno com `SHA`, `Branch`, `Arquivos`, `Testes` (`PASS`, `FAIL` separando *Erro observado / Causa confirmada / Causa provável*, `NOT RUN`, `BLOCKED`), `Ownership`, `Restrições` e `Pendências`.
-- **Proibido:** edição paralela do mesmo doc canônico em `docs/` (coordenar via PR ou fila no chat).
+Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md § Orçamento de orquestração](docs/process/metodo-agentes-mutex-e-revisor.md#orçamento-de-orquestração-fonte-única).
 
-## Revisor vs implementação
+- **Leitura, análise, revisão e planejamento** rodam em paralelo, sem teto de agentes.
+- **Escrever no repositório** (editar arquivo versionado, inclusive no próprio worktree, commit, push, PR, comentário em PR ou issue) exige uma **caneta**. Há **3 canetas**; quem não tem espera na fila.
+- **Caneta e lock são coisas diferentes:** a caneta vem com um conjunto fechado de arquivos; dois portadores nunca têm arquivo em comum (ou §N em markdown com **>200 linhas**). A **caneta** volta ao abrir o PR com CI verde ou ao travar; o **lock dos arquivos** daquele PR só sai no merge em `develop` ou no fechamento do PR.
+- **Plano antes da caneta, sobre arquivos livres:** não planejar edição em arquivo com lock ativo. Antes de pegar a caneta, `git fetch origin develop` e conferir que o alvo não mudou. Ajuste pedido na revisão retoma a caneta com prioridade.
+- **Arquivos quentes** (um portador por vez): `CHANGELOG.md`, `docs/ROADMAP.md`, `docs/README.md`, `docs/release-metadata.json` e `package.json`. `client/sw.js` só muda em PR de release.
+- **Worktree isolado:** quem tem caneta escreve só num worktree próprio criado a partir de `origin/develop`. Nunca trocar a branch do checkout principal nem rodar `git` numa pasta de worktree que deixou de estar registrada (o `git` cai no checkout principal). Antes de qualquer `git` num worktree, confira que existe o **arquivo** `.git` na pasta e que `git rev-parse --show-toplevel` é a própria pasta; sem o arquivo, o `git` sobe calado para o checkout principal.
+- **Merge** é uma fila serial à parte. **Recursos físicos:** no máximo 2 execuções pesadas ao mesmo tempo (`npm run validate`, e2e, mutação) e 1 agente por vez no navegador.
 
-Operação curta: [docs/process/metodo-agentes-mutex-e-revisor.md](docs/process/metodo-agentes-mutex-e-revisor.md).
+## Ownership e handoff
 
-**Orçamento de orquestração:** um executor por padrão (no máximo 2 em paralelo, com mutex disjunto), brief com aceite, até 8 caminhos e um comando de teste, sem ondas automáticas nem polling de CI. Regra completa em [metodo-agentes-mutex-e-revisor.md § Orçamento de orquestração](docs/process/metodo-agentes-mutex-e-revisor.md#orçamento-de-orquestração-fonte-única).
+Encerrar todo turno com `SHA`, `Branch`, `Arquivos`, `Testes` (`PASS`, `FAIL` separando *Erro observado / Causa confirmada / Causa provável*, `NOT RUN`, `BLOCKED`), `Ownership`, `Restrições` e `Pendências`, em no máximo 10 linhas; detalhe longo vai em arquivo à parte. Revisor e auditor são só leitura ([qualidade-e-evidencia.md §4](docs/process/qualidade-e-evidencia.md)).
 
 ## Testes e Qualidade
 

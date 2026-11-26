@@ -13,7 +13,7 @@ import { attachVttPlayerJoin } from "../client/js/dungeon/dungeon-vtt-join.js";
 import * as scene from "../client/js/dungeon/dungeon-scene-actions.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
-import { buildRoomInviteHref, generateRoomKey } from "../client/js/dungeon/vtt-sync-codec.js";
+import { buildRoomInviteHref, generateRoomKey, generateVttKeypair } from "../client/js/dungeon/vtt-sync-codec.js";
 import { createFakeRtcNetwork } from "./helpers/fake-rtc.js";
 
 const store = (flag, url) => ({
@@ -32,7 +32,8 @@ function fakeWs() {
   return { FakeWebSocket, sockets };
 }
 
-const base = (extra = {}) => ({ tableId: "t", peerId: "me", initiate: true, BroadcastChannelImpl: class {}, createBroadcast: () => ({ marca: "bc" }), ...extra });
+const keypair = await generateVttKeypair();
+const base = (extra = {}) => ({ tableId: "t", peerId: "me", keypair, initiate: true, BroadcastChannelImpl: class {}, createBroadcast: () => ({ marca: "bc" }), ...extra });
 
 test("flag, endereço e leitura segura do armazenamento", () => {
   assert.equal(isMesaRedeLabEnabled(store("1", "")), true);

@@ -12,6 +12,10 @@
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
 
+/** Aviso curto de não afiliação, mostrado no seletor de sistema. @type {string} */
+const GURPS4E_NOTICE =
+  "GURPS é publicado pela Steve Jackson Games. O Vox não tem vínculo com a Steve Jackson Games nem com os titulares da marca, e não é endossado por eles.";
+
 /** Aviso de conteúdo do pacote, mostrado em "Sobre este conteúdo". @type {string} */
 export const GURPS4E_ATTRIBUTION =
   "Este pacote traz só fórmulas de mecânica de jogo implementadas pelo Vox e nomes curtos de atributos. Nenhum texto do livro (perícias, vantagens, desvantagens, tabelas, descrições) está incluído; esses dados são escritos ou importados por você. GURPS é marca de Steve Jackson Games, sem vínculo com o Vox.";
@@ -26,6 +30,7 @@ export const GURPS4E_PACK = Object.freeze({
   license: Object.freeze({
     spdx: "LicenseRef-Vox-Estrutura-Propria",
     attribution: GURPS4E_ATTRIBUTION,
+    notice: GURPS4E_NOTICE,
     source: "Nomes de mecânica de jogo; fórmulas e matemática do Vox",
     url: "https://github.com/yurikayel/vox/blob/develop/docs/legal/licenca-e-contribuicoes.md",
   }),

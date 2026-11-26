@@ -105,7 +105,7 @@ export async function attachVttPlayerJoin(state, locationHash, opts = {}) {
   }
   const keypair = state.vttKeypair || await generateVttKeypair();
   const chosen = await chooseVttTransport({
-    tableId: invite.tableId, peerId: keypair.routeId, initiate: true, ...opts.network,
+    tableId: invite.tableId, peerId: keypair.routeId, keypair, initiate: true, ...opts.network,
     onConnection: (conn) => { state.vttConnection = conn; notifyJoin(state, opts); },
   });
   if (!chosen) return { ok: false, error: "broadcast_channel_unavailable" };

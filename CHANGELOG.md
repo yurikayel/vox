@@ -6,6 +6,18 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+## [2026-11-26] — SW `v7.174-mesa-rede-aperto` (corte `develop → main`)
+
+*Correções na Mesa pela rede (laboratório), na malha social, no relay e no pacote Tormenta20.*
+
+- Malha: o anúncio da chave de DM passa a levar uma prova assinada pela conta ([#639](https://github.com/yurikayel/vox/pull/639))
+- Relay: o registro de endereço respeita a conexão viva do peer ([#640](https://github.com/yurikayel/vox/pull/640))
+- Tormenta20: a Iniciativa vem da perícia e o painel Editar não mostra Dado de Vida nem Deslocamento quando o pacote não os declara ([#641](https://github.com/yurikayel/vox/pull/641))
+- Mesa pela rede (laboratório): Mestre e jogador provam a posse da chave da mesa ao abrir o canal ([#642](https://github.com/yurikayel/vox/pull/642))
+- Ficha: o seletor de sistema mostra o aviso de não afiliação de cada pacote, Tormenta20 e GURPS ([#643](https://github.com/yurikayel/vox/pull/643))
+- Docs: ROADMAP de 26/11 refeito — `REV-16` encerrado, `EXP-02`/`EXP-05` marcados, estado de `main`/`develop` e referências atualizados, e itens novos `SUB-19`, `SUB-20`, `PM-116`…`PM-118` e a regra da nightly verde antes do corte.
+- Processo: orquestração passa a "ler é livre, escrever pede caneta" — leitura, análise e revisão em paralelo; no máximo 3 agentes escrevendo no repositório, com mutex de arquivos, arquivos quentes com um portador, merge serial e no máximo 2 execuções pesadas ao mesmo tempo (AGENTS.md, metodo-agentes-mutex-e-revisor.md).
+
 ## [2026-11-26] — SW `v7.173-mesa-canvas-mobile` (corte `develop → main`)
 
 *Correções pós-#628 para a nightly da `main`: canvas do mapa no celular e texto dos JSDoc da sinalização.*
