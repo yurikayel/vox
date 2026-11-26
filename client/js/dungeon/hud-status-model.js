@@ -46,7 +46,7 @@ export function tokenHpLabel(token) {
   return token?.hpStatus ? String(token.hpStatus) : MISSING;
 }
 
-const INK_DARK = "#0c0e11";
+const INK_DARK = "#000000";
 const INK_LIGHT = "#ffffff";
 
 function channel(v) {
@@ -80,7 +80,8 @@ function portrait(token, name) {
 }
 
 /**
- * Ficha do espectador: a ligada a um token cujo dono é a identidade dele; sem isso, a ficha ativa da sessão.
+ * Ficha do espectador: a ligada a um token cujo dono é a identidade dele. Com identidade e sem token dele, nada (não mostra ficha de outra pessoa);
+ * a ficha ativa da sessão só vale quando não há nenhuma identidade.
  * @param {object} state Estado da sessão (`vttKeypair`, `localActor`, `campaign`, `sheet`).
  * @param {object[]} tokens Tokens da cena.
  * @returns {object|null} Ficha própria.
@@ -88,7 +89,8 @@ function portrait(token, name) {
 export function resolveOwnSheet(state, tokens) {
   const viewer = state?.vttKeypair?.routeId || state?.localActor || "";
   const mine = viewer ? tokens.find((t) => t.sheetId && t.ownerRouteId === viewer) : null;
-  return sheetOfToken(state, mine) || state?.sheet || null;
+  if (viewer) return sheetOfToken(state, mine);
+  return state?.sheet || null;
 }
 
 function sheetOfToken(state, token) {

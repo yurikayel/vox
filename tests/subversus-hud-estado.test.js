@@ -120,9 +120,9 @@ test("HUD estado: sem atalhos o bloco de estado continua no HUD", () => {
 
 test("HUD estado: cor do texto das iniciais tem contraste AA em fundo escuro e claro", () => {
   assert.equal(inkFor("#101820"), "#ffffff");
-  assert.equal(inkFor("#f5f5dc"), "#0c0e11");
-  assert.equal(inkFor("#fff"), "#0c0e11");
-  assert.equal(inkFor("nada"), "#0c0e11");
+  assert.equal(inkFor("#f5f5dc"), "#000000");
+  assert.equal(inkFor("#fff"), "#000000");
+  assert.equal(inkFor("nada"), "#000000");
   const dark = renderHudStatus(stateWith(ownSheet()), { tokens: [tok("t1", "ana", { color: "#101820" })] });
   assert.match(dark, /--hud-portrait:#101820;color:#ffffff/);
 });
@@ -146,4 +146,47 @@ test("HUD estado: o bloco próprio usa a ficha do token do espectador, não a fi
   const m = buildHudStatus(state, scene);
   assert.equal(m.own.name, "Lyra");
   assert.deepEqual(m.party.map((p) => p.tokenId), ["t2"]);
+});
+
+function lum(hex) {
+  const ch = (i) => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * ch(1) + 0.7152 * ch(3) + 0.0722 * ch(5);
+}
+const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+
+test("HUD estado: contraste das iniciais ≥ 4,5:1 em cores médias e pontos do cubo RGB", () => {
+  const medios = ["#777777", "#767676", "#808080", "#757575", "#7a7a7a"];
+  const cubo = [0, 128, 255].flatMap((r) => [0, 128, 255].flatMap((g) => [0, 128, 255].map((b) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join(""))));
+  for (const bg of [...medios, ...cubo, "#78d6cf", "#e7c26b"]) assert.ok(ratio(bg, inkFor(bg)) >= 4.5, bg);
+});
+
+test("HUD estado: espectador com identidade e sem token não vê ficha de outra pessoa", () => {
+  const state = { localActor: "vx_ana", sheet: ownSheet({ character_id: "bia", name: "Bia" }), campaign: { sheetsById: { bia: ownSheet({ character_id: "bia" }) } } };
+  const scene = { tokens: [tok("t2", "bia", { ownerRouteId: "vx_bia" })] };
+  assert.equal(buildHudStatus(state, scene), null);
+  assert.equal(renderHudStatus(state, scene), "");
+  assert.equal(buildHudStatus({ sheet: ownSheet() }, scene).own.name, "Lyra");
+});
+
+test("HUD estado: dois tokens com fichas diferentes, o primeiro de outra pessoa; identidade só pelo keypair", () => {
+  const state = {
+    vttKeypair: { routeId: "vx_ana" },
+    campaign: { sheetsById: { ana: ownSheet(), bia: ownSheet({ character_id: "bia", name: "Bia" }) } },
+  };
+  const scene = { tokens: [tok("t2", "bia", { ownerRouteId: "vx_bia" }), tok("t1", "ana", { ownerRouteId: "vx_ana" })] };
+  const m = buildHudStatus(state, scene);
+  assert.equal(m.own.name, "Lyra");
+  assert.deepEqual(m.party.map((p) => p.tokenId), ["t2"]);
+});
+
+test("HUD estado: ficha do token cai em state.sheet quando a campanha não a tem", () => {
+  const state = { localActor: "vx_ana", sheet: ownSheet() };
+  const scene = { tokens: [tok("t1", "ana", { ownerRouteId: "vx_ana" })] };
+  assert.equal(buildHudStatus(state, scene).own.name, "Lyra");
+});
+
+test("HUD estado: com a ficha na campanha e na sessão, vale a da campanha", () => {
+  const state = { localActor: "vx_ana", sheet: ownSheet({ name: "Velha" }), campaign: { sheetsById: { ana: ownSheet({ name: "Nova" }) } } };
+  const scene = { tokens: [tok("t1", "ana", { ownerRouteId: "vx_ana" })] };
+  assert.equal(buildHudStatus(state, scene).own.name, "Nova");
 });
