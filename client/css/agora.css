@@ -4615,3 +4615,42 @@ body,
     transition: none;
   }
 }
+
+/* HUD de jogo: estado do personagem (spec hud-jogo-v0) */
+.dungeon-hud-status { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 0.75rem; }
+.dungeon-hud-own, .dungeon-hud-member { display: flex; align-items: center; gap: 0.5rem; }
+.dungeon-hud-party { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0; padding: 0; }
+.dungeon-hud-portrait { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--hud-portrait, var(--sa-surface-lowest)); color: #0c0e11; font-weight: 700; }
+.dungeon-hud-member .dungeon-hud-portrait { width: 2rem; height: 2rem; font-size: 0.75rem; }
+.dungeon-hud-conditions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; }
+.dungeon-hud-condition { padding: 0.15rem 0.5rem; border: 1px solid var(--sa-on-surface-variant, #bbc9c7); border-radius: 999px; font-size: 0.8rem; }
+.dungeon-hud-mobile-line { display: none; margin: 0; font-weight: 600; }
+@media (max-width: 1023.98px) {
+  .dungeon-hud-own, .dungeon-hud-party { display: none; }
+  .dungeon-hud-mobile-line { display: block; }
+  .dungeon-hud .dungeon-chip-btn { min-height: 44px; }
+}
+
+/* HUD de jogo: cinto, magia e favoritos (spec hud-jogo-v0) */
+.dungeon-hud-belt { display: flex; gap: 0.35rem; margin: 0; padding: 0; }
+.dungeon-hud-belt-slot { min-width: 3rem; min-height: 44px; display: grid; place-items: center; }
+.dungeon-hud-belt-slot.is-empty { border: 1px dashed var(--sa-on-surface-variant, #bbc9c7); border-radius: 0.5rem; font-size: 0.75rem; color: var(--sa-on-surface-variant, #bbc9c7); padding: 0 0.5rem; }
+.dungeon-hud-magic { font-weight: 600; }
+@media (max-width: 1023.98px) {
+  .dungeon-hud.dungeon-chips-row { flex-wrap: nowrap; overflow-x: auto; }
+}
+
+/* HUD de jogo: painéis em meia tela (spec hud-jogo-v0) */
+.dungeon-map-hero { position: relative; }
+.dungeon-hud-dock { position: relative; }
+/* Painel: abre para cima, encostado na doca do HUD (a barra de painéis fica livre) e nunca passa de 60% da viewport; o conteúdo rola por dentro. */
+.dungeon-hud-panel { position: absolute; right: 0; bottom: 100%; width: 50%; max-height: min(60vh, 520px); z-index: 5; overflow-y: auto; overscroll-behavior: contain; padding: 0.75rem; background: var(--sa-surface, #0e1514); color: var(--sa-on-surface, #dde4e2); border-left: 2px solid var(--sa-on-surface-variant, #bbc9c7); }
+.dungeon-hud-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+.dungeon-hud-panel-head h3 { margin: 0; }
+.dungeon-hud-panel-bar kbd { margin-left: 0.25rem; font-size: 0.7rem; opacity: 0.8; }
+.dungeon-hud-panel .dungeon-chip-btn { min-height: 44px; }
+@media (max-width: 1023.98px) {
+  .dungeon-hud-panel { position: fixed; top: auto; right: 0; bottom: 0; left: 0; width: auto; max-height: 75dvh; z-index: 50; border-left: 0; border-top: 2px solid var(--sa-on-surface-variant, #bbc9c7); }
+  .dungeon-hud-panel-bar { flex-wrap: nowrap; overflow-x: auto; }
+  .dungeon-hud-panel-bar kbd { display: none; }
+}

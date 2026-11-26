@@ -23,8 +23,8 @@ import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } 
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
-import { getSystemPack } from "./system-pack.js";
-import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
+import { migrateLegacySheet } from "./system-migrate.js";
+import { systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
@@ -245,19 +245,6 @@ function mergePatchedAbilities(baseAbilities, patch) {
 }
 
 /**
- * `system` e `system_choices` a gravar ao salvar a ficha: sistema escolhido (ou o atual), atributos editados e
- * perícias treinadas relidas das ações vivas. Sistema desconhecido é ignorado.
- */
-function systemFieldsForSave(base, requestedId, abilities) {
-  const pack = getSystemPack(requestedId) || getSystemPack(base.system?.id);
-  const trained = pack ? liveTrainedSkills(pack, base) : base.system_choices?.proficientSkills;
-  return {
-    system: pack ? { id: pack.id, version: pack.version } : base.system,
-    system_choices: { ...base.system_choices, abilities, proficientSkills: trained },
-  };
-}
-
-/**
  * Atualiza dados básicos da ficha ativa (nome, classe, CA e atributos FOR–CAR) via `SHEET_UPSERT`.
  * @param {object} state Estado da sessão.
  * @param {object} patch Campos editados na UI.
@@ -274,8 +261,8 @@ export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
   const abilities = mergePatchedAbilities(attrs.abilities, patch);
   const updated = ensureSheetMeta({
     ...base,
-    ...systemFieldsForSave(base, patch.system, abilities),
-    attributes_lww: { ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities },
+    ...systemFieldsForSave(base, patch, abilities),
+    attributes_lww: withSpeed({ ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities }, patch.speedFt),
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
   state.campaignNotice = `Ficha "${updated.attributes_lww.name}" atualizada.`;
@@ -465,7 +452,7 @@ export async function advanceCampaignCalendar(state, delta, store = getDefaultVt
 }
 
 /**
- * Muta o inventário OR-Set da ficha ativa (`add`, `remove`, `toggle_equip`, `set_qty`).
+ * Muta o inventário OR-Set da ficha ativa (`add`, `remove`, `toggle_equip`, `set_qty`, `adjust_qty`).
  * @param {object} state Sessão.
  * @param {string} kind Tipo da mutação.
  * @param {object} payload Dados do item.

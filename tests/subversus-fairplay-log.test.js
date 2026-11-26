@@ -200,3 +200,21 @@ test("fairplay cifra: só o destinatário abre a parte, e só para aquela rolage
   await assert.rejects(() => openFairplayShare({ envelope, rollId: "outra", fromPeer: "a", toPeer: "b", privateKey: b.privateKey, senderJwk: a.publicKeyJwk }));
   await assert.rejects(() => openFairplayShare({ envelope, rollId: ROLL, fromPeer: "a", toPeer: "c", privateKey: b.privateKey, senderJwk: a.publicKeyJwk }));
 });
+
+test("fairplay log: compromisso sem alg ou com alg desconhecido não entra no log (SUB-07)", async () => {
+  const peers = ["ana", "bia", "gm"];
+  const t = await makeTable(peers);
+  const offers = await makeOffers(peers);
+  t.push("FAIRPLAY_OPEN", "ana", { rollId: ROLL, sides: 20 }, 1000);
+  const { alg, ...semAlg } = offers.ana.commit;
+  assert.ok(alg);
+  assert.equal(t.push("FAIRPLAY_COMMIT", "ana", { rollId: ROLL, commit: semAlg }), false);
+  assert.equal(t.push("FAIRPLAY_COMMIT", "ana", { rollId: ROLL, commit: { ...offers.ana.commit, alg: "sha256" } }), false);
+  assert.equal(t.push("FAIRPLAY_COMMIT", "ana", { rollId: ROLL, commit: offers.ana.commit }), true);
+  const guardado = t.roll().commits.ana;
+  assert.deepEqual([guardado.alg, guardado.commitV, guardado.splitId], [offers.ana.commit.alg, offers.ana.commit.commitV, offers.ana.commit.splitId]);
+  const { commitV, splitId, ...minimo } = offers.bia.commit;
+  assert.ok(commitV && splitId);
+  assert.equal(t.push("FAIRPLAY_COMMIT", "bia", { rollId: ROLL, commit: minimo }), true);
+  assert.deepEqual([t.roll().commits.bia.commitV, t.roll().commits.bia.splitId], ["", ""], "campos ausentes viram texto vazio");
+});

@@ -20,7 +20,7 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_sync_e2e import _add_token, _drag_cell, _generate_invite, _watch_errors
-from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_gm
+from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
 from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 WAIT_MS = 30000
@@ -145,8 +145,7 @@ class DioramaPlaywrightE2ETests(PlaywrightE2EHarness):
         _drag_cell(gm, (1, 1), (9, 6))
         player = ctx.new_page()
         _watch_errors(player, errors)
-        player.goto(invite, wait_until="domcontentloaded")
-        player.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+        _join_as_player(player, invite)
         expect(player.locator(".dungeon-token-roster")).to_contain_text("Lyra", timeout=WAIT_MS)
         return ctx, gm, player, errors
 
@@ -211,13 +210,8 @@ class DioramaPlaywrightE2ETests(PlaywrightE2EHarness):
         finally:
             _close_ctx(ctx)
 
-    @unittest.expectedFailure
-    def test_04_known_gap_player_state_still_carries_token_and_door_inside_fog(self):
-        """ACHADO (falha hoje, de propósito): o estado do jogador ainda recebe o token e a porta fora da área revelada.
-
-        Só a projeção do Diorama os esconde. Quando o sync passar a filtrar por névoa, este teste vira
-        "unexpected success" e deve perder o `expectedFailure`.
-        """
+    def test_04_player_state_carries_no_token_or_door_inside_fog(self):
+        """Zero-Spoiler no sync: o estado do jogador não recebe o token nem a porta fora da área revelada."""
         ctx, gm, player, errors = self._open_pair("Diorama Estado")
         try:
             info = player.evaluate(_PLAYER_VIEW_JS)

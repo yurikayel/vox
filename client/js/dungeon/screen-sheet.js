@@ -6,7 +6,7 @@ import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
 import { renderLevelUpWizard, renderSheetEditPanel } from "./screen-sheet-levelup.js";
-import { renderDerivedStrip } from "./screen-sheet-derived.js";
+import { renderDerivedStrip, resolveSheetSystem } from "./screen-sheet-derived.js";
 import { renderPlayTab, renderSheetTabs, splitSheetActions } from "./screen-sheet-tabs.js";
 import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 
@@ -44,10 +44,16 @@ function renderAbilityButtons(sheet) {
   }).join("");
 }
 
-function renderSheetHero(sheet) {
+/**
+ * Cabeçalho da ficha: retrato, nome, classe e nível.
+ * @param {object} sheet Ficha ativa.
+ * @returns {string} HTML.
+ */
+export function renderSheetHero(sheet) {
   const attrs = sheet.attributes_lww || {};
   const level = Number(attrs.level) || 1;
-  const ac = Number(attrs.armor_class) || 10;
+  const sys = resolveSheetSystem(sheet);
+  const ac = sys?.derived.armored ? sys.derived.armorClass : Number(attrs.armor_class) || 10;
   const subtitle = sheet.role_title || attrs.class_name || "Aventureiro";
   return `
     <section class="dungeon-sheet-hero">
@@ -103,7 +109,12 @@ function renderActionCard(act) {
       </div>`;
 }
 
-function renderAbilitiesPanel(state) {
+/**
+ * Painel de atributos (testes e salvaguardas) da ficha ativa.
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML.
+ */
+export function renderAbilitiesPanel(state) {
   const { abilities } = splitSheetActions(state.sheet?.sheet_meta?.clickable_actions || []);
   const cards = abilities.map(renderActionCard).join("");
   return `
@@ -218,6 +229,16 @@ function renderSheetAudit(orderedOpsCount) {
 }
 
 /**
+ * Botão "Nova ficha" (markup mínimo) ou, com o assistente aberto, a tela dele (carregada sob demanda e guardada no estado).
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML do botão ou do assistente.
+ */
+function renderNewSheetSlot(state) {
+  if (state.sheetWizard && state.sheetWizardView) return state.sheetWizardView(state.sheetWizard);
+  return `<div class="dungeon-input-row"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="wizard-open">Nova ficha</button></div>`;
+}
+
+/**
  * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo protegido, mochila unificada e Assistente de Nível.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
@@ -228,13 +249,14 @@ export function renderSheetScreen(state) {
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const panels = {
-    play: `${renderDerivedStrip(state.sheet)}${renderPlayTab(actions)}`,
+    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
-    about: `${renderSheetEditPanel(state.sheet)}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
+    about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft, link: state.voxcharLink })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
   };
   return `
     ${noticeHtml}
+    ${renderNewSheetSlot(state)}
     ${renderLevelUpWizard(state)}
     <section class="dungeon-sheet-roll-controls" aria-label="Modo e resultado das rolagens">${renderRollModes(state)}</section>
     <div class="dungeon-sheet-layout">

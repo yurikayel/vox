@@ -6,6 +6,8 @@ import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderD20DieSvg } from "./rpg-illustrations.js";
 import { renderHandoutViewer } from "./screen-notes.js";
 import { renderEntrySeal, renderFairplayStatus, isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
+import { renderFairplayAccess } from "./vtt-fairplay-acesso.js";
+import { renderVttConnection } from "./vtt-rede-escolha.js";
 
 /** Atalhos de ação sugeridos na crônica da Mesa. */
 export const QUICK_CHIPS = [
@@ -42,7 +44,13 @@ function renderTacticalGridCells(playerPos) {
   return rows.join("");
 }
 
-function canViewChronicleEntry(entry, state) {
+/**
+ * Diz se a entrada da crônica pode ser vista por quem olha (Mestre vê tudo; jogador só o público e o que é seu).
+ * @param {object} entry Entrada da crônica.
+ * @param {object} state Estado da sessão.
+ * @returns {boolean} `true` quando visível.
+ */
+export function canViewChronicleEntry(entry, state) {
   if (state.viewerRole === "gm") return true;
   if (!entry?.visibility || entry.visibility === "public") return true;
   if (entry.visibility === "gm" && state.joinMode === "p2p_player") {
@@ -52,7 +60,13 @@ function canViewChronicleEntry(entry, state) {
   return false;
 }
 
-function renderChronicleEntry(entry, state) {
+/**
+ * Cartão de uma entrada da crônica.
+ * @param {object} entry Entrada da crônica.
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML.
+ */
+export function renderChronicleEntry(entry, state) {
   const isDm = entry.speaker.includes("Narrador") || entry.speaker.includes("Guardião");
   const isSecret = entry.visibility === "gm" || entry.visibility === "blind";
   const secretCls = isSecret ? " is-secret-roll" : "";
@@ -116,7 +130,8 @@ function renderFormulaTray(state) {
 export function renderChronicleColumn(state) {
   const visibleTurns = (state.chronicle || []).filter((e) => canViewChronicleEntry(e, state));
   const turnsHtml = visibleTurns.map((e) => renderChronicleEntry(e, state)).join("");
-  const unclosedHtml = state.fairplayLabEnabled || isFairplayLabEnabled() ? renderFairplayStatus(state) : "";
+  const fairplayOn = state.fairplayLabEnabled || isFairplayLabEnabled();
+  const unclosedHtml = `${renderVttConnection(state)}${fairplayOn ? `${renderFairplayAccess(state)}${renderFairplayStatus(state)}` : ""}`;
   const chipsHtml = QUICK_CHIPS.map((txt) => `<button type="button" class="dungeon-chip-btn" data-dungeon="chip" data-text="${escapeHtml(txt)}">${escapeHtml(txt)}</button>`).join("");
   const actorFirst = String(state.sheet?.name || "seu personagem").split(/[,\s]+/)[0] || "seu personagem";
   return `

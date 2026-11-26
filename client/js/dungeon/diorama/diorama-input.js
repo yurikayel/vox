@@ -16,7 +16,7 @@ const KEY_ZOOM_IN = 0.85;
 const KEY_ZOOM_OUT = 1 / KEY_ZOOM_IN;
 
 /** Texto do rótulo acessível do canvas 3D (teclas suportadas). */
-export const DIORAMA_KEYS_HELP = "Mapa em 3D. Setas giram a câmera, Shift com setas move, mais e menos aproximam, Home reinicia.";
+export const DIORAMA_KEYS_HELP = "Mapa em 3D. Setas giram a câmera (em 1ª Pessoa, W A S D andam), Shift com setas move, mais e menos aproximam, Home reinicia.";
 
 /**
  * Traduz uma tecla em nova câmera (teclado acessível) ou `null` se a tecla não é da lente.
@@ -27,6 +27,8 @@ export const DIORAMA_KEYS_HELP = "Mapa em 3D. Setas giram a câmera, Shift com s
  * @returns {object|null} Nova câmera ou `null`.
  */
 export function keyboardCameraStep(cam, ev, bounds = {}) {
+  const walk = cam.mode === "fp" ? { w: [0, 1], s: [0, -1], a: [-1, 0], d: [1, 0] }[String(ev.key).toLowerCase()] : null;
+  if (walk) return panCamera(cam, walk[0], walk[1], bounds);
   const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[ev.key];
   if (dir && ev.shiftKey) return panCamera(cam, dir[0], dir[1], bounds);
   if (dir) return orbitCamera(cam, dir[0] * KEY_YAW_DEG, -dir[1] * KEY_PITCH_DEG);

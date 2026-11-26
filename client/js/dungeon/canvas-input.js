@@ -122,10 +122,20 @@ function beginSelectGesture(st, pt, worldPt, ev, opts) {
     opts.onDoorToggle?.(hitDoor.doorId);
     return;
   }
+  beginFloorPan(st, pt, snapWorldToCell(worldPt.wx, worldPt.wy, floor.grid), opts);
+}
+
+/** Toque no chão: com token de ficha selecionado marca o destino do deslocamento e mantém a seleção; senão limpa-a. */
+function beginFloorPan(st, pt, cell, opts) {
   st.mode = "pan";
   st.lastPt = pt;
   st.tappedTokenId = "";
-  opts.onSelectToken?.("");
+  st.keepSelection = Boolean(opts.onFloorTap?.(cell));
+  if (!st.keepSelection) opts.onSelectToken?.("");
+}
+
+function finishPan(st, opts) {
+  if (!st.didDrag && !st.keepSelection) opts.onSelectCommitted?.("");
 }
 
 function beginGesture(st, canvas, ev, opts) {
@@ -229,6 +239,7 @@ function resetGestureState(st) {
   st.stroke = null;
   st.didDrag = false;
   st.tappedTokenId = null;
+  st.keepSelection = false;
 }
 
 function finishGesture(st, canvas, ev, opts) {
@@ -243,7 +254,7 @@ function finishGesture(st, canvas, ev, opts) {
     if (moved) opts.onTokenMove?.(tokId, target.x, target.y);
     else opts.onSelectCommitted?.(tokId);
   } else if (st.mode === "pan") {
-    if (!st.didDrag) opts.onSelectCommitted?.("");
+    finishPan(st, opts);
   } else {
     commitToolFinish(st, opts);
   }

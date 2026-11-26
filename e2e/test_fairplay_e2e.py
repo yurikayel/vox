@@ -18,7 +18,7 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_sync_e2e import _add_token, _generate_invite, _watch_errors
-from test_mesa_ttrpg_e2e import _goto_mesa, _onboard_and_campaign, _set_viewer_gm
+from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
 from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
 
 ROLL_ID = "e2e-roll"
@@ -75,6 +75,25 @@ def _wait_state(page, kind, arg):
         raise AssertionError(f"condição não ocorreu em {WAIT_MS} ms: {kind} {arg}")
 
 
+_ADMIT_JS = """async ({ want, ms }) => {
+  const m = await import('/js/dungeon/dungeon-state.js');
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const st = m.getDungeonSession();
+    for (const id of st.syncPeer.getPendingFairplayPeers()) await st.syncPeer.approveFairplayPeer(id);
+    if (Object.keys(st.fairplay?.admitted || {}).length >= want) return true;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return false;
+}"""
+
+
+def _admit_players(gm, count):
+    """Aprova pelo Mestre os pares pendentes (com a flag ligada, quem entra espera a aprovação) até `count` admitidos."""
+    if not gm.evaluate(_ADMIT_JS, {"want": count, "ms": WAIT_MS}):
+        raise AssertionError(f"admissão não ocorreu em {WAIT_MS} ms: {count} jogadores")
+
+
 def _drop_shared_flag(pages):
     """Desliga a flag só para quem entrar depois.
 
@@ -94,7 +113,7 @@ def _diagnosis(page):
 class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
     """Rolagem verificável pela rede da mesa, com a flag de laboratório."""
 
-    def _open_trio(self, name, flags=(True, True, True)):
+    def _open_trio(self, name, flags=(True, True, True), admit=True):
         """Mestre com mesa aberta e dois jogadores já conectados; `flags` liga o Fairplay por aba (Mestre, J1, J2).
 
         Uma aba sem flag depois de abas com flag usa `_drop_shared_flag` (o `localStorage` é compartilhado).
@@ -115,9 +134,10 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             if flag:
                 page.add_init_script(FLAG_ON)
             _watch_errors(page, errors)
-            page.goto(invite, wait_until="domcontentloaded")
-            page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
+            _join_as_player(page, invite)
             players.append(page)
+            if flag and admit:
+                _admit_players(gm, sum(1 for f in flags[1:i + 1] if f))
         return ctx, gm, players, errors
 
     def _open_roll(self, opener):
@@ -195,6 +215,24 @@ class FairplayPlaywrightE2ETests(PlaywrightE2EHarness):
             roll_peers = _roll_info(p1)["participants"]
             self.assertEqual((info["driver"], info["me"] in roll_peers, info["me"] in _roll_info(p1)["commits"]), (False, False, False))
             self.assertEqual(p2.locator(".dungeon-fairplay-seal").count(), 0)
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_02c_master_approves_and_refuses_entry_on_screen(self):
+        """SUB-03: o Mestre vê os pedidos, aprova um e recusa o outro; cada jogador vê o estado certo."""
+        ctx, gm, (p1, p2), errors = self._open_trio("Fairplay Aprovacao", admit=False)
+        try:
+            ids = [_roll_info(p)["me"] for p in (p1, p2)]
+            for page in (p1, p2):
+                expect(page.locator(".dungeon-fairplay-access.is-waiting")).to_have_text("Aguardando aprovação do Mestre", timeout=WAIT_MS)
+            expect(gm.locator("[data-dungeon='fairplay-approve']")).to_have_count(2, timeout=WAIT_MS)
+            gm.locator(f"[data-dungeon='fairplay-approve'][data-peer='{ids[0]}']").click()
+            gm.locator(f"[data-dungeon='fairplay-refuse'][data-peer='{ids[1]}']").click()
+            expect(p2.locator(".dungeon-fairplay-access.is-refused")).to_have_text("Entrada recusada", timeout=WAIT_MS)
+            expect(p1.locator(".dungeon-fairplay-access.is-waiting")).to_have_count(0, timeout=WAIT_MS)
+            _wait_state(gm, "keys", 2)
+            self.assertEqual(gm.evaluate("() => document.activeElement?.id"), "dungeon-fairplay-access", "foco previsível depois da ação")
             self.assertEqual(errors, [])
         finally:
             _close_ctx(ctx)

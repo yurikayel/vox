@@ -4,7 +4,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
-import { renderSystemSelect } from "./screen-sheet-derived.js";
+import { renderSystemEditFields, renderSystemSelect } from "./screen-sheet-derived.js";
 
 const LEVELUP_PRESETS = [
   { id: "d20_fantasy", label: "d20 Fantasia (+8 PV + CON, +1 slot)" },
@@ -70,28 +70,79 @@ export function renderLevelUpWizard(state) {
     </section>`;
 }
 
+/** Valor digitado no Salvar recusado, se houver; senão o da ficha. */
+function draftOr(draft, key, fallback) {
+  return draft[key] ?? fallback;
+}
+
+/** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. */
+function renderEditIssues(issues) {
+  if (!issues.length) return "";
+  const items = issues.map((i) => `<li>${escapeHtml(i.message)}</li>`).join("");
+  return `<div class="dungeon-alert-warn" role="alert"><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
+}
+
+/**
+ * Bloco do link de ficha: a confirmação antes de gerar (o que vai, histórico e sincronização, sem revogação) ou o motivo da recusa.
+ * @param {{href?: string, size?: number, reason?: string}|null|undefined} link Estado do link (`state.voxcharLink`).
+ * @returns {string} HTML do bloco, ou vazio sem link pendente.
+ */
+export function renderVoxcharLinkBlock(link) {
+  if (!link) return "";
+  if (!link.href) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(link.reason || "Não foi possível gerar o link.")}</p>`;
+  return `<div class="dungeon-alert-warn" role="alert" data-dungeon-voxchar-link>
+    <strong>Confirmar o link da ficha</strong>
+    <p>Vai a ficha-base inteira: nome, atributos, itens e notas públicas (${link.size} caracteres). Notas do Mestre, identidade e estado de jogo ficam de fora.</p>
+    <p>O link fica no histórico e na sincronização do navegador e com quem o receber, e <strong>não pode ser revogado</strong>: quem o tem continua a ver esta cópia.</p>
+    <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="copy-voxchar-link">Copiar link</button>
+    <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="cancel-voxchar-link">Cancelar</button>
+  </div>`;
+}
+
+/**
+ * Linha de arquivo e link da ficha: exportar, importar, copiar link e, se houver, a confirmação do link.
+ * @param {object|null|undefined} link Estado do link (`state.voxcharLink`).
+ * @returns {string} HTML da linha de ações.
+ */
+function renderSheetShareRow(link) {
+  return `
+    <div class="dungeon-input-row">
+      <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-voxchar">Exportar ficha (.voxchar)</button>
+      <label for="dungeon-import-voxchar" class="dungeon-btn dungeon-btn-ghost dungeon-file-trigger">Importar ficha</label>
+      <input id="dungeon-import-voxchar" class="sr-only" type="file" accept=".voxchar,application/json" data-dungeon="import-voxchar" />
+      <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="share-voxchar-link">Copiar link da ficha</button>
+    </div>
+    ${renderVoxcharLinkBlock(link)}`;
+}
+
 /**
  * Renderiza o painel retrátil de edição básica da ficha (nome, classe, CA e atributos FOR–CAR).
  * @param {object} sheet Ficha ativa.
+ * @param {{issues?: Array<{field: string, message: string}>, draft?: object|null, link?: object|null}} [edit] Avisos e valores digitados do último Salvar recusado, e o estado do link de ficha.
  * @returns {string} HTML do formulário de edição.
  */
-export function renderSheetEditPanel(sheet) {
+export function renderSheetEditPanel(sheet, edit = {}) {
   const attrs = sheet?.attributes_lww || {};
+  const draft = edit.draft || {};
+  const issues = edit.issues || [];
   const ab = attrs.abilities || {};
   const abInputs = ABILITY_FIELDS.map((f) => {
-    const val = Number(ab[f.key]) || 10;
+    const val = escapeHtml(String(draftOr(draft, f.key, Number(ab[f.key]) || 10)));
     return `<label class="dungeon-field-mini"><span>${f.label}</span><input class="dungeon-input" name="${f.key}" type="number" min="1" max="30" value="${val}" /></label>`;
   }).join("");
   return `
-    <details class="dungeon-audit" data-dungeon-details="sheet-edit">
+    <details class="dungeon-audit" data-dungeon-details="sheet-edit"${issues.length ? " open" : ""}>
       <summary>Editar Dados da Ficha (Nome, Classe, CA e Atributos)</summary>
-      <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form">
-        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(sheet?.name || "")}" /></label>
-        <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(sheet?.role_title || attrs.class_name || "")}" /></label>
-        ${renderSystemSelect(sheet)}
-        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${Number(attrs.armor_class) || 10}" /></label>
+      ${renderEditIssues(issues)}
+      <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>
+        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "name", sheet?.name || ""))}" /></label>
+        <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "class_name", sheet?.role_title || attrs.class_name || ""))}" /></label>
+        ${renderSystemSelect(sheet, draft.system)}
+        ${renderSystemEditFields(sheet, draft)}
+        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${escapeHtml(String(draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)))}" /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>
+      ${renderSheetShareRow(edit.link)}
     </details>`;
 }

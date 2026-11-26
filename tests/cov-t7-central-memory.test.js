@@ -7,6 +7,7 @@ import test, { beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import * as cm from "../client/js/central-memory.js";
 import * as choice from "../client/js/memory-server-choice.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const realFetch = globalThis.fetch;
 const realWindow = globalThis.window;
@@ -87,7 +88,7 @@ test("notifyCentralMemory - só empurra com envio automático ligado e separa o 
   cm.setCentralMemoryAutoPush(true);
   cm.notifyCentralMemory(null);
   cm.notifyCentralMemory({ type: "POST", id: "p1", mediaBlob: { hash: "h1", data: "AAAA" } });
-  await new Promise((r) => setTimeout(r, 30));
+  await waitUntil(()=> calls.some((c) => c[1]?.type === "MEDIA_BLOB"));
   const bodies = calls.map((c) => c[1]);
   assert.ok(bodies.some((b) => b.id === "p1"));
   assert.ok(bodies.some((b) => b.type === "MEDIA_BLOB" && b.blob.hash === "h1"));
@@ -144,8 +145,9 @@ test("startCentralMemoryLoop - sincroniza já e a cada intervalo, pergunta da su
     assert.ok(calls.filter(([u]) => u.endsWith("/memory/sync")).length > afterFirst);
     assert.equal(listeners[0][0], "visibilitychange");
     globalThis.document.visibilityState = "visible";
+    const beforeVisible = calls.length;
     listeners[0][1]();
-    await new Promise((r) => setTimeout(r, 30));
+    await waitUntil(() => calls.length > beforeVisible);
     stop();
     const n = calls.length;
     mock.timers.tick(5000);

@@ -16,6 +16,7 @@ import {
 import { renderStandaloneBackupHtml as renderCliHtml, parseBackupBundle as parseCliBundle } from "../scripts/export-html-backup.mjs";
 import { renderHtmlBackupCard, renderNetworkSettings } from "../client/js/render/network.js";
 import { bindHtmlBackupButton, exportHtmlBackupNow } from "../client/js/app/screens-network.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const PNG_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -210,7 +211,7 @@ test("EXP-04 UI: clique no botão gera download local HTML com zero chamadas de 
     assert.equal(bound, true);
 
     dom.btn.listeners.click();
-    await new Promise((r) => setTimeout(r, 20));
+    await waitUntil(() => dom.btn.disabled === false);
 
     assert.equal(fetchCalls, 0, "zero chamadas de rede/upload");
     assert.equal(dom.btn.disabled, false, "botão reabilitado após download");

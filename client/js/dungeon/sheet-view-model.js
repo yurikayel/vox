@@ -82,21 +82,29 @@ export function buildCarryView(items) {
 /** Quantidade máxima de atalhos do HUD rápido da aba Mapa (spec Subversus VTT v0, §3.1). */
 export const HUD_MAX_SHORTCUTS = 6;
 
+function favoriteShortcut(fav) {
+  if (fav.kind === "item") return { id: fav.key, label: fav.label, kind: "action", action: "inv-equip", attrs: { "data-item-id": fav.id } };
+  return { id: fav.key, label: fav.label, kind: "action", action: "roll-action", attrs: { "data-action-id": fav.id } };
+}
+
 /**
  * Atalhos do HUD rápido, derivados da ficha ativa: primeiro as ações clicáveis (ataque/perícia), depois
  * "Rolar d20", "Mover" (só com token da ficha na cena) e "Abrir ficha". Nunca passa de `HUD_MAX_SHORTCUTS`;
  * os atalhos fixos têm vaga garantida e as ações da ficha ocupam o que sobra, na ordem da ficha.
  * @param {{char_id?: string, sheet_meta?: {clickable_actions?: Array<{id: string, label: string}>}}|null|undefined} sheet Ficha ativa.
- * @param {{ownTokenId?: string}} [opts] `ownTokenId`: token da ficha na cena, quando existe.
+ * @param {{ownTokenId?: string, favorites?: Array<{key: string, kind: string, id: string, label: string}>}} [opts] `ownTokenId`: token da ficha na cena; `favorites`: favoritos resolvidos, que ocupam as vagas das ações.
  * @returns {Array<{id: string, label: string, kind: "action"|"link", action?: string, attrs?: Record<string, string>, href?: string}>} Atalhos em ordem de exibição.
  */
 export function buildHudShortcuts(sheet, opts = {}) {
   const fixed = [{ id: "roll-d20", label: "Rolar d20", kind: "action", action: "roll-d20" }];
   if (opts.ownTokenId) fixed.push({ id: "move", label: "Mover", kind: "action", action: "select-token", attrs: { "data-token-id": opts.ownTokenId } });
   if (sheet?.char_id) fixed.push({ id: "sheet", label: "Abrir ficha", kind: "link", href: `#/dungeon/ficha/${encodeURIComponent(sheet.char_id)}` });
+  const room = HUD_MAX_SHORTCUTS - fixed.length;
+  const favorites = (opts.favorites || []).slice(0, room).map(favoriteShortcut);
+  if (favorites.length) return [...favorites, ...fixed];
   const actions = (sheet?.sheet_meta?.clickable_actions || [])
     .filter((a) => a?.id && a?.label)
-    .slice(0, HUD_MAX_SHORTCUTS - fixed.length)
+    .slice(0, room)
     .map((a) => ({ id: `action:${a.id}`, label: String(a.label), kind: "action", action: "roll-action", attrs: { "data-action-id": String(a.id) } }));
   return [...actions, ...fixed];
 }

@@ -4,6 +4,7 @@
  */
 import { attachCanvasInput } from "./canvas-input.js";
 import { renderSceneToCanvas } from "./canvas-renderer.js";
+import { loadTokenAvatars, tokenFichaRenderOpts } from "./canvas-token-layers.js";
 import {
   buildCampaignFromSession,
   dispatchCampaignOp,
@@ -13,8 +14,7 @@ import { clampTokenToFloor, clampZoom, createCamera } from "./vtt-geometry.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { buildRoomInviteHref, generateRoomKey, generateVttKeypair } from "./vtt-sync-codec.js";
-import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
-import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
+import { wireHostSyncPeer } from "./vtt-host-wire.js";
 
 /**
  * Retorna a cena ativa da sessão, garantindo fallback para a cena padrão da Cripta.
@@ -243,34 +243,11 @@ async function ensurePersistedCampaignForHost(state, pair, store) {
   return saved.id;
 }
 
-/** Liga o par de sincronização do Mestre (e o condutor Fairplay, com a flag) à mesa recém-convidada. */
-function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
-  const transport = createBroadcastChannelTransport(tableId, pair.routeId);
-  state.syncPeer = createVttSyncPeer({
-    role: "gm",
-    campaignId: tableId,
-    keypair: pair,
-    store,
-    transport,
-    roomKey,
-    onUpdate: (camp) => {
-      hydrateStateFromCampaign(state, camp);
-      (state._onSyncUpdate || opts.onSyncUpdate)?.(camp);
-      state.fairplayDriver?.onUpdate(camp);
-    },
-    onPeerCountChange: (count) => {
-      state.connectedPeersCount = count;
-      (state._onSyncUpdate || opts.onSyncUpdate)?.();
-    },
-  });
-  wireFairplayDriver(state, { peer: state.syncPeer, peerId: pair.routeId, store, campaignId: tableId });
-}
-
 /**
  * Gera um convite P2P local (`#/dungeon/entrar/:id?gm=...#k=...`), garante campanha salva no `VttStore`
  * e ativa o par de sincronização GM com broadcast ao vivo via `BroadcastChannel`.
  * @param {object} state Estado da sessão.
- * @param {object} [opts={}] Opções (`store`, `onSyncUpdate`).
+ * @param {object} [opts={}] Opções (`store`, `onSyncUpdate`, `network` para ajustar o transporte em testes).
  * @returns {Promise<string>} Link de convite gerado.
  */
 export async function generateTableInvite(state, opts = {}) {
@@ -281,8 +258,8 @@ export async function generateTableInvite(state, opts = {}) {
   state.roomKey = roomKey;
   const tableId = await ensurePersistedCampaignForHost(state, pair, store);
   state.inviteHref = buildRoomInviteHref({ tableId, gmRouteId: pair.routeId, roomKey });
-  if (!state.syncPeer && typeof globalThis.BroadcastChannel === "function") {
-    wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store });
+  if (!state.syncPeer) {
+    await wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store });
   }
   state.campaignNotice = "Convite P2P ativo: a mesa sincroniza alterações com abas convidadas.";
   return state.inviteHref;
@@ -329,7 +306,13 @@ function buildCanvasCallbacks(container, state, ov, draw, opts) {
     getViewerRole: () => (state.viewerRole === "gm" ? "gm" : "player"),
     getTool: () => state.activeTool || "select",
     onCameraChange: (cam) => { state.camera = cam; state._cameraTouched = true; syncZoomBadge(container, cam.zoom); draw(); },
-    onSelectToken: (tokId) => { state.selectedTokenId = tokId; draw(); },
+    onSelectToken: (tokId) => { state.selectedTokenId = tokId; ov.moveTarget = null; draw(); },
+    onFloorTap: (cell) => {
+      if (!tokenFichaRenderOpts(state, getActiveScene(state), ov).movePreview) return false;
+      ov.moveTarget = cell;
+      draw();
+      return true;
+    },
     onSelectCommitted: (tokId) => { state.selectedTokenId = tokId; refresh(); },
     onDragPreview: (prev) => { ov.dragPreview = prev; draw(); },
     onTokenMove: (tokId, x, y) => { moveTokenInScene(state, tokId, x, y, { store }).then(refresh); },
@@ -372,7 +355,7 @@ export function mountSceneCanvas(container, state, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   const scene = getActiveScene(state);
   maybeApplyInitialFitCamera(container, canvas, state, scene);
-  const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, draftAoe: null, ruler: null };
+  const ov = { mapImage: null, dragPreview: null, draftStroke: null, draftFogRect: null, draftAoe: null, ruler: null, avatars: new Map(), moveTarget: null };
   /**
    * Redesenha a cena ativa no canvas com a câmera e o estado de sobreposição atuais.
    *
@@ -383,10 +366,12 @@ export function mountSceneCanvas(container, state, opts = {}) {
     viewerRole: state.viewerRole === "gm" ? "gm" : "player",
     selectedTokenId: state.selectedTokenId || "",
     notes: state.notes || [],
+    ...tokenFichaRenderOpts(state, getActiveScene(state), ov),
     ...ov,
   });
   draw();
   resolveMapBitmap(scene, store).then((bmp) => { if (bmp) { ov.mapImage = bmp; draw(); } }).catch(() => {});
+  loadTokenAvatars(scene, store, ov.avatars).then((n) => { if (n) draw(); }).catch(() => {});
   const detachInput = attachCanvasInput(canvas, buildCanvasCallbacks(container, state, ov, draw, opts));
   const detachResize = observeCanvasResize(canvas, draw);
   return () => {

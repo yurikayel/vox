@@ -6,21 +6,30 @@
  * @module dungeon/screen-sheet-derived
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
+import { derivedStats, showBlock } from "./system-display.js";
+import { renderReserveControls } from "./screen-sheet-reserves.js";
+import { projectReserves } from "./sheet-reserves.js";
+import { totalCarriedWeight } from "./vtt-inventory.js";
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
+import { normalizeChoices } from "./system-derive.js";
+import { normalizeRestChoices } from "./system-rest.js";
+import { renderConditionsAndRests } from "./screen-sheet-rest.js";
+import { renderDeathSaves, renderSavesList, renderSystemChoiceFields } from "./screen-sheet-system-extras.js";
 import { escapeHtml } from "../shared/html.js";
 
-/** Soma com sinal explícito ("+3", "-1", "+0"). */
-function signed(n) {
-  return n >= 0 ? `+${n}` : `−${Math.abs(n)}`;
+/** Itens do inventário da ficha (já normalizados na sessão ou o mapa bruto `inventory_orset`). */
+function sheetItems(sheet) {
+  const raw = Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : Object.values(sheet.inventory_orset || {});
+  return raw.filter((it) => it && typeof it === "object" && !Array.isArray(it));
 }
 
 /**
  * Pacote e derivados da ficha. Ficha legada (sem `system`) é migrada só para exibição; nada é gravado aqui.
  * Nível, atributos e perícias treinadas vêm sempre dos campos vivos da ficha (`attributes_lww` e as ações de perícia), para a edição, o Subir de Nível e a remoção de ações valerem na hora.
  * @param {object|null|undefined} sheet Ficha ativa.
- * @returns {{pack: object, derived: object}|null} `null` se o pacote da ficha não está registrado.
+ * @returns {{pack: object, derived: object, choices: object}|null} `null` se o pacote da ficha não está registrado.
  */
 export function resolveSheetSystem(sheet) {
   if (!sheet || typeof sheet !== "object") return null;
@@ -28,8 +37,15 @@ export function resolveSheetSystem(sheet) {
   const pack = getSystemPack(migrated.system?.id);
   if (!pack) return null;
   const attrs = migrated.attributes_lww || {};
-  const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities, proficientSkills: liveTrainedSkills(pack, migrated) };
-  return { pack, derived: deriveSheet(pack, choices) };
+  const choices = { ...migrated.system_choices, level: attrs.level ?? migrated.system_choices?.level, abilities: attrs.abilities ?? migrated.system_choices?.abilities, proficientSkills: liveTrainedSkills(pack, migrated), speedFt: attrs.speed_ft ?? migrated.system_choices?.speedFt };
+  return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices), rest: normalizeRestChoices(pack, { ...migrated.system_choices, level: choices.level }) };
+}
+
+/** Contexto da ficha para a faixa: peso carregado, itens sem peso (carga do GURPS) e recursos atuais/máximos. */
+function displayContext(sheet, pack) {
+  const items = sheetItems(sheet);
+  const unweighed = items.filter((it) => it?.weightLb == null || it.weightLb === "" || Number.isNaN(Number(it.weightLb))).length;
+  return { weightLb: totalCarriedWeight(sheet.inventory_orset), unweighed, reserves: projectReserves(sheet, pack) };
 }
 
 function stat(label, value) {
@@ -45,33 +61,55 @@ function renderCredits(pack) {
 /**
  * Faixa de números derivados: proficiência, CA base, iniciativa e percepção passiva, com os rótulos do pacote.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {number|null} [hpCurrent] PV atuais, para mostrar os testes contra a morte com 0 PV.
  * @returns {string} HTML (vazio se o pacote não existe).
  */
-export function renderDerivedStrip(sheet) {
+export function renderDerivedStrip(sheet, hpCurrent = null) {
   const sys = resolveSheetSystem(sheet);
   if (!sys) return "";
   const { pack, derived } = sys;
-  const l = pack.labels;
   return `
     <section class="dungeon-derived" aria-label="Números do personagem (${escapeHtml(pack.name)})">
       <h3 class="dungeon-eyebrow">Números do personagem · ${escapeHtml(pack.name)}</h3>
       <dl class="dungeon-derived-list">
-        ${stat(l.proficiency, signed(derived.proficiency))}
-        ${stat(`${l.armorClass} sem armadura`, derived.armorClass)}
-        ${stat(l.initiative, signed(derived.initiative))}
-        ${stat(l.passivePerception, derived.passivePerception)}
+        ${derivedStats(pack, derived, undefined, displayContext(sheet, pack)).map((s) => stat(s.label, s.value)).join("\n        ")}
       </dl>
-      ${renderCredits(pack)}
+      ${showBlock(pack, "saves") ? renderSavesList(pack, derived) : ""}
+      ${showBlock(pack, "deathSaves") ? renderDeathSaves(pack, derived, hpCurrent) : ""}
+      ${showBlock(pack, "conditions") ? renderConditionsAndRests(pack, sys.rest) : ""}
+      ${renderReserveControls(sheet, pack)}${renderCredits(pack)}
     </section>`;
+}
+
+/** Escolhas com o que o jogador digitou num Salvar recusado por cima das gravadas. */
+function withDraft(choices, draft) {
+  return {
+    ...choices,
+    speedFt: draft.speedFt ?? choices.speedFt,
+    proficientSaves: draft.proficientSaves ?? choices.proficientSaves,
+    expertSkills: draft.expertSkills ?? choices.expertSkills,
+  };
+}
+
+/**
+ * Campos do pacote no painel Editar (salvaguardas, especialização, Deslocamento); vazio sem pacote.
+ * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {object} [draft] Valores digitados num Salvar recusado (`speedFt`, `proficientSaves`, `expertSkills`).
+ * @returns {string} HTML dos campos.
+ */
+export function renderSystemEditFields(sheet, draft = {}) {
+  const sys = resolveSheetSystem(sheet);
+  return sys ? renderSystemChoiceFields(sys.pack, { ...withDraft(sys.choices, draft), hitDie: sys.rest.hitDie, hitDieSet: sys.rest.hitDieSet }) : "";
 }
 
 /**
  * Seletor de sistema do painel Editar, com um campo para cada pacote registrado.
  * @param {object|null|undefined} sheet Ficha ativa.
+ * @param {string} [chosen] Sistema digitado num Salvar recusado; vence o da ficha quando existe na lista.
  * @returns {string} HTML do campo `sheetSystem`.
  */
-export function renderSystemSelect(sheet) {
-  const current = migrateLegacySheet(sheet || {})?.system?.id || "";
+export function renderSystemSelect(sheet, chosen = "") {
+  const current = chosen || migrateLegacySheet(sheet || {})?.system?.id || "";
   const options = listSystemPackIds().map((id) => {
     const pack = getSystemPack(id);
     return `<option value="${escapeHtml(id)}"${id === current ? " selected" : ""}>${escapeHtml(pack.name)}</option>`;

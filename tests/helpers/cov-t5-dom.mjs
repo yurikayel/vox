@@ -2,6 +2,7 @@
  * @file Mini-DOM programável dos testes de cobertura do lote T5: elementos que guardam ouvintes, `dataset`,
  * `hidden`, `disabled` etc., e um `document` que devolve só o que o teste registrou. Sem parser de HTML.
  */
+import { waitUntil } from "./wait-until.js";
 
 /**
  * Cria um elemento falso. `kids` e `kidsAll` respondem a `querySelector(All)` por seletor exato; `up` responde
@@ -152,7 +153,5 @@ export function unrefLongTimers() {
  * @returns {Promise<boolean>} O último valor da condição.
  */
 export async function waitFor(cond, ms = 15_000) {
-  const end = Date.now() + ms;
-  while (!cond() && Date.now() < end) await new Promise((r) => setTimeout(r, 10));
-  return Boolean(cond());
+  return Boolean(await waitUntil(cond, ms));
 }

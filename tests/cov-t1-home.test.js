@@ -11,6 +11,7 @@ import * as social from "../client/js/social.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as welcome from "../client/js/vox-welcome-profile.js";
 import * as home from "../client/js/app/screens-home.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const dom = installFakeDom();
 const realFetch = globalThis.fetch;
@@ -30,7 +31,6 @@ afterEach(() => {
 });
 
 const offline = () => { globalThis.fetch = async () => { throw new Error("offline"); }; };
-const settle = (ms = 60) => new Promise((r) => setTimeout(r, ms));
 const topic = (over = {}) => ({ id: `t1_home_${++seq}`, type: "topic", communityId: "vox", title: `Titulo-home-${seq}`, body: "corpo", author: "vx_autor_home", ts: 5000 + seq, ...over });
 
 test("home — for-you mostra o tópico local e o post de boas-vindas", async () => {
@@ -98,7 +98,7 @@ test("home — dispensar o post de boas-vindas grava a marca, remove o cartão e
   assert.equal(ev.defaultPrevented && ev.stopped, true);
   assert.equal(localStorage.getItem(DISMISS_KEY), "1");
   assert.equal(post.removed, true);
-  await settle();
+  await waitUntil(() => !dom.main.innerHTML.includes(welcomeId));
   assert.equal(dom.main.innerHTML.includes(welcomeId), false, "a Home remontada não traz mais as boas-vindas");
 });
 

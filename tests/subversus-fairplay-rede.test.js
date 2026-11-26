@@ -4,7 +4,8 @@
  * entre pares é resolvida pelo reenvio depois de `OP_REJECTED`.
  */
 import "./setup.js";
-import test from "node:test";
+import test, { mock } from "node:test";
+import { setTimeout as realSleep } from "node:timers/promises";
 import assert from "node:assert/strict";
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
@@ -13,10 +14,9 @@ import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/v
 import { createFairplayDriver } from "../client/js/dungeon/vtt-fairplay-driver.js";
 import { isFairplayShareEnvelope } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
-import { settlePeers } from "./helpers/wait-until.js";
+import { settlePeers, waitUntil } from "./helpers/wait-until.js";
 
 const CAMP = "mesa-rede";
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
@@ -55,13 +55,28 @@ async function setupTable(drop = {}) {
 }
 
 async function waitAllDone(seats, rollId, timeoutMs = 6000) {
-  const end = Date.now() + timeoutMs;
-  while (Date.now() < end) {
+  let camps = [];
+  const done = await waitUntil(async () => {
+    camps = await Promise.all(seats.map((s) => s.store.loadCampaign(CAMP)));
+    return camps.every((c) => c?.fairplay?.rolls?.[rollId]?.phase === "done");
+  }, timeoutMs);
+  if (!done) throw new Error("rolagem não fechou a tempo");
+  return camps;
+}
+
+/**
+ * Espera a rolagem fechar avançando um relógio virtual (Date + setTimeout simulados): o prazo mínimo de fase do
+ * Fairplay (5 s) passa em ~1 s reais, sem encurtar a regra; cada passo cede 4 ms reais para a cripto assíncrona.
+ */
+async function waitAllDoneVirtual(seats, rollId, virtualMs = 30000, stepMs = 100) {
+  for (let elapsed = 0; elapsed <= virtualMs; elapsed += stepMs) {
     const camps = await Promise.all(seats.map((s) => s.store.loadCampaign(CAMP)));
     if (camps.every((c) => c?.fairplay?.rolls?.[rollId]?.phase === "done")) return camps;
-    await sleep(40);
+    mock.timers.tick(stepMs);
+    await realSleep(4); // a cripto assíncrona (WebCrypto) termina em tempo real; só o relógio das fases é virtual
+    await settlePeers(...seats.map((s) => s.peer));
   }
-  throw new Error("rolagem não fechou a tempo");
+  throw new Error("rolagem não fechou no tempo virtual");
 }
 
 test("fairplay rede: 3 aparelhos com condutor fecham a rolagem e chegam ao mesmo número verificado", async () => {
@@ -78,11 +93,16 @@ test("fairplay rede: 3 aparelhos com condutor fecham a rolagem e chegam ao mesmo
 });
 
 test("fairplay rede: jogador que some na revelação é recuperado pelas partes dos outros", async () => {
-  const seats = await setupTable({ 2: ["FAIRPLAY_REVEAL"] });
-  const rollId = await seats[1].driver.openRoll({ sides: 6, formula: "1d6", phaseMs: 4000 });
-  const camps = await waitAllDone(seats, rollId, 15000);
-  const res = await verifyFairplayRecord(camps[1], rollId);
-  assert.equal(res.status, "verified", `motivo: ${res.reason}`);
-  assert.deepEqual(res.recoveredPeerIds, [seats[2].id]);
-  for (const s of seats) s.driver.close();
+  mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.now() });
+  try {
+    const seats = await setupTable({ 2: ["FAIRPLAY_REVEAL"] });
+    const rollId = await seats[1].driver.openRoll({ sides: 6, formula: "1d6", phaseMs: 5000 });
+    const camps = await waitAllDoneVirtual(seats, rollId);
+    const res = await verifyFairplayRecord(camps[1], rollId);
+    assert.equal(res.status, "verified", `motivo: ${res.reason}`);
+    assert.deepEqual(res.recoveredPeerIds, [seats[2].id]);
+    for (const s of seats) s.driver.close();
+  } finally {
+    mock.timers.reset();
+  }
 });

@@ -9,6 +9,7 @@ import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./
 import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
 import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { createVttOp } from "./vtt-schema.js";
+import { sanitizeDisplayName } from "./vtt-fairplay-nome.js";
 import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   createBlobAssembler,
@@ -213,8 +214,10 @@ function tsOutOfRange(ctx, op) {
 async function admitJoiningPlayer(ctx, peerId) {
   const current = await ctx.store.loadCampaign(ctx.campaignId);
   if (isAdmittedIn(ctx, current, peerId)) return;
+  if (ctx.refusedFairplay.has(peerId)) return; // recusado: um novo pedido não o devolve à fila
   if (isFairplayLabEnabled(ctx.storage)) {
     ctx.pendingFairplay.add(peerId); // com a flag ligada, quem entra espera a aprovação do Mestre
+    ctx.onFairplayAccessChange?.();
     return;
   }
   await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: peerId } });
@@ -225,6 +228,22 @@ async function approveFairplayPeer(ctx, routeId) {
   if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage) || !ctx.pendingFairplay.has(routeId)) return false;
   ctx.pendingFairplay.delete(routeId);
   await dispatchSyncOp(ctx, { type: "FAIRPLAY_ADMIT", payload: { actor: routeId } });
+  ctx.onFairplayAccessChange?.();
+  return true;
+}
+
+/**
+ * Recusa um par pendente (só Mestre, só com a flag ligada): sai da fila, fica em `refusedFairplay` e o pedido de
+ * chave dele volta como `OP_REJECTED` com motivo `revoked`. Recusar quem não está pendente (ou já foi recusado) não muda nada.
+ */
+async function refuseFairplayPeer(ctx, routeId) {
+  if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage) || !ctx.pendingFairplay.has(routeId)) return false;
+  ctx.pendingFairplay.delete(routeId);
+  ctx.peerNames.delete(routeId);
+  ctx.refusedFairplay.add(routeId);
+  const opId = ctx.keyOpByActor.get(routeId) || "";
+  ctx.transport.send(routeId, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId, reason: "revoked" });
+  ctx.onFairplayAccessChange?.();
   return true;
 }
 
@@ -232,6 +251,7 @@ async function approveFairplayPeer(ctx, routeId) {
 async function revokeFairplayPeer(ctx, routeId) {
   if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage)) return false;
   ctx.pendingFairplay.delete(routeId);
+  ctx.peerNames.delete(routeId);
   await dispatchSyncOp(ctx, { type: "FAIRPLAY_REVOKE", payload: { actor: routeId } });
   return true;
 }
@@ -243,6 +263,7 @@ function isRevokedIn(campaign, actor) {
 /** Motivo da recusa de uma op Fairplay com assinatura válida (par revogado ou não admitido), ou `null`. */
 function fairplayRefusal(ctx, current, op) {
   if (isFairplayOp(op) && isRevokedIn(current, op.actor)) return "revoked";
+  if (op.type === "FAIRPLAY_KEY" && ctx.refusedFairplay.has(op.actor)) return "revoked"; // entrada recusada pelo Mestre (ADR-040 §3.1)
   if (op.type === "FAIRPLAY_KEY" && !isAdmittedIn(ctx, current, op.actor)) return "not_admitted";
   return null;
 }
@@ -256,6 +277,7 @@ async function handleGmActionOp(ctx, msg) {
   const validSig = await verifyVttOpSignature(msg.op);
   const current = await ctx.store.loadCampaign(ctx.campaignId);
   const refusal = validSig ? fairplayRefusal(ctx, current, msg.op) : null;
+  if (refusal === "not_admitted") ctx.keyOpByActor.set(msg.op.actor, msg.op.opId); // para avisar este pedido se o Mestre recusar depois
   if (refusal) return rejectOp(ctx, msg, refusal);
   if (!validSig || !isAuthorizedVttOp(current, msg.op)) return rejectOp(ctx, msg, validSig ? "unauthorized" : "invalid_signature");
   const res = await ctx.store.appendOp(ctx.campaignId, msg.op);
@@ -269,10 +291,20 @@ async function handleGmActionOp(ctx, msg) {
   return undefined;
 }
 
+/** Guarda o nome anunciado: recusado não entra, e enquanto pendente vale o nome do primeiro HELLO. */
+function rememberPeerName(ctx, from, name) {
+  if (ctx.refusedFairplay.has(from)) return;
+  if (ctx.pendingFairplay.has(from) && ctx.peerNames.has(from)) return;
+  ctx.peerNames.set(from, sanitizeDisplayName(name));
+}
+
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
-    ctx.connectedPlayers.add(msg.from);
-    ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
+    rememberPeerName(ctx, msg.from, msg.name);
+    if (!ctx.connectedPlayers.has(msg.from)) {
+      ctx.connectedPlayers.add(msg.from);
+      ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
+    }
     await admitJoiningPlayer(ctx, msg.from);
     await sendFilteredSnapshot(ctx, msg.from);
     return;
@@ -299,6 +331,7 @@ async function verifiedFairplayOps(raw) {
 /** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
   ctx.snapshotAsked = false;
+  stopHelloRetry(ctx);
   const ops = await verifiedFairplayOps(msg.fairplayOps);
   const saved = await ctx.store.saveCampaign(rebuildFairplayState(msg.campaign, ops));
   await requestMissingBlobs(ctx, saved, msg.from);
@@ -343,7 +376,10 @@ async function handlePlayerMessage(ctx, msg) {
     }
     return;
   }
-  if (msg.kind === "OP_REJECTED") ctx.onRejected?.(msg);
+  if (msg.kind === "OP_REJECTED") {
+    if (msg.reason === "revoked") stopHelloRetry(ctx); // recusa da entrada: insistir não muda a resposta; outra op recusada não é isso
+    ctx.onRejected?.(msg);
+  }
 }
 
 async function dispatchSyncOp(ctx, rawOp) {
@@ -359,6 +395,68 @@ async function dispatchSyncOp(ctx, rawOp) {
   return op;
 }
 
+/**
+ * Reenvios do HELLO_SYNC quando o Mestre ainda não escuta (sob carga): 1 envio + até 4 reenvios, com espera dobrando
+ * (400, 800, 1600, 3200 ms) e uma espera final de 6400 ms antes de desistir: ~12,4 s no total. Ao desistir, só
+ * chama `onHelloGaveUp`; o aviso ao jogador na interface fica para o SUB-03 (estado honesto do jogador).
+ */
+export const HELLO_RETRY_LIMIT = 4;
+const HELLO_BACKOFF_MS = 400;
+
+function stopHelloRetry(ctx) {
+  if (ctx.helloTimer != null) ctx.cancel(ctx.helloTimer);
+  ctx.helloTimer = null;
+}
+
+function giveUpHello(ctx, reason) {
+  stopHelloRetry(ctx);
+  ctx.onHelloGaveUp?.({ reason });
+}
+
+/** HELLO_SYNC do jogador, com o nome de exibição quando há um (o Mestre o trata como não confiável). */
+function helloMessage(ctx) {
+  const name = sanitizeDisplayName(ctx.displayName);
+  return name ? { kind: "HELLO_SYNC", roomKey: ctx.roomKey, name } : { kind: "HELLO_SYNC", roomKey: ctx.roomKey };
+}
+
+function sendHello(ctx) {
+  try {
+    ctx.transport.send(ctx.gmRouteId, helloMessage(ctx));
+    return true;
+  } catch {
+    giveUpHello(ctx, "error");
+    return false;
+  }
+}
+
+function scheduleHelloRetry(ctx) {
+  ctx.helloTimer = ctx.schedule(() => {
+    ctx.helloTimer = null;
+    if (ctx.helloAttempts >= HELLO_RETRY_LIMIT) return giveUpHello(ctx, "no_response");
+    ctx.helloAttempts += 1;
+    if (sendHello(ctx)) scheduleHelloRetry(ctx);
+    return undefined;
+  }, HELLO_BACKOFF_MS * 2 ** ctx.helloAttempts);
+}
+
+/** Entra na mesa: envia o HELLO_SYNC e o repete, com limite, até o estado chegar, uma recusa final ou um erro. */
+function startHelloRetry(ctx) {
+  stopHelloRetry(ctx);
+  ctx.helloAttempts = 0;
+  if (sendHello(ctx)) scheduleHelloRetry(ctx);
+}
+
+/** Estado do acesso ao Fairplay e do nome de exibição dentro do contexto do par. */
+function fairplayContext(opts) {
+  return {
+    pendingFairplay: new Set(opts.pendingFairplay || []),
+    refusedFairplay: new Set(),
+    keyOpByActor: new Map(),
+    peerNames: new Map(),
+    displayName: opts.displayName,
+  };
+}
+
 function buildSyncContext(opts) {
   return {
     role: opts.role === "gm" ? "gm" : "player",
@@ -369,9 +467,15 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
-    pendingFairplay: new Set(),
+    ...fairplayContext(opts),
+    onFairplayAccessChange: opts.onFairplayAccessChange,
     storage: opts.storage,
     snapshotAsked: false,
+    helloAttempts: 0,
+    helloTimer: null,
+    schedule: typeof opts.schedule === "function" ? opts.schedule : (fn, ms) => setTimeout(fn, ms),
+    cancel: typeof opts.cancel === "function" ? opts.cancel : (h) => clearTimeout(h),
+    onHelloGaveUp: opts.onHelloGaveUp,
     now: typeof opts.now === "function" ? opts.now : Date.now,
     assembler: createBlobAssembler(),
     onUpdate: opts.onUpdate,
@@ -383,8 +487,8 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
- * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
+ * @param {object} opts Opções (`displayName` (nome anunciado no HELLO do jogador), `onFairplayAccessChange` (fila de pedidos mudou), `pendingFairplay` (fila inicial, para testes), `schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], getPeerNames: () => Record<string, string>, approveFairplayPeer: (routeId: string) => Promise<boolean>, refuseFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
   const ctx = buildSyncContext(opts);
@@ -396,14 +500,16 @@ export function createVttSyncPeer(opts) {
       .catch(() => {});
   });
   return {
-    join: () => { if (ctx.role === "player") ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey }); },
+    join: () => { if (ctx.role === "player") startHelloRetry(ctx); },
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
     routeId: ctx.keypair.routeId,
     getPendingFairplayPeers: () => [...ctx.pendingFairplay],
+    getPeerNames: () => Object.fromEntries([...ctx.peerNames].filter(([, name]) => name)),
     approveFairplayPeer: (routeId) => approveFairplayPeer(ctx, String(routeId)),
+    refuseFairplayPeer: (routeId) => refuseFairplayPeer(ctx, String(routeId)),
     revokeFairplayPeer: (routeId) => revokeFairplayPeer(ctx, String(routeId)),
     getPeerCount: () => ctx.connectedPlayers.size,
     flush: () => chain,
-    close: () => { detach(); ctx.transport.close?.(); },
+    close: () => { stopHelloRetry(ctx); detach(); ctx.transport.close?.(); },
   };
 }

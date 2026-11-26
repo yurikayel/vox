@@ -27,6 +27,10 @@ CLIENT_DIR = ROOT / "client"
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    # HTTP/1.1 mantém a conexão aberta: o boot pede centenas de módulos ES e, em HTTP/1.0, cada um abria um socket novo.
+    # No Windows isso esgota os sockets de loopback (milhares em TIME_WAIT) e o Chromium falha com
+    # `net::ERR_NO_BUFFER_SPACE` em `/js/app.js`, sem o app subir.
+    protocol_version = "HTTP/1.1"
     extensions_map = {
         **http.server.SimpleHTTPRequestHandler.extensions_map,
         ".js": "application/javascript; charset=utf-8",
@@ -121,6 +125,24 @@ def _close_ctx(ctx):
     ctx.close()
 
 
+_APP_READY_JS = "() => !!document.querySelector('#app-root')?.firstElementChild"
+
+
+def _wait_app_ready(page):
+    """Espera o primeiro render do shell (`#app-root` com conteúdo) após o boot a frio.
+
+    O boot carrega centenas de módulos ES; sob carga ele dominava os timeouts de 15 s
+    dos passos seguintes. Esta espera isola o boot numa condição real, sem alongar prazo.
+    """
+    page.wait_for_function(_APP_READY_JS, timeout=15000)
+
+
+def _goto_ready(page, url):
+    """`goto` seguido de `_wait_app_ready`: use antes da primeira interação numa página nova."""
+    page.goto(url, wait_until="domcontentloaded")
+    _wait_app_ready(page)
+
+
 def _complete_onboarding(page, display_name, errors=None):
     enter_btn = page.locator("#btn-read-first-enter")
     try:
@@ -171,7 +193,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_01_onboarding_inline_post_and_idb_reload(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Alice E2E")
             page.locator("#feed-inline-composer .inline-composer-collapsed").click()
             marker = f"E2E-Post-{int(time.time())}"
@@ -190,7 +212,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_02_civic_routes_drawer_search_and_theme(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Bruno Rotas", errors)
             page.locator("#agora-identity-toggle").click()
             page.locator("#agora-identity-drawer").wait_for(state="visible", timeout=5000)
@@ -254,7 +276,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_03_ai_social_dungeon_honest_demo_screens_and_exit(self):
         ctx, page, errors, external = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Lyra E2E", errors)
             page.goto(f"{self.base_url}/#/voxpedia", wait_until="domcontentloaded")
             self._run_dungeon_camp_and_table(page)
@@ -290,7 +312,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
             self.browser, self.base_url, viewport={"width": 390, "height": 844}
         )
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mobile E2E")
             page.goto(f"{self.base_url}/#/dungeon", wait_until="domcontentloaded")
             page.locator(".dungeon-mobile-dock").wait_for(state="visible", timeout=10000)
@@ -313,8 +335,8 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
         ctx_a, page_a, err_a, _ = _new_isolated_page(self.browser, self.base_url, cfg)
         ctx_b, page_b, err_b, _ = _new_isolated_page(self.browser, self.base_url, cfg)
         try:
-            page_a.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
-            page_b.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page_a, f"{self.base_url}/#/")
+            _goto_ready(page_b, f"{self.base_url}/#/")
             _complete_onboarding(page_a, "Peer Alice")
             _complete_onboarding(page_b, "Peer Bruno")
             page_a.wait_for_function(
@@ -339,7 +361,7 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_06_stepped_wizards_and_open_frames_lab(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Clara Assistentes", errors)
             for route_hash, sel in [
                 ("#/compose/proposal", "#prop-title"),

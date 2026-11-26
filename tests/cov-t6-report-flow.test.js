@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -22,7 +23,6 @@ await cache.saveLocalPost({ id: updates.canonicalCommunityPostId("c-rep"), type:
 for (const id of ["r1", "r2", "r3"]) await cache.saveLocalPost({ id, type: "topic", communityId: "c-rep", title: id, author: "vx_autor", ts: 1 });
 
 const modal = () => doc.getElementById("report-modal-container");
-const settle = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function submit(ctx, reason, detail = "") {
   flow.openReportFlow(ctx);
@@ -31,7 +31,7 @@ async function submit(ctx, reason, detail = "") {
   radio.checked = true;
   form.querySelector("#report-detail").value = detail;
   form.dispatchEvent({ type: "submit", target: form });
-  for (let i = 0; i < 150 && !/Denúncia registrada/.test(modal().textContent); i++) await settle(40);
+  await waitUntil(() => /Denúncia registrada/.test(modal().textContent), 6000);
 }
 
 test("abrir sem postId não faz nada; com postId mostra o formulário e Cancelar limpa o modal", () => {
@@ -86,7 +86,7 @@ test("erro ao registrar vira toast em vez de quebrar; gatilho .btn-report-post a
   click(doc.body);
   const form = doc.getElementById("form-report");
   form.dispatchEvent({ type: "submit", target: { querySelector: () => { throw new Error("falha simulada"); } } });
-  await settle();
+  await waitUntil(() => toasts.at(-1)?.text === "falha simulada");
   assert.deepEqual([toasts.at(-1).text, toasts.at(-1).type], ["falha simulada", "error"]);
   assert.ok(doc.getElementById("form-report"), "o formulário continua aberto para tentar de novo");
 });

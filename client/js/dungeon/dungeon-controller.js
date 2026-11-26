@@ -5,6 +5,8 @@ import { renderDungeonChrome } from "./dungeon-chrome.js";
 import {
   ACTION_HANDLERS,
   DICE3D_CLICK_ACTIONS,
+  FOCUS_AFTER_ACTION,
+  FILE_CHANGE_ACTIONS,
   dispatchDungeonFormSubmit,
   SUBMIT_FORMS,
 } from "./dungeon-controller-actions.js";
@@ -33,7 +35,8 @@ import {
   revealFogRectInScene,
   toggleDoorInScene,
 } from "./dungeon-tactics-actions.js";
-import { attachVttPlayerJoin } from "./dungeon-vtt-join.js";
+import { attachVttPlayerJoin, joinFailureRollMessage } from "./dungeon-vtt-join.js";
+import { hudPanelKeyJob, isHudPanelKey, takeHudPanelFocus } from "./hud-panels.js";
 import { refreshFavoriteSlider, renderCampScreen } from "./screen-camp.js";
 import { renderDmScreen } from "./screen-dm.js";
 import { renderSheetScreen } from "./screen-sheet.js";
@@ -122,6 +125,10 @@ function handleDioramaPick(container, viewOpts, hit) {
     state.selectedTokenId = hit.tokenId;
     return redrawContainer(container, viewOpts);
   }
+  if (hit.kind === "portal") {
+    state.campaignNotice = `Portal: ${hit.label || "passagem"}`;
+    return redrawContainer(container, viewOpts);
+  }
   return settleAndRedraw(toggleDoorInScene(state, hit.doorId, { store: viewOpts.store }), container, viewOpts);
 }
 
@@ -132,7 +139,7 @@ function redrawContainer(container, opts, focusOverride = "", preserveDraft = fa
   container.innerHTML = renderDungeonView(opts);
   bindActiveCanvas(container, opts);
   rebindDioramaOverlay(container, state);
-  restoreUiViewState(container, snap, focusOverride, preserveDraft);
+  restoreUiViewState(container, snap, focusOverride || takeHudPanelFocus(state), preserveDraft);
   refreshSealsAfterDraw(container, opts);
 }
 
@@ -185,12 +192,26 @@ async function readUploadedBytes(file) {
   return new TextEncoder().encode(String(file?.text || ""));
 }
 
+/** Importa um `.voxchar`: confere o tamanho antes de ler, carrega o módulo só agora e mostra os motivos da recusa no painel Editar. */
+async function importVoxcharFile(state, file, viewOpts) {
+  const { VOXCHAR_MAX_BYTES } = await import("./voxchar-check.js");
+  const fail = (issues) => { state.sheetEditIssues = issues.map((message) => ({ field: "voxchar", message })); };
+  if (file.size > VOXCHAR_MAX_BYTES) return fail([`Arquivo grande demais (${file.size} bytes; o limite é ${VOXCHAR_MAX_BYTES}).`]);
+  const { importVoxchar } = await import("./voxchar.js");
+  const out = await importVoxchar(state, { bytes: await readUploadedBytes(file) }, { store: viewOpts.store });
+  state.sheetEditIssues = [];
+  if (!out.ok) fail(out.issues);
+  return undefined;
+}
+
 function handleDungeonChange(container, viewOpts, ev) {
   const target = ev.target;
   const kind = target?.dataset?.dungeon;
   const file = target?.files?.[0];
-  if (!file || (kind !== "import-file" && kind !== "upload-map")) return undefined;
+  if (!file || (kind !== "import-file" && kind !== "upload-map" && !FILE_CHANGE_ACTIONS.has(kind))) return undefined;
   const state = viewOpts.state || getDungeonSession();
+  if (kind === "wizard-import") return settleAndRedraw(import("./sheet-wizard-actions.js").then((m) => m.importInWizard(state, file, { store: viewOpts.store })), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+  if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts);
   if (kind === "upload-map") {
     const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
     return settleAndRedraw(job, container, viewOpts);
@@ -252,26 +273,45 @@ function handleDungeonClick(container, viewOpts, ev) {
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
   redrawContainer(container, viewOpts);
-  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action) });
+  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
-function handleCanvasKeydown(container, viewOpts, ev) {
+/**
+ * Esc no assistente de criar ficha pede a confirmação de descarte (o mesmo que Cancelar); com a confirmação já aberta, não faz nada.
+ * @param {object} state Estado da sessão.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{key?: string, preventDefault?: Function}} ev Evento de teclado.
+ * @returns {Promise<void>|undefined} Tarefa da ação, ou `undefined` se o evento não se aplica.
+ */
+export function escapeWizardJob(state, container, ev) {
+  if (ev?.key !== "Escape" || !state.sheetWizard || state.sheetWizard.confirmCancel) return undefined;
+  ev.preventDefault?.();
+  return ACTION_HANDLERS["wizard-cancel"](state, null, container, {});
+}
+
+function handleWizardEscape(container, viewOpts, ev, settle = settleAndRedraw) {
+  const state = viewOpts.state || getDungeonSession();
+  const job = escapeWizardJob(state, container, ev) || hudPanelKeyJob(state, ev);
+  return job && settle(job, container, viewOpts, { focusSelector: state.sheetWizard ? "[data-wizard-focus]" : "" });
+}
+
+/**
+ * Teclado da tela: Esc no assistente de criar ficha e setas para empurrar o token selecionado no mapa.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{state?: object, store?: object}} viewOpts Opções da tela.
+ * @param {{key?: string, target?: object, preventDefault?: Function}} ev Evento de teclado.
+ * @param {Function} [settle] Quem espera a tarefa e redesenha (substituível em teste).
+ * @returns {Promise<void>|undefined} Tarefa em andamento, ou `undefined` se a tecla não se aplica.
+ */
+export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndRedraw) {
+  if (ev?.key === "Escape" || (viewOpts.screen === "mesa" && isHudPanelKey(ev))) return handleWizardEscape(container, viewOpts, ev, settle);
   const delta = ARROW_DELTAS[ev?.key];
   if (!delta || ev.target?.id !== "dungeon-vtt-canvas") return undefined;
   const state = viewOpts.state || getDungeonSession();
   if (!state.selectedTokenId) return undefined;
   ev.preventDefault?.();
   const job = nudgeTokenInScene(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
-  return settleAndRedraw(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
-}
-
-/** @param {string} [code] Código de erro de {@link attachVttPlayerJoin}. */
-function joinFailureRollMessage(code) {
-  if (code === "broadcast_channel_unavailable") {
-    return "Convite P2P exige duas abas na mesma origem (BroadcastChannel indisponível neste contexto).";
-  }
-  if (code === "invalid_invite") return "Link de convite inválido ou incompleto.";
-  return "Não foi possível entrar na mesa.";
+  return settle(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
 }
 
 function hydrateP2pJoin(container, viewOpts) {
@@ -280,6 +320,7 @@ function hydrateP2pJoin(container, viewOpts) {
   const hash = typeof location !== "undefined" ? location.hash : "";
   const job = attachVttPlayerJoin(state, hash, {
     store: viewOpts.store,
+    displayName: viewOpts.displayName,
     onCampaign: () => (state._onSyncUpdate ? state._onSyncUpdate() : redrawContainer(container, viewOpts, "", true)),
   }).then((res) => {
     if (res?.ok === false) state.rollError = joinFailureRollMessage(res.error);

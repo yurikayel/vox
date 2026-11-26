@@ -15,7 +15,14 @@ _E2E_DIR = pathlib.Path(__file__).resolve().parent
 if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _complete_onboarding, _new_isolated_page
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _complete_onboarding, _goto_ready, _new_isolated_page
+
+
+def _join_as_player(page, invite):
+    """Abre o convite e espera o app ter subido (a Mesa montada) antes da etapa de entrada na mesa; sem prazo maior."""
+    _goto_ready(page, invite)
+    page.locator(".dungeon-sanctum").wait_for(state="attached", timeout=15000)
+    page.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=15000)
 
 
 def _goto_mesa(page, base_url, table_id="vila-nova"):
@@ -28,10 +35,11 @@ def _set_viewer_player(page):
     """Alterna até a etiqueta de jogador (default mesa sem prefs já é jogador)."""
     toggle = page.locator("button[data-dungeon='toggle-viewer-role']")
     for _ in range(4):
-        if "Jogador" in toggle.inner_text():
+        current = toggle.inner_text()
+        if "Jogador" in current:
             return
         toggle.click()
-        page.wait_for_timeout(120)
+        expect(toggle).not_to_have_text(current)
     raise AssertionError("Não foi possível ativar visão de jogador")
 
 
@@ -39,15 +47,16 @@ def _set_viewer_gm(page):
     """Alterna até visão de mestre (prefs novas na mesa iniciam como jogador)."""
     toggle = page.locator("button[data-dungeon='toggle-viewer-role']")
     for _ in range(4):
-        if "Mestre" in toggle.inner_text():
+        current = toggle.inner_text()
+        if "Mestre" in current:
             return
         toggle.click()
-        page.wait_for_timeout(120)
+        expect(toggle).not_to_have_text(current)
     raise AssertionError("Não foi possível ativar visão de mestre")
 
 
 def _onboard_and_campaign(page, base_url, display_name, campaign_name="E2E Mesa Audit"):
-    page.goto(f"{base_url}/#/", wait_until="domcontentloaded")
+    _goto_ready(page, f"{base_url}/#/")
     _complete_onboarding(page, display_name)
     page.goto(f"{base_url}/#/dungeon", wait_until="domcontentloaded")
     page.locator(".dungeon-sanctum[data-dungeon-screen='acampamento']").wait_for(state="visible", timeout=15000)
@@ -55,7 +64,7 @@ def _onboard_and_campaign(page, base_url, display_name, campaign_name="E2E Mesa 
     if name_input.is_visible():
         name_input.fill(campaign_name)
         page.locator("form[data-dungeon='create-campaign-form']").evaluate("f => f.requestSubmit()")
-        page.wait_for_timeout(600)
+        page.get_by_text(campaign_name).first.wait_for(state="attached", timeout=15000)
     mesa_link = page.locator(".dungeon-topnav a[href^='#/dungeon/mesa/']").first
     href = mesa_link.get_attribute("href") or "#/dungeon/mesa/vila-nova"
     table_id = href.rstrip("/").split("/")[-1]
@@ -68,7 +77,7 @@ def _import_shared_handout_md(page, title="E2E Handout"):
     page.locator("#dungeon-import-file").set_input_files(
         {"name": f"{title}.md", "mimeType": "text/markdown", "buffer": body.encode("utf-8")}
     )
-    page.wait_for_timeout(800)
+    page.get_by_text(title).first.wait_for(state="attached", timeout=15000)
 
 
 class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
@@ -77,7 +86,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_07_mesa_e5_player_chrome_drawer_and_styles(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa Player E2E", errors)
             _goto_mesa(page, self.base_url)
             self.assertTrue(page.locator("link#dungeon-layout-stylesheet").count() > 0)
@@ -99,7 +108,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_08_mesa_gm_canvas_zoom_and_formula_roll(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa GM E2E", errors)
             _goto_mesa(page, self.base_url)
             _set_viewer_gm(page)
@@ -115,7 +124,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             page.mouse.down()
             page.mouse.move(box["x"] + 5.5 * 64, box["y"] + 3.5 * 64, steps=12)
             page.mouse.up()
-            page.wait_for_timeout(200)
+            expect(page.locator(".dungeon-token-roster")).not_to_have_text(before)
             after = page.locator(".dungeon-token-roster").inner_text()
             self.assertIn("Lyra (", after)
             self.assertNotEqual(before, after)
@@ -136,7 +145,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_09_mesa_camp_calendar_and_four_routes(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa Camp E2E", errors)
             page.goto(f"{self.base_url}/#/dungeon", wait_until="domcontentloaded")
             page.locator(".dungeon-sanctum[data-dungeon-screen='acampamento']").wait_for(
@@ -146,11 +155,10 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             if name_input.is_visible():
                 name_input.fill("E2E Campanha Mesa")
                 page.locator("form[data-dungeon='create-campaign-form']").evaluate("f => f.requestSubmit()")
-                page.wait_for_timeout(400)
+                page.get_by_text("E2E Campanha Mesa").first.wait_for(state="attached", timeout=15000)
             cal_btn = page.locator("button[data-dungeon='calendar-round']")
             if cal_btn.is_visible():
                 cal_btn.click()
-                page.wait_for_timeout(200)
             for tab_sel in [
                 ".dungeon-topnav a[href='#/dungeon']",
                 ".dungeon-topnav a[href^='#/dungeon/mesa/']",
@@ -168,7 +176,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             self.browser, self.base_url, viewport={"width": 390, "height": 844}
         )
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa Mobile E2E")
             _goto_mesa(page, self.base_url)
             _set_viewer_player(page)
@@ -187,7 +195,7 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
     def test_11_mesa_ficha_grimorio_and_levelup(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa Grimório E2E", errors)
             page.goto(f"{self.base_url}/#/dungeon/ficha/lyra", wait_until="domcontentloaded")
             page.locator(".dungeon-sanctum[data-dungeon-screen='ficha']").wait_for(
@@ -223,7 +231,6 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             page.goto(f"{self.base_url}/#/dungeon/mestre/{table_id}", wait_until="domcontentloaded")
             page.locator(".dungeon-sanctum[data-dungeon-screen='mestre']").wait_for(state="visible", timeout=10000)
             page.locator("button[data-dungeon='generate-invite']").click()
-            page.wait_for_timeout(500)
             pre = page.locator("pre.dungeon-prompt-preview").filter(has_text="#/dungeon/entrar/")
             pre.wait_for(state="visible", timeout=8000)
             invite = pre.inner_text().strip()
@@ -241,19 +248,15 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             table_id = _onboard_and_campaign(page_gm, self.base_url, "Mesa Join GM")
             page_gm.goto(f"{self.base_url}/#/dungeon/mestre/{table_id}", wait_until="domcontentloaded")
             page_gm.locator("button[data-dungeon='generate-invite']").click()
-            page_gm.wait_for_timeout(400)
-            invite = (
-                page_gm.locator("pre.dungeon-prompt-preview")
-                .filter(has_text="#/dungeon/entrar/")
-                .inner_text()
-                .strip()
-            )
+            pre = page_gm.locator("pre.dungeon-prompt-preview").filter(has_text="#/dungeon/entrar/")
+            pre.wait_for(state="visible", timeout=15000)
+            invite = pre.inner_text().strip()
             self.assertIn("#/dungeon/entrar/", invite)
             page_gm.goto(f"{self.base_url}/#/dungeon/mesa/{table_id}", wait_until="domcontentloaded")
             page_gm.locator("#dungeon-vtt-canvas").wait_for(state="visible", timeout=10000)
             page_pl = ctx_gm.new_page()
             join_url = invite if invite.startswith("http") else f"{self.base_url}{invite}"
-            page_pl.goto(join_url, wait_until="domcontentloaded")
+            _goto_ready(page_pl, join_url)
             page_pl.locator(".dungeon-sanctum[data-dungeon-screen='mesa']").wait_for(state="visible", timeout=15000)
             expect(page_pl.locator(".dungeon-sanctum")).to_have_class(re.compile(r"\bis-session-player\b"))
             self.assertEqual(page_pl.locator(".dungeon-topnav a[href^='#/dungeon/mestre/']").count(), 0)
@@ -288,12 +291,9 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
             page.add_init_script("delete globalThis.BroadcastChannel;")
-            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _goto_ready(page, f"{self.base_url}/#/")
             _complete_onboarding(page, "Mesa BC Fail E2E", errors)
-            page.goto(
-                f"{self.base_url}/#/dungeon/entrar/mesa-bc?gm=vx_gm#k=deadbeefdeadbeefdeadbeefdeadbeef",
-                wait_until="domcontentloaded",
-            )
+            page.goto(f"{self.base_url}/#/dungeon/entrar/mesa-bc?gm=vx_gm#k=deadbeefdeadbeefdeadbeefdeadbeef", wait_until="domcontentloaded")
             page.locator(".dungeon-sanctum[data-dungeon-screen='mesa']").wait_for(state="visible", timeout=15000)
             alert = page.locator(".dungeon-alert-warn")
             alert.wait_for(state="visible", timeout=8000)

@@ -24,6 +24,10 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { validateSheetEdit } from "./sheet-edit-validate.js";
+import { resolveSheetSystem } from "./screen-sheet-derived.js";
+import { markSheetDeathSave } from "./dungeon-persistence-sheet-system.js";
+import { longRestSheet, shortRestSheet, spendSheetHitDie, stepSheetExhaustion, toggleSheetCondition } from "./dungeon-persistence-sheet-rest.js";
 import {
   addDoorToScene,
   addTokenToScene,
@@ -60,6 +64,7 @@ import {
   toggleFogEnabled,
 } from "./dungeon-tactics-actions.js";
 import { clampZoom } from "./vtt-geometry.js";
+import { FAIRPLAY_ACCESS_ID, handleFairplayRequest, handleFairplayRetry } from "./vtt-fairplay-acesso.js";
 
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
 
@@ -117,6 +122,74 @@ function triggerBrowserDownload(artifact, onDownload) {
   return undefined;
 }
 
+/** Ações de arquivo tratadas no evento `change` (`dungeon-controller.js`), não no clique. */
+export const FILE_CHANGE_ACTIONS = new Set(["import-voxchar", "wizard-import"]);
+
+/**
+ * Foto síncrona dos campos do formulário do assistente. Tem de ser tirada antes de qualquer `await`: o clique redesenha a
+ * tela logo depois do handler e apagaria o que foi digitado.
+ * @param {HTMLElement|null} container Raiz da tela.
+ * @returns {Object<string, string|string[]>} Valor por `name` (caixas marcadas viram lista).
+ */
+export function snapshotWizardForm(container) {
+  const form = container?.querySelector?.("[data-wizard-form]");
+  const values = {};
+  for (const el of form?.querySelectorAll("[name]") ?? []) {
+    if (el.type !== "checkbox") values[el.name] = el.value;
+    else if (el.checked) (values[el.name] ??= []).push(el.value);
+  }
+  return values;
+}
+
+/** Nomes das ações do assistente de criar ficha; cada uma é resolvida no módulo do assistente, carregado só no uso. */
+const WIZARD_ACTION_NAMES = [
+  "wizard-open", "wizard-mode", "wizard-step", "wizard-add-item",
+  "wizard-remove-item", "wizard-cancel", "wizard-keep", "wizard-discard",
+];
+
+const wizardAction = (name) => (state, el, c, opts) => {
+  const values = snapshotWizardForm(c);
+  return import("./sheet-wizard-actions.js").then((m) => m.runWizardOp(name, state, el, values, opts));
+};
+
+/**
+ * Baixa o arquivo `.voxchar` da ficha ativa; o módulo é carregado só neste clique.
+ * @param {object} state Estado da sessão.
+ * @param {{onDownload?: Function}} opts Opções do controlador.
+ * @returns {Promise<void>} Conclui após o download ou o aviso de falha.
+ */
+export async function runVoxcharExport(state, opts = {}) {
+  const { exportVoxchar } = await import("./voxchar.js");
+  const artifact = exportVoxchar(state.sheet);
+  if (!artifact) { state.campaignNotice = "Esta ficha não tem pacote de sistema para exportar."; return; }
+  triggerBrowserDownload(artifact, opts.onDownload);
+  state.campaignNotice = `Ficha exportada: ${artifact.filename}.`;
+}
+
+/**
+ * Prepara o link só de leitura da ficha ativa: gera e deixa a confirmação pendente (nada é copiado ainda).
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui com `state.voxcharLink` preenchido (link pronto ou motivo da recusa).
+ */
+export async function runVoxcharLinkPrepare(state) {
+  const { buildVoxcharLink } = await import("./voxchar-link.js");
+  const out = await buildVoxcharLink(state.sheet);
+  state.voxcharLink = out.ok ? { href: out.href, size: out.size } : { reason: out.reason };
+}
+
+/**
+ * Copia o link confirmado para a área de transferência e encerra a confirmação.
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui após copiar ou avisar da falha.
+ */
+export async function runVoxcharLinkCopy(state) {
+  const href = state.voxcharLink?.href;
+  state.voxcharLink = null;
+  if (!href) return;
+  const url = `${location.origin}${location.pathname}${href}`;
+  try { await navigator.clipboard.writeText(url); state.campaignNotice = "Link da ficha copiado."; } catch { state.campaignNotice = "Não foi possível copiar; use o arquivo .voxchar."; }
+}
+
 async function runExportAction(state, container, format, opts) {
   try {
     const passphrase = container.querySelector("#dungeon-backup-passphrase")?.value || "";
@@ -154,8 +227,24 @@ function toggleViewerRoleSafe(state) {
   saveDungeonPrefs({ viewerRole: state.viewerRole });
 }
 
+/** Ações que levam o foco a um seletor depois de redesenhar (foco previsível). */
+export const FOCUS_AFTER_ACTION = {
+  "wizard-open": "[data-wizard-focus]",
+  "wizard-mode": "[data-wizard-focus]",
+  "wizard-step": "[data-wizard-focus]",
+  "wizard-add-item": "[data-wizard-focus]",
+  "wizard-cancel": "[data-wizard-focus]",
+  "wizard-keep": "[data-wizard-focus]",
+  "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
+  "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
+  "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
+};
+
 /** Mapa de handlers de clique `data-dungeon="..."`. */
 export const ACTION_HANDLERS = {
+  "fairplay-approve": (state, el) => handleFairplayRequest(state, el),
+  "fairplay-refuse": (state, el) => handleFairplayRequest(state, el),
+  "fairplay-retry": (state) => handleFairplayRetry(state),
   failover: (state) => simulatePillarFailover(state),
   "roll-d20": (state, _el, _c, opts) => rollD20AndPersist(state, opts),
   "grid-cell": (state, el) => openVaultIfTriggered(movePlayerOnGrid(state, el.dataset.x, el.dataset.y)),
@@ -176,9 +265,15 @@ export const ACTION_HANDLERS = {
   "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, { store: opts.store }),
   "roll-action": (state, el, _c, opts) => recordSheetActionRoll(state, el.dataset.actionId, { store: opts.store }),
   "remove-action": (state, el, _c, opts) => removeCustomSheetAction(state, el.dataset.actionId, { store: opts.store }),
+  "export-voxchar": (state, _el, _c, opts) => runVoxcharExport(state, opts),
+  "share-voxchar-link": (state) => runVoxcharLinkPrepare(state),
+  "copy-voxchar-link": (state) => runVoxcharLinkCopy(state),
+  "cancel-voxchar-link": (state) => { state.voxcharLink = null; },
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
+  "hud-op": (state, el, _c, opts) => import("./dungeon-hud-actions.js").then((m) => m.runHudOp(state, el, opts)),
+  ...Object.fromEntries(WIZARD_ACTION_NAMES.map((name) => [name, wizardAction(name)])),
   "canvas-zoom-in": (state) => adjustCameraZoom(state, 1.2),
   "canvas-zoom-out": (state) => adjustCameraZoom(state, 0.84),
   "canvas-reset": (state) => adjustCameraZoom(state, 0),
@@ -209,6 +304,12 @@ export const ACTION_HANDLERS = {
   "calendar-long-rest": (state, _el, _c, opts) => advanceCampaignCalendar(state, "long_rest", opts.store),
   "inv-equip": (state, el, _c, opts) => mutateSheetInventory(state, "toggle_equip", { itemId: el.dataset.itemId }, opts.store),
   "inv-remove": (state, el, _c, opts) => mutateSheetInventory(state, "remove", { itemId: el.dataset.itemId }, opts.store),
+  "death-save": (state, el, _c, opts) => markSheetDeathSave(state, el.dataset.kind, { store: opts.store }),
+  "condition-toggle": (state, el, _c, opts) => toggleSheetCondition(state, el.dataset.conditionId, { store: opts.store }),
+  "exhaustion-step": (state, el, _c, opts) => stepSheetExhaustion(state, Number(el.dataset.step), { store: opts.store }),
+  "hit-die": (state, _el, _c, opts) => spendSheetHitDie(state, { store: opts.store }),
+  "rest-short": (state, _el, _c, opts) => shortRestSheet(state, { store: opts.store }),
+  "rest-long": (state, _el, _c, opts) => longRestSheet(state, { store: opts.store }),
   "level-up-open": (state) => { state.levelUpOpen = true; },
   "level-up-cancel": (state) => { state.levelUpOpen = false; },
   "select-levelup-preset": (state, el) => { state.levelUpPreset = el.dataset.preset || "d20_fantasy"; },
@@ -242,17 +343,32 @@ function submitActionForm(state, form, ctx) {
   return ctx.settle(persistTableTurnIfActive(state, addedEntries, addedDeltas, ctx.viewOpts.store));
 }
 
+/** Salvaguardas e especializações marcadas no painel Editar; sem esses campos no formulário, não vêm listas (nada muda). */
+function checkedLists(form) {
+  if (!form?.querySelector?.("[name=saveProf]")) return {};
+  const checked = (name) => [...form.querySelectorAll(`[name=${name}]:checked`)].map((el) => el.value);
+  return { proficientSaves: checked("saveProf"), expertSkills: checked("expertSkill") };
+}
+
 function submitEditSheet(state, form, ctx) {
   const patch = {
     name: valOf(form, "[name=sheetName]"),
     class_name: valOf(form, "[name=sheetClass]"),
-    armor_class: Number(valOf(form, "[name=armorClass]")),
+    armor_class: valOf(form, "[name=armorClass]"),
     system: valOf(form, "[name=sheetSystem]"),
+    speedFt: form?.querySelector?.("[name=speedFt]") ? valOf(form, "[name=speedFt]") : undefined,
+    hitDie: valOf(form, "[name=hitDie]"),
+    ...checkedLists(form),
   };
   for (const k of ["str", "dex", "con", "int", "wis", "cha"]) {
     const raw = valOf(form, `[name=${k}]`);
     if (raw) patch[k] = Number(raw);
   }
+  const sys = resolveSheetSystem(state.sheet);
+  const { ok, issues } = validateSheetEdit(patch, { pack: sys?.pack, trainedSkills: sys?.choices.proficientSkills });
+  state.sheetEditIssues = issues;
+  state.sheetEditDraft = ok ? null : patch;
+  if (!ok) return ctx.settle(Promise.resolve());
   return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
 }
 
@@ -280,12 +396,20 @@ function submitAddDoor(state, form, ctx) {
   return ctx.settle(addDoorToScene(state, doorSpec, { store: ctx.viewOpts.store }));
 }
 
+/** Campo opcional Armadura do formulário de item: tipo e CA digitados pelo jogador; vazio vira `null`. */
+function armorFromForm(form) {
+  const kind = valOf(form, "[name=itemArmorKind]");
+  const ac = Number(valOf(form, "[name=itemArmorAc]"));
+  return kind && Number.isFinite(ac) ? { kind, ac } : null;
+}
+
 function submitAddItem(state, form, ctx) {
   const label = valOf(form, "[name=itemLabel]");
   if (!label) return undefined;
   const qty = Math.max(1, Math.trunc(Number(valOf(form, "[name=itemQty]", "1")) || 1));
   const weightLb = Math.max(0, Number(valOf(form, "[name=itemWeight]", "0.5")) || 0);
-  return ctx.settle(mutateSheetInventory(state, "add", { label, qty, weightLb }, ctx.viewOpts.store));
+  const armor = armorFromForm(form);
+  return ctx.settle(mutateSheetInventory(state, "add", { label, qty, weightLb, ...(armor ? { armor } : {}) }, ctx.viewOpts.store));
 }
 
 const FORM_DISPATCHERS = {
