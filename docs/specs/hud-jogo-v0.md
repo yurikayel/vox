@@ -1,6 +1,6 @@
 # HUD de jogo (v0)
 
-> **Status:** aceita (v0) (decisões D1–D10 tomadas em 25/11/2026; código do `SUB-06` ainda não implementado)
+> **Status:** aceita (v0) (decisões D1–D10 tomadas em 25/11/2026; código do `SUB-06` em partes: 1, 2a e 2b em PR)
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§7, brainstorm) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
 Fecha o desenho do HUD de jogo da mesa (`SUB-06`). A §7 do brainstorm descreve a ideia; esta spec define de onde vem cada dado, o que o jogador vê dos outros e como testar. A `SUB-D1` já decidiu: o HUD vem antes do T20.
@@ -22,7 +22,7 @@ Fecha o desenho do HUD de jogo da mesa (`SUB-06`). A §7 do brainstorm descreve 
 | Indicador de magia | Recurso `spell-slots` do pacote; máximo em `pools_base.spell_slots_max` (`vtt-schema.js:217`) | Só aparece se o total de recursos de magia for > 0; rótulo vem do pacote (espaços de magia no D&D, PM no T20, PF no GURPS com magias) |
 | Cinto 4×1 | `inventory_orset` (item com `id`, `label`, `qty`, `tags`, `vtt-inventory.js`) | 4 vagas de consumíveis (`tags` com `consumivel`); clique usa 1 (`SHEET_UPSERT`); vaga vazia mostra "vazio" |
 | Barra de 6 favoritos | Novo campo `sheet_meta.favorites` (lista de até 6 ids de ação ou item) | Substitui os atalhos livres de `buildHudShortcuts`; `roll-d20`, `move`, `sheet` continuam fixos à esquerda |
-| Painéis em meia tela | Ficha (C), Itens (I), Habilidades (S), Mapa (Tab), Crônica | Abrem sobre a metade do tabuleiro, sem modal; Esc fecha; o canvas continua visível |
+| Painéis em meia tela | Ficha (C), Itens (I), Habilidades (S), Mapa (Tab), Crônica | Abrem sobre a metade do tabuleiro, sem modal; Esc fecha; o canvas continua visível. Atalhos C, I, S, M e R (Tab não é atalho: continua navegando o foco) |
 | Linha móvel | Nome, PV atual/máximo e CA da ficha própria | "Lyra · PV 18/24 · CA 16", uma linha, sempre visível |
 
 Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos novos em `sheet_meta` e entram no `.voxchar` só se a `voxchar-v0` os listar (fora do escopo desta spec).

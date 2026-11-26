@@ -43,7 +43,13 @@ function renderTacticalGridCells(playerPos) {
   return rows.join("");
 }
 
-function canViewChronicleEntry(entry, state) {
+/**
+ * Diz se a entrada da crônica pode ser vista por quem olha (Mestre vê tudo; jogador só o público e o que é seu).
+ * @param {object} entry Entrada da crônica.
+ * @param {object} state Estado da sessão.
+ * @returns {boolean} `true` quando visível.
+ */
+export function canViewChronicleEntry(entry, state) {
   if (state.viewerRole === "gm") return true;
   if (!entry?.visibility || entry.visibility === "public") return true;
   if (entry.visibility === "gm" && state.joinMode === "p2p_player") {
@@ -53,7 +59,13 @@ function canViewChronicleEntry(entry, state) {
   return false;
 }
 
-function renderChronicleEntry(entry, state) {
+/**
+ * Cartão de uma entrada da crônica.
+ * @param {object} entry Entrada da crônica.
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML.
+ */
+export function renderChronicleEntry(entry, state) {
   const isDm = entry.speaker.includes("Narrador") || entry.speaker.includes("Guardião");
   const isSecret = entry.visibility === "gm" || entry.visibility === "blind";
   const secretCls = isSecret ? " is-secret-roll" : "";

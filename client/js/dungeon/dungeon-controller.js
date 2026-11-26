@@ -35,7 +35,8 @@ import {
   revealFogRectInScene,
   toggleDoorInScene,
 } from "./dungeon-tactics-actions.js";
-import { attachVttPlayerJoin } from "./dungeon-vtt-join.js";
+import { attachVttPlayerJoin, joinFailureRollMessage } from "./dungeon-vtt-join.js";
+import { hudPanelKeyJob, isHudPanelKey, takeHudPanelFocus } from "./hud-panels.js";
 import { refreshFavoriteSlider, renderCampScreen } from "./screen-camp.js";
 import { renderDmScreen } from "./screen-dm.js";
 import { renderSheetScreen } from "./screen-sheet.js";
@@ -138,7 +139,7 @@ function redrawContainer(container, opts, focusOverride = "", preserveDraft = fa
   container.innerHTML = renderDungeonView(opts);
   bindActiveCanvas(container, opts);
   rebindDioramaOverlay(container, state);
-  restoreUiViewState(container, snap, focusOverride, preserveDraft);
+  restoreUiViewState(container, snap, focusOverride || takeHudPanelFocus(state), preserveDraft);
   refreshSealsAfterDraw(container, opts);
 }
 
@@ -289,8 +290,9 @@ export function escapeWizardJob(state, container, ev) {
 }
 
 function handleWizardEscape(container, viewOpts, ev, settle = settleAndRedraw) {
-  const job = escapeWizardJob(viewOpts.state || getDungeonSession(), container, ev);
-  return job && settle(job, container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+  const state = viewOpts.state || getDungeonSession();
+  const job = escapeWizardJob(state, container, ev) || hudPanelKeyJob(state, ev);
+  return job && settle(job, container, viewOpts, { focusSelector: state.sheetWizard ? "[data-wizard-focus]" : "" });
 }
 
 /**
@@ -302,7 +304,7 @@ function handleWizardEscape(container, viewOpts, ev, settle = settleAndRedraw) {
  * @returns {Promise<void>|undefined} Tarefa em andamento, ou `undefined` se a tecla não se aplica.
  */
 export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndRedraw) {
-  if (ev?.key === "Escape") return handleWizardEscape(container, viewOpts, ev, settle);
+  if (ev?.key === "Escape" || (viewOpts.screen === "mesa" && isHudPanelKey(ev))) return handleWizardEscape(container, viewOpts, ev, settle);
   const delta = ARROW_DELTAS[ev?.key];
   if (!delta || ev.target?.id !== "dungeon-vtt-canvas") return undefined;
   const state = viewOpts.state || getDungeonSession();
@@ -310,15 +312,6 @@ export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndR
   ev.preventDefault?.();
   const job = nudgeTokenInScene(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
   return settle(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
-}
-
-/** @param {string} [code] Código de erro de {@link attachVttPlayerJoin}. */
-function joinFailureRollMessage(code) {
-  if (code === "broadcast_channel_unavailable") {
-    return "Convite P2P exige duas abas na mesma origem (BroadcastChannel indisponível neste contexto).";
-  }
-  if (code === "invalid_invite") return "Link de convite inválido ou incompleto.";
-  return "Não foi possível entrar na mesa.";
 }
 
 function hydrateP2pJoin(container, viewOpts) {
