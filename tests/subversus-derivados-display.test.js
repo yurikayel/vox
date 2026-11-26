@@ -89,3 +89,20 @@ test("registro herdado não vale e pacote sem validar é cortado no teto de entr
   assert.equal(derivedStats(muitos, derived()).length, DISPLAY_ENTRIES_MAX);
   assert.equal(DISPLAY_ENTRIES_MAX, 16);
 });
+
+test("HUD: rótulo da defesa com HTML vindo do pacote sai escapado no HTML renderizado", async () => {
+  const { renderHudStatus } = await import("../client/js/dungeon/screen-hud-status.js");
+  const { registerSystemPack } = await import("../client/js/dungeon/system-pack.js");
+  const display = { ...DND5E_2024_PACK.display, derived: DND5E_2024_PACK.display.derived.map((e) => (e.id === "armorClass" ? { ...e, label: "<b>x</b>" } : e)) };
+  registerSystemPack({ ...DND5E_2024_PACK, id: "pacote-rotulo-html", display });
+  const own = { character_id: "ana", char_id: "ana", name: "Lyra", system: { id: "pacote-rotulo-html" }, attributes_lww: { armor_class: 12 }, pools_base: { hp_max: 10 }, delta_ledger: [] };
+  const html = renderHudStatus({ sheet: own }, { tokens: [] });
+  assert.match(html, /&lt;b&gt;x&lt;\/b&gt; 12/);
+  assert.equal(html.includes("<b>x</b>"), false);
+});
+
+test("faixa: deslocamento fracionário usa vírgula decimal (25 pés = 7,5 m)", () => {
+  const d = deriveSheet(DND5E_2024_PACK, { level: 5, abilities: { dex: 14, wis: 12 }, speedFt: 25 }, []);
+  assert.equal(d.speed.meters, 7.5);
+  assert.deepEqual(derivedStats(DND5E_2024_PACK, d).at(-1), { label: "Deslocamento", value: "7,5 m" });
+});
