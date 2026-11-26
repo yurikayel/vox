@@ -4615,3 +4615,18 @@ body,
     transition: none;
   }
 }
+
+/* HUD de jogo: estado do personagem (spec hud-jogo-v0) */
+.dungeon-hud-status { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 0.75rem; }
+.dungeon-hud-own, .dungeon-hud-member { display: flex; align-items: center; gap: 0.5rem; }
+.dungeon-hud-party { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0; padding: 0; }
+.dungeon-hud-portrait { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--hud-portrait, var(--sa-surface-lowest)); color: #0c0e11; font-weight: 700; }
+.dungeon-hud-member .dungeon-hud-portrait { width: 2rem; height: 2rem; font-size: 0.75rem; }
+.dungeon-hud-conditions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; }
+.dungeon-hud-condition { padding: 0.15rem 0.5rem; border: 1px solid var(--sa-on-surface-variant, #bbc9c7); border-radius: 999px; font-size: 0.8rem; }
+.dungeon-hud-mobile-line { display: none; margin: 0; font-weight: 600; }
+@media (max-width: 1023.98px) {
+  .dungeon-hud-own, .dungeon-hud-party { display: none; }
+  .dungeon-hud-mobile-line { display: block; }
+  .dungeon-hud .dungeon-chip-btn { min-height: 44px; }
+}

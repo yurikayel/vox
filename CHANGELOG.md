@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- HUD da Mesa: abaixo do mapa aparecem o retrato (iniciais e cor do token), nome, PV, CA e condições da ficha própria (até 4, com "+N"), os retratos do grupo com PV e, no celular, a linha "Nome · PV · CA". De outras pessoas só aparece o que a projeção do jogador entrega (PV em número ou rótulo de estado, conforme o modo do token).
 - Fairplay (laboratório): o compromisso da rolagem passa a ser `sha256-bound-v1`, amarrado ao `rollId` e ao `peerId`; reaproveitar o compromisso em outra rolagem ou por outro par, ou mandar `alg` ausente ou desconhecido, é recusado (`rpg-crypto-table.js`, `vtt-fairplay-roll.js`, `vtt-fairplay-log.js`, ADR-040 §2.3a).
 - Ficha: botão "Nova ficha" abre o assistente com três entradas: Rápido (só o nome, o resto nos padrões), Guiado (7 passos, com equipamento em memória e resumo) e Importar (`.voxchar`). Nada é gravado antes do resumo, e sair pede confirmação (Esc inclusive); nome, classe e ancestralidade vão até 60 caracteres e o Dado de Vida de d4 a d12. Módulos carregados sob demanda, fora do precache.
 - Fairplay (laboratório): o Mestre aprova ou recusa quem pede para entrar; o jogador vê "Aguardando aprovação do Mestre", "Entrada recusada" ou o aviso de que não deu para falar com o Mestre, com a opção de tentar de novo.
