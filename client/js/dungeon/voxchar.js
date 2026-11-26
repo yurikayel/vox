@@ -87,14 +87,29 @@ export function exportVoxchar(sheet) {
   return { filename: `${safe}.voxchar`, bytes: ENC.encode(JSON.stringify(doc, null, 2)), mime: "application/json;charset=utf-8" };
 }
 
-/** Ficha nova a partir do arquivo validado: id, campanha e dono vêm desta instalação; estado de jogo nos padrões. */
-function buildImportedSheet(state, doc, pack) {
-  const part = portableSheet(doc.sheet, pack);
-  const fresh = createCharacterSheetDoc({
+/**
+ * Ficha nova vazia desta instalação: id novo, campanha e dono da sessão, tudo o mais nos padrões.
+ * @param {object} state Estado da sessão.
+ * @returns {object} Documento de ficha novo (`createCharacterSheetDoc`).
+ */
+export function freshSheet(state) {
+  return createCharacterSheetDoc({
     character_id: `char_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`,
     campaign_id: state.campaignId || undefined,
     owner_pubkey_p256: state.sheet?.owner_pubkey_p256,
   });
+}
+
+/**
+ * Ficha nova a partir de um documento `.voxchar` já validado: id, campanha e dono vêm desta instalação; estado de jogo nos padrões.
+ * @param {object} state Estado da sessão.
+ * @param {object} doc Documento validado por `checkVoxchar`.
+ * @param {object} pack Pacote de sistema do documento.
+ * @returns {object} Ficha pronta para `SHEET_UPSERT`.
+ */
+export function buildImportedSheet(state, doc, pack) {
+  const part = portableSheet(doc.sheet, pack);
+  const fresh = freshSheet(state);
   return ensureSheetMeta({
     ...fresh,
     attributes_lww: { ...fresh.attributes_lww, ...part.attributes_lww },
