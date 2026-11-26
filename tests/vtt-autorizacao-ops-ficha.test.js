@@ -75,3 +75,8 @@ test("Mestre sempre pode, em qualquer ficha", () => {
   const t = table();
   for (const make of ALL) for (const id of ["ficha_ana", "ficha_bia", "inexistente"]) assert.equal(isAuthorizedVttOp(t, make(GM, id)), true);
 });
+
+test("delta e ações em ficha que não existe são recusados para jogador; só o upsert cria", () => {
+  const t = table();
+  for (const make of [delta, act, rem]) assert.equal(isAuthorizedVttOp(t, make(ANA, "nao_existe")), false);
+});
