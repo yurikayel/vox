@@ -124,3 +124,20 @@ test("ficha ligada a token do viewer é própria, mesmo sendo a de outro persona
   const view = projectStateForPlayer(camp, "player", "vx_ana");
   assert.equal(view.sheetsById.bia.pools_base.hp_max, 22);
 });
+
+test("sem identidade e token com dono vazio, nenhuma ficha vem completa", () => {
+  const camp = campaign();
+  camp.scenesById.s1.tokens = [token("t-ana", "ana", "", "exact"), token("t-bia", "bia", "", "exact")];
+  const view = projectStateForPlayer(camp, "player", "");
+  for (const id of ["ana", "bia"]) {
+    assert.equal(view.sheetsById[id].pools_base, undefined, id);
+    assert.equal(view.sheetsById[id].inventory_orset, undefined, id);
+    assert.equal(view.sheetsById[id].sheet_meta, undefined, id);
+  }
+});
+
+test("ficha própria: notas do Mestre zeradas e o resto de sheet_meta intacto", () => {
+  const own = projectStateForPlayer(campaign(), "player", "vx_ana").sheetsById.ana;
+  assert.equal(own.sheet_meta.notes_gm, "");
+  assert.deepEqual(own.sheet_meta.favorites, ["adaga"]);
+});
