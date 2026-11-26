@@ -108,3 +108,19 @@ test("painel do grupo: classe e nível de ficha alheia ficam sem dado", () => {
   assert.equal(other.level, "—");
   assert.equal(other.role, "—");
 });
+
+test("sem token do viewer na cena, a ficha dele conta como alheia", () => {
+  const camp = campaign();
+  camp.scenesById.s1.tokens = camp.scenesById.s1.tokens.filter((t) => t.tokenId !== "t-ana");
+  const ana = projectStateForPlayer(camp, "player", "vx_ana").sheetsById.ana;
+  assert.equal(ana.pools_base, undefined);
+  assert.equal(ana.inventory_orset, undefined);
+  assert.equal(ana.attributes_lww.armor_class, 15);
+});
+
+test("ficha ligada a token do viewer é própria, mesmo sendo a de outro personagem", () => {
+  const camp = campaign();
+  camp.scenesById.s1.tokens[1] = token("t-bia", "bia", "vx_ana", "exact");
+  const view = projectStateForPlayer(camp, "player", "vx_ana");
+  assert.equal(view.sheetsById.bia.pools_base.hp_max, 22);
+});

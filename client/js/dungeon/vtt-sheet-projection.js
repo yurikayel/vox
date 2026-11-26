@@ -4,7 +4,8 @@
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 
 /**
- * Ids das fichas ligadas a um token do próprio viewer.
+ * Ids das fichas próprias: ficha ligada (`token.sheetId`) a um token cujo `ownerRouteId` é o do viewer.
+ * Sem token do viewer na cena (ou sem identidade), a ficha conta como alheia e segue a lista de permissão.
  * @param {object} scenesById Cenas completas da campanha.
  * @param {string} viewerRouteId Identidade de quem lê.
  * @returns {Set<string>} Ids de ficha próprios.
@@ -38,7 +39,7 @@ function foreignSheetView(sheet) {
  * @param {Set<string>} owned Ids de ficha próprios.
  * @returns {object} Fichas com o conteúdo completo só nas próprias.
  */
-export function hideForeignSheetFields(sheetsById, owned) {
+function hideForeignSheetFields(sheetsById, owned) {
   return Object.fromEntries(
     Object.entries(sheetsById).map(([id, s]) => [id, !s || typeof s !== "object" || owned.has(id) ? s : foreignSheetView(s)]),
   );
@@ -65,4 +66,18 @@ export function withForeignSheetHp(scene, sheetsById, owned) {
     return hp ? { ...t, ...hp } : t;
   });
   return { ...scene, tokens };
+}
+
+/**
+ * Fichas para o jogador: sem notas do Mestre; as alheias reduzidas à lista de permissão.
+ * @param {{sheetsById?: object, scenesById?: object}} state Estado completo da campanha.
+ * @param {string} viewerRouteId Identidade de quem lê.
+ * @returns {{sheetsById: object, owned: Set<string>}} Fichas projetadas e ids próprios.
+ */
+export function projectSheetsForPlayer(state, viewerRouteId) {
+  const owned = ownedSheetIds(state.scenesById, viewerRouteId);
+  const noGmNotes = Object.fromEntries(
+    Object.entries(state.sheetsById || {}).map(([id, s]) => [id, s?.sheet_meta ? { ...s, sheet_meta: { ...s.sheet_meta, notes_gm: "" } } : s]),
+  );
+  return { sheetsById: hideForeignSheetFields(noGmNotes, owned), owned };
 }

@@ -21,7 +21,7 @@ import {
   TACTICS_OP_HANDLERS,
 } from "./vtt-tactics-reducer.js";
 import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
-import { hideForeignSheetFields, ownedSheetIds, withForeignSheetHp } from "./vtt-sheet-projection.js";
+import { projectSheetsForPlayer, withForeignSheetHp } from "./vtt-sheet-projection.js";
 import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
 
 const GM_ONLY_OPS = new Set([
@@ -344,13 +344,7 @@ function projectNotesForPlayer(notesById, viewerRouteId) {
 export function projectStateForPlayer(state, viewerRole = "player", viewerRouteId = "") {
   if (!state) return null;
   if (viewerRole === "gm") return structuredClone(state);
-  const owned = ownedSheetIds(state.scenesById, viewerRouteId);
-  const sheetsById = hideForeignSheetFields(
-    Object.fromEntries(
-      Object.entries(state.sheetsById || {}).map(([id, s]) => [id, s?.sheet_meta ? { ...s, sheet_meta: { ...s.sheet_meta, notes_gm: "" } } : s]),
-    ),
-    owned,
-  );
+  const { sheetsById, owned } = projectSheetsForPlayer(state, viewerRouteId);
   const notesById = projectNotesForPlayer(state.notesById, viewerRouteId);
   const scenesById = Object.fromEntries(
     Object.entries(state.scenesById || {}).map(([id, sc]) => [id, projectSceneForPlayer(withForeignSheetHp(sc, state.sheetsById, owned), viewerRouteId)]),
