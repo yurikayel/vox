@@ -18,13 +18,17 @@ export const DEFAULT_DEFENSE_LABEL = "CA";
 /** Blocos opcionais da faixa que `display.blocks` pode ligar (ids fora da lista são ignorados). @type {readonly string[]} */
 export const DISPLAY_BLOCKS = Object.freeze(["saves", "deathSaves", "conditions"]);
 
+/** Teto de itens em `display.blocks`. @type {number} */
+export const DISPLAY_BLOCKS_MAX = 8;
+
 const ID = /^[a-z][A-Za-z0-9_-]{0,31}$/;
 const plus = (n) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
 /** Registro fechado das fórmulas do motor que a faixa sabe mostrar: nome → (derivados, rótulo) → `{label, value}`. */
 const FORMULA_STATS = Object.freeze({
   proficiency: (d, label) => ({ label, value: plus(d.proficiency) }),
-  armorClass: (d, label) => ({ label: d.armored ? label : `${label} sem armadura`, value: String(d.armorClass) }),
+  /** O sufixo "sem armadura" só existe em pacote que calcula armadura (`formulas.armor`); sem ela o número é sempre a base. */
+  armorClass: (d, label, pack) => ({ label: d.armored || !pack?.formulas?.armor ? label : `${label} sem armadura`, value: String(d.armorClass) }),
   initiative: (d, label) => ({ label, value: plus(d.initiative) }),
   passivePerception: (d, label) => ({ label, value: String(d.passivePerception) }),
   speed: (d, label) => ({ label, value: `${d.speed.meters.toString().replace(".", ",")} m` }),
@@ -54,8 +58,16 @@ function entryErrors(entry, seen) {
 export function validateDisplay(display) {
   if (display === undefined) return [];
   if (!display || typeof display !== "object") return ["display: precisa ser um objeto"];
-  if (display.blocks !== undefined && !Array.isArray(display.blocks)) return ["display.blocks: precisa ser uma lista"];
-  const list = display.derived;
+  return [...blocksErrors(display.blocks), ...derivedErrors(display.derived)];
+}
+
+function blocksErrors(blocks) {
+  if (blocks === undefined) return [];
+  if (!Array.isArray(blocks) || blocks.length > DISPLAY_BLOCKS_MAX) return [`display.blocks: lista de até ${DISPLAY_BLOCKS_MAX} textos`];
+  return blocks.every((b) => typeof b === "string") ? [] : ["display.blocks: só textos"];
+}
+
+function derivedErrors(list) {
   if (list === undefined) return [];
   if (!Array.isArray(list) || list.length > DISPLAY_ENTRIES_MAX) return [`display.derived: lista de até ${DISPLAY_ENTRIES_MAX} entradas`];
   const seen = new Set();
@@ -66,10 +78,10 @@ export function validateDisplay(display) {
   });
 }
 
-function resolveEntry(entry, derived, registry) {
+function resolveEntry(pack, entry, derived, registry) {
   const { formula, computed } = entry.source || {};
   const label = String(entry.label).trim();
-  if (typeof formula === "string" && Object.hasOwn(FORMULA_STATS, formula)) return FORMULA_STATS[formula](derived, label);
+  if (typeof formula === "string" && Object.hasOwn(FORMULA_STATS, formula)) return FORMULA_STATS[formula](derived, label, pack);
   if (typeof computed !== "string" || !Object.hasOwn(registry, computed)) return null;
   try {
     const out = registry[computed](derived, label);
@@ -80,7 +92,7 @@ function resolveEntry(entry, derived, registry) {
 }
 
 function legacyStats(pack, derived) {
-  return LEGACY_ORDER.map((name) => FORMULA_STATS[name](derived, pack.labels[name]));
+  return LEGACY_ORDER.map((name) => FORMULA_STATS[name](derived, pack.labels[name], pack));
 }
 
 /**
@@ -94,7 +106,7 @@ function legacyStats(pack, derived) {
 export function derivedStats(pack, derived, registry = COMPUTED_STATS) {
   const list = pack?.display?.derived;
   if (!Array.isArray(list)) return legacyStats(pack, derived);
-  return list.slice(0, DISPLAY_ENTRIES_MAX).map((entry) => (entry ? resolveEntry(entry, derived, registry) : null)).filter(Boolean);
+  return list.slice(0, DISPLAY_ENTRIES_MAX).map((entry) => (entry ? resolveEntry(pack, entry, derived, registry) : null)).filter(Boolean);
 }
 
 /**

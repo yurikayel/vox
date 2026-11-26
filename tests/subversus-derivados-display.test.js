@@ -111,8 +111,10 @@ const t20Sheet = () => ({ ...sheet(), system: { id: "t20", version: 1 } });
 
 test("T20: a faixa mostra Defesa, Iniciativa e Deslocamento, sem salvaguardas por atributo nem testes contra a morte", () => {
   const html = renderDerivedStrip(t20Sheet(), 0);
-  assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Defesa sem armadura<\/dt><dd>14<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa<\/dt><dd>\+4<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
-  for (const gone of ["Proficiência", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Sucessos"]) assert.equal(html.includes(gone), false, gone);
+  assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Defesa<\/dt><dd>14<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa \(atributo\)<\/dt><dd>\+4<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
+  assert.equal(html.includes("Condições"), false, "o pacote t20 não declara condições; o bloco só aparece quando houver lista");
+  assert.equal(html.includes("sem armadura"), false);
+  for (const gone of ["Proficiência", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Sucessos", "Descanso"]) assert.equal(html.includes(gone), false, gone);
 });
 
 test("T20: o HUD chama a defesa de Defesa; o D&D segue com o mesmo hash e com CA", () => {
@@ -129,4 +131,22 @@ test("blocos: sem display.blocks valem todos; com a lista, só os listados; bloc
   assert.equal(validateDisplay({ blocks: "saves" }).length, 1);
   assert.deepEqual(validateDisplay({ blocks: ["saves", "desconhecido"] }), []);
   assert.deepEqual(validateSystemPack(getSystemPack("t20")), { ok: true, errors: [] });
+});
+
+test("blocos: teto de 8, só textos, e o erro de blocks não esconde erro de derived", () => {
+  const ok = Array.from({ length: 8 }, (_, i) => `b${i}`);
+  assert.deepEqual(validateDisplay({ blocks: ok }), []);
+  assert.equal(validateDisplay({ blocks: [...ok, "b8"] }).length, 1);
+  assert.equal(validateDisplay({ blocks: ["saves", 3] }).length, 1);
+  const ruins = validateDisplay({ blocks: "x", derived: [entry("a", "")] });
+  assert.equal(ruins.length, 2);
+  assert.match(ruins.join("|"), /display\.blocks/);
+  assert.match(ruins.join("|"), /display\.derived\[0\]/);
+});
+
+test("Defesa sem sufixo em pacote sem armadura; D&D mantém o sufixo", () => {
+  const nua = { ...derived(), armored: false };
+  const semArmor = { labels: {}, formulas: {}, display: { derived: [entry("armorClass", "Defesa", { formula: "armorClass" })] } };
+  assert.equal(derivedStats(semArmor, nua)[0].label, "Defesa");
+  assert.equal(derivedStats(DND5E_2024_PACK, nua).find((s) => s.label.startsWith("CA")).label, "CA sem armadura");
 });

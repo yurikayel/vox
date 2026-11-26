@@ -82,10 +82,10 @@ export const T20_PACK = Object.freeze({
   display: Object.freeze({
     derived: Object.freeze([
       Object.freeze({ id: "armorClass", label: "Defesa", source: Object.freeze({ formula: "armorClass" }) }),
-      Object.freeze({ id: "initiative", label: "Iniciativa", source: Object.freeze({ formula: "initiative" }) }),
+      Object.freeze({ id: "initiative", label: "Iniciativa (atributo)", source: Object.freeze({ formula: "initiative" }) }),
       Object.freeze({ id: "speed", label: "Deslocamento", source: Object.freeze({ formula: "speed" }) }),
     ]),
-    blocks: Object.freeze(["conditions"]),
+    blocks: Object.freeze([]),
     hud: Object.freeze({ defense: "armorClass" }),
   }),
   formulas: Object.freeze({
