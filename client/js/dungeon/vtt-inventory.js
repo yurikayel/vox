@@ -124,10 +124,19 @@ function mutateItem(sheet, inv, itemId, updater) {
   return { ...sheet, inventory_orset: inv };
 }
 
+const QTY_DELTA_LIMIT = 99;
+
+/** Delta de quantidade como inteiro entre −99 e 99; qualquer outra coisa vira 0 (sem efeito). */
+function qtyDelta(raw) {
+  const n = Math.trunc(Number(raw));
+  return Number.isFinite(n) ? Math.max(-QTY_DELTA_LIMIT, Math.min(QTY_DELTA_LIMIT, n)) : 0;
+}
+
 /**
- * Aplica mutação de inventário na ficha (cópia pura).
+ * Aplica mutação de inventário na ficha (cópia pura). `adjust_qty` soma `payload.delta` (inteiro, −99 a 99) à
+ * quantidade atual, que nunca fica negativa; zerar tira o item. Por ser relativo, dois ajustes seguidos somam.
  * @param {object} sheet Ficha CRDT.
- * @param {"add"|"remove"|"toggle_equip"|"set_qty"} kind Tipo.
+ * @param {"add"|"remove"|"toggle_equip"|"set_qty"|"adjust_qty"} kind Tipo.
  * @param {object} payload Dados do item.
  * @returns {object} Nova ficha.
  */
@@ -140,6 +149,10 @@ export function applyInventoryMutation(sheet, kind, payload = {}) {
   if (kind === "set_qty") {
     const qty = Math.max(0, Math.trunc(Number(payload.qty) || 0));
     return mutateItem(sheet, inv, itemId, (it) => (qty === 0 ? null : { ...it, qty }));
+  }
+  if (kind === "adjust_qty") {
+    const delta = qtyDelta(payload.delta);
+    return mutateItem(sheet, inv, itemId, (it) => (it.qty + delta <= 0 ? null : { ...it, qty: it.qty + delta }));
   }
   return { ...sheet, inventory_orset: inv };
 }
