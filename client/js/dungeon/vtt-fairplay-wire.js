@@ -9,7 +9,7 @@ import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 /**
  * Cria e inicia o condutor deste aparelho, guardando-o em `state.fairplayDriver`.
  * @param {object} state Estado da sessão dungeon (recebe `fairplayDriver`).
- * @param {{peer: object, peerId: string, store: object, campaignId: string, storage?: Storage}} opts
+ * @param {{peer: object, peerId: string, store: object, campaignId: string, storage?: Storage, onStatus?: (status: string) => void}} opts
  *   Par de sincronização, identidade do aparelho na mesa, store da campanha e armazenamento da flag.
  * @returns {object|null} Condutor criado, ou `null` com a flag desligada ou se `peerId` não for o `routeId` do par.
  */
@@ -22,6 +22,7 @@ export function wireFairplayDriver(state, opts) {
     peerId: opts.peerId,
     dispatchOp: (op) => opts.peer.dispatchOp(op),
     loadCampaign: () => opts.store.loadCampaign(opts.campaignId),
+    onStatus: opts.onStatus,
   });
   state.fairplayDriver = driver;
   driver.start().catch(() => { state.fairplayDriver = null; });
