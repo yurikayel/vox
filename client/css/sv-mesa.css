@@ -1,0 +1,4 @@
+/* @file Mesa (tela v4): barra do jogador, painel do Mestre, iniciativa, Fairplay. Cada fatia anexa um bloco delimitado por "== Vn ==".
+ * Injetada sob demanda por `dungeon-layout-style.js` (fora do precache; não toca `sw.js`). Só tokens `--sa-*`,
+ * alvos de toque >= 44 px, sem `!important`. Contrato testado em `tests/helpers/css-contrato.js`.
+ */
