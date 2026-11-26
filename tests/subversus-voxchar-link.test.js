@@ -109,7 +109,7 @@ test("7. usar como modelo cria ficha com id novo, campanha da instalação e est
   assert.equal((await importVoxchar(dst, { bytes: out.bytes })).ok, true);
   assert.notEqual(dst.sheet.character_id, src.sheet.character_id);
   assert.notEqual(dst.sheet.owner_pubkey_p256, "CHAVE-SECRETA");
-  assert.equal(dst.sheet.pools_base.hp_max, 20);
+  assert.equal(dst.sheet.pools_base.hp_max, 24, "o máximo vem do link (§10); o atual é o máximo");
   assert.deepEqual(dst.sheet.delta_ledger, []);
 });
 

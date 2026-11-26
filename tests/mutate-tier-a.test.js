@@ -103,13 +103,28 @@ test("PM-112 CLI/diff: parseArgs, Tier A, parseChangedLines e resolveTestsForFil
   assert.ok(resolveTestsForFile("client/js/sig-format.js", ROOT).includes("tests/sig-format.test.js"));
 });
 
-test("PM-112 resolução: módulo sem teste direto sobe pelos importadores até achar quem o exercita", () => {
-  for (const mod of ["admission", "state"]) {
-    const tests = resolveTestsForFile(`client/js/dungeon/vtt-fairplay-${mod}.js`, ROOT);
-    assert.ok(tests.includes("tests/subversus-fairplay-log.test.js"), `${mod} resolve testes via importadores`);
+test("PM-112 resolução: módulo sem teste direto sobe pelos importadores (do mais próximo) até achar quem o exercita", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vox-resolve-"));
+  const write = (rel, body) => {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), body);
+  };
+  try {
+    write("client/js/d/folha.js", "export const a = 1;\n");
+    write("client/js/d/meio.js", 'import { a } from "./folha.js";\nexport const b = a;\n');
+    write("client/js/d/topo.js", 'export const c = () => import("./meio.js");\n');
+    write("client/js/d/solto.js", "export const s = 1;\n");
+    write("tests/topo.test.js", 'import "../client/js/d/topo.js";\n');
+    write("tests/outro.test.js", "// sem imports\n");
+    assert.deepEqual(resolveTestsForFile("client/js/d/folha.js", root), ["tests/topo.test.js"], "folha → meio → topo (import dinâmico)");
+    assert.deepEqual(resolveTestsForFile("client/js/d/meio.js", root), ["tests/topo.test.js"]);
+    assert.deepEqual(resolveTestsForFile("client/js/d/solto.js", root), [], "sem importador nem teste: vazio");
+    write("tests/meio.test.js", 'import "../client/js/d/meio.js";\n');
+    assert.deepEqual(resolveTestsForFile("client/js/d/folha.js", root), ["tests/meio.test.js"], "para no nível mais próximo que tem teste");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
-  assert.deepEqual(resolveTestsForFile("client/js/sig-format.js", ROOT), ["tests/sig-format.test.js"], "teste direto não muda");
-  assert.deepEqual(resolveTestsForFile(`client/js/${"inexis"}tente-qq.js`, ROOT), [], "sem importador nem teste: vazio");
+  assert.deepEqual(resolveTestsForFile("client/js/sig-format.js", ROOT), ["tests/sig-format.test.js"], "teste por nome não muda");
 });
 
 test("PM-112 gate: evaluateGate, formatTextReport e formatSummaryMarkdown cobrem noop, pass e fail", () => {

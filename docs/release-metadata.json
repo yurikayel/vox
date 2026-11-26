@@ -1,9 +1,9 @@
 {
-  "git_sha": "913ea00d",
-  "branch": "main",
+  "git_sha": "9a46a94a",
+  "branch": "chore/release-v7.172",
   "test_js": 3528,
   "test_python": 358,
   "test_total": 3886,
-  "cache_name": "vox-pwa-v7.171-device-merge-tombstone",
-  "generated_at": "2026-11-25T15:42:56Z"
+  "cache_name": "vox-pwa-v7.172-subversus-sistemas",
+  "generated_at": "2026-11-26T08:15:16Z"
 }

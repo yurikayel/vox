@@ -7,6 +7,7 @@
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
 import { derivedStats, showBlock } from "./system-display.js";
+import { renderReserveControls } from "./screen-sheet-reserves.js";
 import { projectReserves } from "./sheet-reserves.js";
 import { totalCarriedWeight } from "./vtt-inventory.js";
 import { deriveSheet } from "./system-derive.js";
@@ -20,7 +21,8 @@ import { escapeHtml } from "../shared/html.js";
 
 /** Itens do inventário da ficha (já normalizados na sessão ou o mapa bruto `inventory_orset`). */
 function sheetItems(sheet) {
-  return Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : Object.values(sheet.inventory_orset || {});
+  const raw = Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : Object.values(sheet.inventory_orset || {});
+  return raw.filter((it) => it && typeof it === "object" && !Array.isArray(it));
 }
 
 /**
@@ -75,7 +77,7 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
       ${showBlock(pack, "saves") ? renderSavesList(pack, derived) : ""}
       ${showBlock(pack, "deathSaves") ? renderDeathSaves(pack, derived, hpCurrent) : ""}
       ${showBlock(pack, "conditions") ? renderConditionsAndRests(pack, sys.rest) : ""}
-      ${renderCredits(pack)}
+      ${renderReserveControls(sheet, pack)}${renderCredits(pack)}
     </section>`;
 }
 

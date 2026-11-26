@@ -5,6 +5,7 @@
  */
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { buildHudBelt, buildHudMagic } from "./hud-bar-model.js";
+import { computedDefense } from "./hud-defense.js";
 import { defenseLabel } from "./system-display.js";
 import { getSystemPack } from "./system-pack.js";
 import { normalizeTokenConditions } from "./vtt-tactics-schema.js";
@@ -126,8 +127,9 @@ export function buildHudStatus(state, scene) {
   const token = tokens.find((t) => t.sheetId && t.sheetId === sheet.character_id);
   const name = sheetName(sheet);
   const hp = ownHp(sheet);
-  const ac = Number(sheet.attributes_lww?.armor_class);
-  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, acLabel: defenseLabel(getSystemPack(sheet.system?.id)), ...portrait(token, name), conditions: buildHudConditions(token, sheet), magic: buildHudMagic(sheet), belt: buildHudBelt(sheet) };
+  const pack = getSystemPack(sheet.system?.id);
+  const ac = computedDefense(sheet, pack) ?? Number(sheet.attributes_lww?.armor_class);
+  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, acLabel: defenseLabel(pack), ...portrait(token, name), conditions: buildHudConditions(token, sheet), magic: buildHudMagic(sheet), belt: buildHudBelt(sheet) };
   own.mobileLine = buildMobileLine(own);
   const party = tokens
     .filter((t) => t.layer === "player" && t !== token)

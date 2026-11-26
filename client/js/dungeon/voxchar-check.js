@@ -7,6 +7,7 @@
  * @see docs/specs/voxchar-v0.md
  */
 import { getSystemPack } from "./system-pack.js";
+import { poolsIssues } from "./voxchar-pools.js";
 
 /** Tamanho máximo do arquivo em bytes (256 KiB). */
 export const VOXCHAR_MAX_BYTES = 256 * 1024;
@@ -110,6 +111,6 @@ export function checkVoxchar(bytes) {
   if (head.length) return { ok: false, issues: head };
   const pack = getSystemPack(doc.system.id);
   const sheet = isPlain(doc.sheet) ? doc.sheet : {};
-  const issues = [...attributeIssues(sheet.attributes_lww, pack), ...choicesIssues(sheet.system_choices), ...inventoryIssues(sheet.inventory_orset), ...metaIssues(sheet.sheet_meta)];
+  const issues = [...attributeIssues(sheet.attributes_lww, pack), ...choicesIssues(sheet.system_choices), ...inventoryIssues(sheet.inventory_orset), ...metaIssues(sheet.sheet_meta), ...poolsIssues(sheet.pools_base, pack)];
   return issues.length ? { ok: false, issues } : { ok: true, doc, pack };
 }
