@@ -267,6 +267,8 @@ export const ACTION_HANDLERS = {
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
+  "hud-belt-use": (state, el, _c, opts) => import("./dungeon-hud-actions.js").then((m) => m.useBeltItem(state, el.dataset.itemId, opts)),
+  "hud-favorite": (state, el, _c, opts) => import("./dungeon-hud-actions.js").then((m) => m.toggleHudFavorite(state, el.dataset.favoriteKey, opts)),
   "wizard-open": wizardAction("openWizard"),
   "wizard-mode": wizardAction("chooseMode"),
   "wizard-step": wizardAction("stepWizard"),

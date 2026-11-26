@@ -8,6 +8,7 @@ import { createDefaultScene, createSceneDoc } from "./vtt-scene-schema.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
 import { createDefaultCalendar } from "./vtt-calendar.js";
 import { normalizeFairplayState } from "./vtt-fairplay-log.js";
+import { normalizeFavorites } from "./hud-favorites.js";
 
 /** Versão canônica do schema de campanha da Mesa Soberana. */
 export const VTT_SCHEMA_VERSION = "1.0.0";
@@ -83,6 +84,7 @@ export function ensureSheetMeta(sheet = {}) {
       notes_public: String(meta.notes_public || ""),
       notes_gm: String(meta.notes_gm || ""),
       level_milestones: Array.isArray(meta.level_milestones) ? [...meta.level_milestones] : [],
+      favorites: normalizeFavorites(meta.favorites),
     },
   };
 }
