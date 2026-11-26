@@ -10,8 +10,11 @@
 const SIGNAL_TYPES = new Set(["offer", "answer", "ice"]);
 /** Teto de um quadro de sinalização recebido (SDP e ICE são pequenos; o relay aceita até 1 MB). */
 export const VTT_MAX_SIGNAL_CHARS = 64 * 1024;
-/** Teto de mensagens guardadas até o WebSocket abrir (a oferta e alguns candidatos ICE). */
+/** Teto de mensagens guardadas até o nó confirmar o registro (a oferta e alguns candidatos ICE). */
 const MAX_PENDING = 32;
+/** Quanto esperar o `registered` do nó antes de declarar erro de conexão. */
+export const VTT_REGISTER_TIMEOUT_MS = 10_000;
+const MAX_PEER_ID = 256;
 
 function parseFrame(raw) {
   if (typeof raw !== "string" || raw.length > VTT_MAX_SIGNAL_CHARS) return null;
@@ -23,35 +26,77 @@ function parseFrame(raw) {
   }
 }
 
-/** Liga os eventos do WebSocket: registra o par ao abrir, solta a fila quando o nó confirma (`registered`) e filtra o que chega. */
-function wireSocket(ws, ctx) {
-  ws.onopen = () => {
-    if (ctx.state === "closed") {
-      ws.close();
-      return;
-    }
-    ctx.transmit({ type: "register", peerId: ctx.opts.peerId });
-  };
-  ws.onclose = () => ctx.setState("closed");
-  ws.onerror = () => ctx.setState("closed");
-  ws.onmessage = (ev) => {
-    const data = parseFrame(ev.data);
-    if (data?.type === "registered" && data.peerId === ctx.opts.peerId && ctx.state === "connecting") {
-      ctx.setState("open");
-      ctx.pending.splice(0).forEach(ctx.transmit);
-    }
-    if (!data || !SIGNAL_TYPES.has(data.type)) return;
-    ctx.handlers.forEach((fn) => { try { fn(data); } catch { /* um ouvinte ruim não derruba a sinalização */ } });
-  };
+/** Só estes campos saem para o nó (lista fechada): conteúdo da mesa ou qualquer outro campo nunca viaja pela sinalização. */
+function pickFields(data) {
+  return data.type === "ice" ? { type: "ice", to: data.to, candidate: data.candidate } : { type: data.type, to: data.to, sdp: data.sdp };
 }
 
-/** Envia na hora quando aberto, guarda (com teto) enquanto conecta, recusa quando fechado ou fora do formato. */
+const validId = (id) => typeof id === "string" && id.length > 0 && id.length <= MAX_PEER_ID;
+
+/** Presença no nó: quem já estava (`registered`), quem entrou e quem saiu; avisa os ouvintes de `onPeerJoined`. */
+function trackPresence(ctx, data) {
+  if (data.type === "registered" && data.peerId === ctx.opts.peerId) {
+    ctx.online = new Set((Array.isArray(data.peers) ? data.peers : []).filter(validId));
+  } else if (data.type === "peer-joined" && validId(data.peerId)) {
+    ctx.online.add(data.peerId);
+    ctx.joinHandlers.forEach((fn) => { try { fn(data.peerId); } catch { /* ouvinte ruim */ } });
+  } else if (data.type === "peer-left") ctx.online.delete(data.peerId);
+}
+
+/** O nó confirmou o registro: o enlace abre e a fila sai. */
+function confirmRegistration(ctx, data) {
+  if (data.type !== "registered" || data.peerId !== ctx.opts.peerId || ctx.state !== "connecting") return;
+  ctx.cancel(ctx.timer);
+  ctx.setState("open");
+  ctx.pending.splice(0).forEach(ctx.transmit);
+}
+
+function onFrame(ctx, raw) {
+  const data = parseFrame(raw);
+  if (!data) return;
+  confirmRegistration(ctx, data);
+  trackPresence(ctx, data);
+  if (!SIGNAL_TYPES.has(data.type)) return;
+  ctx.handlers.forEach((fn) => { try { fn(data); } catch { /* um ouvinte ruim não derruba a sinalização */ } });
+}
+
+/** Liga os eventos do WebSocket: registra o par ao abrir; falha antes do registro vira `error`, depois vira `closed`. */
+function wireSocket(ws, ctx) {
+  ws.onopen = () => {
+    if (ctx.state === "closed") ws.close();
+    else ws.send(JSON.stringify({ type: "register", peerId: ctx.opts.peerId }));
+  };
+  const lost = () => ctx.setState(ctx.state === "connecting" ? "error" : "closed");
+  ws.onclose = lost;
+  ws.onerror = lost;
+  ws.onmessage = (ev) => onFrame(ctx, ev.data);
+}
+
+/** Envia na hora quando aberto, guarda (com teto) enquanto conecta, recusa quando fechado, com erro ou fora do formato. */
 function sendSignal(ctx, data) {
-  if (!SIGNAL_TYPES.has(data?.type) || typeof data.to !== "string" || ctx.state === "closed") return false;
+  const ended = ctx.state === "closed" || ctx.state === "error";
+  if (!SIGNAL_TYPES.has(data?.type) || typeof data.to !== "string" || ended) return false;
   if (ctx.state === "open") ctx.transmit(data);
   else if (ctx.pending.length < MAX_PENDING) ctx.pending.push(data);
   else return false;
   return true;
+}
+
+function newContext(opts, ws) {
+  const ctx = {
+    opts, handlers: new Set(), joinHandlers: new Set(), online: new Set(), pending: [], state: "connecting",
+    transmit: (data) => ws.send(JSON.stringify(pickFields(data))),
+    cancel: opts.cancel || clearTimeout,
+  };
+  ctx.setState = (next) => {
+    if (ctx.state === next || ctx.state === "closed") return;
+    ctx.state = next;
+    if (next !== "open") { ctx.cancel(ctx.timer); ctx.pending.length = 0; }
+    opts.onStatus?.(next);
+  };
+  const schedule = opts.schedule || ((fn, ms) => setTimeout(fn, ms));
+  ctx.timer = schedule(() => { if (ctx.state === "connecting") { ctx.setState("error"); try { ws.close(); } catch { /* já fechado */ } } }, opts.registerTimeoutMs ?? VTT_REGISTER_TIMEOUT_MS);
+  return ctx;
 }
 
 /**
@@ -60,28 +105,29 @@ function sendSignal(ctx, data) {
  * @param {string} opts.url Endereço `ws://` ou `wss://` do nó de sinalização.
  * @param {string} opts.peerId `routeId` local, registrado no nó.
  * @param {typeof WebSocket} [opts.WebSocketImpl] Implementação de WebSocket (testes); padrão: a global.
- * @param {(state: "connecting"|"open"|"closed") => void} [opts.onStatus] Estado do enlace; `open` só depois de o nó confirmar o registro.
- * @returns {{ send: (data: object) => boolean, onMessage: (fn: Function) => Function, close: () => void, state: () => string }}
- *   Objeto no formato que `createRtcVttTransport` espera em `signaling`.
+ * @param {number} [opts.registerTimeoutMs] Espera máxima pelo `registered` (padrão `VTT_REGISTER_TIMEOUT_MS`); estourou, estado `error`.
+ * @param {(fn: Function, ms: number) => unknown} [opts.schedule] Agendador do prazo (testes); padrão `setTimeout`.
+ * @param {(handle: unknown) => void} [opts.cancel] Cancela o prazo (testes); padrão `clearTimeout`.
+ * @param {(state: "connecting"|"open"|"closed"|"error") => void} [opts.onStatus] Estado do enlace: `open` só depois de o nó
+ *   confirmar o registro; `error` quando o nó não responde a tempo ou cai antes de registrar.
+ * @returns {{ send: Function, onMessage: Function, onPeerJoined: Function, isPeerOnline: Function, close: Function, state: Function }}
+ *   Objeto no formato que `createRtcVttTransport` espera em `signaling` (com presença: `isPeerOnline` e `onPeerJoined`).
  */
 export function createVttSignalingClient(opts) {
   const Impl = opts.WebSocketImpl || globalThis.WebSocket;
   if (typeof Impl !== "function") throw new Error("WebSocket indisponível neste navegador.");
   const ws = new Impl(opts.url);
-  const ctx = { opts, handlers: new Set(), pending: [], state: "connecting", transmit: (data) => ws.send(JSON.stringify(data)) };
-  ctx.setState = (next) => {
-    if (ctx.state === next) return;
-    ctx.state = next;
-    opts.onStatus?.(next);
-  };
+  const ctx = newContext(opts, ws);
   wireSocket(ws, ctx);
   return {
     state: () => ctx.state,
+    isPeerOnline: (id) => ctx.online.has(id),
     onMessage(fn) { ctx.handlers.add(fn); return () => ctx.handlers.delete(fn); },
+    onPeerJoined(fn) { ctx.joinHandlers.add(fn); return () => ctx.joinHandlers.delete(fn); },
     send: (data) => sendSignal(ctx, data),
     close() {
-      ctx.pending.length = 0;
       ctx.handlers.clear();
+      ctx.joinHandlers.clear();
       ctx.setState("closed");
       try { ws.close(); } catch { /* já fechado */ }
     },

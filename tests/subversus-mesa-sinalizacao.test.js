@@ -155,3 +155,110 @@ test("só o `registered` do próprio routeId abre o enlace (confirmação de out
   sockets[0].confirm("gm");
   assert.equal(client.state(), "open");
 });
+
+test("prazo do `registered`: nó mudo vira erro visível, fecha o socket e recusa envio", () => {
+  const { FakeWebSocket, sockets } = fakeWebSocketClass();
+  const states = [];
+  let fire = null;
+  const client = createVttSignalingClient({
+    url: "ws://x", peerId: "gm", WebSocketImpl: FakeWebSocket, onStatus: (s) => states.push(s),
+    registerTimeoutMs: 7, schedule: (fn, ms) => { fire = { fn, ms }; return 1; }, cancel: () => {},
+  });
+  assert.equal(fire.ms, 7);
+  client.send({ type: "offer", to: "ana", sdp: {} });
+  sockets[0].open();
+  fire.fn();
+  assert.equal(client.state(), "error");
+  assert.deepEqual(states, ["error"]);
+  assert.equal(sockets[0].closed, true);
+  assert.equal(client.send({ type: "offer", to: "ana", sdp: {} }), false);
+  sockets[0].confirm("gm");
+  assert.equal(client.state(), "error", "confirmação tardia não ressuscita o enlace");
+});
+
+test("registrado a tempo cancela o prazo; falha antes do registro é erro, depois dele é closed", () => {
+  const { FakeWebSocket, sockets } = fakeWebSocketClass();
+  const cancelled = [];
+  const a = createVttSignalingClient({ url: "ws://x", peerId: "a", WebSocketImpl: FakeWebSocket, schedule: () => "t", cancel: (h) => cancelled.push(h) });
+  sockets[0].open();
+  sockets[0].confirm("a");
+  assert.deepEqual(cancelled, ["t"]);
+  sockets[0].onclose();
+  assert.equal(a.state(), "closed");
+  const b = createVttSignalingClient({ url: "ws://x", peerId: "b", WebSocketImpl: FakeWebSocket, schedule: () => "t", cancel: () => {} });
+  sockets[1].onerror();
+  assert.equal(b.state(), "error");
+});
+
+test("lista fechada no send: só type, to e sdp/candidate saem para o nó", () => {
+  const { FakeWebSocket, sockets } = fakeWebSocketClass();
+  const client = createVttSignalingClient({ url: "ws://x", peerId: "gm", WebSocketImpl: FakeWebSocket });
+  sockets[0].open();
+  sockets[0].confirm("gm");
+  client.send({ type: "offer", to: "ana", sdp: { type: "offer" }, ficha: { hp: 9 }, from: "falso" });
+  client.send({ type: "ice", to: "ana", candidate: { c: 1 }, mesa: "segredo", sdp: {} });
+  assert.deepEqual(sockets[0].sent.slice(1), [
+    { type: "offer", to: "ana", sdp: { type: "offer" } },
+    { type: "ice", to: "ana", candidate: { c: 1 } },
+  ]);
+});
+
+test("presença: registered lista quem está, peer-joined avisa os ouvintes, peer-left tira", () => {
+  const { FakeWebSocket, sockets } = fakeWebSocketClass();
+  const client = createVttSignalingClient({ url: "ws://x", peerId: "ana", WebSocketImpl: FakeWebSocket });
+  const joined = [];
+  const off = client.onPeerJoined((id) => joined.push(id));
+  sockets[0].open();
+  sockets[0].receive(JSON.stringify({ type: "registered", peerId: "ana", peers: ["gm", 7, ""] }));
+  assert.equal(client.isPeerOnline("gm"), true);
+  assert.equal(client.isPeerOnline("7"), false);
+  sockets[0].receive(JSON.stringify({ type: "peer-left", peerId: "gm" }));
+  assert.equal(client.isPeerOnline("gm"), false);
+  sockets[0].receive(JSON.stringify({ type: "peer-joined", peerId: "gm" }));
+  sockets[0].receive(JSON.stringify({ type: "peer-joined", peerId: 5 }));
+  assert.deepEqual(joined, ["gm"]);
+  assert.equal(client.isPeerOnline("gm"), true);
+  off();
+  sockets[0].receive(JSON.stringify({ type: "peer-joined", peerId: "x" }));
+  assert.deepEqual(joined, ["gm"]);
+});
+
+test("transporte: jogador espera o Mestre aparecer (waiting_peer) e só então oferta", async () => {
+  const rtc = createFakeRtcNetwork();
+  const sent = [];
+  let joinFn = null;
+  let online = false;
+  const statuses = [];
+  const signaling = {
+    send: (d) => { sent.push(d); return true; }, onMessage: () => () => {},
+    isPeerOnline: () => online, onPeerJoined: (fn) => { joinFn = fn; return () => { joinFn = null; }; },
+  };
+  const ana = createRtcVttTransport({ peerId: "ana", initiate: true, signaling, createPeerConnection: rtc.createPeerConnection, onStatus: (id, s) => statuses.push(s) });
+  ana.send("gm", { type: "OLA" });
+  assert.ok(statuses.includes("waiting_peer"));
+  assert.deepEqual(sent, [], "nenhuma oferta antes de o Mestre estar no nó");
+  online = true;
+  joinFn("gm");
+  assert.ok(await waitUntil(() => sent.some((d) => d.type === "offer" && d.to === "gm"), 15000));
+  ana.close();
+  assert.equal(joinFn, null, "close() solta a assinatura de presença");
+});
+
+test("contra o relay real: o jogador entra antes do Mestre e a conexão fecha quando o Mestre registra", async (t) => {
+  const relay = await startRelay();
+  t.after(relay.stop);
+  const url = `ws://127.0.0.1:${relay.port}`;
+  const rtc = createFakeRtcNetwork();
+  const anaSig = createVttSignalingClient({ url, peerId: "ana" });
+  const ana = createRtcVttTransport({ peerId: "ana", initiate: true, signaling: anaSig, createPeerConnection: rtc.createPeerConnection });
+  t.after(() => { ana.close(); anaSig.close(); });
+  assert.ok(await waitUntil(() => anaSig.state() === "open", 15000));
+  ana.send("gm", { type: "OLA", n: 1 });
+  const gmSig = createVttSignalingClient({ url, peerId: "gm" });
+  const gm = createRtcVttTransport({ peerId: "gm", signaling: gmSig, createPeerConnection: rtc.createPeerConnection });
+  t.after(() => { gm.close(); gmSig.close(); });
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  assert.ok(await waitUntil(() => got.length > 0, 15000), "a oferta não se perdeu: o jogador reofertou quando o Mestre entrou");
+  assert.equal(got[0].type, "OLA");
+});
