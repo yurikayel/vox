@@ -38,7 +38,7 @@ Cada entrada de `derived` tem um **`source`** de um destes tipos, todos validado
 | Sistema | Derivados na faixa (ordem) | Fora da faixa |
 | :-- | :-- | :-- |
 | **D&D 2024** | Proficiência, CA, Iniciativa, Percepção passiva, Deslocamento | salvaguardas, testes contra a morte, Dados de Vida, descansos e Exaustão, como hoje |
-| **Tormenta20** | Defesa, Iniciativa, Deslocamento; PV e PM como recursos | sem Proficiência, Percepção passiva, salvaguardas por atributo, testes contra a morte, Dados de Vida e Exaustão (Fortitude, Reflexos e Vontade já são perícias) |
+| **Tormenta20** | Defesa, Iniciativa (só atributo, rótulo "Iniciativa (atributo)"; no livro é perícia, a perícia `iniciativa` existe à parte; **conferir com o mantenedor**), Deslocamento; PV e PM como recursos **(PM fica para depois, depende da D8)** | sem Proficiência, Percepção passiva, salvaguardas por atributo, testes contra a morte, Dados de Vida e Exaustão (Fortitude, Reflexos e Vontade já são perícias) |
 | **GURPS 4e** | Esquiva, Deslocamento Básico, Velocidade Básica, nível de carga (com o peso do inventário); PV e PF como recursos | sem Proficiência, CA, Percepção passiva (Percepção é o secundário `per`), salvaguardas, testes contra a morte, Dados de Vida |
 
 Os blocos opcionais (salvaguardas, testes contra a morte, descansos) passam a aparecer só quando o pacote os declara (`display.blocks`, lista de ids conhecidos). Sem a lista, vale o conjunto atual do D&D (§5).
@@ -48,7 +48,7 @@ Os blocos opcionais (salvaguardas, testes contra a morte, descansos) passam a ap
 | Parte do HUD | D&D 2024 | Tormenta20 | GURPS 4e |
 | :-- | :-- | :-- | :-- |
 | Barra de vida | PV | PV | PV |
-| Indicador de magia | espaços de magia (rótulo do recurso `spell-slots`) | PM (só se o máximo for maior que zero) | PF (só se o personagem tiver magias; ver D4) |
+| Indicador de magia | espaços de magia (rótulo do recurso `spell-slots`) | PM (só se o máximo for maior que zero; depende da D8) | PF (só se o personagem tiver magias; ver D4; depende da D8) |
 | Defesa no retrato | "CA 16" | "Defesa 14" | "Esquiva 8" |
 | Linha móvel | Nome · PV 18/24 · CA 16 | Nome · PV 18/24 · Defesa 14 | Nome · PV 12/12 · Esquiva 8 |
 | Cinto e favoritos | iguais (não dependem do sistema) | iguais | iguais |
@@ -67,7 +67,7 @@ O HUD lê `display.hud` do pacote da ficha e usa o **rótulo do pacote**, não o
 ## 6. Fatias de implementação (SUB-17)
 
 1. **Modelo e D&D idêntico:** `display` na validação, leitura em `renderDerivedStrip` e no HUD, `dnd5e-2024` declarando o que já mostra. Aceite: nenhum teste existente muda de resultado. **Feita (módulo `system-display.js`):** erro de forma (lista maior que 16, id fora de `^[a-z][A-Za-z0-9_-]{0,31}$` ou repetido, rótulo vazio ou com mais de 24 caracteres) recusa o pacote; `source` desconhecido ou `computed` fora do registro é **ignorado** na hora de desenhar, sem derrubar as outras entradas; `computed` que lança some; o registro de `computed` está vazio nesta fatia; `resource` é aceito na forma, mas só o HUD o usará, nas fatias seguintes. Sem declaração de defesa, o HUD mostra o literal "CA" (o T20 só muda na fatia 2). Teste de igualdade do D&D por hash do HTML em `tests/subversus-derivados-display.test.js`.
-2. **Tormenta20:** declara `display`; some o que não existe; o HUD mostra Defesa e PM.
+2. **Tormenta20:** declara `display`; some o que não existe; o HUD mostra Defesa e PM (PM depende da D8). **Feita em parte (PR da fatia 2):** faixa com Defesa, Iniciativa (atributo) e Deslocamento; `display.blocks` (`saves`, `deathSaves`, `conditions`; sem a lista valem todos; teto de 8 textos, só strings; o erro de `blocks` não esconde o de `derived`) vazio no T20, que também não declara condições; o sufixo "sem armadura" só existe em pacote com `formulas.armor` (o T20 mostra "Defesa" pura); HUD com o rótulo "Defesa". **Fica para depois:** PV e PM como recurso na faixa e o indicador de PM no HUD, porque o Vox ainda não guarda PM na ficha (`pools_base` só tem PV e espaços de magia); precisa de decisão de armazenamento.
 3. **GURPS 4e:** ligar `system-gurps-math.js` (Esquiva, Deslocamento, carga pelo inventário) e o HUD com PV, PF e Esquiva. Aqui o módulo sai de `UNPLUGGED_MODULES` do `sw.js`.
 
 Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo 30 linhas lógicas; arquivo legado acima de 350 linhas não cresce.
@@ -78,10 +78,10 @@ Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo
 | :-- | :--- | :--- |
 | 1 | `validateSystemPack` aceita `display` válido e recusa `source` com tipo desconhecido, `computed` fora do registro, rótulo acima de 24 caracteres e id de recurso inexistente | Sim |
 | 2 | Pacote sem `display` renderiza a faixa e o HUD exatamente como hoje (comparação de HTML) | Não: guarda de regressão |
-| 3 | Ficha `t20` na faixa: Defesa, Iniciativa, Deslocamento, PV e PM; sem Proficiência, Percepção passiva, testes contra a morte nem Dados de Vida | Sim |
+| 3 | Ficha `t20` na faixa: Defesa, Iniciativa (atributo), Deslocamento (PV e PM dependem da D8); sem Proficiência, Percepção passiva, testes contra a morte nem Dados de Vida | Sim |
 | 4 | Ficha `gurps4e` na faixa: Esquiva, Deslocamento Básico, Velocidade Básica e carga (com e sem peso), valores iguais aos de `gurpsSecondaries` e `encumbrance` | Sim |
 | 5 | HUD: rótulo e número da defesa vêm do pacote (D&D "CA", T20 "Defesa", GURPS "Esquiva"); a linha móvel segue o formato por sistema | Sim |
-| 6 | Indicador de magia: aparece com PM no T20 e com PF no GURPS só quando D4 mandar; some sem máximo | Sim |
+| 6 | Indicador de magia: aparece com PM no T20 e com PF no GURPS só quando D4 mandar; some sem máximo (depende da D8) | Sim |
 | 7 | `computed` com nome registrado não executa nada vindo do pacote (o pacote é congelado e só guarda texto) e função lançando erro não derruba a tela (entrada some, resto aparece) | Sim |
 | 8 | Roundtrip `.voxchar` de ficha `t20` e `gurps4e`: exporta, importa, mesma tela; arquivo igual ao de antes da mudança (sem campo novo) | Parcial |
 | 9 | Projeção do jogador não ganha campo novo (comparar chaves antes e depois) | Não: guarda de regressão |
@@ -111,6 +111,9 @@ Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo
 - **D7.** Tela de **editar** (campos de salvaguardas, especialização e dado de vida) acompanha `display` na mesma fatia, ou fica para depois?
   - **Recomendado: depois**, em item próprio; a faixa de leitura e o HUD vêm primeiro, e a edição só some o que o pacote não declara.
   - **Decidido em 26/11/2026:** depois, em item próprio (opção recomendada; autorização geral do mantenedor).
+- **D8.** Onde guardar PM (T20) e PF (GURPS) para a barra do HUD e a faixa: hoje `pools_base` só tem PV e espaços de magia, então `resource: "mp"` não tem dado.
+  - **Recomendado: reservas genéricas por id do recurso do pacote** em `pools_base` (`<id>_max` e `<id>_current`, mesmo molde do PV, mudando pelo livro-razão `delta_ledger`), sem campo novo na projeção do jogador além do que o HUD já mostra. PM/PF novos passam pelo mesmo teto e validação do livro-razão (inteiros ≥ 0, máximo limitado), pela projeção ao jogador e pelo round-trip do `.voxchar`, cada um com teste. Sai em fatia própria, antes de `resource` na faixa e do indicador de PM.
+  - **Decidido em 26/11/2026:** reservas genéricas `<id>_max`/`<id>_current` em `pools_base` com `delta_ledger`, em fatia própria (opção recomendada; autorização geral do mantenedor).
 
 ## 9. Fora de escopo
 

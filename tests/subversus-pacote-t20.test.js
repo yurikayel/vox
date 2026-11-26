@@ -55,7 +55,7 @@ test("t20: uma ficha escolhida como Tormenta20 mostra a faixa com Defesa e os cr
   assert.deepEqual(state.sheet.system, { id: "t20", version: 1 });
   const html = renderDerivedStrip(state.sheet);
   assert.match(html, /Tormenta20 \(estrutura\)/);
-  assert.match(html, /<dt>Defesa sem armadura<\/dt><dd>14<\/dd>/);
+  assert.match(html, /<dt>Defesa<\/dt><dd>14<\/dd>/);
   assert.match(html, /Nenhum texto do livro/);
   assert.ok(!/CC-BY|Creative Commons/.test(html));
 });
