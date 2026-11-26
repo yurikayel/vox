@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+## [2026-11-26] — SW `v7.173-mesa-canvas-mobile` (corte `develop → main`)
+
+*Correções pós-#628 para a nightly da `main`: canvas do mapa no celular e texto dos JSDoc da sinalização.*
+
+- Mesa: no celular o mapa não estoura mais a largura da tela enquanto o layout da Mesa ainda carrega
+
 ## [2026-11-26] — SW `v7.172-subversus-sistemas` (corte `develop → main`)
 
 *Subversus: pacotes T20 e GURPS 4e, derivados e HUD por sistema, reservas PM/PF, `.voxchar` com `pools_base`, mesa pela rede (laboratório), HUD completo e Fairplay (SUB-01 a SUB-11, SUB-17 e SUB-18).*

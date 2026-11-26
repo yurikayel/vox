@@ -1,9 +1,9 @@
 {
-  "git_sha": "9a46a94a",
-  "branch": "chore/release-v7.172",
-  "test_js": 3528,
-  "test_python": 358,
-  "test_total": 3886,
-  "cache_name": "vox-pwa-v7.172-subversus-sistemas",
-  "generated_at": "2026-11-26T08:15:16Z"
+  "git_sha": "0f5961dd",
+  "branch": "chore/release-v7.173",
+  "test_js": 3999,
+  "test_python": 359,
+  "test_total": 4358,
+  "cache_name": "vox-pwa-v7.173-mesa-canvas-mobile",
+  "generated_at": "2026-11-26T09:51:26Z"
 }

@@ -117,7 +117,7 @@ function newContext(opts, ws) {
 /**
  * Abre a sinalização da Mesa.
  * @param {object} opts Opções.
- * @param {string} opts.url Endereço `ws://` ou `wss://` do nó de sinalização.
+ * @param {string} opts.url Endereço do nó de sinalização, com esquema `ws:` (só em loopback) ou `wss:`.
  * @param {string} opts.peerId `routeId` local, registrado no nó.
  * @param {typeof WebSocket} [opts.WebSocketImpl] Implementação de WebSocket (testes); padrão: a global.
  * @param {number} [opts.registerTimeoutMs] Espera máxima pelo `registered` (padrão `VTT_REGISTER_TIMEOUT_MS`); estourou, estado `error`.

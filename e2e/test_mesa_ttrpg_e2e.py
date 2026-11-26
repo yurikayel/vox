@@ -4,6 +4,7 @@ Herda o servidor estático e o Chromium de `test_vox_e2e.py`.
 Execução: `npm run test:e2e` (filtra com `python -m unittest e2e.test_mesa_ttrpg_e2e`).
 """
 
+import json
 import pathlib
 import re
 import sys
@@ -78,6 +79,20 @@ def _import_shared_handout_md(page, title="E2E Handout"):
         {"name": f"{title}.md", "mimeType": "text/markdown", "buffer": body.encode("utf-8")}
     )
     page.get_by_text(title).first.wait_for(state="attached", timeout=15000)
+
+
+_OVERFLOW_JS = """() => {
+  const vw = window.innerWidth;
+  const clipped = (el) => { for (let a = el.parentElement; a; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === 'auto' || o === 'hidden' || o === 'scroll') return a.tagName + '.' + a.className + ' (' + o + ')'; } return null; };
+  const wide = [...document.querySelectorAll('body *')].map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.width > 0 && r.right > vw).slice(0, 10)
+    .map(([el, r]) => ({ tag: el.tagName, classes: String(el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className), id: el.id, right: Math.round(r.right), clippedBy: clipped(el) }));
+  return { scrollWidth: document.documentElement.scrollWidth, innerWidth: vw, wide };
+}"""
+
+
+def _overflow_report(page):
+    """Mensagem de diagnóstico do estouro horizontal: larguras e até 10 elementos além da viewport."""
+    return json.dumps(page.evaluate(_OVERFLOW_JS), ensure_ascii=False)
 
 
 class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
@@ -187,8 +202,26 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
             dice_panel.evaluate("el => { el.open = true; }")
             page.locator("#dungeon-roll-input").wait_for(state="visible", timeout=8000)
             overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
-            self.assertLessEqual(overflow, 4)
+            self.assertLessEqual(overflow, 4, _overflow_report(page))
             self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_10b_canvas_do_mapa_nao_estoura_o_celular_sem_a_folha_de_layout(self):
+        ctx, page, errors, _ = _new_isolated_page(
+            self.browser, self.base_url, viewport={"width": 390, "height": 844}
+        )
+        try:
+            _goto_ready(page, f"{self.base_url}/#/")
+            _complete_onboarding(page, "Mesa Canvas E2E")
+            _goto_mesa(page, self.base_url)
+            _set_viewer_player(page)
+            page.locator("#dungeon-vtt-canvas").wait_for(state="attached", timeout=10000)
+            # Estado de corrida: folha sob demanda ainda não aplicada e canvas no tamanho do atributo.
+            page.evaluate("document.getElementById('dungeon-layout-stylesheet').disabled = true")
+            page.evaluate("document.getElementById('dungeon-vtt-canvas').width = 768")
+            overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+            self.assertLessEqual(overflow, 4, _overflow_report(page))
         finally:
             _close_ctx(ctx)
 
