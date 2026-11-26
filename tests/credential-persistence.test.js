@@ -53,7 +53,6 @@ test("contas vinculadas sem chave do aparelho: App Password e webhook não vão 
   localStorage.clear();
   await withoutDeviceKey(async () => {
     linked.saveLinkedAccount("bsky", { handle: "u.bsky.social", appPassword: "APP-PWD-SECRETA", webhook: "https://hook.test/SEGREDO", enabled: true });
-    await new Promise((r) => setTimeout(r, 20));
     const raw = dump();
     assert.ok(!raw.includes("APP-PWD-SECRETA"));
     assert.ok(!raw.includes("SEGREDO"));
