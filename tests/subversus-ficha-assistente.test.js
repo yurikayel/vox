@@ -15,7 +15,9 @@ import { exportVoxchar, importVoxchar } from "../client/js/dungeon/voxchar.js";
 import { createDraft, createWizard, draftToDoc, finishGuided, finishQuick, validateStep, WIZARD_STEPS } from "../client/js/dungeon/sheet-wizard.js";
 import { renderWizard } from "../client/js/dungeon/sheet-wizard-view.js";
 import * as actions from "../client/js/dungeon/sheet-wizard-actions.js";
-import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
+import { ACTION_HANDLERS, snapshotWizardForm } from "../client/js/dungeon/dungeon-controller-actions.js";
+import { escapeWizardJob } from "../client/js/dungeon/dungeon-controller.js";
+import { VOXCHAR_LIMITS } from "../client/js/dungeon/voxchar-check.js";
 
 const fakeContainer = (vals) => vals;
 
@@ -177,4 +179,67 @@ test("14. acessibilidade: Passo X de Y, rótulos, role=alert, foco no primeiro e
   assert.match(renderWizard({ ...wz, confirmCancel: true }), /role="alertdialog"/);
   const ctl = fs.readFileSync("client/js/dungeon/dungeon-controller.js", "utf8");
   assert.match(ctl, /Escape/);
+});
+
+test("15. fronteira de texto: 60 caracteres passam e 61 são recusados em nome, classe e ancestralidade", () => {
+  const d = okDraft();
+  for (const [field, step] of [["name", 1], ["class_name", 1], ["ancestry", 1]]) {
+    assert.deepEqual(validateStep(step, { ...d, [field]: "a".repeat(60) }), [], `${field} 60`);
+    assert.equal(validateStep(step, { ...d, [field]: "a".repeat(61) }).length, 1, `${field} 61`);
+  }
+});
+
+test("16. fronteira de item: nome com 80 passa e com 81 é recusado; quantidade no máximo passa e no máximo+1 é recusada", () => {
+  const d = okDraft();
+  const item = (over) => ({ ...d, items: [{ label: "x", qty: 1, weightLb: 1, ...over }] });
+  assert.deepEqual(validateStep(6, item({ label: "a".repeat(80) })), []);
+  assert.equal(validateStep(6, item({ label: "a".repeat(81) })).length, 1);
+  assert.deepEqual(validateStep(6, item({ qty: VOXCHAR_LIMITS.qty })), []);
+  assert.equal(validateStep(6, item({ qty: VOXCHAR_LIMITS.qty + 1 })).length, 1);
+  assert.equal(validateStep(6, item({ qty: 0 })).length, 1);
+});
+
+test("17. o despachador tira a foto do formulário antes do import(): o que foi digitado entra no rascunho mesmo se a tela for redesenhada", async () => {
+  const { state } = await ready();
+  state.sheetWizard = { ...createWizard(), mode: "guided", step: 1 };
+  const field = { name: "sheetName", value: "Digitado", type: "text" };
+  const form = { querySelectorAll: () => [field, { name: "className", value: "Bardo", type: "text" }, { name: "ancestry", value: "", type: "text" }] };
+  const container = { querySelector: (s) => (s === "[data-wizard-form]" ? form : null) };
+  const job = ACTION_HANDLERS["wizard-step"](state, { dataset: { dir: "next" } }, container, {});
+  field.value = "";
+  form.querySelectorAll = () => [];
+  await job;
+  assert.equal(state.sheetWizard.draft.name, "Digitado");
+  assert.equal(state.sheetWizard.draft.class_name, "Bardo");
+  assert.equal(state.sheetWizard.step, 2);
+  assert.deepEqual(snapshotWizardForm({ querySelector: () => ({ querySelectorAll: () => [{ name: "skill", value: "stealth", type: "checkbox", checked: true }, { name: "skill", value: "arcana", type: "checkbox", checked: false }] }) }), { skill: ["stealth"] });
+});
+
+test("18. Esc abre a confirmação sem fechar direto, e um segundo Esc não descarta", async () => {
+  const { state } = await ready();
+  state.sheetWizard = { ...createWizard(), mode: "guided", step: 2 };
+  let prevented = 0;
+  const esc = { key: "Escape", preventDefault: () => { prevented += 1; } };
+  assert.equal(escapeWizardJob(state, {}, { key: "a" }), undefined);
+  await escapeWizardJob(state, {}, esc);
+  assert.ok(state.sheetWizard, "não fechou direto");
+  assert.equal(state.sheetWizard.confirmCancel, true);
+  assert.equal(escapeWizardJob(state, {}, esc), undefined, "o 2º Esc não faz nada");
+  assert.ok(state.sheetWizard);
+  assert.equal(prevented, 1);
+});
+
+test("19. o resumo revalida e volta ao passo com problema; voltar limpa os avisos", async () => {
+  const { state, store, writes } = await ready();
+  const bad = { ...okDraft(), expertSkills: ["arcana"] };
+  const out = await finishGuided(state, bad, { store });
+  assert.equal(out.ok, false);
+  assert.equal(out.step, 3);
+  assert.deepEqual(writes, []);
+  state.sheetWizard = { ...createWizard(), mode: "guided", step: 7, draft: bad };
+  await actions.stepWizard(state, { dataset: { dir: "finish" } }, {}, { store });
+  assert.equal(state.sheetWizard.step, 3);
+  assert.ok(state.sheetWizard.issues.length > 0);
+  await actions.stepWizard(state, { dataset: { dir: "back" } }, {}, { store });
+  assert.deepEqual(state.sheetWizard.issues, []);
 });

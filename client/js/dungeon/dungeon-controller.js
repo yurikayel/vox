@@ -275,12 +275,22 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
-/** Esc no assistente de criar ficha pede a confirmação de descarte (o mesmo que Cancelar). */
-function handleWizardEscape(container, viewOpts, ev) {
-  const state = viewOpts.state || getDungeonSession();
+/**
+ * Esc no assistente de criar ficha pede a confirmação de descarte (o mesmo que Cancelar); com a confirmação já aberta, não faz nada.
+ * @param {object} state Estado da sessão.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{key?: string, preventDefault?: Function}} ev Evento de teclado.
+ * @returns {Promise<void>|undefined} Tarefa da ação, ou `undefined` se o evento não se aplica.
+ */
+export function escapeWizardJob(state, container, ev) {
   if (ev?.key !== "Escape" || !state.sheetWizard || state.sheetWizard.confirmCancel) return undefined;
   ev.preventDefault?.();
-  return settleAndRedraw(ACTION_HANDLERS["wizard-cancel"](state, null, container, viewOpts), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+  return ACTION_HANDLERS["wizard-cancel"](state, null, container, {});
+}
+
+function handleWizardEscape(container, viewOpts, ev) {
+  const job = escapeWizardJob(viewOpts.state || getDungeonSession(), container, ev);
+  return job && settleAndRedraw(job, container, viewOpts, { focusSelector: "[data-wizard-focus]" });
 }
 
 function handleCanvasKeydown(container, viewOpts, ev) {
