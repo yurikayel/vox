@@ -291,10 +291,16 @@ async function handleGmActionOp(ctx, msg) {
   return undefined;
 }
 
+/** Guarda o nome anunciado: recusado não entra, e enquanto pendente vale o nome do primeiro HELLO. */
+function rememberPeerName(ctx, from, name) {
+  if (ctx.refusedFairplay.has(from)) return;
+  if (ctx.pendingFairplay.has(from) && ctx.peerNames.has(from)) return;
+  ctx.peerNames.set(from, sanitizeDisplayName(name));
+}
+
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
-    // Enquanto pendente vale o nome do primeiro HELLO: um segundo HELLO não troca o nome que o Mestre já viu.
-    if (!ctx.pendingFairplay.has(msg.from) || !ctx.peerNames.has(msg.from)) ctx.peerNames.set(msg.from, sanitizeDisplayName(msg.name));
+    rememberPeerName(ctx, msg.from, msg.name);
     if (!ctx.connectedPlayers.has(msg.from)) {
       ctx.connectedPlayers.add(msg.from);
       ctx.onPeerCountChange?.(ctx.connectedPlayers.size);

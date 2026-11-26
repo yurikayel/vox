@@ -165,3 +165,32 @@ test("enquanto pendente vale o nome do primeiro HELLO; recusar limpa o nome", as
   assert.deepEqual(gmPeer.getPeerNames(), {});
   gmPeer.close();
 });
+
+async function gmWithHello(name) {
+  const [gm, player] = [await generateVttKeypair(), await generateVttKeypair()];
+  const hub = createInMemorySyncHub();
+  const roomKey = generateRoomKey();
+  const store = makeStore();
+  await store.saveCampaign(createCampaign({ id: ID, name: "Mesa", gmRouteId: gm.routeId }));
+  const gmPeer = createVttSyncPeer({ role: "gm", campaignId: ID, keypair: gm, store, transport: hub.connect(gm.routeId), roomKey, storage: FLAG_ON });
+  const hello = async () => { hub.connect(player.routeId).send(gm.routeId, { kind: "HELLO_SYNC", roomKey, name }); await settlePeers(gmPeer); };
+  await hello();
+  return { gmPeer, id: player.routeId, hello };
+}
+
+test("admitir e depois revogar: o nome some de getPeerNames", async () => {
+  const { gmPeer, id } = await gmWithHello("Ana");
+  assert.equal(await gmPeer.approveFairplayPeer(id), true);
+  assert.deepEqual(gmPeer.getPeerNames(), { [id]: "Ana" });
+  assert.equal(await gmPeer.revokeFairplayPeer(id), true);
+  assert.deepEqual(gmPeer.getPeerNames(), {});
+  gmPeer.close();
+});
+
+test("par recusado que manda novo HELLO com nome não volta a ter nome guardado", async () => {
+  const { gmPeer, id, hello } = await gmWithHello("Ana");
+  await gmPeer.refuseFairplayPeer(id);
+  await hello();
+  assert.deepEqual(gmPeer.getPeerNames(), {});
+  gmPeer.close();
+});
