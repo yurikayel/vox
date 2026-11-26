@@ -12,6 +12,7 @@
 /client/js/sig-format.js            @yurikayel
 /client/js/inbox.js                 @yurikayel
 /client/js/shared/device-merge.js   @yurikayel
+/client/js/dungeon/vtt-sync.js @yurikayel
 /client/js/dungeon/vtt-fairplay-admission.js @yurikayel
 /client/js/dungeon/vtt-sheet-auth.js @yurikayel
 /client/js/dungeon/vtt-fairplay-cipher.js @yurikayel
