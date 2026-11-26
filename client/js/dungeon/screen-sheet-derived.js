@@ -21,7 +21,8 @@ import { escapeHtml } from "../shared/html.js";
 
 /** Itens do inventário da ficha (já normalizados na sessão ou o mapa bruto `inventory_orset`). */
 function sheetItems(sheet) {
-  return Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : Object.values(sheet.inventory_orset || {});
+  const raw = Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : Object.values(sheet.inventory_orset || {});
+  return raw.filter((it) => it && typeof it === "object" && !Array.isArray(it));
 }
 
 /**

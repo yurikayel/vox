@@ -15,6 +15,7 @@ import { getSystemPack } from "./system-pack.js";
 import { normalizeInventoryOrset } from "./vtt-inventory.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
+import { missingPoolsNotice, portablePools } from "./voxchar-pools.js";
 
 const ENC = new TextEncoder();
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
@@ -69,6 +70,7 @@ export function portableSheet(sheet, pack) {
     system_choices: portableChoices(sheet.system_choices, pack),
     inventory_orset: normalizeInventoryOrset(sheet.inventory_orset),
     sheet_meta: portableMeta(sheet.sheet_meta),
+    pools_base: portablePools(sheet.pools_base, pack),
   };
 }
 
@@ -117,6 +119,7 @@ export function buildImportedSheet(state, doc, pack) {
     system_choices: part.system_choices,
     inventory_orset: part.inventory_orset,
     sheet_meta: part.sheet_meta,
+    pools_base: { ...fresh.pools_base, ...part.pools_base },
   });
 }
 
@@ -132,6 +135,7 @@ export async function importVoxchar(state, file, opts = {}) {
   if (!checked.ok) return checked;
   const sheet = buildImportedSheet(state, checked.doc, checked.pack);
   await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet, setActive: true }, { store: opts.store || getDefaultVttStore() });
-  state.campaignNotice = `Ficha "${sheet.attributes_lww.name}" importada do arquivo .voxchar.`;
+  const warn = missingPoolsNotice(checked.doc, checked.pack);
+  state.campaignNotice = `Ficha "${sheet.attributes_lww.name}" importada do arquivo .voxchar.${warn ? ` ${warn}` : ""}`;
   return { ok: true };
 }
