@@ -2,6 +2,7 @@
 
 Escopo **somente** o sub-repo [`vox/`](.). Não escrever roteiro Matrix/vídeo aqui nem promover conteúdo de `politica/` para `~/.gemini/config/AGENTS.md`.
 - **Hardening v3.2:** [docs/HARDENING.md](docs/HARDENING.md) (limites e o que o CI bloqueia) · **Evidência de testes e auditoria:** [docs/process/qualidade-e-evidencia.md](docs/process/qualidade-e-evidencia.md). Este repositório é autossuficiente: não dependa de arquivos de `politica/`.
+- **Postura vibe/qualidade v2:** completa [`../.cursor/rules/engineering-vibe-quality.mdc`](../.cursor/rules/engineering-vibe-quality.mdc) · compacta [`../.cursor/rules/engineering-vibe-quality-compact.mdc`](../.cursor/rules/engineering-vibe-quality-compact.mdc) — complementa o Canônico; **limites numéricos e CI** seguem HARDENING v3.2.
 
 ## Mutex e Ownership
 
