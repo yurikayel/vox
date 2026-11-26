@@ -14,10 +14,9 @@ import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/v
 import { createFairplayDriver } from "../client/js/dungeon/vtt-fairplay-driver.js";
 import { isFairplayShareEnvelope } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
-import { settlePeers } from "./helpers/wait-until.js";
+import { settlePeers, waitUntil } from "./helpers/wait-until.js";
 
 const CAMP = "mesa-rede";
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
@@ -56,13 +55,13 @@ async function setupTable(drop = {}) {
 }
 
 async function waitAllDone(seats, rollId, timeoutMs = 6000) {
-  const end = Date.now() + timeoutMs;
-  while (Date.now() < end) {
-    const camps = await Promise.all(seats.map((s) => s.store.loadCampaign(CAMP)));
-    if (camps.every((c) => c?.fairplay?.rolls?.[rollId]?.phase === "done")) return camps;
-    await sleep(40);
-  }
-  throw new Error("rolagem não fechou a tempo");
+  let camps = [];
+  const done = await waitUntil(async () => {
+    camps = await Promise.all(seats.map((s) => s.store.loadCampaign(CAMP)));
+    return camps.every((c) => c?.fairplay?.rolls?.[rollId]?.phase === "done");
+  }, timeoutMs);
+  if (!done) throw new Error("rolagem não fechou a tempo");
+  return camps;
 }
 
 /**
