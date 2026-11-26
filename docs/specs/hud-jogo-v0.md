@@ -33,7 +33,7 @@ Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos no
 - PV muda → `aria-live="polite"` só para a ficha própria (sem anunciar o grupo todo).
 - Cor nunca é o único sinal: condição e PV levam texto; contraste WCAG AA com tokens `--sa-*` (`client/css/agora.css`).
 - Alvos de toque ≥ 44 px; respeita `prefers-reduced-motion` (sem animação de barra).
-- Painéis: foco entra no painel ao abrir e volta ao botão que o abriu ao fechar; atalhos de teclado só quando o foco não está em campo de texto.
+- Painéis: foco entra no painel ao abrir (no título, `tabindex="-1"`) e volta ao botão que o abriu ao fechar. Atalhos de uma letra (C, I, S, M, R) valem só com o foco dentro da área da Mesa (mapa e HUD), fora de campo de texto e sem Ctrl, Meta ou Alt (WCAG 2.1.4); fora da área, nada. Esc fecha o painel aberto. Sem ficha, Ficha, Itens e Habilidades ficam `aria-disabled` e não abrem; Mapa e Crônica seguem. `aria-controls` só aparece com o painel aberto.
 - Celular (≤ 390 px, `@media (max-width: 1023.98px)`): some o cinto e o grupo; ficam a linha "Nome · PV · CA" e a barra de favoritos com rolagem horizontal; painéis ocupam a tela inteira como folha.
 
 ## 4. O que o jogador vê dos outros

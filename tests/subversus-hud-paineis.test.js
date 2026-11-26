@@ -4,8 +4,8 @@
 import "./setup.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { HUD_PANELS, closeHudPanel, hudPanelKeyJob, isHudPanelKey, isTextTarget, openHudPanel, takeHudPanelFocus, toggleHudPanel } from "../client/js/dungeon/hud-panels.js";
-import { renderHudPanel, renderHudPanelButtons } from "../client/js/dungeon/screen-hud-panels.js";
+import { HUD_PANELS, closeHudPanel, isHudPanelEnabled, hudPanelKeyJob, isHudPanelKey, isTextTarget, openHudPanel, takeHudPanelFocus, toggleHudPanel } from "../client/js/dungeon/hud-panels.js";
+import { CHRONICLE_LIMIT, renderHudPanel, renderHudPanelButtons } from "../client/js/dungeon/screen-hud-panels.js";
 import { renderMapHud } from "../client/js/dungeon/screen-map-hud.js";
 import { runHudOp } from "../client/js/dungeon/dungeon-hud-actions.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
@@ -13,7 +13,8 @@ import { handleCanvasKeydown } from "../client/js/dungeon/dungeon-controller.js"
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 
 const HOSTILE = `"><img src=x onerror=alert(1)>`;
-const key = (k, extra = {}) => ({ key: k, target: { tagName: "BUTTON" }, preventDefault() { this.prevented = true; }, ...extra });
+const inMesa = (tagName = "BUTTON") => ({ tagName, closest: (sel) => (sel.includes("mapHero") ? {} : null) });
+const key = (k, extra = {}) => ({ key: k, target: inMesa(), preventDefault() { this.prevented = true; }, ...extra });
 const sheet = () => ({ character_id: "ana", char_id: "ana", name: "Lyra", attributes_lww: { name: "Lyra", armor_class: 12 }, pools_base: { hp_max: 10 }, delta_ledger: [], sheet_meta: { clickable_actions: [] } });
 const player = (extra = {}) => ({ sheet: sheet(), viewerRole: "player", chronicle: [], ...extra });
 
@@ -24,7 +25,7 @@ test("painéis: cinco, com atalho de uma letra única e sem Tab", () => {
 });
 
 test("abrir, trocar, fechar e alternar; id desconhecido não abre", () => {
-  const s = {};
+  const s = { sheet: sheet() };
   assert.equal(openHudPanel(s, "nada"), false);
   assert.equal(s.hudPanel, undefined);
   assert.equal(openHudPanel(s, "items"), true);
@@ -36,7 +37,7 @@ test("abrir, trocar, fechar e alternar; id desconhecido não abre", () => {
 });
 
 test("foco: abrir leva ao painel; fechar volta ao botão que abriu; entrega uma vez só", () => {
-  const s = {};
+  const s = { sheet: sheet() };
   openHudPanel(s, "items");
   assert.equal(takeHudPanelFocus(s), "[data-hud-panel-body]");
   assert.equal(takeHudPanelFocus(s), "");
@@ -45,14 +46,14 @@ test("foco: abrir leva ao painel; fechar volta ao botão que abriu; entrega uma 
 });
 
 test("teclado: letra abre o painel, Esc fecha, campo de texto e modificador ignoram", async () => {
-  const s = {};
+  const s = { sheet: sheet() };
   const ev = key("c");
   await hudPanelKeyJob(s, ev);
   assert.equal(s.hudPanel, "sheet");
   assert.equal(ev.prevented, true);
   await hudPanelKeyJob(s, key("I"));
   assert.equal(s.hudPanel, "items");
-  assert.equal(hudPanelKeyJob(s, key("c", { target: { tagName: "INPUT" } })), undefined);
+  assert.equal(hudPanelKeyJob(s, key("c", { target: inMesa("INPUT") })), undefined);
   assert.equal(hudPanelKeyJob(s, key("c", { ctrlKey: true })), undefined);
   assert.equal(hudPanelKeyJob(s, key("x")), undefined);
   assert.equal(s.hudPanel, "items");
@@ -70,7 +71,7 @@ test("campo de texto: input, textarea, select e contenteditable; Tab não é ata
 
 test("botão do painel e fechar despacham por hud-op; o mesmo botão abre e fecha", async () => {
   assert.equal(typeof ACTION_HANDLERS["hud-op"], "function");
-  const s = {};
+  const s = { sheet: sheet() };
   const open = { dataset: { hudOp: "panel-open", panelId: "chronicle" } };
   await runHudOp(s, open);
   assert.equal(s.hudPanel, "chronicle");
@@ -82,7 +83,7 @@ test("botão do painel e fechar despacham por hud-op; o mesmo botão abre e fech
 });
 
 test("render: barra com aria-expanded, painel sem aria-modal, nome e botão Fechar", () => {
-  assert.equal([...renderHudPanelButtons({}).matchAll(/aria-expanded="false"/g)].length, 5);
+  assert.equal([...renderHudPanelButtons(player()).matchAll(/aria-expanded="false"/g)].length, 5);
   const state = player({ hudPanel: "items" });
   assert.match(renderHudPanelButtons(state), /data-panel-id="items"[^>]*aria-expanded="true"/);
   const html = renderHudPanel(state, undefined);
@@ -127,7 +128,7 @@ test("tela: Esc e a letra chegam ao painel pelo teclado da Mesa; fora da Mesa e 
   assert.equal(state.hudPanel, "sheet");
   assert.equal(run({ screen: "ficha" }, key("i")), undefined);
   assert.equal(state.hudPanel, "sheet");
-  assert.equal(run({ screen: "mesa" }, key("i", { target: { tagName: "INPUT" } })), undefined);
+  assert.equal(run({ screen: "mesa" }, key("i", { target: inMesa("INPUT") })), undefined);
   await run({ screen: "mesa" }, key("Escape"));
   assert.equal(state.hudPanel, "");
 });
@@ -142,4 +143,67 @@ test("redesenho: depois de abrir pelo teclado, o foco é pedido ao corpo do pain
   asked.length = 0;
   await handleCanvasKeydown(container, opts, key("Escape"));
   assert.ok(asked.includes(`[data-hud-op="panel-open"][data-panel-id="sheet"]`), asked.join("|"));
+});
+
+test("teclado: Meta+C e Alt+C não abrem painel", () => {
+  const s = { sheet: sheet() };
+  assert.equal(hudPanelKeyJob(s, key("c", { metaKey: true })), undefined);
+  assert.equal(hudPanelKeyJob(s, key("c", { altKey: true })), undefined);
+  assert.equal(isHudPanelKey(key("c", { metaKey: true })), false);
+  assert.equal(s.hudPanel, undefined);
+});
+
+test("WCAG 2.1.4: a letra só vale com o foco dentro da área da Mesa; fora dela, nada", () => {
+  const s = { sheet: sheet() };
+  const outside = { tagName: "BUTTON", closest: () => null };
+  assert.equal(hudPanelKeyJob(s, key("c", { target: outside })), undefined);
+  assert.equal(isHudPanelKey(key("c", { target: outside })), false);
+  assert.equal(isHudPanelKey(key("c", { target: { tagName: "BODY" } })), false);
+  assert.equal(isHudPanelKey(key("c", { target: undefined })), false);
+  assert.equal(s.hudPanel, undefined);
+  assert.equal(isHudPanelKey(key("c")), true);
+});
+
+test("a11y: o alvo do foco do painel é o título com tabindex -1 (focável)", () => {
+  const html = renderHudPanel(player({ hudPanel: "items" }), undefined);
+  assert.match(html, /<h3 tabindex="-1" data-hud-panel-body>Itens<\/h3>/);
+});
+
+test("a11y: rótulos de constante (sem escape), aria-label do Fechar e aria-controls só com o painel aberto", () => {
+  const html = renderHudPanel(player({ hudPanel: "abilities" }), undefined);
+  assert.match(html, /aria-label="Fechar painel Habilidades"/);
+  assert.match(html, /<section id="dungeon-hud-panel"[^>]*aria-label="Habilidades"/);
+  const closed = renderHudPanelButtons(player());
+  assert.ok(!closed.includes("aria-controls"));
+  const open = renderHudPanelButtons(player({ hudPanel: "map" }));
+  assert.equal([...open.matchAll(/aria-controls="dungeon-hud-panel"/g)].length, 1);
+  assert.match(open, /data-panel-id="map"[^>]*aria-expanded="true" aria-controls="dungeon-hud-panel"/);
+  assert.match(renderHudPanel(player({ hudPanel: "chronicle" }), undefined), /id="dungeon-hud-panel"/);
+});
+
+test("crônica: o painel mostra só as últimas 20 entradas", () => {
+  assert.equal(CHRONICLE_LIMIT, 20);
+  const chronicle = Array.from({ length: 25 }, (_, i) => ({ speaker: "Narrador", badge: "Nota", text: `entrada-${i}-fim`, visibility: "public" }));
+  const html = renderHudPanel(player({ hudPanel: "chronicle", chronicle }), undefined);
+  assert.equal([...html.matchAll(/dungeon-turn-card/g)].length, 20);
+  assert.ok(!html.includes("entrada-4-fim"));
+  assert.match(html, /entrada-5-fim/);
+  assert.match(html, /entrada-24-fim/);
+});
+
+test("sem ficha: Ficha, Itens e Habilidades ficam desabilitados e não abrem; Mapa e Crônica seguem", () => {
+  const none = { viewerRole: "player", chronicle: [] };
+  const html = renderHudPanelButtons(none);
+  for (const id of ["sheet", "items", "abilities"]) {
+    assert.match(html, new RegExp(`aria-disabled="true" data-panel-id="${id}"`), id);
+    assert.equal(isHudPanelEnabled(none, id), false);
+    assert.equal(openHudPanel({ ...none }, id), false);
+  }
+  assert.equal([...html.matchAll(/aria-disabled="true"/g)].length, 3);
+  assert.equal([...html.matchAll(/aria-expanded="false"/g)].length, 2);
+  assert.ok(!html.includes('data-panel-id="sheet" aria-expanded'));
+  assert.equal(openHudPanel({ ...none }, "map"), true);
+  assert.equal(renderHudPanel({ ...none, hudPanel: "items" }, undefined), "");
+  assert.match(renderHudPanel({ ...none, hudPanel: "map" }, { name: "Cripta", floors: [], tokens: [] }), /data-hud-panel="map"/);
+  assert.ok(!renderHudPanelButtons({ ...none, hudPanel: "items" }).includes('data-panel-id="items" aria-expanded="true"'));
 });

@@ -4,14 +4,31 @@
  * @module dungeon/hud-panels
  */
 
-/** Painéis, na ordem da barra. `key` é o atalho de uma letra (sem Tab: Tab continua navegando o foco). */
+/**
+ * Painéis, na ordem da barra. `key` é o atalho de uma letra (sem Tab: Tab continua navegando o foco). `needsSheet`:
+ * sem ficha o painel fica desabilitado. Os textos são constantes do código (não vêm da mesa), por isso a tela não os escapa.
+ */
 export const HUD_PANELS = Object.freeze([
-  Object.freeze({ id: "sheet", key: "c", label: "Ficha" }),
-  Object.freeze({ id: "items", key: "i", label: "Itens" }),
-  Object.freeze({ id: "abilities", key: "s", label: "Habilidades" }),
-  Object.freeze({ id: "map", key: "m", label: "Mapa" }),
-  Object.freeze({ id: "chronicle", key: "r", label: "Crônica" }),
+  Object.freeze({ id: "sheet", key: "c", label: "Ficha", needsSheet: true }),
+  Object.freeze({ id: "items", key: "i", label: "Itens", needsSheet: true }),
+  Object.freeze({ id: "abilities", key: "s", label: "Habilidades", needsSheet: true }),
+  Object.freeze({ id: "map", key: "m", label: "Mapa", needsSheet: false }),
+  Object.freeze({ id: "chronicle", key: "r", label: "Crônica", needsSheet: false }),
 ]);
+
+/** Seletor da área da Mesa (mapa e HUD): os atalhos de uma letra só valem com o foco dentro dela (WCAG 2.1.4). */
+export const HUD_SHORTCUT_ZONE = "[data-dungeon-zone=\"mapHero\"]";
+
+/**
+ * Diz se o painel pode abrir agora (os que mostram a ficha precisam dela).
+ * @param {object} state Estado da sessão.
+ * @param {string} id Id do painel.
+ * @returns {boolean} `true` quando o painel existe e tem o que mostrar.
+ */
+export function isHudPanelEnabled(state, id) {
+  const panel = HUD_PANELS.find((p) => p.id === id);
+  return Boolean(panel) && (!panel.needsSheet || Boolean(state?.sheet));
+}
 
 const IDS = new Set(HUD_PANELS.map((p) => p.id));
 const TEXT_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
@@ -36,7 +53,7 @@ export function isTextTarget(target) {
  * @returns {boolean} `true` se abriu.
  */
 export function openHudPanel(state, id) {
-  if (!IDS.has(id)) return false;
+  if (!IDS.has(id) || !isHudPanelEnabled(state, id)) return false;
   state.hudPanel = id;
   state.hudPanelFocus = HUD_PANEL_BODY_SELECTOR;
   return true;
@@ -78,12 +95,12 @@ export function takeHudPanelFocus(state) {
 }
 
 function panelForKey(ev) {
-  if (ev.ctrlKey || ev.metaKey || ev.altKey || isTextTarget(ev.target)) return undefined;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey || isTextTarget(ev.target) || !ev.target?.closest?.(HUD_SHORTCUT_ZONE)) return undefined;
   return HUD_PANELS.find((p) => p.key === String(ev.key || "").toLowerCase());
 }
 
 /**
- * Diz se a tecla é atalho de painel (letra sem modificador fora de campo de texto) ou Esc.
+ * Diz se a tecla é atalho de painel (letra sem modificador, com o foco na área da Mesa e fora de campo de texto) ou Esc.
  * @param {{key?: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean, target?: object}} ev Evento de teclado.
  * @returns {boolean} `true` quando o HUD pode tratar a tecla.
  */
