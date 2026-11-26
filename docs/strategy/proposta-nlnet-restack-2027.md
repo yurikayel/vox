@@ -1,7 +1,7 @@
 # Proposta ao NLnet NGI Zero / Restack (PM-42 / LAN-36): rascunho de trabalho
 
-> **Status:** rascunho (revisão humana final obrigatória antes de submeter) · **Owner:** mantenedor (quem submete) · **Revisado:** 2026-11-24 · **Prazo:** 03/01/2027, 12:00 CET
-> Não substitui o [ROADMAP](../ROADMAP.md). Este documento reúne fatos verificados do repositório, riscos eliminatórios, um recorte técnico honesto e rascunhos em inglês dentro dos limites do formulário. **Cold Readiness preservada:** nenhuma submissão externa é feita por agentes; a versão enviada deve ser revisada e reescrita pelo mantenedor.
+> **Status:** rascunho (revisão humana final obrigatória antes de submeter) · **Owner:** mantenedor (quem submete) · **Revisado:** 2026-11-26 · **Prazo:** 03/01/2027, 12:00 CET
+> Não substitui o [ROADMAP](../ROADMAP.md). Este documento reúne fatos verificados do repositório, riscos eliminatórios, um recorte técnico honesto e rascunhos em inglês dentro dos limites do formulário. **Atualização de 26/11:** entram o Subversus com o Fairplay ([ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md)), a mesa pela rede (laboratório) e a linha de release `v7.174` ([release-metadata.json](../release-metadata.json)); o estado do `vox-node` passa a refletir o que já está em `main`. O que depende do mantenedor está na [§7 Pendências](#7-pendências-perguntas-ao-mantenedor). **Cold Readiness preservada:** nenhuma submissão externa é feita por agentes; a versão enviada deve ser revisada e reescrita pelo mantenedor.
 
 ---
 
@@ -10,6 +10,8 @@
 Fontes consultadas: [formulário de submissão](https://nlnet.nl/propose/), [chamada Restack](https://nlnet.nl/restack/), [política de IA generativa v1.1](https://nlnet.nl/foundation/policies/generativeAI/) e [perguntas frequentes do NLnet](https://nlnet.nl/officehour).
 
 ### 1.1 Dimensão europeia (critério eliminatório)
+
+> **Pergunta pendente e eliminatória:** um proponente individual no Brasil, com este recorte de bens públicos digitais abertos, é elegível no Restack? Sem essa resposta (e sem decisão sobre co-proponente na UE), nada abaixo deve ser enviado. Perguntas explícitas ao mantenedor: [§7, P1 e P2](#7-pendências-perguntas-ao-mantenedor).
 
 Os fundos NGI Zero / Restack são financiados pelo Horizon Europe. Propostas sem **dimensão europeia clara** são descartadas antes da avaliação técnica. Uma candidatura individual sediada no Brasil focada apenas em comunidades brasileiras corre risco alto de eliminação sumária.
 
@@ -27,7 +29,7 @@ Como estruturar a dimensão europeia de forma concreta e verdadeira:
 A política do NLnet exige transparência total sobre o uso de IA generativa. Omitir esse uso pode causar rejeição ou cancelamento da bolsa.
 
 - **Na escrita da proposta:** marque **"Yes"** no campo de uso de IA. Este rascunho foi estruturado e revisado com assistência de LLMs a partir de arquivos reais do repositório. Antes da submissão, o mantenedor deve reescrever cada campo com suas próprias palavras, verificar cada afirmação e incluir um resumo honesto de como a IA foi usada (organização de fatos, revisão de clareza em inglês e verificação de limites de caracteres).
-- **Na base de código do Vox:** marque **"Yes"** também no campo relativo ao código. O repositório usa assistentes de IA de forma contínua — em 2026-11-24, `381` dos `1.860` commits registram o trailer `Co-Authored-By:` (além de sessões auxiliares sem trailer). Explique objetivamente como a integridade do código é garantida por controle humano e automação:
+- **Na base de código do Vox:** marque **"Yes"** também no campo relativo ao código. O repositório usa assistentes de IA de forma contínua — em 2026-11-26, `1.121` dos `2.404` commits de `origin/develop` registram o trailer `Co-Authored-By:` (além de sessões auxiliares sem trailer). Explique objetivamente como a integridade do código é garantida por controle humano e automação:
   - Revisão por PR contra `develop` e `main` protegidos;
   - CI bloqueante com lint JS/Python, auditoria de documentação e suíte automatizada JS + Python (contagem canônica em [release-metadata.json](../release-metadata.json));
   - Limites estritos de complexidade medidos por AST ([HARDENING.md](../HARDENING.md));
@@ -50,7 +52,8 @@ Para manter a proposta verificável por qualquer avaliador técnico do NLnet:
 |---|---|---|
 | **Cliente PWA** | App estático em JavaScript vanilla sem build step (`client/`), offline-first com Service Worker + IndexedDB, malha WebRTC e sinalização dupla (WebSocket + Nostr efêmero `kind 25050`). | Extração da malha WebRTC/gossip/sinalização em biblioteca reutilizável, sinalização multi-relay com failover medido, chaves WebCrypto `extractable: false` com backup cifrado e i18n (inglês + base para outros idiomas europeus). |
 | **Núcleo Rust (`rust/vox-core`)** | Crate já implementado e testado (`#![no_std]`, `#![forbid(unsafe_code)]`, `#![deny(missing_docs)]`, zero dependências externas) com `genesis_data`, `genesis_guard`, `shamir_gf256`, `sig_format`, `vault_v2`, `dm_envelope_v1` e `community_manifest_v1`. | Reutilização direta de `vox-core` como dependência do novo daemon `vox-node`. |
-| **Nó/Relay (`rust/vox-node`)** | Hoje opera em Python (`relay/signaling.py` e `relay/server.py`, com gargalos de concorrência medidos no `LAN-09`) e possui blueprint técnico completo em [vox-node-rust-fase4.md](../specs/vox-node-rust-fase4.md) (implementação Rust ainda não iniciada). | Implementação do binário unificado `rust/vox-node` (sinalização WebSocket + relay/memória auto-hospedável) validado em caixa-preta contra a suíte de contrato Python existente e o benchmark de 500 pares. |
+| **Nó/Relay (`rust/vox-node`)** | O relay de produção ainda é Python (`relay/signaling.py` e `relay/server.py`, com gargalos de concorrência medidos no `LAN-09`). O binário Rust `rust/vox-node` já existe em `main` (ADR-039 Fase 4, `PR4.1a`–`PR4.4`): sinalização WebSocket, paridade HTTP do relay, modo memória, fachada loopback, `cdylib` C-ABI e fallback JNI Android ([blueprint](../specs/vox-node-rust-fase4.md)). Falta o empacotamento NDK/`.so` cross-compilado em CI e a validação em campo. | Fechar o `vox-node`: paridade caixa-preta completa contra a suíte de contrato Python, benchmark de 500 pares, empacotamento reproduzível por plataforma e validação em campo por cooperativas. |
+| **Aplicação de referência (Subversus)** | Mesa de RPG local-first sobre a mesma malha: rolagem verificável em três fases com o Mestre como hub que não pode forjar ([ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md), aceito em 25/11), mesa entre aparelhos pela rede atrás de flag de laboratório desligada por padrão ([mesa-rede-v0](../specs/mesa-rede-v0.md)) e linha de release `v7.174`. | Nada é financiado aqui: serve de caso de uso real para exercitar a biblioteca de malha (M1) e os vetores de teste de gossip, sem compromisso de entrega no escopo da bolsa. |
 | **Infraestrutura e custos** | Custo atual de R$ 0/mês apoiado em free tiers com cotas rígidas e um nó único de sinalização no Render ([INFRA-CUSTOS.md](../INFRA-CUSTOS.md)). | Remoção da dependência de servidor único via Nostr multi-relay + binário `vox-node` leve para auto-hospedagem comunitária, sem prometer "grátis para sempre". |
 
 ---
@@ -70,14 +73,14 @@ Os textos abaixo servem como base factual verificada e respeitam os limites de c
 
 ### Budget breakdown (máx. 4.000 caracteres)
 
-O valor/hora (€50/h) é apenas referência de cálculo e deve ser confirmado pelo mantenedor.
+O valor/hora (€50/h) e o total de EUR 30,000 aguardam a decisão do mantenedor em [§7, P3](#7-pendências-perguntas-ao-mantenedor).
 
 > We request EUR 30,000 for 600 hours of engineering and documentation at EUR 50/hour, paid strictly upon verifiable milestone delivery. No hardware, travel, or commercial hosting costs are requested.
 >
 > - M1 — Standalone P2P mesh library (120 h, EUR 6,000): extract the browser WebRTC mesh, gossip deduplication, and signalling adapter from `client/` into a standalone plain-JS module with a documented API, automated tests, and a minimal working example for third-party local-first apps.
 > - M2 — Multi-relay serverless signalling (100 h, EUR 5,000): harden ephemeral Nostr signalling (kind 25050) across multiple public relays with automatic failover, connection success metrics on mobile/NAT networks, and clear UI degradation states, eliminating the single hosted Render signalling server as a hard dependency.
 > - M3 — Open protocol specifications (60 h, EUR 3,000): publish complete, implementation-independent specs for message envelopes, gossip sync/retraction, community manifests, and encrypted WebRTC signalling, and submit a draft NIP for the ephemeral signalling format.
-> - M4 — Unified Rust node `vox-node` (160 h, EUR 8,000): implement the `vox-node` binary on top of the existing `rust/vox-core` crate, consolidating WebSocket signalling and optional community relay/memory endpoints. Validate 1-to-1 compatibility using the existing Python black-box contract test suite and pass the 500-peer load benchmark (0 connection drops, p95 <= 100 ms, RSS <= 25 MB) so cooperatives can self-host on modest hardware.
+> - M4 — Unified Rust node `vox-node` (160 h, EUR 8,000): complete and release the `vox-node` binary, whose core (WebSocket signalling, HTTP relay parity, memory mode, C-ABI/JNI facade) is already implemented on top of `rust/vox-core`. Remaining work: validate 1-to-1 compatibility with the existing Python black-box contract test suite, pass the 500-peer load benchmark (0 connection drops, p95 <= 100 ms, RSS <= 25 MB), and ship reproducible cross-compiled packages so cooperatives can self-host on modest hardware.
 > - M5 — Browser key hardening and encrypted backup (80 h, EUR 4,000): migrate local browser identity custody to standard non-extractable WebCrypto keys (`extractable: false`) with an encrypted, user-held backup format and tested migration path, using only standard browser cryptography.
 > - M6 — Reproducible supply chain, i18n, and European adoption docs (80 h, EUR 4,000): produce reproducible release artefacts with hash-pinned CI/dependencies, deliver full English UI and i18n scaffolding ready for European languages, and publish self-hosting and data-minimization guides tailored to European associations and cooperatives.
 
@@ -93,7 +96,8 @@ O valor/hora (€50/h) é apenas referência de cálculo e deve ser confirmado p
 > 2. Replacing a blocking Python signalling server with an async Rust node without breaking existing clients: our 500-peer loopback benchmark against `relay/signaling.py` exposed TCP backlog drops and synchronous O(N^2) presence fan-out stalls (p95 ~7.9–9.4 s). `rust/vox-node` must eliminate these stalls using bounded per-peer channels and non-blocking dispatch while maintaining strict 1-to-1 HTTP/WebSocket contract and on-disk storage parity verified against our existing Python black-box test suite.
 > 3. Browser key custody without lockouts: moving stored keys to non-extractable WebCrypto handles (`extractable: false`) must be paired with an encrypted, user-controlled backup and restore flow and a safe migration path for existing local profiles, without introducing custom cryptographic primitives.
 > 4. Interoperable gossip semantics: deduplication, retraction, tombstone ordering, and manifest validation must be specified unambiguously and backed by cross-language test vectors between the JavaScript client and `rust/vox-core`.
-> 5. Zero-build supply chain integrity: keeping the browser client free of heavy bundlers requires strict vendoring, hash pinning, reproducible release artefacts, and automated CI checks (`cargo deny`, `cargo audit`, AST complexity limits).
+> 5. Verifiable shared state without a trusted server: a tabletop session runs as a star with the host as hub, yet dice rolls must be verifiable by every player and must not be forgeable by the host. The accepted design (ADR-040) uses staged commitments, a log-based closing step and a host veto, built on the commit-reveal primitives already in the repository. The same pattern must hold when the session crosses devices over the mesh, with the host proving key possession on channel open.
+> 6. Zero-build supply chain integrity: keeping the browser client free of heavy bundlers requires strict vendoring, hash pinning, reproducible release artefacts, and automated CI checks (`cargo deny`, `cargo audit`, AST complexity limits).
 
 ### Ecosystem and engagement (máx. 2.000 caracteres)
 
@@ -109,9 +113,9 @@ Fatos objetivos do repositório que o mantenedor pode incluir ao redigir sua tra
 
 - Projeto iniciado em 22/10/2026, sob licença `AGPL-3.0-or-later`, desenvolvido de forma aberta em `https://github.com/yurikayel/vox`.
 - Engenharia orientada a evidência: CI bloqueante com lint, limites de complexidade por AST ([HARDENING.md](../HARDENING.md)), suíte automatizada JS + Python (ver [release-metadata.json](../release-metadata.json)), crate `rust/vox-core` com `#![forbid(unsafe_code)]` e zero dependências, modelo de ameaças ([THREAT-MODEL.md](../THREAT-MODEL.md)) e mapa operacional de custos ([INFRA-CUSTOS.md](../INFRA-CUSTOS.md)).
-- **Espaço reservado ao mantenedor:** inserir experiência técnica real, motivação pessoal e, se confirmado, nome/papel do co-proponente ou parceiro sediado na UE.
+- **Espaço reservado ao mantenedor:** experiência técnica real, motivação pessoal e o co-proponente ou parceiro na UE, se houver ([§7, P4](#7-pendências-perguntas-ao-mantenedor)).
 
-### Other funding sources (máx. 1.000 caracteres — conferir antes de enviar)
+### Other funding sources (máx. 1.000 caracteres — declaração do mantenedor, [§7, P5](#7-pendências-perguntas-ao-mantenedor))
 
 > None so far. Development has been self-funded with zero recurring hosting costs (relying on documented free tiers and local volunteer hardware). No overlapping grants have been awarded for these milestones.
 
@@ -128,7 +132,7 @@ Fatos objetivos do repositório que o mantenedor pode incluir ao redigir sua tra
 | **M1** Biblioteca de malha P2P | Módulo JS vanilla independente (WebRTC + gossip + sinalização), API documentada, testes e exemplo mínimo | 120 h | `client/` (NET-01) |
 | **M2** Sinalização multi-relay | Failover Nostr `kind 25050`, medição de conectividade e degradação honesta na UI (Render deixa de ser obrigatório) | 100 h | NET-01, REV-09 |
 | **M3** Especificação aberta | Specs de envelopes, gossip, retração, manifestos e rascunho de NIP de sinalização | 60 h | `docs/specs/` |
-| **M4** Binário `rust/vox-node` | Daemon unificado sobre `rust/vox-core`, paridade caixa-preta com suíte Python e meta `LAN-09` (500 pares, p95 ≤ 100 ms, ≤ 25 MB RSS) | 160 h | [vox-node-rust-fase4.md](../specs/vox-node-rust-fase4.md) |
+| **M4** Binário `rust/vox-node` | Núcleo já em `main`; entrega da bolsa: paridade caixa-preta completa com a suíte Python, meta `LAN-09` (500 pares, p95 ≤ 100 ms, ≤ 25 MB RSS) e pacotes cross-compilados reproduzíveis | 160 h | ADR-039-F4 (`PR4.1a`–`PR4.4` em `main`; falta NDK/`.so` e campo), [vox-node-rust-fase4.md](../specs/vox-node-rust-fase4.md) |
 | **M5** Chaves não exportáveis | WebCrypto `extractable: false`, backup cifrado sob controle do usuário e migração testada (sem cripto customizada) | 80 h | PM-12 |
 | **M6** Cadeia de suprimentos e i18n UE | Releases reproduzíveis com hashes fixados, interface em inglês + base i18n europeia e guia de auto-hospedagem | 80 h | PM-01, PM-14, LAN-20 |
 | **Total** | **6 marcos verificáveis** | **600 h** | **€30.000 (€50/h de referência)** |
@@ -145,7 +149,7 @@ Fatos objetivos do repositório que o mantenedor pode incluir ao redigir sua tra
 | 2 | `ops-humano` | Definir participação de co-proponente real na UE (ou ajustar estratégia conforme resposta do passo 1) | 2026-12-15 | [ ] |
 | 3 | `ops-humano` | Solicitar token de submissão em `token-request@nlnet.nl` | 2026-12-20 | [ ] |
 | 4 | `ops-humano` | Confirmar valor/hora, total em euros e declaração de outras fontes de financiamento (§3 e §4) | 2026-12-26 | [ ] |
-| 5 | `ops-humano` | **Revisão humana final obrigatória:** reescrever os campos em inglês em voz própria, preencher `Background` e conferir limites de caracteres | 2026-12-30 | [ ] |
+| 5 | `ops-humano` | **Revisão humana final obrigatória:** reescrever os campos em inglês em voz própria, preencher `Background` e respeitar os limites de caracteres | 2026-12-30 | [ ] |
 | 6 | `ops-humano` | Preencher declaração explícita de uso de IA (proposta + código) com resumo fiel (§1.2) | 2026-12-30 | [ ] |
 | 7 | `ops-humano` | Submeter no portal NLnet até **02/01/2027** (margem de 24 h antes do corte de **03/01/2027, 12:00 CET**) e registrar o protocolo na linha `LAN-36` do [ROADMAP](../ROADMAP.md) | 2027-01-02 | [ ] |
 
@@ -156,3 +160,16 @@ Fatos objetivos do repositório que o mantenedor pode incluir ao redigir sua tra
 - Registrar data de envio e número de protocolo na linha `LAN-36` do [ROADMAP](../ROADMAP.md) (somente após envio humano real).
 - Caso aprovada, os marcos da §4 servem de base para o plano de trabalho e pagamentos por entrega verificada.
 - **Governança e contingência:** acompanhar custos e métricas no [Relatório Trimestral "Estado da Praça" (PM-103)](./relatorio-trimestral-estado-praca-pm103.md); em caso de recusa ou inelegibilidade, acionar a [Matriz de Editais Brasileiros (PM-108)](./editais-brasileiros-pm108.md); para planejamento operacional de longo prazo, consultar [Preparo Eleitoral 2028 (PM-109)](../operations/preparo-eleitoral-2028-pm109.md).
+
+---
+
+## 7. Pendências (perguntas ao mantenedor)
+
+Nada abaixo é decidido por agente. Cada item precisa de resposta antes do envio real (03/01/2027, 12:00 CET).
+
+1. **P1 · Dimensão europeia (eliminatória):** enviar ao NLnet a pergunta de elegibilidade de proponente individual no Brasil? O texto e o prazo (05/12) estão no passo 1 da §5.
+2. **P2 · Co-proponente na UE:** existe pessoa ou organização europeia que assuma parte real do trabalho (implementação, interoperabilidade ou tradução/empacotamento)? Se não houver, a proposta segue só com o recorte de bens públicos abertos, conforme a resposta de P1.
+3. **P3 · Valor e distribuição das horas:** manter EUR 50/h, 600 h e EUR 30,000? Como o núcleo do `vox-node` já está em `main`, as 160 h de M4 podem ficar como estão (validação, benchmark e empacotamento) ou parte delas passar para M1 ou M3. Qual opção?
+4. **P4 · Background pessoal:** o mantenedor redige a trajetória e a motivação no campo `Background`.
+5. **P5 · Outras fontes de financiamento:** confirma a declaração "None so far" ou há apoio a declarar?
+6. **P6 · Subversus na proposta:** manter como caso de uso de referência sem compromisso de entrega (como na §2) ou retirar do texto enviado?
