@@ -10,6 +10,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { createDefaultScene } from "../client/js/dungeon/vtt-scene-schema.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 /** Contêiner e canvas 2D falsos, o suficiente para o controller montar o overlay (sem WebGL no Node). */
 function makeFakeMesa() {
@@ -42,6 +43,6 @@ test("Diorama: com campanha em campaignDoc, o clique no modo 3D cria o canvas da
   const button = { dataset: { dungeon: "diorama-mode", mode: "iso" } };
   button.closest = () => button;
   await handlers.click({ target: button });
-  for (let i = 0; i < 50 && !appended.length; i += 1) await new Promise((r) => setTimeout(r, 0));
+  assert.ok(await waitUntil(() => appended.length), "a lente anexou o canvas");
   assert.ok(appended.some((el) => el.dataset?.dioramaGl === "1"), "o canvas WebGL da lente foi anexado ao mapa");
 });

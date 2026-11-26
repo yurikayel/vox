@@ -3,6 +3,7 @@
  * @module dungeon/dungeon-hud-actions
  */
 import { toggleFavorite } from "./hud-favorites.js";
+import { closeHudPanel, toggleHudPanel } from "./hud-panels.js";
 import { dispatchCampaignOp } from "./dungeon-sync-bridge.js";
 import { mutateSheetInventory } from "./dungeon-persistence.js";
 import { CONSUMABLE_TAG } from "./hud-bar-model.js";
@@ -45,7 +46,7 @@ export async function toggleHudFavorite(state, key, opts = {}) {
 }
 
 /**
- * Despacha uma ação do HUD pelo `data-hud-op` do botão (`belt-use` ou `favorite`); op desconhecida não faz nada.
+ * Despacha uma ação do HUD pelo `data-hud-op` do botão (`belt-use`, `favorite`, `panel-open` ou `panel-close`); op desconhecida não faz nada.
  * @param {object} state Estado da sessão.
  * @param {HTMLElement} el Botão clicado.
  * @param {{store?: object}} [opts] Opções.
@@ -55,5 +56,7 @@ export async function runHudOp(state, el, opts = {}) {
   const op = el?.dataset?.hudOp;
   if (op === "belt-use") return useBeltItem(state, el.dataset.itemId, opts);
   if (op === "favorite") return toggleHudFavorite(state, el.dataset.favoriteKey, opts);
+  if (op === "panel-open") return toggleHudPanel(state, el.dataset.panelId);
+  if (op === "panel-close") return closeHudPanel(state);
   return undefined;
 }

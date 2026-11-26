@@ -34,14 +34,22 @@ function device(state, fromPeer) {
 /** Liga dois aparelhos: o que um manda chega ao outro, como no canal WebRTC. */
 async function connect(a, b) {
   const log = { aToB: [], bToA: [] };
-  const deliver = (to, from, outLog) => async (msg) => {
+  const inFlight = new Set();
+  const deliver = (to, from, outLog) => (msg) => {
+    const run = handle(to, from, outLog, msg);
+    inFlight.add(run);
+    const clean = () => inFlight.delete(run);
+    run.then(clean, clean);
+    return run;
+  };
+  const handle = async (to, from, outLog, msg) => {
     outLog.push(msg);
     if (msg.type === sync.SYNC_INV) await to.peer.onInventory(msg, deliver(from, to, outLog === log.aToB ? log.bToA : log.aToB));
     if (msg.type === sync.SYNC_WANT) await to.peer.onWant(msg, deliver(from, to, outLog === log.aToB ? log.bToA : log.aToB));
   };
   await a.peer.onConnect(deliver(b, a, log.aToB));
   await b.peer.onConnect(deliver(a, b, log.bToA));
-  await new Promise((r) => setTimeout(r, 50));
+  while (inFlight.size) await Promise.allSettled([...inFlight]);
   return log;
 }
 
