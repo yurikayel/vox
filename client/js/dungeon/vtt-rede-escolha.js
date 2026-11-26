@@ -90,12 +90,13 @@ export function readMesaRedeUrl(storage = globalThis.localStorage) {
 
 /**
  * Junta o estado do nó e dos elos num estado só. Quem inicia (jogador) só está `open` com um elo aberto; o Mestre, com o nó.
- * @param {{signaling: string, links: Record<string, string>, initiate: boolean}} parts Estados parciais.
- * @returns {"connecting"|"waiting_peer"|"open"|"error"} Estado resumido.
+ * @param {{signaling: string, links: Record<string, string>, initiate: boolean, authFailed?: boolean}} parts Estados parciais (`authFailed`: o Mestre não provou a chave da mesa; vale só para o jogador).
+ * @returns {"connecting"|"waiting_peer"|"open"|"error"|"auth_failed"} Estado resumido.
  */
-export function summarizeConnection({ signaling, links, initiate }) {
+export function summarizeConnection({ signaling, links, initiate, authFailed = false }) {
   if (signaling === "error" || signaling === "closed") return "error";
   if (signaling !== "open") return "connecting";
+  if (initiate && authFailed) return "auth_failed";
   const states = Object.values(links);
   if (!initiate || states.includes("open")) return "open";
   return states.includes("waiting_peer") ? "waiting_peer" : "connecting";
@@ -106,6 +107,7 @@ const TEXTS = {
   waiting_peer: "Aguardando o Mestre entrar na Mesa…",
   open: "Conectado à Mesa pela rede.",
   error: "Sem conexão com o nó de sinalização. A Mesa pela rede não está disponível.",
+  auth_failed: "Não foi possível confirmar que este é o Mestre da Mesa.",
 };
 const FALLBACK_TEXT = "Mesa pela rede indisponível neste aparelho; usando a mesma origem (outra aba).";
 
@@ -143,7 +145,7 @@ function broadcastResult(opts, fallback) {
 function openNetwork(opts, url, { rtc, sig, onSignaling, onLink, onAbort }) {
   const signaling = sig.createVttSignalingClient({ url, peerId: opts.peerId, WebSocketImpl: opts.WebSocketImpl, onStatus: onSignaling });
   try {
-    const transport = rtc.createRtcVttTransport({ peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection, iceServers: opts.iceServers, onStatus: onLink });
+    const transport = rtc.createRtcVttTransport({ peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection, iceServers: opts.iceServers, auth: { keypair: opts.keypair }, onStatus: onLink });
     return { signaling, transport };
   } catch (err) {
     onAbort();
@@ -157,7 +159,7 @@ async function buildNetwork(opts, url) {
   const parts = { signaling: "connecting", links: {}, initiate: Boolean(opts.initiate) };
   let live = true;
   const publish = () => { if (live) opts.onConnection?.({ transport: "rede", status: summarizeConnection(parts) }); };
-  const hooks = { rtc, sig, onSignaling: (s) => { parts.signaling = s; publish(); }, onLink: (id, s) => { parts.links[id] = s; publish(); }, onAbort: () => { live = false; } };
+  const hooks = { rtc, sig, onSignaling: (s) => { parts.signaling = s; publish(); }, onLink: (id, s) => { parts.links[id] = s; if (s === "auth_failed") parts.authFailed = true; publish(); }, onAbort: () => { live = false; } };
   const net = openNetwork(opts, url, hooks);
   publish();
   const close = () => { live = false; net.transport.close(); net.signaling.close(); };
@@ -171,6 +173,7 @@ async function buildNetwork(opts, url) {
  * @param {string} opts.tableId Id da mesa (sala do `BroadcastChannel`).
  * @param {string} opts.peerId `routeId` local.
  * @param {boolean} opts.initiate `true` no jogador (oferta), `false` no Mestre.
+ * @param {{privateKey: CryptoKey, publicJwk: object, routeId: string}} [opts.keypair] Par de chaves da mesa: prova de posse no canal; sem ele a rede não abre e cai na mesma origem.
  * @param {Storage|null} [opts.storage] Onde ler a flag e o endereço (padrão `localStorage`).
  * @param {(conn: object) => void} [opts.onConnection] Ouvinte do estado de conexão.
  * @param {Function} [opts.loadRtc] Carregador do transporte de rede (testes).
@@ -185,7 +188,7 @@ export async function chooseVttTransport(opts) {
   const storage = opts.storage ?? globalThis.localStorage;
   if (!isMesaRedeLabEnabled(storage)) return broadcastResult(opts, false);
   const url = readMesaRedeUrl(storage);
-  if (!url) return broadcastResult(opts, true);
+  if (!url || !opts.keypair) return broadcastResult(opts, true);
   try {
     return await buildNetwork({ ...opts, iceServers: opts.iceServers ?? readMesaRedeIce(storage) }, url);
   } catch {

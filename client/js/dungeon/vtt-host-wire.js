@@ -11,7 +11,7 @@ import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 /** Escolhe o transporte do Mestre (rede com a flag, senão mesma origem) e devolve-o; `null` se nada serve ou o par já existe. */
 async function chooseHostTransport(state, opts, { pair, tableId }) {
   const chosen = await chooseVttTransport({
-    tableId, peerId: pair.routeId, initiate: false, ...opts.network,
+    tableId, peerId: pair.routeId, keypair: pair, initiate: false, ...opts.network,
     onConnection: (conn) => { state.vttConnection = conn; (state._onSyncUpdate || opts.onSyncUpdate)?.(); },
   });
   if (chosen && state.syncPeer) chosen.transport.close?.();
