@@ -145,8 +145,9 @@ test("startCentralMemoryLoop - sincroniza já e a cada intervalo, pergunta da su
     assert.ok(calls.filter(([u]) => u.endsWith("/memory/sync")).length > afterFirst);
     assert.equal(listeners[0][0], "visibilitychange");
     globalThis.document.visibilityState = "visible";
+    const beforeVisible = calls.length;
     listeners[0][1]();
-    await new Promise((r) => setTimeout(r, 30));
+    await waitUntil(() => calls.length > beforeVisible);
     stop();
     const n = calls.length;
     mock.timers.tick(5000);

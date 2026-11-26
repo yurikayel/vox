@@ -62,28 +62,54 @@ class _SignalingFixture(unittest.TestCase):
 
 class TestSignalingConnectionCap(_SignalingFixture):
     max_connections = 2
+    WAIT_SECONDS = 30  # prazo de espera da condição (não é dormir): o laço sai assim que ela vale
+
+    def slots_free(self):
+        """Vagas livres do servidor (o semáforo é a fonte da verdade do teto)."""
+        return self.server._slots._value
+
+    def wait_slots(self, expected):
+        """Espera o servidor ter exatamente `expected` vagas livres; devolve o último valor visto."""
+        deadline = time.monotonic() + self.WAIT_SECONDS
+        while self.slots_free() != expected and time.monotonic() < deadline:
+            time.sleep(0.01)
+        return self.slots_free()
+
+    def health_if_served(self):
+        """Health, ou texto vazio se a conexão foi recusada (fechada sem dados ou derrubada com reset, conforme o SO)."""
+        try:
+            return self.health_status()
+        except OSError:
+            return ""
+
+    def close_idle(self, idle):
+        for sock in idle:
+            sock.close()
+            self._sockets.remove(sock)
 
     def test_connection_over_the_cap_is_closed_and_slot_is_reused(self):
         idle = [self.raw_socket(), self.raw_socket()]
-        time.sleep(0.35)
+        self.assertEqual(self.wait_slots(0), 0, msg="o servidor deve ter ocupado as duas vagas")
         refused = self.raw_socket()
         refused.settimeout(2)
         chunk = refused.recv(32)
         self.assertEqual(chunk, b"", msg="conexão acima do teto deve fechar sem dados")
-        idle[0].close()
-        idle[1].close()
-        self._sockets.remove(idle[0])
-        self._sockets.remove(idle[1])
-        time.sleep(0.3)
+        self.close_idle(idle)
+        self.assertEqual(self.wait_slots(2), 2, msg="as vagas devem voltar depois que os clientes saem")
         self.assertIn("200 OK", self.health_status())
 
-    def _health_when_slot_frees(self):
-        for _ in range(20):
-            try:
-                return self.health_status()
-            except OSError:
-                time.sleep(0.1)
-        return ""
+    def test_health_is_refused_while_a_slot_is_held_and_served_once_it_frees(self):
+        """Regressão da CI: conexão recusada devolve texto vazio (não OSError), então só a vaga livre prova o health."""
+        gate = threading.Event()
+        real_release = self.server._slots.release
+        self.server._slots.release = lambda: (gate.wait(self.WAIT_SECONDS), real_release())[1]
+        idle = [self.raw_socket(), self.raw_socket()]
+        self.assertEqual(self.wait_slots(0), 0)
+        self.close_idle(idle)
+        self.assertEqual(self.health_if_served(), "", msg="com as vagas presas o health é recusado sem dados")
+        gate.set()
+        self.assertEqual(self.wait_slots(2), 2)
+        self.assertIn("200 OK", self.health_status())
 
 
 class TestSignalingCapWithRateLimit(_SignalingFixture):

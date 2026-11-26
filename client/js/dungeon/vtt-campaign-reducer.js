@@ -6,6 +6,7 @@ import { createDefaultCalendar, advanceTime } from "./vtt-calendar.js";
 import { applyInventoryMutation, applyCurrencyDelta } from "./vtt-inventory.js";
 import { applyLevelUp } from "./vtt-levelup.js";
 import { createNoteDoc } from "./vtt-schema.js";
+import { isSheetOwner } from "./vtt-sheet-auth.js";
 
 function applyCalendarSet(state, op) {
   const calendar = createDefaultCalendar(op.payload?.calendar || {});
@@ -123,7 +124,7 @@ export function isPlayerAuthorizedForCampaignOp(state, op, isGm) {
   if (op.type === "INVENTORY_MUTATE" || op.type === "CURRENCY_DELTA" || op.type === "LEVEL_UP_APPLY") {
     const sheetId = op.payload?.sheetId || state.activeSheetId;
     const sheet = state.sheetsById?.[sheetId];
-    return Boolean(sheet && op.actor && (sheet.owner_pubkey_p256 === op.actor || !sheet.owner_pubkey_p256));
+    return Boolean(sheet && isSheetOwner(state, sheetId, op.actor));
   }
   return false;
 }

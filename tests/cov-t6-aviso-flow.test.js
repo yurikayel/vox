@@ -7,6 +7,7 @@ import "./setup.js";
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -29,11 +30,8 @@ const main = () => doc.getElementById("app-main");
 const act = (scope, action, extra = "") => scope.querySelector(`[data-aviso-action="${action}"]${extra}`);
 
 async function until(check, label) {
-  for (let i = 0; i < 100; i++) {
-    const got = check();
-    if (got) return got;
-    await new Promise((resolve) => setTimeout(resolve, 40));
-  }
+  const got = await waitUntil(check, 4000);
+  if (got) return got;
   throw new Error(`tempo esgotado: ${label}`);
 }
 

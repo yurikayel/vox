@@ -15,6 +15,19 @@ import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
  */
 export const loadRtcVttTransport = () => import("./vtt-rtc-transport.js");
 
+/**
+ * Texto de aviso para cada código de falha da entrada P2P.
+ * @param {string} [code] Código de erro de {@link attachVttPlayerJoin}.
+ * @returns {string} Mensagem para o jogador.
+ */
+export function joinFailureRollMessage(code) {
+  if (code === "broadcast_channel_unavailable") {
+    return "Convite P2P exige duas abas na mesma origem (BroadcastChannel indisponível neste contexto).";
+  }
+  if (code === "invalid_invite") return "Link de convite inválido ou incompleto.";
+  return "Não foi possível entrar na mesa.";
+}
+
 /** @param {object} state @param {object} invite @param {object} keypair */
 function stampPlayerJoinState(state, invite, keypair) {
   state.vttKeypair = keypair;

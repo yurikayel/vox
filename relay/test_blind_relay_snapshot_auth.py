@@ -13,7 +13,6 @@ import json
 import os
 import tempfile
 import threading
-import time
 import unittest
 import urllib.error
 import urllib.request
@@ -205,8 +204,9 @@ class TestRepeticaoEConflito(_Base):
         self.assertEqual(self.seriais(), [4, 5, 6])
         blind_relay.store_envelope(CANAL, env(2))  # chegou depois: um novo corte apagaria
         arquivo = self.arquivo()
-        antes, mtime = arquivo.read_bytes(), arquivo.stat().st_mtime_ns
-        time.sleep(0.02)
+        antes = arquivo.read_bytes()
+        mtime = arquivo.stat().st_mtime_ns - 10_000_000_000  # recua 10 s: qualquer reescrita mudaria o mtime, sem dormir
+        os.utime(arquivo, ns=(mtime, mtime))
         segundo = blind_relay.store_snapshot(CANAL, snap(2, covered=3), proof=prova())
         self.assertIs(segundo["idempotent"], True)
         self.assertEqual(arquivo.read_bytes(), antes)

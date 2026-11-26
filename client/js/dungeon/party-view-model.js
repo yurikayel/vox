@@ -46,11 +46,26 @@ function sheetName(sheet) {
 }
 
 /** Sem PV máximo na ficha não há PV a mostrar: a projeção preenche um padrão, e esse padrão não é dado da ficha. */
-function hpText(sheet) {
+function hpText(sheet, token) {
   const max = Number(sheet.pools_base?.hp_max);
-  if (!Number.isFinite(max) || max <= 0) return `${NO_DATA} / ${NO_DATA} PV`;
+  if (!Number.isFinite(max) || max <= 0) return tokenHpText(token);
   const hp = Number(projectCharacterPools(sheet.pools_base, sheet.delta_ledger || []).pools?.hp_current);
   return `${Number.isFinite(hp) ? hp : NO_DATA} / ${max} PV`;
+}
+
+/** Ficha alheia chega sem pools: o PV vem do token projetado (número, ou só o rótulo de estado). */
+function tokenHpText(token) {
+  if (Number.isFinite(token?.hpCurrent) && Number(token?.hpMax) > 0) return `${token.hpCurrent} / ${token.hpMax} PV`;
+  if (token?.hpStatus) return String(token.hpStatus);
+  return `${NO_DATA} / ${NO_DATA} PV`;
+}
+
+function tokensBySheet(state) {
+  const map = new Map();
+  for (const scene of Object.values(state?.campaign?.scenesById || {})) {
+    for (const t of scene?.tokens || []) if (t.sheetId && !map.has(t.sheetId)) map.set(t.sheetId, t);
+  }
+  return map;
 }
 
 /**
@@ -59,6 +74,7 @@ function hpText(sheet) {
  * @returns {Array<{id: string, name: string, role: string, level: string, hp: string}>} Linhas do grupo.
  */
 export function buildPartyView(state) {
+  const tokens = tokensBySheet(state);
   return listPartySheets(state).map((sheet, i) => {
     const level = Number(sheet.attributes_lww?.level);
     return {
@@ -66,7 +82,7 @@ export function buildPartyView(state) {
       name: sheetName(sheet),
       role: String(sheet.role_title || sheet.attributes_lww?.class_name || "").slice(0, 60) || NO_DATA,
       level: Number.isFinite(level) && level > 0 ? String(Math.trunc(level)) : NO_DATA,
-      hp: hpText(sheet),
+      hp: hpText(sheet, tokens.get(sheetId(sheet, i))),
     };
   });
 }
