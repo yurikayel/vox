@@ -15,9 +15,13 @@ function scores(derived) {
   return Object.fromEntries((derived.abilities || []).map((a) => [a.id, a.score]));
 }
 
+/** Teto do peso considerado, em libras: infinito, estouro e valores absurdos viram este teto (e caem em Sobrecarga). */
+const WEIGHT_CAP_LB = 1e6;
+
 function weightOf(ctx) {
   const w = Number(ctx?.weightLb);
-  return Number.isFinite(w) && w > 0 ? w : 0;
+  if (Number.isNaN(w) || w <= 0) return 0;
+  return Math.min(w, WEIGHT_CAP_LB);
 }
 
 /**

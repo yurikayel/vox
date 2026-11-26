@@ -41,7 +41,7 @@ export function resolveSheetSystem(sheet) {
 /** Peso carregado e quantos itens não informam peso, para os números de carga do GURPS. */
 function carryContext(sheet) {
   const items = sheetItems(sheet);
-  const unweighed = items.filter((it) => !Number.isFinite(Number(it?.weightLb))).length;
+  const unweighed = items.filter((it) => it?.weightLb == null || it.weightLb === "" || Number.isNaN(Number(it.weightLb))).length;
   return { weightLb: totalCarriedWeight(sheet.inventory_orset), unweighed };
 }
 

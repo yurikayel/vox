@@ -152,13 +152,13 @@ test("Defesa sem sufixo em pacote sem armadura; D&D mantém o sufixo", () => {
 });
 
 const gurpsSheet = (inv = {}) => ({ character_id: "g", system: { id: "gurps4e", version: 1 }, attributes_lww: { abilities: { st: 13, dx: 11, iq: 10, ht: 12 } }, pools_base: { hp_max: 12, hp_current: 12 }, inventory_orset: inv });
-const gstat = (html, label) => html.match(new RegExp(`<dt>${label}</dt><dd>([^<]*)</dd>`))?.[1];
+const gstat = (html, label) => html.match(new RegExp(`<dt>${label.replace(/[.()]/g, (c) => `\\${c}`)}</dt><dd>([^<]*)</dd>`))?.[1];
 const bag = (weightLb, extra = {}) => ({ saco: { id: "saco", label: "Saco", qty: 1, weightLb, equipped: false, tags: [], ...extra } });
 
 test("GURPS: a faixa mostra PV, PF, Esquiva, Deslocamento, Desloc. Básico, Velocidade Básica e Carga, sem blocos do D&D", () => {
   const html = renderDerivedStrip(gurpsSheet());
-  const got = Object.fromEntries(["PV", "PF", "Esquiva", "Deslocamento", "Desloc. Básico", "Velocidade Básica", "Carga"].map((l) => [l, gstat(html, l.replace(".", "\."))]));
-  assert.deepEqual(got, { PV: "13", PF: "12", Esquiva: "8", Deslocamento: "5", "Desloc. Básico": "5", "Velocidade Básica": "5,75", Carga: "Nenhuma" });
+  const got = Object.fromEntries(["PV (ST)", "PF (HT)", "Esquiva", "Deslocamento", "Desloc. Básico", "Velocidade Básica", "Carga"].map((l) => [l, gstat(html, l)]));
+  assert.deepEqual(got, { "PV (ST)": "13", "PF (HT)": "12", Esquiva: "8", Deslocamento: "5", "Desloc. Básico": "5", "Velocidade Básica": "5,75", Carga: "Nenhuma" });
   for (const gone of ["Proficiência", "CA", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Condições"]) assert.equal(html.includes(`<dt>${gone}`) || html.includes(gone + "</h4>"), false, gone);
 });
 
@@ -175,4 +175,20 @@ test("GURPS: o registro de computed é fechado (só nomes gurps.*) e D&D e T20 s
   assert.deepEqual(validateSystemPack(getSystemPack("gurps4e")), { ok: true, errors: [] });
   assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
   assert.equal(gstat(renderDerivedStrip(t20Sheet()), "Defesa"), "14");
+});
+
+test("GURPS: pesos absurdos (Infinity, estouro 1e308 × 1e308) caem em Sobrecarga; negativo é Nenhuma", () => {
+  const carga = (inv) => gstat(renderDerivedStrip(gurpsSheet(inv)), "Carga");
+  assert.equal(carga(bag(Infinity)), "Sobrecarga");
+  assert.equal(carga(bag(1e308, { qty: 1e308 })), "Sobrecarga");
+  assert.equal(carga({ ...bag(1e308), outro: { id: "outro", label: "Outro", qty: 1, weightLb: 1e308, equipped: false, tags: [] } }), "Sobrecarga");
+  assert.equal(carga(bag(-50)), "Nenhuma");
+});
+
+test("GURPS: peso null ou vazio conta como sem peso e os níveis Pesada e Muito pesada aparecem", () => {
+  const carga = (inv) => gstat(renderDerivedStrip(gurpsSheet(inv)), "Carga");
+  assert.equal(carga(bag(null)), "Nenhuma (itens sem peso)");
+  assert.equal(carga(bag("")), "Nenhuma (itens sem peso)");
+  assert.equal(carga(bag(150)), "Pesada");
+  assert.equal(carga(bag(300)), "Muito pesada");
 });

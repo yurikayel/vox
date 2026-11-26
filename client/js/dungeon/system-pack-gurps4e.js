@@ -36,8 +36,8 @@ export const GURPS4E_PACK = Object.freeze({
   labels: Object.freeze({ armorClass: "DX", initiative: "Iniciativa", proficiency: "Proficiência", passivePerception: "Percepção passiva", speed: "Deslocamento", saves: "Salvaguardas", deathSaves: "Testes contra a morte", conditions: "Condições", exhaustion: "Exaustão", hitDice: "Dados de Vida", shortRest: "Descanso curto", longRest: "Descanso longo" }),
   display: Object.freeze({
     derived: Object.freeze([
-      Object.freeze({ id: "hp", label: "PV", source: Object.freeze({ computed: "gurps.hp" }) }),
-      Object.freeze({ id: "fp", label: "PF", source: Object.freeze({ computed: "gurps.fp" }) }),
+      Object.freeze({ id: "hp", label: "PV (ST)", source: Object.freeze({ computed: "gurps.hp" }) }),
+      Object.freeze({ id: "fp", label: "PF (HT)", source: Object.freeze({ computed: "gurps.fp" }) }),
       Object.freeze({ id: "dodge", label: "Esquiva", source: Object.freeze({ computed: "gurps.dodge" }) }),
       Object.freeze({ id: "move", label: "Deslocamento", source: Object.freeze({ computed: "gurps.move" }) }),
       Object.freeze({ id: "basicMove", label: "Desloc. Básico", source: Object.freeze({ computed: "gurps.basicMove" }) }),
