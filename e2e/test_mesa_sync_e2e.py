@@ -16,7 +16,7 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _goto_ready, _new_isolated_page
 
 SYNC_TIMEOUT = 12000
 _TABLE_NAMES_JS = """async () => {
