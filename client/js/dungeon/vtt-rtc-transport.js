@@ -44,21 +44,27 @@ function resolveFactory(opts) {
  * @param {Function} [opts.createPeerConnection] Fábrica de `RTCPeerConnection` (testes).
  * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`).
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
- * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `open`, `closed` ou `oversize`.
+ * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `open`, `closed`, `oversize` ou `queue_full`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
 export function createRtcVttTransport(opts) {
   const factory = resolveFactory(opts);
   const links = new Map();
   const handlers = new Set();
-  const ctx = { opts, factory, links, handlers };
+  const ctx = { opts, factory, links, handlers, chains: new Map(), closed: false };
   const detach = opts.signaling.onMessage((data) => onSignal(ctx, data));
   return {
     peerId: opts.peerId,
     connect: (remoteId) => { ensureLink(ctx, remoteId, true); },
     send: (to, msg) => sendMessage(ctx, to, msg),
     onMessage(fn) { handlers.add(fn); return () => handlers.delete(fn); },
-    close() { detach(); handlers.clear(); [...links.keys()].forEach((id) => dropLink(ctx, id)); },
+    close() {
+      ctx.closed = true;
+      detach();
+      handlers.clear();
+      ctx.chains.clear();
+      [...links.keys()].forEach((id) => dropLink(ctx, id));
+    },
   };
 }
 
@@ -78,19 +84,39 @@ function attachChannel(ctx, remoteId, link, channel) {
   link.channel = channel;
   channel.onopen = () => {
     status(ctx, remoteId, "open");
-    link.queue.splice(0).forEach((text) => channel.send(text));
+    try {
+      link.queue.splice(0).forEach((text) => channel.send(text));
+    } catch {
+      dropLink(ctx, remoteId);
+    }
   };
   channel.onclose = () => { if (ctx.links.get(remoteId) === link) dropLink(ctx, remoteId); };
   channel.onmessage = (ev) => deliver(ctx, remoteId, ev.data);
 }
 
+/** Objeto simples (nem array, nem `null`, nem instância de classe). */
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype;
+}
+
+/** Entrada não confiável: só texto dentro do teto vira JSON; só objeto simples vira mensagem. Nada disso derruba o elo. */
+function parseInbound(ctx, raw) {
+  const max = ctx.opts.maxMessageBytes ?? VTT_MAX_MESSAGE_BYTES;
+  if (typeof raw !== "string" || raw.length > max || byteLength(raw) > max) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return isPlainObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 /** O `from` vem do canal, nunca do corpo: o par remoto não escolhe quem diz ser. */
 function deliver(ctx, remoteId, raw) {
-  let parsed;
-  try { parsed = JSON.parse(raw); } catch { return; }
-  if (!parsed || typeof parsed !== "object") return;
+  const parsed = parseInbound(ctx, raw);
+  if (!parsed) return;
   const msg = { ...parsed, from: remoteId };
-  ctx.handlers.forEach((fn) => fn(msg));
+  ctx.handlers.forEach((fn) => { try { fn(msg); } catch { /* um ouvinte ruim não derruba o canal */ } });
 }
 
 function newLink(ctx, remoteId) {
@@ -118,6 +144,7 @@ async function startOffer(ctx, remoteId, link) {
 
 /** Devolve o elo do par (criando-o na hora); quem inicia abre o canal e manda a oferta sem esperar, para não reordenar o envio. */
 function ensureLink(ctx, remoteId, initiator) {
+  if (ctx.closed) return null;
   const existing = ctx.links.get(remoteId);
   if (existing) return existing;
   const link = newLink(ctx, remoteId);
@@ -130,6 +157,7 @@ function ensureLink(ctx, remoteId, initiator) {
 async function answerOffer(ctx, from, sdp) {
   dropLink(ctx, from);
   const link = ensureLink(ctx, from, false);
+  if (!link) return;
   await link.pc.setRemoteDescription(sdp);
   const answer = await link.pc.createAnswer();
   await link.pc.setLocalDescription(answer);
@@ -146,27 +174,48 @@ async function applySignal(ctx, data) {
   return undefined;
 }
 
-function onSignal(ctx, data) {
-  if (!data?.from || data.from === ctx.opts.peerId) return;
-  Promise.resolve(applySignal(ctx, data)).catch(() => dropLink(ctx, data.from));
+const SIGNAL_TYPES = new Set(["offer", "answer", "ice"]);
+const MAX_PEER_ID = 256;
+
+/** Sinalização também é entrada não confiável: tipo conhecido, `from` textual curto e carga do formato certo. */
+function isValidSignal(ctx, data) {
+  if (!isPlainObject(data) || !SIGNAL_TYPES.has(data.type)) return false;
+  if (typeof data.from !== "string" || !data.from || data.from.length > MAX_PEER_ID || data.from === ctx.opts.peerId) return false;
+  return data.type === "ice" ? isPlainObject(data.candidate) : isPlainObject(data.sdp);
 }
 
+/** Um sinal por vez por par: o ICE só é aplicado depois de a oferta/resposta anterior terminar (há remote description). */
+function onSignal(ctx, data) {
+  if (ctx.closed || !isValidSignal(ctx, data)) return;
+  const prev = ctx.chains.get(data.from) || Promise.resolve();
+  const next = prev.then(() => applySignal(ctx, data)).catch(() => dropLink(ctx, data.from));
+  ctx.chains.set(data.from, next);
+}
+
+/** Entrega ou enfileira; `false` quando a fila de espera está cheia (a mensagem não some em silêncio). */
 function sendOnLink(ctx, remoteId, link, text) {
-  if (link.channel?.readyState === "open") return link.channel.send(text);
-  if (link.queue.length >= MAX_QUEUED) return status(ctx, remoteId, "oversize");
-  return link.queue.push(text);
+  if (link.channel?.readyState === "open") {
+    link.channel.send(text);
+    return true;
+  }
+  if (link.queue.length >= MAX_QUEUED) {
+    status(ctx, remoteId, "queue_full");
+    return false;
+  }
+  link.queue.push(text);
+  return true;
 }
 
 function sendMessage(ctx, to, msg) {
+  if (ctx.closed) return false;
   const text = JSON.stringify({ ...msg, from: ctx.opts.peerId });
   if (byteLength(text) > (ctx.opts.maxMessageBytes ?? VTT_MAX_MESSAGE_BYTES)) {
     status(ctx, to, "oversize");
     return false;
   }
   const targets = to === "*" ? [...ctx.links.keys()] : [to];
-  targets.forEach((id) => {
+  return targets.map((id) => {
     const link = ctx.links.get(id) || (ctx.opts.initiate && to !== "*" ? ensureLink(ctx, id, true) : null);
-    if (link) sendOnLink(ctx, id, link, text);
-  });
-  return true;
+    return link ? sendOnLink(ctx, id, link, text) : true;
+  }).every(Boolean);
 }

@@ -145,3 +145,88 @@ test("o carregador sob demanda entrega o transporte (import dinâmico, não est�
   const { loadRtcVttTransport } = await import("../client/js/dungeon/dungeon-vtt-join.js");
   assert.equal(typeof (await loadRtcVttTransport()).createRtcVttTransport, "function");
 });
+
+const noSignaling = (onEmit) => ({ send() {}, onMessage(fn) { onEmit?.(fn); return () => {}; } });
+
+test("entrada não confiável: lixo, JSON inválido, acima do teto, array, número e não-string não chegam ao ouvinte nem derrubam o elo", async () => {
+  const { gm, ana, rtc, events } = pair();
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "OK1" });
+  await waitUntil(() => got.length === 1);
+  const wire = rtc.log.channels[0];
+  const huge = JSON.stringify({ type: "GRANDE", pad: "a".repeat(262144) });
+  for (const raw of ["lixo", "{nao e json", huge, "[1,2]", "42", "null", "\"texto\"", 42, null, undefined, { type: "objeto-cru" }, ["a"]]) wire.send(raw);
+  gm.onMessage(() => { throw new Error("ouvinte ruim"); });
+  ana.send("gm", { type: "OK2" });
+  await waitUntil(() => got.length === 2);
+  assert.deepEqual(got.map((m) => m.type), ["OK1", "OK2"], "só mensagens válidas chegam");
+  assert.equal(events.some((e) => e[2] === "closed"), false, "o elo não caiu");
+});
+
+test("sinalização não confiável: tipo desconhecido, forma errada e `from` absurdo não criam elo nem lançam", () => {
+  let emit;
+  let pcs = 0;
+  createRtcVttTransport({ peerId: "gm", signaling: noSignaling((fn) => { emit = fn; }), createPeerConnection: () => { pcs += 1; return createFakeRtcNetwork().createPeerConnection(); } });
+  const junk = [null, [], "x", 7, {}, { type: "evil", from: "x", sdp: {} }, { type: "offer", from: "x", sdp: "texto" }, { type: "offer", from: "x" }, { type: "ice", from: "x", candidate: "s" }, { type: "offer", from: "y".repeat(300), sdp: {} }, { type: "offer", from: "gm", sdp: {} }, { type: "offer", from: 5, sdp: {} }];
+  for (const data of junk) assert.doesNotThrow(() => emit(data));
+  assert.equal(pcs, 0, "nenhuma conexão nasceu de sinal inválido");
+});
+
+function slowRemote(network) {
+  return () => {
+    const pc = network.createPeerConnection();
+    const original = pc.setRemoteDescription;
+    pc.hasRemote = false;
+    pc.setRemoteDescription = async (desc) => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+      await original(desc);
+      pc.hasRemote = true;
+    };
+    pc.addIceCandidate = async () => { if (!pc.hasRemote) throw new Error("sem remote description"); };
+    return pc;
+  };
+}
+
+test("corrida: ICE colado na oferta e na resposta espera a remote description (fake assíncrono) e o elo não cai", async () => {
+  const rtc = createFakeRtcNetwork();
+  const hub = createFakeSignalingHub();
+  const events = [];
+  const withIce = (sig) => ({ onMessage: sig.onMessage, send(data) { sig.send(data); if (data.type !== "ice") sig.send({ type: "ice", to: data.to, candidate: { candidate: "c" } }); } });
+  const make = (peerId, initiate) => createRtcVttTransport({ peerId, initiate, signaling: withIce(hub.connect(peerId)), createPeerConnection: slowRemote(rtc), onStatus: (id, s) => events.push([peerId, id, s]) });
+  const [gm, ana] = [make("gm", false), make("ana", true)];
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "OI" });
+  await waitUntil(() => got.length === 1);
+  assert.ok(hub.log.filter((m) => m.type === "ice").length >= 2, "offer→ice e answer→ice foram enviados");
+  assert.equal(events.some((e) => e[2] === "closed"), false, "nenhum elo caiu");
+});
+
+test("fila de espera cheia: a 65ª mensagem antes de o canal abrir devolve false e avisa `queue_full`", () => {
+  const events = [];
+  const ana = createRtcVttTransport({ peerId: "ana", initiate: true, signaling: noSignaling(), createPeerConnection: createFakeRtcNetwork().createPeerConnection, onStatus: (id, s) => events.push(s) });
+  for (let i = 0; i < 64; i += 1) assert.equal(ana.send("gm", { n: i }), true);
+  assert.equal(ana.send("gm", { n: 64 }), false);
+  assert.ok(events.includes("queue_full"));
+});
+
+test("close(): depois de fechar, enviar, conectar e sinais não recriam o elo", async () => {
+  let pcs = 0;
+  const net = createFakeRtcNetwork();
+  let emit;
+  const ana = createRtcVttTransport({ peerId: "ana", initiate: true, signaling: noSignaling((fn) => { emit = fn; }), createPeerConnection: () => { pcs += 1; return net.createPeerConnection(); } });
+  ana.close();
+  assert.equal(ana.send("gm", { type: "X" }), false);
+  ana.connect("gm");
+  emit({ type: "offer", from: "gm", sdp: { type: "offer", pcId: 1 } });
+  await Promise.resolve();
+  assert.equal(pcs, 0);
+});
+
+test("falha ao esvaziar a fila no onopen derruba só esse elo, sem lançar", async () => {
+  const { ana, rtc, events } = pair();
+  ana.send("gm", { type: "A" });
+  rtc.log.channels[0].send = () => { throw new Error("canal quebrou"); };
+  assert.ok(await waitUntil(() => events.some((e) => e[0] === "ana" && e[2] === "closed")), "o elo foi descartado");
+});
