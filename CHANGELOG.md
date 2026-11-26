@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+## [2026-11-26] — SW `v7.172-subversus-sistemas` (corte `develop → main`)
+
+*Subversus: pacotes T20 e GURPS 4e, derivados e HUD por sistema, reservas PM/PF, `.voxchar` com `pools_base`, mesa pela rede (laboratório), HUD completo e Fairplay (SUB-01 a SUB-11, SUB-17 e SUB-18).*
+
 - HUD: no GURPS 4e a defesa mostrada é a Esquiva calculada (com o peso do inventário), no lugar da CA
 - Ficha: na faixa da aba Jogar, as reservas de PM (Tormenta20) e PF (GURPS) ganham botões de gastar e recuperar 1 ponto e o campo "Definir máximo"; o gasto vai pelo livro-razão e nunca passa de 0 nem do máximo
 - Ficha portátil: o `.voxchar` passa a levar o PV máximo e os máximos das reservas do sistema (PM do Tormenta20, PF do GURPS), inteiros de 0 a 9999 e só dos recursos do pacote; o atual, o livro-razão, o ouro e os espaços de magia continuam fora, e a importação avisa quando o arquivo não traz os máximos de um sistema com reservas (SUB-18, `format` segue 1)
