@@ -23,6 +23,7 @@ import {
 import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
 import { projectSheetsForPlayer, withForeignSheetHp } from "./vtt-sheet-projection.js";
 import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
+import { isPlayerAuthorizedForSheetOp, isSheetOp, ownerForUpsert } from "./vtt-sheet-auth.js";
 
 const GM_ONLY_OPS = new Set([
   "FAIRPLAY_ADMIT",
@@ -65,6 +66,7 @@ export function isAuthorizedVttOp(state, op) {
   if (op.type in TACTICS_OP_HANDLERS) return isPlayerAuthorizedForTacticsOp(state, op);
   if (op.type in CAMPAIGN_OP_HANDLERS) return isPlayerAuthorizedForCampaignOp(state, op, false);
   if (op.type === "TOKEN_MOVE") return canPlayerMoveToken(state, op);
+  if (isSheetOp(op.type)) return isPlayerAuthorizedForSheetOp(state, op);
   return true;
 }
 
@@ -108,6 +110,7 @@ function applyRollRecorded(state, op) {
 
 function applySheetUpsert(state, op) {
   const incoming = ensureSheetMeta({ ...op.payload?.sheet, campaign_id: state.id });
+  incoming.owner_pubkey_p256 = ownerForUpsert(state, incoming.character_id, op.actor, isGmActor(state, op.actor), incoming.owner_pubkey_p256);
   const sheetsById = { ...state.sheetsById, [incoming.character_id]: incoming };
   const activeSheetId = op.payload?.setActive ? incoming.character_id : state.activeSheetId || incoming.character_id;
   return { ...state, sheetsById, activeSheetId };
