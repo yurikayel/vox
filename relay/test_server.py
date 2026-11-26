@@ -46,7 +46,6 @@ class TestVoxRelayServer(unittest.TestCase):
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
-        time.sleep(0.1)
 
     @classmethod
     def tearDownClass(cls):

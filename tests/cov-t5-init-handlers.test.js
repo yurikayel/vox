@@ -8,6 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { person } from "./signer.js";
 import { makeEl, installDom, settle, unrefLongTimers, waitFor } from "./helpers/cov-t5-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 unrefLongTimers();
 const realSetInterval = globalThis.setInterval;
@@ -363,11 +364,8 @@ test("editar post: o formulário regrava o post assinado com título e corpo nov
   await mutation.openPostEditModal("post_edit_1");
   assert.ok(container.innerHTML.includes("post_edit_1") || container.innerHTML.length > 0, "o modal foi desenhado");
   await form.fire("submit");
-  let saved = await cacheNode.getLocalPost("post_edit_1");
-  for (let i = 0; i < 300 && saved.title !== "Título novo"; i++) {
-    await new Promise((r) => setTimeout(r, 10));
-    saved = await cacheNode.getLocalPost("post_edit_1");
-  }
+  await waitUntil(async () => (await cacheNode.getLocalPost("post_edit_1")).title === "Título novo", 3000);
+  const saved = await cacheNode.getLocalPost("post_edit_1");
   assert.equal(saved.title, "Título novo");
   assert.match(saved.body, /Corpo novo/);
   assert.equal(saved.image, "data:image/png;base64,AAAA", "sem marcar remover, a imagem fica");

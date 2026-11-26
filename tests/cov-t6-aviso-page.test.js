@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const root = mount(doc, '<main id="aviso-root"></main>');
@@ -42,10 +43,7 @@ globalThis.location.hash = `#${encodeAvisoFragment(first)}`;
 const page = await import("../client/aviso/aviso-page.js");
 
 const until = async (check, label) => {
-  for (let i = 0; i < 100; i++) {
-    if (check()) return;
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
+  if (await waitUntil(check, 2000)) return;
   throw new Error(`tempo esgotado: ${label}`);
 };
 const text = (selector) => root.querySelector(selector)?.textContent;

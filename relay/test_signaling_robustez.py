@@ -59,7 +59,6 @@ class TestSignalingRobustez(unittest.TestCase):
         cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
-        time.sleep(0.1)
 
     @classmethod
     def tearDownClass(cls):

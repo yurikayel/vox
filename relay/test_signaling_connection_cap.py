@@ -74,8 +74,7 @@ class TestSignalingConnectionCap(_SignalingFixture):
         idle[1].close()
         self._sockets.remove(idle[0])
         self._sockets.remove(idle[1])
-        time.sleep(0.3)
-        self.assertIn("200 OK", self.health_status())
+        self.assertIn("200 OK", self._health_when_slot_frees())
 
     def _health_when_slot_frees(self):
         for _ in range(20):
