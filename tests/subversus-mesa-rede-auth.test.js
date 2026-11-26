@@ -31,8 +31,9 @@ const anaSawFailure = (w) => waitUntil(
 function endpoint(env, key, extra = {}) {
   const got = [];
   const tr = createRtcVttTransport({
-    peerId: key.routeId, signaling: env.hub.connect(key.routeId), createPeerConnection: env.rtc.createPeerConnection,
+    peerId: key.routeId, createPeerConnection: env.rtc.createPeerConnection,
     onStatus: (id, s) => env.events.push([key.routeId, id, s]), ...extra,
+    signaling: extra.signaling ?? env.hub.connect(key.routeId),
   });
   tr.onMessage((m) => got.push(m));
   return { tr, got };
@@ -141,6 +142,29 @@ test("f) elo que nunca abre cai por prazo e libera a vaga", async (t) => {
   t.mock.timers.tick(30_000); // prazo de montagem do elo (LINK_SETUP_TIMEOUT_MS)
   await drain();
   assert.equal(gm.tr.stats().links, 0);
-  assert.ok(w.env.events.some(([, id, s]) => id === w.evilKey.routeId && s === "auth_failed"));
+  assert.ok(w.env.events.some(([, id, s]) => id === w.evilKey.routeId && s === "timeout"));
+  assert.equal(w.env.events.some(([, , s]) => s === "auth_failed"), false, "não é falha de prova");
   gm.tr.close();
+});
+
+test("g) jogador espera o Mestre mais de 30 s; quando ele entra, o elo autentica sem auth_failed", async (t) => {
+  const w = await world();
+  let gmOnline = false;
+  const joined = new Set();
+  const base = w.env.hub.connect(w.anaKey.routeId);
+  const signaling = { ...base, isPeerOnline: () => gmOnline, onPeerJoined: (fn) => { joined.add(fn); return () => joined.delete(fn); } };
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const ana = endpoint(w.env, w.anaKey, { initiate: true, auth: { keypair: w.anaKey }, signaling });
+  ana.tr.send(w.gmKey.routeId, { type: "HELLO_SYNC", roomKey: w.roomKey });
+  await drain();
+  t.mock.timers.tick(40_000);
+  await drain();
+  assert.equal(ana.tr.stats().links, 1, "esperar o Mestre não derruba o elo");
+  t.mock.timers.reset();
+  const gm = endpoint(w.env, w.gmKey, { auth: { keypair: w.gmKey } });
+  gmOnline = true;
+  joined.forEach((fn) => fn(w.gmKey.routeId));
+  await waitUntil(() => gm.got.some((m) => m.type === "HELLO_SYNC"));
+  assert.equal(w.env.events.some(([, , s]) => s === "auth_failed" || s === "timeout"), false);
+  [gm, ana].forEach((x) => x.tr.close());
 });

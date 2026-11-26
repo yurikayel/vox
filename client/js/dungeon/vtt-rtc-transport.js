@@ -14,7 +14,7 @@ export const VTT_MAX_MESSAGE_BYTES = 256 * 1024;
 const MAX_QUEUED = 64;
 /** Prazo para o outro lado provar a chave da mesa (só com `opts.auth`); estourou, o elo cai. */
 export const AUTH_TIMEOUT_MS = 10_000;
-/** Prazo para o canal abrir depois que o elo nasce ou que a oferta sai (só com `opts.auth`); elo parado não fica ocupando vaga. */
+/** Prazo para o canal abrir depois que a oferta sai (jogador) ou que o elo nasce de uma oferta recebida (Mestre); só com `opts.auth`. Jogador esperando o Mestre entrar não tem prazo. */
 export const LINK_SETUP_TIMEOUT_MS = 30_000;
 /** Teto de elos simultâneos (uma mesa tem poucos jogadores; a sinalização é pública e não pode esgotar a memória do Mestre). */
 export const VTT_MAX_LINKS = 16;
@@ -56,7 +56,7 @@ function resolveFactory(opts) {
  * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
  * @param {{keypair: {privateKey: CryptoKey, publicJwk: object, routeId: string}}} [opts.auth] Aperto de mão autenticado (par de chaves da mesa): cada ponta manda um `VTT_AUTH` ao abrir o canal; até o outro lado provar, nada da mesa sai nem entra, e quem não prova em `AUTH_TIMEOUT_MS` é desconectado. Sem `auth`, o comportamento é o de sempre.
  * @param {() => number} [opts.now] Relógio em ms (testes); padrão `Date.now`.
- * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full`, `link_limit` ou `auth_failed`.
+ * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full`, `link_limit`, `timeout` (o canal não abriu a tempo) ou `auth_failed`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
 export function createRtcVttTransport(opts) {
@@ -121,11 +121,18 @@ function failAuth(ctx, remoteId, link) {
   dropLink(ctx, remoteId);
 }
 
-/** (Re)arma o prazo do elo: quem não chega à prova dentro dele cai. No-op sem `auth` ou com o elo já liberado. */
-function armDeadline(ctx, remoteId, link, ms) {
+/** Canal que não abriu a tempo: o elo cai como `timeout` (não é falha de prova) e libera a vaga. */
+function expireLink(ctx, remoteId, link) {
+  if (ctx.links.get(remoteId) !== link) return;
+  status(ctx, remoteId, "timeout");
+  dropLink(ctx, remoteId);
+}
+
+/** (Re)arma o prazo do elo. No-op sem `auth` ou com o elo já liberado. `onExpire` decide como o elo cai. */
+function armDeadline(ctx, remoteId, link, ms, onExpire) {
   if (!ctx.opts.auth || link.authed) return;
   clearTimeout(link.timer);
-  link.timer = setTimeout(() => failAuth(ctx, remoteId, link), ms);
+  link.timer = setTimeout(() => onExpire(ctx, remoteId, link), ms);
   link.timer?.unref?.();
 }
 
@@ -133,7 +140,7 @@ function armDeadline(ctx, remoteId, link, ms) {
 function beginAuth(ctx, remoteId, link) {
   const fps = linkFingerprints(link.pc);
   if (!fps) return failAuth(ctx, remoteId, link);
-  armDeadline(ctx, remoteId, link, AUTH_TIMEOUT_MS);
+  armDeadline(ctx, remoteId, link, AUTH_TIMEOUT_MS, failAuth);
   return signVttAuth(ctx.opts.auth.keypair, fps, remoteId)
     .then((frame) => { if (ctx.links.get(remoteId) === link) link.channel.send(JSON.stringify(frame)); })
     .catch(() => failAuth(ctx, remoteId, link));
@@ -216,7 +223,6 @@ function newLink(ctx, remoteId) {
     if (["failed", "closed"].includes(pc.connectionState)) dropLink(ctx, remoteId);
   };
   status(ctx, remoteId, "connecting");
-  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS);
   return link;
 }
 
@@ -224,7 +230,7 @@ async function startOffer(ctx, remoteId, link) {
   link.offers += 1;
   link.awaiting = true;
   link.offerAt = nowOf(ctx);
-  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS);
+  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS, expireLink);
   const offer = await link.pc.createOffer();
   await link.pc.setLocalDescription(offer);
   ctx.opts.signaling.send({ type: "offer", to: remoteId, sdp: link.pc.localDescription });
@@ -240,7 +246,10 @@ function ensureLink(ctx, remoteId, initiator) {
     return null;
   }
   const link = newLink(ctx, remoteId);
-  if (!initiator) return link;
+  if (!initiator) {
+    armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS, expireLink);
+    return link;
+  }
   attachChannel(ctx, remoteId, link, link.pc.createDataChannel(VTT_CHANNEL_LABEL));
   if (ctx.opts.signaling.isPeerOnline && !ctx.opts.signaling.isPeerOnline(remoteId)) status(ctx, remoteId, "waiting_peer");
   else startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
