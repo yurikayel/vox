@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 import { generateRoomKey, generateVttKeypair } from "../client/js/dungeon/vtt-sync-codec.js";
+import { waitUntil } from "./helpers/wait-until.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
 import { createFairplayDriver } from "../client/js/dungeon/vtt-fairplay-driver.js";
 import { verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
@@ -15,12 +16,7 @@ import { verifyFairplayRecord } from "../client/js/dungeon/vtt-fairplay-log.js";
 const ID = "mesa-tarde";
 
 async function until(check, ms = 20000) {
-  const end = Date.now() + ms;
-  while (Date.now() < end) {
-    if (await check()) return;
-    await new Promise((r) => setTimeout(r, 15));
-  }
-  throw new Error("condição não atendida a tempo");
+  if (!(await waitUntil(check, ms))) throw new Error("condição não atendida a tempo");
 }
 
 function makeStore() {
