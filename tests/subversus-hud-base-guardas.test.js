@@ -89,3 +89,16 @@ test("dois cliques seguidos no cinto gastam dois (a quantidade é relida a cada 
   await runHudOp(state, el);
   assert.equal(Object.values(state.sheet.inventory_orset).find((i) => i.id === "p").qty, 1);
 });
+
+test("assistente: todas as ações wizard-* continuam registradas e despachando; nome desconhecido não faz nada", async () => {
+  const names = ["wizard-open", "wizard-mode", "wizard-step", "wizard-add-item", "wizard-remove-item", "wizard-cancel", "wizard-keep", "wizard-discard"];
+  for (const name of names) assert.equal(typeof ACTION_HANDLERS[name], "function", name);
+  const { runWizardOp } = await import("../client/js/dungeon/sheet-wizard-actions.js");
+  assert.equal(runWizardOp("wizard-inexistente", {}, null, {}, {}), undefined);
+  const state = createDungeonSessionState();
+  await ACTION_HANDLERS["wizard-open"](state, null, { querySelector: () => null });
+  assert.ok(state.sheetWizard, "abrir cria o rascunho");
+  await ACTION_HANDLERS["wizard-cancel"](state, null, { querySelector: () => null });
+  await ACTION_HANDLERS["wizard-discard"](state, null, { querySelector: () => null });
+  assert.equal(state.sheetWizard, null, "descartar fecha o assistente");
+});
