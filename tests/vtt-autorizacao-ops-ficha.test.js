@@ -123,3 +123,11 @@ test("upsert do Mestre sem dono preserva o dono existente; com dono, grava o dec
   const com = reduceCampaign(t, op("SHEET_UPSERT", GM, { sheet: sheet("ficha_bia", ANA) }));
   assert.equal(com.sheetsById.ficha_bia.owner_pubkey_p256, ANA);
 });
+
+test("dono por token regravando ficha com outro dono declarado: o dono não muda", () => {
+  const t = table();
+  const dividida = { ...t, sheetsById: { ...t.sheetsById, ficha_ana: sheet("ficha_ana", BIA) } };
+  const ana = op("SHEET_UPSERT", ANA, { sheet: sheet("ficha_ana", ANA) });
+  assert.equal(isAuthorizedVttOp(dividida, ana), true, "o token dá a ela o direito de editar");
+  assert.equal(reduceCampaign(dividida, ana).sheetsById.ficha_ana.owner_pubkey_p256, BIA);
+});
