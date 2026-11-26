@@ -215,15 +215,46 @@ async function twoPlayerTable() {
   }
   table.push({ type: "FAIRPLAY_SHARES", actor: "bia", payload: { rollId: ROLL, shares: list } });
   await settle(table);
-  return { table, ana };
+  return { table, ana, real };
 }
 
-test("faltas: N=2, partes de bia que não refazem o número: o condutor de ana não revela e aponta bia", async () => {
+test("faltas: N=2, partes ruins de bia: ana revela do mesmo jeito e só recebe um aviso local", async () => {
   const { table, ana } = await twoPlayerTable();
   const roll = table.state.fairplay.rolls[ROLL];
-  assert.equal(roll.phase, "reveal");
-  assert.equal(Object.hasOwn(roll.reveals, "ana"), false, "ana não revela antes de conferir as partes de bia");
+  assert.equal(Object.hasOwn(roll.reveals, "ana"), true, "quem é honesto revela sempre");
   assert.equal(ana.invalidShares(ROLL), "bia");
   const state = viewState(table.state, { fairplayDriver: ana });
-  assert.match(renderFairplayStatus(state), /As partes de bia não refazem o número que ele escondeu; a rolagem foi anulada\./);
+  assert.match(renderFairplayStatus(state), /As partes de bia que ficaram comigo não refazem o número que ele escondeu/);
+  assert.deepEqual(countUnclosedRolls(table.state.fairplay, {}), {});
+});
+
+test("faltas: N=2, bia revela e não libera as partes: a falta nunca cai em ana, vista de fora", async () => {
+  const { table, real } = await twoPlayerTable();
+  table.push({ type: "FAIRPLAY_REVEAL", actor: "bia", payload: { rollId: ROLL, seedHex: hex(real.secret.seedBytes) } });
+  const phase = () => table.state.fairplay.rolls[ROLL].phase;
+  if (phase() === "reveal") table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId: ROLL, phase: "reveal" }, ts: LATE });
+  if (phase() === "recovery") table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId: ROLL, phase: "recovery" }, ts: LATE * 2 });
+  assert.equal(phase(), "done");
+  const gm = viewState(table.state, { fairplayViewerId: "gm", fairplayNames: { ana: "ana", bia: "bia" } });
+  await refreshFairplaySeals(gm);
+  assert.doesNotMatch(renderFairplayStatus(gm), /ana não revelou|anulada/);
+  assert.deepEqual(countUnclosedRolls(table.state.fairplay, gm.fairplayVerdicts), {});
+});
+
+test("faltas: N=3, revelação que não bate com o compromisso gera falta para quem a mandou", async () => {
+  const t = await toReveal(["ana", "bia", "gm"]);
+  for (const p of ["ana", "gm"]) t.push("FAIRPLAY_REVEAL", p, { rollId: ROLL, seedHex: hex(t.offers[p].secret.seedBytes) });
+  t.push("FAIRPLAY_REVEAL", "bia", { rollId: ROLL, seedHex: "ab".repeat(32) });
+  assert.equal(t.box.doc.fairplay.rolls[ROLL].phase, "done");
+  const state = viewState(t.box.doc);
+  await refreshFairplaySeals(state);
+  assert.match(renderFairplayStatus(state), /bia revelou um número que não bate com o que escondeu; a rolagem foi anulada\./);
+  assert.equal(countUnclosedRolls(t.box.doc.fairplay, state.fairplayVerdicts).bia, 1);
+});
+
+test("faltas: o cartão da falta do Mestre sai com texto, orador e selo fixos, ignorando o payload", () => {
+  const doc = createCampaign({ id: "mesa-faltas", name: "Mesa", gmRouteId: "gm" });
+  const op = createVttOp({ type: "CHRONICLE_APPEND", actor: "gm", lamport: 1, payload: { id: "fault-roll-a", speaker: "Fulano", badge: "Aviso", text: "ana trapaceou", fairplayRollId: ROLL, fairplayFault: true } });
+  const entry = reduceCampaign(doc, op).chronicle.at(-1);
+  assert.deepEqual([entry.speaker, entry.badge, entry.text], ["Mesa", "Falta", ""]);
 });

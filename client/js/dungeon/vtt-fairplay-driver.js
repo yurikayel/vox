@@ -11,8 +11,8 @@
  */
 import { createFairplayRollOffer } from "./vtt-fairplay-roll.js";
 import { createFairplaySessionKey, fairplayShareHash, openFairplayShare, sealFairplayShare } from "./vtt-fairplay-cipher.js";
-import { fairplayMinHolders, fairplayQuorum, verifyFairplayRecord } from "./vtt-fairplay-log.js";
-import { fairplayRollFaults } from "./vtt-fairplay-faltas.js";
+import { fairplayMinHolders, fairplayQuorum } from "./vtt-fairplay-log.js";
+import { fairplayRollFaults, verdictForFaults } from "./vtt-fairplay-faltas.js";
 import { recoverAbortedSeed } from "../rpg-crypto-table.js";
 
 const CLOSABLE = new Set(["commit", "shares", "reveal", "recovery"]);
@@ -142,18 +142,21 @@ async function badSharesOwner(ctx, campaign, roll) {
   return ok ? "" : owner;
 }
 
-/** Só revela se, com 2 participantes, as partes do outro refazem o número que ele escondeu (ADR-040 §3). */
-async function sharesAreSound(ctx, campaign, roll) {
+/**
+ * Em mesa de dois, anota (só neste aparelho) se as partes do outro refazem o número que ele escondeu (ADR-040 §3).
+ * É aviso: quem é honesto revela sempre, e só o log decide quem é apontado.
+ */
+async function noteBadShares(ctx, campaign, roll) {
   const owner = roll.participants.find((p) => p !== ctx.peerId);
   const holdsAny = (roll.shares[owner] || []).some((s) => s.to === ctx.peerId);
-  if (roll.participants.length !== 2 || !holdsAny) return true;
-  if (!ctx.invalid.has(roll.rollId)) ctx.invalid.set(roll.rollId, await badSharesOwner(ctx, campaign, roll));
-  return !ctx.invalid.get(roll.rollId);
+  if (roll.participants.length !== 2 || !holdsAny || ctx.invalid.has(roll.rollId)) return;
+  ctx.invalid.set(roll.rollId, await badSharesOwner(ctx, campaign, roll));
 }
 
 async function stepReveal(ctx, campaign, roll) {
   const offer = ctx.offers.get(roll.rollId);
-  if (!offer || !logShowsEveryoneReady(roll) || !(await sharesAreSound(ctx, campaign, roll))) return;
+  if (!offer || !logShowsEveryoneReady(roll)) return;
+  await noteBadShares(ctx, campaign, roll);
   await send(ctx, `${roll.rollId}:reveal`, "FAIRPLAY_REVEAL", { rollId: roll.rollId, seedHex: toHex(offer.secret.seedBytes) });
   ctx.revealSent.add(roll.rollId);
 }
@@ -195,7 +198,7 @@ function scheduleClose(ctx, campaign, roll) {
 async function stepFault(ctx, campaign, roll) {
   if (campaign.gmRouteId !== ctx.peerId || roll.phase !== "done" || ctx.faultChecked.has(roll.rollId)) return;
   const written = (campaign.chronicle || []).some((e) => e.fairplayFault && e.fairplayRollId === roll.rollId);
-  const faults = written ? [] : fairplayRollFaults(roll, await verifyFairplayRecord(campaign, roll.rollId));
+  const faults = written ? [] : fairplayRollFaults(roll, await verdictForFaults(campaign, roll.rollId));
   if (written || !faults.length) {
     ctx.faultChecked.add(roll.rollId);
     return;

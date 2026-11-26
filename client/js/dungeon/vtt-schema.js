@@ -112,7 +112,7 @@ export function createChronicleEntry(opts = {}) {
 /** Vínculo com a rolagem Fairplay (só o id e o valor anunciado, ou a marca booleana de falta que o reducer só dá ao Mestre; nunca um "verificado" de outro par). */
 function fairplayLink(opts) {
   const faultRoll = String(opts.fairplayFaultRoll || "");
-  if (VTT_ID_RE.test(faultRoll)) return { fairplayRollId: faultRoll, fairplayFault: true };
+  if (VTT_ID_RE.test(faultRoll)) return { fairplayRollId: faultRoll, fairplayFault: true, speaker: "Mesa", badge: "Falta", text: "", rollNote: "" };
   const rollId = String(opts.fairplayRollId || "");
   if (!VTT_ID_RE.test(rollId)) return {};
   const value = Number(opts.fairplayValue);

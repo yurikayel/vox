@@ -7,7 +7,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { parseDiceCommand, rollDiceFormula, singleDieSides } from "./dice-engine.js";
 import { verifyFairplayRecord } from "./vtt-fairplay-log.js";
-import { fairplayRollFaults, faultText } from "./vtt-fairplay-faltas.js";
+import { fairplayRollFaults, faultText, verdictForFaults } from "./vtt-fairplay-faltas.js";
 
 /** Chave local da flag de laboratório (desligada por padrão). */
 export const FAIRPLAY_LAB_KEY = "vox.lab.fairplay";
@@ -153,8 +153,7 @@ async function computeFairplayVerdicts(state) {
   const out = {};
   for (const [rollId, roll] of Object.entries(state?.fairplay?.rolls || {})) {
     if (roll?.phase !== "done") continue;
-    const { status, reason } = await verifyFairplayRecord(state, rollId);
-    out[rollId] = { status, reason };
+    out[rollId] = await verdictForFaults(state, rollId);
   }
   return out;
 }
