@@ -3,6 +3,9 @@
  * @module dungeon/vtt-inventory
  */
 import { appendPoolDeltaOp } from "../rpg-sheet-and-lore.js";
+import { BACKPACK_COLS, BACKPACK_ROWS, footprint, inBounds, itemSize, layoutBackpack, organizeBackpack, overlaps } from "./vtt-inventory-grid.js";
+
+export { BACKPACK_COLS, BACKPACK_ROWS, defaultItemSize, itemSize, layoutBackpack, organizeBackpack } from "./vtt-inventory-grid.js";
 
 function itemIdFrom(label, fallback) {
   const clean = String(label || "")
@@ -12,12 +15,6 @@ function itemIdFrom(label, fallback) {
     .slice(0, 40);
   return clean || fallback;
 }
-
-/** Colunas da mochila em grade (ficha, spec §5.4). @type {number} */
-export const BACKPACK_COLS = 10;
-
-/** Linhas da mochila em grade. @type {number} */
-export const BACKPACK_ROWS = 4;
 
 function sizeField(value, max) {
   const n = Math.trunc(Number(value));
@@ -38,11 +35,30 @@ function armorField(raw) {
   return kind && Number.isFinite(ac) && ac >= 0 && ac <= 40 ? { armor: { kind, ac } } : {};
 }
 
+/**
+ * Posição guardada (`x`, `y`, `rot`): inteiros dentro da grade com o tamanho do item. Fora disso, ou em item equipado,
+ * os campos caem e o item volta a "sem posição". `rot` só vale em item não quadrado.
+ */
+function positionField(raw, item) {
+  if (item.equipped || !Number.isInteger(raw.x) || !Number.isInteger(raw.y)) return {};
+  const size = itemSize(item);
+  const rot = raw.rot === true && size.w !== size.h;
+  return inBounds(raw.x, raw.y, footprint({ ...item, rot })) ? { x: raw.x, y: raw.y, ...(rot ? { rot } : {}) } : {};
+}
+
+function withoutSpot(item) {
+  const rest = { ...item };
+  delete rest.x;
+  delete rest.y;
+  delete rest.rot;
+  return rest;
+}
+
 function normalizeItem(raw, idx = 0) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const label = String(raw.label || raw.name || "").trim().slice(0, 80);
   if (!label) return null;
-  return {
+  const item = {
     id: String(raw.id || itemIdFrom(label, `item-${idx}`)).slice(0, 48),
     label,
     qty: Math.max(0, Math.trunc(Number(raw.qty) || 1)),
@@ -52,6 +68,7 @@ function normalizeItem(raw, idx = 0) {
     ...explicitSize(raw),
     ...armorField(raw),
   };
+  return { ...item, ...positionField(raw, item) };
 }
 
 /**
@@ -111,7 +128,7 @@ export function totalCarriedKg(orset) {
 }
 
 function addItem(sheet, payload, inv) {
-  const item = normalizeItem({ ...payload, id: payload.itemId || undefined }, Object.keys(inv).length);
+  const item = normalizeItem({ ...withoutSpot(payload), id: payload.itemId || undefined }, Object.keys(inv).length);
   if (!item) return { ...sheet, inventory_orset: inv };
   const prev = inv[item.id];
   inv[item.id] = prev ? { ...prev, qty: prev.qty + (item.qty || 1) } : item;
@@ -122,6 +139,28 @@ function mutateItem(sheet, inv, itemId, updater) {
   if (!itemId || !inv[itemId]) return { ...sheet, inventory_orset: inv };
   inv[itemId] = updater(inv[itemId]);
   if (!inv[itemId]) delete inv[itemId];
+  return { ...sheet, inventory_orset: inv };
+}
+
+/** `place`: grava x/y/rot só se o item cabe na grade e não toca o layout atual dos outros; senão a ficha segue igual. */
+function placeItem(sheet, inv, itemId, payload) {
+  const current = inv[itemId];
+  const moved = current && !current.equipped ? normalizeItem({ ...withoutSpot(current), x: payload.x, y: payload.y, rot: payload.rot }) : null;
+  if (!moved || !("x" in moved)) return { ...sheet, inventory_orset: inv };
+  const others = Object.values(inv).filter((it) => it.id !== itemId);
+  const rect = { x: moved.x, y: moved.y, ...footprint(moved) };
+  if (!overlaps(layoutBackpack(others).placements, rect)) inv[itemId] = moved;
+  return { ...sheet, inventory_orset: inv };
+}
+
+/** `organize`: grava o first-fit determinístico em todos os itens soltos; quem não coube fica sem posição. */
+function organizeInventory(sheet, inv) {
+  const at = new Map(organizeBackpack(Object.values(inv)).placements.map((p) => [p.id, p]));
+  for (const it of Object.values(inv)) {
+    if (it.equipped) continue;
+    const spot = at.get(it.id);
+    inv[it.id] = spot ? { ...withoutSpot(it), x: spot.x, y: spot.y } : withoutSpot(it);
+  }
   return { ...sheet, inventory_orset: inv };
 }
 
@@ -137,7 +176,9 @@ function qtyDelta(raw) {
  * Aplica mutação de inventário na ficha (cópia pura). `adjust_qty` soma `payload.delta` (inteiro, −99 a 99) à
  * quantidade atual, que nunca fica negativa; zerar tira o item. Por ser relativo, dois ajustes seguidos somam.
  * @param {object} sheet Ficha CRDT.
- * @param {"add"|"remove"|"toggle_equip"|"set_qty"|"adjust_qty"} kind Tipo.
+ * `place` (`x`, `y`, `rot?`) guarda a posição do item na mochila se couber e não colidir; `organize` grava o first-fit
+ * de todos. Em ambos, o que não passa na revalidação é no-op, então o resultado é o mesmo em todos os aparelhos.
+ * @param {"add"|"remove"|"toggle_equip"|"set_qty"|"adjust_qty"|"place"|"organize"} kind Tipo.
  * @param {object} payload Dados do item.
  * @returns {object} Nova ficha.
  */
@@ -146,11 +187,13 @@ export function applyInventoryMutation(sheet, kind, payload = {}) {
   const itemId = String(payload.itemId || "").slice(0, 48);
   if (kind === "add") return addItem(sheet, payload, inv);
   if (kind === "remove") return mutateItem(sheet, inv, itemId, () => null);
-  if (kind === "toggle_equip") return mutateItem(sheet, inv, itemId, (it) => ({ ...it, equipped: !it.equipped }));
+  if (kind === "toggle_equip") return mutateItem(sheet, inv, itemId, (it) => ({ ...withoutSpot(it), equipped: !it.equipped }));
   if (kind === "set_qty") {
     const qty = Math.max(0, Math.trunc(Number(payload.qty) || 0));
     return mutateItem(sheet, inv, itemId, (it) => (qty === 0 ? null : { ...it, qty }));
   }
+  if (kind === "place") return placeItem(sheet, inv, itemId, payload);
+  if (kind === "organize") return organizeInventory(sheet, inv);
   if (kind === "adjust_qty") {
     const delta = qtyDelta(payload.delta);
     return mutateItem(sheet, inv, itemId, (it) => (it.qty + delta <= 0 ? null : { ...it, qty: it.qty + delta }));
@@ -184,82 +227,4 @@ export function applyCurrencyDelta(sheet, delta = {}, opMeta = {}) {
       reason: String(opMeta.reason || "Moedas").slice(0, 80),
     }),
   };
-}
-const SIZE_RULES = Object.freeze([
-  [1, 4, /montante|alabarda|lanca|arco longo|cajado longo/],
-  [2, 3, /armadura|escudo de corpo|escudo torre|besta pesada/],
-  [2, 2, /escudo|elmo|botas|manopla|grimorio|tomo|kit de aventura/],
-  [1, 3, /espada|maca|machado|cajado|arco/],
-  [1, 2, /adaga|varinha|tocha|algibeira|instrumento|ferramenta/],
-  [1, 1, /pocao|elixir|anel|amuleto|pergaminho|municao|foco|chave|insignia/],
-]);
-
-function plainText(text) {
-  return String(text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-}
-
-/**
- * Tamanho padrão na grade pelo nome do item (tabela do ficha-personagem-brainstorm §5.4). Nome desconhecido ocupa 1×1.
- * @param {{label?: string}} item Item do inventário.
- * @returns {{w: number, h: number}} Largura e altura em células.
- */
-export function defaultItemSize(item) {
-  const name = plainText(item?.label);
-  const rule = SIZE_RULES.find(([, , pattern]) => pattern.test(name));
-  return rule ? { w: rule[0], h: rule[1] } : { w: 1, h: 1 };
-}
-
-/**
- * Tamanho do item na grade: o informado na ficha (`w`, `h`) ou o padrão pelo nome.
- * @param {{label?: string, w?: number, h?: number}} item Item do inventário.
- * @returns {{w: number, h: number}} Largura e altura em células.
- */
-export function itemSize(item) {
-  return item?.w && item?.h ? { w: item.w, h: item.h } : defaultItemSize(item);
-}
-
-function byAreaThenHeightThenName(a, b) {
-  return b.w * b.h - a.w * a.h || b.h - a.h || a.label.localeCompare(b.label, "pt-BR") || a.id.localeCompare(b.id);
-}
-
-function newGrid(cols, rows) {
-  return { cols, rows, cells: Array.from({ length: rows }, () => Array(cols).fill(false)) };
-}
-
-function fits(grid, x, y, size) {
-  if (x + size.w > grid.cols || y + size.h > grid.rows) return false;
-  for (let dy = 0; dy < size.h; dy += 1) for (let dx = 0; dx < size.w; dx += 1) if (grid.cells[y + dy][x + dx]) return false;
-  return true;
-}
-
-function occupy(grid, x, y, size) {
-  for (let dy = 0; dy < size.h; dy += 1) for (let dx = 0; dx < size.w; dx += 1) grid.cells[y + dy][x + dx] = true;
-}
-
-function firstFreeSpot(grid, size) {
-  for (let y = 0; y < grid.rows; y += 1) for (let x = 0; x < grid.cols; x += 1) if (fits(grid, x, y, size)) return { x, y };
-  return null;
-}
-
-/**
- * Arruma a mochila em grade, de forma determinística (spec §5.4, "Organizar"): maior área primeiro, desempate por maior
- * altura e depois por nome, preenchendo da esquerda para a direita e de cima para baixo (first-fit). Cada item ocupa uma
- * vez o seu tamanho, qualquer que seja a quantidade. Itens equipados não entram na grade.
- * @param {Array<{id: string, label: string, equipped?: boolean, w?: number, h?: number}>} items Itens listados.
- * @param {{cols?: number, rows?: number}} [options={}] Tamanho da grade (padrão 10×4).
- * @returns {{placements: Array<{id: string, x: number, y: number, w: number, h: number}>, overflow: string[]}} Posições e ids que não couberam.
- */
-export function organizeBackpack(items, options = {}) {
-  const cols = options.cols || BACKPACK_COLS;
-  const rows = options.rows || BACKPACK_ROWS;
-  const grid = newGrid(cols, rows);
-  const sized = (items || []).filter((it) => !it.equipped).map((it) => ({ ...it, ...itemSize(it) })).sort(byAreaThenHeightThenName);
-  const placements = [];
-  const overflow = [];
-  for (const it of sized) {
-    const spot = firstFreeSpot(grid, it);
-    if (!spot) overflow.push(it.id);
-    else { occupy(grid, spot.x, spot.y, it); placements.push({ id: it.id, x: spot.x, y: spot.y, w: it.w, h: it.h }); }
-  }
-  return { placements, overflow };
 }

@@ -175,7 +175,9 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 - A grade é a forma de ver e arrumar; o limite de carga continua sendo a regra do sistema (peso no D&D e no GURPS, espaços no Tormenta20). Se a carga estoura, o indicador fica vermelho e o motivo aparece por escrito.
 - Arrastar um item para o boneco equipa; arrastar para o cinto (`4×1`) põe no atalho rápido do HUD. No mobile, tocar no item abre Equipar / Cinto / Usar / Descartar, sem precisar arrastar.
-- **Organizar** reacomoda a mochila sozinho por ordenação determinística (maior área `w×h` primeiro, desempate por maior altura `h` e ordem alfabética do nome), preenchendo a grade `10×4` da esquerda para a direita, de cima para baixo (`first-fit`).
+- **Posição guardada:** cada item solto pode ter `x`, `y` (inteiros, célula de cima à esquerda) e `rot` (booleano; troca `w`↔`h`, só em item não quadrado). Sem `x`/`y` o item entra por `first-fit`; `x`/`y` fora da grade caem na leitura; item equipado não tem posição. O desenho da mochila usa `layoutBackpack`: primeiro os itens com posição válida (por `id` crescente; quem colide com um já posto perde a posição só no cálculo), depois os sem posição por `first-fit`; o que não cabe vai para "Não coube na mochila". Mesma entrada, mesma saída em qualquer aparelho. Ficha antiga, sem `x`/`y`, desenha como antes. `x`, `y` e `rot` viajam no `.voxchar`.
+- **Mutações** (mesma op assinada `INVENTORY_MUTATE`, sem op nova): `place {itemId, x, y, rot?}` só grava se o item cabe na grade e não toca o layout atual dos outros; senão não muda nada (a op é revalidada ao aplicar, então o resultado é o mesmo em todos). `organize` grava o `first-fit` abaixo em todos os itens soltos e tira a posição de quem não coube.
+- **Organizar** (`organize`) reacomoda a mochila e grava a posição de cada item, por ordenação determinística (maior área `w×h` primeiro, desempate por maior altura `h` e ordem alfabética do nome), preenchendo a grade `10×4` da esquerda para a direita, de cima para baixo (`first-fit`).
 - O mesmo componente aparece na ficha e no painel Itens (I) do HUD.
 
 ## 6. Ciclo de vida
