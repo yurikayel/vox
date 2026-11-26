@@ -22,6 +22,15 @@ export async function getActiveUser() {
 }
 
 /**
+ * Nome de exibição da conta local (vazio se não há), para telas que o anunciam a outros pares.
+ *
+ * @returns {string} Nome de exibição.
+ */
+export function getLocalDisplayName() {
+  return localAccount.getDisplayName();
+}
+
+/**
  * Monta as props padrão passadas a {@link render.renderShell}.
  *
  * @param {string} user Identidade ativa.

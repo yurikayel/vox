@@ -16,6 +16,12 @@ import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 export const loadRtcVttTransport = () => import("./vtt-rtc-transport.js");
 
 /**
+ * Carrega sob demanda o cliente de sinalização da Mesa (SUB-08); fora do shell, como o transporte.
+ * @returns {Promise<typeof import("./vtt-signaling-client.js")>} Módulo do cliente de sinalização.
+ */
+export const loadVttSignalingClient = () => import("./vtt-signaling-client.js");
+
+/**
  * Texto de aviso para cada código de falha da entrada P2P.
  * @param {string} [code] Código de erro de {@link attachVttPlayerJoin}.
  * @returns {string} Mensagem para o jogador.
@@ -84,6 +90,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
+    displayName: opts.displayName,
     ...playerSyncCallbacks(state, opts),
   });
   state.syncPeer.join();
@@ -98,7 +105,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
  * Conecta a sessão como jogador P2P em store isolado (sem sobrescrever o IndexedDB do Mestre na mesma origem).
  * @param {object} state Estado da sessão dungeon.
  * @param {string} locationHash `location.hash` com query `gm` e fragmento `#k=`.
- * @param {{ store?: object, onCampaign?: (campaign: object) => void }} [opts]
+ * @param {{ store?: object, displayName?: string, onCampaign?: (campaign: object) => void }} [opts] `displayName`: nome anunciado ao Mestre (vem da camada de app).
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 export async function attachVttPlayerJoin(state, locationHash, opts = {}) {
