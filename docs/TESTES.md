@@ -64,6 +64,8 @@ A métrica não muda a regra do teste: todo teste confere algo observável (reto
 
 O Tier A dos testes são as linhas de `client/js/` do [`.github/CODEOWNERS`](../.github/CODEOWNERS): identidade (`identity/`), cofre (`vault/`), formato de assinatura (`sig-format.js`), DM cifrada (`crypto-dm.js`) e caixa de entrada (`inbox.js`). Não há outro mapa de risco. `tests/codeowners-paths.test.js` reprova linha que aponta para caminho que não existe mais, para a marca de sensível não sumir quando um arquivo muda de pasta. A identidade está congelada desde 17/11/2026: nessas pastas, só correção de bug ou mudança de lugar sem mudança de comportamento.
 
+Rodada semanal: `.github/workflows/mutation-weekly.yml` (domingo 04:30 UTC, ou `workflow_dispatch`) roda `npm run audit:mutate:tier-a -- --base <árvore vazia do git>`, isto é, o Tier A inteiro e não só o diff do PR. O score e os sobreviventes saem no resumo do job; é informativo, sem piso e fora dos checks obrigatórios.
+
 ### 3.4 Vermelho na base: o teste prova o defeito? (PM-111)
 
 O job `red-on-base` do CI (só em PR) roda `scripts/red-on-base.mjs`: monta o código da base do PR num diretório temporário, põe por cima a pasta `tests/` do PR e os `relay/test_*.py` alterados, e roda só os testes novos ou alterados (`tests/*.test.js` e `relay/test_*.py`).

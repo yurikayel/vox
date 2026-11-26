@@ -1,0 +1,38 @@
+# Mutação Tier A completa, semanal (PM-112). Informativa: não é check de PR nem bloqueia merge.
+# O job de PR (ci.yml) só muta o diff; aqui a base é a árvore vazia do git, então todo o Tier A entra.
+# SHAs de actions: somente os pinados em ci.yml.
+name: Mutation Tier A weekly
+
+on:
+  schedule:
+    - cron: "30 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-weekly
+  cancel-in-progress: true
+
+jobs:
+  mutate-tier-a-full:
+    name: Mutação Tier A completa (PM-112)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Mutação AST no Tier A inteiro (resumo no job, sem piso)
+        run: npm run audit:mutate:tier-a -- --base 4b825dc642cb6eb9a060e54bf8d69288fbee4904
