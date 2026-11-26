@@ -219,6 +219,16 @@ function renderSheetAudit(orderedOpsCount) {
 }
 
 /**
+ * Botão "Nova ficha" (markup mínimo) ou, com o assistente aberto, a tela dele (carregada sob demanda e guardada no estado).
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML do botão ou do assistente.
+ */
+function renderNewSheetSlot(state) {
+  if (state.sheetWizard && state.sheetWizardView) return state.sheetWizardView(state.sheetWizard);
+  return `<div class="dungeon-input-row"><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="wizard-open">Nova ficha</button></div>`;
+}
+
+/**
  * Renderiza a Tela 3 (Grimório da Ficha & Crônica @tag) com saldo protegido, mochila unificada e Assistente de Nível.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
@@ -232,10 +242,11 @@ export function renderSheetScreen(state) {
     play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
-    about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
+    about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft, link: state.voxcharLink })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,
   };
   return `
     ${noticeHtml}
+    ${renderNewSheetSlot(state)}
     ${renderLevelUpWizard(state)}
     <section class="dungeon-sheet-roll-controls" aria-label="Modo e resultado das rolagens">${renderRollModes(state)}</section>
     <div class="dungeon-sheet-layout">

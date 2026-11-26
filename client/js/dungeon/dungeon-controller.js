@@ -209,6 +209,7 @@ function handleDungeonChange(container, viewOpts, ev) {
   const file = target?.files?.[0];
   if (!file || (kind !== "import-file" && kind !== "upload-map" && !FILE_CHANGE_ACTIONS.has(kind))) return undefined;
   const state = viewOpts.state || getDungeonSession();
+  if (kind === "wizard-import") return settleAndRedraw(import("./sheet-wizard-actions.js").then((m) => m.importInWizard(state, file, { store: viewOpts.store })), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
   if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts);
   if (kind === "upload-map") {
     const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
@@ -274,14 +275,41 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
-function handleCanvasKeydown(container, viewOpts, ev) {
+/**
+ * Esc no assistente de criar ficha pede a confirmação de descarte (o mesmo que Cancelar); com a confirmação já aberta, não faz nada.
+ * @param {object} state Estado da sessão.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{key?: string, preventDefault?: Function}} ev Evento de teclado.
+ * @returns {Promise<void>|undefined} Tarefa da ação, ou `undefined` se o evento não se aplica.
+ */
+export function escapeWizardJob(state, container, ev) {
+  if (ev?.key !== "Escape" || !state.sheetWizard || state.sheetWizard.confirmCancel) return undefined;
+  ev.preventDefault?.();
+  return ACTION_HANDLERS["wizard-cancel"](state, null, container, {});
+}
+
+function handleWizardEscape(container, viewOpts, ev, settle = settleAndRedraw) {
+  const job = escapeWizardJob(viewOpts.state || getDungeonSession(), container, ev);
+  return job && settle(job, container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+}
+
+/**
+ * Teclado da tela: Esc no assistente de criar ficha e setas para empurrar o token selecionado no mapa.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{state?: object, store?: object}} viewOpts Opções da tela.
+ * @param {{key?: string, target?: object, preventDefault?: Function}} ev Evento de teclado.
+ * @param {Function} [settle] Quem espera a tarefa e redesenha (substituível em teste).
+ * @returns {Promise<void>|undefined} Tarefa em andamento, ou `undefined` se a tecla não se aplica.
+ */
+export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndRedraw) {
+  if (ev?.key === "Escape") return handleWizardEscape(container, viewOpts, ev, settle);
   const delta = ARROW_DELTAS[ev?.key];
   if (!delta || ev.target?.id !== "dungeon-vtt-canvas") return undefined;
   const state = viewOpts.state || getDungeonSession();
   if (!state.selectedTokenId) return undefined;
   ev.preventDefault?.();
   const job = nudgeTokenInScene(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
-  return settleAndRedraw(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
+  return settle(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
 }
 
 /** @param {string} [code] Código de erro de {@link attachVttPlayerJoin}. */
