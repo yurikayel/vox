@@ -7,6 +7,7 @@
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
 import { derivedStats, showBlock } from "./system-display.js";
+import { projectReserves } from "./sheet-reserves.js";
 import { totalCarriedWeight } from "./vtt-inventory.js";
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
@@ -38,11 +39,11 @@ export function resolveSheetSystem(sheet) {
   return { pack, derived: deriveSheet(pack, choices, sheetItems(migrated)), choices: normalizeChoices(pack, choices), rest: normalizeRestChoices(pack, { ...migrated.system_choices, level: choices.level }) };
 }
 
-/** Peso carregado e quantos itens não informam peso, para os números de carga do GURPS. */
-function carryContext(sheet) {
+/** Contexto da ficha para a faixa: peso carregado, itens sem peso (carga do GURPS) e recursos atuais/máximos. */
+function displayContext(sheet, pack) {
   const items = sheetItems(sheet);
   const unweighed = items.filter((it) => it?.weightLb == null || it.weightLb === "" || Number.isNaN(Number(it.weightLb))).length;
-  return { weightLb: totalCarriedWeight(sheet.inventory_orset), unweighed };
+  return { weightLb: totalCarriedWeight(sheet.inventory_orset), unweighed, reserves: projectReserves(sheet, pack) };
 }
 
 function stat(label, value) {
@@ -69,7 +70,7 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
     <section class="dungeon-derived" aria-label="Números do personagem (${escapeHtml(pack.name)})">
       <h3 class="dungeon-eyebrow">Números do personagem · ${escapeHtml(pack.name)}</h3>
       <dl class="dungeon-derived-list">
-        ${derivedStats(pack, derived, undefined, carryContext(sheet)).map((s) => stat(s.label, s.value)).join("\n        ")}
+        ${derivedStats(pack, derived, undefined, displayContext(sheet, pack)).map((s) => stat(s.label, s.value)).join("\n        ")}
       </dl>
       ${showBlock(pack, "saves") ? renderSavesList(pack, derived) : ""}
       ${showBlock(pack, "deathSaves") ? renderDeathSaves(pack, derived, hpCurrent) : ""}

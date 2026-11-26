@@ -71,7 +71,7 @@ export function validateSystemPack(pack) {
   checkTests(pack, errors);
   checkResources(pack.resources, errors);
   checkFormulas(pack.formulas, errors);
-  errors.push(...validateDisplay(pack.display));
+  errors.push(...validateDisplay(pack.display, Array.isArray(pack.resources) ? pack.resources.map((r) => r?.id) : undefined));
   return { ok: errors.length === 0, errors };
 }
 
