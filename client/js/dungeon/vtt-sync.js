@@ -8,6 +8,7 @@ import { isAuthorizedVttOp, projectStateForPlayer } from "./vtt-reducer.js";
 import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./vtt-fairplay-log.js";
 import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
 import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
+import { isFairplayOp, needsSignature, snapshotFromInvitedGm } from "./vtt-sync-fairplay-guard.js";
 import { createVttOp } from "./vtt-schema.js";
 import { sanitizeDisplayName } from "./vtt-fairplay-nome.js";
 import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
@@ -199,10 +200,6 @@ async function handleGmWantBlob(ctx, msg) {
 /** Tolerância (ms) entre o relógio do autor de uma op Fairplay e o do Mestre; o prazo das fases não depende de um `ts` livre. */
 export const FAIRPLAY_TS_TOLERANCE_MS = 5000;
 
-function isFairplayOp(op) {
-  return String(op?.type || "").startsWith("FAIRPLAY_");
-}
-
 function tsOutOfRange(ctx, op) {
   return isFairplayOp(op) && !(Math.abs(Number(op.ts) - ctx.now()) <= FAIRPLAY_TS_TOLERANCE_MS);
 }
@@ -330,7 +327,6 @@ async function verifiedFairplayOps(raw) {
 
 /** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
-  if (!ctx.gmRouteId || msg.campaign?.gmRouteId !== ctx.gmRouteId) return; // estado de uma mesa com outro Mestre nunca é salvo
   ctx.snapshotAsked = false;
   stopHelloRetry(ctx);
   const ops = await verifiedFairplayOps(msg.fairplayOps);
@@ -344,13 +340,6 @@ function askSnapshotOnce(ctx) {
   if (ctx.snapshotAsked) return;
   ctx.snapshotAsked = true;
   ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
-}
-
-/** Op que o jogador só aceita com assinatura válida: as `FAIRPLAY_*`, a rolagem Fairplay e a falta registrada. */
-function needsSignature(op) {
-  if (isFairplayOp(op)) return true;
-  if (op.type === "ROLL_RECORDED") return Boolean((op.payload?.rollResult || op.payload)?.fairplay);
-  return op.type === "CHRONICLE_APPEND" && Boolean(op.payload?.fairplayFault);
 }
 
 async function applyCommittedOp(ctx, msg) {
@@ -369,7 +358,7 @@ async function applyCommittedOp(ctx, msg) {
 async function handlePlayerMessage(ctx, msg) {
   const fromGm = msg.from === ctx.gmRouteId;
   if (msg.kind === "SNAPSHOT_FILTERED" && msg.campaign) {
-    if (fromGm) await applySnapshot(ctx, msg);
+    if (fromGm && snapshotFromInvitedGm(ctx, msg)) await applySnapshot(ctx, msg); // estado de outra mesa nunca é salvo
     return;
   }
   if (msg.kind === "COMMIT_OP" && msg.op) {
