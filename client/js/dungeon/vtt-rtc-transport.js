@@ -41,13 +41,15 @@ function resolveFactory(opts) {
  * Cria o transporte de rede da mesa.
  * @param {object} opts Opções.
  * @param {string} opts.peerId `routeId` local.
- * @param {{send: (data: object) => void, onMessage: (fn: Function) => Function}} opts.signaling Canal de sinalização (oferta, resposta e ICE).
+ * @param {{send: (data: object) => void, onMessage: (fn: Function) => Function, isPeerOnline?: (id: string) => boolean, onPeerJoined?: (fn: (id: string) => void) => Function}} opts.signaling
+ *   Canal de sinalização (oferta, resposta e ICE). Se informar `isPeerOnline`/`onPeerJoined`, o jogador só oferta quando o par está no nó e reoferta quando ele aparece.
  * @param {boolean} [opts.initiate] `true` no jogador: abre a conexão ao primeiro `send` para um par desconhecido.
  * @param {Function} [opts.createPeerConnection] Fábrica de `RTCPeerConnection` (testes).
  * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`).
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
  * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
- * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `open`, `closed`, `oversize`, `queue_full` ou `link_limit`.
+ * @param {() => number} [opts.now] Relógio em ms (testes); padrão `Date.now`.
+ * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full` ou `link_limit`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
 export function createRtcVttTransport(opts) {
@@ -56,6 +58,7 @@ export function createRtcVttTransport(opts) {
   const handlers = new Set();
   const ctx = { opts, factory, links, handlers, chains: new Map(), pending: new Map(), closed: false };
   const detach = opts.signaling.onMessage((data) => onSignal(ctx, data));
+  const detachJoin = opts.signaling.onPeerJoined?.((id) => resumeOffer(ctx, id)) || (() => {});
   return {
     peerId: opts.peerId,
     connect: (remoteId) => { ensureLink(ctx, remoteId, true); },
@@ -66,6 +69,7 @@ export function createRtcVttTransport(opts) {
     close() {
       ctx.closed = true;
       detach();
+      detachJoin();
       handlers.clear();
       ctx.chains.clear();
       [...links.keys()].forEach((id) => dropLink(ctx, id));
@@ -132,7 +136,7 @@ function deliver(ctx, remoteId, raw) {
 
 function newLink(ctx, remoteId) {
   const pc = ctx.factory();
-  const link = { pc, channel: null, queue: [] };
+  const link = { pc, channel: null, queue: [], offers: 0, awaiting: false, offerAt: 0 };
   ctx.links.set(remoteId, link);
   pc.onicecandidate = (ev) => {
     if (ev.candidate) ctx.opts.signaling.send({ type: "ice", to: remoteId, candidate: ev.candidate });
@@ -148,6 +152,9 @@ function newLink(ctx, remoteId) {
 }
 
 async function startOffer(ctx, remoteId, link) {
+  link.offers += 1;
+  link.awaiting = true;
+  link.offerAt = nowOf(ctx);
   const offer = await link.pc.createOffer();
   await link.pc.setLocalDescription(offer);
   ctx.opts.signaling.send({ type: "offer", to: remoteId, sdp: link.pc.localDescription });
@@ -165,8 +172,26 @@ function ensureLink(ctx, remoteId, initiator) {
   const link = newLink(ctx, remoteId);
   if (!initiator) return link;
   attachChannel(ctx, remoteId, link, link.pc.createDataChannel(VTT_CHANNEL_LABEL));
-  startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
+  if (ctx.opts.signaling.isPeerOnline && !ctx.opts.signaling.isPeerOnline(remoteId)) status(ctx, remoteId, "waiting_peer");
+  else startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
   return link;
+}
+
+/**
+ * Ofertas por elo (a primeira mais as reofertas) e quanto tempo uma oferta sem resposta ainda conta como em voo.
+ * Liveness: esgotadas as ofertas, um Mestre que reinicia só é reofertado quando o app cria um elo novo para ele.
+ */
+const MAX_OFFERS_PER_LINK = 4;
+const OFFER_TTL_MS = 15_000;
+const nowOf = (ctx) => (ctx.opts.now ? ctx.opts.now() : Date.now());
+
+/** O par registrou-se no nó (ou voltou): quem ainda não tem canal aberto oferta de novo; a oferta antes disso se perderia no nó. */
+function resumeOffer(ctx, remoteId) {
+  const link = ctx.links.get(remoteId);
+  if (ctx.closed || !ctx.opts.initiate || !link || link.channel?.readyState === "open") return;
+  if (link.awaiting && nowOf(ctx) - link.offerAt < OFFER_TTL_MS) return;
+  if (link.offers >= MAX_OFFERS_PER_LINK) return;
+  startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
 }
 
 async function answerOffer(ctx, from, sdp) {
@@ -184,7 +209,10 @@ async function applySignal(ctx, data) {
   if (type === "offer" && !ctx.opts.initiate) return answerOffer(ctx, from, data.sdp);
   const link = ctx.links.get(from);
   if (!link) return undefined;
-  if (type === "answer") return link.pc.setRemoteDescription(data.sdp);
+  if (type === "answer") {
+    link.awaiting = false;
+    return link.pc.setRemoteDescription(data.sdp);
+  }
   if (type === "ice" && data.candidate) return link.pc.addIceCandidate(data.candidate);
   return undefined;
 }

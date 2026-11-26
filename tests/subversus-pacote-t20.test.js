@@ -17,7 +17,7 @@ const BASIC_SKILLS = ["Acrobacia", "Adestramento", "Atletismo", "Atuação", "Ca
 test("t20: formato válido, registrado ao lado do D&D, resolução d20_vs_cd", () => {
   assert.deepEqual(validateSystemPack(T20_PACK), { ok: true, errors: [] });
   assert.equal(getSystemPack("t20"), T20_PACK);
-  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024", "t20"]);
+  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024", "t20", "gurps4e"]);
   assert.equal(T20_PACK.testKind, "d20_vs_cd");
 });
 
