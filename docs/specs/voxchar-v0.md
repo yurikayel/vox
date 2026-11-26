@@ -1,6 +1,6 @@
 # Ficha portátil `.voxchar` (v0)
 
-> **Status:** parcial (aceita pelo mantenedor em 2026-11-25; exportar e importar `.voxchar` implementados em `client/js/dungeon/voxchar.js` e `voxchar-check.js`; link só de leitura fica fora do v1, §6) · **Owner:** mantenedor · **Revisado:** 2026-11-25
+> **Status:** parcial (aceita pelo mantenedor em 2026-11-25; exportar e importar `.voxchar` implementados em `client/js/dungeon/voxchar.js` e `voxchar-check.js`; link só de leitura: decisões da §9.6 registradas em 2026-11-25, código liberado) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§6) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
 Define o arquivo `.voxchar`, que leva a ficha-base de um personagem de uma instalação do Vox para outra. Aceita em 2026-11-25. O v1 (exportar e importar) está implementado; o link só de leitura (§6) e o item dentro do `.voxrpg.zip` não.
@@ -101,7 +101,7 @@ JSON comprimido (`CompressionStream` nativo, sem dependência) e codificado em b
 
 ## 9. Emenda (rascunho): link só de leitura e cópia-modelo (SUB-04, parte 2)
 
-> **Status desta emenda:** rascunho; aguarda as decisões da §9.6. Zero código antes do aceite. O que não está no código nem nos docs vai marcado **(proposta)**.
+> **Status desta emenda:** aceita (decisões da §9.6 registradas em 2026-11-25). O que não está no código nem nos docs vai marcado **(proposta)**.
 
 ### 9.1 O que já existe
 
@@ -144,12 +144,19 @@ Formato do link (esquema, compressão, versão), de onde vem o conteúdo, onde o
 ### 9.6 Decisões abertas para o mantenedor
 
 - **D1.** Aceita o link por fragmento comprimido como forma de compartilhar a ficha?
+  - Decidido em 25/11/2026: sim (opção recomendada; autorização geral do mantenedor).
 - **D2.** Rota e nome do link (proposta: `#/ficha/ver#voxchar=…`)?
+  - Decidido em 25/11/2026: `#/ficha/ver#voxchar=…` (opção recomendada; autorização geral do mantenedor).
 - **D3.** Limite de tamanho do link (proposta: ~8 KB) e o que fazer acima dele (proposta: só arquivo).
+  - Decidido em 25/11/2026: ~8 KB para gerar e só arquivo acima disso (opção recomendada; autorização geral do mantenedor).
 - **D4.** Revogação: aceitar que não existe no v1 (proposta) ou adiar o link até haver servidor?
+  - Decidido em 25/11/2026: sem revogação no v1, com a tela avisando (opção recomendada; autorização geral do mantenedor).
 - **D5.** Confirmação antes de gerar o link, mostrando o que vai.
+  - Decidido em 25/11/2026: sim, confirmar antes de gerar (opção recomendada; autorização geral do mantenedor).
 - **D6.** Cópia-modelo sem marca gravada na ficha (proposta) ou com marca de "modelo"?
+  - Decidido em 25/11/2026: sem marca (opção recomendada; autorização geral do mantenedor).
 - **D7.** O botão de gerar entra no mesmo PR da tela de visualização, ou atrás de flag?
+  - Decidido em 25/11/2026: o botão entra no mesmo PR da tela de visualização (opção recomendada; autorização geral do mantenedor).
 
 ### 9.7 Testes previstos e o que falharia na base
 

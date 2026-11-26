@@ -16,7 +16,7 @@ if str(_E2E_DIR) not in sys.path:
     sys.path.insert(0, str(_E2E_DIR))
 
 from test_mesa_ttrpg_e2e import _goto_mesa, _join_as_player, _onboard_and_campaign, _set_viewer_gm
-from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _new_isolated_page
+from test_vox_e2e import PlaywrightE2EHarness, _close_ctx, _goto_ready, _new_isolated_page
 
 SYNC_TIMEOUT = 12000
 _TABLE_NAMES_JS = """async () => {
@@ -30,7 +30,7 @@ _TABLE_NAMES_JS = """async () => {
 
 def _generate_invite(page_gm, base_url, table_id):
     """Gera o convite P2P na tela do Mestre e devolve a URL absoluta."""
-    page_gm.goto(f"{base_url}/#/dungeon/mestre/{table_id}", wait_until="domcontentloaded")
+    _goto_ready(page_gm, f"{base_url}/#/dungeon/mestre/{table_id}")
     page_gm.locator("button[data-dungeon='generate-invite']").click()
     pre = page_gm.locator("pre.dungeon-prompt-preview").filter(has_text="#/dungeon/entrar/")
     pre.wait_for(state="visible", timeout=8000)
