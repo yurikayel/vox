@@ -3,17 +3,20 @@
 Escopo **somente** o sub-repo [`vox/`](.). Não escrever roteiro Matrix/vídeo aqui nem promover conteúdo de `politica/` para `~/.gemini/config/AGENTS.md`.
 - **Hardening v3.2:** [docs/HARDENING.md](docs/HARDENING.md) (limites e o que o CI bloqueia) · **Evidência de testes e auditoria:** [docs/process/qualidade-e-evidencia.md](docs/process/qualidade-e-evidencia.md). Este repositório é autossuficiente: não dependa de arquivos de `politica/`.
 
-## Mutex e Ownership
+## Ler é livre, escrever pede caneta
 
-- **Um agente por arquivo** (ou por **§N** se o markdown tiver **>200 linhas**).
-- **Ownership & Handoff:** Registrar locks ativos e encerrar todo turno com `SHA`, `Branch`, `Arquivos`, `Testes` (`PASS`, `FAIL` separando *Erro observado / Causa confirmada / Causa provável*, `NOT RUN`, `BLOCKED`), `Ownership`, `Restrições` e `Pendências`.
-- **Proibido:** edição paralela do mesmo doc canônico em `docs/` (coordenar via PR ou fila no chat).
+Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md § Orçamento de orquestração](docs/process/metodo-agentes-mutex-e-revisor.md#orçamento-de-orquestração-fonte-única).
 
-## Revisor vs implementação
+- **Leitura, análise, revisão e planejamento** rodam em paralelo, sem teto de agentes.
+- **Escrever no repositório** (editar arquivo versionado, inclusive no próprio worktree, commit, push, PR, comentário em PR ou issue) exige uma **caneta**. Há **3 canetas**; quem não tem espera na fila.
+- **Caneta vem com mutex:** o orquestrador entrega a caneta junto com um conjunto fechado de arquivos; dois portadores nunca têm arquivo em comum (ou §N em markdown com **>200 linhas**).
+- **Plano antes da caneta;** solta ao abrir o PR com CI verde ou ao travar. Ajuste pedido na revisão retoma a caneta com prioridade.
+- **Arquivos quentes** (`CHANGELOG.md`, `docs/ROADMAP.md`): um portador por vez.
+- **Merge** é uma fila serial à parte. **Recursos físicos:** no máximo 2 execuções pesadas ao mesmo tempo (`npm run validate`, e2e, mutação) e 1 agente por vez no navegador.
 
-Operação curta: [docs/process/metodo-agentes-mutex-e-revisor.md](docs/process/metodo-agentes-mutex-e-revisor.md).
+## Ownership e handoff
 
-**Orçamento de orquestração:** um executor por padrão (no máximo 2 em paralelo, com mutex disjunto), brief com aceite, até 8 caminhos e um comando de teste, sem ondas automáticas nem polling de CI. Regra completa em [metodo-agentes-mutex-e-revisor.md § Orçamento de orquestração](docs/process/metodo-agentes-mutex-e-revisor.md#orçamento-de-orquestração-fonte-única).
+Encerrar todo turno com `SHA`, `Branch`, `Arquivos`, `Testes` (`PASS`, `FAIL` separando *Erro observado / Causa confirmada / Causa provável*, `NOT RUN`, `BLOCKED`), `Ownership`, `Restrições` e `Pendências`, em no máximo 10 linhas; detalhe longo vai em arquivo à parte. Revisor e auditor são só leitura ([qualidade-e-evidencia.md §4](docs/process/qualidade-e-evidencia.md)).
 
 ## Testes e Qualidade
 
