@@ -110,3 +110,37 @@ test("texto leigo: o jogador é avisado quando não dá para confirmar o Mestre"
   assert.equal(summarizeConnection({ ...parts, initiate: false }), "open", "o Mestre não perde o estado por causa de um intruso");
   assert.match(connectionText({ transport: "rede", status: "auth_failed" }), /confirmar que este é o Mestre/);
 });
+
+test("e) SDP com duas impressões diferentes: o elo não autentica e nada da mesa passa", async () => {
+  const w = await world();
+  const doubleFp = () => {
+    const pc = w.env.rtc.createPeerConnection();
+    pc.sdp += "a=fingerprint:sha-256 11:22:33:44\r\n";
+    return pc;
+  };
+  const gm = endpoint(w.env, w.gmKey, { auth: { keypair: w.gmKey } });
+  const ana = endpoint(w.env, w.anaKey, { initiate: true, auth: { keypair: w.anaKey }, createPeerConnection: doubleFp });
+  ana.tr.send(w.gmKey.routeId, { type: "HELLO_SYNC", roomKey: w.roomKey });
+  await waitUntil(() => w.env.events.some(([, , s]) => s === "auth_failed"), 2000);
+  await drain();
+  assert.equal(gm.got.some((m) => m.type === "HELLO_SYNC"), false);
+  assert.ok(w.env.events.some(([, , s]) => s === "auth_failed"));
+  [gm, ana].forEach((x) => x.tr.close());
+});
+
+test("f) elo que nunca abre cai por prazo e libera a vaga", async (t) => {
+  const w = await world();
+  const gm = endpoint(w.env, w.gmKey, { auth: { keypair: w.gmKey } });
+  const hub = w.env.hub.connect(w.evilKey.routeId);
+  const evilPc = w.env.rtc.createPeerConnection();
+  evilPc.createDataChannel("vox-vtt-v0");
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  hub.send({ type: "offer", to: w.gmKey.routeId, sdp: await evilPc.createOffer() });
+  await drain();
+  assert.equal(gm.tr.stats().links, 1, "o elo existe, mas o canal não abriu");
+  t.mock.timers.tick(30_000); // prazo de montagem do elo (LINK_SETUP_TIMEOUT_MS)
+  await drain();
+  assert.equal(gm.tr.stats().links, 0);
+  assert.ok(w.env.events.some(([, id, s]) => id === w.evilKey.routeId && s === "auth_failed"));
+  gm.tr.close();
+});

@@ -14,6 +14,8 @@ export const VTT_MAX_MESSAGE_BYTES = 256 * 1024;
 const MAX_QUEUED = 64;
 /** Prazo para o outro lado provar a chave da mesa (só com `opts.auth`); estourou, o elo cai. */
 export const AUTH_TIMEOUT_MS = 10_000;
+/** Prazo para o canal abrir depois que o elo nasce ou que a oferta sai (só com `opts.auth`); elo parado não fica ocupando vaga. */
+export const LINK_SETUP_TIMEOUT_MS = 30_000;
 /** Teto de elos simultâneos (uma mesa tem poucos jogadores; a sinalização é pública e não pode esgotar a memória do Mestre). */
 export const VTT_MAX_LINKS = 16;
 const DEFAULT_STUN = [{ urls: "stun:stun.l.google.com:19302" }];
@@ -119,12 +121,19 @@ function failAuth(ctx, remoteId, link) {
   dropLink(ctx, remoteId);
 }
 
+/** (Re)arma o prazo do elo: quem não chega à prova dentro dele cai. No-op sem `auth` ou com o elo já liberado. */
+function armDeadline(ctx, remoteId, link, ms) {
+  if (!ctx.opts.auth || link.authed) return;
+  clearTimeout(link.timer);
+  link.timer = setTimeout(() => failAuth(ctx, remoteId, link), ms);
+  link.timer?.unref?.();
+}
+
 /** Manda a prova desta ponta (fora do portão de envio) e arma o prazo para a do outro lado. */
 function beginAuth(ctx, remoteId, link) {
   const fps = linkFingerprints(link.pc);
   if (!fps) return failAuth(ctx, remoteId, link);
-  link.timer = setTimeout(() => failAuth(ctx, remoteId, link), AUTH_TIMEOUT_MS);
-  link.timer?.unref?.();
+  armDeadline(ctx, remoteId, link, AUTH_TIMEOUT_MS);
   return signVttAuth(ctx.opts.auth.keypair, fps, remoteId)
     .then((frame) => { if (ctx.links.get(remoteId) === link) link.channel.send(JSON.stringify(frame)); })
     .catch(() => failAuth(ctx, remoteId, link));
@@ -207,6 +216,7 @@ function newLink(ctx, remoteId) {
     if (["failed", "closed"].includes(pc.connectionState)) dropLink(ctx, remoteId);
   };
   status(ctx, remoteId, "connecting");
+  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS);
   return link;
 }
 
@@ -214,6 +224,7 @@ async function startOffer(ctx, remoteId, link) {
   link.offers += 1;
   link.awaiting = true;
   link.offerAt = nowOf(ctx);
+  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS);
   const offer = await link.pc.createOffer();
   await link.pc.setLocalDescription(offer);
   ctx.opts.signaling.send({ type: "offer", to: remoteId, sdp: link.pc.localDescription });

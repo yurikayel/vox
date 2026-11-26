@@ -39,11 +39,12 @@ function fromB64Url(text) {
 /**
  * Impressão `a=fingerprint:` do SDP (algoritmo e valor, em minúsculas).
  * @param {{sdp?: string}|null|undefined} desc Descrição de sessão (`localDescription` ou `remoteDescription`).
- * @returns {string|null} Impressão, ou `null` quando o SDP não a traz.
+ * @returns {string|null} Impressão; `null` quando o SDP não a traz ou traz mais de um valor distinto.
  */
 export function sdpFingerprint(desc) {
-  const m = /^a=fingerprint:(\S+)[ \t]+(\S+)/im.exec(String(desc?.sdp || ""));
-  return m ? `${m[1]} ${m[2]}`.toLowerCase() : null;
+  const found = [...String(desc?.sdp || "").matchAll(/^a=fingerprint:(\S+)[ \t]+(\S+)/gim)];
+  const distinct = new Set(found.map((m) => `${m[1]} ${m[2]}`.toLowerCase()));
+  return distinct.size === 1 ? [...distinct][0] : null;
 }
 
 /**
