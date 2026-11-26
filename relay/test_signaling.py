@@ -158,6 +158,11 @@ class TestSignalingIntegration(unittest.TestCase):
         self.assertEqual(opcode, 1)
         return json.loads(payload.decode("utf-8"))
 
+    def _settle(self, sock):
+        """Espera o servidor terminar de tratar o registro (resposta e `peer-joined`) antes do próximo par."""
+        self._send_json(sock, {"type": "ping"})
+        self.assertEqual(self._recv_json(sock)["type"], "pong")
+
     def _assert_sdp_exchange(self, s1, s2):
         offer_sdp = {"type": "offer", "sdp": "v=0..."}
         self._send_json(s1, {"type": "offer", "to": "peer_beta", "sdp": offer_sdp})
@@ -192,6 +197,7 @@ class TestSignalingIntegration(unittest.TestCase):
             self.assertEqual(msg1["type"], "registered")
             self.assertEqual(msg1["peerId"], "peer_alpha")
             self.assertEqual(msg1["peers"], [])
+            self._settle(s1)
 
             # Registrar peer 2
             self._send_json(s2, {"type": "register", "peerId": "peer_beta"})
