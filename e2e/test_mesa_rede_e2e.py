@@ -2,7 +2,7 @@
 
 Os dois contextos têm armazenamento separado, então a mesa só atravessa pelo transporte de rede: sinalização do relay
 local em loopback (`relay/signaling.py`) e `RTCDataChannel` entre os dois Chromium. Flags de laboratório ligadas por
-contexto (`vox.lab.mesa-rede`, `vox.lab.mesa-rede.url`, `vox.lab.fairplay`). App só local, sem tráfego externo.
+contexto (`vox.lab.mesa-rede`, `.url`, `.ice` vazio = só candidatos locais, `vox.lab.fairplay`). App só local, sem tráfego externo.
 Execução: `python -m unittest e2e.test_mesa_rede_e2e -v` (ou `npm run test:e2e`). Sem esperas fixas.
 """
 
@@ -31,7 +31,22 @@ def _flags_js(ws_url):
         "localStorage.setItem('vox.lab.mesa-rede', '1');"
         f"localStorage.setItem('vox.lab.mesa-rede.url', {json.dumps(ws_url)});"
         "localStorage.setItem('vox.lab.fairplay', '1');"
+        "localStorage.setItem('vox.lab.mesa-rede.ice', '');"
     )
+
+
+# Registra a configuração de cada `RTCPeerConnection` criada pela página (para provar que nenhum STUN externo é usado).
+_RECORD_RTC_JS = """(() => {
+  const Real = window.RTCPeerConnection;
+  window.__rtcConfigs = [];
+  window.RTCPeerConnection = function (cfg, ...rest) { window.__rtcConfigs.push(JSON.stringify(cfg || null)); return new Real(cfg, ...rest); };
+  window.RTCPeerConnection.prototype = Real.prototype;
+})();"""
+
+
+def _rtc_configs(page):
+    """Configurações com que a página criou conexões RTC."""
+    return page.evaluate("() => window.__rtcConfigs")
 
 
 class MesaRedePlaywrightE2ETests(PlaywrightE2EHarness):
@@ -50,6 +65,7 @@ class MesaRedePlaywrightE2ETests(PlaywrightE2EHarness):
         """Mestre com a mesa aberta e convite gerado; jogador em outro contexto entra pelo convite."""
         ctx_gm, gm, errors, _ = _new_isolated_page(self.browser, self.base_url)
         gm.add_init_script(self.flags)
+        gm.add_init_script(_RECORD_RTC_JS)
         _watch_errors(gm, errors)
         table_id = _onboard_and_campaign(gm, self.base_url, name)
         invite = _generate_invite(gm, self.base_url, table_id)
@@ -57,6 +73,7 @@ class MesaRedePlaywrightE2ETests(PlaywrightE2EHarness):
         _set_viewer_gm(gm)
         ctx_pl, player, errors_pl, _ = _new_isolated_page(self.browser, self.base_url)
         player.add_init_script(self.flags)
+        player.add_init_script(_RECORD_RTC_JS)
         _watch_errors(player, errors_pl)
         _join_as_player(player, invite)
         self.errors = errors + errors_pl
@@ -68,6 +85,10 @@ class MesaRedePlaywrightE2ETests(PlaywrightE2EHarness):
             for page in (gm, player):
                 expect(page.locator(".dungeon-vtt-connection")).to_contain_text(CONNECTED, timeout=WAIT_MS)
             _admit_players(gm, 1)
+            for page in (gm, player):
+                configs = _rtc_configs(page)
+                self.assertTrue(configs, "a página criou conexão RTC")
+                self.assertTrue(all(json.loads(c)["iceServers"] == [] for c in configs), f"sem STUN externo: {configs}")
             _add_token(gm, "SinalPelaRede", "player")
             expect(player.locator(".dungeon-token-roster")).to_contain_text("SinalPelaRede", timeout=WAIT_MS)
             self.assertEqual(self.errors, [])
