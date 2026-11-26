@@ -150,8 +150,8 @@ test("mensagens do socket - JSON inválido é ignorado; par registrado vem como 
   ws.onmessage({ data: JSON.stringify({ type: "peer-joined", peerId: "peer-z", address: "vx_z", dmPub: { k: 1 } }) });
   await flush();
   assert.equal(state.peerTransport.get("peer-z"), "ws");
-  assert.equal(state.addressToPeer.get("vx_z"), "peer-z");
-  assert.deepEqual(state.dmPubByAddress.get("vx_z"), { k: 1 });
+  assert.equal(state.addressToPeer.has("vx_z"), false, "anúncio sem prova da conta não mapeia a rota");
+  assert.equal(state.dmPubByAddress.has("vx_z"), false, "nem a chave");
 });
 
 test("registered - mapeia contas e conecta só aos pares válidos até o limite", async () => {
@@ -163,7 +163,7 @@ test("registered - mapeia contas e conecta só aos pares válidos até o limite"
   });
   await flush();
   assert.deepEqual([...state.peerConnections.keys()], ["pa", "pb"]);
-  assert.equal(state.addressToPeer.get("vx_b"), "pb");
+  assert.equal(state.addressToPeer.size, 0, "sem prova da conta, nenhuma rota é mapeada");
   assert.equal(FakePc.all.length, 2);
   await sig.handleSignalingMessage({ type: "registered", addressMap: "x" });
 });

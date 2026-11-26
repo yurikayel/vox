@@ -312,13 +312,13 @@ export async function handleSignalingMessage(msg) {
   if (mtype === "registered") {
     if (msg.addressMap && typeof msg.addressMap === "object") {
       for (const [addr, info] of Object.entries(msg.addressMap)) {
-        registerAddressMapping(addr, info.peerId, info.dmPub);
+        await registerAddressMapping(addr, info.peerId, info.dmPub);
       }
     }
     handleRegisteredPeers(msg.peers || []);
   } else if (mtype === "peer-joined") {
     if (msg.address) {
-      registerAddressMapping(msg.address, msg.peerId, msg.dmPub);
+      await registerAddressMapping(msg.address, msg.peerId, msg.dmPub);
     }
     handlePeerJoined(msg.peerId);
   } else if (mtype === "offer") {
