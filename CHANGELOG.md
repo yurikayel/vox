@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- HUD da Mesa: os painéis em meia tela com conteúdo longo (mochila cheia, Crônica longa) agora cabem na tela, rolam por dentro e não cobrem a barra de painéis nem empurram o mapa: no computador abrem para cima da barra, no celular viram folha presa ao rodapé (até 75% da altura).
 - Ficha: novo sistema "Tormenta20 (estrutura)" no seletor, com 6 atributos, 29 perícias básicas, PV, PM e Defesa; sem nenhum texto do livro. A tela de derivados ainda é a do D&D (spec `pacote-t20-v0`).
 - HUD da Mesa: cinco painéis em meia tela sobre o mapa (Ficha, Itens, Habilidades, Mapa e Crônica), abertos pelos botões da barra ou pelas teclas C, I, S, M e R (só com o foco na área do mapa e fora de campo de texto; sem ficha, Ficha, Itens e Habilidades ficam desabilitados). Não é janela modal: o mapa segue visível, Esc fecha, o foco entra no painel e volta ao botão que o abriu; no celular o painel ocupa a tela. Tab continua navegando o foco e não é atalho.
 - HUD da Mesa: cinto de 4 consumíveis (itens com a tag `consumivel`; clicar gasta 1), indicador de magia no rótulo do sistema (só com espaços de magia), favoritos (até 6, marcados em "Favoritar" na mochila) que ocupam as vagas de atalhos, e o PV próprio passa a ser anunciado por uma região viva fixa. Painéis em meia tela ficam para o próximo PR.
