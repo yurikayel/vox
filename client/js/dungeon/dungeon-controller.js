@@ -209,6 +209,7 @@ function handleDungeonChange(container, viewOpts, ev) {
   const file = target?.files?.[0];
   if (!file || (kind !== "import-file" && kind !== "upload-map" && !FILE_CHANGE_ACTIONS.has(kind))) return undefined;
   const state = viewOpts.state || getDungeonSession();
+  if (kind === "wizard-import") return settleAndRedraw(import("./sheet-wizard-actions.js").then((m) => m.importInWizard(state, file, { store: viewOpts.store })), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
   if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts);
   if (kind === "upload-map") {
     const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
@@ -274,7 +275,16 @@ function handleDungeonClick(container, viewOpts, ev) {
   return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
+/** Esc no assistente de criar ficha pede a confirmação de descarte (o mesmo que Cancelar). */
+function handleWizardEscape(container, viewOpts, ev) {
+  const state = viewOpts.state || getDungeonSession();
+  if (ev?.key !== "Escape" || !state.sheetWizard || state.sheetWizard.confirmCancel) return undefined;
+  ev.preventDefault?.();
+  return settleAndRedraw(ACTION_HANDLERS["wizard-cancel"](state, null, container, viewOpts), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+}
+
 function handleCanvasKeydown(container, viewOpts, ev) {
+  if (ev?.key === "Escape") return handleWizardEscape(container, viewOpts, ev);
   const delta = ARROW_DELTAS[ev?.key];
   if (!delta || ev.target?.id !== "dungeon-vtt-canvas") return undefined;
   const state = viewOpts.state || getDungeonSession();
