@@ -207,6 +207,24 @@ class MesaTTRPGPlaywrightE2ETests(PlaywrightE2EHarness):
         finally:
             _close_ctx(ctx)
 
+    def test_10b_canvas_do_mapa_nao_estoura_o_celular_sem_a_folha_de_layout(self):
+        ctx, page, errors, _ = _new_isolated_page(
+            self.browser, self.base_url, viewport={"width": 390, "height": 844}
+        )
+        try:
+            _goto_ready(page, f"{self.base_url}/#/")
+            _complete_onboarding(page, "Mesa Canvas E2E")
+            _goto_mesa(page, self.base_url)
+            _set_viewer_player(page)
+            page.locator("#dungeon-vtt-canvas").wait_for(state="attached", timeout=10000)
+            # Estado de corrida: folha sob demanda ainda não aplicada e canvas no tamanho do atributo.
+            page.evaluate("document.getElementById('dungeon-layout-stylesheet').disabled = true")
+            page.evaluate("document.getElementById('dungeon-vtt-canvas').width = 768")
+            overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+            self.assertLessEqual(overflow, 4, _overflow_report(page))
+        finally:
+            _close_ctx(ctx)
+
     def test_11_mesa_ficha_grimorio_and_levelup(self):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url)
         try:
