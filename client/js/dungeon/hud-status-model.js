@@ -5,6 +5,7 @@
  */
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { buildHudBelt, buildHudMagic } from "./hud-bar-model.js";
+import { defenseLabel } from "./system-display.js";
 import { getSystemPack } from "./system-pack.js";
 import { normalizeTokenConditions } from "./vtt-tactics-schema.js";
 
@@ -108,7 +109,7 @@ function sheetOfToken(state, token) {
 export function buildMobileLine(own) {
   const parts = [own.name];
   if (own.hp) parts.push(`PV ${own.hp}`);
-  if (Number.isFinite(own.ac)) parts.push(`CA ${own.ac}`);
+  if (Number.isFinite(own.ac)) parts.push(`${own.acLabel || "CA"} ${own.ac}`);
   return parts.join(" · ");
 }
 
@@ -126,7 +127,7 @@ export function buildHudStatus(state, scene) {
   const name = sheetName(sheet);
   const hp = ownHp(sheet);
   const ac = Number(sheet.attributes_lww?.armor_class);
-  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, ...portrait(token, name), conditions: buildHudConditions(token, sheet), magic: buildHudMagic(sheet), belt: buildHudBelt(sheet) };
+  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, acLabel: defenseLabel(getSystemPack(sheet.system?.id)), ...portrait(token, name), conditions: buildHudConditions(token, sheet), magic: buildHudMagic(sheet), belt: buildHudBelt(sheet) };
   own.mobileLine = buildMobileLine(own);
   const party = tokens
     .filter((t) => t.layer === "player" && t !== token)

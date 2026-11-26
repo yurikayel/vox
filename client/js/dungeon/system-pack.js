@@ -7,6 +7,7 @@
  * @module dungeon/system-pack
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
+import { validateDisplay } from "./system-display.js";
 import { DND5E_2024_PACK } from "./system-pack-dnd5e-2024.js";
 import { T20_PACK } from "./system-pack-t20.js";
 import { GURPS4E_PACK } from "./system-pack-gurps4e.js";
@@ -70,6 +71,7 @@ export function validateSystemPack(pack) {
   checkTests(pack, errors);
   checkResources(pack.resources, errors);
   checkFormulas(pack.formulas, errors);
+  errors.push(...validateDisplay(pack.display));
   return { ok: errors.length === 0, errors };
 }
 

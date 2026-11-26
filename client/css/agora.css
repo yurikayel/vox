@@ -4642,13 +4642,15 @@ body,
 
 /* HUD de jogo: painéis em meia tela (spec hud-jogo-v0) */
 .dungeon-map-hero { position: relative; }
-.dungeon-hud-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; z-index: 5; overflow: auto; padding: 0.75rem; background: var(--sa-surface, #0e1514); color: var(--sa-on-surface, #dde4e2); border-left: 2px solid var(--sa-on-surface-variant, #bbc9c7); }
+.dungeon-hud-dock { position: relative; }
+/* Painel: abre para cima, encostado na doca do HUD (a barra de painéis fica livre) e nunca passa de 60% da viewport; o conteúdo rola por dentro. */
+.dungeon-hud-panel { position: absolute; right: 0; bottom: 100%; width: 50%; max-height: min(60vh, 520px); z-index: 5; overflow-y: auto; overscroll-behavior: contain; padding: 0.75rem; background: var(--sa-surface, #0e1514); color: var(--sa-on-surface, #dde4e2); border-left: 2px solid var(--sa-on-surface-variant, #bbc9c7); }
 .dungeon-hud-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
 .dungeon-hud-panel-head h3 { margin: 0; }
 .dungeon-hud-panel-bar kbd { margin-left: 0.25rem; font-size: 0.7rem; opacity: 0.8; }
 .dungeon-hud-panel .dungeon-chip-btn { min-height: 44px; }
 @media (max-width: 1023.98px) {
-  .dungeon-hud-panel { position: fixed; inset: 0; width: auto; z-index: 50; border-left: 0; }
+  .dungeon-hud-panel { position: fixed; top: auto; right: 0; bottom: 0; left: 0; width: auto; max-height: 75dvh; z-index: 50; border-left: 0; border-top: 2px solid var(--sa-on-surface-variant, #bbc9c7); }
   .dungeon-hud-panel-bar { flex-wrap: nowrap; overflow-x: auto; }
   .dungeon-hud-panel-bar kbd { display: none; }
 }
