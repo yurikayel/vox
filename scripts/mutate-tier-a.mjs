@@ -156,7 +156,48 @@ export function parseChangedLines(diffText) {
 }
 
 /**
- * Resolve arquivos de teste correspondentes a um módulo Tier A em `tests/`.
+ * Módulos de `client/js/` que importam `relFile` diretamente (import estático ou dinâmico com caminho relativo).
+ * @param {string} relFile Caminho relativo do módulo importado.
+ * @param {string} root Diretório raiz do repositório.
+ * @returns {string[]} Caminhos relativos (POSIX) dos importadores diretos.
+ */
+function directImporters(relFile, root) {
+  const found = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(rel);
+      else if (entry.name.endsWith(".js") && rel !== relFile && importsFile(rel, relFile, root)) found.push(rel);
+    }
+  };
+  walk("client/js");
+  return found;
+}
+
+/** `fromRel` tem um `from "./x.js"` ou `import("./x.js")` que resolve para `targetRel`? */
+function importsFile(fromRel, targetRel, root) {
+  const body = fs.readFileSync(path.join(root, fromRel), "utf8");
+  const re = /(?:from\s*|import\s*\(\s*)["'](\.{1,2}\/[^"']+)["']/g;
+  for (const m of body.matchAll(re)) {
+    if (toPosix(path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), m[1]))) === targetRel) return true;
+  }
+  return false;
+}
+
+/** Testes que citam o módulo pelo caminho (import direto), em ordem alfabética. */
+function testsImporting(norm, root) {
+  const testsDir = path.join(root, "tests");
+  const suffix = `/${path.basename(norm)}`;
+  return fs.readdirSync(testsDir).filter((f) => f.endsWith(".test.js")).sort().filter((f) => {
+    const body = fs.readFileSync(path.join(testsDir, f), "utf8");
+    return body.includes(norm) || body.includes(suffix);
+  }).map((f) => `tests/${f}`);
+}
+
+/**
+ * Resolve arquivos de teste correspondentes a um módulo Tier A em `tests/`: pelo nome (`<stem>.test.js`, `<stem>-*`),
+ * senão pelos testes que importam o módulo; se nenhum o importa, sobe pelos importadores (do mais próximo ao mais
+ * distante) até achar testes que o exercitam por dentro deles. Nunca remove testes que já eram resolvidos.
  * @param {string} relFile Caminho relativo do módulo (ex.: `client/js/sig-format.js`).
  * @param {string} root Diretório raiz do repositório.
  * @returns {string[]} Lista ordenada de caminhos relativos em `tests/*.test.js`.
@@ -166,15 +207,17 @@ export function resolveTestsForFile(relFile, root) {
   if (!fs.existsSync(testsDir)) return [];
   const norm = toPosix(relFile);
   const stem = path.basename(norm, ".js");
-  const all = fs.readdirSync(testsDir).filter((f) => f.endsWith(".test.js")).sort();
-  const byName = all.filter((f) => f === `${stem}.test.js` || f.startsWith(`${stem}-`));
+  const byName = fs.readdirSync(testsDir).filter((f) => f.endsWith(".test.js") && (f === `${stem}.test.js` || f.startsWith(`${stem}-`))).sort();
   if (byName.length > 0) return byName.map((f) => `tests/${f}`);
-  const suffix = `/${path.basename(norm)}`;
-  const byImport = all.filter((f) => {
-    const body = fs.readFileSync(path.join(testsDir, f), "utf8");
-    return body.includes(norm) || body.includes(suffix);
-  });
-  return byImport.map((f) => `tests/${f}`);
+  const seen = new Set([norm]);
+  let level = [norm];
+  while (level.length > 0) {
+    const tests = [...new Set(level.flatMap((m) => testsImporting(m, root)))].sort();
+    if (tests.length > 0) return tests;
+    level = [...new Set(level.flatMap((m) => directImporters(m, root)))].filter((m) => !seen.has(m));
+    level.forEach((m) => seen.add(m));
+  }
+  return [];
 }
 
 /**
