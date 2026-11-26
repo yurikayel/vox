@@ -160,8 +160,8 @@ test("interface do Mestre: Aprovar e Recusar com rótulo, e a ação chama a API
   };
   const state = { fairplayPendingPeers: ["vx_ana"], fairplayNames: { vx_ana: "Ana" }, syncPeer };
   const html = renderFairplayAccess(state);
-  assert.match(html, /aria-label="Aprovar a entrada de Ana (…_ana)"/);
-  assert.match(html, /aria-label="Recusar a entrada de Ana (…_ana)"/);
+  assert.match(html, /aria-label="Aprovar a entrada de Ana \(…_ana\)"/);
+  assert.match(html, /aria-label="Recusar a entrada de Ana \(…_ana\)"/);
   assert.match(html, /id="dungeon-fairplay-access"[^>]*tabindex="-1"/);
   const btn = (kind) => ({ dataset: { dungeon: kind, peer: "vx_ana" } });
   await handleFairplayRequest(state, btn("fairplay-approve"));
