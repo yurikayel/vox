@@ -38,7 +38,7 @@ Cada entrada de `derived` tem um **`source`** de um destes tipos, todos validado
 | Sistema | Derivados na faixa (ordem) | Fora da faixa |
 | :-- | :-- | :-- |
 | **D&D 2024** | Proficiência, CA, Iniciativa, Percepção passiva, Deslocamento | salvaguardas, testes contra a morte, Dados de Vida, descansos e Exaustão, como hoje |
-| **Tormenta20** | Defesa, Iniciativa (a perícia `iniciativa`, rótulo "Iniciativa"; o motor segue com treino 0 e a rolagem usa o mesmo número da faixa; **conferir no livro**, Cap. 2: fórmula da perícia), Deslocamento; PV e PM como recursos **(PM fica para depois, depende da D8)** | sem Proficiência, Percepção passiva, salvaguardas por atributo, testes contra a morte, Dados de Vida e Exaustão (Fortitude, Reflexos e Vontade já são perícias) |
+| **Tormenta20** | Defesa, Iniciativa (a perícia `iniciativa`, rótulo "Iniciativa"; treino 0 no motor; a rolagem usa o mesmo número da faixa), Deslocamento; PV e PM como recursos **(PM fica para depois, depende da D8)** | sem Proficiência, Percepção passiva, salvaguardas por atributo, testes contra a morte, Dados de Vida e Exaustão (Fortitude, Reflexos e Vontade já são perícias) |
 | **GURPS 4e** | Esquiva, Deslocamento Básico, Velocidade Básica, nível de carga (com o peso do inventário); PV e PF como recursos | sem Proficiência, CA, Percepção passiva (Percepção é o secundário `per`), salvaguardas, testes contra a morte, Dados de Vida |
 
 Os blocos opcionais (salvaguardas, testes contra a morte, descansos) passam a aparecer só quando o pacote os declara (`display.blocks`, lista de ids conhecidos). Sem a lista, vale o conjunto atual do D&D (§5).
@@ -78,7 +78,7 @@ Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo
 | :-- | :--- | :--- |
 | 1 | `validateSystemPack` aceita `display` válido e recusa `source` com tipo desconhecido, `computed` fora do registro, rótulo acima de 24 caracteres e id de recurso inexistente | Sim |
 | 2 | Pacote sem `display` renderiza a faixa e o HUD exatamente como hoje (comparação de HTML) | Não: guarda de regressão |
-| 3 | Ficha `t20` na faixa: Defesa, Iniciativa (perícia), Deslocamento (PV e PM dependem da D8); sem Proficiência, Percepção passiva, testes contra a morte nem Dados de Vida (nem no painel Editar nem no assistente; descanso do T20: **conferir no livro**, Cap. 6) | Sim |
+| 3 | Ficha `t20` na faixa: Defesa, Iniciativa (perícia), Deslocamento (PV e PM dependem da D8); sem Proficiência, Percepção passiva, testes contra a morte nem Dados de Vida (nem no painel Editar nem no assistente; sem cura automática de descanso, PV e PM são ajustados à mão) | Sim |
 | 4 | Ficha `gurps4e` na faixa: Esquiva, Deslocamento Básico, Velocidade Básica e carga (com e sem peso), valores iguais aos de `gurpsSecondaries` e `encumbrance` | Sim |
 | 5 | HUD: rótulo e número da defesa vêm do pacote (D&D "CA", T20 "Defesa", GURPS "Esquiva"); a linha móvel segue o formato por sistema | Sim |
 | 6 | Indicador de magia: aparece com PM no T20 e com PF no GURPS só quando D4 mandar; some sem máximo (depende da D8) | Sim |

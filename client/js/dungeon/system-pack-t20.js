@@ -96,7 +96,7 @@ export const T20_PACK = Object.freeze({
     /** Treino (meio nível mais treino por perícia) ainda não é calculado pelo motor: o bônus fica em zero. */
     proficiency: Object.freeze({ base: 0, every: 20 }),
     armorClass: Object.freeze({ base: 10, ability: "dex" }),
-    /** Iniciativa é a perícia; o atributo é reserva. Fórmula da perícia: conferir no livro (Cap. 2). */
+    /** Iniciativa é a perícia `iniciativa`; o atributo é reserva. */
     initiative: Object.freeze({ skill: "iniciativa", ability: "dex" }),
     passivePerception: Object.freeze({ base: 10, skill: "percepcao" }),
   }),

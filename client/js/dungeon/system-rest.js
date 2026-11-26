@@ -100,6 +100,7 @@ export function spendHitDie(pack, choices, roll) {
  * @returns {{choices: object, deltas: Array<{pool: string, delta: number}>}} Escolhas novas e os deltas de recurso (só os > 0).
  */
 export function longRestPlan(pack, choices, { pools, base }) {
+  if (!pack.formulas.hitDice) return { choices, deltas: [] };
   const rest = normalizeRestChoices(pack, choices);
   const deltas = [{ pool: "hp_current", delta: (base.hp_max ?? 0) - (pools.hp_current ?? 0) }];
   for (const l of SLOT_POOLS) deltas.push({ pool: `spell_slot_${l}`, delta: (base.spell_slots_max?.[l] ?? 0) - (pools[`spell_slot_${l}`] ?? 0) });

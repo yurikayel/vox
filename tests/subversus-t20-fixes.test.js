@@ -11,7 +11,8 @@ import { rollInitiativeForScene } from "../client/js/dungeon/dungeon-tactics-act
 import { renderDerivedStrip, renderSystemEditFields } from "../client/js/dungeon/screen-sheet-derived.js";
 import { renderWizard } from "../client/js/dungeon/sheet-wizard-view.js";
 import { createWizard } from "../client/js/dungeon/sheet-wizard.js";
-import { spendHitDie } from "../client/js/dungeon/system-rest.js";
+import { longRestPlan, spendHitDie } from "../client/js/dungeon/system-rest.js";
+import { getSystemPack } from "../client/js/dungeon/system-pack.js";
 import { T20_PACK } from "../client/js/dungeon/system-pack-t20.js";
 
 const fixedBytes = () => new Uint8Array(32).fill(7);
@@ -69,6 +70,13 @@ test("e) controle D&D 5e: faixa +2, rolagem +2 e o painel Editar mantém o Dado 
   const html = renderSystemEditFields(sheetOf("dnd5e-2024"));
   assert.match(html, /Dados? de Vida/);
   assert.match(html, /name="speedFt"/);
+});
+
+test("g) T20: o descanso longo não aplica cura automática; o D&D segue curando ao máximo", () => {
+  const state = { pools: { hp_current: 5 }, base: { hp_max: 20 } };
+  assert.deepEqual(longRestPlan(T20_PACK, { level: 3 }, state).deltas, []);
+  const dnd = longRestPlan(getSystemPack("dnd5e-2024"), { level: 3 }, state);
+  assert.deepEqual(dnd.deltas, [{ pool: "hp_current", delta: 15 }]);
 });
 
 test("f) o passo 5 do assistente com pacote T20 não mostra Dado de Vida; o D&D mostra", () => {
