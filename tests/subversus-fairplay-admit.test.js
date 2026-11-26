@@ -9,15 +9,11 @@ import { reduceCampaign, replayCampaignOps } from "../client/js/dungeon/vtt-redu
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 import { createFairplaySessionKey } from "../client/js/dungeon/vtt-fairplay-cipher.js";
 import { generateRoomKey, generateVttKeypair } from "../client/js/dungeon/vtt-sync-codec.js";
+import { waitUntil } from "./helpers/wait-until.js";
 import { createInMemorySyncHub, createVttSyncPeer } from "../client/js/dungeon/vtt-sync.js";
 
 async function until(check, ms = 5000) {
-  const end = Date.now() + ms;
-  while (Date.now() < end) {
-    if (await check()) return;
-    await new Promise((r) => setTimeout(r, 10));
-  }
-  throw new Error("condição não atendida a tempo");
+  if (!(await waitUntil(check, ms))) throw new Error("condição não atendida a tempo");
 }
 const keyCount = async (store) => Object.keys((await store.loadCampaign(ID))?.fairplay?.keys || {}).length;
 const ID = "mesa-admit";

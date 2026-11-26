@@ -13,6 +13,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { createDefaultScene, createFloorDoc, createTokenDoc } from "../client/js/dungeon/vtt-scene-schema.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const HERO = createTokenDoc({ tokenId: "tok-heroi", x: 2, y: 2, layer: "player" });
 const ORC = createTokenDoc({ tokenId: "tok-orc", x: 6, y: 3, layer: "player" });
@@ -100,7 +101,7 @@ test("clique em portal na lente avisa 'Portal: <rótulo>' e não mexe em portas"
   const btn = { dataset: { dungeon: "diorama-mode", mode: "3d" } };
   btn.closest = () => btn;
   await mesa.handlers.click({ target: btn });
-  for (let i = 0; i < 50 && !mesa.listeners.click; i += 1) await new Promise((r) => setTimeout(r, 0));
+  assert.ok(await waitUntil(() => mesa.listeners.click), "a lente 3D registrou o clique");
   const m = computeCameraMatrices(createDioramaCamera({ mode: "3d" }), 800 / 500).viewProj;
   const p = [0, 1, 2, 3].map((r) => m[r] * PORTAL.x + m[4 + r] * 0 + m[8 + r] * PORTAL.y + m[12 + r]);
   mesa.listeners.click({ clientX: ((p[0] / p[3] + 1) / 2) * 800, clientY: ((1 - p[1] / p[3]) / 2) * 500 });

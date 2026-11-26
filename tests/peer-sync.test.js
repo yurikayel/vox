@@ -38,7 +38,8 @@ async function connect(a, b) {
   const deliver = (to, from, outLog) => (msg) => {
     const run = handle(to, from, outLog, msg);
     inFlight.add(run);
-    run.finally(() => inFlight.delete(run));
+    const clean = () => inFlight.delete(run);
+    run.then(clean, clean);
     return run;
   };
   const handle = async (to, from, outLog, msg) => {

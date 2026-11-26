@@ -1,5 +1,5 @@
 /**
- * @file Catraca de esperas fixas nos testes (fora de VTT/Fairplay/Diorama, que têm `settlePeers`): o total não pode
+ * @file Catraca de esperas fixas nos testes (todos os arquivos; VTT, Fairplay e Diorama estão em zero e usam `settlePeers`/`waitUntil`): o total não pode
  * crescer. Conta `new Promise((r) => setTimeout(r, N))` escrito no corpo e as chamadas de helpers de seta que embrulham
  * `setTimeout` (`const settle = (ms) => new Promise(...)`), que o padrão literal não via. Espera por condição usa
  * `waitUntil` (`tests/helpers/wait-until.js`); dormir tempo fixo falha sob carga. Os restantes são timers simulados,
@@ -13,8 +13,8 @@ import { fileURLToPath } from "node:url";
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 const SLEEP = /new Promise\(\((r|res|resolve)\) => setTimeout\(\1, \d+\)\)/g;
 const HELPER_DEF = /\bconst (\w+) = (?:async )?\([^)]*\) => new Promise\(\((\w+)\) => setTimeout\(\2, [^)]*\)\)/g;
-const EXCLUDED = /vtt-sync|fairplay|diorama|sem-esperas-fixas/;
-/** Medido com helpers contados: 32 (eram 35 antes do SUB-09 parte 5: `peer-sync` passou a drenar as entregas em voo, e a espera final de `pm01-lazy-fifth-screen` e de `credential-persistence` era inútil; antes 35, eram 41 antes do SUB-09 parte 4: 6 laços de espera por tempo viraram `waitUntil` em aviso, sorteio, edição de post, entrada P2P e memória central; antes 51; 10 convertidas para `waitUntil` em lead-tab, círculos, aviso consultivo e explode; antes, 15 só nos 5 helpers apontados, antes de converter 8 delas). */
+const EXCLUDED = /sem-esperas-fixas/;
+/** Medido com helpers contados: 32, agora sem exclusões (VTT/Fairplay/Diorama já estavam em zero ao tirar a lista de exceções; as esperas de `until`/laços de 0 ms viraram `waitUntil`) (eram 35 antes do SUB-09 parte 5: `peer-sync` passou a drenar as entregas em voo, e a espera final de `pm01-lazy-fifth-screen` e de `credential-persistence` era inútil; antes 35, eram 41 antes do SUB-09 parte 4: 6 laços de espera por tempo viraram `waitUntil` em aviso, sorteio, edição de post, entrada P2P e memória central; antes 51; 10 convertidas para `waitUntil` em lead-tab, círculos, aviso consultivo e explode; antes, 15 só nos 5 helpers apontados, antes de converter 8 delas). */
 const CEILING = 32;
 
 /** Conta esperas fixas de um texto: literais mais chamadas (não a definição) de helpers de seta que dormem. */
@@ -34,7 +34,7 @@ function countSleeps() {
   return perFile;
 }
 
-test("esperas fixas fora de VTT/Fairplay não crescem além do medido", () => {
+test("esperas fixas nos testes não crescem além do medido", () => {
   const perFile = countSleeps();
   const total = Object.values(perFile).reduce((a, b) => a + b, 0);
   assert.ok(total <= CEILING, `${total} esperas fixas > ${CEILING}: use waitUntil. ${JSON.stringify(perFile)}`);
