@@ -1,6 +1,6 @@
 # Assistente de criar ficha (v0)
 
-> **Status:** rascunho (proposta; aguarda decisões do mantenedor na §7, zero código antes) · **Owner:** mantenedor · **Revisado:** 2026-11-25
+> **Status:** aceita (v0; decisões da §7 registradas em 2026-11-25; código liberado) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§6) · [voxchar-v0.md](./voxchar-v0.md) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
 Define o assistente que cria uma ficha nova no pacote `dnd5e-2024`, com três entradas: **Rápido**, **Guiado** e **Importar**. Nada aqui está implementado.
@@ -64,8 +64,11 @@ Reaproveita o `.voxchar` ([voxchar-v0.md](./voxchar-v0.md)):
 ## 7. Decisões pendentes do mantenedor
 
 - **D1. Rápido com personagem de verdade:** o pacote não tem classes. Opções: (a) Rápido só pede o nome e usa os padrões (proposta inicial, §3); (b) acrescentar ao pacote uma lista pequena de "modelos prontos" (dados: classe, atributos, perícias, salvaguardas, Dado de Vida) tirados do SRD 5.2, em PR próprio com a atribuição de licença.
+  - Decidido em 25/11/2026: (a) Rápido pede só o nome e usa os padrões (opção recomendada; autorização geral do mantenedor).
 - **D2. Regras de criação:** compra de pontos ou lista padrão de atributos, e quantas perícias treinar por classe. Proposta: **fora do v1**; o Guiado aceita os valores dentro dos limites do Editar, sem impor regra de criação.
+  - Decidido em 25/11/2026: fora do v1 (opção recomendada; autorização geral do mantenedor).
 - **D3. Equipamento no Guiado:** o passo 6 usa os mesmos campos dos itens, montados em memória, sem reaproveitar o formulário que grava na hora; confirmar se entra no v1 ou só depois.
+  - Decidido em 25/11/2026: o equipamento entra no v1 como descrito (em memória, um único `SHEET_UPSERT`) (opção recomendada; autorização geral do mantenedor).
 
 ## 8. Testes de aceite
 
