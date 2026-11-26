@@ -347,3 +347,34 @@ test("padrão de 16 elos; send sem elo: Mestre devolve true (nada a entregar), j
   rtc.log.channels.forEach((c) => { c.onmessage?.({ data: { type: "OBJ" } }); c.onmessage?.({ data: 42 }); });
   assert.equal(got.length, before, "dado que não é texto não vira mensagem");
 });
+
+test("cadeia não é apagada com sinal em andamento: o elo cai no meio da oferta e o ICE seguinte ainda espera por ela", async () => {
+  const order = [];
+  let gated = false;
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const factory = () => ({
+    createDataChannel: () => ({}),
+    setRemoteDescription: async () => { order.push("remote:inicio"); if (gated) await gate; order.push("remote:fim"); },
+    createAnswer: async () => ({ type: "answer" }),
+    setLocalDescription: async () => {},
+    addIceCandidate: async () => { order.push("ice"); },
+    close() {},
+  });
+  let emit;
+  const gm = createRtcVttTransport({ peerId: "gm", signaling: { send() {}, onMessage: (fn) => { emit = fn; return () => {}; } }, createPeerConnection: factory });
+  emit({ type: "offer", from: "p", sdp: { type: "offer" } });
+  assert.ok(await waitUntil(() => gm.stats().links === 1 && order.length === 2), "primeira oferta concluída: há elo");
+  order.length = 0;
+  gated = true;
+  emit({ type: "offer", from: "p", sdp: { type: "offer" } });
+  assert.ok(await waitUntil(() => order.includes("remote:inicio")), "a segunda oferta derrubou o elo antigo e está em andamento");
+  emit({ type: "ice", from: "p", candidate: { candidate: "c" } });
+  assert.ok(await waitUntil(() => gm.stats().links === 1));
+  await Promise.resolve();
+  assert.deepEqual(order, ["remote:inicio"], "o ICE não passa na frente da oferta em andamento");
+  release();
+  assert.ok(await waitUntil(() => order.includes("ice")));
+  assert.deepEqual(order, ["remote:inicio", "remote:fim", "ice"], "ICE aplicado em ordem, depois da remote description");
+  assert.ok(await waitUntil(() => gm.stats().chains === 1), "elo vivo mantém a cadeia");
+});
