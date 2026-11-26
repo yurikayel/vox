@@ -16,7 +16,7 @@ import { createDraft, createWizard, draftToDoc, finishGuided, finishQuick, valid
 import { renderWizard } from "../client/js/dungeon/sheet-wizard-view.js";
 import * as actions from "../client/js/dungeon/sheet-wizard-actions.js";
 import { ACTION_HANDLERS, snapshotWizardForm } from "../client/js/dungeon/dungeon-controller-actions.js";
-import { escapeWizardJob } from "../client/js/dungeon/dungeon-controller.js";
+import { escapeWizardJob, handleCanvasKeydown } from "../client/js/dungeon/dungeon-controller.js";
 import { VOXCHAR_LIMITS } from "../client/js/dungeon/voxchar-check.js";
 
 const fakeContainer = (vals) => vals;
@@ -242,4 +242,16 @@ test("19. o resumo revalida e volta ao passo com problema; voltar limpa os aviso
   assert.ok(state.sheetWizard.issues.length > 0);
   await actions.stepWizard(state, { dataset: { dir: "back" } }, {}, { store });
   assert.deepEqual(state.sheetWizard.issues, []);
+});
+
+test("20. o handler de teclado do controlador leva o Esc ao assistente: a confirmação abre e o foco vai ao alvo certo", async () => {
+  const { state } = await ready();
+  state.sheetWizard = { ...createWizard(), mode: "guided", step: 2 };
+  const settled = [];
+  const settle = (job, _c, _v, extra) => { settled.push(extra); return job; };
+  const job = handleCanvasKeydown({}, { state }, { key: "Escape", preventDefault() {} }, settle);
+  await job;
+  assert.equal(state.sheetWizard.confirmCancel, true);
+  assert.deepEqual(settled, [{ focusSelector: "[data-wizard-focus]" }]);
+  assert.equal(handleCanvasKeydown({}, { state }, { key: "Enter" }, settle), undefined, "outra tecla não abre nada");
 });

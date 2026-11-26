@@ -288,20 +288,28 @@ export function escapeWizardJob(state, container, ev) {
   return ACTION_HANDLERS["wizard-cancel"](state, null, container, {});
 }
 
-function handleWizardEscape(container, viewOpts, ev) {
+function handleWizardEscape(container, viewOpts, ev, settle = settleAndRedraw) {
   const job = escapeWizardJob(viewOpts.state || getDungeonSession(), container, ev);
-  return job && settleAndRedraw(job, container, viewOpts, { focusSelector: "[data-wizard-focus]" });
+  return job && settle(job, container, viewOpts, { focusSelector: "[data-wizard-focus]" });
 }
 
-function handleCanvasKeydown(container, viewOpts, ev) {
-  if (ev?.key === "Escape") return handleWizardEscape(container, viewOpts, ev);
+/**
+ * Teclado da tela: Esc no assistente de criar ficha e setas para empurrar o token selecionado no mapa.
+ * @param {HTMLElement} container Raiz da tela.
+ * @param {{state?: object, store?: object}} viewOpts Opções da tela.
+ * @param {{key?: string, target?: object, preventDefault?: Function}} ev Evento de teclado.
+ * @param {Function} [settle] Quem espera a tarefa e redesenha (substituível em teste).
+ * @returns {Promise<void>|undefined} Tarefa em andamento, ou `undefined` se a tecla não se aplica.
+ */
+export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndRedraw) {
+  if (ev?.key === "Escape") return handleWizardEscape(container, viewOpts, ev, settle);
   const delta = ARROW_DELTAS[ev?.key];
   if (!delta || ev.target?.id !== "dungeon-vtt-canvas") return undefined;
   const state = viewOpts.state || getDungeonSession();
   if (!state.selectedTokenId) return undefined;
   ev.preventDefault?.();
   const job = nudgeTokenInScene(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
-  return settleAndRedraw(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
+  return settle(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
 }
 
 /** @param {string} [code] Código de erro de {@link attachVttPlayerJoin}. */
