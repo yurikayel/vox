@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- HUD: no GURPS 4e a defesa mostrada é a Esquiva calculada (com o peso do inventário), no lugar da CA
 - Ficha: na faixa da aba Jogar, as reservas de PM (Tormenta20) e PF (GURPS) ganham botões de gastar e recuperar 1 ponto e o campo "Definir máximo"; o gasto vai pelo livro-razão e nunca passa de 0 nem do máximo
 - Ficha: reservas de PM (Tormenta20) e PF (GURPS) com máximo e atual na faixa de derivados, e indicador de PM no HUD do Tormenta20; o atual muda pelo livro-razão e nunca passa do máximo (campo de editar e botões de gastar ainda não). D&D inalterado.
 - Ficha: no GURPS 4e a faixa mostra PV, PF, Esquiva, Deslocamento, Deslocamento Básico, Velocidade Básica e nível de Carga (com o peso do inventário), sem nenhum texto do livro (fatia 3 do SUB-17). D&D e Tormenta20 inalterados.

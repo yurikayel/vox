@@ -88,3 +88,13 @@ test("botão de máximo leva aria-label com o nome da reserva", async () => {
   assert.match(html, /aria-label="Definir máximo de PM"/);
   assert.match(renderReserveControls({ pools_base: { fp_max: 3 } }, getSystemPack("gurps4e")), /aria-label="Definir máximo de PF"/);
 });
+
+test("HUD: GURPS mostra Esquiva calculada (com o peso do inventário); D&D e T20 seguem com armor_class", async () => {
+  const { buildHudStatus } = await import("../client/js/dungeon/hud-status-model.js");
+  const g = { character_id: "g", system: { id: "gurps4e", version: 1 }, attributes_lww: { armor_class: 99, abilities: { st: 10, dx: 10, iq: 10, ht: 10 } }, pools_base: { hp_max: 10 }, delta_ledger: [], inventory_orset: {} };
+  const own = buildHudStatus({ sheet: g }, { tokens: [] }).own;
+  assert.equal(own.acLabel, "Esquiva");
+  assert.equal(own.ac, 8);
+  const t = buildHudStatus({ sheet: { ...g, system: { id: "t20", version: 1 } } }, { tokens: [] }).own;
+  assert.equal(t.ac, 99);
+});
