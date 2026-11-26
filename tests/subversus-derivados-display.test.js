@@ -10,7 +10,7 @@ import { renderDerivedStrip } from "../client/js/dungeon/screen-sheet-derived.js
 import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
 import { validateSystemPack, getSystemPack } from "../client/js/dungeon/system-pack.js";
 import { deriveSheet } from "../client/js/dungeon/system-derive.js";
-import { DISPLAY_ENTRIES_MAX, defenseLabel, derivedStats, showBlock, validateDisplay } from "../client/js/dungeon/system-display.js";
+import { COMPUTED_STATS, DISPLAY_ENTRIES_MAX, defenseLabel, derivedStats, showBlock, validateDisplay } from "../client/js/dungeon/system-display.js";
 import { buildMobileLine } from "../client/js/dungeon/hud-status-model.js";
 
 const sheet = () => ({ character_id: "a", system: { id: "dnd5e-2024", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
@@ -149,4 +149,30 @@ test("Defesa sem sufixo em pacote sem armadura; D&D mantém o sufixo", () => {
   const semArmor = { labels: {}, formulas: {}, display: { derived: [entry("armorClass", "Defesa", { formula: "armorClass" })] } };
   assert.equal(derivedStats(semArmor, nua)[0].label, "Defesa");
   assert.equal(derivedStats(DND5E_2024_PACK, nua).find((s) => s.label.startsWith("CA")).label, "CA sem armadura");
+});
+
+const gurpsSheet = (inv = {}) => ({ character_id: "g", system: { id: "gurps4e", version: 1 }, attributes_lww: { abilities: { st: 13, dx: 11, iq: 10, ht: 12 } }, pools_base: { hp_max: 12, hp_current: 12 }, inventory_orset: inv });
+const gstat = (html, label) => html.match(new RegExp(`<dt>${label}</dt><dd>([^<]*)</dd>`))?.[1];
+const bag = (weightLb, extra = {}) => ({ saco: { id: "saco", label: "Saco", qty: 1, weightLb, equipped: false, tags: [], ...extra } });
+
+test("GURPS: a faixa mostra PV, PF, Esquiva, Deslocamento, Desloc. Básico, Velocidade Básica e Carga, sem blocos do D&D", () => {
+  const html = renderDerivedStrip(gurpsSheet());
+  const got = Object.fromEntries(["PV", "PF", "Esquiva", "Deslocamento", "Desloc. Básico", "Velocidade Básica", "Carga"].map((l) => [l, gstat(html, l.replace(".", "\."))]));
+  assert.deepEqual(got, { PV: "13", PF: "12", Esquiva: "8", Deslocamento: "5", "Desloc. Básico": "5", "Velocidade Básica": "5,75", Carga: "Nenhuma" });
+  for (const gone of ["Proficiência", "CA", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Condições"]) assert.equal(html.includes(`<dt>${gone}`) || html.includes(gone + "</h4>"), false, gone);
+});
+
+test("GURPS: o peso do inventário muda Carga, Deslocamento e Esquiva; item sem peso é avisado", () => {
+  const html = renderDerivedStrip(gurpsSheet(bag(70)));
+  assert.deepEqual([gstat(html, "Carga"), gstat(html, "Deslocamento"), gstat(html, "Esquiva")], ["Média", "3", "6"]);
+  assert.equal(gstat(renderDerivedStrip(gurpsSheet(bag(1000))), "Carga"), "Sobrecarga");
+  const sem = renderDerivedStrip(gurpsSheet(bag(undefined)));
+  assert.equal(gstat(sem, "Carga"), "Nenhuma (itens sem peso)");
+});
+
+test("GURPS: o registro de computed é fechado (só nomes gurps.*) e D&D e T20 seguem iguais", () => {
+  assert.deepEqual(Object.keys(COMPUTED_STATS).sort(), ["gurps.basicMove", "gurps.basicSpeed", "gurps.dodge", "gurps.fp", "gurps.hp", "gurps.load", "gurps.move"]);
+  assert.deepEqual(validateSystemPack(getSystemPack("gurps4e")), { ok: true, errors: [] });
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(gstat(renderDerivedStrip(t20Sheet()), "Defesa"), "14");
 });

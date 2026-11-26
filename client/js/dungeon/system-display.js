@@ -8,6 +8,8 @@
  * @see docs/specs/derivados-por-sistema-v0.md
  */
 
+import { GURPS_COMPUTED } from "./system-display-gurps.js";
+
 /** Teto de caracteres de um rótulo de derivado. @type {number} */
 export const DISPLAY_LABEL_MAX = 24;
 /** Teto de entradas em `display.derived`. @type {number} */
@@ -34,8 +36,8 @@ const FORMULA_STATS = Object.freeze({
   speed: (d, label) => ({ label, value: `${d.speed.meters.toString().replace(".", ",")} m` }),
 });
 
-/** Registro fechado das funções puras nomeadas (`computed`); a fatia 1 não registra nenhuma. @type {Readonly<Object<string, Function>>} */
-export const COMPUTED_STATS = Object.freeze({});
+/** Registro fechado das funções puras nomeadas (`computed`): hoje só as do GURPS. @type {Readonly<Object<string, Function>>} */
+export const COMPUTED_STATS = Object.freeze({ ...GURPS_COMPUTED });
 
 const LEGACY_ORDER = ["proficiency", "armorClass", "initiative", "passivePerception", "speed"];
 
@@ -78,13 +80,13 @@ function derivedErrors(list) {
   });
 }
 
-function resolveEntry(pack, entry, derived, registry) {
+function resolveEntry(pack, entry, derived, registry, ctx) {
   const { formula, computed } = entry.source || {};
   const label = String(entry.label).trim();
   if (typeof formula === "string" && Object.hasOwn(FORMULA_STATS, formula)) return FORMULA_STATS[formula](derived, label, pack);
   if (typeof computed !== "string" || !Object.hasOwn(registry, computed)) return null;
   try {
-    const out = registry[computed](derived, label);
+    const out = registry[computed](derived, label, ctx);
     return out && typeof out.label === "string" && typeof out.value === "string" ? out : null;
   } catch {
     return null;
@@ -101,12 +103,13 @@ function legacyStats(pack, derived) {
  * @param {object} pack Pacote de sistema.
  * @param {object} derived Derivados calculados por `deriveSheet`.
  * @param {Readonly<Object<string, Function>>} [registry] Registro de `computed` (só os testes trocam).
+ * @param {{weightLb?: number, unweighed?: number}} [ctx] Contexto de carga para os `computed` que dependem do inventário.
  * @returns {{label: string, value: string}[]} Pares rótulo e valor, em texto puro (quem desenha escapa).
  */
-export function derivedStats(pack, derived, registry = COMPUTED_STATS) {
+export function derivedStats(pack, derived, registry = COMPUTED_STATS, ctx = undefined) {
   const list = pack?.display?.derived;
   if (!Array.isArray(list)) return legacyStats(pack, derived);
-  return list.slice(0, DISPLAY_ENTRIES_MAX).map((entry) => (entry ? resolveEntry(pack, entry, derived, registry) : null)).filter(Boolean);
+  return list.slice(0, DISPLAY_ENTRIES_MAX).map((entry) => (entry ? resolveEntry(pack, entry, derived, registry, ctx) : null)).filter(Boolean);
 }
 
 /**
