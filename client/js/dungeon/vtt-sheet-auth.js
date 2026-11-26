@@ -71,3 +71,25 @@ export function ownerForUpsert(state, sheetId, actor, isGm, declared) {
   if (isGm) return String(declared || current || "");
   return current || actor;
 }
+
+/**
+ * Ficha ativa da campanha após um `SHEET_UPSERT`: só o Mestre troca a ativa; jogador herda a atual.
+ * Exceção intencional: se a campanha ainda não tem ficha ativa, a primeira ficha gravada (de quem for) vira a ativa.
+ * @param {object} state Estado da campanha.
+ * @param {{isGm: boolean, setActive: boolean, sheetId: string}} change Quem gravou, se pediu ativar e qual ficha.
+ * @returns {string} Id da ficha ativa.
+ */
+export function activeSheetAfterUpsert(state, change) {
+  if (change.isGm && change.setActive) return change.sheetId;
+  return state.activeSheetId || change.sheetId;
+}
+
+/**
+ * Ficha que a pessoa vê como sua: a primeira de que é dona (declarada ou por token), na ordem do mapa; vazio se nenhuma.
+ * @param {object} state Estado da campanha (visão do jogador).
+ * @param {string} actor Identidade de quem vê.
+ * @returns {string} Id da ficha, ou vazio.
+ */
+export function ownSheetIdFor(state, actor) {
+  return Object.keys(state.sheetsById || {}).find((id) => isSheetOwner(state, id, actor)) || "";
+}

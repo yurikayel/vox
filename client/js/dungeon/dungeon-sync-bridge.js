@@ -6,6 +6,7 @@
 import { formatInWorldDate } from "./vtt-calendar.js";
 import { listInventoryItems, totalCarriedWeight } from "./vtt-inventory.js";
 import { reduceCampaign } from "./vtt-reducer.js";
+import { ownSheetIdFor } from "./vtt-sheet-auth.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { createCampaign, createVttOp, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
@@ -48,6 +49,12 @@ function syncLastD20(state) {
   if (keptD20) state.lastRoll = { dieSides: 20, value: keptD20.value, committed: false };
 }
 
+/** Id da ficha que esta tela mostra: jogador remoto vê a própria (a ativa é decisão do Mestre); os demais, a ativa. */
+function viewerSheetId(state, campaign) {
+  if (state.joinMode !== "p2p_player") return campaign.activeSheetId;
+  return ownSheetIdFor(campaign, state.vttKeypair?.routeId || state.localActor) || campaign.activeSheetId;
+}
+
 /**
  * Hidrata o estado de sessão da UI a partir de um `CampaignDoc` completo sem sobrescrever blocos demo W-DRF.
  * @param {object} state Estado de sessão do `#/dungeon`.
@@ -59,7 +66,7 @@ export function hydrateStateFromCampaign(state, campaign) {
   state.campaignDoc = campaign;
   state.tableId = campaign.id;
   state.tableName = campaign.name;
-  const activeSheet = pickRecord(campaign.sheetsById, campaign.activeSheetId);
+  const activeSheet = pickRecord(campaign.sheetsById, viewerSheetId(state, campaign));
   if (activeSheet) state.sheet = buildUiSheetProjection(activeSheet, state.sheet?.inventory);
   const activeScene = pickRecord(campaign.scenesById, campaign.activeSceneId);
   if (activeScene) state.scene = activeScene;
