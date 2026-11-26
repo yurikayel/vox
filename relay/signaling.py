@@ -291,11 +291,20 @@ class PeerRegistry:
         with self.lock:
             existing = list(self.peers.keys())
             self.peers[peer_id] = handler
+            if address and self._address_held_by_other(str(address), peer_id):
+                return existing  # o dono conectado mantém endereço e chave
             if address:
                 self.addresses[peer_id] = str(address)
             if dm_pub:
                 self.dm_pubs[peer_id] = dm_pub
             return existing
+
+    def _address_held_by_other(self, address: str, peer_id: str) -> bool:
+        """Diz se outro par conectado já responde por `address`; chamar com `self.lock` preso."""
+        return any(
+            pid != peer_id and addr == address
+            for pid, addr in self.addresses.items()
+        )
 
     def unregister(self, peer_id: str, handler=None) -> bool:
         """Remove o par; devolve False se `handler` não for o registrado, senão se algo foi removido."""

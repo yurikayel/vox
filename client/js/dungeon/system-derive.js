@@ -162,6 +162,12 @@ function speedView(pack, ft) {
   return { ft, meters: Math.round(ft * per * 10) / 10 };
 }
 
+/** Iniciativa: bônus da perícia quando o pacote declara `skill`; senão o modificador do atributo. */
+function initiativeOf(init, skills, modOf) {
+  const bySkill = init.skill ? skills.find((s) => s.id === init.skill) : null;
+  return bySkill ? bySkill.bonus : modOf(init.ability);
+}
+
 /**
  * Calcula todos os derivados da ficha para um pacote. A CA devolvida é a base sem armadura: armadura e escudo
  * entram quando o inventário os informar, fora deste módulo.
@@ -187,7 +193,7 @@ export function deriveSheet(pack, choices = {}, items = []) {
     skills,
     armorClass: armor.armorClass,
     armored: armor.worn,
-    initiative: modOf(init.ability),
+    initiative: initiativeOf(init, skills, modOf),
     passivePerception: pp.base + skillBonus,
     speed: speedView(pack, c.speedFt),
     deathSaves: deathSaveStatus(pack, c.deathSaves),

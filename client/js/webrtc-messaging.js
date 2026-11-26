@@ -3,6 +3,7 @@
  * @module webrtc-messaging
  */
 import { sendSignaling } from "./webrtc-signaling-send.js";
+import { acceptDmPubAnnouncement } from "./dm-pub-proof.js";
 import {
   addressToPeer,
   dmPubByAddress,
@@ -103,22 +104,24 @@ export function announceIdentity(address, dmPub = null) {
 }
 
 /**
- * Associa a conta de um par ao seu id na malha.
+ * Associa a conta de um par ao seu id na malha. A rota e a chave só entram quando o anúncio traz
+ * a prova da conta (`dm-pub-proof`); o beacon de memória não tem conta e segue sem chave.
  * @param {string} address
  * @param {string} peerId
  * @param {object|null} [dmPub=null]
+ * @returns {Promise<void>}
  */
-export function registerAddressMapping(address, peerId, dmPub = null) {
+export async function registerAddressMapping(address, peerId, dmPub = null) {
   if (!address || !peerId) return;
   const identityHandler = getIdentityHandler();
-  if (dmPub && identityHandler) {
-    identityHandler(address, dmPub);
+  if (isBeaconIdentity(address, peerId)) {
+    if (dmPub && identityHandler) identityHandler(address, dmPub);
+    return;
   }
-  if (isBeaconIdentity(address, peerId)) return;
+  if (!(await acceptDmPubAnnouncement(address, peerId, dmPub))) return;
+  if (identityHandler) identityHandler(address, dmPub);
   addressToPeer.set(address, peerId);
-  if (dmPub) {
-    dmPubByAddress.set(address, dmPub);
-  }
+  dmPubByAddress.set(address, dmPub);
 }
 
 /**
