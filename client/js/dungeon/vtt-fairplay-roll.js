@@ -14,6 +14,7 @@ import {
   createCommitReveal2Slot,
   DEFAULT_SHAMIR_PEERS,
   DEFAULT_SHAMIR_THRESHOLD,
+  FAIRPLAY_COMMIT_ALG,
   resolveCommitReveal2Roll,
 } from "../rpg-crypto-table.js";
 
@@ -29,20 +30,21 @@ function randomSeed32() {
  * Cria o compromisso Commit-Reveal² de um participante de uma rolagem auditável do Subversus.
  *
  * @param {object} [opts={}] Opções (`peerId`, `rollId`, `seedBytes`, `threshold`, `totalPeers`).
- * @returns {Promise<{commit: {peerId: string, rollId: string, commitO: string, commitV: string, splitId: string, threshold: number, totalPeers: number}, secret: {peerId: string, rollId: string, seedBytes: Uint8Array}, shares: Array<object>}>}
+ * @returns {Promise<{commit: {peerId: string, rollId: string, alg: string, commitO: string, commitV: string, splitId: string, threshold: number, totalPeers: number}, secret: {peerId: string, rollId: string, seedBytes: Uint8Array}, shares: Array<object>}>}
  *   `commit` pode ir para a mesa; `secret` fica no aparelho até a revelação; cada item de `shares` vai para um par só.
  */
 export async function createFairplayRollOffer(opts = {}) {
   const seedBytes = opts.seedBytes instanceof Uint8Array ? opts.seedBytes : randomSeed32();
   const threshold = Number(opts.threshold) || DEFAULT_SHAMIR_THRESHOLD;
   const totalPeers = Number(opts.totalPeers) || DEFAULT_SHAMIR_PEERS;
-  const slot = await createCommitReveal2Slot(seedBytes, { threshold, totalPeers });
   const peerId = String(opts.peerId || "local");
   const rollId = String(opts.rollId || `roll-${crypto.randomUUID().slice(0, 8)}`);
+  const slot = await createCommitReveal2Slot(seedBytes, { threshold, totalPeers, binding: { rollId, peerId } });
   return {
     commit: {
       peerId,
       rollId,
+      alg: FAIRPLAY_COMMIT_ALG,
       commitO: slot.commitO,
       commitV: slot.commitV,
       splitId: slot.splitId,
@@ -65,7 +67,18 @@ export function buildFairplayReveal(secret) {
 }
 
 /**
- * Confere os compromissos da fase 1: hash válido, mesma rolagem, um por par.
+ * Confere um compromisso da fase 1: `alg` conhecido, hash válido e mesma rolagem.
+ * @param {object} c Compromisso recebido.
+ * @param {string} rollId Rolagem esperada.
+ */
+function assertValidCommit(c, rollId) {
+  if (c?.alg !== FAIRPLAY_COMMIT_ALG) throw new Error(`Compromisso do par ${c?.peerId || "?"} sem alg conhecido: inválido.`);
+  if (!HEX64_RE.test(String(c.commitO || ""))) throw new Error(`Compromisso inválido do par ${c.peerId || "?"}.`);
+  if (String(c.rollId || "") !== rollId) throw new Error(`Compromisso de outra rolagem (par ${c.peerId || "?"}): inválida.`);
+}
+
+/**
+ * Confere os compromissos da fase 1: formato válido, mesma rolagem, um por par.
  * @param {Array<object>} commits Compromissos recebidos.
  * @param {string} rollId Rolagem esperada.
  */
@@ -73,8 +86,7 @@ function assertValidCommits(commits, rollId) {
   if (!Array.isArray(commits) || commits.length === 0) throw new Error("Rolagem sem compromissos: inválida.");
   const seen = new Set();
   for (const c of commits) {
-    if (!HEX64_RE.test(String(c?.commitO || ""))) throw new Error(`Compromisso inválido do par ${c?.peerId || "?"}.`);
-    if (String(c.rollId || "") !== rollId) throw new Error(`Compromisso de outra rolagem (par ${c.peerId || "?"}): inválida.`);
+    assertValidCommit(c, rollId);
     if (seen.has(c.peerId)) throw new Error(`Par ${c.peerId} comprometeu duas vezes: inválida.`);
     seen.add(c.peerId);
   }
@@ -88,9 +100,11 @@ function assertValidCommits(commits, rollId) {
  * @returns {object} Participante.
  */
 function participantFor(commit, reveal, recoveryShares) {
-  if (reveal) return { peerId: commit.peerId, commitO: commit.commitO, seedBytes: reveal.seedBytes };
+  const binding = { rollId: commit.rollId, peerId: commit.peerId };
+  if (reveal) return { peerId: commit.peerId, commitO: commit.commitO, binding, seedBytes: reveal.seedBytes };
   return {
     peerId: commit.peerId,
+    binding,
     aborted: true,
     commitO: commit.commitO,
     threshold: commit.threshold,
