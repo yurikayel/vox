@@ -94,6 +94,55 @@ test("d) controle: o registro honesto de quem abriu é verificado", async () => 
   assert.equal(seals[t.box.doc.chronicle[0].id].status, "verified");
 });
 
+function pushOp(t, type, actor, payload) {
+  t.box.doc = reduceCampaign(t.box.doc, createVttOp({ type, actor, payload, lamport: 500 + t.box.doc.chronicle.length }));
+}
+
+test("g) entrada de CHRONICLE_APPEND não cria vínculo Fairplay nem herda autor do payload", async () => {
+  const t = await closedTable(["ana", "bia", "gm"]);
+  recordAs(t, "bia", "roll-z", { fairplay: undefined });
+  const forged = { id: "turn-roll-z", author: "ana", text: "ana: 1d20 → [20] = 20", fairplayRollId: ROLL, fairplayValue: t.value };
+  pushOp(t, "CHRONICLE_APPEND", "bia", forged);
+  assert.equal(t.box.doc.chronicle.at(-1).fairplayRollId, undefined);
+  recordAs(t, "ana", "roll-1");
+  const seals = await sealsOf(t);
+  assert.equal(seals[t.box.doc.chronicle.at(-1).id].status, "verified");
+});
+
+test("h) id de registro repetido não empresta o selo ao número forjado", async () => {
+  const t = await closedTable(["ana", "bia", "gm"]);
+  recordAs(t, "ana", "roll-1", { visibility: "gm", fairplay: undefined });
+  recordAs(t, "ana", "roll-1", { rolls: [{ value: 20, kept: true }], total: 20, crits: 1 });
+  const seals = await sealsOf(t);
+  const linked = t.box.doc.chronicle.filter((e) => e.fairplayRollId);
+  assert.ok(linked.length > 0);
+  for (const e of linked) assert.notEqual(seals[e.id].status, "verified");
+});
+
+test("i) sem @ na fórmula, a conta resolvida não pode trazer bônus inventado", async () => {
+  const t = await closedTable(["ana", "bia", "gm"]);
+  recordAs(t, "ana", "roll-1", { ...rollDiceFormula("1d20+15", { fairplayValue: t.value }), formula: "1d20" });
+  const seals = await sealsOf(t);
+  assert.equal(seals[t.box.doc.chronicle[0].id].status, "unverified");
+});
+
+test("j) o que aparece na entrada (dados, críticos e total) tem de bater com a conta refeita", async () => {
+  const t = await closedTable(["ana", "bia", "gm"]);
+  recordAs(t, "ana", "roll-1", { crits: 1 });
+  const seals = await sealsOf(t);
+  assert.equal(seals[t.box.doc.chronicle[0].id].status, "unverified");
+});
+
+test("k) registro de quem não abriu a rolagem não gasta o 'uma vez só' de quem abriu", async () => {
+  const t = await closedTable(["ana", "bia", "gm"]);
+  recordAs(t, "bia", "roll-b");
+  recordAs(t, "ana", "roll-1");
+  const [fromBia, fromAna] = t.box.doc.chronicle;
+  const seals = await sealsOf(t);
+  assert.equal(seals[fromBia.id].status, "unverified");
+  assert.equal(seals[fromAna.id].status, "verified");
+});
+
 function makeStore() {
   return createVttStore(createMemoryVttBackend(), {
     requestPersistenceFn: async () => ({ persisted: true, isSupported: true }),

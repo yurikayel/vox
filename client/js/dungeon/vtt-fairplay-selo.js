@@ -63,38 +63,48 @@ function tookPartIn(state, rollId, me) {
   return Boolean(me && roll?.participants?.includes(me) && Object.hasOwn(roll.commits || {}, me));
 }
 
-/** Mesma fórmula da abertura e mesmo dado: o registro não troca a conta que a mesa fechou. */
-function sameFormula(roll, rec) {
+/** Fórmula normalizada de um comando de dados, ou `null` quando não interpreta. */
+function formulaOf(raw) {
   try {
-    return parseDiceCommand(roll.formula).formula === rec.formula && singleDieSides(rec.resolvedFormula) === roll.sides;
+    return parseDiceCommand(raw).formula;
   } catch {
-    return false;
+    return null;
   }
 }
 
-/** O número exibido é o refeito aqui: mesmo dado do veredito e mesmo total do registro. */
+/** Mesma fórmula da abertura e mesmo dado; sem `@`, a conta resolvida também é a própria fórmula (sem bônus inventado). */
+function sameFormula(roll, rec) {
+  if (formulaOf(roll.formula) !== rec.formula || singleDieSides(rec.resolvedFormula) !== roll.sides) return false;
+  return String(roll.formula).includes("@") || formulaOf(rec.resolvedFormula) === formulaOf(roll.formula);
+}
+
+const diceKey = (rolls) => (rolls || []).map((d) => `${d.sides}:${d.value}:${d.kept}:${d.exploded}`).join(",");
+
+/** O que a entrada mostra (todos os dados, críticos, falhas críticas e total) é o refeito aqui. */
 function sameNumber(rec, verdict) {
   const redo = rollDiceFormula(rec.resolvedFormula, { fairplayValue: verdict.value });
-  return redo.ok && redo.total === rec.total && redo.rolls?.[0]?.value === rec.rolls?.[0]?.value;
+  if (!redo.ok || diceKey(redo.rolls) !== diceKey(rec.rolls)) return false;
+  return redo.total === rec.total && redo.crits === rec.crits && redo.fumbles === rec.fumbles;
 }
 
 /**
- * Amarra a entrada da Crônica à rolagem Fairplay: autor assinado, uma vez só, mesma fórmula e número refeito aqui.
+ * Amarra a entrada da Crônica à rolagem Fairplay: autor assinado, um único registro com o id, uma vez só
+ * (contando só quem abriu), mesma fórmula e tudo o que a entrada mostra refeito aqui.
  * @param {object} state Estado com `fairplay`, `rolls` e a crônica.
  * @param {object} entry Entrada da crônica com `fairplayRollId`.
  * @param {object} verdict Veredito local de `verifyFairplayRecord` (já `verified`).
- * @param {Set<string>} seen Rolagens que já tiveram uma entrada na crônica (muda o conjunto).
+ * @param {Set<string>} seen Rolagens que já tiveram uma entrada de quem abriu (muda o conjunto).
  * @returns {string} Motivo da recusa do selo, ou vazio quando a entrada se amarra à rolagem.
  */
 export function bindsToRoll(state, entry, verdict, seen) {
   const roll = state.fairplay.rolls[entry.fairplayRollId];
-  const rec = (state.rolls || []).find((r) => `turn-${r.id}` === entry.id);
+  const recs = (state.rolls || []).filter((r) => `turn-${r.id}` === entry.id);
+  if (entry.author !== roll.opener) return "o autor do registro não é quem abriu a rolagem";
   const first = !seen.has(entry.fairplayRollId);
   seen.add(entry.fairplayRollId);
-  if (entry.author !== roll.opener) return "o autor do registro não é quem abriu a rolagem";
-  if (!first) return "esta rolagem já foi registrada";
-  if (!rec || !sameFormula(roll, rec)) return "a fórmula registrada não é a da rolagem";
-  return sameNumber(rec, verdict) ? "" : "o número mostrado não confere com a conta";
+  if (!first || recs.length > 1) return "esta rolagem já foi registrada";
+  if (recs.length === 0 || !sameFormula(roll, recs[0])) return "a fórmula registrada não é a da rolagem";
+  return sameNumber(recs[0], verdict) ? "" : "o número mostrado não confere com a conta";
 }
 
 async function sealForEntry(state, entry, me, seen) {

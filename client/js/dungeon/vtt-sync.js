@@ -330,7 +330,7 @@ async function verifiedFairplayOps(raw) {
 
 /** O estado Fairplay do snapshot nunca é usado: ele é refeito, de uma vez, das ops assinadas e reverificadas. */
 async function applySnapshot(ctx, msg) {
-  if (msg.campaign?.gmRouteId !== ctx.gmRouteId) return; // estado de uma mesa com outro Mestre nunca é salvo
+  if (!ctx.gmRouteId || msg.campaign?.gmRouteId !== ctx.gmRouteId) return; // estado de uma mesa com outro Mestre nunca é salvo
   ctx.snapshotAsked = false;
   stopHelloRetry(ctx);
   const ops = await verifiedFairplayOps(msg.fairplayOps);

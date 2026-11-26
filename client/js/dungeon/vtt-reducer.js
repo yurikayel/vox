@@ -80,7 +80,7 @@ function formatRollSummary(roll) {
 
 function applyChronicleAppend(state, op) {
   const id = op.payload?.id || `turn-${op.opId}`;
-  const entry = createChronicleEntry({ ...op.payload, id, author: op.payload?.author || op.actor, ts: op.ts });
+  const entry = createChronicleEntry({ ...op.payload, fairplayRollId: "", fairplayValue: undefined, id, author: op.payload?.author || op.actor, ts: op.ts });
   return { ...state, chronicle: [...state.chronicle, entry] };
 }
 
