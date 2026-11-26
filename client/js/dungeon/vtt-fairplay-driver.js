@@ -156,7 +156,6 @@ async function noteBadShares(ctx, campaign, roll) {
 async function stepReveal(ctx, campaign, roll) {
   const offer = ctx.offers.get(roll.rollId);
   if (!offer || !logShowsEveryoneReady(roll)) return;
-  await noteBadShares(ctx, campaign, roll);
   await send(ctx, `${roll.rollId}:reveal`, "FAIRPLAY_REVEAL", { rollId: roll.rollId, seedHex: toHex(offer.secret.seedBytes) });
   ctx.revealSent.add(roll.rollId);
 }
@@ -212,6 +211,7 @@ async function advanceRoll(ctx, campaign, roll) {
   await stepFault(ctx, campaign, roll);
   if (!roll.participants.includes(ctx.peerId)) return;
   const mine = Object.hasOwn(roll.commits, ctx.peerId);
+  if (mine && ["reveal", "recovery", "done"].includes(roll.phase)) await noteBadShares(ctx, campaign, roll);
   if (roll.phase === "commit" && !mine) return stepCommit(ctx, roll);
   if (roll.phase === "shares" && mine && !Object.hasOwn(roll.shares, ctx.peerId)) return stepShares(ctx, campaign, roll);
   if (roll.phase === "reveal" && mine && !Object.hasOwn(roll.reveals, ctx.peerId)) return stepReveal(ctx, campaign, roll);

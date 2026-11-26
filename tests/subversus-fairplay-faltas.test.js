@@ -193,7 +193,7 @@ test("faltas: o Mestre grava a falta uma vez por rolagem, sem texto confiável",
 });
 
 /** Mesa de dois: bia entrega partes de OUTRA semente (não refazem o compromisso que ela publicou). */
-async function twoPlayerTable() {
+async function twoPlayerTable({ lateAna = false } = {}) {
   const table = makeDriverTable(["ana"]);
   const ana = table.drivers.ana;
   await ana.start();
@@ -214,7 +214,7 @@ async function twoPlayerTable() {
     list.push({ to: "ana", share: envelope, shareHash: await fairplayShareHash(share) });
   }
   table.push({ type: "FAIRPLAY_SHARES", actor: "bia", payload: { rollId: ROLL, shares: list } });
-  await settle(table);
+  if (!lateAna) await settle(table);
   return { table, ana, real };
 }
 
@@ -224,8 +224,21 @@ test("faltas: N=2, partes ruins de bia: ana revela do mesmo jeito e só recebe u
   assert.equal(Object.hasOwn(roll.reveals, "ana"), true, "quem é honesto revela sempre");
   assert.equal(ana.invalidShares(ROLL), "bia");
   const state = viewState(table.state, { fairplayDriver: ana });
-  assert.match(renderFairplayStatus(state), /As partes de bia que ficaram comigo não refazem o número que ele escondeu/);
+  assert.match(renderFairplayStatus(state), /As partes de bia que ficaram comigo não refazem o número escondido; sem a revelação de bia, a recuperação não vai funcionar\./);
   assert.deepEqual(countUnclosedRolls(table.state.fairplay, {}), {});
+});
+
+test("faltas: o aviso local das partes ruins aparece mesmo se este aparelho só vê a rolagem já fechada", async () => {
+  const { table, ana, real } = await twoPlayerTable({ lateAna: true });
+  table.push({ type: "FAIRPLAY_REVEAL", actor: "bia", payload: { rollId: ROLL, seedHex: hex(real.secret.seedBytes) } });
+  table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId: ROLL, phase: "reveal" }, ts: LATE });
+  table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId: ROLL, phase: "recovery" }, ts: LATE * 2 });
+  assert.equal(table.state.fairplay.rolls[ROLL].phase, "done");
+  await ana.onUpdate(table.state);
+  const state = viewState(table.state, { fairplayDriver: ana });
+  await refreshFairplaySeals(state);
+  assert.equal(ana.invalidShares(ROLL), "bia");
+  assert.match(renderFairplayStatus(state), /As partes de bia que ficaram comigo não refazem o número escondido/);
 });
 
 test("faltas: N=2, bia revela e não libera as partes: a falta nunca cai em ana, vista de fora", async () => {

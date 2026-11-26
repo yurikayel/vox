@@ -70,7 +70,7 @@ export function fairplayRollFaults(roll, verdict, local = {}) {
  * @returns {string} Frase para a Crônica.
  */
 export function faultText(fault, who) {
-  if (fault.kind === "invalid_shares") return `As partes de ${who.name} que ficaram comigo não refazem o número que ele escondeu; se ele não revelar, a recuperação não vai funcionar.`;
+  if (fault.kind === "invalid_shares") return `As partes de ${who.name} que ficaram comigo não refazem o número escondido; sem a revelação de ${who.name}, a recuperação não vai funcionar.`;
   if (fault.kind === "bad_reveal") return who.mine ? "O número que você revelou não bate com o que escondeu; a rolagem foi anulada." : `${who.name} revelou um número que não bate com o que escondeu; a rolagem foi anulada.`;
   if (who.mine && who.sent) return "Sua revelação foi segurada no caminho: ela não aparece no registro da mesa.";
   if (who.mine) return "Você não revelou o seu número a tempo; a rolagem foi anulada.";
