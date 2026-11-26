@@ -263,6 +263,10 @@ function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
       state.connectedPeersCount = count;
       (state._onSyncUpdate || opts.onSyncUpdate)?.();
     },
+    onFairplayAccessChange: () => {
+      state.fairplayPendingPeers = state.syncPeer?.getPendingFairplayPeers() || [];
+      (state._onSyncUpdate || opts.onSyncUpdate)?.();
+    },
   });
   wireFairplayDriver(state, { peer: state.syncPeer, peerId: pair.routeId, store, campaignId: tableId });
 }

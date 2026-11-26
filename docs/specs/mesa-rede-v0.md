@@ -1,6 +1,6 @@
 # Mesa entre aparelhos pela rede (v0)
 
-> **Status:** rascunho (proposta; aguarda decisões do mantenedor na §8, zero código antes) · **Owner:** mantenedor · **Revisado:** 2026-11-25
+> **Status:** aceita (v0; decisões da §8 registradas em 2026-11-25; código liberado) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [subversus-vtt-v0.md](./subversus-vtt-v0.md) · [relay-api.md](./relay-api.md) · [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md) · [ADR-024](../adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md) · ROADMAP `SUB-08`
 
 Item `SUB-08` do [ROADMAP](../ROADMAP.md): hoje a entrada na mesa só funciona entre abas da mesma origem; falta ligar a mesa a um canal que cruze aparelhos. Esta spec descreve o que existe (com arquivo e linha), o que falta, as opções e o que depende do mantenedor. **Convenção:** o que está no código ou nos docs vai como fato, com a fonte; o que não está vai marcado **(proposta)**. O teste com pessoas é o `SUB-14` e fica fora.
@@ -83,9 +83,16 @@ O teste com pessoas e redes reais é o `SUB-14` e fica fora.
 ## 8. Decisões abertas para o mantenedor
 
 - **D1. Opção:** A (recomendada), B ou C?
+  - Decidido em 25/11/2026: opção A (WebRTC) (opção recomendada; autorização geral do mantenedor).
 - **D2. Endereço do Mestre:** o `routeId` do Mestre como identidade na sinalização, ou o convite passa a levar outro dado?
+  - Decidido em 25/11/2026: o `routeId` do Mestre é a identidade na sinalização e o convite não muda (opção recomendada; autorização geral do mantenedor).
 - **D3. Cifra de mensagem da mesa:** exigir cifra de mensagem da mesa (derivada da `roomKey` ou outra) já no v1, ou só se a opção B entrar?
+  - Decidido em 25/11/2026: sem cifra própria de mensagem no v1; as ops seguem assinadas. **Condição:** o código prova, por teste, que a mesa usa só `RTCDataChannel`; se a opção B entrar, a cifra volta a ser exigida (opção recomendada; autorização geral do mantenedor).
 - **D4. TURN:** não há TURN hoje; a operação de TURN e o 2º nó (`INF-01…04`) ficam adiados até passar de 50 usuários ativos (decisão de 19/11/2026). Confirmar que a mesa em rede aceita, no v1, só conectar onde STUN basta, e que o TURN entra depois do gatilho.
+  - Decidido em 25/11/2026: confirmado: só STUN no v1 e TURN depois do gatilho (opção recomendada; autorização geral do mantenedor).
 - **D5. Sinalização:** a mesa usa o nó de sinalização público atual ou espera o caminho Nostr (REV-09)?
+  - Decidido em 25/11/2026: o nó de sinalização público atual; o caminho Nostr fica para depois do REV-09 (opção recomendada; autorização geral do mantenedor).
 - **D6. Metadados:** a sinalização e o relay veem quem fala com quem, quando e o tamanho; aceitável no v1?
+  - Decidido em 25/11/2026: aceitável no v1, com o aviso documentado nesta spec (opção recomendada; autorização geral do mantenedor).
 - **D7. Fora do v1:** mais de um Mestre, e jogador que reentra depois de dias.
+  - Decidido em 25/11/2026: confirmado fora do v1 (opção recomendada; autorização geral do mantenedor).

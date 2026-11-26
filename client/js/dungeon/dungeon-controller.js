@@ -5,6 +5,7 @@ import { renderDungeonChrome } from "./dungeon-chrome.js";
 import {
   ACTION_HANDLERS,
   DICE3D_CLICK_ACTIONS,
+  FOCUS_AFTER_ACTION,
   FILE_CHANGE_ACTIONS,
   dispatchDungeonFormSubmit,
   SUBMIT_FORMS,
@@ -270,7 +271,7 @@ function handleDungeonClick(container, viewOpts, ev) {
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
   redrawContainer(container, viewOpts);
-  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action) });
+  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
 function handleCanvasKeydown(container, viewOpts, ev) {
