@@ -4403,6 +4403,8 @@ body,
   font-size: 0.8rem;
   color: var(--sa-on-surface-variant, #bbc9c7);
 }
+/* Canvas do mapa: nunca passa da coluna, mesmo antes de dungeon-layout.css (carregada sob demanda) chegar; sem isto o atributo width=768 estoura o celular. */
+.dungeon-vtt-canvas { display: block; width: 100%; max-width: 100%; }
 .dungeon-mobile-dock {
   display: none;
   position: fixed;
