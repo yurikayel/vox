@@ -103,6 +103,15 @@ test("PM-112 CLI/diff: parseArgs, Tier A, parseChangedLines e resolveTestsForFil
   assert.ok(resolveTestsForFile("client/js/sig-format.js", ROOT).includes("tests/sig-format.test.js"));
 });
 
+test("PM-112 resolução: módulo sem teste direto sobe pelos importadores até achar quem o exercita", () => {
+  for (const mod of ["admission", "state"]) {
+    const tests = resolveTestsForFile(`client/js/dungeon/vtt-fairplay-${mod}.js`, ROOT);
+    assert.ok(tests.includes("tests/subversus-fairplay-log.test.js"), `${mod} resolve testes via importadores`);
+  }
+  assert.deepEqual(resolveTestsForFile("client/js/sig-format.js", ROOT), ["tests/sig-format.test.js"], "teste direto não muda");
+  assert.deepEqual(resolveTestsForFile(`client/js/${"inexis"}tente-qq.js`, ROOT), [], "sem importador nem teste: vazio");
+});
+
 test("PM-112 gate: evaluateGate, formatTextReport e formatSummaryMarkdown cobrem noop, pass e fail", () => {
   assert.equal(evaluateGate({ total: 3, score: 66.7 }, null).status, "noop");
   assert.deepEqual(evaluateGate({ total: 0, score: null }, 70), {
