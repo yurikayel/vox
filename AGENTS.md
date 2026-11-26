@@ -12,7 +12,7 @@ Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md § Orçamento 
 - **Caneta e lock são coisas diferentes:** a caneta vem com um conjunto fechado de arquivos; dois portadores nunca têm arquivo em comum (ou §N em markdown com **>200 linhas**). A **caneta** volta ao abrir o PR com CI verde ou ao travar; o **lock dos arquivos** daquele PR só sai no merge em `develop` ou no fechamento do PR.
 - **Plano antes da caneta, sobre arquivos livres:** não planejar edição em arquivo com lock ativo. Antes de pegar a caneta, `git fetch origin develop` e conferir que o alvo não mudou. Ajuste pedido na revisão retoma a caneta com prioridade.
 - **Arquivos quentes** (um portador por vez): `CHANGELOG.md`, `docs/ROADMAP.md`, `docs/README.md`, `docs/release-metadata.json` e `package.json`. `client/sw.js` só muda em PR de release.
-- **Worktree isolado:** quem tem caneta escreve só num worktree próprio criado a partir de `origin/develop`. Nunca trocar a branch do checkout principal nem rodar `git` numa pasta de worktree que deixou de estar registrada (o `git` cai no checkout principal).
+- **Worktree isolado:** quem tem caneta escreve só num worktree próprio criado a partir de `origin/develop`. Nunca trocar a branch do checkout principal nem rodar `git` numa pasta de worktree que deixou de estar registrada (o `git` cai no checkout principal). Antes de qualquer `git` num worktree, confira que existe o **arquivo** `.git` na pasta e que `git rev-parse --show-toplevel` é a própria pasta; sem o arquivo, o `git` sobe calado para o checkout principal.
 - **Merge** é uma fila serial à parte. **Recursos físicos:** no máximo 2 execuções pesadas ao mesmo tempo (`npm run validate`, e2e, mutação) e 1 agente por vez no navegador.
 
 ## Ownership e handoff
