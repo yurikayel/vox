@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: o pacote de sistema passa a declarar o que a faixa de derivados e o rótulo da defesa no HUD mostram (`display`, validado com tetos e texto puro). O D&D 2024 declara exatamente o que mostrava, sem diferença visível; pacote sem `display` segue como antes (spec `derivados-por-sistema-v0`, fatia 1 do SUB-17).
 - Ficha: novo sistema "Tormenta20 (estrutura)" no seletor, com 6 atributos, 29 perícias básicas, PV, PM e Defesa; sem nenhum texto do livro. A tela de derivados ainda é a do D&D (spec `pacote-t20-v0`).
 - Ficha: novo sistema "GURPS 4e (matemática)" no seletor, com ST, DX, IQ, HT, PV e PF, secundários, níveis de carga e o teste 3d6 sob NH em funções puras; sem nenhum texto do livro. A tela de derivados ainda é a do D&D (spec `pacote-gurps4e-v0`).
 - HUD da Mesa: cinco painéis em meia tela sobre o mapa (Ficha, Itens, Habilidades, Mapa e Crônica), abertos pelos botões da barra ou pelas teclas C, I, S, M e R (só com o foco na área do mapa e fora de campo de texto; sem ficha, Ficha, Itens e Habilidades ficam desabilitados). Não é janela modal: o mapa segue visível, Esc fecha, o foco entra no painel e volta ao botão que o abriu; no celular o painel ocupa a tela. Tab continua navegando o foco e não é atalho.
