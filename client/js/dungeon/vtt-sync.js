@@ -239,6 +239,7 @@ async function approveFairplayPeer(ctx, routeId) {
 async function refuseFairplayPeer(ctx, routeId) {
   if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage) || !ctx.pendingFairplay.has(routeId)) return false;
   ctx.pendingFairplay.delete(routeId);
+  ctx.peerNames.delete(routeId);
   ctx.refusedFairplay.add(routeId);
   const opId = ctx.keyOpByActor.get(routeId) || "";
   ctx.transport.send(routeId, { kind: "OP_REJECTED", roomKey: ctx.roomKey, opId, reason: "revoked" });
@@ -250,6 +251,7 @@ async function refuseFairplayPeer(ctx, routeId) {
 async function revokeFairplayPeer(ctx, routeId) {
   if (ctx.role !== "gm" || !isFairplayLabEnabled(ctx.storage)) return false;
   ctx.pendingFairplay.delete(routeId);
+  ctx.peerNames.delete(routeId);
   await dispatchSyncOp(ctx, { type: "FAIRPLAY_REVOKE", payload: { actor: routeId } });
   return true;
 }
@@ -291,7 +293,8 @@ async function handleGmActionOp(ctx, msg) {
 
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
-    ctx.peerNames.set(msg.from, sanitizeDisplayName(msg.name));
+    // Enquanto pendente vale o nome do primeiro HELLO: um segundo HELLO não troca o nome que o Mestre já viu.
+    if (!ctx.pendingFairplay.has(msg.from) || !ctx.peerNames.has(msg.from)) ctx.peerNames.set(msg.from, sanitizeDisplayName(msg.name));
     if (!ctx.connectedPlayers.has(msg.from)) {
       ctx.connectedPlayers.add(msg.from);
       ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
