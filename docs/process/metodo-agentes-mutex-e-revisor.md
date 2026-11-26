@@ -38,14 +38,15 @@ Desde 26/11/2026 (decisão do mantenedor): **ler é livre, escrever pede caneta.
 
 1. **Leitura, análise, revisão e planejamento** rodam em paralelo, sem teto de agentes. Cada um entrega relatório curto (≤10 linhas) e deixa o detalhe em arquivo à parte.
 2. **Três canetas para escrever no repositório.** Escrever = editar arquivo versionado (inclusive no próprio worktree), commit, push, PR, comentário em PR ou issue. Quem não tem caneta não escreve; o quarto pedido espera na fila.
-3. **Caneta vem com mutex.** O orquestrador entrega a caneta com um conjunto fechado de arquivos (**no máximo 8 caminhos**) e **um** comando de teste; dois portadores nunca têm arquivo em comum.
-4. **Plano antes da caneta.** O agente planeja sem caneta e só a pega com o plano pronto; solta ao abrir o PR com CI verde ou ao travar (handoff). Ajuste pedido na revisão retoma a caneta com prioridade.
-5. **Arquivos quentes** (`CHANGELOG.md`, `docs/ROADMAP.md`): um portador por vez; os outros deixam a linha para quem tem a vez.
+3. **Caneta vem com mutex; lock dura até o merge.** O orquestrador entrega a caneta com um conjunto fechado de arquivos (**no máximo 8 caminhos**) e **um** comando de teste; dois portadores nunca têm arquivo em comum. A caneta volta cedo (item 4), mas o lock dos arquivos de um PR só sai no merge em `develop` ou no fechamento do PR.
+4. **Plano antes da caneta, sobre arquivos livres.** O agente planeja sem caneta, só sobre arquivos sem lock, e antes de pegá-la faz `git fetch origin develop` e confere que o alvo não mudou. Solta a caneta ao abrir o PR com CI verde ou ao travar (handoff). Ajuste pedido na revisão retoma a caneta com prioridade.
+5. **Arquivos quentes** (`CHANGELOG.md`, `docs/ROADMAP.md`, `docs/README.md`, `docs/release-metadata.json`, `package.json`): um portador por vez; os outros deixam a linha para quem tem a vez. `client/sw.js` só muda em PR de release.
 6. **Merge é fila serial à parte**, um PR por vez, com o CI verde no SHA exato.
 7. **Recursos físicos:** no máximo 2 execuções pesadas ao mesmo tempo (`npm run validate`, e2e, mutação), mesmo para quem só lê; 1 agente por vez no navegador.
-8. **Brief curto e leitura mínima:** critério de aceite, caminhos e comando de teste; proibido colar lobby, ADR inteiro ou árvore de pastas. O executor lê só os arquivos do mutex, a porta de entrada do contexto e o teste irmão.
-9. **Contexto:** uma tarefa por contexto; o agente que encher o contexto entrega o handoff e recomeça limpo, em vez de seguir com contexto degradado.
-10. **Sem ondas automáticas** (lote 1 → 3 → 9) e **sem polling de CI** feito por agente: o próximo lote abre com decisão explícita.
+8. **Worktree isolado.** Quem tem caneta escreve só num worktree próprio a partir de `origin/develop`; nunca troca a branch do checkout principal nem roda `git` em pasta de worktree desregistrada. Ao descartar: tirar a junção `node_modules`, conferir que ela sumiu, e só então `git worktree remove` sem `--force`.
+9. **Brief curto e leitura mínima:** critério de aceite, caminhos e comando de teste; proibido colar lobby, ADR inteiro ou árvore de pastas. O executor lê só os arquivos do mutex, a porta de entrada do contexto e o teste irmão.
+10. **Contexto:** uma tarefa por contexto; o agente que encher o contexto entrega o handoff e recomeça limpo, em vez de seguir com contexto degradado.
+11. **Sem ondas automáticas** (lote 1 → 3 → 9) e **sem polling de CI** feito por agente: o próximo lote abre com decisão explícita.
 
 ## Mantenedor → revisor (o que muda na prática)
 
