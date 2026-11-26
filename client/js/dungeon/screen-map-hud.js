@@ -8,6 +8,7 @@ import { escapeHtml } from "../shared/html.js";
 import { buildHudShortcuts } from "./sheet-view-model.js";
 import { resolveHudFavorites } from "./hud-bar-model.js";
 import { renderHudStatus } from "./screen-hud-status.js";
+import { renderHudPanel, renderHudPanelButtons } from "./screen-hud-panels.js";
 
 function renderShortcut(item) {
   if (item.kind === "link") {
@@ -29,5 +30,6 @@ export function renderMapHud(state, scene) {
   if (!state?.sheet) return status;
   const own = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet.character_id);
   const items = buildHudShortcuts(state.sheet, { ownTokenId: own?.tokenId, favorites: resolveHudFavorites(state.sheet) });
-  return `${status}<nav class="dungeon-hud dungeon-chips-row" aria-label="Atalhos rápidos" data-dungeon-zone="mapHud">${items.map(renderShortcut).join("")}</nav>`;
+  const shortcuts = `<nav class="dungeon-hud dungeon-chips-row" aria-label="Atalhos rápidos" data-dungeon-zone="mapHud">${items.map(renderShortcut).join("")}</nav>`;
+  return `${renderHudPanel(state, scene)}${status}${shortcuts}${renderHudPanelButtons(state)}`;
 }

@@ -44,7 +44,12 @@ function renderAbilityButtons(sheet) {
   }).join("");
 }
 
-function renderSheetHero(sheet) {
+/**
+ * Cabeçalho da ficha: retrato, nome, classe e nível.
+ * @param {object} sheet Ficha ativa.
+ * @returns {string} HTML.
+ */
+export function renderSheetHero(sheet) {
   const attrs = sheet.attributes_lww || {};
   const level = Number(attrs.level) || 1;
   const sys = resolveSheetSystem(sheet);
@@ -104,7 +109,12 @@ function renderActionCard(act) {
       </div>`;
 }
 
-function renderAbilitiesPanel(state) {
+/**
+ * Painel de atributos (testes e salvaguardas) da ficha ativa.
+ * @param {object} state Estado da sessão.
+ * @returns {string} HTML.
+ */
+export function renderAbilitiesPanel(state) {
   const { abilities } = splitSheetActions(state.sheet?.sheet_meta?.clickable_actions || []);
   const cards = abilities.map(renderActionCard).join("");
   return `

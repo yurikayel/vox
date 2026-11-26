@@ -1,6 +1,6 @@
 # HUD de jogo (v0)
 
-> **Status:** aceita (v0) (decisões D1–D10 tomadas em 25/11/2026; código do `SUB-06` ainda não implementado)
+> **Status:** aceita (v0) (decisões D1–D10 tomadas em 25/11/2026; código do `SUB-06` em partes: 1, 2a e 2b em PR)
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§7, brainstorm) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
 Fecha o desenho do HUD de jogo da mesa (`SUB-06`). A §7 do brainstorm descreve a ideia; esta spec define de onde vem cada dado, o que o jogador vê dos outros e como testar. A `SUB-D1` já decidiu: o HUD vem antes do T20.
@@ -22,7 +22,7 @@ Fecha o desenho do HUD de jogo da mesa (`SUB-06`). A §7 do brainstorm descreve 
 | Indicador de magia | Recurso `spell-slots` do pacote; máximo em `pools_base.spell_slots_max` (`vtt-schema.js:217`) | Só aparece se o total de recursos de magia for > 0; rótulo vem do pacote (espaços de magia no D&D, PM no T20, PF no GURPS com magias) |
 | Cinto 4×1 | `inventory_orset` (item com `id`, `label`, `qty`, `tags`, `vtt-inventory.js`) | 4 vagas de consumíveis (`tags` com `consumivel`); clique usa 1 (`SHEET_UPSERT`); vaga vazia mostra "vazio" |
 | Barra de 6 favoritos | Novo campo `sheet_meta.favorites` (lista de até 6 ids de ação ou item) | Substitui os atalhos livres de `buildHudShortcuts`; `roll-d20`, `move`, `sheet` continuam fixos à esquerda |
-| Painéis em meia tela | Ficha (C), Itens (I), Habilidades (S), Mapa (Tab), Crônica | Abrem sobre a metade do tabuleiro, sem modal; Esc fecha; o canvas continua visível |
+| Painéis em meia tela | Ficha (C), Itens (I), Habilidades (S), Mapa (Tab), Crônica | Abrem sobre a metade do tabuleiro, sem modal; Esc fecha; o canvas continua visível. Atalhos C, I, S, M e R (Tab não é atalho: continua navegando o foco) |
 | Linha móvel | Nome, PV atual/máximo e CA da ficha própria | "Lyra · PV 18/24 · CA 16", uma linha, sempre visível |
 
 Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos novos em `sheet_meta` e entram no `.voxchar` só se a `voxchar-v0` os listar (fora do escopo desta spec).
@@ -33,7 +33,7 @@ Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos no
 - PV muda → `aria-live="polite"` só para a ficha própria (sem anunciar o grupo todo).
 - Cor nunca é o único sinal: condição e PV levam texto; contraste WCAG AA com tokens `--sa-*` (`client/css/agora.css`).
 - Alvos de toque ≥ 44 px; respeita `prefers-reduced-motion` (sem animação de barra).
-- Painéis: foco entra no painel ao abrir e volta ao botão que o abriu ao fechar; atalhos de teclado só quando o foco não está em campo de texto.
+- Painéis: foco entra no painel ao abrir (no título, `tabindex="-1"`) e volta ao botão que o abriu ao fechar. Atalhos de uma letra (C, I, S, M, R) valem só com o foco dentro da área da Mesa (mapa e HUD), fora de campo de texto e sem Ctrl, Meta ou Alt (WCAG 2.1.4); fora da área, nada. Esc fecha o painel aberto. Sem ficha, Ficha, Itens e Habilidades ficam `aria-disabled` e não abrem; Mapa e Crônica seguem. `aria-controls` só aparece com o painel aberto.
 - Celular (≤ 390 px, `@media (max-width: 1023.98px)`): some o cinto e o grupo; ficam a linha "Nome · PV · CA" e a barra de favoritos com rolagem horizontal; painéis ocupam a tela inteira como folha.
 
 ## 4. O que o jogador vê dos outros
