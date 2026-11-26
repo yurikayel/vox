@@ -13,6 +13,7 @@
 /client/js/inbox.js                 @yurikayel
 /client/js/shared/device-merge.js   @yurikayel
 /client/js/dungeon/vtt-fairplay-admission.js @yurikayel
+/client/js/dungeon/vtt-sheet-auth.js @yurikayel
 /client/js/dungeon/vtt-fairplay-cipher.js @yurikayel
 /client/js/dungeon/vtt-fairplay-driver.js @yurikayel
 /client/js/dungeon/vtt-fairplay-log.js @yurikayel
