@@ -265,6 +265,7 @@ function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
     },
     onFairplayAccessChange: () => {
       state.fairplayPendingPeers = state.syncPeer?.getPendingFairplayPeers() || [];
+      state.fairplayNames = state.syncPeer?.getPeerNames?.() || {};
       (state._onSyncUpdate || opts.onSyncUpdate)?.();
     },
   });
