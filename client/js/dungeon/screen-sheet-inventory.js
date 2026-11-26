@@ -3,15 +3,15 @@
  * parte e indicador de carga com o motivo por escrito (ficha-personagem-brainstorm §5.4).
  *
  * Só renderização: usa apenas as ações já existentes (`inv-equip`, `inv-remove`, `add-item-form`).
- * A posição de cada item é calculada ao desenhar (`organizeBackpack`), sem guardar nada novo na ficha. Fora daqui
- * ficam o cinto, o boneco de equipamento e o arrastar, que pedem ações novas.
+ * A posição de cada item vem de `layoutBackpack`: a guardada na ficha (`x`, `y`, `rot`) quando vale, first-fit para
+ * o resto. Fora daqui ficam o cinto, o boneco de equipamento e o arrastar, que pedem ações novas.
  * @module dungeon/screen-sheet-inventory
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon } from "./rpg-illustrations.js";
 import { resolveSheetSystem } from "./screen-sheet-derived.js";
 import { buildItemWeightView, buildLoadView } from "./sheet-view-model.js";
-import { BACKPACK_COLS, BACKPACK_ROWS, organizeBackpack } from "./vtt-inventory.js";
+import { BACKPACK_COLS, BACKPACK_ROWS, layoutBackpack } from "./vtt-inventory.js";
 
 function itemLabel(it) {
   return `${escapeHtml(it.label)} ×${it.qty}`;
@@ -23,7 +23,7 @@ function gridCell(it, spot) {
 }
 
 function renderBackpackGrid(items) {
-  const { placements, overflow } = organizeBackpack(items);
+  const { placements, overflow } = layoutBackpack(items);
   const byId = new Map(items.map((it) => [it.id, it]));
   const cells = placements.map((spot) => gridCell(byId.get(spot.id), spot)).join("");
   const lost = overflow.map((id) => escapeHtml(byId.get(id).label)).join(", ");

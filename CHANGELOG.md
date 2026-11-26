@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
+
 ## [2026-11-26] — SW `v7.174-mesa-rede-aperto` (corte `develop → main`)
 
 *Correções na Mesa pela rede (laboratório), na malha social, no relay e no pacote Tormenta20.*
