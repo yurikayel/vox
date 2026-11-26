@@ -5,6 +5,7 @@ import { getFlags } from "../feature-flags.js";
 import { root } from "../render/util.js";
 import * as openFramesHost from "../open-frames-host.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+import { getDisplayName } from "../identity/local-account.js";
 import { renderMofnLab, wireMofnLab } from "../labs/mofn-lab.js";
 import { renderDungeonLab, wireDungeonLab } from "../labs/ai-social-dungeon-lab.js";
 
@@ -108,6 +109,7 @@ export async function showDungeonScreen(route = {}) {
     tableId: route.tableId,
     charId: route.charId,
     joinP2p: Boolean(route.joinP2p),
+    displayName: getDisplayName(),
   };
   appRoot.innerHTML = `${notice}${demoBanner}<div id="dungeon-host">${renderDungeonLab(opts)}</div>`;
   const host = appRoot.querySelector("#dungeon-host");

@@ -327,6 +327,7 @@ function hydrateP2pJoin(container, viewOpts) {
   const hash = typeof location !== "undefined" ? location.hash : "";
   const job = attachVttPlayerJoin(state, hash, {
     store: viewOpts.store,
+    displayName: viewOpts.displayName,
     onCampaign: () => (state._onSyncUpdate ? state._onSyncUpdate() : redrawContainer(container, viewOpts, "", true)),
   }).then((res) => {
     if (res?.ok === false) state.rollError = joinFailureRollMessage(res.error);
