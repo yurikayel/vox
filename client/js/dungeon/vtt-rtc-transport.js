@@ -11,6 +11,8 @@ export const VTT_CHANNEL_LABEL = "vox-vtt-v0";
 /** Teto de uma mensagem no canal (o protocolo já fatia blobs em 16 KiB; o snapshot é um só). */
 export const VTT_MAX_MESSAGE_BYTES = 256 * 1024;
 const MAX_QUEUED = 64;
+/** Teto de elos simultâneos (uma mesa tem poucos jogadores; a sinalização é pública e não pode esgotar a memória do Mestre). */
+export const VTT_MAX_LINKS = 16;
 const DEFAULT_STUN = [{ urls: "stun:stun.l.google.com:19302" }];
 
 /**
@@ -44,7 +46,8 @@ function resolveFactory(opts) {
  * @param {Function} [opts.createPeerConnection] Fábrica de `RTCPeerConnection` (testes).
  * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`).
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
- * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `open`, `closed`, `oversize` ou `queue_full`.
+ * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
+ * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `open`, `closed`, `oversize`, `queue_full` ou `link_limit`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
 export function createRtcVttTransport(opts) {
@@ -102,7 +105,7 @@ function isPlainObject(value) {
 /** Entrada não confiável: só texto dentro do teto vira JSON; só objeto simples vira mensagem. Nada disso derruba o elo. */
 function parseInbound(ctx, raw) {
   const max = ctx.opts.maxMessageBytes ?? VTT_MAX_MESSAGE_BYTES;
-  if (typeof raw !== "string" || raw.length > max || byteLength(raw) > max) return null;
+  if (typeof raw !== "string" || byteLength(raw) > max) return null;
   try {
     const parsed = JSON.parse(raw);
     return isPlainObject(parsed) ? parsed : null;
@@ -147,6 +150,10 @@ function ensureLink(ctx, remoteId, initiator) {
   if (ctx.closed) return null;
   const existing = ctx.links.get(remoteId);
   if (existing) return existing;
+  if (ctx.links.size >= (ctx.opts.maxLinks ?? VTT_MAX_LINKS)) {
+    status(ctx, remoteId, "link_limit");
+    return null;
+  }
   const link = newLink(ctx, remoteId);
   if (!initiator) return link;
   attachChannel(ctx, remoteId, link, link.pc.createDataChannel(VTT_CHANNEL_LABEL));
@@ -190,13 +197,21 @@ function onSignal(ctx, data) {
   const prev = ctx.chains.get(data.from) || Promise.resolve();
   const next = prev.then(() => applySignal(ctx, data)).catch(() => dropLink(ctx, data.from));
   ctx.chains.set(data.from, next);
+  next.then(() => {
+    if (ctx.chains.get(data.from) === next && !ctx.links.has(data.from)) ctx.chains.delete(data.from);
+  });
 }
 
 /** Entrega ou enfileira; `false` quando a fila de espera está cheia (a mensagem não some em silêncio). */
 function sendOnLink(ctx, remoteId, link, text) {
   if (link.channel?.readyState === "open") {
-    link.channel.send(text);
-    return true;
+    try {
+      link.channel.send(text);
+      return true;
+    } catch {
+      dropLink(ctx, remoteId);
+      return false;
+    }
   }
   if (link.queue.length >= MAX_QUEUED) {
     status(ctx, remoteId, "queue_full");
@@ -216,6 +231,7 @@ function sendMessage(ctx, to, msg) {
   const targets = to === "*" ? [...ctx.links.keys()] : [to];
   return targets.map((id) => {
     const link = ctx.links.get(id) || (ctx.opts.initiate && to !== "*" ? ensureLink(ctx, id, true) : null);
-    return link ? sendOnLink(ctx, id, link, text) : true;
+    if (link) return sendOnLink(ctx, id, link, text);
+    return !ctx.opts.initiate;
   }).every(Boolean);
 }

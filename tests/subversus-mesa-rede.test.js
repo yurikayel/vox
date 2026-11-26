@@ -230,3 +230,68 @@ test("falha ao esvaziar a fila no onopen derruba só esse elo, sem lançar", asy
   rtc.log.channels[0].send = () => { throw new Error("canal quebrou"); };
   assert.ok(await waitUntil(() => events.some((e) => e[0] === "ana" && e[2] === "closed")), "o elo foi descartado");
 });
+
+test("teto em BYTES: texto multibyte (é, emoji) com .length abaixo do teto mas bytes acima é recusado", async () => {
+  const { gm, ana, rtc } = pair();
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "OK1" });
+  await waitUntil(() => got.length === 1);
+  const wire = rtc.log.channels[0];
+  const accents = JSON.stringify({ type: "ACENTOS", pad: "é".repeat(140000) });
+  const emoji = JSON.stringify({ type: "EMOJI", pad: "😀".repeat(70000) });
+  for (const raw of [accents, emoji]) {
+    assert.ok(raw.length < 262144 && new TextEncoder().encode(raw).length > 262144, "a prova exige .length abaixo e bytes acima do teto");
+    wire.send(raw);
+  }
+  ana.send("gm", { type: "OK2" });
+  await waitUntil(() => got.length === 2);
+  assert.deepEqual(got.map((m) => m.type), ["OK1", "OK2"]);
+});
+
+test("sinalização: `from` com 257 caracteres é recusado e com 256 é aceito", () => {
+  let emit;
+  let pcs = 0;
+  const factory = () => { pcs += 1; return createFakeRtcNetwork().createPeerConnection(); };
+  createRtcVttTransport({ peerId: "gm", signaling: noSignaling((fn) => { emit = fn; }), createPeerConnection: factory });
+  emit({ type: "offer", from: "p".repeat(257), sdp: { type: "offer", pcId: 1 } });
+  assert.equal(pcs, 0, "257 caracteres: recusado");
+  emit({ type: "offer", from: "p".repeat(256), sdp: { type: "offer", pcId: 1 } });
+  return waitUntil(() => pcs === 1).then((ok) => assert.ok(ok, "256 caracteres: aceito"));
+});
+
+test("teto de elos: o Mestre recusa a oferta acima do teto, libera a vaga de quem saiu e a recusada entra depois", async () => {
+  const rtc = createFakeRtcNetwork();
+  const hub = createFakeSignalingHub();
+  const events = [];
+  const gm = createRtcVttTransport({ peerId: "gm", maxLinks: 2, signaling: hub.connect("gm"), createPeerConnection: rtc.createPeerConnection, onStatus: (id, s) => events.push([id, s]) });
+  const mk = (id) => createRtcVttTransport({ peerId: id, initiate: true, signaling: hub.connect(id), createPeerConnection: rtc.createPeerConnection });
+  const [p1, p2, p3] = [mk("p1"), mk("p2"), mk("p3")];
+  const got = [];
+  gm.onMessage((m) => got.push(m.from));
+  p1.send("gm", { n: 1 });
+  p2.send("gm", { n: 2 });
+  await waitUntil(() => got.length === 2);
+  p3.send("gm", { n: 3 });
+  assert.ok(await waitUntil(() => events.some((e) => e[0] === "p3" && e[1] === "link_limit")), "oferta acima do teto recusada");
+  assert.deepEqual(got.sort(), ["p1", "p2"], "p3 não entrou");
+  p1.close();
+  assert.ok(await waitUntil(() => events.some((e) => e[0] === "p1" && e[1] === "closed")), "a vaga de quem saiu foi liberada");
+  const p3b = mk("p3");
+  p3b.send("gm", { n: 4 });
+  assert.ok(await waitUntil(() => got.includes("p3")), "depois de liberar, p3 entra");
+});
+
+test("canal que falha ao enviar derruba só esse elo e send devolve false; o próximo envio reconecta", async () => {
+  const { gm, ana, rtc, events } = pair();
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "A" });
+  await waitUntil(() => got.length === 1);
+  rtc.log.channels[0].send = () => { throw new Error("canal quebrou"); };
+  assert.equal(ana.send("gm", { type: "B" }), false);
+  assert.ok(events.some((e) => e[0] === "ana" && e[2] === "closed"));
+  assert.equal(ana.send("gm", { type: "C" }), true);
+  await waitUntil(() => got.length === 2);
+  assert.equal(got[1].type, "C");
+});
