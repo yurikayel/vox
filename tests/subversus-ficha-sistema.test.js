@@ -57,7 +57,7 @@ test("exibir uma ficha legada não grava nada nela", () => {
 });
 
 test("editar: o seletor de sistema lista o pacote, vem marcado e vai dentro do formulário de edição", () => {
-  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem"><option value="dnd5e-2024" selected>D&amp;D 2024<\/option><option value="gurps4e">GURPS 4e \(matemática\)<\/option><\/select>/);
+  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem"><option value="dnd5e-2024" selected>D&amp;D 2024<\/option><option value="t20">Tormenta20 \(estrutura\)<\/option><option value="gurps4e">GURPS 4e \(matemática\)<\/option><\/select>/);
   const about = panel(renderSheetScreen({ ...createDungeonSessionState(), sheet: legacy() }), "about");
   assert.match(about, /<form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>[\s\S]*name="sheetSystem"[\s\S]*<\/form>/);
 });
