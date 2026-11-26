@@ -14,8 +14,8 @@ const DIR = fileURLToPath(new URL(".", import.meta.url));
 const SLEEP = /new Promise\(\((r|res|resolve)\) => setTimeout\(\1, \d+\)\)/g;
 const HELPER_DEF = /\bconst (\w+) = (?:async )?\([^)]*\) => new Promise\(\((\w+)\) => setTimeout\(\2, [^)]*\)\)/g;
 const EXCLUDED = /vtt-sync|fairplay|diorama|sem-esperas-fixas/;
-/** Medido com helpers contados: 41 (eram 51; 10 convertidas para `waitUntil` em lead-tab, círculos, aviso consultivo e explode; antes, 15 só nos 5 helpers apontados, antes de converter 8 delas). */
-const CEILING = 41;
+/** Medido com helpers contados: 35 (eram 41 antes do SUB-09 parte 4: 6 laços de espera por tempo viraram `waitUntil` em aviso, sorteio, edição de post, entrada P2P e memória central; antes 51; 10 convertidas para `waitUntil` em lead-tab, círculos, aviso consultivo e explode; antes, 15 só nos 5 helpers apontados, antes de converter 8 delas). */
+const CEILING = 35;
 
 /** Conta esperas fixas de um texto: literais mais chamadas (não a definição) de helpers de seta que dormem. */
 export function countSleepsIn(src) {

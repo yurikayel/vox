@@ -58,9 +58,7 @@ test("wireDungeonView joinP2p: prefs viewerRole não sobrescreve jogador P2P", a
   const key = generateRoomKey();
   globalThis.location = { hash: `#/dungeon/entrar/join-wt?gm=vx_gm#k=${key}` };
   wireDungeonView(host, { screen: "mesa", state, joinP2p: true });
-  for (let i = 0; i < 50 && state.joinMode !== "p2p_player"; i += 1) {
-    await new Promise((r) => setTimeout(r, 20));
-  }
+  await waitUntil(() => state.joinMode === "p2p_player", 1000);
   assert.equal(state.viewerRole, "player");
   assert.equal(state.joinMode, "p2p_player");
   state.syncPeer?.close?.();
