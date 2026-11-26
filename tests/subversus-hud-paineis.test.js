@@ -4,12 +4,13 @@
 import "./setup.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { HUD_PANELS, closeHudPanel, isHudPanelEnabled, hudPanelKeyJob, isHudPanelKey, isTextTarget, openHudPanel, takeHudPanelFocus, toggleHudPanel } from "../client/js/dungeon/hud-panels.js";
+import { HUD_PANELS, HUD_SHORTCUT_ZONE, closeHudPanel, isHudPanelEnabled, hudPanelKeyJob, isHudPanelKey, isTextTarget, openHudPanel, takeHudPanelFocus, toggleHudPanel } from "../client/js/dungeon/hud-panels.js";
 import { CHRONICLE_LIMIT, renderHudPanel, renderHudPanelButtons } from "../client/js/dungeon/screen-hud-panels.js";
 import { renderMapHud } from "../client/js/dungeon/screen-map-hud.js";
 import { runHudOp } from "../client/js/dungeon/dungeon-hud-actions.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { handleCanvasKeydown } from "../client/js/dungeon/dungeon-controller.js";
+import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 
 const HOSTILE = `"><img src=x onerror=alert(1)>`;
@@ -206,4 +207,20 @@ test("sem ficha: Ficha, Itens e Habilidades ficam desabilitados e não abrem; Ma
   assert.equal(renderHudPanel({ ...none, hudPanel: "items" }, undefined), "");
   assert.match(renderHudPanel({ ...none, hudPanel: "map" }, { name: "Cripta", floors: [], tokens: [] }), /data-hud-panel="map"/);
   assert.ok(!renderHudPanelButtons({ ...none, hudPanel: "items" }).includes('data-panel-id="items" aria-expanded="true"'));
+});
+
+test("WCAG 2.1.4: o seletor da área bate com a zona que a view da Mesa renderiza e contém a barra e o painel", () => {
+  const zone = /^\[data-dungeon-zone="([^"]+)"\]$/.exec(HUD_SHORTCUT_ZONE)?.[1];
+  assert.ok(zone, HUD_SHORTCUT_ZONE);
+  const state = createDungeonSessionState({ viewerRole: "player" });
+  state.hudPanel = "chronicle";
+  const html = renderTableScreen(state);
+  const open = html.indexOf(`data-dungeon-zone="${zone}"`);
+  assert.ok(open >= 0, `a Mesa não renderiza data-dungeon-zone="${zone}"`);
+  assert.equal(html.indexOf(`data-dungeon-zone="${zone}"`, open + 1), -1, "a zona é única");
+  const bar = html.indexOf('class="dungeon-hud-panel-bar');
+  const roster = html.indexOf("dungeon-token-roster");
+  assert.ok(bar > open && bar < roster, "a barra fica dentro da zona (antes da lista de tokens, que é da zona)");
+  const panel = html.indexOf('id="dungeon-hud-panel"');
+  assert.ok(panel > open && panel < roster, "o painel fica dentro da zona");
 });
