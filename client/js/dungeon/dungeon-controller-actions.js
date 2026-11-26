@@ -161,6 +161,30 @@ export async function runVoxcharExport(state, opts = {}) {
   state.campaignNotice = `Ficha exportada: ${artifact.filename}.`;
 }
 
+/**
+ * Prepara o link só de leitura da ficha ativa: gera e deixa a confirmação pendente (nada é copiado ainda).
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui com `state.voxcharLink` preenchido (link pronto ou motivo da recusa).
+ */
+export async function runVoxcharLinkPrepare(state) {
+  const { buildVoxcharLink } = await import("./voxchar-link.js");
+  const out = await buildVoxcharLink(state.sheet);
+  state.voxcharLink = out.ok ? { href: out.href, size: out.size } : { reason: out.reason };
+}
+
+/**
+ * Copia o link confirmado para a área de transferência e encerra a confirmação.
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui após copiar ou avisar da falha.
+ */
+export async function runVoxcharLinkCopy(state) {
+  const href = state.voxcharLink?.href;
+  state.voxcharLink = null;
+  if (!href) return;
+  const url = `${location.origin}${location.pathname}${href}`;
+  try { await navigator.clipboard.writeText(url); state.campaignNotice = "Link da ficha copiado."; } catch { state.campaignNotice = "Não foi possível copiar; use o arquivo .voxchar."; }
+}
+
 async function runExportAction(state, container, format, opts) {
   try {
     const passphrase = container.querySelector("#dungeon-backup-passphrase")?.value || "";
@@ -237,6 +261,9 @@ export const ACTION_HANDLERS = {
   "roll-action": (state, el, _c, opts) => recordSheetActionRoll(state, el.dataset.actionId, { store: opts.store }),
   "remove-action": (state, el, _c, opts) => removeCustomSheetAction(state, el.dataset.actionId, { store: opts.store }),
   "export-voxchar": (state, _el, _c, opts) => runVoxcharExport(state, opts),
+  "share-voxchar-link": (state) => runVoxcharLinkPrepare(state),
+  "copy-voxchar-link": (state) => runVoxcharLinkCopy(state),
+  "cancel-voxchar-link": (state) => { state.voxcharLink = null; },
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
