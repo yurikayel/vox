@@ -221,6 +221,14 @@ fn connection_cap_drops_excess_and_recovers_after_close() {
     assert!(h4.contains("101 Switching Protocols"));
 }
 
+/// Waits until the server has finished handling the peer's registration (reply and `peer-joined`
+/// broadcast): the connection loop is sequential, so a `pong` proves the broadcast went out.
+fn await_registration_settled(stream: &mut TcpStream) {
+    send_ws_text(stream, r#"{"type":"ping"}"#);
+    let pong = read_ws_json(stream);
+    assert_eq!(pong.get("type").and_then(JsonValue::as_str), Some("pong"));
+}
+
 #[test]
 fn ws_relay_between_two_peers_forges_from_and_notifies_left() {
     let server = start_test_server(SignalingConfig::default());
@@ -244,6 +252,7 @@ fn ws_relay_between_two_peers_forges_from_and_notifies_left() {
         reg_a.get("peerId").and_then(JsonValue::as_str),
         Some("peer-a")
     );
+    await_registration_settled(&mut peer_a);
 
     send_ws_text(
         &mut peer_b,
