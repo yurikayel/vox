@@ -62,7 +62,17 @@ function entryErrors(entry, seen, resourceIds) {
 export function validateDisplay(display, resourceIds) {
   if (display === undefined) return [];
   if (!display || typeof display !== "object") return ["display: precisa ser um objeto"];
-  return [...blocksErrors(display.blocks), ...derivedErrors(display.derived, resourceIds)];
+  return [...blocksErrors(display.blocks), ...derivedErrors(display.derived, resourceIds), ...hudErrors(display)];
+}
+
+/** `display.hud` é um objeto e `hud.defense`, se existir, aponta para o id de uma entrada de `display.derived`. */
+function hudErrors(display) {
+  const hud = display.hud;
+  if (hud === undefined) return [];
+  if (!hud || typeof hud !== "object" || Array.isArray(hud)) return ["display.hud: precisa ser um objeto"];
+  if (hud.defense === undefined) return [];
+  const ids = Array.isArray(display.derived) ? display.derived.map((e) => e?.id) : [];
+  return typeof hud.defense === "string" && ids.includes(hud.defense) ? [] : ["display.hud.defense: precisa ser o id de uma entrada de display.derived"];
 }
 
 function blocksErrors(blocks) {

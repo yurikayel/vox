@@ -38,7 +38,8 @@ function armorField(raw) {
   return kind && Number.isFinite(ac) && ac >= 0 && ac <= 40 ? { armor: { kind, ac } } : {};
 }
 
-function normalizeItem(raw = {}, idx = 0) {
+function normalizeItem(raw, idx = 0) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const label = String(raw.label || raw.name || "").trim().slice(0, 80);
   if (!label) return null;
   return {
