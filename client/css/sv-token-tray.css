@@ -7,8 +7,9 @@
   bottom: 0;
   max-height: 60vh;
   overflow-y: auto;
-  background: var(--dungeon-surface, #1b1a17);
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--surface-1);
+  color: var(--text);
+  border-top: 1px solid var(--border);
 }
 
 .dungeon-token-tray summary {
@@ -50,6 +51,6 @@
     width: min(20rem, 90vw);
     max-height: calc(100vh - 8rem);
     border-top: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.18);
+    border-right: 1px solid var(--border);
   }
 }

@@ -129,3 +129,11 @@ test("o link de sv-token-tray.css só entra quando a bandeja abre, uma vez, e a 
   const legacy = readFileSync(new URL("../client/css/dungeon-layout.css", import.meta.url), "utf8").split("\n").length;
   assert.ok(legacy <= 369, `dungeon-layout.css é legado acima de 350 linhas e não cresce (${legacy})`);
 });
+
+test("CSS: toda var(--x) da bandeja está definida nas folhas de tema (sem token fantasma)", () => {
+  const read = (name) => readFileSync(new URL(`../client/css/${name}`, import.meta.url), "utf8");
+  const theme = `${read("style.css")}\n${read("agora.css")}`;
+  const used = [...read("sv-token-tray.css").matchAll(/var\(\s*(--[\w-]+)/g)].map((m) => m[1]);
+  assert.ok(used.length >= 3, "a folha usa tokens de tema");
+  for (const name of new Set(used)) assert.match(theme, new RegExp(`${name}\s*:`), `${name} não existe nas folhas de tema`);
+});
