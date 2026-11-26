@@ -21,7 +21,7 @@ function renderReserve(sheet, pack, id) {
   const buttons = now ? `${spendButton(id, label, -1)}${spendButton(id, label, 1)}` : "";
   return `<li class="dungeon-reserve" data-reserve="${escapeHtml(id)}"><strong>${escapeHtml(label)}</strong> <span role="status">${value}</span> ${buttons}
     <label class="dungeon-field-mini"><span>Máximo</span><input class="dungeon-input" type="number" inputmode="numeric" min="0" max="${RESERVE_CAP}" step="1" value="${max}" aria-label="Máximo de ${escapeHtml(label)}"></label>
-    <button type="button" class="dungeon-chip-btn" data-dungeon="hud-op" data-hud-op="reserve-max" data-reserve-id="${escapeHtml(id)}">Definir máximo</button></li>`;
+    <button type="button" class="dungeon-chip-btn" data-dungeon="hud-op" data-hud-op="reserve-max" data-reserve-id="${escapeHtml(id)}" aria-label="Definir máximo de ${escapeHtml(label)}">Definir máximo</button></li>`;
 }
 
 /**

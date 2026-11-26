@@ -67,3 +67,24 @@ test("controles: rótulo do pacote com HTML sai escapado", async () => {
   const pack = { ...t20(), resources: [{ id: "mp", label: "<img src=x>", kind: "pool" }] };
   assert.equal(renderReserveControls((await local(3)).sheet, pack).includes("<img"), false);
 });
+
+test("passo: o teto de 99 vale por ação (pedir 150 gasta 99)", async () => {
+  const s = await local(500);
+  await spendReserve(s, "mp", -150);
+  assert.equal(projectReserves(s.sheet, t20()).mp.cur, 401);
+  assert.equal(s.sheet.delta_ledger.at(-1).delta, -99);
+});
+
+test("máximo vazio, NaN, texto ou negativo é ignorado e não grava 0", async () => {
+  const s = await local(8);
+  for (const bad of ["", "  ", "abc", NaN, -3, "-1", undefined]) await setReserveMaxFor(s, "mp", bad);
+  assert.equal(s.sheet.pools_base.mp_max, 8);
+  await setReserveMaxFor(s, "mp", "0");
+  assert.equal(s.sheet.pools_base.mp_max, 0);
+});
+
+test("botão de máximo leva aria-label com o nome da reserva", async () => {
+  const html = renderReserveControls((await local(8)).sheet, t20());
+  assert.match(html, /aria-label="Definir máximo de PM"/);
+  assert.match(renderReserveControls({ pools_base: { fp_max: 3 } }, getSystemPack("gurps4e")), /aria-label="Definir máximo de PF"/);
+});

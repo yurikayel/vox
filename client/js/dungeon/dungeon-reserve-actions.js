@@ -56,7 +56,8 @@ export async function spendReserve(state, id, delta, opts = {}) {
  */
 export async function setReserveMaxFor(state, id, value, opts = {}) {
   const pack = getSystemPack(state.sheet?.system?.id);
-  if (!pack || !reserveIds(pack).includes(id)) return undefined;
-  const sheet = withReserveMax(state.sheet, id, Number(value));
+  const n = typeof value === "string" ? Number(value.trim() === "" ? NaN : value) : Number(value);
+  if (!pack || !reserveIds(pack).includes(id) || !Number.isFinite(n) || n < 0) return undefined;
+  const sheet = withReserveMax(state.sheet, id, n);
   return dispatchCampaignOp(state, "SHEET_UPSERT", { sheet, setActive: true }, { store: opts.store || getDefaultVttStore() });
 }
