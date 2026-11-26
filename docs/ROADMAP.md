@@ -23,9 +23,9 @@ O cliente está maduro; **`main`** está em `860bf3fd` (release **[#534](https:/
 
 | Frente | O que fazer | Bloqueio / Critério |
 |---|---|---|
-| **Frente Rust `vox-node` (`ADR-039` F4)** | Empacotamento NDK/`.so` Android em CI, paridade final e benchmark de carga/memória pós-`PR4.4` (`#479`/`#480`) | `PR4.1a`–`PR4.4` já em `main` (`#480`); respeitar teto de `≤2` agentes/frentes em paralelo com mutex disjunto |
+| **Frente Rust `vox-node` (`ADR-039` F4)** | Empacotamento NDK/`.so` Android em CI, paridade final e benchmark de carga/memória pós-`PR4.4` (`#479`/`#480`) | `PR4.1a`–`PR4.4` já em `main` (`#480`); respeitar a regra das 3 canetas (mutex disjunto) |
 | **Próximas frentes de código desbloqueadas** | Avançar dieta do shell (`PM-01`), promover aviso de mutação AST (`PM-112` F3) para catraca + rodada semanal, decidir demais módulos em `labs/parado/` (`REV-02`), medir `LAN-23` em Android 2 GB RAM e `PM-70` em celular barato/iPhone | Sem dependência jurídica/externa |
-| **Subversus VTT** | Corte `develop → main` feito em 26/11 ([#628](https://github.com/yurikayel/vox/pull/628)): `SUB-03`…`SUB-05`, `SUB-07`…`SUB-11`, `SUB-17`, `SUB-18`, `SUB-F2` e `SUB-B2` em `main`; `SUB-01` e `SUB-02` em `main` com a nightly verde ([#634](https://github.com/yurikayel/vox/pull/634)); `SUB-06` aguarda o celular real; `SUB-12`…`SUB-16` dependem de pessoas | Teto de **3 agentes** (exceção local até novo aviso); identidade congelada; `vox.lab.fairplay` desligado fora do laboratório |
+| **Subversus VTT** | Corte `develop → main` feito em 26/11 ([#628](https://github.com/yurikayel/vox/pull/628)): `SUB-03`…`SUB-05`, `SUB-07`…`SUB-11`, `SUB-17`, `SUB-18`, `SUB-F2` e `SUB-B2` em `main`; `SUB-01` e `SUB-02` em `main` com a nightly verde ([#634](https://github.com/yurikayel/vox/pull/634)); `SUB-06` aguarda o celular real; `SUB-12`…`SUB-16` dependem de pessoas | Regra das 3 canetas; identidade congelada; `vox.lab.fairplay` desligado fora do laboratório |
 | **Congelado / depende de decisão humana** | Piloto `V-P09` (`PIL-01..05`), jurídico (`REV-12`/`LAN-01`), ops de infra >50 ativos (`INF-01..04`, `REV-01/10`, `NET-02`), cripto nova e `.wasm` no PWA (`LAN-18`), envio real NLnet (`LAN-36`), ativação GitHub Sponsors (`REV-22`), split de `identity/local-account.js` (só se doer, sessão dedicada) | Aguarda OK do mantenedor ou gatilho |
 
 ## Calendário 2027
@@ -42,7 +42,7 @@ Ideias, triagem e o porquê da ordem: [brainstorm do ano de 2027](./brainstorms/
 A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-roadmap-2027.md#1-o-norte-de-dezembro-de-2027).
 
 **Regras do ano:**
-- no máximo **2 agentes/frentes de código em paralelo** por onda, com mutex disjunto de arquivos ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
+- no máximo **3 agentes escrevendo no repositório ao mesmo tempo** (regra das 3 canetas), com mutex disjunto de arquivos; leitura e análise rodam em paralelo ([metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md));
 - tela nova paga os próprios bytes, e nada grande entra antes do PM-01;
 - código congelado nas 4 primeiras semanas de cada onda.
 
@@ -115,7 +115,7 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 
 ## Subversus VTT (frente de produto)
 
-**Decisão do mantenedor (25/11/2026):** a frente do Subversus fica aberta até novo aviso, com **no máximo 3 agentes trabalhando ao mesmo tempo** (o revisor conta). É uma exceção local à regra de 2 frentes do ano; a [AGENTS.md](../AGENTS.md) não muda. Continuam valendo:
+**Decisão do mantenedor (25/11/2026):** a frente do Subversus fica aberta até novo aviso, com a **regra das 3 canetas** (26/11/2026): leitura e revisão em paralelo, no máximo 3 agentes escrevendo no repositório ao mesmo tempo ([AGENTS.md](../AGENTS.md)). Continuam valendo:
 - a identidade congelada (só correção);
 - `vox.lab.fairplay`, `vox.lab.diorama` e `vox.lab.slm` desligados fora do laboratório;
 - nenhum byte novo em `SHELL_ASSETS`;

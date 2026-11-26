@@ -1,12 +1,12 @@
 # Método — mutex de agentes e modo revisor
 
-> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-24
+> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-26
 
 Operacional (repo `vox`). Tese longa: [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md).
 
 ## Mutex (markdown canônico)
 
-- **Um agente por arquivo** — ou **por §N** em arquivos com **>200 linhas**.
+- **Um portador de caneta por arquivo** — ou **por §N** em arquivos com **>200 linhas** (ver caneta abaixo).
 - **Handoff** ao encerrar o turno: listar paths tocados + o que **não** mexer neste lote.
 - **Proibido:** duas sessões editando o **mesmo** markdown canônico em paralelo (PRs concorrentes no mesmo doc = rebase + dono único).
 
@@ -34,13 +34,19 @@ No máximo 3 palavras (ex.: `testes-relay`, `apagar-tudo-local`).
 
 ## Orçamento de orquestração (fonte única)
 
-Para gastar menos contexto e evitar conflito de arquivo, toda orquestração com agentes segue:
+Desde 26/11/2026 (decisão do mantenedor): **ler é livre, escrever pede caneta.** Conflito só nasce na escrita; o resto roda em paralelo.
 
-1. **Um executor por padrão.** Paralelo só com no máximo **2 agentes/frentes de código em paralelo** por onda, com mutex disjunto (nenhum arquivo em comum) — alinhado às regras do [ROADMAP](../ROADMAP.md#calendário-2027).
-2. **Brief curto:** critério de aceite, **no máximo 8 caminhos** e **um** comando de teste. Proibido colar lobby, ADR inteiro ou árvore de pastas no brief.
-3. **Leitura mínima:** o executor lê só os arquivos do mutex, a porta de entrada do contexto (fachada ou índice do módulo) e o teste irmão.
-4. **Modelo:** auditoria e leitura em Haiku Low; Opus só para cripto, ADR ou identidade crítica (tabela acima).
-5. **Sem ondas automáticas** (lote 1 → 3 → 9) e **sem polling de CI** feito por agente: o próximo lote abre depois de o anterior entrar, com decisão explícita.
+1. **Leitura, análise, revisão e planejamento** rodam em paralelo, sem teto de agentes. Cada um entrega relatório curto (≤10 linhas) e deixa o detalhe em arquivo à parte.
+2. **Três canetas para escrever no repositório.** Escrever = editar arquivo versionado (inclusive no próprio worktree), commit, push, PR, comentário em PR ou issue. Quem não tem caneta não escreve; o quarto pedido espera na fila.
+3. **Caneta vem com mutex; lock dura até o merge.** O orquestrador entrega a caneta com um conjunto fechado de arquivos (**no máximo 8 caminhos**) e **um** comando de teste; dois portadores nunca têm arquivo em comum. A caneta volta cedo (item 4), mas o lock dos arquivos de um PR só sai no merge em `develop` ou no fechamento do PR.
+4. **Plano antes da caneta, sobre arquivos livres.** O agente planeja sem caneta, só sobre arquivos sem lock, e antes de pegá-la faz `git fetch origin develop` e confere que o alvo não mudou. Solta a caneta ao abrir o PR com CI verde ou ao travar (handoff). Ajuste pedido na revisão retoma a caneta com prioridade.
+5. **Arquivos quentes** (`CHANGELOG.md`, `docs/ROADMAP.md`, `docs/README.md`, `docs/release-metadata.json`, `package.json`): um portador por vez; os outros deixam a linha para quem tem a vez. `client/sw.js` só muda em PR de release.
+6. **Merge é fila serial à parte**, um PR por vez, com o CI verde no SHA exato.
+7. **Recursos físicos:** no máximo 2 execuções pesadas ao mesmo tempo (`npm run validate`, e2e, mutação), mesmo para quem só lê; 1 agente por vez no navegador.
+8. **Worktree isolado.** Quem tem caneta escreve só num worktree próprio a partir de `origin/develop`; nunca troca a branch do checkout principal nem roda `git` em pasta de worktree desregistrada. Ao descartar: tirar a junção `node_modules`, conferir que ela sumiu, e só então `git worktree remove` sem `--force`. Antes de qualquer `git` num worktree, confira que existe o **arquivo** `.git` na pasta e que `git rev-parse --show-toplevel` é a própria pasta; sem o arquivo, o `git` sobe calado para o checkout principal.
+9. **Brief curto e leitura mínima:** critério de aceite, caminhos e comando de teste; proibido colar lobby, ADR inteiro ou árvore de pastas. O executor lê só os arquivos do mutex, a porta de entrada do contexto e o teste irmão.
+10. **Contexto:** uma tarefa por contexto; o agente que encher o contexto entrega o handoff e recomeça limpo, em vez de seguir com contexto degradado.
+11. **Sem ondas automáticas** (lote 1 → 3 → 9) e **sem polling de CI** feito por agente: o próximo lote abre com decisão explícita.
 
 ## Mantenedor → revisor (o que muda na prática)
 
@@ -65,4 +71,4 @@ Conta como revisor-mode se, na semana civil:
 
 Fora do modo revisor: ok feature branch + PR normal — desde que não viole freeze de piloto (CODE-01).
 
-**Versão:** 1.3
+**Versão:** 1.4

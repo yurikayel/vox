@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Processo: orquestração passa a "ler é livre, escrever pede caneta" — leitura, análise e revisão em paralelo; no máximo 3 agentes escrevendo no repositório, com mutex de arquivos, arquivos quentes com um portador, merge serial e no máximo 2 execuções pesadas ao mesmo tempo (AGENTS.md, metodo-agentes-mutex-e-revisor.md).
+
 ## [2026-11-26] — SW `v7.173-mesa-canvas-mobile` (corte `develop → main`)
 
 *Correções pós-#628 para a nightly da `main`: canvas do mapa no celular e texto dos JSDoc da sinalização.*
