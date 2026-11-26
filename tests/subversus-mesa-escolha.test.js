@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   chooseVttTransport, summarizeConnection, connectionText, renderVttConnection, isMesaRedeLabEnabled, readMesaRedeUrl,
-  MESA_REDE_LAB_KEY, MESA_REDE_URL_KEY,
+  MESA_REDE_LAB_KEY, MESA_REDE_URL_KEY, MESA_REDE_ICE_KEY, readMesaRedeIce,
 } from "../client/js/dungeon/vtt-rede-escolha.js";
 import { attachVttPlayerJoin } from "../client/js/dungeon/dungeon-vtt-join.js";
 import * as scene from "../client/js/dungeon/dungeon-scene-actions.js";
@@ -182,4 +182,36 @@ test("endereço do nó: barra invertida, %00 no caminho, senha sem usuário e o 
   const head = "wss://a.example/";
   assert.equal(url(head + "x".repeat(512 - head.length)).length, 512, "512 caracteres é aceito");
   assert.equal(url(head + "x".repeat(513 - head.length)), "", "513 caracteres é recusado");
+});
+
+test("STUN da Mesa em rede: ausente usa o padrão, vazio é só candidatos locais, inválido nunca abre tráfego externo", () => {
+  const ice = (v) => readMesaRedeIce({ getItem: (k) => (k === MESA_REDE_ICE_KEY ? v : null) });
+  assert.equal(ice(null), undefined);
+  assert.deepEqual(ice(""), []);
+  assert.deepEqual(ice("   "), []);
+  assert.deepEqual(ice("stun:a.example:3478, stun:b.example"), [{ urls: "stun:a.example:3478" }, { urls: "stun:b.example" }]);
+  assert.deepEqual(ice("stun:[::1]:3478"), [{ urls: "stun:[::1]:3478" }]);
+  for (const bad of ["turn:t.example", "stun:a.example, turn:t.example", "http://x", "stun:", "stun:a b", "stun:a.example:99999x", "s1,s2,s3,s4,s5".replace(/s/g, "stun:a")]) {
+    assert.deepEqual(ice(bad), [], bad);
+  }
+});
+
+test("a rede monta o RTC só com candidatos locais quando a lista de STUN está vazia", async () => {
+  const seen = [];
+  const { FakeWebSocket } = fakeWs();
+  const real = globalThis.RTCPeerConnection;
+  globalThis.RTCPeerConnection = function Fake(cfg) { seen.push(cfg); Object.assign(this, createFakeRtcNetwork().createPeerConnection()); };
+  try {
+    const st = { getItem: (k) => (k === MESA_REDE_LAB_KEY ? "1" : k === MESA_REDE_URL_KEY ? "ws://127.0.0.1:1" : k === MESA_REDE_ICE_KEY ? "" : null) };
+    const out = await chooseVttTransport(base({ storage: st, WebSocketImpl: FakeWebSocket }));
+    out.transport.connect("gm");
+    assert.deepEqual(seen.map((c) => c.iceServers), [[]]);
+    out.transport.close();
+    const dflt = await chooseVttTransport(base({ storage: ON, WebSocketImpl: FakeWebSocket }));
+    dflt.transport.connect("gm");
+    assert.ok(seen[1].iceServers.length > 0, "sem a chave, o padrão do produto continua (spec mesa-rede-v0)");
+    dflt.transport.close();
+  } finally {
+    globalThis.RTCPeerConnection = real;
+  }
 });

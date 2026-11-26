@@ -33,7 +33,8 @@ function resolveFactory(opts) {
   if (opts.createPeerConnection) return opts.createPeerConnection;
   const Ctor = globalThis.RTCPeerConnection;
   if (typeof Ctor !== "function") throw new Error("WebRTC indisponível neste navegador.");
-  const iceServers = stunOnly(opts.iceServers).length ? stunOnly(opts.iceServers) : DEFAULT_STUN;
+  const hostOnly = Array.isArray(opts.iceServers) && opts.iceServers.length === 0;
+  const iceServers = hostOnly ? [] : stunOnly(opts.iceServers).length ? stunOnly(opts.iceServers) : DEFAULT_STUN;
   return () => new Ctor({ iceServers });
 }
 
@@ -45,7 +46,7 @@ function resolveFactory(opts) {
  *   Canal de sinalização (oferta, resposta e ICE). Se informar `isPeerOnline`/`onPeerJoined`, o jogador só oferta quando o par está no nó e reoferta quando ele aparece.
  * @param {boolean} [opts.initiate] `true` no jogador: abre a conexão ao primeiro `send` para um par desconhecido.
  * @param {Function} [opts.createPeerConnection] Fábrica de `RTCPeerConnection` (testes).
- * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`).
+ * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`); lista vazia = só candidatos locais (nenhum tráfego externo); ausente = STUN padrão.
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
  * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
  * @param {() => number} [opts.now] Relógio em ms (testes); padrão `Date.now`.

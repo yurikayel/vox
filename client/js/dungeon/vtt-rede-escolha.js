@@ -13,6 +13,9 @@ export const MESA_REDE_LAB_KEY = "vox.lab.mesa-rede";
 /** Endereço `ws://` ou `wss://` do nó de sinalização usado pela Mesa em rede. */
 export const MESA_REDE_URL_KEY = "vox.lab.mesa-rede.url";
 
+/** Servidores STUN da Mesa em rede (laboratório): vazio = só candidatos locais; ausente = o padrão do produto (STUN público). */
+export const MESA_REDE_ICE_KEY = "vox.lab.mesa-rede.ice";
+
 /**
  * Carrega sob demanda o transporte da Mesa pela rede (SUB-08); nenhum byte dele entra no shell.
  * @returns {Promise<typeof import("./vtt-rtc-transport.js")>} Módulo do transporte WebRTC.
@@ -40,6 +43,23 @@ function readKey(storage, key) {
  */
 export function isMesaRedeLabEnabled(storage = globalThis.localStorage) {
   return readKey(storage, MESA_REDE_LAB_KEY) === "1";
+}
+
+const STUN_ENTRY = /^stun:[A-Za-z0-9.-]{1,253}(:\d{1,5})?$|^stun:\[[0-9A-Fa-f:]{2,45}\](:\d{1,5})?$/;
+
+/**
+ * Lista de STUN salva para a Mesa: entradas `stun:host[:porta]` separadas por vírgula ou espaço (até 4). Texto vazio é
+ * "só candidatos locais"; ausente devolve `undefined` (padrão do produto); qualquer entrada inválida vira lista vazia, para
+ * que erro de digitação nunca abra tráfego externo.
+ * @param {Storage|null} [storage] Armazenamento local (padrão `globalThis.localStorage`).
+ * @returns {Array<{urls: string}>|undefined} Servidores ICE, ou `undefined` para usar o padrão.
+ */
+export function readMesaRedeIce(storage = globalThis.localStorage) {
+  const raw = readKey(storage, MESA_REDE_ICE_KEY);
+  if (raw === null) return undefined;
+  const items = String(raw).split(/[\s,]+/).filter(Boolean);
+  const valid = items.length <= 4 && items.every((item) => STUN_ENTRY.test(item));
+  return valid ? items.map((urls) => ({ urls })) : [];
 }
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -123,7 +143,7 @@ function broadcastResult(opts, fallback) {
 function openNetwork(opts, url, { rtc, sig, onSignaling, onLink, onAbort }) {
   const signaling = sig.createVttSignalingClient({ url, peerId: opts.peerId, WebSocketImpl: opts.WebSocketImpl, onStatus: onSignaling });
   try {
-    const transport = rtc.createRtcVttTransport({ peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection, onStatus: onLink });
+    const transport = rtc.createRtcVttTransport({ peerId: opts.peerId, initiate: opts.initiate, signaling, createPeerConnection: opts.createPeerConnection, iceServers: opts.iceServers, onStatus: onLink });
     return { signaling, transport };
   } catch (err) {
     onAbort();
@@ -156,6 +176,7 @@ async function buildNetwork(opts, url) {
  * @param {Function} [opts.loadRtc] Carregador do transporte de rede (testes).
  * @param {Function} [opts.loadSignaling] Carregador da sinalização (testes).
  * @param {typeof WebSocket} [opts.WebSocketImpl] WebSocket (testes).
+ * @param {Array} [opts.iceServers] Servidores ICE (testes); padrão: `readMesaRedeIce`.
  * @param {Function} [opts.createPeerConnection] Fábrica de `RTCPeerConnection` (testes).
  * @param {Function} [opts.createBroadcast] Fábrica do transporte local (testes).
  * @returns {Promise<{kind: "rede"|"mesma_origem", transport: object, fallback: boolean}|null>} Escolha; `null` sem nenhum transporte possível.
@@ -166,7 +187,7 @@ export async function chooseVttTransport(opts) {
   const url = readMesaRedeUrl(storage);
   if (!url) return broadcastResult(opts, true);
   try {
-    return await buildNetwork(opts, url);
+    return await buildNetwork({ ...opts, iceServers: opts.iceServers ?? readMesaRedeIce(storage) }, url);
   } catch {
     return broadcastResult(opts, true);
   }
