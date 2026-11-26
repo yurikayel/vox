@@ -45,7 +45,7 @@ function renderLoadIndicator(load) {
 
 function renderFavoriteToggle(it, favorites) {
   const on = favorites.includes(`item:${it.id}`);
-  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="hud-favorite" data-favorite-key="item:${escapeHtml(it.id)}" aria-pressed="${on}">${on ? "Tirar dos favoritos" : "Favoritar"}</button>`;
+  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="hud-op" data-hud-op="favorite" data-favorite-key="item:${escapeHtml(it.id)}" aria-pressed="${on}">${on ? "Tirar dos favoritos" : "Favoritar"}</button>`;
 }
 
 function renderItemRow(it, favorites = []) {

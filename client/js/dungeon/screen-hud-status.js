@@ -24,7 +24,7 @@ function renderMagic(magic) {
 function renderBeltSlot(slot, index) {
   if (!slot) return `<li class="dungeon-hud-belt-slot is-empty" aria-label="Vaga ${index + 1} do cinto, vazia">vazio</li>`;
   const name = `${escapeHtml(slot.label)}, ${slot.qty} restantes. Usar 1`;
-  return `<li class="dungeon-hud-belt-slot"><button type="button" class="dungeon-chip-btn" data-dungeon="hud-belt-use" data-item-id="${escapeHtml(slot.id)}" aria-label="${name}">${escapeHtml(slot.label)} ×${slot.qty}</button></li>`;
+  return `<li class="dungeon-hud-belt-slot"><button type="button" class="dungeon-chip-btn" data-dungeon="hud-op" data-hud-op="belt-use" data-item-id="${escapeHtml(slot.id)}" aria-label="${name}">${escapeHtml(slot.label)} ×${slot.qty}</button></li>`;
 }
 
 function renderBelt(belt) {

@@ -5,7 +5,7 @@
 
 /** Teto de favoritos na barra do HUD. */
 export const FAVORITES_MAX = 6;
-const KEY_RE = /^(action|item):[^\s]{1,48}$/;
+const KEY_RE = /^(action|item):[^\s\p{Cc}]{1,48}$/u;
 
 /**
  * Normaliza a lista: só chaves válidas, sem repetição, no máximo `FAVORITES_MAX`.

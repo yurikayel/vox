@@ -43,3 +43,17 @@ export async function toggleHudFavorite(state, key, opts = {}) {
   const sheet = { ...base, sheet_meta: { ...base.sheet_meta, favorites } };
   return dispatchCampaignOp(state, "SHEET_UPSERT", { sheet, setActive: true }, { store: opts.store || getDefaultVttStore() });
 }
+
+/**
+ * Despacha uma ação do HUD pelo `data-hud-op` do botão (`belt-use` ou `favorite`); op desconhecida não faz nada.
+ * @param {object} state Estado da sessão.
+ * @param {HTMLElement} el Botão clicado.
+ * @param {{store?: object}} [opts] Opções.
+ * @returns {Promise<object|undefined>} Resultado da ação, ou nada.
+ */
+export async function runHudOp(state, el, opts = {}) {
+  const op = el?.dataset?.hudOp;
+  if (op === "belt-use") return useBeltItem(state, el.dataset.itemId, opts);
+  if (op === "favorite") return toggleHudFavorite(state, el.dataset.favoriteKey, opts);
+  return undefined;
+}
