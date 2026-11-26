@@ -1,5 +1,5 @@
 /**
- * @file Projeção do jogador para fichas: campos internos de fichas alheias ficam fora; o PV delas segue pelo token.
+ * @file Projeção do jogador para fichas: fichas alheias só pela lista de permissão; o PV delas segue pelo token.
  */
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 
@@ -21,20 +21,26 @@ export function ownedSheetIds(scenesById, viewerRouteId) {
 }
 
 /**
- * Tira `pools_base` e `delta_ledger` das fichas que não são do viewer.
+ * Lista de permissão da ficha alheia: identificação, nome e CA. O resto (inventário, metadados, escolhas, recursos, atributos) fica fora.
+ * @param {object} sheet Ficha completa.
+ * @returns {object} Ficha reduzida.
+ */
+function foreignSheetView(sheet) {
+  const attrs = sheet.attributes_lww || {};
+  const out = { character_id: sheet.character_id, campaign_id: sheet.campaign_id, attributes_lww: { name: attrs.name, armor_class: attrs.armor_class } };
+  if (sheet.name !== undefined) out.name = sheet.name;
+  return out;
+}
+
+/**
+ * Reduz à lista de permissão as fichas que não são do viewer; as próprias passam inteiras.
  * @param {object} sheetsById Fichas já projetadas (sem notas do Mestre).
  * @param {Set<string>} owned Ids de ficha próprios.
- * @returns {object} Fichas com campos internos só nas próprias.
+ * @returns {object} Fichas com o conteúdo completo só nas próprias.
  */
 export function hideForeignSheetFields(sheetsById, owned) {
   return Object.fromEntries(
-    Object.entries(sheetsById).map(([id, s]) => {
-      if (!s || typeof s !== "object" || owned.has(id)) return [id, s];
-      const copy = { ...s };
-      delete copy.pools_base;
-      delete copy.delta_ledger;
-      return [id, copy];
-    }),
+    Object.entries(sheetsById).map(([id, s]) => [id, !s || typeof s !== "object" || owned.has(id) ? s : foreignSheetView(s)]),
   );
 }
 

@@ -10,11 +10,17 @@ import { tokenHp } from "../client/js/dungeon/token-ficha.js";
 
 const sheet = (id, hpMax) => ({
   character_id: id,
+  campaign_id: "camp",
   name: id,
-  attributes_lww: { level: 2 },
+  role_title: "Bardo",
+  owner_pubkey_p256: "chave",
+  attributes_lww: { name: id, level: 2, armor_class: 15, class_name: "Bardo", abilities: { str: 8 }, conditions: ["prone"] },
   pools_base: { hp_max: hpMax },
   delta_ledger: [],
-  sheet_meta: { notes_gm: "x" },
+  inventory_orset: { adaga: { id: "adaga", qty: 1 } },
+  system_choices: { conditions: ["prone"] },
+  spatial_state: { x: 1 },
+  sheet_meta: { notes_gm: "x", favorites: ["adaga"] },
 });
 const token = (tokenId, sheetId, ownerRouteId, hpVisible) => ({
   tokenId, sheetId, ownerRouteId, hpVisible, layer: "player", floorZ: 0, x: 1, y: 1, hpCurrent: 1, hpMax: 1,
@@ -32,24 +38,38 @@ function campaign(hpVisible = "exact") {
   };
 }
 
-test("jogador não recebe pools_base nem delta_ledger de ficha alheia, mas recebe os próprios", () => {
+test("ficha alheia chega só com a lista de permissão; a própria chega completa", () => {
   const view = projectStateForPlayer(campaign(), "player", "vx_ana");
-  assert.equal(view.sheetsById.bia.pools_base, undefined);
-  assert.equal(view.sheetsById.bia.delta_ledger, undefined);
+  assert.deepEqual(view.sheetsById.bia, {
+    character_id: "bia",
+    campaign_id: "camp",
+    name: "bia",
+    attributes_lww: { name: "bia", armor_class: 15 },
+  });
   assert.equal(view.sheetsById.ana.pools_base.hp_max, 30);
-  assert.deepEqual(view.sheetsById.ana.delta_ledger, []);
+  assert.deepEqual(view.sheetsById.ana.sheet_meta.favorites, ["adaga"]);
+  assert.ok(view.sheetsById.ana.inventory_orset.adaga);
 });
 
-test("sem identidade, nenhuma ficha vem com campos internos", () => {
+test("cada campo fora da lista some da ficha alheia", () => {
+  const bia = projectStateForPlayer(campaign(), "player", "vx_ana").sheetsById.bia;
+  for (const key of ["pools_base", "delta_ledger", "inventory_orset", "system_choices", "spatial_state", "sheet_meta", "role_title", "owner_pubkey_p256"]) {
+    assert.equal(bia[key], undefined, key);
+  }
+  for (const key of ["level", "class_name", "abilities", "conditions"]) assert.equal(bia.attributes_lww[key], undefined, key);
+});
+
+test("sem identidade, nenhuma ficha vem completa", () => {
   const view = projectStateForPlayer(campaign(), "player", "");
   assert.equal(view.sheetsById.ana.pools_base, undefined);
-  assert.equal(view.sheetsById.bia.pools_base, undefined);
+  assert.equal(view.sheetsById.bia.inventory_orset, undefined);
 });
 
 test("o Mestre vê tudo, como antes", () => {
   const view = projectStateForPlayer(campaign(), "gm", "vx_gm");
   assert.equal(view.sheetsById.bia.pools_base.hp_max, 22);
   assert.deepEqual(view.sheetsById.bia.delta_ledger, []);
+  assert.ok(view.sheetsById.bia.inventory_orset.adaga);
 });
 
 test("PV alheio vem pelo token: número com hpVisible exact, só rótulo com status", () => {
@@ -79,4 +99,12 @@ test("token da ficha própria não é reescrito pela projeção", () => {
   const own = projectStateForPlayer(campaign(), "player", "vx_ana").scenesById.s1.tokens[0];
   assert.equal(own.hpCurrent, 1);
   assert.equal(own.hpMax, 1);
+});
+
+test("painel do grupo: classe e nível de ficha alheia ficam sem dado", () => {
+  const camp = projectStateForPlayer(campaign("exact"), "player", "vx_ana");
+  const [own, other] = buildPartyView({ campaign: camp });
+  assert.equal(own.level, "2");
+  assert.equal(other.level, "—");
+  assert.equal(other.role, "—");
 });
