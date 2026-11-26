@@ -14,7 +14,7 @@
 
 /** Aviso de conteúdo do pacote, mostrado em "Sobre este conteúdo". @type {string} */
 export const GURPS4E_ATTRIBUTION =
-  "Este pacote traz só fórmulas numéricas próprias do Vox e nomes curtos de atributos. Nenhum texto do livro (perícias, vantagens, desvantagens, tabelas, descrições) está incluído; esses dados são escritos ou importados por você. GURPS é marca de Steve Jackson Games, sem vínculo com o Vox.";
+  "Este pacote traz só fórmulas de mecânica de jogo implementadas pelo Vox e nomes curtos de atributos. Nenhum texto do livro (perícias, vantagens, desvantagens, tabelas, descrições) está incluído; esses dados são escritos ou importados por você. GURPS é marca de Steve Jackson Games, sem vínculo com o Vox.";
 
 const ability = (id, label, short) => Object.freeze({ id, label, short });
 

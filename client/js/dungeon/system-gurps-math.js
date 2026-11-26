@@ -1,6 +1,6 @@
 /**
  * @file Matemática pura do pacote `gurps4e`: atributos secundários, níveis de carga e resolução `3d6_sob_nh`.
- * Só fórmulas numéricas do projeto; nenhuma tabela de perícias, vantagens, desvantagens ou texto de regra.
+ * Só fórmulas de mecânica de jogo implementadas pelo Vox; nenhuma tabela de perícias, vantagens, desvantagens ou texto de regra.
  * Funções puras, sem estado: a ficha nunca grava o resultado (spec brainstorm v0, §4).
  *
  * @module dungeon/system-gurps-math
@@ -74,7 +74,7 @@ export function encumbrance(scores, weightLb) {
  * Resolve um teste `3d6_sob_nh`: sucesso com a soma até o NH (3 e 4 sempre, 17 e 18 nunca); crítico de sucesso em 3, 4,
  * 5 com NH 15+ e 6 com NH 16+; crítico de falha em 18, em 17 com NH 15 ou menos e em 10 ou mais acima do NH.
  * @param {number} nh Nível de habilidade efetivo.
- * @param {number} roll Soma dos três dados (3 a 18).
+ * @param {number} roll Soma real dos três dados (3 a 18); o chamador a fornece, e esta função não valida NaN nem faixa.
  * @returns {{success: boolean, critical: boolean, margin: number}} Resultado e margem (NH − soma).
  */
 export function resolve3d6(nh, roll) {

@@ -107,3 +107,23 @@ test("gurps4e: partes jurídicas — licença própria, atribuição com marca d
   assert.equal(GURPS4E_PACK.license.source, "Nomes de mecânica de jogo; fórmulas e matemática do Vox");
   assert.equal(GURPS4E_ATTRIBUTION, GURPS4E_PACK.license.attribution);
 });
+
+test("gurps4e: carga com Deslocamento Básico 7 — o fator não dá inteiro e o resultado é truncado, não arredondado", () => {
+  const s = { st: 14, dx: 14, ht: 14 };
+  const rows = [[40, "leve", 5, 9], [117, "media", 4, 8], [234, "pesada", 2, 7], [235, "muito-pesada", 1, 6]];
+  for (const [weight, level, move, dodge] of rows) assert.deepEqual([encumbrance(s, weight).level, encumbrance(s, weight).move, encumbrance(s, weight).dodge], [level, move, dodge], level);
+  assert.equal(encumbrance(s, 390).overloaded, false);
+  assert.equal(encumbrance(s, 391).overloaded, true);
+});
+
+test("gurps4e: Deslocamento e Esquiva nunca caem abaixo de 1 (ST, DX e HT mínimos, carga pesada)", () => {
+  const frail = { st: 1, dx: 1, ht: 1 };
+  assert.equal(gurpsSecondaries(frail).basicMove, 0);
+  assert.deepEqual(encumbrance(frail, 0.2), { level: "nenhuma", index: 0, move: 1, dodge: 3, overloaded: false });
+  assert.deepEqual(encumbrance(frail, 1), { level: "pesada", index: 3, move: 1, dodge: 1, overloaded: false });
+});
+
+test("gurps4e: atributo em texto vazio vira 10", () => {
+  assert.equal(gurpsScore(""), 10);
+  assert.equal(gurpsSecondaries({ st: "" }).hp, 10);
+});
