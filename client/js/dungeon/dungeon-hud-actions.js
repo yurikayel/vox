@@ -21,7 +21,7 @@ import { getDefaultVttStore } from "./vtt-store.js";
 export async function useBeltItem(state, itemId, opts = {}) {
   const item = listInventoryItems(state.sheet?.inventory_orset).find((it) => it.id === itemId);
   if (!item || !item.tags.includes(CONSUMABLE_TAG)) return undefined;
-  const res = await mutateSheetInventory(state, "set_qty", { itemId, qty: item.qty - 1 }, opts.store);
+  const res = await mutateSheetInventory(state, "adjust_qty", { itemId, delta: -1 }, opts.store);
   state.campaignNotice = `Usou 1 de ${item.label}.`;
   return res;
 }
