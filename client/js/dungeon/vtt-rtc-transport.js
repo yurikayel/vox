@@ -5,12 +5,17 @@
  * Carregado sob demanda (`import()`), fora de `SHELL_ASSETS`.
  * @module dungeon/vtt-rtc-transport
  */
+import { VTT_AUTH_KIND, signVttAuth, verifyVttAuth, linkFingerprints } from "./vtt-rtc-auth.js";
 
 /** Rótulo do canal de dados da mesa (distinto de `vox-peer-v0` e `vox-dm-v0` da malha). */
 export const VTT_CHANNEL_LABEL = "vox-vtt-v0";
 /** Teto de uma mensagem no canal (o protocolo já fatia blobs em 16 KiB; o snapshot é um só). */
 export const VTT_MAX_MESSAGE_BYTES = 256 * 1024;
 const MAX_QUEUED = 64;
+/** Prazo para o outro lado provar a chave da mesa (só com `opts.auth`); estourou, o elo cai. */
+export const AUTH_TIMEOUT_MS = 10_000;
+/** Prazo para o canal abrir depois que a oferta sai (jogador) ou que o elo nasce de uma oferta recebida (Mestre); só com `opts.auth`. Jogador esperando o Mestre entrar não tem prazo. */
+export const LINK_SETUP_TIMEOUT_MS = 30_000;
 /** Teto de elos simultâneos (uma mesa tem poucos jogadores; a sinalização é pública e não pode esgotar a memória do Mestre). */
 export const VTT_MAX_LINKS = 16;
 const DEFAULT_STUN = [{ urls: "stun:stun.l.google.com:19302" }];
@@ -49,8 +54,9 @@ function resolveFactory(opts) {
  * @param {Array} [opts.iceServers] Servidores ICE (filtrados para `stun:`); lista vazia = só candidatos locais (nenhum tráfego externo); ausente = STUN padrão.
  * @param {number} [opts.maxMessageBytes] Teto de uma mensagem.
  * @param {number} [opts.maxLinks] Teto de elos simultâneos (padrão `VTT_MAX_LINKS`); acima dele a oferta é recusada.
+ * @param {{keypair: {privateKey: CryptoKey, publicJwk: object, routeId: string}}} [opts.auth] Aperto de mão autenticado (par de chaves da mesa): cada ponta manda um `VTT_AUTH` ao abrir o canal; até o outro lado provar, nada da mesa sai nem entra, e quem não prova em `AUTH_TIMEOUT_MS` é desconectado. Sem `auth`, o comportamento é o de sempre.
  * @param {() => number} [opts.now] Relógio em ms (testes); padrão `Date.now`.
- * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full` ou `link_limit`.
+ * @param {(peerId: string, state: string) => void} [opts.onStatus] `connecting`, `waiting_peer`, `open`, `closed`, `oversize`, `queue_full`, `link_limit`, `timeout` (o canal não abriu a tempo) ou `auth_failed`.
  * @returns {{peerId: string, send: Function, onMessage: Function, close: Function, connect: Function}} Transporte compatível com `createVttSyncPeer`.
  */
 export function createRtcVttTransport(opts) {
@@ -91,23 +97,60 @@ function dropLink(ctx, remoteId) {
   const link = ctx.links.get(remoteId);
   if (!link) return;
   ctx.links.delete(remoteId);
+  clearTimeout(link.timer);
   pruneChain(ctx, remoteId);
   try { link.channel?.close?.(); link.pc.close?.(); } catch { /* já fechado */ }
   status(ctx, remoteId, "closed");
 }
 
+/** Canal pronto para a mesa: avisa e solta o que ficou na fila. */
+function openLink(ctx, remoteId, link) {
+  status(ctx, remoteId, "open");
+  try {
+    link.queue.splice(0).forEach((text) => link.channel.send(text));
+  } catch {
+    dropLink(ctx, remoteId);
+  }
+}
+
+/** Prova ausente, inválida ou fora do prazo: a fila é descartada (não é enviada) e o elo cai. */
+function failAuth(ctx, remoteId, link) {
+  if (ctx.links.get(remoteId) !== link) return;
+  link.queue.length = 0;
+  status(ctx, remoteId, "auth_failed");
+  dropLink(ctx, remoteId);
+}
+
+/** Canal que não abriu a tempo: o elo cai como `timeout` (não é falha de prova) e libera a vaga. */
+function expireLink(ctx, remoteId, link) {
+  if (ctx.links.get(remoteId) !== link) return;
+  status(ctx, remoteId, "timeout");
+  dropLink(ctx, remoteId);
+}
+
+/** (Re)arma o prazo do elo. No-op sem `auth` ou com o elo já liberado. `onExpire` decide como o elo cai. */
+function armDeadline(ctx, remoteId, link, ms, onExpire) {
+  if (!ctx.opts.auth || link.authed) return;
+  clearTimeout(link.timer);
+  link.timer = setTimeout(() => onExpire(ctx, remoteId, link), ms);
+  link.timer?.unref?.();
+}
+
+/** Manda a prova desta ponta (fora do portão de envio) e arma o prazo para a do outro lado. */
+function beginAuth(ctx, remoteId, link) {
+  const fps = linkFingerprints(link.pc);
+  if (!fps) return failAuth(ctx, remoteId, link);
+  armDeadline(ctx, remoteId, link, AUTH_TIMEOUT_MS, failAuth);
+  return signVttAuth(ctx.opts.auth.keypair, fps, remoteId)
+    .then((frame) => { if (ctx.links.get(remoteId) === link) link.channel.send(JSON.stringify(frame)); })
+    .catch(() => failAuth(ctx, remoteId, link));
+}
+
 function attachChannel(ctx, remoteId, link, channel) {
   link.channel = channel;
-  channel.onopen = () => {
-    status(ctx, remoteId, "open");
-    try {
-      link.queue.splice(0).forEach((text) => channel.send(text));
-    } catch {
-      dropLink(ctx, remoteId);
-    }
-  };
+  channel.onopen = () => (ctx.opts.auth ? beginAuth(ctx, remoteId, link) : openLink(ctx, remoteId, link));
   channel.onclose = () => { if (ctx.links.get(remoteId) === link) dropLink(ctx, remoteId); };
-  channel.onmessage = (ev) => deliver(ctx, remoteId, ev.data);
+  channel.onmessage = (ev) => { if (ctx.links.get(remoteId) === link) deliver(ctx, remoteId, link, ev.data); };
 }
 
 /** Objeto simples (nem array, nem `null`, nem instância de classe). */
@@ -128,16 +171,47 @@ function parseInbound(ctx, raw) {
 }
 
 /** O `from` vem do canal, nunca do corpo: o par remoto não escolhe quem diz ser. */
-function deliver(ctx, remoteId, raw) {
-  const parsed = parseInbound(ctx, raw);
-  if (!parsed) return;
+function dispatch(ctx, remoteId, parsed) {
   const msg = { ...parsed, from: remoteId };
   ctx.handlers.forEach((fn) => { try { fn(msg); } catch { /* um ouvinte ruim não derruba o canal */ } });
 }
 
+/** Libera o elo depois da prova: o que chegou logo atrás dela (já na ordem) segue para a mesa. */
+function acceptAuth(ctx, remoteId, link) {
+  if (ctx.links.get(remoteId) !== link) return;
+  clearTimeout(link.timer);
+  link.authed = true;
+  link.checking = false;
+  const held = link.held.splice(0);
+  openLink(ctx, remoteId, link);
+  held.forEach((parsed) => dispatch(ctx, remoteId, parsed));
+}
+
+/** Antes da prova só o `VTT_AUTH` passa; o resto é descartado (ou guardado, enquanto a prova é conferida). */
+function gateInbound(ctx, remoteId, link, parsed) {
+  const isAuth = parsed.kind === VTT_AUTH_KIND;
+  if (link.checking) {
+    if (!isAuth && link.held.length < MAX_QUEUED) link.held.push(parsed);
+    return;
+  }
+  if (!isAuth) return;
+  link.checking = true;
+  const fps = linkFingerprints(link.pc);
+  const check = fps ? verifyVttAuth(parsed, fps, { own: ctx.opts.peerId, remote: remoteId }) : Promise.resolve(false);
+  check.then((ok) => (ok ? acceptAuth(ctx, remoteId, link) : failAuth(ctx, remoteId, link)));
+}
+
+function deliver(ctx, remoteId, link, raw) {
+  const parsed = parseInbound(ctx, raw);
+  if (!parsed) return;
+  if (!link.authed) return gateInbound(ctx, remoteId, link, parsed);
+  if (parsed.kind !== VTT_AUTH_KIND) dispatch(ctx, remoteId, parsed);
+  return undefined;
+}
+
 function newLink(ctx, remoteId) {
   const pc = ctx.factory();
-  const link = { pc, channel: null, queue: [], offers: 0, awaiting: false, offerAt: 0 };
+  const link = { pc, channel: null, queue: [], offers: 0, awaiting: false, offerAt: 0, authed: !ctx.opts.auth, checking: false, held: [], timer: null };
   ctx.links.set(remoteId, link);
   pc.onicecandidate = (ev) => {
     if (ev.candidate) ctx.opts.signaling.send({ type: "ice", to: remoteId, candidate: ev.candidate });
@@ -156,6 +230,7 @@ async function startOffer(ctx, remoteId, link) {
   link.offers += 1;
   link.awaiting = true;
   link.offerAt = nowOf(ctx);
+  armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS, expireLink);
   const offer = await link.pc.createOffer();
   await link.pc.setLocalDescription(offer);
   ctx.opts.signaling.send({ type: "offer", to: remoteId, sdp: link.pc.localDescription });
@@ -171,7 +246,10 @@ function ensureLink(ctx, remoteId, initiator) {
     return null;
   }
   const link = newLink(ctx, remoteId);
-  if (!initiator) return link;
+  if (!initiator) {
+    armDeadline(ctx, remoteId, link, LINK_SETUP_TIMEOUT_MS, expireLink);
+    return link;
+  }
   attachChannel(ctx, remoteId, link, link.pc.createDataChannel(VTT_CHANNEL_LABEL));
   if (ctx.opts.signaling.isPeerOnline && !ctx.opts.signaling.isPeerOnline(remoteId)) status(ctx, remoteId, "waiting_peer");
   else startOffer(ctx, remoteId, link).catch(() => dropLink(ctx, remoteId));
@@ -245,7 +323,7 @@ function onSignal(ctx, data) {
 
 /** Entrega ou enfileira; `false` quando a fila de espera está cheia (a mensagem não some em silêncio). */
 function sendOnLink(ctx, remoteId, link, text) {
-  if (link.channel?.readyState === "open") {
+  if (link.channel?.readyState === "open" && link.authed) {
     try {
       link.channel.send(text);
       return true;
