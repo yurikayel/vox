@@ -11,7 +11,9 @@
  */
 import { createFairplayRollOffer } from "./vtt-fairplay-roll.js";
 import { createFairplaySessionKey, fairplayShareHash, openFairplayShare, sealFairplayShare } from "./vtt-fairplay-cipher.js";
-import { fairplayMinHolders, fairplayQuorum } from "./vtt-fairplay-log.js";
+import { fairplayMinHolders, fairplayQuorum, verifyFairplayRecord } from "./vtt-fairplay-log.js";
+import { fairplayRollFaults } from "./vtt-fairplay-faltas.js";
+import { recoverAbortedSeed } from "../rpg-crypto-table.js";
 
 const CLOSABLE = new Set(["commit", "shares", "reveal", "recovery"]);
 
@@ -45,6 +47,9 @@ function createDriverContext(opts) {
     offers: new Map(),
     pending: new Map(),
     timers: new Map(),
+    revealSent: new Set(),
+    invalid: new Map(),
+    faultChecked: new Set(),
   };
 }
 
@@ -122,10 +127,35 @@ function logShowsEveryoneReady(roll) {
   return roll.participants.every((p) => Object.hasOwn(roll.commits, p) && Object.hasOwn(roll.shares, p));
 }
 
-async function stepReveal(ctx, roll) {
+function hexBytes(hex) {
+  return Uint8Array.from(String(hex).match(/../g) || [], (h) => Number.parseInt(h, 16));
+}
+
+/** Em mesa de dois, quem guarda todas as partes do outro as junta e confere contra o compromisso dele; devolve o dono se não batem. */
+async function badSharesOwner(ctx, campaign, roll) {
+  const owner = roll.participants.find((p) => p !== ctx.peerId);
+  const commit = roll.commits[owner];
+  const held = await openHeld(ctx, campaign, roll, owner).catch(() => []);
+  const parts = held.map((s) => ({ splitId: s.splitId, x: s.x, y: hexBytes(s.y) }));
+  const binding = { rollId: roll.rollId, peerId: owner };
+  const ok = await recoverAbortedSeed(parts, commit.commitO, commit.threshold, binding).then(() => true, () => false);
+  return ok ? "" : owner;
+}
+
+/** Só revela se, com 2 participantes, as partes do outro refazem o número que ele escondeu (ADR-040 §3). */
+async function sharesAreSound(ctx, campaign, roll) {
+  const owner = roll.participants.find((p) => p !== ctx.peerId);
+  const holdsAny = (roll.shares[owner] || []).some((s) => s.to === ctx.peerId);
+  if (roll.participants.length !== 2 || !holdsAny) return true;
+  if (!ctx.invalid.has(roll.rollId)) ctx.invalid.set(roll.rollId, await badSharesOwner(ctx, campaign, roll));
+  return !ctx.invalid.get(roll.rollId);
+}
+
+async function stepReveal(ctx, campaign, roll) {
   const offer = ctx.offers.get(roll.rollId);
-  if (!offer || !logShowsEveryoneReady(roll)) return;
+  if (!offer || !logShowsEveryoneReady(roll) || !(await sharesAreSound(ctx, campaign, roll))) return;
   await send(ctx, `${roll.rollId}:reveal`, "FAIRPLAY_REVEAL", { rollId: roll.rollId, seedHex: toHex(offer.secret.seedBytes) });
+  ctx.revealSent.add(roll.rollId);
 }
 
 async function openHeld(ctx, campaign, roll, ofPeer) {
@@ -161,13 +191,27 @@ function scheduleClose(ctx, campaign, roll) {
   }, wait));
 }
 
+/** O Mestre grava, uma vez por rolagem, que ela foi anulada por falta; o texto cada aparelho refaz pela própria conta. */
+async function stepFault(ctx, campaign, roll) {
+  if (campaign.gmRouteId !== ctx.peerId || roll.phase !== "done" || ctx.faultChecked.has(roll.rollId)) return;
+  const written = (campaign.chronicle || []).some((e) => e.fairplayFault && e.fairplayRollId === roll.rollId);
+  const faults = written ? [] : fairplayRollFaults(roll, await verifyFairplayRecord(campaign, roll.rollId));
+  if (written || !faults.length) {
+    ctx.faultChecked.add(roll.rollId);
+    return;
+  }
+  const entry = { id: `fault-${roll.rollId}`, speaker: "Mesa", badge: "Falta", text: "", fairplayRollId: roll.rollId, fairplayFault: true };
+  await send(ctx, `${roll.rollId}:fault`, "CHRONICLE_APPEND", entry);
+}
+
 async function advanceRoll(ctx, campaign, roll) {
   scheduleClose(ctx, campaign, roll);
+  await stepFault(ctx, campaign, roll);
   if (!roll.participants.includes(ctx.peerId)) return;
   const mine = Object.hasOwn(roll.commits, ctx.peerId);
   if (roll.phase === "commit" && !mine) return stepCommit(ctx, roll);
   if (roll.phase === "shares" && mine && !Object.hasOwn(roll.shares, ctx.peerId)) return stepShares(ctx, campaign, roll);
-  if (roll.phase === "reveal" && mine && !Object.hasOwn(roll.reveals, ctx.peerId)) return stepReveal(ctx, roll);
+  if (roll.phase === "reveal" && mine && !Object.hasOwn(roll.reveals, ctx.peerId)) return stepReveal(ctx, campaign, roll);
   if (roll.phase === "recovery") return stepRecovery(ctx, campaign, roll);
   return undefined;
 }
@@ -248,7 +292,7 @@ async function handleRejected(ctx, msg) {
  * Cria o condutor Fairplay de um aparelho da mesa.
  * @param {{peerId: string, dispatchOp: (rawOp: object) => Promise<object>, loadCampaign: () => Promise<object>, now?: () => number, schedule?: Function, cancel?: Function, onWarn?: (message: string) => void, onError?: (err: unknown) => void, onStopped?: (info: {reason: string, opId: string, stepKey: string}) => void, onStatus?: (status: "waiting"|"refused"|"ok") => void}} opts
  *   `dispatchOp` é o do par de sincronização (`createVttSyncPeer`); `schedule`/`cancel` trocam o relógio nos testes.
- * @returns {{warnings: () => string[], lastRejection: () => ?object, getStatus: () => "waiting"|"refused"|"ok", start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
+ * @returns {{revealSent: (rollId: string) => boolean, invalidShares: (rollId: string) => string, warnings: () => string[], lastRejection: () => ?object, getStatus: () => "waiting"|"refused"|"ok", start: () => Promise<void>, openRoll: (o?: object) => Promise<string>, onUpdate: (campaign: object) => Promise<void>, onRejected: (msg: object) => Promise<void>, close: () => void}} Controlador.
  */
 export function createFairplayDriver(opts) {
   const ctx = createDriverContext(opts);
@@ -268,6 +312,8 @@ export function createFairplayDriver(opts) {
     onRejected: (msg) => queue(() => handleRejected(ctx, msg)),
     warnings: () => [...ctx.warnings],
     lastRejection: () => ctx.rejection,
+    revealSent: (rollId) => ctx.revealSent.has(rollId),
+    invalidShares: (rollId) => ctx.invalid.get(rollId) || "",
     getStatus: () => accessStatus(ctx),
     close() {
       for (const h of ctx.timers.values()) ctx.cancel(h);

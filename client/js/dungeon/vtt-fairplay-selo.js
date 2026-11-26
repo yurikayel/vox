@@ -7,6 +7,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { parseDiceCommand, rollDiceFormula, singleDieSides } from "./dice-engine.js";
 import { verifyFairplayRecord } from "./vtt-fairplay-log.js";
+import { fairplayRollFaults, faultText } from "./vtt-fairplay-faltas.js";
 
 /** Chave local da flag de laboratório (desligada por padrão). */
 export const FAIRPLAY_LAB_KEY = "vox.lab.fairplay";
@@ -126,7 +127,7 @@ export async function computeFairplaySeals(state) {
   const seen = new Set();
   const me = state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
   for (const entry of state?.chronicle || []) {
-    if (entry?.fairplayRollId) seals[entry.id] = await sealForEntry(state, entry, me, seen);
+    if (entry?.fairplayRollId && !entry.fairplayFault) seals[entry.id] = await sealForEntry(state, entry, me, seen);
   }
   return seals;
 }
@@ -140,23 +141,35 @@ export async function computeFairplaySeals(state) {
 export async function refreshFairplaySeals(state, storage) {
   if (!state?.fairplayLabEnabled && !isFairplayLabEnabled(storage)) return false;
   const next = await computeFairplaySeals(state);
-  const changed = JSON.stringify(next) !== JSON.stringify(state.fairplaySeals || {});
+  const verdicts = await computeFairplayVerdicts(state);
+  const changed = JSON.stringify([next, verdicts]) !== JSON.stringify([state.fairplaySeals || {}, state.fairplayVerdicts || {}]);
   state.fairplaySeals = next;
+  state.fairplayVerdicts = verdicts;
   return changed;
 }
 
+/** Veredito local (só estado e motivo) de cada rolagem que fechou: base das faltas, refeita neste aparelho. */
+async function computeFairplayVerdicts(state) {
+  const out = {};
+  for (const [rollId, roll] of Object.entries(state?.fairplay?.rolls || {})) {
+    if (roll?.phase !== "done") continue;
+    const { status, reason } = await verifyFairplayRecord(state, rollId);
+    out[rollId] = { status, reason };
+  }
+  return out;
+}
+
 /**
- * Conta, por pessoa, as rolagens que não fecharam (abortadas por falta de compromisso).
+ * Conta, por pessoa, as rolagens que não fecharam: abortadas por falta de compromisso ou anuladas porque
+ * o par se comprometeu e não revelou (esta, só com o veredito local da rolagem).
  * @param {object} [fairplay] Bloco `fairplay` do estado.
+ * @param {Record<string, {status?: string}>} [verdicts] Vereditos locais por rolagem (`state.fairplayVerdicts`).
  * @returns {Record<string, number>} Contagem por identificador de par.
  */
-export function countUnclosedRolls(fairplay) {
+export function countUnclosedRolls(fairplay, verdicts = {}) {
   const counts = {};
-  for (const roll of Object.values(fairplay?.rolls || {})) {
-    if (roll?.phase !== "aborted") continue;
-    for (const peer of roll.participants || []) {
-      if (!Object.hasOwn(roll.commits || {}, peer)) counts[peer] = (counts[peer] || 0) + 1;
-    }
+  for (const [rollId, roll] of Object.entries(fairplay?.rolls || {})) {
+    for (const r of [...missingReasons(roll || {}), ...fairplayRollFaults(roll, verdicts[rollId])]) counts[r.peer] = (counts[r.peer] || 0) + 1;
   }
   return counts;
 }
@@ -182,7 +195,7 @@ export function renderFairplaySeal(seal) {
  * @returns {string} HTML ou string vazia.
  */
 export function renderFairplayUnclosed(state) {
-  const entries = Object.entries(countUnclosedRolls(state?.fairplay));
+  const entries = Object.entries(countUnclosedRolls(state?.fairplay, state?.fairplayVerdicts));
   if (!entries.length) return "";
   const names = state.fairplayNames || {};
   const list = entries.map(([peer, n]) => `${escapeHtml(names[peer] || peer)}: ${n}`).join(" · ");
@@ -199,6 +212,7 @@ export function renderFairplayUnclosed(state) {
 export function renderEntrySeal(entry, state, storage) {
   if (!entry?.fairplayRollId) return "";
   if (!state?.fairplayLabEnabled && !isFairplayLabEnabled(storage)) return "";
+  if (entry.fairplayFault) return renderFaultEntry(entry, state);
   return renderFairplaySeal(state?.fairplaySeals?.[entry.id]);
 }
 
@@ -206,40 +220,54 @@ function nameOf(state, peer) {
   return state?.fairplayNames?.[peer] || peer;
 }
 
-function committedOf(roll) {
-  return (roll.participants || []).filter((p) => Object.hasOwn(roll.commits || {}, p));
+function missingReasons(roll) {
+  if (roll.phase !== "aborted") return [];
+  return (roll.participants || []).filter((p) => !Object.hasOwn(roll.commits || {}, p)).map((peer) => ({ peer, kind: "commit" }));
 }
 
-function missingReasons(roll) {
-  const out = [];
-  if (roll.phase === "aborted") {
-    for (const p of roll.participants || []) if (!Object.hasOwn(roll.commits || {}, p)) out.push({ peer: p, kind: "commit" });
-  }
-  const afterReveal = ["recovery", "done", "aborted"].includes(roll.phase);
-  if (afterReveal && committedOf(roll).length) {
-    for (const p of committedOf(roll)) if (!Object.hasOwn(roll.reveals || {}, p)) out.push({ peer: p, kind: "reveal" });
-  }
-  return out;
+function faultContext(state, rollId, fault) {
+  const me = viewerOf(state);
+  const driver = state?.fairplayDriver;
+  return { name: nameOf(state, fault.peer), mine: fault.peer === me, sent: Boolean(driver?.revealSent?.(rollId)) };
+}
+
+function localFaults(state, rollId) {
+  const roll = state?.fairplay?.rolls?.[rollId];
+  const local = { invalidShares: state?.fairplayDriver?.invalidShares?.(rollId) || "" };
+  return fairplayRollFaults(roll, state?.fairplayVerdicts?.[rollId], local);
+}
+
+/** Entrada que o Mestre grava ao anular uma rolagem: o texto sai da conta deste aparelho, nunca do payload. */
+function renderFaultEntry(entry, state) {
+  const rollId = entry.fairplayRollId;
+  const faults = localFaults(state, rollId);
+  const text = faults.length
+    ? faults.map((f) => faultText(f, faultContext(state, rollId, f))).join(" ")
+    : "falta registrada pelo Mestre; este aparelho não pôde conferir.";
+  return `<p class="dungeon-fairplay-seal is-unverified" role="status">${escapeHtml(text)}</p>`;
+}
+
+function viewerOf(state) {
+  return state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
 }
 
 /**
- * Motivos, por pessoa, de uma rolagem não ter corrido limpa, como este aparelho a viu no log.
- * @param {object} [fairplay] Bloco `fairplay` do estado.
- * @param {string} [viewerId] Identidade deste aparelho (para o aviso "segurada no caminho").
- * @returns {Array<{rollId: string, peer: string, kind: "commit"|"reveal", mine: boolean}>} Motivos por rolagem e pessoa.
+ * Motivos, por pessoa, de uma rolagem não ter corrido limpa, como este aparelho a viu no log e na própria conta.
+ * @param {object} [state] Estado com `fairplay`, `fairplayVerdicts`, `fairplayDriver` e identidade local.
+ * @returns {Array<{rollId: string, peer: string, kind: "commit"|"no_reveal"|"invalid_shares", mine: boolean, sent: boolean}>} Motivos por rolagem e pessoa.
  */
-export function fairplayRollReasons(fairplay, viewerId = "") {
+export function fairplayRollReasons(state) {
   const list = [];
-  for (const [rollId, roll] of Object.entries(fairplay?.rolls || {})) {
-    for (const r of missingReasons(roll || {})) list.push({ rollId, ...r, mine: r.peer === viewerId });
+  for (const [rollId, roll] of Object.entries(state?.fairplay?.rolls || {})) {
+    const faults = [...missingReasons(roll || {}), ...localFaults(state, rollId)];
+    for (const r of faults) list.push({ rollId, ...r, ...faultContext(state, rollId, r) });
   }
   return list;
 }
 
-function reasonText(state, r) {
-  if (r.kind === "commit") return `${r.mine ? "Você não entrou" : `${nameOf(state, r.peer)} não entrou`} a tempo na rolagem.`;
-  if (r.mine) return "Sua revelação foi segurada no caminho: ela não aparece no registro da mesa.";
-  return `A revelação de ${nameOf(state, r.peer)} não chegou.`;
+function reasonText(r) {
+  if (r.kind === "commit") return `${r.mine ? "Você não entrou" : `${r.name} não entrou`} a tempo na rolagem.`;
+  return faultText(r, r);
 }
 
 /**
@@ -258,8 +286,7 @@ export function renderFairplayPending(state) {
  * @returns {string} HTML ou vazio.
  */
 export function renderFairplayStatus(state) {
-  const me = state?.fairplayViewerId || state?.vttKeypair?.routeId || state?.localActor || "";
-  const items = fairplayRollReasons(state?.fairplay, me).map((r) => `<li>${escapeHtml(reasonText(state, r))}</li>`).join("");
+  const items = fairplayRollReasons(state).map((r) => `<li>${escapeHtml(reasonText(r))}</li>`).join("");
   const reasons = items ? `<ul class="dungeon-fairplay-reasons">${items}</ul>` : "";
   return `${renderFairplayPending(state)}${renderFairplayUnclosed(state)}${reasons}`;
 }

@@ -88,14 +88,17 @@ Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0
 
 **Não garante (limites honestos, visíveis na interface):**
 - **O Mestre tem veto, e sabe o resultado antes de usá-lo.** Como hub, ele recebe as revelações antes de repassar. Se o número não agradar, pode segurar uma revelação ou uma parte, e a rolagem fica "não verificada". É mais que censura: é desistir seletivamente. Na v0 isso é exposto, não impedido:
-  - a Crônica mostra cada rolagem que não fechou e o motivo que o próprio aparelho viu ("a revelação de X não chegou");
-  - cada jogador sabe se mandou a própria revelação; se ela não aparece no log, o aparelho dele marca "segurada no caminho".
+  - a Crônica mostra cada rolagem que não fechou e o motivo que o próprio aparelho viu ("X não revelou o número a tempo; a rolagem foi anulada");
+  - cada jogador sabe se mandou a própria revelação; se ela foi assinada e enviada e não aparece no log, o aparelho dele marca "segurada no caminho"; se nunca saiu, diz "você não revelou a tempo";
+  - o Mestre grava a falta no log (uma por rolagem, sem texto confiável) e cada aparelho redesenha a frase pela própria conta.
   Tirar o veto exige rede direta entre jogadores (abaixo).
 - **Abortar e pedir de novo.** Quem não gosta do rumo pode deixar a rolagem não fechar e abrir outra. Mitigação: toda rolagem aberta fica no log, e a Crônica mostra quantas rolagens não fecharam por pessoa. A punição é social, não técnica.
 - **Conluio de quórum.** Se `M` participantes combinarem entre si, eles reconstroem a semente de um terceiro antes da revelação. Com 2 ou 3 pares, o quórum é quase todo mundo: a garantia real é contra **um** trapaceiro, não contra a maioria.
 - **Vários aparelhos da mesma pessoa.** A lista vem dos pares com chave na sala (§2.1), então quem abre não escolhe a dedo quem entra. Quem tem vários aparelhos na sala, porém, entra várias vezes. Contra isso, a defesa continua sendo o Mestre admitir os jogadores.
 - **Sem rede direta entre jogadores.** Tudo passa pelo Mestre. Uma malha completa entre jogadores tiraria o poder de censura, mas é outra decisão.
 - **Histórico limitado para quem entra tarde.** A campanha guarda as ops assinadas das 50 rolagens mais novas, mais todas as admissões e chaves. Quem entra depois (ou a mesa depois de recarregar) refaz o estado só dessas; rolagens mais antigas aparecem como "não verificada" para esse aparelho. O arquivo de backup importado não traz estado Fairplay: ele é descartado e refeito pelas ops da mesa.
+- **Sem partes verificáveis, um participante pode anular a rolagem, não enviesá-la.** Quem entrega partes que não refazem a semente ou sonega a revelação só consegue anular, e é apontado como faltoso. Em mesa de dois, o guardião que tem todas as partes do outro as junta e confere contra o compromisso antes de revelar; se não bater, não revela e a rolagem é anulada com a falta apontada ao dono das partes. Com até 5 participantes a recuperação depende de todos os outros (L1). A verificação pública das partes (VSS) fica para a LAN-18.
+- **Fora desta emenda:** VSS, culpa por parte não liberada na recuperação e as camadas L2 a L4.
 - **Admissão ainda automática (pendente).** Hoje o Mestre admite quem entra na mesa. A aprovação explícita e a revogação estão aceitas na §3.1 e valem só com a flag de laboratório ligada.
 
 ### 3.1 Emenda: aprovação de admissão e revogação (Aceito)

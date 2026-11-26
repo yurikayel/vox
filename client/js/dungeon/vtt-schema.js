@@ -91,7 +91,7 @@ export function ensureSheetMeta(sheet = {}) {
 
 /**
  * Cria uma entrada padronizada da crônica da mesa.
- * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`).
+ * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
  * @returns {object} Entrada normalizada da crônica.
  */
 export function createChronicleEntry(opts = {}) {
@@ -109,8 +109,10 @@ export function createChronicleEntry(opts = {}) {
   };
 }
 
-/** Vínculo com a rolagem Fairplay (só o id e o valor anunciado; nunca um "verificado" de outro par). */
+/** Vínculo com a rolagem Fairplay (só o id e o valor anunciado, ou a marca booleana de falta que o reducer só dá ao Mestre; nunca um "verificado" de outro par). */
 function fairplayLink(opts) {
+  const faultRoll = String(opts.fairplayFaultRoll || "");
+  if (VTT_ID_RE.test(faultRoll)) return { fairplayRollId: faultRoll, fairplayFault: true };
   const rollId = String(opts.fairplayRollId || "");
   if (!VTT_ID_RE.test(rollId)) return {};
   const value = Number(opts.fairplayValue);
