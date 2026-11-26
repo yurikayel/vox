@@ -86,11 +86,48 @@ export async function sha256Hex(inputBytes) {
   return bytesToHex(new Uint8Array(digest));
 }
 
+/** `alg` do compromisso amarrado à rolagem e ao par (ADR-040 §2.3a). */
+export const FAIRPLAY_COMMIT_ALG = "sha256-bound-v1";
+const BOUND_PREFIX = "vox-fairplay-commit-v1";
+
+/**
+ * Texto em UTF-8 precedido do comprimento em bytes (uint32 big-endian): sem ambiguidade entre campos.
+ * @param {string} text Texto
+ * @returns {Uint8Array} Comprimento mais bytes.
+ */
+function lengthPrefixed(text) {
+  const bytes = TEXT_ENCODER.encode(String(text));
+  const head = new Uint8Array(4);
+  new DataView(head.buffer).setUint32(0, bytes.length, false);
+  return concatByteArrays([head, bytes]);
+}
+
+/**
+ * Compromisso `sha256-bound-v1`: SHA-256 de prefixo, 0x00, rollId, peerId e semente, com comprimentos.
+ * @param {{rollId: string, peerId: string}} binding Rolagem e par a que o compromisso pertence.
+ * @param {Uint8Array} seedBytes Semente.
+ * @returns {Promise<string>} Hash em hex (64 caracteres).
+ */
+export function boundCommitHex(binding, seedBytes) {
+  const prefix = concatByteArrays([TEXT_ENCODER.encode(BOUND_PREFIX), Uint8Array.of(0)]);
+  return sha256Hex(concatByteArrays([prefix, lengthPrefixed(binding.rollId), lengthPrefixed(binding.peerId), seedBytes]));
+}
+
+/**
+ * Compromisso da semente: amarrado quando há `binding`, SHA-256 simples (mesa local) quando não há.
+ * @param {Uint8Array} seedBytes Semente.
+ * @param {{rollId: string, peerId: string}} [binding] Amarração opcional.
+ * @returns {Promise<string>} Hash em hex.
+ */
+function commitHashOf(seedBytes, binding) {
+  return binding ? boundCommitHex(binding, seedBytes) : sha256Hex(seedBytes);
+}
+
 /**
  * Cria um slot pré-comprometido Commit-Reveal² ($c_o = H(s)$, $c_v = H(c_o)$) com backup Shamir.
  *
  * @param {Uint8Array} secretSeedBytes Semente aleatória de 32 bytes do jogador.
- * @param {object} [shareConfig={}] Opções (`threshold`, `totalPeers`, `splitId`, `random`).
+ * @param {object} [shareConfig={}] Opções (`threshold`, `totalPeers`, `splitId`, `random`, `binding` com `rollId` e `peerId`).
  * @returns {Promise<{commitO: string, commitV: string, splitId: string, threshold: number, totalPeers: number, backupShares: Array<object>}>} Envelope do slot.
  */
 export async function createCommitReveal2Slot(secretSeedBytes, shareConfig = {}) {
@@ -99,7 +136,7 @@ export async function createCommitReveal2Slot(secretSeedBytes, shareConfig = {})
   }
   const threshold = Number(shareConfig.threshold) || DEFAULT_SHAMIR_THRESHOLD;
   const totalPeers = Number(shareConfig.totalPeers) || DEFAULT_SHAMIR_PEERS;
-  const commitO = await sha256Hex(secretSeedBytes);
+  const commitO = await commitHashOf(secretSeedBytes, shareConfig.binding);
   const commitV = await sha256Hex(hexToBytes(commitO));
   const splitOpts = { m: threshold, n: totalPeers };
   if (shareConfig.splitId) splitOpts.splitId = shareConfig.splitId;
@@ -121,16 +158,18 @@ export async function createCommitReveal2Slot(secretSeedBytes, shareConfig = {})
  * @param {Array<object>} [backupShares=[]] Mínimo de $M$ partes Shamir daquele slot.
  * @param {string} [expectedCommitOHex=""] Compromisso $c_o$ esperado para prova criptográfica.
  * @param {number} [threshold=DEFAULT_SHAMIR_THRESHOLD] Quórum mínimo $M$ da divisão.
+ * @param {{rollId: string, peerId: string}} [binding] Amarração do compromisso, quando ele é `sha256-bound-v1`.
  * @returns {Promise<Uint8Array>} Semente reconstruída e autenticada.
  */
 export async function recoverAbortedSeed(
   backupShares = [],
   expectedCommitOHex = "",
   threshold = DEFAULT_SHAMIR_THRESHOLD,
+  binding = undefined,
 ) {
   const seedBytes = combineShares(backupShares, threshold);
   if (expectedCommitOHex) {
-    const actual = await sha256Hex(seedBytes);
+    const actual = await commitHashOf(seedBytes, binding);
     if (actual !== expectedCommitOHex) {
       throw new Error("Semente reconstruída não corresponde ao compromisso commitO.");
     }
@@ -176,7 +215,7 @@ function requireCommitO(participant) {
  */
 async function verifyRevealedSeed(participant) {
   requireCommitO(participant);
-  const commitO = await sha256Hex(participant.seedBytes);
+  const commitO = await commitHashOf(participant.seedBytes, participant.binding);
   if (commitO !== participant.commitO) {
     throw new Error(`Revelação inválida do par ${participant.peerId || "desconhecido"}.`);
   }
@@ -191,7 +230,7 @@ async function verifyRevealedSeed(participant) {
 async function recoverParticipantSeed(participant) {
   requireCommitO(participant);
   const threshold = Number(participant.threshold) || DEFAULT_SHAMIR_THRESHOLD;
-  const seedBytes = await recoverAbortedSeed(participant.backupShares, participant.commitO, threshold);
+  const seedBytes = await recoverAbortedSeed(participant.backupShares, participant.commitO, threshold, participant.binding);
   return { peerId: participant.peerId || "", seedBytes, commitO: participant.commitO, recovered: true };
 }
 

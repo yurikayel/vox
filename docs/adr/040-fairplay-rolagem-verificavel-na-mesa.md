@@ -54,6 +54,13 @@ Hoje `commitO = SHA-256(semente)` não diz de qual rolagem nem de quem é. Na v0
 - Compromisso sem `commitO` é recusado. Hoje a camada de baixo (`verifyRevealedSeed`) pula a verificação quando falta o `commitO`; o adaptador já exige o campo (#495), e o PR-3a fecha a lacuna também embaixo, com teste que falha na base.
 - Amarrar rolagem e pessoa dentro do hash (`SHA-256(rollId‖peerId‖semente)`) é o desenho mais firme, mas muda o formato. Entra com um `alg` novo (ADR-036), num PR próprio depois do PR-3b.
 
+**Emenda (SUB-07; decidido em 25/11/2026, opção recomendada; autorização geral do mantenedor).** O formato fica fixo assim:
+- `alg: "sha256-bound-v1"` no objeto `commit` do `FAIRPLAY_COMMIT`.
+- `commitO = SHA-256(` bytes UTF-8 de `vox-fairplay-commit-v1`, `0x00`, `len32(rollId)`, bytes UTF-8 de `rollId`, `len32(peerId)`, bytes UTF-8 de `peerId`, bytes crus da semente `)`. `len32` é o comprimento em bytes, uint32 big-endian: sem ele, `"ab"+"c"` e `"a"+"bc"` dariam o mesmo hash.
+- `alg` ausente ou desconhecido é recusado, sem transição (o log não aceita o `commit` e a rolagem não resolve). A flag `vox.lab.fairplay` é só de laboratório, então não há rolagem antiga a preservar.
+- Só o `commitO` muda: `commitV = SHA-256(commitO)` continua igual, e a recuperação pelas partes confere a semente contra o novo `commitO`, com o `rollId` e o `peerId` do compromisso.
+- A mesa local e o cofre de lore (`rpg-crypto-table.js` sem `binding`) seguem com SHA-256 simples: não há rolagem entre pares a amarrar.
+
 ### 2.4 Escopo da v0
 
 - **Só rolagens públicas.** Rolagens "Somente Mestre" e "Cega" continuam locais, sem selo: os jogadores não veem o valor, então não teriam o que verificar. Uma versão com compromisso público e valor escondido fica para depois.

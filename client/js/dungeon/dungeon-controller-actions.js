@@ -123,7 +123,29 @@ function triggerBrowserDownload(artifact, onDownload) {
 }
 
 /** Ações de arquivo tratadas no evento `change` (`dungeon-controller.js`), não no clique. */
-export const FILE_CHANGE_ACTIONS = new Set(["import-voxchar"]);
+export const FILE_CHANGE_ACTIONS = new Set(["import-voxchar", "wizard-import"]);
+
+/**
+ * Foto síncrona dos campos do formulário do assistente. Tem de ser tirada antes de qualquer `await`: o clique redesenha a
+ * tela logo depois do handler e apagaria o que foi digitado.
+ * @param {HTMLElement|null} container Raiz da tela.
+ * @returns {Object<string, string|string[]>} Valor por `name` (caixas marcadas viram lista).
+ */
+export function snapshotWizardForm(container) {
+  const form = container?.querySelector?.("[data-wizard-form]");
+  const values = {};
+  for (const el of form?.querySelectorAll("[name]") ?? []) {
+    if (el.type !== "checkbox") values[el.name] = el.value;
+    else if (el.checked) (values[el.name] ??= []).push(el.value);
+  }
+  return values;
+}
+
+/** Delega a ação do assistente de criar ficha ao módulo carregado só quando a pessoa o usa. */
+const wizardAction = (fn, how) => (state, el, c, opts) => {
+  const values = snapshotWizardForm(c);
+  return import("./sheet-wizard-actions.js").then((m) => m[fn](state, el, values, how ?? opts));
+};
 
 /**
  * Baixa o arquivo `.voxchar` da ficha ativa; o módulo é carregado só neste clique.
@@ -137,6 +159,30 @@ export async function runVoxcharExport(state, opts = {}) {
   if (!artifact) { state.campaignNotice = "Esta ficha não tem pacote de sistema para exportar."; return; }
   triggerBrowserDownload(artifact, opts.onDownload);
   state.campaignNotice = `Ficha exportada: ${artifact.filename}.`;
+}
+
+/**
+ * Prepara o link só de leitura da ficha ativa: gera e deixa a confirmação pendente (nada é copiado ainda).
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui com `state.voxcharLink` preenchido (link pronto ou motivo da recusa).
+ */
+export async function runVoxcharLinkPrepare(state) {
+  const { buildVoxcharLink } = await import("./voxchar-link.js");
+  const out = await buildVoxcharLink(state.sheet);
+  state.voxcharLink = out.ok ? { href: out.href, size: out.size } : { reason: out.reason };
+}
+
+/**
+ * Copia o link confirmado para a área de transferência e encerra a confirmação.
+ * @param {object} state Estado da sessão.
+ * @returns {Promise<void>} Conclui após copiar ou avisar da falha.
+ */
+export async function runVoxcharLinkCopy(state) {
+  const href = state.voxcharLink?.href;
+  state.voxcharLink = null;
+  if (!href) return;
+  const url = `${location.origin}${location.pathname}${href}`;
+  try { await navigator.clipboard.writeText(url); state.campaignNotice = "Link da ficha copiado."; } catch { state.campaignNotice = "Não foi possível copiar; use o arquivo .voxchar."; }
 }
 
 async function runExportAction(state, container, format, opts) {
@@ -178,6 +224,12 @@ function toggleViewerRoleSafe(state) {
 
 /** Ações que levam o foco a um seletor depois de redesenhar (foco previsível). */
 export const FOCUS_AFTER_ACTION = {
+  "wizard-open": "[data-wizard-focus]",
+  "wizard-mode": "[data-wizard-focus]",
+  "wizard-step": "[data-wizard-focus]",
+  "wizard-add-item": "[data-wizard-focus]",
+  "wizard-cancel": "[data-wizard-focus]",
+  "wizard-keep": "[data-wizard-focus]",
   "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
@@ -209,9 +261,20 @@ export const ACTION_HANDLERS = {
   "roll-action": (state, el, _c, opts) => recordSheetActionRoll(state, el.dataset.actionId, { store: opts.store }),
   "remove-action": (state, el, _c, opts) => removeCustomSheetAction(state, el.dataset.actionId, { store: opts.store }),
   "export-voxchar": (state, _el, _c, opts) => runVoxcharExport(state, opts),
+  "share-voxchar-link": (state) => runVoxcharLinkPrepare(state),
+  "copy-voxchar-link": (state) => runVoxcharLinkCopy(state),
+  "cancel-voxchar-link": (state) => { state.voxcharLink = null; },
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
+  "wizard-open": wizardAction("openWizard"),
+  "wizard-mode": wizardAction("chooseMode"),
+  "wizard-step": wizardAction("stepWizard"),
+  "wizard-add-item": wizardAction("addItem"),
+  "wizard-remove-item": wizardAction("removeItem"),
+  "wizard-cancel": wizardAction("cancelWizard", {}),
+  "wizard-keep": wizardAction("cancelWizard", { confirm: false }),
+  "wizard-discard": wizardAction("cancelWizard", { discard: true }),
   "canvas-zoom-in": (state) => adjustCameraZoom(state, 1.2),
   "canvas-zoom-out": (state) => adjustCameraZoom(state, 0.84),
   "canvas-reset": (state) => adjustCameraZoom(state, 0),
