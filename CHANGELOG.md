@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: novo sistema "GURPS 4e (matemática)" no seletor, com ST, DX, IQ, HT, PV e PF, secundários, níveis de carga e o teste 3d6 sob NH em funções puras; sem nenhum texto do livro. A tela de derivados ainda é a do D&D (spec `pacote-gurps4e-v0`).
 - HUD da Mesa: cinco painéis em meia tela sobre o mapa (Ficha, Itens, Habilidades, Mapa e Crônica), abertos pelos botões da barra ou pelas teclas C, I, S, M e R (só com o foco na área do mapa e fora de campo de texto; sem ficha, Ficha, Itens e Habilidades ficam desabilitados). Não é janela modal: o mapa segue visível, Esc fecha, o foco entra no painel e volta ao botão que o abriu; no celular o painel ocupa a tela. Tab continua navegando o foco e não é atalho.
 - HUD da Mesa: cinto de 4 consumíveis (itens com a tag `consumivel`; clicar gasta 1), indicador de magia no rótulo do sistema (só com espaços de magia), favoritos (até 6, marcados em "Favoritar" na mochila) que ocupam as vagas de atalhos, e o PV próprio passa a ser anunciado por uma região viva fixa. Painéis em meia tela ficam para o próximo PR.
 - Ficha: criar ou salvar ficha como jogador não troca mais a ficha ativa da mesa, que é decisão do Mestre; o jogador remoto continua vendo a própria ficha. Para o Mestre e no modo local nada muda.

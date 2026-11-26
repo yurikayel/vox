@@ -56,3 +56,7 @@ O pacote de sistema `client/js/dungeon/system-pack-dnd5e-2024.js` inclui **somen
 - **Fonte:** [SRD 5.2](https://www.dndbeyond.com/srd) · [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 Qualquer expansão desse pacote deve manter a atribuição visível e restringir-se ao que a SRD permite sob CC-BY-4.0.
+
+## 6. Pacote `gurps4e` (GURPS 4e)
+
+O pacote `client/js/dungeon/system-pack-gurps4e.js` (e `system-gurps-math.js`) traz **somente** fórmulas numéricas próprias do Vox e nomes curtos de atributos. Não há licença aberta para o conteúdo editorial desse sistema, então nenhum texto, tabela, perícia, vantagem ou desvantagem do livro é embutido; esses dados vêm do jogador. Licença declarada: `LicenseRef-Vox-Estrutura-Propria`. Atribuição no código: `GURPS4E_ATTRIBUTION`. Marca de Steve Jackson Games, sem vínculo com o Vox. Ver [pacote-gurps4e-v0.md](../specs/pacote-gurps4e-v0.md).
