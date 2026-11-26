@@ -111,6 +111,9 @@ Cada fatia é um PR; JSDoc em todo export; função de produção com no máximo
 - **D7.** Tela de **editar** (campos de salvaguardas, especialização e dado de vida) acompanha `display` na mesma fatia, ou fica para depois?
   - **Recomendado: depois**, em item próprio; a faixa de leitura e o HUD vêm primeiro, e a edição só some o que o pacote não declara.
   - **Decidido em 26/11/2026:** depois, em item próprio (opção recomendada; autorização geral do mantenedor).
+- **D8.** Onde guardar PM (T20) e PF (GURPS) para a barra do HUD e a faixa: hoje `pools_base` só tem PV e espaços de magia, então `resource: "mp"` não tem dado.
+  - **Recomendado: reservas genéricas por id do recurso do pacote** em `pools_base` (`<id>_max` e `<id>_current`, mesmo molde do PV, mudando pelo livro-razão `delta_ledger`), sem campo novo na projeção do jogador além do que o HUD já mostra. Sai em fatia própria, antes de `resource` na faixa e do indicador de PM.
+  - **Pendente** (fora das fatias 1 e 2; precisa de OK do mantenedor por tocar o formato da ficha).
 
 ## 9. Fora de escopo
 
