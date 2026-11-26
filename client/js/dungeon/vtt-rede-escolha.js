@@ -10,7 +10,7 @@ import { createBroadcastChannelTransport } from "./vtt-sync.js";
 
 /** Flag de laboratório: `"1"` liga a Mesa pela rede neste aparelho. */
 export const MESA_REDE_LAB_KEY = "vox.lab.mesa-rede";
-/** Endereço `ws://` ou `wss://` do nó de sinalização usado pela Mesa em rede. */
+/** Endereço do nó de sinalização, com esquema `ws:` (só em loopback) ou `wss:`, usado pela Mesa em rede. */
 export const MESA_REDE_URL_KEY = "vox.lab.mesa-rede.url";
 
 /** Servidores STUN da Mesa em rede (laboratório): vazio = só candidatos locais; ausente = o padrão do produto (STUN público). */
