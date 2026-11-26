@@ -9,6 +9,7 @@ import { collectFairplayOps, limitFairplayOps, normalizeFairplayState } from "./
 import { rebuildFairplayState } from "./vtt-fairplay-rebuild.js";
 import { isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { createVttOp } from "./vtt-schema.js";
+import { sanitizeDisplayName } from "./vtt-fairplay-nome.js";
 import { isDoorRevealedByFog, isTokenRevealedByFog } from "./vtt-tactics-geometry.js";
 import {
   createBlobAssembler,
@@ -290,6 +291,7 @@ async function handleGmActionOp(ctx, msg) {
 
 async function handleGmMessage(ctx, msg) {
   if (msg.kind === "HELLO_SYNC" && msg.from) {
+    ctx.peerNames.set(msg.from, sanitizeDisplayName(msg.name));
     if (!ctx.connectedPlayers.has(msg.from)) {
       ctx.connectedPlayers.add(msg.from);
       ctx.onPeerCountChange?.(ctx.connectedPlayers.size);
@@ -402,9 +404,15 @@ function giveUpHello(ctx, reason) {
   ctx.onHelloGaveUp?.({ reason });
 }
 
+/** HELLO_SYNC do jogador, com o nome de exibição quando há um (o Mestre o trata como não confiável). */
+function helloMessage(ctx) {
+  const name = sanitizeDisplayName(ctx.displayName);
+  return name ? { kind: "HELLO_SYNC", roomKey: ctx.roomKey, name } : { kind: "HELLO_SYNC", roomKey: ctx.roomKey };
+}
+
 function sendHello(ctx) {
   try {
-    ctx.transport.send(ctx.gmRouteId, { kind: "HELLO_SYNC", roomKey: ctx.roomKey });
+    ctx.transport.send(ctx.gmRouteId, helloMessage(ctx));
     return true;
   } catch {
     giveUpHello(ctx, "error");
@@ -429,6 +437,17 @@ function startHelloRetry(ctx) {
   if (sendHello(ctx)) scheduleHelloRetry(ctx);
 }
 
+/** Estado do acesso ao Fairplay e do nome de exibição dentro do contexto do par. */
+function fairplayContext(opts) {
+  return {
+    pendingFairplay: new Set(opts.pendingFairplay || []),
+    refusedFairplay: new Set(),
+    keyOpByActor: new Map(),
+    peerNames: new Map(),
+    displayName: opts.displayName,
+  };
+}
+
 function buildSyncContext(opts) {
   return {
     role: opts.role === "gm" ? "gm" : "player",
@@ -439,9 +458,7 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
-    pendingFairplay: new Set(opts.pendingFairplay || []),
-    refusedFairplay: new Set(),
-    keyOpByActor: new Map(),
+    ...fairplayContext(opts),
     onFairplayAccessChange: opts.onFairplayAccessChange,
     storage: opts.storage,
     snapshotAsked: false,
@@ -461,8 +478,8 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`onFairplayAccessChange` (fila de pedidos mudou), `pendingFairplay` (fila inicial, para testes), `schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
- * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, refuseFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
+ * @param {object} opts Opções (`displayName` (nome anunciado no HELLO do jogador), `onFairplayAccessChange` (fila de pedidos mudou), `pendingFairplay` (fila inicial, para testes), `schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], getPeerNames: () => Record<string, string>, approveFairplayPeer: (routeId: string) => Promise<boolean>, refuseFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
   const ctx = buildSyncContext(opts);
@@ -478,6 +495,7 @@ export function createVttSyncPeer(opts) {
     dispatchOp: (rawOp) => dispatchSyncOp(ctx, rawOp),
     routeId: ctx.keypair.routeId,
     getPendingFairplayPeers: () => [...ctx.pendingFairplay],
+    getPeerNames: () => Object.fromEntries([...ctx.peerNames].filter(([, name]) => name)),
     approveFairplayPeer: (routeId) => approveFairplayPeer(ctx, String(routeId)),
     refuseFairplayPeer: (routeId) => refuseFairplayPeer(ctx, String(routeId)),
     revokeFairplayPeer: (routeId) => revokeFairplayPeer(ctx, String(routeId)),

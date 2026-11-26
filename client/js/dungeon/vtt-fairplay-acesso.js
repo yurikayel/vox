@@ -5,12 +5,13 @@
  * @module dungeon/vtt-fairplay-acesso
  */
 import { escapeHtml } from "../shared/html.js";
+import { fairplayPeerLabel } from "./vtt-fairplay-nome.js";
 
 /** Seletor do contêiner de acesso (recebe o foco depois de uma ação, para o foco ser previsível). */
 export const FAIRPLAY_ACCESS_ID = "dungeon-fairplay-access";
 
 function peerName(state, id) {
-  return state?.fairplayNames?.[id] || id;
+  return fairplayPeerLabel(id, state?.fairplayNames?.[id]);
 }
 
 function requestRow(state, id) {

@@ -7,6 +7,7 @@ import { createMemoryVttBackend, createVttStore } from "./vtt-store.js";
 import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
 import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
 import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
+import { getDisplayName } from "../identity/local-account.js";
 
 /** @param {object} state @param {object} invite @param {object} keypair */
 function stampPlayerJoinState(state, invite, keypair) {
@@ -64,6 +65,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
+    displayName: getDisplayName(),
     ...playerSyncCallbacks(state, opts),
   });
   state.syncPeer.join();
