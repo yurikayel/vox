@@ -121,6 +121,24 @@ def _close_ctx(ctx):
     ctx.close()
 
 
+_APP_READY_JS = "() => !!document.querySelector('#app-root')?.firstElementChild"
+
+
+def _wait_app_ready(page):
+    """Espera o primeiro render do shell (`#app-root` com conteúdo) após o boot a frio.
+
+    O boot carrega centenas de módulos ES; sob carga ele dominava os timeouts de 15 s
+    dos passos seguintes. Esta espera isola o boot numa condição real, sem alongar prazo.
+    """
+    page.wait_for_function(_APP_READY_JS, timeout=15000)
+
+
+def _goto_ready(page, url):
+    """`goto` seguido de `_wait_app_ready`: use antes da primeira interação numa página nova."""
+    page.goto(url, wait_until="domcontentloaded")
+    _wait_app_ready(page)
+
+
 def _complete_onboarding(page, display_name, errors=None):
     enter_btn = page.locator("#btn-read-first-enter")
     try:
