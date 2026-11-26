@@ -105,7 +105,8 @@ async function mountShell() {
  */
 export async function showFichaVer(route = {}, deps = {}) {
   scrubFichaUrl();
-  const parse = deps.parse ?? (await import("../dungeon/voxchar-link.js")).parseVoxcharLink;
+  const link = await import("../dungeon/voxchar-link.js");
+  const parse = deps.parse ?? link.parseVoxcharLink;
   const main = await (deps.mountShell ?? mountShell)();
   const out = await parse(route.hash || "");
   main.innerHTML = out.ok ? renderFichaView(out.doc) : renderFichaError(out.issues);

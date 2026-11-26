@@ -195,8 +195,8 @@ test("14. a visualização troca a URL antes de qualquer await e o hash completo
     mountShell: async () => main,
   };
   try {
-    const job = showFichaVer({ hash: full }, deps);
-    assert.deepEqual(events, [["replace", "/app/?x=1#/ficha/ver"]], "a URL já foi trocada antes de qualquer await");
+    const job = showFichaVer({ hash: full }, deps); // sem await: nenhuma microtask rodou ainda
+    assert.deepEqual(events, [["replace", "/app/?x=1#/ficha/ver"]], "replaceState já foi chamado de forma síncrona, antes do import() e do parse");
     await job;
   } finally { Object.assign(globalThis, real); }
   assert.deepEqual(events[1], ["parse", full], "o parser recebe o hash completo, não o já limpo");
