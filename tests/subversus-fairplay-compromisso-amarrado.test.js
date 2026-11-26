@@ -72,3 +72,9 @@ test("commitO malformado é recusado dizendo qual par", async () => {
   assert.equal(res.ok, false);
   assert.match(res.error, /inválido do par vx_a/);
 });
+
+test("resposta conhecida: o formato exato do hash está fixado (vetor calculado fora do código)", async () => {
+  const seed = Uint8Array.from({ length: 32 }, (_, i) => i);
+  const hash = await boundCommitHex({ rollId: "roll-é1", peerId: "vx_peer" }, seed);
+  assert.equal(hash, "bf4995b093ef3a0d86c70d83726b39b3977c882b2150f1aec8fefd0d9ab3853c");
+});
