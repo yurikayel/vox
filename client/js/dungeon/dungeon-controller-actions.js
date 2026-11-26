@@ -64,6 +64,7 @@ import {
   toggleFogEnabled,
 } from "./dungeon-tactics-actions.js";
 import { clampZoom } from "./vtt-geometry.js";
+import { FAIRPLAY_ACCESS_ID, handleFairplayRequest, handleFairplayRetry } from "./vtt-fairplay-acesso.js";
 
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
 
@@ -175,8 +176,18 @@ function toggleViewerRoleSafe(state) {
   saveDungeonPrefs({ viewerRole: state.viewerRole });
 }
 
+/** Ações que levam o foco a um seletor depois de redesenhar (foco previsível). */
+export const FOCUS_AFTER_ACTION = {
+  "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
+  "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
+  "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
+};
+
 /** Mapa de handlers de clique `data-dungeon="..."`. */
 export const ACTION_HANDLERS = {
+  "fairplay-approve": (state, el) => handleFairplayRequest(state, el),
+  "fairplay-refuse": (state, el) => handleFairplayRequest(state, el),
+  "fairplay-retry": (state) => handleFairplayRetry(state),
   failover: (state) => simulatePillarFailover(state),
   "roll-d20": (state, _el, _c, opts) => rollD20AndPersist(state, opts),
   "grid-cell": (state, el) => openVaultIfTriggered(movePlayerOnGrid(state, el.dataset.x, el.dataset.y)),
