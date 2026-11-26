@@ -84,9 +84,11 @@ export const T20_PACK = Object.freeze({
       Object.freeze({ id: "armorClass", label: "Defesa", source: Object.freeze({ formula: "armorClass" }) }),
       Object.freeze({ id: "initiative", label: "Iniciativa (atributo)", source: Object.freeze({ formula: "initiative" }) }),
       Object.freeze({ id: "speed", label: "Deslocamento", source: Object.freeze({ formula: "speed" }) }),
+      Object.freeze({ id: "hp", label: "PV", source: Object.freeze({ resource: "hp" }) }),
+      Object.freeze({ id: "mp", label: "PM", source: Object.freeze({ resource: "mp" }) }),
     ]),
     blocks: Object.freeze([]),
-    hud: Object.freeze({ defense: "armorClass" }),
+    hud: Object.freeze({ defense: "armorClass", secondary: "mp" }),
   }),
   formulas: Object.freeze({
     /** Valor guardado = 10 + modificador (o cartão mostra só o modificador). */
