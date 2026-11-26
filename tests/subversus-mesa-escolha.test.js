@@ -173,3 +173,13 @@ test("queda sem vazamento: o transporte que lança fecha a sinalização, cancel
   assert.equal(events.length, after, "o descartado não publica mais");
   assert.ok(events.every((e) => e.transport === "mesma_origem"), "nenhum evento de rede");
 });
+
+test("endereço do nó: barra invertida, %00 no caminho, senha sem usuário e o teto de 512 caracteres", () => {
+  const url = (v) => readMesaRedeUrl(store("1", v));
+  assert.equal(url("wss://evil.example\@good.example"), "");
+  assert.equal(url("wss://a/%00"), "");
+  assert.equal(url("wss://:senha@host"), "");
+  const head = "wss://a.example/";
+  assert.equal(url(head + "x".repeat(512 - head.length)).length, 512, "512 caracteres é aceito");
+  assert.equal(url(head + "x".repeat(513 - head.length)), "", "513 caracteres é recusado");
+});
