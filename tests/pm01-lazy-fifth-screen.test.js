@@ -141,7 +141,6 @@ test("PM-01 passo 6: showStatus carrega view sob demanda, hidrata storage/cache 
   els.resetSignaling.onclick();
   assert.equal(signalingTelemetry.getSignalingTelemetrySummary().channels.ws.attempts, 0);
   els.resetAvailability.onclick();
-  await new Promise((r) => setTimeout(r, 20));
 });
 
 test("PM-01 passo 6: trata falhas de storage, caches, clipboard e DOM parcial sem exceção", async () => {
