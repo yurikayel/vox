@@ -10,6 +10,7 @@
  */
 import { isSafeKey, withEntry } from "../shared/safe-key.js";
 import { FAIRPLAY_SHARE_ALG, fairplayShareHash, isFairplayPublicKeyOnCurve, isFairplayShareEnvelope } from "./vtt-fairplay-cipher.js";
+import { FAIRPLAY_COMMIT_ALG } from "../rpg-crypto-table.js";
 import { resolveFairplayRoll } from "./vtt-fairplay-roll.js";
 import { MAX_ADMIT_EVENTS_PER_ACTOR, MAX_KEYS, MAX_KEY_OPS_PER_ACTOR, MAX_LOGGED_ROLLS, fairplayOf, normalizeFairplayState, seal } from "./vtt-fairplay-state.js";
 import { applyFairplayAdmit, applyFairplayRevoke, isAdmitted, isRevokedAt } from "./vtt-fairplay-admission.js";
@@ -117,14 +118,14 @@ function applyFairplayOpen(state, op) {
 
 function isFreshCommit(roll, op) {
   const commitO = String(op.payload?.commit?.commitO || "");
-  if (!HEX64.test(commitO) || Object.hasOwn(roll.commits, op.actor)) return false;
+  if (op.payload?.commit?.alg !== FAIRPLAY_COMMIT_ALG || !HEX64.test(commitO) || Object.hasOwn(roll.commits, op.actor)) return false;
   return !Object.values(roll.commits).some((c) => c.commitO === commitO);
 }
 
 function commitDocFor(roll, op) {
   const c = op.payload.commit;
   const { threshold, totalPeers } = fairplayQuorum(roll.participants.length);
-  return { peerId: op.actor, rollId: roll.rollId, commitO: String(c.commitO), commitV: String(c.commitV || ""), splitId: String(c.splitId || ""), threshold, totalPeers };
+  return { peerId: op.actor, rollId: roll.rollId, alg: FAIRPLAY_COMMIT_ALG, commitO: String(c.commitO), commitV: String(c.commitV || ""), splitId: String(c.splitId || ""), threshold, totalPeers };
 }
 
 function applyFairplayCommit(state, op) {
