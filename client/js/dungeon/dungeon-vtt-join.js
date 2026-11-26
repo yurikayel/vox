@@ -9,6 +9,13 @@ import { generateVttKeypair, parseRoomInviteHref } from "./vtt-sync-codec.js";
 import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
 /**
+ * Carrega sob demanda o transporte da Mesa pela rede (SUB-08); nenhum byte dele entra no shell. Ainda sem chamador na
+ * tela: a escolha entre `BroadcastChannel` e rede vem na próxima fatia.
+ * @returns {Promise<typeof import("./vtt-rtc-transport.js")>} Módulo do transporte WebRTC.
+ */
+export const loadRtcVttTransport = () => import("./vtt-rtc-transport.js");
+
+/**
  * Texto de aviso para cada código de falha da entrada P2P.
  * @param {string} [code] Código de erro de {@link attachVttPlayerJoin}.
  * @returns {string} Mensagem para o jogador.
