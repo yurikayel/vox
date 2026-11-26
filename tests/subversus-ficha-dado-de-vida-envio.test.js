@@ -60,7 +60,7 @@ test("envio: ficha de sistema sem pacote ou form sem o campo não quebra nem gra
   const state = await freshState();
   await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "dnd5e-2024" }), ctx);
   assert.equal("hitDie" in state.sheet.system_choices, false, "sem o campo hitDie nada é gravado");
-  await submit(state, { sheetSystem: "gurps4e", hitDie: "10" });
+  await submit(state, { sheetSystem: "sistema-inexistente", hitDie: "10" });
   assert.equal(state.sheetEditIssues.length > 0, true, "sistema desconhecido recusa o Salvar");
   assert.notEqual(state.sheet.system_choices.hitDie, 10, "recusado: nada gravado");
   assert.equal(state.sheet.name, "Kael");

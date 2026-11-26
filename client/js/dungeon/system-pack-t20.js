@@ -7,9 +7,10 @@
  * Licença: não há licença aberta para o conteúdo editorial desse sistema; o pacote não embute conteúdo de terceiros
  * além dos nomes curtos de atributos e perícias.
  *
- * @module dungeon/system-pack-t20
  * Rótulos fora de Defesa, Iniciativa e Deslocamento são os genéricos do motor atual (a tela de derivados ainda é
  * a do D&D; adaptá-la ao T20 é trabalho futuro, veja a spec).
+ *
+ * @module dungeon/system-pack-t20
  *
  * @see docs/specs/pacote-t20-v0.md
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
@@ -30,7 +31,7 @@ export const T20_PACK = Object.freeze({
   license: Object.freeze({
     spdx: "LicenseRef-Vox-Estrutura-Propria",
     attribution: T20_ATTRIBUTION,
-    source: "Estrutura e matemática próprias do Vox; sem conteúdo editorial de terceiros",
+    source: "Nomes e ligações de mecânica de jogo; estrutura e matemática do Vox",
     url: "https://github.com/yurikayel/vox/blob/develop/docs/legal/licenca-e-contribuicoes.md",
   }),
   testKind: "d20_vs_cd",

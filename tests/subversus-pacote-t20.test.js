@@ -64,7 +64,27 @@ test("t20: nenhum texto de livro no pacote (sem chaves de descrição, poderes, 
   const keys = new Set(JSON.stringify(T20_PACK).match(/"[a-zA-Z]+":/g));
   for (const forbidden of ['"description":', '"text":', '"rules":', '"spells":', '"classes":', '"powers":', '"races":', '"deities":']) assert.equal(keys.has(forbidden), false, forbidden);
   const strings = [...JSON.stringify(T20_PACK).matchAll(/"([^"]{41,})"/g)].map((m) => m[1]);
-  assert.deepEqual(strings.filter((t) => t !== T20_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Estrutura e matemática")), []);
+  assert.deepEqual(strings.filter((t) => t !== T20_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Nomes e ligações")), []);
   assert.match(T20_PACK.license.attribution, /Nenhum texto do livro/);
   assert.notEqual(T20_PACK.license.spdx, "CC-BY-4.0");
+});
+
+const SKILL_ABILITY = {
+  acrobacia: "dex", adestramento: "cha", atletismo: "str", atuacao: "cha", cavalgar: "dex", conhecimento: "int", cura: "wis", diplomacia: "cha", enganacao: "cha", fortitude: "con",
+  furtividade: "dex", guerra: "int", iniciativa: "dex", intimidacao: "cha", intuicao: "wis", investigacao: "int", jogatina: "cha", ladinagem: "dex", luta: "str", misticismo: "int",
+  nobreza: "int", oficio: "int", percepcao: "wis", pilotagem: "dex", pontaria: "dex", reflexos: "dex", religiao: "wis", sobrevivencia: "wis", vontade: "wis",
+};
+
+test("t20: tabela perícia→atributo completa (luta→FOR, vontade→SAB, fortitude→CON…) e a percepção passiva lê Percepção", () => {
+  assert.deepEqual(Object.fromEntries(T20_PACK.skills.map((s) => [s.id, s.ability])), SKILL_ABILITY);
+  assert.equal(T20_PACK.formulas.passivePerception.skill, "percepcao");
+  assert.ok(T20_PACK.skills.some((s) => s.id === T20_PACK.formulas.passivePerception.skill));
+});
+
+test("t20: partes jurídicas — licença própria, atribuição com marca de terceiros e sem vínculo, fonte declarada", () => {
+  assert.equal(T20_PACK.license.spdx, "LicenseRef-Vox-Estrutura-Propria");
+  assert.match(T20_PACK.license.attribution, /marca/);
+  assert.match(T20_PACK.license.attribution, /sem vínculo/);
+  assert.equal(T20_PACK.license.source, "Nomes e ligações de mecânica de jogo; estrutura e matemática do Vox");
+  assert.equal(T20_ATTRIBUTION, T20_PACK.license.attribution);
 });

@@ -14,7 +14,7 @@ Só estrutura e matemática, no mesmo formato dos pacotes existentes (`validateS
 
 ## 2. Conteúdo e licença
 
-Não há licença aberta para o conteúdo editorial do sistema. O pacote traz só nomes curtos de atributos e perícias (termos de jogo) e matemática própria. Fica fora: poderes, magias, classes, raças, divindades, descrições e qualquer texto de regra. O que for texto vem do jogador (campo livre) ou de importação local. `license.spdx` é `LicenseRef-Vox-Estrutura-Propria`; a atribuição diz isso e que a marca é de seus titulares. Nota em `docs/legal/licenca-e-contribuicoes.md` §5.
+Não há licença aberta para o conteúdo editorial do sistema. O pacote traz só nomes e ligações de mecânica de jogo (atributos, perícias e a ligação de cada perícia a um atributo); estrutura e matemática do Vox. Fica fora: poderes, magias, classes, raças, divindades, descrições e qualquer texto de regra. O que for texto vem do jogador (campo livre) ou de importação local. `license.spdx` é `LicenseRef-Vox-Estrutura-Propria`; a atribuição diz isso e que a marca é de seus titulares. Nota em `docs/legal/licenca-e-contribuicoes.md` §5.
 
 ## 3. Representação no motor
 

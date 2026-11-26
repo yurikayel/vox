@@ -20,7 +20,7 @@ test("validação: edição boa passa; campos de atributo ausentes não são cob
 });
 
 test("validação: cada problema vem com campo e motivo em português", () => {
-  const r = validateSheetEdit({ name: "  ", armor_class: 99, system: "gurps4e", str: 0, dex: 31, con: "abc", int: 12.5 });
+  const r = validateSheetEdit({ name: "  ", armor_class: 99, system: "sistema-inexistente", str: 0, dex: 31, con: "abc", int: 12.5 });
   assert.equal(r.ok, false);
   assert.match(field(r.issues, "sheetName"), /precisa de um nome/);
   assert.match(field(r.issues, "armorClass"), /99 está fora do intervalo 1–40/);
@@ -28,7 +28,7 @@ test("validação: cada problema vem com campo e motivo em português", () => {
   assert.match(field(r.issues, "dex"), /Destreza: 31/);
   assert.match(field(r.issues, "con"), /Constituição: use um número inteiro/);
   assert.match(field(r.issues, "int"), /Inteligência: use um número inteiro/);
-  assert.match(field(r.issues, "sheetSystem"), /"gurps4e" não está instalado/);
+  assert.match(field(r.issues, "sheetSystem"), /"sistema-inexistente" não está instalado/);
   const blank = validateSheetEdit({ name: "A", armor_class: "" });
   assert.match(field(blank.issues, "armorClass"), /em branco/);
   assert.doesNotMatch(field(blank.issues, "armorClass"), /fora do intervalo/);
