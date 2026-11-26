@@ -286,22 +286,30 @@ function reofferRig(opts = {}) {
   const rtc = createFakeRtcNetwork();
   const sent = [];
   let joinFn = null;
+  let deliver = null;
   const signaling = {
-    send: (d) => { sent.push(d); return true; }, onMessage: () => () => {},
+    send: (d) => { sent.push(d); return true; }, onMessage: (fn) => { deliver = fn; return () => {}; },
     isPeerOnline: () => false, onPeerJoined: (fn) => { joinFn = fn; return () => { joinFn = null; }; },
   };
   const t = createRtcVttTransport({ peerId: "ana", initiate: true, signaling, createPeerConnection: rtc.createPeerConnection, ...opts });
-  return { t, sent, join: (id) => joinFn?.(id), offers: () => sent.filter((d) => d.type === "offer").length };
+  return { t, sent, deliver: (m) => deliver(m), join: (id) => joinFn?.(id), offers: () => sent.filter((d) => d.type === "offer").length };
 }
 
 test("freio de reoferta: 50 avisos de entrada do mesmo par dão uma oferta em voo e, passado o prazo, no máximo 4 no total", async () => {
-  let now = 0;
+  let now = 1000;
   const rig = reofferRig({ now: () => now });
   rig.t.send("gm", { type: "OLA" });
   for (let i = 0; i < 50; i += 1) rig.join("gm");
   assert.ok(await waitUntil(() => rig.offers() > 0, 15000));
   await flush();
   assert.equal(rig.offers(), 1, "uma só oferta em voo");
+  now += 14_000;
+  rig.join("gm");
+  await flush();
+  assert.equal(rig.offers(), 1, "aos 14 s a oferta ainda está em voo");
+  now += 2_000;
+  rig.join("gm");
+  assert.ok(await waitUntil(() => rig.offers() === 2, 15000), "aos 16 s a oferta expirou e a reoferta sai");
   for (let i = 0; i < 20; i += 1) {
     now += 20_000;
     for (let j = 0; j < 50; j += 1) rig.join("gm");
@@ -429,4 +437,23 @@ test("o Mestre com elo ainda fechado não oferta quando o jogador reaparece", as
   await flush();
   assert.equal(sent.filter((d) => d.type === "offer").length, 0, "só quem inicia oferta");
   gm.close();
+});
+
+test("resposta recebida encerra a oferta em voo: nova entrada do par reoferta na hora", async () => {
+  const stubPc = () => ({
+    localDescription: { type: "offer", sdp: "s" }, createOffer: async () => ({ type: "offer", sdp: "s" }), setLocalDescription: async () => {},
+    setRemoteDescription: async () => {}, createDataChannel: () => ({ readyState: "connecting" }), close() {},
+  });
+  const rig = reofferRig({ now: () => 1000, createPeerConnection: stubPc });
+  rig.t.send("gm", { type: "OLA" });
+  rig.join("gm");
+  assert.ok(await waitUntil(() => rig.offers() === 1, 15000));
+  rig.join("gm");
+  await flush();
+  assert.equal(rig.offers(), 1);
+  rig.deliver({ type: "answer", from: "gm", sdp: { type: "answer", sdp: "x" } });
+  await flush();
+  rig.join("gm");
+  assert.ok(await waitUntil(() => rig.offers() === 2, 15000), "sem oferta em voo, reoferta sem esperar o prazo");
+  rig.t.close();
 });

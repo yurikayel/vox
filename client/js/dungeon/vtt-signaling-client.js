@@ -15,7 +15,7 @@ const MAX_PENDING = 32;
 /** Quanto esperar o `registered` do nó antes de declarar erro de conexão. */
 export const VTT_REGISTER_TIMEOUT_MS = 10_000;
 const MAX_PEER_ID = 256;
-/** Teto de ppares lembrados como presentes (16 enlaces × 4). */
+/** Teto de pares lembrados como presentes; acompanha o `DEFAULT_MAX_CONNECTIONS` (64) do relay, que é configurável por `VOX_SIGNAL_MAX_CONNECTIONS`. */
 const MAX_ONLINE = 64;
 
 function parseFrame(raw) {

@@ -177,7 +177,10 @@ function ensureLink(ctx, remoteId, initiator) {
   return link;
 }
 
-/** Ofertas por elo (a primeira mais as reofertas) e quanto tempo uma oferta sem resposta ainda conta como em voo. */
+/**
+ * Ofertas por elo (a primeira mais as reofertas) e quanto tempo uma oferta sem resposta ainda conta como em voo.
+ * Liveness: esgotadas as ofertas, um Mestre que reinicia só é reofertado quando o app cria um elo novo para ele.
+ */
 const MAX_OFFERS_PER_LINK = 4;
 const OFFER_TTL_MS = 15_000;
 const nowOf = (ctx) => (ctx.opts.now ? ctx.opts.now() : Date.now());
