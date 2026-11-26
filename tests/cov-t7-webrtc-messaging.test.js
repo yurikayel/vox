@@ -100,19 +100,19 @@ test("announceIdentity - sem socket aberto só guarda a identidade", () => {
   assert.equal(state.getCurrentAddress(), "vx_bia");
 });
 
-test("registerAddressMapping - mapeia conta→par, repassa a chave e ignora o beacon", () => {
+test("registerAddressMapping - sem prova não mapeia chave; beacon repassa a identidade e não mapeia", async () => {
   const got = [];
   msg.onPeerIdentity((address, dmPub) => got.push([address, dmPub]));
-  msg.registerAddressMapping("", "p1");
-  msg.registerAddressMapping("vx_a", "");
-  msg.registerAddressMapping("vx_a", "p1", { kty: "EC" });
-  msg.registerAddressMapping("vx_zero_memory_beacon", "peer_zero_memory_1", { kty: "OKP" });
-  msg.registerAddressMapping("vx_b", "p2");
-  assert.deepEqual(msg.getPeerDmPub("vx_a"), { kty: "EC" });
+  await msg.registerAddressMapping("", "p1");
+  await msg.registerAddressMapping("vx_a", "");
+  await msg.registerAddressMapping("vx_a", "p1", { kty: "EC" });
+  await msg.registerAddressMapping("vx_zero_memory_beacon", "peer_zero_memory_1", { kty: "OKP" });
+  await msg.registerAddressMapping("vx_b", "p2");
+  assert.equal(msg.getPeerDmPub("vx_a"), null);
   assert.equal(msg.getPeerDmPub("vx_b"), null);
   assert.equal(state.addressToPeer.has("vx_zero_memory_beacon"), false);
-  assert.deepEqual(got.map((g) => g[0]), ["vx_a", "vx_zero_memory_beacon"]);
-  assert.deepEqual(msg.listKnownPeerAddresses(), ["vx_a", "vx_b"]);
+  assert.deepEqual(got.map((g) => g[0]), ["vx_zero_memory_beacon"]);
+  assert.deepEqual(msg.listKnownPeerAddresses(), []);
 });
 
 test("isAddressConnectedRtc - exige conta conhecida e canal de DM aberto", () => {

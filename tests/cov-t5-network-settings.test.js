@@ -331,4 +331,7 @@ test("syncIdentity: anuncia a conta e a chave de DM com nome e avatar do perfil"
   assert.equal(webrtcState.getCurrentDmPub().displayName, "Ana Voz");
   assert.equal(webrtcState.getCurrentDmPub().avatarUrl, "https://x.exemplo/a.png");
   assert.equal(webrtcState.getCurrentDmPub().kty, "EC", "leva a chave pública de DM");
+  const proof = webrtcState.getCurrentDmPub().proof;
+  assert.equal(proof?.type, "vox-dm-pub-v1", "leva a prova assinada pela conta");
+  assert.equal(proof.author, routeId);
 });
