@@ -128,7 +128,7 @@ function logShowsEveryoneReady(roll) {
 }
 
 function hexBytes(hex) {
-  return Uint8Array.from(String(hex).match(/../g) || [], (h) => Number.parseInt(h, 16));
+  return Uint8Array.from(String(hex).matchAll(/../g), (m) => Number.parseInt(m[0], 16));
 }
 
 /** Em mesa de dois, quem guarda todas as partes do outro as junta e confere contra o compromisso dele; devolve o dono se não batem. */

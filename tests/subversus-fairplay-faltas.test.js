@@ -192,8 +192,48 @@ test("faltas: o Mestre grava a falta uma vez por rolagem, sem texto confiável",
   assert.equal(table.ops.filter((o) => o.type === "CHRONICLE_APPEND" && o.actor !== "gm").length, 0);
 });
 
+test("faltas: duas rolagens anuladas na mesma mesa ganham uma entrada de falta cada", async () => {
+  const table = makeDriverTable(["ana", "bia", "gm"], { bia: ["FAIRPLAY_REVEAL"], ana: ["FAIRPLAY_SHARE"], gm: ["FAIRPLAY_SHARE"] });
+  for (const d of Object.values(table.drivers)) await d.start();
+  for (const [i, rollId] of ["roll-m", "roll-n"].entries()) {
+    await table.drivers.ana.openRoll({ rollId, sides: 20, phaseMs: 5000 });
+    await settle(table);
+    table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId, phase: "reveal" }, ts: LATE * (3 + 2 * i) });
+    table.push({ type: "FAIRPLAY_CLOSE", actor: "gm", payload: { rollId, phase: "recovery" }, ts: LATE * (4 + 2 * i) });
+    await settle(table);
+  }
+  const ids = table.state.chronicle.filter((e) => e.fairplayFault).map((e) => e.fairplayRollId);
+  assert.deepEqual(ids.sort(), ["roll-m", "roll-n"]);
+});
+
+test("faltas: partes honestas em mesa de dois não geram aviso", async () => {
+  const { ana } = await twoPlayerTable({ honest: true });
+  assert.equal(ana.invalidShares(ROLL), "");
+});
+
+test("faltas: a conferência das partes vale só para mesa de dois e só para quem guarda partes", async () => {
+  const { table, ana } = await twoPlayerTable({ lateAna: true });
+  const roll = table.state.fairplay.rolls[ROLL];
+  const three = { ...roll, participants: ["ana", "bia", "gm"], commits: { ...roll.commits, gm: roll.commits.bia } };
+  const campaign = (r) => ({ ...table.state, fairplay: { ...table.state.fairplay, rolls: { [ROLL]: r } } });
+  await ana.onUpdate(campaign(three));
+  assert.equal(ana.invalidShares(ROLL), "", "com 3 participantes não há conferência");
+  const elsewhere = { ...roll, shares: { bia: roll.shares.bia.map((s) => ({ ...s, to: "gm" })) } };
+  await ana.onUpdate(campaign(elsewhere));
+  assert.equal(ana.invalidShares(ROLL), "", "sem partes guardadas por ana, não há o que conferir");
+});
+
+test("faltas: o resultado da conferência fica guardado e não muda com um estado posterior", async () => {
+  const { table, ana } = await twoPlayerTable({ honest: true });
+  assert.equal(ana.invalidShares(ROLL), "");
+  const roll = table.state.fairplay.rolls[ROLL];
+  const broken = { ...roll, shares: { bia: roll.shares.bia.map((s) => ({ ...s, shareHash: "0".repeat(64) })) } };
+  await ana.onUpdate({ ...table.state, fairplay: { ...table.state.fairplay, rolls: { [ROLL]: broken } } });
+  assert.equal(ana.invalidShares(ROLL), "");
+});
+
 /** Mesa de dois: bia entrega partes de OUTRA semente (não refazem o compromisso que ela publicou). */
-async function twoPlayerTable({ lateAna = false } = {}) {
+async function twoPlayerTable({ lateAna = false, honest = false } = {}) {
   const table = makeDriverTable(["ana"]);
   const ana = table.drivers.ana;
   await ana.start();
@@ -209,7 +249,7 @@ async function twoPlayerTable({ lateAna = false } = {}) {
   await settle(table);
   const anaKey = table.state.fairplay.keys.ana.publicKeyJwk;
   const list = [];
-  for (const share of other.shares) {
+  for (const share of honest ? real.shares : other.shares) {
     const envelope = await sealFairplayShare({ share, rollId: ROLL, fromPeer: "bia", toPeer: "ana", privateKey: bia.privateKey, recipientJwk: anaKey });
     list.push({ to: "ana", share: envelope, shareHash: await fairplayShareHash(share) });
   }
