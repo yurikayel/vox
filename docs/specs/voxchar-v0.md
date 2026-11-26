@@ -177,7 +177,7 @@ Formato do link (esquema, compressão, versão), de onde vem o conteúdo, onde o
 
 ## 10. Emenda (rascunho): `pools_base` no `.voxchar` (SUB-18)
 
-> **Status desta emenda:** proposta, para decisão do mantenedor (§10.8). Só docs: nenhum código muda até as decisões. O que não está no código vai marcado **(proposta)**. Esta emenda **substitui, só para `hp_max` e `<id>_max`,** a exclusão de `pools_base` da §3 e do teste 2 da §8.
+> **Status desta emenda:** aceita em 26/11/2026 (opções recomendadas; autorização geral do mantenedor); código liberado (SUB-18). Só docs: nenhum código muda até as decisões. O que não está no código vai marcado **(proposta)**. Esta emenda **substitui, só para `hp_max` e `<id>_max`,** a exclusão de `pools_base` da §3 e do teste 2 da §8.
 
 ### 10.1 Problema
 
@@ -247,7 +247,12 @@ Funções novas com no máximo 30 LLOC e JSDoc em todo export; não toca em Fair
 ### 10.8 Decisões abertas para o mantenedor
 
 - **D1.** Manter `format: 1` (campo opcional, descartado por leitor antigo) ou subir para `format: 2`? **Recomendada: manter 1.** Subir faria leitores antigos recusarem o arquivo inteiro, sem ganho: o campo é aditivo.
+  - Decidido em 26/11/2026: manter `format: 1` (opção recomendada; autorização geral do mantenedor).
 - **D2.** Levar só `hp_max` e `<id>_max` ou também `gold_initial` e `spell_slots_max`? **Recomendada: só os máximos de PV e reservas;** ouro e espaços em emenda própria.
+  - Decidido em 26/11/2026: só `hp_max` e `<id>_max` (opção recomendada; autorização geral do mantenedor).
 - **D3.** Avisar na importação quando o arquivo não traz máximos de um sistema com reservas? **Recomendada: sim** (texto curto, sem bloquear).
+  - Decidido em 26/11/2026: avisar na importação (opção recomendada; autorização geral do mantenedor).
 - **D4.** Valor inválido recusa o arquivo com campo e motivo ou descarta só o campo? **Recomendada: recusar** (igual a `qty`); descartar deixaria a ficha sem PV em silêncio.
+  - Decidido em 26/11/2026: recusar valor inválido com campo e motivo (opção recomendada; autorização geral do mantenedor).
 - **D5.** Máximo 0 no arquivo: aceitar e tratar como "sem o recurso" ou recusar? **Recomendada: aceitar.**
+  - Decidido em 26/11/2026: aceitar 0 como "sem o recurso" (opção recomendada; autorização geral do mantenedor).
