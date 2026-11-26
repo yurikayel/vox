@@ -114,5 +114,15 @@ export function renderSystemSelect(sheet, chosen = "") {
     const pack = getSystemPack(id);
     return `<option value="${escapeHtml(id)}"${id === current ? " selected" : ""}>${escapeHtml(pack.name)}</option>`;
   }).join("");
-  return `<label class="dungeon-field-mini dungeon-field-wide"><span>Sistema</span><select class="dungeon-input" name="sheetSystem">${options}</select></label>`;
+  return `<label class="dungeon-field-mini dungeon-field-wide"><span>Sistema</span><select class="dungeon-input" name="sheetSystem" aria-describedby="sheet-system-notices">${options}</select></label>${renderSystemNotices()}`;
+}
+
+/**
+ * Avisos de não afiliação dos pacotes registrados, em texto estático abaixo do seletor.
+ * @returns {string} HTML do parágrafo, ou vazio se nenhum pacote tiver aviso.
+ */
+function renderSystemNotices() {
+  const notices = listSystemPackIds().map((id) => getSystemPack(id).license?.notice).filter(Boolean);
+  if (!notices.length) return "";
+  return `<p class="dungeon-muted" role="note" id="sheet-system-notices">${notices.map(escapeHtml).join(" ")}</p>`;
 }
