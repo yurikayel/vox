@@ -295,3 +295,55 @@ test("canal que falha ao enviar derruba só esse elo e send devolve false; o pr�
   await waitUntil(() => got.length === 2);
   assert.equal(got[1].type, "C");
 });
+
+test("cadeias de sinal: par recusado ou sem elo não deixa entrada, e a queda do elo poda a cadeia", async () => {
+  const { gm, ana, rtc } = pair();
+  let emit;
+  const lone = createRtcVttTransport({ peerId: "x", signaling: noSignaling((fn) => { emit = fn; }), createPeerConnection: createFakeRtcNetwork().createPeerConnection });
+  emit({ type: "offer", from: "p".repeat(257), sdp: { type: "offer" } });
+  emit({ type: "bogus", from: "q", sdp: {} });
+  emit({ type: "answer", from: "sem-elo", sdp: { type: "answer" } });
+  emit({ type: "ice", from: "sem-elo", candidate: { c: 1 } });
+  assert.ok(await waitUntil(() => lone.stats().chains === 0), "sinais recusados ou sem elo não guardam cadeia");
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "A" });
+  await waitUntil(() => got.length === 1);
+  assert.deepEqual(gm.stats(), { links: 1, chains: 1 }, "com elo vivo a cadeia fica");
+  rtc.log.channels.forEach((c) => c.close());
+  assert.ok(await waitUntil(() => gm.stats().links === 0 && gm.stats().chains === 0), "elo caído: cadeia podada");
+  lone.close();
+});
+
+test("queda por connectionstatechange failed também poda elo e cadeia", async () => {
+  const { gm, ana, rtc } = pair();
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  ana.send("gm", { type: "A" });
+  await waitUntil(() => got.length === 1);
+  const pc = rtc.last();
+  pc.connectionState = "failed";
+  pc.onconnectionstatechange();
+  rtc.log.channels.forEach((c) => c.close());
+  assert.ok(await waitUntil(() => gm.stats().chains === 0 && ana.stats().links === 0));
+});
+
+test("padrão de 16 elos; send sem elo: Mestre devolve true (nada a entregar), jogador no teto devolve false; entrada não-string é recusada", async () => {
+  const rtc = createFakeRtcNetwork();
+  const hub = createFakeSignalingHub();
+  const events = [];
+  const gm = createRtcVttTransport({ peerId: "gm", signaling: hub.connect("gm"), createPeerConnection: rtc.createPeerConnection, onStatus: (id, s) => events.push([id, s]) });
+  const got = [];
+  gm.onMessage((m) => got.push(m));
+  const ps = Array.from({ length: 17 }, (_, i) => createRtcVttTransport({ peerId: `p${i}`, initiate: true, signaling: hub.connect(`p${i}`), createPeerConnection: rtc.createPeerConnection }));
+  ps.forEach((p) => p.send("gm", { n: 1 }));
+  assert.ok(await waitUntil(() => events.some((e) => e[1] === "link_limit")), "o 17º elo é recusado");
+  assert.equal(gm.stats().links, 16);
+  assert.equal(gm.send("ninguem", { type: "X" }), true);
+  const capped = createRtcVttTransport({ peerId: "j", initiate: true, maxLinks: 0, signaling: hub.connect("j"), createPeerConnection: rtc.createPeerConnection });
+  assert.equal(capped.send("gm", { type: "X" }), false);
+  await waitUntil(() => got.length === 16);
+  const before = got.length;
+  rtc.log.channels.forEach((c) => { c.onmessage?.({ data: { type: "OBJ" } }); c.onmessage?.({ data: 42 }); });
+  assert.equal(got.length, before, "dado que não é texto não vira mensagem");
+});

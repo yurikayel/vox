@@ -54,11 +54,13 @@ export function createRtcVttTransport(opts) {
   const factory = resolveFactory(opts);
   const links = new Map();
   const handlers = new Set();
-  const ctx = { opts, factory, links, handlers, chains: new Map(), closed: false };
+  const ctx = { opts, factory, links, handlers, chains: new Map(), pending: new Map(), closed: false };
   const detach = opts.signaling.onMessage((data) => onSignal(ctx, data));
   return {
     peerId: opts.peerId,
     connect: (remoteId) => { ensureLink(ctx, remoteId, true); },
+    /** Diagnóstico: quantos elos e cadeias de sinalização o transporte guarda (para provar que nada vaza). */
+    stats: () => ({ links: links.size, chains: ctx.chains.size }),
     send: (to, msg) => sendMessage(ctx, to, msg),
     onMessage(fn) { handlers.add(fn); return () => handlers.delete(fn); },
     close() {
@@ -75,10 +77,16 @@ function status(ctx, remoteId, state) {
   ctx.opts.onStatus?.(remoteId, state);
 }
 
+/** Esquece a cadeia de sinais do par quando não há elo nem sinal em andamento (senão um par recusado/caído vazaria memória). */
+function pruneChain(ctx, remoteId) {
+  if (!ctx.links.has(remoteId) && !ctx.pending.get(remoteId)) ctx.chains.delete(remoteId);
+}
+
 function dropLink(ctx, remoteId) {
   const link = ctx.links.get(remoteId);
   if (!link) return;
   ctx.links.delete(remoteId);
+  pruneChain(ctx, remoteId);
   try { link.channel?.close?.(); link.pc.close?.(); } catch { /* já fechado */ }
   status(ctx, remoteId, "closed");
 }
@@ -105,7 +113,7 @@ function isPlainObject(value) {
 /** Entrada não confiável: só texto dentro do teto vira JSON; só objeto simples vira mensagem. Nada disso derruba o elo. */
 function parseInbound(ctx, raw) {
   const max = ctx.opts.maxMessageBytes ?? VTT_MAX_MESSAGE_BYTES;
-  if (typeof raw !== "string" || byteLength(raw) > max) return null;
+  if (byteLength(raw) > max) return null;
   try {
     const parsed = JSON.parse(raw);
     return isPlainObject(parsed) ? parsed : null;
@@ -197,8 +205,12 @@ function onSignal(ctx, data) {
   const prev = ctx.chains.get(data.from) || Promise.resolve();
   const next = prev.then(() => applySignal(ctx, data)).catch(() => dropLink(ctx, data.from));
   ctx.chains.set(data.from, next);
+  ctx.pending.set(data.from, (ctx.pending.get(data.from) || 0) + 1);
   next.then(() => {
-    if (ctx.chains.get(data.from) === next && !ctx.links.has(data.from)) ctx.chains.delete(data.from);
+    const left = ctx.pending.get(data.from) - 1;
+    if (left > 0) ctx.pending.set(data.from, left);
+    else ctx.pending.delete(data.from);
+    pruneChain(ctx, data.from);
   });
 }
 
