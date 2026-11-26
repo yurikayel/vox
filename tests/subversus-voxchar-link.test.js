@@ -181,3 +181,50 @@ test("13. a rota #/ficha/ver abre a visualização e carrega o hash completo", a
     assert.notEqual(parseRoute().name, "ficha-ver");
   } finally { globalThis.location.hash = prev; }
 });
+
+test("14. a visualização troca a URL antes de qualquer await e o hash completo ainda chega ao parser", async () => {
+  const { showFichaVer } = await import("../client/js/app/screens-ficha-ver.js");
+  const real = { history: globalThis.history, location: globalThis.location };
+  const events = [];
+  const full = "#/ficha/ver#voxchar=AAAA";
+  globalThis.location = { hash: full, pathname: "/app/", search: "?x=1" };
+  globalThis.history = { replaceState: (_s, _t, url) => events.push(["replace", url]) };
+  const main = { innerHTML: "", querySelector: () => null };
+  const deps = {
+    parse: async (hash) => { events.push(["parse", hash]); return { ok: false, issues: ["x"] }; },
+    mountShell: async () => main,
+  };
+  try {
+    const job = showFichaVer({ hash: full }, deps);
+    assert.deepEqual(events, [["replace", "/app/?x=1#/ficha/ver"]], "a URL já foi trocada antes de qualquer await");
+    await job;
+  } finally { Object.assign(globalThis, real); }
+  assert.deepEqual(events[1], ["parse", full], "o parser recebe o hash completo, não o já limpo");
+  assert.match(main.innerHTML, /Ficha não aberta/);
+});
+
+test("15. 'Usar como modelo' cria a ficha com id novo, dono da instalação e vai para a ficha; bytes vazios não criam nada", async () => {
+  const { useAsTemplate } = await import("../client/js/app/screens-ficha-ver.js");
+  const { getDungeonSession } = await import("../client/js/dungeon/dungeon-state.js");
+  const src = await kaelState();
+  const out = await parseVoxcharLink((await buildVoxcharLink(src.sheet)).href);
+  const session = getDungeonSession(true);
+  session.sheet = { ...session.sheet, owner_pubkey_p256: "DONO-DESTA-INSTALACAO" };
+  const before = session.sheet.character_id;
+  const realLocation = globalThis.location;
+  globalThis.location = { hash: "#/ficha/ver", pathname: "/", search: "" };
+  const status = { textContent: "" };
+  try {
+    await useAsTemplate(new Uint8Array(0), status);
+    assert.equal(globalThis.location.hash, "#/ficha/ver", "bytes vazios não navegam");
+    assert.ok(status.textContent.length > 0);
+    assert.equal(getDungeonSession().sheet.character_id, before);
+    await useAsTemplate(out.bytes, status);
+    assert.equal(globalThis.location.hash, "#/dungeon/ficha");
+  } finally { globalThis.location = realLocation; }
+  const made = getDungeonSession().sheet;
+  assert.equal(made.attributes_lww.name, "Kael");
+  assert.notEqual(made.character_id, before);
+  assert.notEqual(made.character_id, src.sheet.character_id);
+  assert.equal(made.owner_pubkey_p256, "DONO-DESTA-INSTALACAO");
+});

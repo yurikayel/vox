@@ -62,7 +62,13 @@ function download(bytes, name) {
   setTimeout(() => URL.revokeObjectURL(href), 1500);
 }
 
-async function useAsTemplate(bytes, status) {
+/**
+ * "Usar como modelo": cria a ficha nova (id novo; campanha e dono desta instalação) pelo mesmo import do arquivo e vai para a ficha.
+ * @param {Uint8Array} bytes Conteúdo `.voxchar` já validado.
+ * @param {{textContent: string}} status Região de aviso para os motivos de uma recusa.
+ * @returns {Promise<void>} Conclui após criar a ficha e trocar o hash, ou após mostrar os motivos.
+ */
+export async function useAsTemplate(bytes, status) {
   const [{ importVoxchar }, { getDungeonSession }] = await Promise.all([import("../dungeon/voxchar.js"), import("../dungeon/dungeon-state.js")]);
   const out = await importVoxchar(getDungeonSession(), { bytes });
   if (out.ok) { location.hash = "#/dungeon/ficha"; return; }
@@ -75,17 +81,33 @@ function wireView(main, bytes) {
   main.querySelector('[data-ficha="use-template"]')?.addEventListener("click", () => useAsTemplate(bytes, status));
 }
 
+/** Rota de visualização, sem o fragmento (a mesma de `VOXCHAR_VIEW_ROUTE`, aqui para não esperar o módulo do link). */
+const VIEW_ROUTE = "#/ficha/ver";
+
 /**
- * Abre a visualização do link. Troca a URL por `#/ficha/ver` logo na entrada (o fragmento não fica na barra nem no
- * histórico) e só então lê e valida o conteúdo. Não grava nada.
+ * Troca a URL por `#/ficha/ver` (o fragmento não fica na barra nem no histórico). Síncrona, para rodar antes de qualquer `await`.
+ * @returns {void}
+ */
+export function scrubFichaUrl() {
+  try { history.replaceState(null, "", `${location.pathname}${location.search}${VIEW_ROUTE}`); } catch { /* ignore */ }
+}
+
+async function mountShell() {
+  return render.renderShell(makeShellProps(await getActiveUser(), "profile", "Ficha"));
+}
+
+/**
+ * Abre a visualização do link: troca a URL na entrada, antes de qualquer `await`, e só então lê e valida o conteúdo
+ * (o hash completo, capturado no parse da rota, é o que chega ao parser). Não grava nada.
  * @param {{hash?: string}} [route] Rota com o `location.hash` completo capturado no parse.
+ * @param {{parse?: Function, mountShell?: Function}} [deps] Substitutos para teste (leitor do link e montagem do shell).
  * @returns {Promise<void>} Conclui após montar a tela.
  */
-export async function showFichaVer(route = {}) {
-  const { parseVoxcharLink, VOXCHAR_VIEW_ROUTE } = await import("../dungeon/voxchar-link.js");
-  try { history.replaceState(null, "", `${location.pathname}${location.search}${VOXCHAR_VIEW_ROUTE}`); } catch { /* ignore */ }
-  const main = render.renderShell(makeShellProps(await getActiveUser(), "profile", "Ficha"));
-  const out = await parseVoxcharLink(route.hash || "");
+export async function showFichaVer(route = {}, deps = {}) {
+  scrubFichaUrl();
+  const parse = deps.parse ?? (await import("../dungeon/voxchar-link.js")).parseVoxcharLink;
+  const main = await (deps.mountShell ?? mountShell)();
+  const out = await parse(route.hash || "");
   main.innerHTML = out.ok ? renderFichaView(out.doc) : renderFichaError(out.issues);
   if (out.ok) wireView(main, out.bytes);
 }
