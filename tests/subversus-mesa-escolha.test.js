@@ -1,0 +1,140 @@
+/**
+ * @file SUB-08, fatia 2c: escolha do transporte da Mesa (rede atrás da flag de laboratório, com queda para
+ * `BroadcastChannel`), estado da conexão e seu texto acessível. WebSocket e RTC falsos: nenhum tráfego externo.
+ */
+import "./setup.js";
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  chooseVttTransport, summarizeConnection, connectionText, renderVttConnection, isMesaRedeLabEnabled, readMesaRedeUrl,
+  MESA_REDE_LAB_KEY, MESA_REDE_URL_KEY,
+} from "../client/js/dungeon/vtt-rede-escolha.js";
+import { attachVttPlayerJoin } from "../client/js/dungeon/dungeon-vtt-join.js";
+import * as scene from "../client/js/dungeon/dungeon-scene-actions.js";
+import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
+import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { buildRoomInviteHref, generateRoomKey } from "../client/js/dungeon/vtt-sync-codec.js";
+import { createFakeRtcNetwork } from "./helpers/fake-rtc.js";
+
+const store = (flag, url) => ({
+  getItem: (k) => (k === MESA_REDE_LAB_KEY ? flag : k === MESA_REDE_URL_KEY ? url : null),
+});
+const ON = store("1", "ws://127.0.0.1:1");
+
+function fakeWs() {
+  const sockets = [];
+  class FakeWebSocket {
+    constructor(url) { this.url = url; this.sent = []; this.closed = false; sockets.push(this); }
+    send(text) { this.sent.push(JSON.parse(text)); }
+    close() { this.closed = true; }
+    receive(obj) { this.onmessage?.({ data: JSON.stringify(obj) }); }
+  }
+  return { FakeWebSocket, sockets };
+}
+
+const base = (extra = {}) => ({ tableId: "t", peerId: "me", initiate: true, BroadcastChannelImpl: class {}, createBroadcast: () => ({ marca: "bc" }), ...extra });
+
+test("flag, endereço e leitura segura do armazenamento", () => {
+  assert.equal(isMesaRedeLabEnabled(store("1", "")), true);
+  assert.equal(isMesaRedeLabEnabled(store("0", "")), false);
+  assert.equal(isMesaRedeLabEnabled({ getItem() { throw new Error("bloqueado"); } }), false);
+  assert.equal(readMesaRedeUrl(store("1", "wss://no.exemplo/ws")), "wss://no.exemplo/ws");
+  assert.equal(readMesaRedeUrl(store("1", "http://x")), "");
+  assert.equal(readMesaRedeUrl(store("1", "javascript:alert(1)")), "");
+  assert.equal(readMesaRedeUrl(store("1", `ws://${"a".repeat(600)}`)), "");
+});
+
+test("sem a flag: mesma origem, sem carregar nada da rede", async () => {
+  const seen = [];
+  const out = await chooseVttTransport(base({ storage: store(null, null), loadRtc: () => { throw new Error("nao devia carregar"); }, onConnection: (c) => seen.push(c) }));
+  assert.equal(out.kind, "mesma_origem");
+  assert.equal(out.fallback, false);
+  assert.deepEqual(seen, [{ transport: "mesma_origem", status: "open", fallback: false }]);
+});
+
+test("queda para a mesma origem: sem endereço, endereço inválido ou módulo que não carrega", async () => {
+  let loads = 0;
+  const spy = () => { loads += 1; throw new Error("sem endereço válido não carrega a rede"); };
+  const noWs = { createVttSignalingClient: () => { throw new Error("sem WebSocket"); } };
+  for (const [storage, opts] of [
+    [store("1", null), { loadRtc: spy }], [store("1", "http://x"), { loadRtc: spy }],
+    [ON, { loadRtc: async () => { throw new Error("falhou"); } }],
+    [ON, { loadSignaling: async () => noWs }],
+  ]) {
+    const out = await chooseVttTransport(base({ storage, ...opts }));
+    assert.equal(out.kind, "mesma_origem");
+    assert.equal(out.fallback, true);
+  }
+  assert.equal(loads, 0, "sem endereço válido nem tenta a rede");
+  assert.equal(await chooseVttTransport(base({ storage: store(null, null), BroadcastChannelImpl: null })), null, "sem nenhum transporte possível");
+});
+
+test("rede: connecting, waiting_peer e error; o Mestre fica open quando o nó confirma; fechar fecha a sinalização", async () => {
+  const { FakeWebSocket, sockets } = fakeWs();
+  const rtc = createFakeRtcNetwork();
+  const ana = [];
+  const out = await chooseVttTransport(base({ storage: ON, WebSocketImpl: FakeWebSocket, createPeerConnection: rtc.createPeerConnection, onConnection: (c) => ana.push(c.status) }));
+  assert.equal(out.kind, "rede");
+  assert.equal(ana.at(-1), "connecting");
+  sockets[0].onopen();
+  sockets[0].receive({ type: "registered", peerId: "me", peers: [] });
+  out.transport.send("gm", { type: "OLA" });
+  assert.equal(ana.at(-1), "waiting_peer", "o Mestre ainda não está no nó");
+  sockets[0].onclose();
+  assert.equal(ana.at(-1), "error");
+  out.transport.close();
+  const gmSeen = [];
+  const gmSock = fakeWs();
+  const gm = await chooseVttTransport(base({ storage: ON, initiate: false, peerId: "gm", WebSocketImpl: gmSock.FakeWebSocket, createPeerConnection: rtc.createPeerConnection, onConnection: (c) => gmSeen.push(c.status) }));
+  gmSock.sockets[0].onopen();
+  gmSock.sockets[0].receive({ type: "registered", peerId: "gm", peers: [] });
+  assert.equal(gmSeen.at(-1), "open");
+  gm.transport.close();
+  assert.equal(gmSock.sockets[0].closed, true, "fechar o transporte fecha também a sinalização");
+});
+
+test("resumo e texto: cada estado tem texto, o erro é dito com clareza e a região é aria-live", () => {
+  const s = (signaling, links, initiate = true) => summarizeConnection({ signaling, links, initiate });
+  assert.equal(s("connecting", {}), "connecting");
+  assert.equal(s("error", {}), "error");
+  assert.equal(s("closed", {}), "error");
+  assert.equal(s("open", {}), "connecting");
+  assert.equal(s("open", { gm: "waiting_peer" }), "waiting_peer");
+  assert.equal(s("open", { gm: "open" }), "open");
+  assert.equal(s("open", {}, false), "open");
+  for (const status of ["connecting", "waiting_peer", "open", "error"]) assert.ok(connectionText({ transport: "rede", status }).length > 10);
+  assert.match(connectionText({ transport: "rede", status: "error" }), /Sem conexão com o nó/);
+  assert.equal(connectionText({ transport: "mesma_origem", fallback: false }), "");
+  assert.match(connectionText({ transport: "mesma_origem", fallback: true }), /mesma origem/);
+  const html = renderVttConnection({ vttConnection: { transport: "rede", status: "error" } });
+  assert.match(html, /role="status" aria-live="polite"/);
+  assert.equal(renderVttConnection({}), "");
+  assert.equal(renderVttConnection({ vttConnection: { transport: "mesma_origem", fallback: false } }), "");
+});
+
+test("o jogador entra pela rede com a flag: estado na sessão e fechar o par fecha a sinalização", async () => {
+  const { FakeWebSocket, sockets } = fakeWs();
+  const state = createDungeonSessionState();
+  const href = buildRoomInviteHref({ tableId: "mesa-rede", gmRouteId: "vx_gm", roomKey: generateRoomKey() });
+  const rtc = createFakeRtcNetwork();
+  const out = await attachVttPlayerJoin(state, href, { network: { storage: ON, WebSocketImpl: FakeWebSocket, createPeerConnection: rtc.createPeerConnection } });
+  assert.equal(out.ok, true);
+  assert.equal(state.vttConnection.transport, "rede");
+  assert.equal(sockets.length, 1);
+  state.syncPeer.close();
+  assert.equal(sockets[0].closed, true);
+});
+
+test("o Mestre gera o convite pela rede com a flag e vê o estado open quando o nó confirma", async () => {
+  const { FakeWebSocket, sockets } = fakeWs();
+  const st = createDungeonSessionState({ viewerRole: "gm", campaignId: "", syncPeer: null });
+  const rtc = createFakeRtcNetwork();
+  const network = { storage: ON, WebSocketImpl: FakeWebSocket, createPeerConnection: rtc.createPeerConnection };
+  await scene.generateTableInvite(st, { store: createVttStore(createMemoryVttBackend()), network });
+  assert.equal(st.vttConnection.transport, "rede");
+  sockets[0].onopen();
+  sockets[0].receive({ type: "registered", peerId: st.vttKeypair.routeId, peers: [] });
+  assert.equal(st.vttConnection.status, "open");
+  st.syncPeer.close();
+  assert.equal(sockets[0].closed, true);
+});

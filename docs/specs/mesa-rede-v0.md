@@ -96,3 +96,10 @@ O teste com pessoas e redes reais é o `SUB-14` e fica fora.
   - Decidido em 25/11/2026: aceitável no v1, com o aviso documentado nesta spec (opção recomendada; autorização geral do mantenedor).
 - **D7. Fora do v1:** mais de um Mestre, e jogador que reentra depois de dias.
   - Decidido em 25/11/2026: confirmado fora do v1 (opção recomendada; autorização geral do mantenedor).
+
+## Estado da implementação (SUB-08, fatia 2c)
+
+- **Flag de laboratório:** `vox.lab.mesa-rede` = `"1"` no `localStorage` liga a Mesa pela rede neste aparelho; o endereço `ws://` ou `wss://` do nó fica em `vox.lab.mesa-rede.url` (o convite não muda, D2). Sem a flag, ou sem endereço válido, a Mesa usa `BroadcastChannel` (mesma origem).
+- **Queda:** se a rede não montar (módulo, WebSocket ou endereço), usa `BroadcastChannel` e a tela diz que a rede ficou indisponível. Depois de montada, um nó que não responde mostra o estado de erro ("Sem conexão com o nó de sinalização"); a troca de transporte ao vivo não existe.
+- **Estado na tela:** `connecting`, `waiting_peer`, `open` e `error`, em região `aria-live="polite"` (`renderVttConnection`).
+- **Liveness:** esgotadas as 4 ofertas por elo, um Mestre que reinicia só é reofertado quando o app cria um elo novo para ele.

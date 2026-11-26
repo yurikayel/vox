@@ -14,7 +14,8 @@ import { clampTokenToFloor, clampZoom, createCamera } from "./vtt-geometry.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { buildRoomInviteHref, generateRoomKey, generateVttKeypair } from "./vtt-sync-codec.js";
-import { createBroadcastChannelTransport, createVttSyncPeer } from "./vtt-sync.js";
+import { createVttSyncPeer } from "./vtt-sync.js";
+import { chooseVttTransport } from "./vtt-rede-escolha.js";
 import { wireFairplayDriver } from "./vtt-fairplay-wire.js";
 
 /**
@@ -244,9 +245,20 @@ async function ensurePersistedCampaignForHost(state, pair, store) {
   return saved.id;
 }
 
+/** Escolhe o transporte do Mestre (rede com a flag, senão mesma origem) e devolve-o; `null` se nada serve ou o par já existe. */
+async function chooseHostTransport(state, opts, { pair, tableId }) {
+  const chosen = await chooseVttTransport({
+    tableId, peerId: pair.routeId, initiate: false, ...opts.network,
+    onConnection: (conn) => { state.vttConnection = conn; (state._onSyncUpdate || opts.onSyncUpdate)?.(); },
+  });
+  if (chosen && state.syncPeer) chosen.transport.close?.();
+  return chosen && !state.syncPeer ? chosen.transport : null;
+}
+
 /** Liga o par de sincronização do Mestre (e o condutor Fairplay, com a flag) à mesa recém-convidada. */
-function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
-  const transport = createBroadcastChannelTransport(tableId, pair.routeId);
+async function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
+  const transport = await chooseHostTransport(state, opts, { pair, tableId });
+  if (!transport) return;
   state.syncPeer = createVttSyncPeer({
     role: "gm",
     campaignId: tableId,
@@ -276,7 +288,7 @@ function wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store }) {
  * Gera um convite P2P local (`#/dungeon/entrar/:id?gm=...#k=...`), garante campanha salva no `VttStore`
  * e ativa o par de sincronização GM com broadcast ao vivo via `BroadcastChannel`.
  * @param {object} state Estado da sessão.
- * @param {object} [opts={}] Opções (`store`, `onSyncUpdate`).
+ * @param {object} [opts={}] Opções (`store`, `onSyncUpdate`, `network` para ajustar o transporte em testes).
  * @returns {Promise<string>} Link de convite gerado.
  */
 export async function generateTableInvite(state, opts = {}) {
@@ -287,8 +299,8 @@ export async function generateTableInvite(state, opts = {}) {
   state.roomKey = roomKey;
   const tableId = await ensurePersistedCampaignForHost(state, pair, store);
   state.inviteHref = buildRoomInviteHref({ tableId, gmRouteId: pair.routeId, roomKey });
-  if (!state.syncPeer && typeof globalThis.BroadcastChannel === "function") {
-    wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store });
+  if (!state.syncPeer) {
+    await wireHostSyncPeer(state, opts, { pair, tableId, roomKey, store });
   }
   state.campaignNotice = "Convite P2P ativo: a mesa sincroniza alterações com abas convidadas.";
   return state.inviteHref;
