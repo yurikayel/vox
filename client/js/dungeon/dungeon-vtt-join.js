@@ -90,6 +90,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
     transport,
     roomKey: invite.roomKey,
     gmRouteId: invite.gmRouteId,
+    displayName: opts.displayName,
     ...playerSyncCallbacks(state, opts),
   });
   state.syncPeer.join();
@@ -104,7 +105,7 @@ function wirePlayerSyncPeer(state, invite, opts) {
  * Conecta a sessão como jogador P2P em store isolado (sem sobrescrever o IndexedDB do Mestre na mesma origem).
  * @param {object} state Estado da sessão dungeon.
  * @param {string} locationHash `location.hash` com query `gm` e fragmento `#k=`.
- * @param {{ store?: object, onCampaign?: (campaign: object) => void }} [opts]
+ * @param {{ store?: object, displayName?: string, onCampaign?: (campaign: object) => void }} [opts] `displayName`: nome anunciado ao Mestre (vem da camada de app).
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 export async function attachVttPlayerJoin(state, locationHash, opts = {}) {
