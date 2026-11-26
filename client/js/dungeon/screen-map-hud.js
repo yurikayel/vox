@@ -24,10 +24,10 @@ function renderShortcut(item) {
  * @returns {string} HTML do HUD ou string vazia.
  */
 export function renderMapHud(state, scene) {
-  if (!state?.sheet) return "";
+  const status = renderHudStatus(state, scene);
+  if (!state?.sheet) return status;
   const own = (scene?.tokens || []).find((t) => t.sheetId && t.sheetId === state.sheet.character_id);
   const items = buildHudShortcuts(state.sheet, { ownTokenId: own?.tokenId });
-  const status = renderHudStatus(state, scene);
   if (!items.length) return status;
   return `${status}<nav class="dungeon-hud dungeon-chips-row" aria-label="Atalhos rápidos" data-dungeon-zone="mapHud">${items.map(renderShortcut).join("")}</nav>`;
 }

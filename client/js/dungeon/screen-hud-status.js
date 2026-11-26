@@ -6,7 +6,7 @@ import { escapeHtml } from "../shared/html.js";
 import { buildHudStatus } from "./hud-status-model.js";
 
 function renderPortrait(p, name) {
-  return `<span class="dungeon-hud-portrait" style="--hud-portrait:${escapeHtml(p.color)}" role="img" aria-label="Retrato de ${escapeHtml(name)}">${escapeHtml(p.initials)}</span>`;
+  return `<span class="dungeon-hud-portrait" style="--hud-portrait:${escapeHtml(p.color)};color:${escapeHtml(p.ink)}" role="img" aria-label="Retrato de ${escapeHtml(name)}">${escapeHtml(p.initials)}</span>`;
 }
 
 function renderConditions({ shown, more }) {

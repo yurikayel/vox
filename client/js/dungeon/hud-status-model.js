@@ -46,8 +46,55 @@ export function tokenHpLabel(token) {
   return token?.hpStatus ? String(token.hpStatus) : MISSING;
 }
 
+const INK_DARK = "#0c0e11";
+const INK_LIGHT = "#ffffff";
+
+function channel(v) {
+  const c = v / 255;
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function luminance(hex) {
+  const m = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(String(hex));
+  if (!m) return 0.5;
+  const full = m[1].length === 3 ? [...m[1]].map((x) => x + x).join("") : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => channel(parseInt(full.slice(i, i + 2), 16)));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Cor do texto das iniciais com mais contraste sobre a cor do token (WCAG AA exige 4,5:1 para texto normal).
+ * @param {string} bg Cor de fundo (#rgb ou #rrggbb); inválida vira cinza médio.
+ * @returns {string} Cor de texto, escura ou clara.
+ */
+export function inkFor(bg) {
+  const l = luminance(bg);
+  const contrastDark = (l + 0.05) / (luminance(INK_DARK) + 0.05);
+  const contrastLight = (luminance(INK_LIGHT) + 0.05) / (l + 0.05);
+  return contrastDark >= contrastLight ? INK_DARK : INK_LIGHT;
+}
+
 function portrait(token, name) {
-  return { initials: String(token?.initials || name.slice(0, 2)).toUpperCase(), color: String(token?.color || "#78d6cf") };
+  const color = String(token?.color || "#78d6cf");
+  return { initials: String(token?.initials || name.slice(0, 2)).toUpperCase(), color, ink: inkFor(color) };
+}
+
+/**
+ * Ficha do espectador: a ligada a um token cujo dono é a identidade dele; sem isso, a ficha ativa da sessão.
+ * @param {object} state Estado da sessão (`vttKeypair`, `localActor`, `campaign`, `sheet`).
+ * @param {object[]} tokens Tokens da cena.
+ * @returns {object|null} Ficha própria.
+ */
+export function resolveOwnSheet(state, tokens) {
+  const viewer = state?.vttKeypair?.routeId || state?.localActor || "";
+  const mine = viewer ? tokens.find((t) => t.sheetId && t.ownerRouteId === viewer) : null;
+  return sheetOfToken(state, mine) || state?.sheet || null;
+}
+
+function sheetOfToken(state, token) {
+  if (!token) return null;
+  const active = state.sheet?.character_id === token.sheetId ? state.sheet : null;
+  return state.campaign?.sheetsById?.[token.sheetId] || active;
 }
 
 /**
@@ -69,9 +116,9 @@ export function buildMobileLine(own) {
  * @returns {{own: object, party: object[]}|null} Modelo, ou null sem ficha.
  */
 export function buildHudStatus(state, scene) {
-  const sheet = state?.sheet;
-  if (!sheet) return null;
   const tokens = scene?.tokens || [];
+  const sheet = resolveOwnSheet(state, tokens);
+  if (!sheet) return null;
   const token = tokens.find((t) => t.sheetId && t.sheetId === sheet.character_id);
   const name = sheetName(sheet);
   const hp = ownHp(sheet);
@@ -80,6 +127,6 @@ export function buildHudStatus(state, scene) {
   own.mobileLine = buildMobileLine(own);
   const party = tokens
     .filter((t) => t.layer === "player" && t !== token)
-    .map((t) => ({ tokenId: t.tokenId, name: String(t.name || MISSING), hp: tokenHpLabel(t), ...portrait(t, String(t.name || "??")) }));
+    .map((t) => ({ tokenId: t.tokenId, name: String(t.name || MISSING).slice(0, 60), hp: tokenHpLabel(t), ...portrait(t, String(t.name || "??")) }));
   return { own, party };
 }
