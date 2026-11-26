@@ -83,6 +83,7 @@ export function exhaustionEffect(pack, level) {
  * @returns {{ok: boolean, heal?: number, hitDiceSpent?: number, error?: string}} Cura e novo total gasto, ou o motivo da recusa.
  */
 export function spendHitDie(pack, choices, roll) {
+  if (!pack.formulas.hitDice) return { ok: false, error: "Este sistema não usa Dado de Vida." };
   const rest = normalizeRestChoices(pack, choices);
   if (rest.hitDiceSpent >= rest.hitDiceTotal) return { ok: false, error: "Sem Dados de Vida disponíveis; só um descanso longo os devolve." };
   const mod = abilityModifier(pack, choices.abilities?.[pack.formulas.hitDice.healAbility]);
@@ -99,6 +100,7 @@ export function spendHitDie(pack, choices, roll) {
  * @returns {{choices: object, deltas: Array<{pool: string, delta: number}>}} Escolhas novas e os deltas de recurso (só os > 0).
  */
 export function longRestPlan(pack, choices, { pools, base }) {
+  if (!pack.formulas.hitDice) return { choices, deltas: [] };
   const rest = normalizeRestChoices(pack, choices);
   const deltas = [{ pool: "hp_current", delta: (base.hp_max ?? 0) - (pools.hp_current ?? 0) }];
   for (const l of SLOT_POOLS) deltas.push({ pool: `spell_slot_${l}`, delta: (base.spell_slots_max?.[l] ?? 0) - (pools[`spell_slot_${l}`] ?? 0) });

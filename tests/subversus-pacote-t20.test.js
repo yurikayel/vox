@@ -64,7 +64,7 @@ test("t20: nenhum texto de livro no pacote (sem chaves de descrição, poderes, 
   const keys = new Set(JSON.stringify(T20_PACK).match(/"[a-zA-Z]+":/g));
   for (const forbidden of ['"description":', '"text":', '"rules":', '"spells":', '"classes":', '"powers":', '"races":', '"deities":']) assert.equal(keys.has(forbidden), false, forbidden);
   const strings = [...JSON.stringify(T20_PACK).matchAll(/"([^"]{41,})"/g)].map((m) => m[1]);
-  assert.deepEqual(strings.filter((t) => t !== T20_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Nomes e ligações")), []);
+  assert.deepEqual(strings.filter((t) => t !== T20_ATTRIBUTION && t !== T20_PACK.license.notice && !t.startsWith("https://") && !t.startsWith("Nomes e ligações")), []);
   assert.match(T20_PACK.license.attribution, /Nenhum texto do livro/);
   assert.notEqual(T20_PACK.license.spdx, "CC-BY-4.0");
 });
@@ -81,10 +81,11 @@ test("t20: tabela perícia→atributo completa (luta→FOR, vontade→SAB, forti
   assert.ok(T20_PACK.skills.some((s) => s.id === T20_PACK.formulas.passivePerception.skill));
 });
 
-test("t20: partes jurídicas — licença própria, atribuição com marca de terceiros e sem vínculo, fonte declarada", () => {
+test("t20: partes jurídicas — licença própria, atribuição com a editora, sem vínculo nem endosso, fonte declarada", () => {
   assert.equal(T20_PACK.license.spdx, "LicenseRef-Vox-Estrutura-Propria");
-  assert.match(T20_PACK.license.attribution, /marca/);
-  assert.match(T20_PACK.license.attribution, /sem vínculo/);
+  assert.match(T20_PACK.license.attribution, /publicado pela Jambô Editora/);
+  assert.match(T20_PACK.license.attribution, /não tem vínculo/);
+  assert.match(T20_PACK.license.notice, /não é endossado/);
   assert.equal(T20_PACK.license.source, "Nomes e ligações de mecânica de jogo; estrutura e matemática do Vox");
   assert.equal(T20_ATTRIBUTION, T20_PACK.license.attribution);
 });

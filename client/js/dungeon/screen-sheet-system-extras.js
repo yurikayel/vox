@@ -65,6 +65,12 @@ function hitDieSelect(pack, choices) {
   return `<label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.hitDice)}</span><select class="dungeon-input" name="hitDie">${none}${opts}</select></label>`;
 }
 
+/** Campo de Deslocamento; só existe em pacote com `formulas.speed`. */
+function speedField(pack, choices) {
+  if (!pack.formulas.speed) return "";
+  return `<label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.speed)} (pés)</span><input class="dungeon-input" name="speedFt" type="number" min="0" max="${pack.formulas.speed.maxFt}" value="${escapeHtml(String(choices.speedFt))}" /></label>`;
+}
+
 /**
  * Campos do painel Editar ligados ao pacote: salvaguardas treinadas, especialização (só em perícia treinada) e Deslocamento.
  * @param {object} pack Pacote de sistema.
@@ -75,8 +81,8 @@ export function renderSystemChoiceFields(pack, choices) {
   const saves = pack.abilities.map((a) => checkbox("saveProf", a.id, a.label, choices.proficientSaves.includes(a.id))).join("");
   const skills = pack.skills.map((s) => checkbox("expertSkill", s.id, s.label, choices.expertSkills.includes(s.id), !choices.proficientSkills.includes(s.id))).join("");
   return `
-    <label class="dungeon-field-mini"><span>${escapeHtml(pack.labels.speed)} (pés)</span><input class="dungeon-input" name="speedFt" type="number" min="0" max="${pack.formulas.speed.maxFt}" value="${escapeHtml(String(choices.speedFt))}" /></label>
-    ${hitDieSelect(pack, choices)}
+    ${speedField(pack, choices)}
+    ${pack.formulas.hitDice ? hitDieSelect(pack, choices) : ""}
     <fieldset class="dungeon-field-wide"><legend>Salvaguardas treinadas</legend>${saves}</fieldset>
     <fieldset class="dungeon-field-wide"><legend>Especialização (só em perícia treinada)</legend>${skills}</fieldset>`;
 }
