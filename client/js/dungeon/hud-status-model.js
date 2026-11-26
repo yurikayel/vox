@@ -4,6 +4,7 @@
  * @module dungeon/hud-status-model
  */
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
+import { buildHudBelt, buildHudMagic } from "./hud-bar-model.js";
 import { getSystemPack } from "./system-pack.js";
 import { normalizeTokenConditions } from "./vtt-tactics-schema.js";
 
@@ -125,7 +126,7 @@ export function buildHudStatus(state, scene) {
   const name = sheetName(sheet);
   const hp = ownHp(sheet);
   const ac = Number(sheet.attributes_lww?.armor_class);
-  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, ...portrait(token, name), conditions: buildHudConditions(token, sheet) };
+  const own = { name, hp: hp ? `${hp.cur}/${hp.max}` : null, ac: Number.isFinite(ac) ? ac : null, ...portrait(token, name), conditions: buildHudConditions(token, sheet), magic: buildHudMagic(sheet), belt: buildHudBelt(sheet) };
   own.mobileLine = buildMobileLine(own);
   const party = tokens
     .filter((t) => t.layer === "player" && t !== token)

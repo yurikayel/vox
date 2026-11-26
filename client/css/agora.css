@@ -4630,3 +4630,12 @@ body,
   .dungeon-hud-mobile-line { display: block; }
   .dungeon-hud .dungeon-chip-btn { min-height: 44px; }
 }
+
+/* HUD de jogo: cinto, magia e favoritos (spec hud-jogo-v0) */
+.dungeon-hud-belt { display: flex; gap: 0.35rem; margin: 0; padding: 0; }
+.dungeon-hud-belt-slot { min-width: 3rem; min-height: 44px; display: grid; place-items: center; }
+.dungeon-hud-belt-slot.is-empty { border: 1px dashed var(--sa-on-surface-variant, #bbc9c7); border-radius: 0.5rem; font-size: 0.75rem; color: var(--sa-on-surface-variant, #bbc9c7); padding: 0 0.5rem; }
+.dungeon-hud-magic { font-weight: 600; }
+@media (max-width: 1023.98px) {
+  .dungeon-hud.dungeon-chips-row { flex-wrap: nowrap; overflow-x: auto; }
+}

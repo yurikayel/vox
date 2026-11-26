@@ -141,10 +141,15 @@ export function snapshotWizardForm(container) {
   return values;
 }
 
-/** Delega a ação do assistente de criar ficha ao módulo carregado só quando a pessoa o usa. */
-const wizardAction = (fn, how) => (state, el, c, opts) => {
+/** Nomes das ações do assistente de criar ficha; cada uma é resolvida no módulo do assistente, carregado só no uso. */
+const WIZARD_ACTION_NAMES = [
+  "wizard-open", "wizard-mode", "wizard-step", "wizard-add-item",
+  "wizard-remove-item", "wizard-cancel", "wizard-keep", "wizard-discard",
+];
+
+const wizardAction = (name) => (state, el, c, opts) => {
   const values = snapshotWizardForm(c);
-  return import("./sheet-wizard-actions.js").then((m) => m[fn](state, el, values, how ?? opts));
+  return import("./sheet-wizard-actions.js").then((m) => m.runWizardOp(name, state, el, values, opts));
 };
 
 /**
@@ -267,14 +272,8 @@ export const ACTION_HANDLERS = {
   "export-voxrpg": (state, _el, c, opts) => runExportAction(state, c, "zip", opts),
   "export-chronicle-md": (state, _el, c, opts) => runExportAction(state, c, "md", opts),
   "export-voxrpg-enc": (state, _el, c, opts) => runExportAction(state, c, "enc", opts),
-  "wizard-open": wizardAction("openWizard"),
-  "wizard-mode": wizardAction("chooseMode"),
-  "wizard-step": wizardAction("stepWizard"),
-  "wizard-add-item": wizardAction("addItem"),
-  "wizard-remove-item": wizardAction("removeItem"),
-  "wizard-cancel": wizardAction("cancelWizard", {}),
-  "wizard-keep": wizardAction("cancelWizard", { confirm: false }),
-  "wizard-discard": wizardAction("cancelWizard", { discard: true }),
+  "hud-op": (state, el, _c, opts) => import("./dungeon-hud-actions.js").then((m) => m.runHudOp(state, el, opts)),
+  ...Object.fromEntries(WIZARD_ACTION_NAMES.map((name) => [name, wizardAction(name)])),
   "canvas-zoom-in": (state) => adjustCameraZoom(state, 1.2),
   "canvas-zoom-out": (state) => adjustCameraZoom(state, 0.84),
   "canvas-reset": (state) => adjustCameraZoom(state, 0),

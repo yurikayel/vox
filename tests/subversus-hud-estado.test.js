@@ -61,11 +61,11 @@ test("HUD estado: grupo lista os outros tokens do jogador, sem repetir o própri
   assert.deepEqual(m.party.map((p) => [p.tokenId, p.hp]), [["t2", "5/10"]]);
 });
 
-test("HUD estado: HTML tem aria-live só no PV próprio, retrato com nome acessível e escapa texto", () => {
+test("HUD estado: HTML sem região viva recriada, retrato com nome acessível e escapa texto", () => {
   const sheet = ownSheet({ name: "<b>Lyra</b>" });
   const scene = { tokens: [tok("t1", "ana"), tok("t2", "bia", { hpCurrent: 5, hpMax: 10 })] };
   const html = renderHudStatus(stateWith(sheet), scene);
-  assert.equal([...html.matchAll(/aria-live/g)].length, 1);
+  assert.equal([...html.matchAll(/aria-live/g)].length, 0);
   assert.match(html, /role="img" aria-label="Retrato de &lt;b&gt;Lyra/);
   assert.ok(!html.includes("<b>Lyra"));
   assert.match(html, /data-hud-member="t2"/);
