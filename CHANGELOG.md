@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: o pacote de sistema passa a declarar o que a faixa de derivados e o rótulo da defesa no HUD mostram (`display`, validado com tetos e texto puro). O D&D 2024 declara exatamente o que mostrava, sem diferença visível; pacote sem `display` segue como antes (spec `derivados-por-sistema-v0`, fatia 1 do SUB-17).
 - HUD da Mesa: os painéis em meia tela com conteúdo longo (mochila cheia, Crônica longa) agora cabem na tela, rolam por dentro e não cobrem a barra de painéis nem empurram o mapa: no computador abrem para cima da barra, no celular viram folha presa ao rodapé (até 75% da altura).
 - Ficha: "Copiar link da ficha" (painel Editar, com confirmação) gera um link só de leitura `#/ficha/ver#voxchar=…` com a ficha-base comprimida (até cerca de 8 KB; acima disso, só arquivo). Quem abre vê a ficha sem gravar nada, com o aviso de que o conteúdo veio de um link, e pode "Usar como modelo" (ficha nova, estado de jogo no padrão) ou baixar o `.voxchar`. Não há revogação do link.
 - HUD da Mesa: usar um consumível do cinto passa a mandar um delta relativo (`adjust_qty`, inteiro de −99 a 99, quantidade nunca negativa), então dois cliques rápidos gastam dois e não um quando a resposta da rede demora.

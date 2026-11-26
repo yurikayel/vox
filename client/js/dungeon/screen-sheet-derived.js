@@ -6,13 +6,14 @@
  * @module dungeon/screen-sheet-derived
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
+import { derivedStats } from "./system-display.js";
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { normalizeChoices } from "./system-derive.js";
 import { normalizeRestChoices } from "./system-rest.js";
 import { renderConditionsAndRests } from "./screen-sheet-rest.js";
-import { renderDeathSaves, renderSavesList, renderSystemChoiceFields, signed } from "./screen-sheet-system-extras.js";
+import { renderDeathSaves, renderSavesList, renderSystemChoiceFields } from "./screen-sheet-system-extras.js";
 import { escapeHtml } from "../shared/html.js";
 
 /** Itens do inventário da ficha (já normalizados na sessão ou o mapa bruto `inventory_orset`). */
@@ -56,16 +57,11 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
   const sys = resolveSheetSystem(sheet);
   if (!sys) return "";
   const { pack, derived } = sys;
-  const l = pack.labels;
   return `
     <section class="dungeon-derived" aria-label="Números do personagem (${escapeHtml(pack.name)})">
       <h3 class="dungeon-eyebrow">Números do personagem · ${escapeHtml(pack.name)}</h3>
       <dl class="dungeon-derived-list">
-        ${stat(l.proficiency, signed(derived.proficiency))}
-        ${stat(derived.armored ? l.armorClass : `${l.armorClass} sem armadura`, derived.armorClass)}
-        ${stat(l.initiative, signed(derived.initiative))}
-        ${stat(l.passivePerception, derived.passivePerception)}
-        ${stat(l.speed, `${derived.speed.meters.toString().replace(".", ",")} m`)}
+        ${derivedStats(pack, derived).map((s) => stat(s.label, s.value)).join("\n        ")}
       </dl>
       ${renderSavesList(pack, derived)}
       ${renderDeathSaves(pack, derived, hpCurrent)}

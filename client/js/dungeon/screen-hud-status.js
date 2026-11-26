@@ -33,7 +33,7 @@ function renderBelt(belt) {
 
 function renderOwn(own) {
   const hp = own.hp ? `<span class="dungeon-hud-hp">PV ${escapeHtml(own.hp)}</span>` : "";
-  const ac = own.ac === null ? "" : `<span class="dungeon-hud-ac">CA ${own.ac}</span>`;
+  const ac = own.ac === null ? "" : `<span class="dungeon-hud-ac">${escapeHtml(own.acLabel || "CA")} ${own.ac}</span>`;
   return `<div class="dungeon-hud-own" data-hud-own>${renderPortrait(own, own.name)}<strong class="dungeon-hud-name">${escapeHtml(own.name)}</strong>${hp}${ac}${renderMagic(own.magic)}${renderConditions(own.conditions)}${renderBelt(own.belt)}</div>`;
 }
 
