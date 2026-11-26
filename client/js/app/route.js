@@ -150,6 +150,7 @@ const ROUTE_DISPATCH_TABLE = {
   "labs-frames": async () => { (await loadLabsRoute()).showLabsFrames(); },
   "labs-mofn": async () => { (await loadLabsRoute()).showLabsMofn(); },
   "labs-dungeon": async () => { (await loadLabsRoute()).showLabsDungeon(); },
+  "ficha-ver": async (r) => { (await import("./screens-ficha-ver.js")).showFichaVer(r); },
   dungeon: async (r) => { (await loadLabsRoute()).showDungeonScreen(r); },
   community: (r) => showCommunity(r.id, r.tab),
   "community-avisos": async (r) => { (await loadAvisoRoute()).showAvisos(r.communityId); },
