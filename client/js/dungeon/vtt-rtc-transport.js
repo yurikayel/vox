@@ -233,6 +233,16 @@ function sendOnLink(ctx, remoteId, link, text) {
   return true;
 }
 
+/**
+ * Envia `msg` a um par (ou `"*"` para todos os elos).
+ * Retorno: `false` se o transporte está fechado, a mensagem passa do teto, a fila do elo está cheia, o canal falhou ou o jogador
+ * (`initiate`) não pôde abrir elo (teto). O Mestre (sem `initiate`) devolve `true` para um par sem elo: não há o que
+ * entregar e a mesa segue (o par reaparece pela oferta dele).
+ * @param {object} ctx Contexto do transporte.
+ * @param {string} to `routeId` do destino ou `"*"`.
+ * @param {object} msg Mensagem (o `from` é carimbado aqui).
+ * @returns {boolean} `true` se entregue ou enfileirada em todos os alvos.
+ */
 function sendMessage(ctx, to, msg) {
   if (ctx.closed) return false;
   const text = JSON.stringify({ ...msg, from: ctx.opts.peerId });
