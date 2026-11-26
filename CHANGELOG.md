@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: na faixa da aba Jogar, as reservas de PM (Tormenta20) e PF (GURPS) ganham botões de gastar e recuperar 1 ponto e o campo "Definir máximo"; o gasto vai pelo livro-razão e nunca passa de 0 nem do máximo
 - Ficha: reservas de PM (Tormenta20) e PF (GURPS) com máximo e atual na faixa de derivados, e indicador de PM no HUD do Tormenta20; o atual muda pelo livro-razão e nunca passa do máximo (campo de editar e botões de gastar ainda não). D&D inalterado.
 - Ficha: no GURPS 4e a faixa mostra PV, PF, Esquiva, Deslocamento, Deslocamento Básico, Velocidade Básica e nível de Carga (com o peso do inventário), sem nenhum texto do livro (fatia 3 do SUB-17). D&D e Tormenta20 inalterados.
 - Mesa pela rede (laboratório): com `vox.lab.mesa-rede` e o endereço do nó em `vox.lab.mesa-rede.url`, Mestre e jogador em aparelhos diferentes se conectam por WebRTC (sinalização só de oferta, resposta e ICE) e o Fairplay roda por cima; sem a flag ou se a rede não montar, a Mesa segue pela mesma origem. A tela mostra o estado da conexão. Corrigido o cancelamento do prazo de registro, que falhava no navegador. Testado com dois navegadores em loopback (SUB-08, fatias 2 e 3).
