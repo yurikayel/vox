@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: no GURPS 4e a faixa mostra PV, PF, Esquiva, Deslocamento, Deslocamento Básico, Velocidade Básica e nível de Carga (com o peso do inventário), sem nenhum texto do livro (fatia 3 do SUB-17). D&D e Tormenta20 inalterados.
 - Ficha: no Tormenta20 a faixa mostra Defesa, Iniciativa e Deslocamento (sem Proficiência, Percepção passiva, salvaguardas por atributo e testes contra a morte) e o HUD chama a defesa de "Defesa". D&D inalterado (fatia 2 do SUB-17).
 - Ficha: o pacote de sistema passa a declarar o que a faixa de derivados e o rótulo da defesa no HUD mostram (`display`, validado com tetos e texto puro). O D&D 2024 declara exatamente o que mostrava, sem diferença visível; pacote sem `display` segue como antes (spec `derivados-por-sistema-v0`, fatia 1 do SUB-17).
 - HUD da Mesa: os painéis em meia tela com conteúdo longo (mochila cheia, Crônica longa) agora cabem na tela, rolam por dentro e não cobrem a barra de painéis nem empurram o mapa: no computador abrem para cima da barra, no celular viram folha presa ao rodapé (até 75% da altura).
