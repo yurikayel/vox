@@ -452,7 +452,7 @@ export async function advanceCampaignCalendar(state, delta, store = getDefaultVt
 }
 
 /**
- * Muta o inventário OR-Set da ficha ativa (`add`, `remove`, `toggle_equip`, `set_qty`).
+ * Muta o inventário OR-Set da ficha ativa (`add`, `remove`, `toggle_equip`, `set_qty`, `adjust_qty`).
  * @param {object} state Sessão.
  * @param {string} kind Tipo da mutação.
  * @param {object} payload Dados do item.
