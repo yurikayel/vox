@@ -6,7 +6,7 @@
  * @module dungeon/screen-sheet-derived
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
  */
-import { derivedStats } from "./system-display.js";
+import { derivedStats, showBlock } from "./system-display.js";
 import { deriveSheet } from "./system-derive.js";
 import { getSystemPack, listSystemPackIds } from "./system-pack.js";
 import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
@@ -63,9 +63,9 @@ export function renderDerivedStrip(sheet, hpCurrent = null) {
       <dl class="dungeon-derived-list">
         ${derivedStats(pack, derived).map((s) => stat(s.label, s.value)).join("\n        ")}
       </dl>
-      ${renderSavesList(pack, derived)}
-      ${renderDeathSaves(pack, derived, hpCurrent)}
-      ${renderConditionsAndRests(pack, sys.rest)}
+      ${showBlock(pack, "saves") ? renderSavesList(pack, derived) : ""}
+      ${showBlock(pack, "deathSaves") ? renderDeathSaves(pack, derived, hpCurrent) : ""}
+      ${showBlock(pack, "conditions") ? renderConditionsAndRests(pack, sys.rest) : ""}
       ${renderCredits(pack)}
     </section>`;
 }

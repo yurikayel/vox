@@ -10,7 +10,7 @@ import { renderDerivedStrip } from "../client/js/dungeon/screen-sheet-derived.js
 import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
 import { validateSystemPack, getSystemPack } from "../client/js/dungeon/system-pack.js";
 import { deriveSheet } from "../client/js/dungeon/system-derive.js";
-import { DISPLAY_ENTRIES_MAX, defenseLabel, derivedStats, validateDisplay } from "../client/js/dungeon/system-display.js";
+import { DISPLAY_ENTRIES_MAX, defenseLabel, derivedStats, showBlock, validateDisplay } from "../client/js/dungeon/system-display.js";
 import { buildMobileLine } from "../client/js/dungeon/hud-status-model.js";
 
 const sheet = () => ({ character_id: "a", system: { id: "dnd5e-2024", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
@@ -105,4 +105,28 @@ test("faixa: deslocamento fracionário usa vírgula decimal (25 pés = 7,5 m)", 
   const d = deriveSheet(DND5E_2024_PACK, { level: 5, abilities: { dex: 14, wis: 12 }, speedFt: 25 }, []);
   assert.equal(d.speed.meters, 7.5);
   assert.deepEqual(derivedStats(DND5E_2024_PACK, d).at(-1), { label: "Deslocamento", value: "7,5 m" });
+});
+
+const t20Sheet = () => ({ ...sheet(), system: { id: "t20", version: 1 } });
+
+test("T20: a faixa mostra Defesa, Iniciativa e Deslocamento, sem salvaguardas por atributo nem testes contra a morte", () => {
+  const html = renderDerivedStrip(t20Sheet(), 0);
+  assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Defesa sem armadura<\/dt><dd>14<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa<\/dt><dd>\+4<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
+  for (const gone of ["Proficiência", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Sucessos"]) assert.equal(html.includes(gone), false, gone);
+});
+
+test("T20: o HUD chama a defesa de Defesa; o D&D segue com o mesmo hash e com CA", () => {
+  assert.equal(defenseLabel(getSystemPack("t20")), "Defesa");
+  assert.equal(defenseLabel(getSystemPack("dnd5e-2024")), "CA");
+  assert.equal(buildMobileLine({ name: "A", hp: "18/24", ac: 14, acLabel: defenseLabel(getSystemPack("t20")) }), "A · PV 18/24 · Defesa 14");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+});
+
+test("blocos: sem display.blocks valem todos; com a lista, só os listados; blocks que não é lista recusa o pacote", () => {
+  assert.equal(showBlock(null, "saves"), true);
+  assert.equal(showBlock({ display: { blocks: ["conditions"] } }, "saves"), false);
+  assert.equal(showBlock({ display: { blocks: ["conditions"] } }, "conditions"), true);
+  assert.equal(validateDisplay({ blocks: "saves" }).length, 1);
+  assert.deepEqual(validateDisplay({ blocks: ["saves", "desconhecido"] }), []);
+  assert.deepEqual(validateSystemPack(getSystemPack("t20")), { ok: true, errors: [] });
 });

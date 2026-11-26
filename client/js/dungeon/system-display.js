@@ -15,6 +15,9 @@ export const DISPLAY_ENTRIES_MAX = 16;
 /** Rótulo da defesa no HUD quando o pacote não declara outro. @type {string} */
 export const DEFAULT_DEFENSE_LABEL = "CA";
 
+/** Blocos opcionais da faixa que `display.blocks` pode ligar (ids fora da lista são ignorados). @type {readonly string[]} */
+export const DISPLAY_BLOCKS = Object.freeze(["saves", "deathSaves", "conditions"]);
+
 const ID = /^[a-z][A-Za-z0-9_-]{0,31}$/;
 const plus = (n) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
@@ -51,6 +54,7 @@ function entryErrors(entry, seen) {
 export function validateDisplay(display) {
   if (display === undefined) return [];
   if (!display || typeof display !== "object") return ["display: precisa ser um objeto"];
+  if (display.blocks !== undefined && !Array.isArray(display.blocks)) return ["display.blocks: precisa ser uma lista"];
   const list = display.derived;
   if (list === undefined) return [];
   if (!Array.isArray(list) || list.length > DISPLAY_ENTRIES_MAX) return [`display.derived: lista de até ${DISPLAY_ENTRIES_MAX} entradas`];
@@ -103,4 +107,15 @@ export function defenseLabel(pack) {
   const entry = Array.isArray(pack?.display?.derived) ? pack.display.derived.find((e) => e?.id === id) : null;
   const label = typeof entry?.label === "string" ? entry.label.trim() : "";
   return label && label.length <= DISPLAY_LABEL_MAX ? label : DEFAULT_DEFENSE_LABEL;
+}
+
+/**
+ * Se um bloco opcional da faixa aparece. Sem `display.blocks` valem todos (o conjunto de hoje, do D&D).
+ * @param {object|null|undefined} pack Pacote de sistema.
+ * @param {string} id Um de `DISPLAY_BLOCKS`.
+ * @returns {boolean} `true` quando o bloco deve ser desenhado.
+ */
+export function showBlock(pack, id) {
+  const blocks = pack?.display?.blocks;
+  return Array.isArray(blocks) ? blocks.includes(id) : true;
 }
