@@ -10,6 +10,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { getActiveScene } from "../client/js/dungeon/dungeon-scene-actions.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
+import { ensureDungeonLayoutStyles } from "../client/js/dungeon/dungeon-layout-style.js";
 
 const SHEETS = {
   s1: { character_id: "s1", attributes_lww: { name: "Gareth" }, pools_base: { hp_max: 31 } },
@@ -92,10 +93,39 @@ test("fora do Mestre a ação não grava nada", async () => {
 });
 
 test("CSS: alvos de toque de 44 px, bottom sheet no celular e gaveta à esquerda no desktop", () => {
-  const css = readFileSync(new URL("../client/css/dungeon-layout.css", import.meta.url), "utf8");
-  const block = css.slice(css.indexOf(".dungeon-token-tray"));
+  const block = readFileSync(new URL("../client/css/sv-token-tray.css", import.meta.url), "utf8");
   assert.match(block, /\.dungeon-token-tray summary[^{]*\{[^}]*min-height:\s*44px/);
   assert.match(block, /\.dungeon-token-tray \.dungeon-chip-btn[^{]*\{[^}]*min-height:\s*44px/);
   assert.match(block, /bottom:\s*0/);
   assert.match(block, /@media \(min-width:\s*768px\)[\s\S]*left:\s*0/);
+});
+
+function fakeDoc() {
+  const listeners = {};
+  const links = [];
+  return {
+    links,
+    head: { appendChild: (el) => links.push(el) },
+    getElementById: (id) => links.find((l) => l.id === id) ?? null,
+    createElement: () => ({ id: "", rel: "", href: "" }),
+    addEventListener: (type, fn, capture) => { listeners[type] = { fn, capture }; },
+    fire: (type, target) => listeners[type]?.fn({ target }),
+    listeners,
+  };
+}
+
+test("o link de sv-token-tray.css só entra quando a bandeja abre, uma vez, e a folha do legado não cresce", () => {
+  const doc = fakeDoc();
+  ensureDungeonLayoutStyles(doc);
+  ensureDungeonLayoutStyles(doc);
+  assert.equal(doc.listeners.toggle?.capture, true, "toggle não borbulha: escuta em captura");
+  assert.deepEqual(doc.links.map((l) => l.href), ["css/dungeon-layout.css"], "fechada: só a folha da Mesa");
+  doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: false });
+  doc.fire("toggle", { dataset: { dungeonDetails: "sheet-audit" }, open: true });
+  assert.equal(doc.links.length, 1, "fechar a bandeja ou abrir outro details não injeta");
+  doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: true });
+  doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: true });
+  assert.deepEqual(doc.links.map((l) => l.href), ["css/dungeon-layout.css", "css/sv-token-tray.css"]);
+  const legacy = readFileSync(new URL("../client/css/dungeon-layout.css", import.meta.url), "utf8").split("\n").length;
+  assert.ok(legacy <= 369, `dungeon-layout.css é legado acima de 350 linhas e não cresce (${legacy})`);
 });

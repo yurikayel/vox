@@ -3,6 +3,8 @@
  * @module dungeon/dungeon-layout-style
  */
 
+import { watchTokenTrayStyles } from "./token-tray-style.js";
+
 const LINK_ID = "dungeon-layout-stylesheet";
 
 /**
@@ -12,6 +14,7 @@ const LINK_ID = "dungeon-layout-stylesheet";
  * @returns {void}
  */
 export function ensureDungeonLayoutStyles(doc = document) {
+  watchTokenTrayStyles(doc);
   if (!doc?.head || doc.getElementById(LINK_ID)) return;
   const link = doc.createElement("link");
   link.id = LINK_ID;
