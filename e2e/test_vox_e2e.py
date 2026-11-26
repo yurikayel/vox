@@ -27,6 +27,10 @@ CLIENT_DIR = ROOT / "client"
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    # HTTP/1.1 mantém a conexão aberta: o boot pede centenas de módulos ES e, em HTTP/1.0, cada um abria um socket novo.
+    # No Windows isso esgota os sockets de loopback (milhares em TIME_WAIT) e o Chromium falha com
+    # `net::ERR_NO_BUFFER_SPACE` em `/js/app.js`, sem o app subir.
+    protocol_version = "HTTP/1.1"
     extensions_map = {
         **http.server.SimpleHTTPRequestHandler.extensions_map,
         ".js": "application/javascript; charset=utf-8",

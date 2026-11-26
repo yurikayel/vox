@@ -38,6 +38,8 @@ export const GURPS4E_PACK = Object.freeze({
     derived: Object.freeze([
       Object.freeze({ id: "hp", label: "PV (ST)", source: Object.freeze({ computed: "gurps.hp" }) }),
       Object.freeze({ id: "fp", label: "PF (HT)", source: Object.freeze({ computed: "gurps.fp" }) }),
+      Object.freeze({ id: "hpNow", label: "PV", source: Object.freeze({ resource: "hp" }) }),
+      Object.freeze({ id: "fpNow", label: "PF", source: Object.freeze({ resource: "fp" }) }),
       Object.freeze({ id: "dodge", label: "Esquiva", source: Object.freeze({ computed: "gurps.dodge" }) }),
       Object.freeze({ id: "move", label: "Deslocamento", source: Object.freeze({ computed: "gurps.move" }) }),
       Object.freeze({ id: "basicMove", label: "Desloc. Básico", source: Object.freeze({ computed: "gurps.basicMove" }) }),

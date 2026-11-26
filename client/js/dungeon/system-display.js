@@ -41,7 +41,7 @@ export const COMPUTED_STATS = Object.freeze({ ...GURPS_COMPUTED });
 
 const LEGACY_ORDER = ["proficiency", "armorClass", "initiative", "passivePerception", "speed"];
 
-function entryErrors(entry, seen) {
+function entryErrors(entry, seen, resourceIds) {
   if (!entry || typeof entry !== "object") return ["entrada não é objeto"];
   const errors = [];
   if (typeof entry.id !== "string" || !ID.test(entry.id)) errors.push("id inválido");
@@ -49,18 +49,20 @@ function entryErrors(entry, seen) {
   const label = typeof entry.label === "string" ? entry.label.trim() : "";
   if (!label || label.length > DISPLAY_LABEL_MAX) errors.push(`rótulo vazio ou acima de ${DISPLAY_LABEL_MAX} caracteres`);
   if (!entry.source || typeof entry.source !== "object") errors.push("`source` ausente");
+  else if (resourceIds && typeof entry.source.resource === "string" && !resourceIds.includes(entry.source.resource)) errors.push(`recurso inexistente: ${entry.source.resource.slice(0, 24)}`);
   return errors;
 }
 
 /**
  * Confere a forma de `display`. Fonte desconhecida não é erro (é ignorada na hora de desenhar); forma quebrada é.
  * @param {unknown} display Campo `display` do pacote (ausente é válido).
+ * @param {string[]} [resourceIds] Ids de `pack.resources`; com eles, `resource` que aponta para id inexistente é erro.
  * @returns {string[]} Erros em português; vazio quando válido.
  */
-export function validateDisplay(display) {
+export function validateDisplay(display, resourceIds) {
   if (display === undefined) return [];
   if (!display || typeof display !== "object") return ["display: precisa ser um objeto"];
-  return [...blocksErrors(display.blocks), ...derivedErrors(display.derived)];
+  return [...blocksErrors(display.blocks), ...derivedErrors(display.derived, resourceIds)];
 }
 
 function blocksErrors(blocks) {
@@ -69,21 +71,28 @@ function blocksErrors(blocks) {
   return blocks.every((b) => typeof b === "string") ? [] : ["display.blocks: só textos"];
 }
 
-function derivedErrors(list) {
+function derivedErrors(list, resourceIds) {
   if (list === undefined) return [];
   if (!Array.isArray(list) || list.length > DISPLAY_ENTRIES_MAX) return [`display.derived: lista de até ${DISPLAY_ENTRIES_MAX} entradas`];
   const seen = new Set();
   return list.flatMap((entry, i) => {
-    const errors = entryErrors(entry, seen).map((e) => `display.derived[${i}]: ${e}`);
+    const errors = entryErrors(entry, seen, resourceIds).map((e) => `display.derived[${i}]: ${e}`);
     if (entry && typeof entry.id === "string") seen.add(entry.id);
     return errors;
   });
 }
 
+/** Reserva da ficha como "atual/máximo"; some quando a ficha não tem esse recurso (máximo 0 ou ausente). */
+function resourceStat(id, label, ctx) {
+  const r = ctx?.reserves && Object.hasOwn(ctx.reserves, id) ? ctx.reserves[id] : null;
+  return r ? { label, value: `${r.cur}/${r.max}` } : null;
+}
+
 function resolveEntry(pack, entry, derived, registry, ctx) {
-  const { formula, computed } = entry.source || {};
+  const { formula, computed, resource } = entry.source || {};
   const label = String(entry.label).trim();
   if (typeof formula === "string" && Object.hasOwn(FORMULA_STATS, formula)) return FORMULA_STATS[formula](derived, label, pack);
+  if (typeof resource === "string") return resourceStat(resource, label, ctx);
   if (typeof computed !== "string" || !Object.hasOwn(registry, computed)) return null;
   try {
     const out = registry[computed](derived, label, ctx);
@@ -103,7 +112,7 @@ function legacyStats(pack, derived) {
  * @param {object} pack Pacote de sistema.
  * @param {object} derived Derivados calculados por `deriveSheet`.
  * @param {Readonly<Object<string, Function>>} [registry] Registro de `computed` (só os testes trocam).
- * @param {{weightLb?: number, unweighed?: number}} [ctx] Contexto de carga para os `computed` que dependem do inventário.
+ * @param {{weightLb?: number, unweighed?: number, reserves?: Object<string, {cur: number, max: number}>}} [ctx] Contexto da ficha: carga para os `computed` e valores de recursos para os `resource`.
  * @returns {{label: string, value: string}[]} Pares rótulo e valor, em texto puro (quem desenha escapa).
  */
 export function derivedStats(pack, derived, registry = COMPUTED_STATS, ctx = undefined) {

@@ -111,7 +111,8 @@ const t20Sheet = () => ({ ...sheet(), system: { id: "t20", version: 1 } });
 
 test("T20: a faixa mostra Defesa, Iniciativa e Deslocamento, sem salvaguardas por atributo nem testes contra a morte", () => {
   const html = renderDerivedStrip(t20Sheet(), 0);
-  assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Defesa<\/dt><dd>14<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa \(atributo\)<\/dt><dd>\+4<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
+  assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Defesa<\/dt><dd>14<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa \(atributo\)<\/dt><dd>\+4<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>PV<\/dt><dd>24\/24<\/dd><\/div>\s*<\/dl>/);
+  assert.equal(html.includes("PM"), false, "sem máximo de PM gravado a reserva não aparece");
   assert.equal(html.includes("Condições"), false, "o pacote t20 não declara condições; o bloco só aparece quando houver lista");
   assert.equal(html.includes("sem armadura"), false);
   for (const gone of ["Proficiência", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Sucessos", "Descanso"]) assert.equal(html.includes(gone), false, gone);

@@ -6,7 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Ficha: reservas de PM (Tormenta20) e PF (GURPS) com máximo e atual na faixa de derivados, e indicador de PM no HUD do Tormenta20; o atual muda pelo livro-razão e nunca passa do máximo (campo de editar e botões de gastar ainda não). D&D inalterado.
 - Ficha: no GURPS 4e a faixa mostra PV, PF, Esquiva, Deslocamento, Deslocamento Básico, Velocidade Básica e nível de Carga (com o peso do inventário), sem nenhum texto do livro (fatia 3 do SUB-17). D&D e Tormenta20 inalterados.
+- Mesa pela rede (laboratório): com `vox.lab.mesa-rede` e o endereço do nó em `vox.lab.mesa-rede.url`, Mestre e jogador em aparelhos diferentes se conectam por WebRTC (sinalização só de oferta, resposta e ICE) e o Fairplay roda por cima; sem a flag ou se a rede não montar, a Mesa segue pela mesma origem. A tela mostra o estado da conexão. Corrigido o cancelamento do prazo de registro, que falhava no navegador. Testado com dois navegadores em loopback (SUB-08, fatias 2 e 3).
 - Ficha: no Tormenta20 a faixa mostra Defesa, Iniciativa e Deslocamento (sem Proficiência, Percepção passiva, salvaguardas por atributo e testes contra a morte) e o HUD chama a defesa de "Defesa". D&D inalterado (fatia 2 do SUB-17).
 - Ficha: o pacote de sistema passa a declarar o que a faixa de derivados e o rótulo da defesa no HUD mostram (`display`, validado com tetos e texto puro). O D&D 2024 declara exatamente o que mostrava, sem diferença visível; pacote sem `display` segue como antes (spec `derivados-por-sistema-v0`, fatia 1 do SUB-17).
 - HUD da Mesa: os painéis em meia tela com conteúdo longo (mochila cheia, Crônica longa) agora cabem na tela, rolam por dentro e não cobrem a barra de painéis nem empurram o mapa: no computador abrem para cima da barra, no celular viram folha presa ao rodapé (até 75% da altura).
