@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -29,11 +30,8 @@ const card = (host) => host.querySelector(".sorteio-card");
 const button = (host, action) => host.querySelector(`[data-sorteio-action="${action}"]`);
 
 async function until(check, label) {
-  for (let i = 0; i < 100; i++) {
-    const got = check();
-    if (got) return got;
-    await new Promise((resolve) => setTimeout(resolve, 30));
-  }
+  const got = await waitUntil(check, 3000);
+  if (got) return got;
   throw new Error(`tempo esgotado: ${label}`);
 }
 
