@@ -38,16 +38,19 @@ Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos no
 
 ## 4. O que o jogador vê dos outros
 
-- Quem é o `gm` vê tudo (`projectStateForPlayer`, `vtt-reducer.js:343`).
-- Jogador: retratos do grupo só de tokens visíveis (`projectSceneForPlayer`); `hpVisible === "status"` esconde número e mostra só o rótulo `Ileso/Ferido/Crítico/Caído` (`vtt-reducer.js:305`, `hpStatusLabel` em `vtt-scene-schema.js:258`).
-- **Lacuna medida:** `sheetsById` chega ao jogador sem ocultar `pools_base` nem `delta_ledger` de fichas alheias. O HUD **não** lê PV de outra pessoa pela ficha; só pelo token projetado. Fechar a lacuna na projeção é item do código (D4).
-- Condições de outros: só as do token (públicas na mesa); nunca de `system_choices`.
-- Cinto, favoritos e magia são só da ficha própria; nunca aparecem para outros.
+Critério de dono: uma ficha é **própria** quando um token ligado a ela (`token.sheetId`) tem `ownerRouteId` igual à identidade de quem lê. O resto é **alheia**.
+
+- **Mestre:** vê tudo.
+- **Ficha própria:** completa, exceto as notas do Mestre.
+- **Ficha alheia (lista de permissão):** o jogador recebe só nome, CA e retrato (iniciais e cor), mais PV atual e máximo gravados no **token projetado**, e apenas quando o modo `hpVisible` permitir; com `status`, só o rótulo (`Ileso`, `Ferido`, `Crítico`, `Caído`). Todo o resto sai da projeção: inventário, favoritos e demais metadados, escolhas do sistema, recursos e histórico de recursos, atributos.
+- **Grupo:** retratos só de tokens visíveis na cena; condições de outros são só as do token.
+- **Cinto, favoritos e magia:** só da ficha própria.
+- **Achado medido:** a projeção ainda entrega a jogadores dados de fichas alheias além do necessário; a D4 passa a filtrar por lista de permissão.
 
 ## 5. Testes previstos
 
 - Unidade (`node:test`, sem DOM): construtor do modelo do HUD (retrato, condições com corte "+N", magia oculta com 0, cinto com 4 vagas, favoritos com teto 6, linha móvel).
-- Projeção: jogador não recebe PV numérico de token `status`; `pools_base`/`delta_ledger` alheios saem da projeção (mutante: remover o filtro falha o teste).
+- Projeção: teste por campo (cada campo fora da lista de permissão some da ficha alheia; ficha própria e visão do Mestre completas); jogador não recebe PV numérico de token `status`; remover o filtro falha o teste.
 - Acessibilidade: nomes acessíveis, `aria-live` só na ficha própria.
 - e2e Python/Playwright: abrir/fechar painel com Esc e devolver o foco; viewport 390 px mostra a linha móvel.
 - Evidência de teste segue `docs/process/qualidade-e-evidencia.md` (comando, contagem, mutantes conferidos).
@@ -59,7 +62,7 @@ Cada uma: **Decidido em 25/11/2026: opção recomendada (autorização geral do 
 - **D1 — Favoritos: onde guardar.** (a) `sheet_meta.favorites` na ficha *(recomendada)*; (b) só no navegador. Fica na ficha para acompanhar o personagem.
 - **D2 — Cinto: critério de consumível.** (a) tag `consumivel` no item *(recomendada)*; (b) lista fixa por sistema.
 - **D3 — Indicador de magia: fonte do rótulo.** (a) pacote do sistema *(recomendada)*; (b) texto livre na ficha.
-- **D4 — PV de outras pessoas.** (a) só pelo token projetado e filtrar `pools_base`/`delta_ledger` alheios na projeção *(recomendada)*; (b) ler da ficha alheia.
+- **D4 — Fichas alheias.** (a) lista de permissão explícita (nome, CA, retrato, PV pelo token conforme `hpVisible`) e dono pelo token ligado, como na §4 *(recomendada)*; (b) enviar a ficha inteira e esconder só na tela.
 - **D5 — Retrato.** (a) iniciais sobre a cor do token, sem bitmap *(recomendada)*; (b) imagem enviada.
 - **D6 — Painéis.** (a) meia tela sem modal no desktop e folha no celular *(recomendada)*; (b) modais.
 - **D7 — Atalhos do #525.** (a) manter `roll-d20`, `move`, `sheet` fixos e trocar o restante pelos favoritos *(recomendada)*; (b) remover.
