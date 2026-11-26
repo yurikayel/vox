@@ -13,7 +13,7 @@ Só matemática, no formato dos pacotes existentes (`validateSystemPack`):
 
 ## 2. Conteúdo e licença
 
-Não há licença aberta para o conteúdo editorial. O pacote traz fórmulas numéricas próprias do Vox e os nomes curtos dos atributos. Fora: lista de perícias, vantagens, desvantagens, tabelas (inclusive a de dano por ST) e qualquer texto de regra; esses dados são escritos ou importados pelo jogador. `license.spdx` é `LicenseRef-Vox-Estrutura-Propria`. Nota em `docs/legal/licenca-e-contribuicoes.md`.
+Não há licença aberta para o conteúdo editorial. O pacote traz nomes de mecânica de jogo (os quatro atributos) e fórmulas e matemática do Vox. Fora: lista de perícias, vantagens, desvantagens, tabelas (inclusive a de dano por ST) e qualquer texto de regra; esses dados são escritos ou importados pelo jogador. `license.spdx` é `LicenseRef-Vox-Estrutura-Propria`. Nota em `docs/legal/licenca-e-contribuicoes.md`.
 
 ## 3. Limites conhecidos (não entram neste PR)
 

@@ -96,6 +96,14 @@ test("gurps4e: nenhum texto de livro no pacote (sem chaves de descrição, perí
   const keys = new Set(json.match(/"[a-zA-Z]+":/g));
   for (const forbidden of ['"description":', '"text":', '"rules":', '"advantages":', '"disadvantages":', '"spells":', '"tables":']) assert.equal(keys.has(forbidden), false, forbidden);
   const long = [...json.matchAll(/"([^"]{41,})"/g)].map((m) => m[1]);
-  assert.deepEqual(long.filter((t) => t !== GURPS4E_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Fórmulas numéricas")), []);
+  assert.deepEqual(long.filter((t) => t !== GURPS4E_ATTRIBUTION && !t.startsWith("https://") && !t.startsWith("Nomes de mecânica")), []);
   assert.notEqual(GURPS4E_PACK.license.spdx, "CC-BY-4.0");
+});
+
+test("gurps4e: partes jurídicas — licença própria, atribuição com marca de terceiros e sem vínculo, fonte declarada", () => {
+  assert.equal(GURPS4E_PACK.license.spdx, "LicenseRef-Vox-Estrutura-Propria");
+  assert.match(GURPS4E_PACK.license.attribution, /marca/);
+  assert.match(GURPS4E_PACK.license.attribution, /sem vínculo/);
+  assert.equal(GURPS4E_PACK.license.source, "Nomes de mecânica de jogo; fórmulas e matemática do Vox");
+  assert.equal(GURPS4E_ATTRIBUTION, GURPS4E_PACK.license.attribution);
 });

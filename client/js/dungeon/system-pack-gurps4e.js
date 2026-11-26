@@ -26,7 +26,7 @@ export const GURPS4E_PACK = Object.freeze({
   license: Object.freeze({
     spdx: "LicenseRef-Vox-Estrutura-Propria",
     attribution: GURPS4E_ATTRIBUTION,
-    source: "Fórmulas numéricas próprias do Vox; sem conteúdo editorial de terceiros",
+    source: "Nomes de mecânica de jogo; fórmulas e matemática do Vox",
     url: "https://github.com/yurikayel/vox/blob/develop/docs/legal/licenca-e-contribuicoes.md",
   }),
   testKind: "3d6_sob_nh",

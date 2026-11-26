@@ -139,5 +139,5 @@ test("ficha: descanso curto com 0 PV mantém as marcas de morte; com PV acima de
 test("ficha: sem ficha ou sem pacote, nada acontece e nada quebra", async () => {
   assert.equal(await longRestSheet({ sheet: null }), undefined);
   assert.equal(await toggleSheetCondition({ sheet: null }, "prone"), undefined);
-  assert.equal(await shortRestSheet({ sheet: { schema_version: "1.0.0", system: { id: "t20", version: 1 }, attributes_lww: {} } }), undefined);
+  assert.equal(await shortRestSheet({ sheet: { schema_version: "1.0.0", system: { id: "sistema-inexistente", version: 1 }, attributes_lww: {} } }), undefined);
 });
