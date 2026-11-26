@@ -47,7 +47,8 @@ test("round-trip: exportar e importar devolve a ficha-base com id novo e estado 
   assert.equal(dst.sheet.attributes_lww.speed_ft, 25);
   assert.equal(Object.values(dst.sheet.inventory_orset).find((i) => i.label === "Cota").qty, 2);
   assert.notEqual(dst.sheet.character_id, src.sheet.character_id);
-  assert.equal(dst.sheet.pools_base.hp_max, 20, "PV e espaços iniciais vêm dos padrões da ficha nova");
+  assert.equal(dst.sheet.pools_base.hp_max, 24, "o PV máximo viaja (§10); ouro e espaços vêm dos padrões da ficha nova");
+  assert.equal(dst.sheet.pools_base.gold_initial, 0);
   assert.deepEqual(dst.sheet.delta_ledger, []);
   assert.deepEqual(dst.sheet.system_choices.conditions ?? [], []);
   assert.equal(dst.sheet.system_choices.deathSaves, undefined);
@@ -55,7 +56,7 @@ test("round-trip: exportar e importar devolve a ficha-base com id novo e estado 
 
 test("exportar não leva identidade, campanha, notas do Mestre, estado de jogo nem retrato", async () => {
   const raw = new TextDecoder().decode(exportVoxchar((await richState()).sheet).bytes);
-  for (const banned of ["owner_pubkey_p256", "CHAVE-SECRETA", "campaign_id", "character_id", "spatial_state", "notes_gm", "segredo do mestre", "pools_base", "delta_ledger", "deathSaves", "conditions", "portrait", "avatar"]) {
+  for (const banned of ["owner_pubkey_p256", "CHAVE-SECRETA", "campaign_id", "character_id", "spatial_state", "notes_gm", "segredo do mestre", "hp_current", "gold_initial", "spell_slots_max", "hp_temp_max", "delta_ledger", "deathSaves", "conditions", "portrait", "avatar"]) {
     assert.equal(raw.includes(banned), false, banned);
   }
   assert.equal(dec(new TextEncoder().encode(raw)).sheet.sheet_meta.notes_public, "olá");
