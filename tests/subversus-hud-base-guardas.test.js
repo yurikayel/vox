@@ -13,6 +13,9 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { mutateSheetInventory, updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
 import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
 import { registerSystemPack } from "../client/js/dungeon/system-pack.js";
+import { createAndSelectCampaign } from "../client/js/dungeon/dungeon-persistence.js";
+import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
+import { createDraft, createWizard } from "../client/js/dungeon/sheet-wizard.js";
 import { createCampaign, createVttOp } from "../client/js/dungeon/vtt-schema.js";
 import { createCharacterSheetDoc } from "../client/js/rpg-sheet-and-lore.js";
 import { isAuthorizedVttOp, projectStateForPlayer, reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
@@ -101,4 +104,27 @@ test("assistente: todas as ações wizard-* continuam registradas e despachando;
   await ACTION_HANDLERS["wizard-cancel"](state, null, { querySelector: () => null });
   await ACTION_HANDLERS["wizard-discard"](state, null, { querySelector: () => null });
   assert.equal(state.sheetWizard, null, "descartar fecha o assistente");
+});
+
+test("assistente: wizard-remove-item tira o item do rascunho", async () => {
+  const state = createDungeonSessionState();
+  await ACTION_HANDLERS["wizard-open"](state, null, { querySelector: () => null });
+  state.sheetWizard.draft.items.push({ label: "A" }, { label: "B" }, { label: "C" });
+  await ACTION_HANDLERS["wizard-remove-item"](state, { dataset: { index: "1" } }, { querySelector: () => null });
+  assert.deepEqual(state.sheetWizard.draft.items.map((i) => i.label), ["A", "C"]);
+});
+
+test("assistente: wizard-step até finish grava no store injetado", async () => {
+  const store = createVttStore(createMemoryVttBackend());
+  const state = createDungeonSessionState();
+  await createAndSelectCampaign(state, "Mesa", { store });
+  const writes = [];
+  const real = store.appendOp.bind(store);
+  store.appendOp = (...a) => { writes.push(a[1].type); return real(...a); };
+  const { runWizardOp } = await import("../client/js/dungeon/sheet-wizard-actions.js");
+  state.sheetWizard = { ...createWizard(), mode: "quick", draft: { ...createDraft(), name: "Bram" } };
+  await runWizardOp("wizard-step", state, { dataset: { dir: "finish" } }, { sheetName: "Bram" }, { store });
+  assert.deepEqual(writes, ["SHEET_UPSERT"]);
+  assert.equal(state.sheetWizard, null);
+  assert.equal(state.sheet.attributes_lww.name, "Bram");
 });
