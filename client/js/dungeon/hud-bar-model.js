@@ -4,6 +4,7 @@
  */
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { normalizeFavorites } from "./hud-favorites.js";
+import { projectReserves } from "./sheet-reserves.js";
 import { getSystemPack } from "./system-pack.js";
 import { listInventoryItems } from "./vtt-inventory.js";
 
@@ -27,6 +28,15 @@ export function buildHudBelt(sheet) {
   return Array.from({ length: HUD_BELT_SLOTS }, (_, i) => picked[i] || null);
 }
 
+/** Indicador de reserva (PM do T20) quando o pacote a declara em `display.hud.secondary` e a ficha tem máximo. */
+function reserveMagic(sheet) {
+  const pack = getSystemPack(sheet?.system?.id);
+  const id = pack?.display?.hud?.secondary;
+  const r = typeof id === "string" ? projectReserves(sheet, pack)[id] : null;
+  const label = pack?.resources?.find((x) => x.id === id)?.label;
+  return r && label ? { label, text: `${r.cur}/${r.max}` } : null;
+}
+
 /**
  * Indicador de magia: só existe com recurso de magia acima de zero; o rótulo vem do pacote do sistema (D3).
  * @param {object|null} sheet Ficha própria.
@@ -35,7 +45,7 @@ export function buildHudBelt(sheet) {
 export function buildHudMagic(sheet) {
   const maxes = sheet?.pools_base?.spell_slots_max || {};
   const max = SLOT_POOLS.reduce((sum, l) => sum + (Number(maxes[l]) > 0 ? Number(maxes[l]) : 0), 0);
-  if (max <= 0) return null;
+  if (max <= 0) return reserveMagic(sheet);
   const pools = projectCharacterPools(sheet.pools_base, sheet.delta_ledger || []).pools;
   const cur = SLOT_POOLS.reduce((sum, l) => sum + (Number(pools[`spell_slot_${l}`]) || 0), 0);
   const label = getSystemPack(sheet.system?.id)?.resources?.find((r) => r.id === "spell-slots")?.label || DEFAULT_MAGIC_LABEL;

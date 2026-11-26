@@ -103,3 +103,4 @@ O teste com pessoas e redes reais é o `SUB-14` e fica fora.
 - **Queda:** se a rede não montar (módulo, WebSocket ou endereço), usa `BroadcastChannel` e a tela diz que a rede ficou indisponível. Depois de montada, um nó que não responde mostra o estado de erro ("Sem conexão com o nó de sinalização"); a troca de transporte ao vivo não existe.
 - **Estado na tela:** `connecting`, `waiting_peer`, `open` e `error`, em região `aria-live="polite"` (`renderVttConnection`).
 - **Liveness:** esgotadas as 4 ofertas por elo, um Mestre que reinicia só é reofertado quando o app cria um elo novo para ele.
+- **STUN:** sem configuração o padrão do produto segue o decidido (STUN público). `vox.lab.mesa-rede.ice` aceita até 4 entradas `stun:host[:porta]`; texto vazio = só candidatos locais (nenhum tráfego externo, o que os testes usam); entrada inválida também vira lista vazia.

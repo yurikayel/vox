@@ -457,3 +457,24 @@ test("resposta recebida encerra a oferta em voo: nova entrada do par reoferta na
   assert.ok(await waitUntil(() => rig.offers() === 2, 15000), "sem oferta em voo, reoferta sem esperar o prazo");
   rig.t.close();
 });
+
+test("o cancelamento padrão do prazo não depende de `this` (clearTimeout do navegador lança com receptor errado)", () => {
+  const real = globalThis.clearTimeout;
+  let calls = 0;
+  globalThis.clearTimeout = function strictClear(handle) {
+    if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
+    calls += 1;
+    return real(handle);
+  };
+  try {
+    const { FakeWebSocket, sockets } = fakeWebSocketClass();
+    const client = createVttSignalingClient({ url: "ws://x", peerId: "gm", WebSocketImpl: FakeWebSocket });
+    sockets[0].open();
+    sockets[0].confirm("gm");
+    assert.equal(client.state(), "open");
+    client.close();
+    assert.ok(calls >= 1, "o prazo foi cancelado");
+  } finally {
+    globalThis.clearTimeout = real;
+  }
+});
