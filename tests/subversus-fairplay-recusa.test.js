@@ -89,6 +89,31 @@ test("só o Mestre, e só com a flag ligada, recusa", async () => {
   off.close();
 });
 
+test("flag desligada depois do pedido: recusar devolve false e o par continua pendente", async () => {
+  const flag = { value: "1", getItem() { return this.value; } };
+  const env = await setup();
+  const gm = createVttSyncPeer({ role: "gm", campaignId: ID, keypair: env.gm, store: env.gmStore, transport: env.hub.connect("gm2"), roomKey: env.roomKey, storage: flag });
+  const wire = env.hub.connect(env.player.routeId);
+  wire.send("gm2", { kind: "HELLO_SYNC", roomKey: env.roomKey });
+  await settlePeers(gm);
+  assert.deepEqual(gm.getPendingFairplayPeers(), [env.player.routeId]);
+  flag.value = "0";
+  assert.equal(await gm.refuseFairplayPeer(env.player.routeId), false);
+  assert.deepEqual(gm.getPendingFairplayPeers(), [env.player.routeId], "continua pendente");
+  gm.close();
+});
+
+test("ctx de jogador com fila forçada: recusar devolve false e a fila fica como está", async () => {
+  const env = await setup();
+  const forced = createVttSyncPeer({
+    role: "player", campaignId: ID, keypair: env.player, store: env.playerStore, transport: env.hub.connect("forcado"),
+    roomKey: env.roomKey, gmRouteId: env.gm.routeId, storage: FLAG_ON, pendingFairplay: ["vx_x"],
+  });
+  assert.equal(await forced.refuseFairplayPeer("vx_x"), false);
+  assert.deepEqual(forced.getPendingFairplayPeers(), ["vx_x"]);
+  forced.close();
+});
+
 test("o recusado para de reenviar o HELLO", async () => {
   const env = await setup();
   const pending = [];

@@ -439,7 +439,7 @@ function buildSyncContext(opts) {
     roomKey: opts.roomKey,
     gmRouteId: opts.gmRouteId || opts.keypair.routeId,
     connectedPlayers: new Set(),
-    pendingFairplay: new Set(),
+    pendingFairplay: new Set(opts.pendingFairplay || []),
     refusedFairplay: new Set(),
     keyOpByActor: new Map(),
     onFairplayAccessChange: opts.onFairplayAccessChange,
@@ -461,7 +461,7 @@ function buildSyncContext(opts) {
 
 /**
  * Instancia um par P2P da Mesa Soberana (`"gm"` ou `"player"`) sobre qualquer transporte compatível.
- * @param {object} opts Opções (`onFairplayAccessChange` (fila de pedidos mudou), `schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
+ * @param {object} opts Opções (`onFairplayAccessChange` (fila de pedidos mudou), `pendingFairplay` (fila inicial, para testes), `schedule`, `cancel` e `onHelloGaveUp` opcionais: reenvio do HELLO_SYNC do jogador; `storage` opcional: armazenamento da flag `vox.lab.fairplay`; `role`, `campaignId`, `keypair`, `store`, `transport`, `roomKey`, `gmRouteId`, `onUpdate`, `onBlobReceived`, `onRejected`, `onPeerCountChange`, `now` relógio injetável).
  * @returns {{ routeId: string, getPendingFairplayPeers: () => string[], approveFairplayPeer: (routeId: string) => Promise<boolean>, refuseFairplayPeer: (routeId: string) => Promise<boolean>, revokeFairplayPeer: (routeId: string) => Promise<boolean>, join: () => void, dispatchOp: (rawOp: object) => Promise<object>, getPeerCount: () => number, flush: () => Promise<void>, close: () => void }} Controlador do par P2P.
  */
 export function createVttSyncPeer(opts) {
