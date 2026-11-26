@@ -2,6 +2,7 @@
  * @file Ações do HUD (spec hud-jogo-v0): usar um consumível do cinto e marcar favorito. Carregado por `import()`.
  * @module dungeon/dungeon-hud-actions
  */
+import { setReserveMaxFor, spendReserve } from "./dungeon-reserve-actions.js";
 import { toggleFavorite } from "./hud-favorites.js";
 import { closeHudPanel, toggleHudPanel } from "./hud-panels.js";
 import { dispatchCampaignOp } from "./dungeon-sync-bridge.js";
@@ -46,7 +47,7 @@ export async function toggleHudFavorite(state, key, opts = {}) {
 }
 
 /**
- * Despacha uma ação do HUD pelo `data-hud-op` do botão (`belt-use`, `favorite`, `panel-open` ou `panel-close`); op desconhecida não faz nada.
+ * Despacha uma ação do HUD pelo `data-hud-op` do botão (`belt-use`, `favorite`, `reserve-spend`, `reserve-max`, `panel-open` ou `panel-close`); op desconhecida não faz nada.
  * @param {object} state Estado da sessão.
  * @param {HTMLElement} el Botão clicado.
  * @param {{store?: object}} [opts] Opções.
@@ -56,6 +57,8 @@ export async function runHudOp(state, el, opts = {}) {
   const op = el?.dataset?.hudOp;
   if (op === "belt-use") return useBeltItem(state, el.dataset.itemId, opts);
   if (op === "favorite") return toggleHudFavorite(state, el.dataset.favoriteKey, opts);
+  if (op === "reserve-spend") return spendReserve(state, el.dataset.reserveId, Number(el.dataset.delta), opts);
+  if (op === "reserve-max") return setReserveMaxFor(state, el.dataset.reserveId, el.closest("[data-reserve]")?.querySelector("input")?.value, opts);
   if (op === "panel-open") return toggleHudPanel(state, el.dataset.panelId);
   if (op === "panel-close") return closeHudPanel(state);
   return undefined;

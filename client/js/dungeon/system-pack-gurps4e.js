@@ -47,6 +47,7 @@ export const GURPS4E_PACK = Object.freeze({
       Object.freeze({ id: "load", label: "Carga", source: Object.freeze({ computed: "gurps.load" }) }),
     ]),
     blocks: Object.freeze([]),
+    hud: Object.freeze({ defense: "dodge" }),
   }),
   formulas: Object.freeze({
     /** Valor guardado = 10 + diferença para o padrão (o motor mostra só a diferença). */
