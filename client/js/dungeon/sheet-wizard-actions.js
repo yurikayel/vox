@@ -144,3 +144,27 @@ export async function importInWizard(state, file, opts = {}) {
   state.campaignNotice = `Ficha "${sheet.attributes_lww.name}" criada do arquivo .voxchar.`;
   close(state);
 }
+
+const WIZARD_OPS = {
+  "wizard-open": (state) => openWizard(state),
+  "wizard-mode": (state, el) => chooseMode(state, el),
+  "wizard-step": (state, el, values, opts) => stepWizard(state, el, values, opts),
+  "wizard-add-item": (state, el, values) => addItem(state, el, values),
+  "wizard-remove-item": (state, el) => removeItem(state, el),
+  "wizard-cancel": (state, el, values) => cancelWizard(state, el, values, {}),
+  "wizard-keep": (state, el, values) => cancelWizard(state, el, values, { confirm: false }),
+  "wizard-discard": (state, el, values) => cancelWizard(state, el, values, { discard: true }),
+};
+
+/**
+ * Despacha uma ação `wizard-*` do assistente pelo nome do botão; nome desconhecido não faz nada.
+ * @param {string} name Valor de `data-dungeon` do botão.
+ * @param {object} state Estado da sessão.
+ * @param {HTMLElement|null} el Botão clicado.
+ * @param {Object<string, string|string[]>} values Foto do formulário (`snapshotWizardForm`).
+ * @param {{store?: object}} [opts] Opções (`store`).
+ * @returns {Promise<void>|undefined} Conclui quando a ação termina.
+ */
+export function runWizardOp(name, state, el, values, opts) {
+  return WIZARD_OPS[name]?.(state, el, values, opts);
+}

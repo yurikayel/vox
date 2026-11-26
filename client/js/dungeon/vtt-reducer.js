@@ -23,7 +23,7 @@ import {
 import { CAMPAIGN_OP_HANDLERS, isPlayerAuthorizedForCampaignOp } from "./vtt-campaign-reducer.js";
 import { projectSheetsForPlayer, withForeignSheetHp } from "./vtt-sheet-projection.js";
 import { FAIRPLAY_OP_HANDLERS } from "./vtt-fairplay-log.js";
-import { isPlayerAuthorizedForSheetOp, isSheetOp, ownerForUpsert } from "./vtt-sheet-auth.js";
+import { activeSheetAfterUpsert, isPlayerAuthorizedForSheetOp, isSheetOp, ownerForUpsert } from "./vtt-sheet-auth.js";
 
 const GM_ONLY_OPS = new Set([
   "FAIRPLAY_ADMIT",
@@ -112,7 +112,7 @@ function applySheetUpsert(state, op) {
   const incoming = ensureSheetMeta({ ...op.payload?.sheet, campaign_id: state.id });
   incoming.owner_pubkey_p256 = ownerForUpsert(state, incoming.character_id, op.actor, isGmActor(state, op.actor), incoming.owner_pubkey_p256);
   const sheetsById = { ...state.sheetsById, [incoming.character_id]: incoming };
-  const activeSheetId = op.payload?.setActive ? incoming.character_id : state.activeSheetId || incoming.character_id;
+  const activeSheetId = activeSheetAfterUpsert(state, { isGm: isGmActor(state, op.actor), setActive: Boolean(op.payload?.setActive), sheetId: incoming.character_id });
   return { ...state, sheetsById, activeSheetId };
 }
 

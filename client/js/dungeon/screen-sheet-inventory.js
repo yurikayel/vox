@@ -43,13 +43,19 @@ function renderLoadIndicator(load) {
   return `<p class="dungeon-load${cls}" role="status"><strong>Carga ${escapeHtml(load.text)} / ${escapeHtml(load.limitText)}</strong> — ${escapeHtml(load.reason)}</p>`;
 }
 
-function renderItemRow(it) {
+function renderFavoriteToggle(it, favorites) {
+  const on = favorites.includes(`item:${it.id}`);
+  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="hud-op" data-hud-op="favorite" data-favorite-key="item:${escapeHtml(it.id)}" aria-pressed="${on}">${on ? "Tirar dos favoritos" : "Favoritar"}</button>`;
+}
+
+function renderItemRow(it, favorites = []) {
   return `
     <li class="dungeon-inventory-row">
       ${dungeonIcon("backpack", 15)}
       <span>${itemLabel(it)} · ${escapeHtml(buildItemWeightView(it).text)}${it.equipped ? " · equipado" : ""}</span>
       <div class="dungeon-card-actions">
         <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}">${it.equipped ? "Desequipar" : "Equipar"}</button>
+        ${renderFavoriteToggle(it, favorites)}
         <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
       </div>
     </li>`;
@@ -90,7 +96,8 @@ function renderAddItemForm(sheet) {
 export function renderInventoryPanel(state) {
   const items = state.sheet?.inventoryItems || [];
   const load = buildLoadView(state.sheet, items);
-  const rows = items.map(renderItemRow).join("");
+  const favs = state.sheet?.sheet_meta?.favorites || [];
+  const rows = items.map((it) => renderItemRow(it, favs)).join("");
   const grid = items.some((it) => !it.equipped) ? renderBackpackGrid(items) : `<p class="dungeon-muted">Mochila vazia — adicione itens acima.</p>`;
   return `
     <section class="dungeon-panel" aria-label="Inventário da ficha">

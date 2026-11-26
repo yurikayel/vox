@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- HUD da Mesa: cinto de 4 consumíveis (itens com a tag `consumivel`; clicar gasta 1), indicador de magia no rótulo do sistema (só com espaços de magia), favoritos (até 6, marcados em "Favoritar" na mochila) que ocupam as vagas de atalhos, e o PV próprio passa a ser anunciado por uma região viva fixa. Painéis em meia tela ficam para o próximo PR.
+- Ficha: criar ou salvar ficha como jogador não troca mais a ficha ativa da mesa, que é decisão do Mestre; o jogador remoto continua vendo a própria ficha. Para o Mestre e no modo local nada muda.
 - HUD da Mesa: abaixo do mapa aparecem o retrato (iniciais e cor do token), nome, PV, CA e condições da ficha própria (até 4, com "+N"), os retratos do grupo com PV e, no celular, a linha "Nome · PV · CA". De outras pessoas só aparece o que a projeção do jogador entrega (PV em número ou rótulo de estado, conforme o modo do token).
 - Fairplay (laboratório): o compromisso da rolagem passa a ser `sha256-bound-v1`, amarrado ao `rollId` e ao `peerId`; reaproveitar o compromisso em outra rolagem ou por outro par, ou mandar `alg` ausente ou desconhecido, é recusado (`rpg-crypto-table.js`, `vtt-fairplay-roll.js`, `vtt-fairplay-log.js`, ADR-040 §2.3a).
 - Ficha: botão "Nova ficha" abre o assistente com três entradas: Rápido (só o nome, o resto nos padrões), Guiado (7 passos, com equipamento em memória e resumo) e Importar (`.voxchar`). Nada é gravado antes do resumo, e sair pede confirmação (Esc inclusive); nome, classe e ancestralidade vão até 60 caracteres e o Dado de Vida de d4 a d12. Módulos carregados sob demanda, fora do precache.

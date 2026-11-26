@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { buildHudStatus } from "./hud-status-model.js";
+import { syncHudLive } from "./hud-live.js";
 
 function renderPortrait(p, name) {
   return `<span class="dungeon-hud-portrait" style="--hud-portrait:${escapeHtml(p.color)};color:${escapeHtml(p.ink)}" role="img" aria-label="Retrato de ${escapeHtml(name)}">${escapeHtml(p.initials)}</span>`;
@@ -16,10 +17,24 @@ function renderConditions({ shown, more }) {
   return `<ul class="dungeon-clean-list dungeon-hud-conditions" aria-label="Condições">${chips}${extra}</ul>`;
 }
 
+function renderMagic(magic) {
+  return magic ? `<span class="dungeon-hud-magic" data-hud-magic>${escapeHtml(magic.label)} ${escapeHtml(magic.text)}</span>` : "";
+}
+
+function renderBeltSlot(slot, index) {
+  if (!slot) return `<li class="dungeon-hud-belt-slot is-empty" aria-label="Vaga ${index + 1} do cinto, vazia">vazio</li>`;
+  const name = `${escapeHtml(slot.label)}, ${slot.qty} restantes. Usar 1`;
+  return `<li class="dungeon-hud-belt-slot"><button type="button" class="dungeon-chip-btn" data-dungeon="hud-op" data-hud-op="belt-use" data-item-id="${escapeHtml(slot.id)}" aria-label="${name}">${escapeHtml(slot.label)} ×${slot.qty}</button></li>`;
+}
+
+function renderBelt(belt) {
+  return `<ul class="dungeon-clean-list dungeon-hud-belt" aria-label="Cinto" data-hud-belt>${belt.map(renderBeltSlot).join("")}</ul>`;
+}
+
 function renderOwn(own) {
-  const hp = own.hp ? `<span class="dungeon-hud-hp" role="status" aria-live="polite">PV ${escapeHtml(own.hp)}</span>` : "";
+  const hp = own.hp ? `<span class="dungeon-hud-hp">PV ${escapeHtml(own.hp)}</span>` : "";
   const ac = own.ac === null ? "" : `<span class="dungeon-hud-ac">CA ${own.ac}</span>`;
-  return `<div class="dungeon-hud-own" data-hud-own>${renderPortrait(own, own.name)}<strong class="dungeon-hud-name">${escapeHtml(own.name)}</strong>${hp}${ac}${renderConditions(own.conditions)}</div>`;
+  return `<div class="dungeon-hud-own" data-hud-own>${renderPortrait(own, own.name)}<strong class="dungeon-hud-name">${escapeHtml(own.name)}</strong>${hp}${ac}${renderMagic(own.magic)}${renderConditions(own.conditions)}${renderBelt(own.belt)}</div>`;
 }
 
 function renderParty(party) {
@@ -36,6 +51,7 @@ function renderParty(party) {
  */
 export function renderHudStatus(state, scene) {
   const model = buildHudStatus(state, scene);
+  syncHudLive(model?.own.hp ? `PV ${model.own.hp}` : "");
   if (!model) return "";
   const line = `<p class="dungeon-hud-mobile-line" data-hud-mobile-line>${escapeHtml(model.own.mobileLine)}</p>`;
   return `<section class="dungeon-hud-status" aria-label="Estado do personagem" data-dungeon-zone="mapHudStatus">${line}${renderOwn(model.own)}${renderParty(model.party)}</section>`;
