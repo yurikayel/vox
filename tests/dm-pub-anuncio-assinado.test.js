@@ -84,3 +84,21 @@ test("sendGuardianShares com só anúncio falso devolve no-key", async () => {
   assert.equal(res.reason, "no-key");
   assert.equal(sent.length, 0);
 });
+
+test("prova com autor da rota alvo mas chave e assinatura de outra conta não registra", async () => {
+  const { ids } = await setup(1);
+  const alheia = await proofFor("peer_x");
+  const forjada = { ...alheia, author: ids[0] };
+  await msg.registerAddressMapping(ids[0], "peer_x", { ...KEY, proof: forjada });
+  assert.equal(msg.getPeerDmPub(ids[0]), null);
+  assert.equal(state.addressToPeer.has(ids[0]), false);
+});
+
+test("prova própria com a chave adulterada depois de assinada não registra", async () => {
+  const { owner } = await setup(1);
+  const proof = await proofFor("peer_ok");
+  const trocada = { ...KEY, x: "xOUTRA", y: "yOUTRA" };
+  const adulterada = { ...proof, dmX: trocada.x, dmY: trocada.y };
+  await msg.registerAddressMapping(owner, "peer_ok", { ...trocada, proof: adulterada });
+  assert.equal(msg.getPeerDmPub(owner), null);
+});
