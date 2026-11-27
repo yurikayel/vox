@@ -139,12 +139,12 @@ export function assertMinTarget(css, selector, minPx = 44) {
 
 function definedProps() {
   const names = new Set();
-  for (const file of ["agora.css", "style.css"]) for (const m of stripComments(readCss(file)).matchAll(/(--[\w-]+)\s*:/g)) names.add(m[1]);
+  for (const file of ["agora.css", "style.css", "sv-tokens.css"]) for (const m of stripComments(readCss(file)).matchAll(/(--[\w-]+)\s*:/g)) names.add(m[1]);
   return names;
 }
 
 /**
- * Falha se a folha usa `var(--x)` com `--x` não definida em `agora.css` nem em `style.css`; o fallback literal não conta.
+ * Falha se a folha usa `var(--x)` com `--x` não definida em `agora.css`, `style.css` nem `sv-tokens.css`; o fallback literal não conta.
  * @param {string} css Texto da folha.
  * @param {string} [label="folha"] Nome para a mensagem.
  * @returns {void}

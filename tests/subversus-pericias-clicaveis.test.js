@@ -7,7 +7,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
-import { renderSheetHero } from "../client/js/dungeon/screen-sheet.js";
+import { renderSheetHero, renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
+import { renderHudPanel } from "../client/js/dungeon/screen-hud-panels.js";
 import { renderPlayTab } from "../client/js/dungeon/screen-sheet-tabs.js";
 import { resolveSheetSystem } from "../client/js/dungeon/screen-sheet-derived.js";
 
@@ -111,4 +112,97 @@ test("j) controle: 5e e T20 seguem com os seis botões de atributo", () => {
     const html = renderSheetHero(stateFor(id).sheet);
     assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
   }
+});
+
+const FRASE_ATRIBUTO = "clique em um atributo";
+const FRASE_CABECALHO = "Os testes de atributo estão no cabeçalho";
+const countAbility = (html) => (html.match(/data-dungeon="roll-ability"/g) || []).length;
+
+/** Ficha por pacote, pronta para a tela inteira (cabeçalho e aba Jogar). */
+function screenFor(systemId, extra) {
+  const state = stateFor(systemId, extra);
+  state.loreNodes = [];
+  return { state, hero: renderSheetHero(state.sheet), screen: renderSheetScreen(state) };
+}
+
+test("k) GURPS (sem botão de atributo): nem o cabeçalho nem a aba Jogar falam em testes de atributo", () => {
+  const { hero, screen } = screenFor("gurps4e");
+  assert.equal(hero.includes(FRASE_ATRIBUTO), false);
+  assert.equal(screen.includes(FRASE_CABECALHO), false);
+  assert.equal(renderPlayTab([], [], false).includes(FRASE_CABECALHO), false);
+});
+
+test("l) controle: 5e e T20 mantêm as duas frases", () => {
+  for (const id of ["5e", "t20"]) {
+    const { hero, screen } = screenFor(id);
+    assert.ok(hero.includes(FRASE_ATRIBUTO), id);
+    assert.ok(screen.includes(FRASE_CABECALHO), id);
+  }
+});
+
+test("m) pacote desconhecido não mostra os seis botões nem as frases; ficha sem system segue 5e", () => {
+  const { hero, screen } = screenFor("nao-existe");
+  assert.equal(countAbility(hero), 0);
+  assert.equal(hero.includes(FRASE_ATRIBUTO), false);
+  assert.equal(screen.includes(FRASE_CABECALHO), false);
+  const legada = stateFor("5e");
+  delete legada.sheet.system;
+  assert.equal(countAbility(renderSheetHero(legada.sheet)), 6);
+});
+
+const custom = (id, label) => ({ id, label, roll: "1d20+@des+2", damage: "", tag: "pericia" });
+const actionIds = (html) => [...html.matchAll(/data-dungeon="roll-action" data-action-id="([^"]+)"/g)].map((m) => m[1]);
+
+test("n) ação cadastrada com o nome de uma perícia do pacote, mas com id próprio, continua rolando", () => {
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [custom("x1", "Furtividade")] } });
+  const ids = actionIds(playTab(state));
+  assert.equal(ids.filter((id) => id === "x1").length, 2, "em Mais usados e em Todos os testes");
+});
+
+test("o) ação de perícia fora do pacote (Ofício de Forja) aparece nas duas grades", () => {
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [custom("x2", "Ofício de Forja")] } });
+  assert.equal(actionIds(playTab(state)).filter((id) => id === "x2").length, 2);
+});
+
+test("p) a semente act-* coberta pelo pacote continua escondida (sem repetir o botão)", () => {
+  const seed = { ...custom("act-furtividade", "Furtividade"), roll: "1d20+@des" };
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [seed] } });
+  assert.equal(actionIds(playTab(state)).includes("act-furtividade"), false);
+});
+
+const withActions = (actions, id = "5e") => stateFor(id, { sheet_meta: { clickable_actions: actions } });
+const plain = (id, label, roll = "1d20+@des") => ({ ...custom(id, label), roll });
+
+test("q) ação importada ou criada na interface (id do nome, fórmula só com @var) não repete o botão do pacote", () => {
+  const html = playTab(withActions([plain("furtividade", "Furtividade")]));
+  assert.equal(actionIds(html).length, 0, "nenhum roll-action extra");
+  assert.equal((html.match(/data-skill="stealth"/g) || []).length, 1, "só o botão do pacote");
+  assert.equal(actionIds(playTab(withActions([plain("furtividade", "Furtividade", "1d20+@des+2")]))).length, 2, "com bônus fixo próprio, rola");
+});
+
+test("r) o escondido exige tag de perícia", () => {
+  const ataque = { ...plain("act-furtividade", "Furtividade"), tag: "ataque" };
+  assert.equal(actionIds(playTab(withActions([ataque]))).includes("act-furtividade"), true, "ataque com o nome da perícia fica");
+});
+
+test("u) só some a fórmula exata do pacote: outro atributo, d20 puro, outro dado ou subtração ficam", () => {
+  const visible = (roll) => actionIds(playTab(withActions([plain("x", "Furtividade", roll)]))).includes("x");
+  for (const roll of ["1d20+@for", "1d20", "1d20+1d20+@des", "1d20+@des-1", "1d20+@des+@for", "2d20kh1+@des", "1d20+@des+@prof+@prof"]) assert.equal(visible(roll), true, roll);
+  for (const roll of ["1d20+@des", "1D20 + @DES", "1d20+@destreza", "1d20+@des+@prof"]) assert.equal(visible(roll), false, roll);
+});
+
+test("v) o painel Habilidades do HUD aplica o mesmo dedupe", () => {
+  const hudIds = (roll) => actionIds(renderHudPanel({ ...withActions([plain("x", "Furtividade", roll)]), hudPanel: "abilities" }));
+  assert.equal(hudIds("1d20+@des").includes("x"), false);
+  assert.equal(hudIds("1d20+@for").includes("x"), true);
+});
+
+test("s) renderPlayTab sem o 3º argumento mantém a frase do cabeçalho (padrão true)", () => {
+  assert.ok(renderPlayTab([], []).includes(FRASE_CABECALHO));
+});
+
+test("t) o painel Habilidades do HUD também só fala em atributo quando há botão", () => {
+  const hud = (id) => renderHudPanel({ ...stateFor(id), hudPanel: "abilities" });
+  for (const id of ["gurps4e", "nao-existe"]) assert.equal(hud(id).includes(FRASE_CABECALHO), false, id);
+  for (const id of ["5e", "t20"]) assert.ok(hud(id).includes(FRASE_CABECALHO), id);
 });

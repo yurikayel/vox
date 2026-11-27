@@ -2,6 +2,7 @@
  * @file Tela 1 do AI Social Dungeon: Acampamento — Campanhas Locais no topo, Notas/Backup e bloco demo W-DRF abaixo.
  */
 import { escapeHtml } from "../shared/html.js";
+import { renderStateCard } from "../shared/state-card.js";
 import { dungeonIcon, renderCampfireSceneSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
 import { renderLootPanel, renderPartyPanel } from "./screen-party-panels.js";
@@ -241,7 +242,7 @@ function renderBackupControls() {
 
 function renderSavedCampaignsGrid(state, list) {
   if (!list.length) {
-    return `<p class="dungeon-muted">Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha acima ou importe um pacote <code>.voxrpg.zip</code>, nota <code>.md</code> ou quadro <code>.canvas</code> do Obsidian.</p>`;
+    return renderStateCard({ kind: "empty", text: "Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha acima ou importe um pacote .voxrpg.zip, nota .md ou quadro .canvas do Obsidian." });
   }
   return `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`;
 }
