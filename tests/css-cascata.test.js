@@ -43,6 +43,24 @@ describe("combinador descendente e filho", () => {
   });
 });
 
+describe("pseudo-elemento", () => {
+  const CSS = ".a > b { color: blue } .a > b::before { color: red } .a > b:hover::before { color: green }";
+  it("::before só casa quando o caminho o pede, e então só regras com ::before", () => {
+    assert.equal(winner(CSS, "html > div.a > b::before", ["color"]), "red");
+    assert.equal(winner(CSS, "html > div.a > b", ["color"]), "blue");
+  });
+  it("regra sem pseudo-elemento não vale para o pseudo-elemento, mesmo mais específica; e a com ::before não vale para o elemento", () => {
+    assert.equal(winner("#i b { color: purple } .a > b::before { color: red }", "html > div#i.a > b::before", ["color"]), "red");
+    assert.equal(winner("#i b { color: purple } .a > b::before { color: red }", "html > div#i.a > b", ["color"]), "purple");
+    assert.equal(winner(".a > b::before { color: red }", "html > div.a > b", ["color"]), null);
+  });
+  it("o estado soma ao pseudo-elemento: b:hover::before ganha com hover e não sem ele", () => {
+    const rules = rulesOf(CSS);
+    const com = cascadeIn(rules, buildChain("html > div.a > b::before", ["hover"]), ["color"]);
+    assert.equal(com.value, "green");
+  });
+});
+
 describe("@media (prefers-color-scheme) e o bloco do atributo aninhado", () => {
   const VAR = ["--w"];
   const CSS = `:root { --w: claro }

@@ -93,6 +93,13 @@ export const PACK_5E = Object.freeze({
     ]),
     hud: Object.freeze({ defense: "armorClass" }),
   }),
+  /** Ações semeadas numa ficha nova (ataque e perícias comuns); o `@atributo` e o `@prof` seguem as fórmulas deste pacote. */
+  seedActions: Object.freeze([
+    Object.freeze({ id: "act-ataque", label: "Espada Longa", roll: "1d20+@for+@prof", damage: "1d8+@for", tag: "ataque" }),
+    Object.freeze({ id: "act-investigacao", label: "Investigação", roll: "1d20+@int+@prof", damage: "", tag: "pericia" }),
+    Object.freeze({ id: "act-percepcao", label: "Percepção", roll: "1d20+@sab+@prof", damage: "", tag: "pericia" }),
+    Object.freeze({ id: "act-furtividade", label: "Furtividade", roll: "1d20+@des", damage: "", tag: "pericia" }),
+  ]),
   formulas: Object.freeze({
     modifier: Object.freeze({ base: 10, step: 2 }),
     proficiency: Object.freeze({ base: 2, every: 4 }),
