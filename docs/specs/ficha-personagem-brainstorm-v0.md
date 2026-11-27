@@ -3,7 +3,7 @@
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-24
 > **Relacionados:** [subversus-vtt-v0.md](./subversus-vtt-v0.md) · [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [STITCH-MESA-GUIA.md](../design/stitch-captures/STITCH-MESA-GUIA.md) · `client/js/dungeon/vtt-schema.js` · `client/js/dungeon/screen-sheet-levelup.js`
 
-Ideias para a ficha de personagem do **Subversus VTT** (rótulo na barra do Vox: **Subversus**) — criar, salvar, editar, compartilhar e usar na partida em **D&D 2024**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)** — e para a tela de jogo com HUD no estilo Diablo II. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
+Ideias para a ficha de personagem do **Subversus VTT** (rótulo na barra do Vox: **Subversus**) — criar, salvar, editar, compartilhar e usar na partida em **D&D 2024**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)** — e para a tela de jogo com HUD no estilo de RPG de ação clássico. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
 
 ---
 
@@ -119,7 +119,7 @@ Detalhes por sistema:
 
 - **Jogar:** favoritos, atributos, defesas e resistências, lista completa de testes.
 - **Habilidades:** magias, poderes e vantagens em grupos, com o custo à vista (espaço, PM ou PF) e o botão **Usar**, que gasta o recurso e rola.
-- **Itens:** inventário em grade como no Diablo II (§5.4) e dinheiro.
+- **Itens:** inventário em grade como em RPGs de ação clássicos (§5.4) e dinheiro.
 - **Sobre:** identidade, história, notas e **Compartilhar**.
 
 ### 5.2 Desktop
@@ -146,7 +146,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 **Perícias clicáveis (SUB-21):** toda perícia do pacote de sistema (`deriveSheet(...).skills`) tem botão em "Todos os testes", na aba Jogar e no painel do HUD, com o bônus à vista (atributo + proficiência + especialização). O toque rola `1d20±bônus # Perícia: nome` por `recordFormulaRoll` (mesmo caminho, mesma op `ROLL_RECORDED`, sem op nova). O teste de atributo do cabeçalho usa o modificador derivado do pacote. Regra de código: o bônus entra na fórmula como número literal vindo do derivado, nunca como `@atr`/`@prof`, porque `@atr` aplica a conta da 5e e erra nos demais sistemas (T20 com Des 14: ficha e dado mostram +4). Ações de perícia cadastradas à mão que o pacote não tem seguem como botões `roll-action`. Código: `client/js/dungeon/dungeon-sheet-rolls.js`.
 
-### 5.4 Inventário em grade (estilo Diablo II)
+### 5.4 Inventário em grade (estilo RPG de ação clássico)
 
 ```
 +---------------------------------------+
@@ -190,7 +190,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 - **Compartilhar:** com o Mestre na mesa, por link só de leitura, por arquivo `.voxchar` dentro do `.voxrpg.zip` ou como cópia que serve de modelo.
 - **Usar na partida:** rolar, gastar recurso, marcar condição e descansar (curto e longo onde o sistema prevê).
 
-## 7. HUD de jogo (estrutura do Diablo II)
+## 7. HUD de jogo (estrutura de RPG de ação clássico)
 
 ```
 +--------------------------------------------------------------+
@@ -210,7 +210,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 - Base da tela: indicador de PV, indicador de magia, cinto com 4 consumíveis e a barra com os 6 "Mais usados" da ficha.
 - O formato do indicador é livre (barra, orbe, contador); o que importa é ler PV de relance. Orbes literais são opcionais e ficam para a direção de arte.
 - O indicador de magia só aparece se o personagem tem um recurso de magia com máximo acima de zero, e usa o rótulo do sistema: PM no Tormenta20, espaços de magia no D&D (pontos por nível de círculo), PF no GURPS quando o personagem tem magias. Guerreiro sem magia vê só PV.
-- Ficha (C), Itens (I), Habilidades (S), Mapa (Tab) e Crônica abrem painéis que cobrem metade do mapa, como no Diablo II, sem modais. O painel Ficha é a própria ficha da §5 em largura reduzida, e o painel Itens é a grade da §5.4, não versões paralelas.
+- Ficha (C), Itens (I), Habilidades (S), Mapa (Tab) e Crônica abrem painéis que cobrem metade do mapa, como em RPGs de ação clássicos, sem modais. O painel Ficha é a própria ficha da §5 em largura reduzida, e o painel Itens é a grade da §5.4, não versões paralelas.
 - Todos os rótulos vêm do pacote de sistema, então o HUD fala a mesma língua da ficha.
 - **Direção de arte do HUD:** base de tokens Sovereign Agora (`--sa-*`, garantindo contraste WCAG AA e zero requisição externa ou bitmap pesado) com superfície escura de pedra ("Sovereign Sanctum") aplicada aos painéis de meio-ecrã (Ficha `C`, Itens `I`, Habilidades `S`, Crônica) e à barra inferior do HUD, sem molduras góticas ornamentais que roubem área útil no mobile 390 px.
 - No mobile, o HUD encolhe para a faixa "Lyra · PV 18/24 · CA 16" (mais PM se houver) e a barra de favoritos.
@@ -234,7 +234,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 - **Tormenta20:** a edição atual do livro básico, sem regra caseira; o cartão de atributo mostra só o modificador (§4).
 - **Indicadores do HUD:** PV sempre; magia só se o personagem tem magia. Não precisa ser orbe (§7).
-- **Inventário e tamanhos na grade (`10×4` + cinto `4×1`):** grade como no Diablo II com tabela padrão por categoria (`1×1` a `2×3`), botão **Organizar** determinístico (`first-fit` por maior área `w×h`, altura `h` e nome) e limite de carga do sistema (§5.4).
+- **Inventário e tamanhos na grade (`10×4` + cinto `4×1`):** grade como em RPGs de ação clássicos com tabela padrão por categoria (`1×1` a `2×3`), botão **Organizar** determinístico (`first-fit` por maior área `w×h`, altura `h` e nome) e limite de carga do sistema (§5.4).
 - **Mapa:** grade quadrada vista de cima; isométrico fora até existir arte isométrica (§8).
 - **Direção de arte do HUD:** tokens Sovereign Agora (`--sa-*`, WCAG AA, zero requisição externa/bitmap pesado) com superfície escura de pedra ("Sovereign Sanctum") nos painéis de meio-ecrã (`C`, `I`, `S`, Crônica) e barra inferior, sem molduras góticas ornamentais no mobile 390 px (§7).
 - **Licença de conteúdo (D&D 2024, Tormenta20 e GURPS 4e):** SRD 5.2 sob CC-BY-4.0 no `dnd5e-2024`; apenas estrutura e matemática pura nos pacotes `t20` e `gurps4e`, com textos e catálogos fornecidos/importados localmente pelo jogador (§9).
