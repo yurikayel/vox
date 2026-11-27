@@ -13,6 +13,7 @@ import { renderInitiativePanel, renderTacticalToolbar } from "./screen-table-tac
 import { buildCoinsView, buildVitalsView } from "./sheet-view-model.js";
 import { createDefaultScene } from "./vtt-scene-schema.js";
 import { isDioramaFlagEnabled, renderDioramaModePill } from "./diorama-lens.js";
+import { renderTokenTray } from "./screen-token-tray.js";
 import { formatFairplayBadge } from "./vtt-fairplay-roll.js";
 import { projectInitiativeForPlayer } from "./vtt-tactics-reducer.js";
 import { createInitiativeState } from "./vtt-tactics-schema.js";
@@ -156,6 +157,7 @@ function renderInteractiveMapSection(state, scene) {
       ${notice}
       <ul class="dungeon-clean-list dungeon-token-roster">${rosterHtml}</ul>
       ${renderSelectedTokenEditor(scene, state.selectedTokenId, isGm)}
+      ${renderTokenTray(state, scene)}
       ${renderMapFormsRow(isGm)}
     </section>
     ${initHtml}`;
