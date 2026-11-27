@@ -24,22 +24,13 @@ import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js"
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 import { migrateLegacySheet } from "./system-migrate.js";
-import { systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
+import { mergePatchedAbilities, systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
-
-const ABILITY_LABELS_PTBR = Object.freeze({
-  str: "Força",
-  dex: "Destreza",
-  con: "Constituição",
-  int: "Inteligência",
-  wis: "Sabedoria",
-  cha: "Carisma",
-});
 
 async function refreshStoreSummary(state, store) {
   state.campaigns = await store.listCampaigns();
@@ -116,12 +107,14 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
 
 /**
  * Avalia uma fórmula de dados (`/roll`, `/gmroll`, `2d20kh1+@for`), registra na crônica e persiste/sincroniza.
+ * Desliga o chip `state.rollSecret`: ele só vale para o teste de atributo ou perícia da ficha, que lê o chip antes de chamar.
  * @param {object} state Estado da sessão.
  * @param {string} rawInput Comando ou fórmula de dados.
  * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
  * @returns {Promise<object>} Resultado de `rollDiceFormula`.
  */
 export async function recordFormulaRoll(state, rawInput, opts = {}) {
+  state.rollSecret = false; // o chip "Só para o Mestre" vale só para o teste da ficha, que já o leu; qualquer rolagem o desliga
   const store = opts.store || getDefaultVttStore();
   const mode = opts.mode || state.rollMode || "normal";
   const viaTable = await tryStartFairplayRoll(state, rawInput, { ...opts, store, mode });
@@ -218,17 +211,6 @@ export async function addCustomSheetAction(state, action, opts = {}) {
 export async function removeCustomSheetAction(state, actionId, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   return dispatchCampaignOp(state, "SHEET_ACTION_REMOVE", { sheetId: state.sheet?.character_id, actionId }, { store });
-}
-
-function mergePatchedAbilities(baseAbilities, patch) {
-  const ab = { ...(baseAbilities || {}) };
-  for (const key of Object.keys(ABILITY_LABELS_PTBR)) {
-    const num = Number(patch[key]);
-    if (patch[key] !== undefined && Number.isFinite(num)) {
-      ab[key] = Math.max(1, Math.min(30, Math.trunc(num)));
-    }
-  }
-  return ab;
 }
 
 /**
