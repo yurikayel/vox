@@ -6,6 +6,7 @@ import { renderStateCard } from "../shared/state-card.js";
 import { dungeonIcon, renderCampfireSceneSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
 import { renderLootPanel, renderPartyPanel } from "./screen-party-panels.js";
+import { isMesaRedeLabEnabled } from "./vtt-rede-escolha.js";
 
 const ROLE_LABELS_PTBR = {
   STAGE1_JUDGE_RULES: { title: "Juiz de Regras", duty: "Valida acertos e danos", icon: "shield" },
@@ -121,19 +122,29 @@ function renderTablesSection(state) {
     </section>`;
 }
 
-function renderCampHero(state) {
+/** Botão e aviso do teste de queda de nó: só aparecem com a flag de laboratório da Mesa em rede. */
+function renderFailoverLab() {
+  return `
+          <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="failover">${dungeonIcon("bolt", 16)}<span>Testar Queda de GPU (k-1)</span></button>`;
+}
+
+function renderFailoverNotice(state) {
+  return `
+        <p class="dungeon-inline-status" role="status">${escapeHtml(state.failoverNotice)}</p>`;
+}
+
+function renderCampHero(state, lab) {
   return `
     <section class="dungeon-hero-camp">
       <div class="dungeon-hero-art">${renderCampfireSceneSvg()}</div>
       <div class="dungeon-hero-copy">
         <span class="dungeon-eyebrow">Santuário da Guilda (exemplo)</span>
         <h2>${escapeHtml(state.tableName)}</h2>
-        <p class="dungeon-lead">5 guardiões virtuais dividem o trabalho do Mestre direto nos aparelhos da vizinhança — sem servidores centrais ou mensalidade.</p>
+        <p class="dungeon-lead">A mesa roda nos aparelhos de quem joga, sem servidor central e sem mensalidade.</p>
         <div class="dungeon-hero-actions">
           <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${encodeURIComponent(state.tableId)}">${dungeonIcon("sword", 16)}<span>Entrar na Mesa →</span></a>
-          <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="failover">${dungeonIcon("bolt", 16)}<span>Testar Queda de GPU (k-1)</span></button>
-        </div>
-        <p class="dungeon-inline-status" role="status">${escapeHtml(state.failoverNotice)}</p>
+${lab ? renderFailoverLab() : ""}
+        </div>${lab ? renderFailoverNotice(state) : ""}
       </div>
     </section>`;
 }
@@ -230,8 +241,8 @@ function renderBackupControls() {
         <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-voxrpg-enc">Exportar Cifrado (.voxrpg.enc)</button>
       </div>
       <div class="dungeon-input-row">
-        <label class="sr-only" for="dungeon-backup-passphrase">Senha Soberana para backup cifrado</label>
-        <input id="dungeon-backup-passphrase" class="dungeon-input" type="password" autocomplete="off" placeholder="Senha Soberana (mín. 12 caracteres) para cifrar/abrir .voxrpg.enc" />
+        <label class="sr-only" for="dungeon-backup-passphrase">Senha do backup cifrado</label>
+        <input id="dungeon-backup-passphrase" class="dungeon-input" type="password" autocomplete="off" placeholder="Senha do backup (mín. 12 caracteres) para cifrar/abrir .voxrpg.enc" />
       </div>
       <div class="dungeon-input-row dungeon-import-row">
         <label for="dungeon-import-file" class="dungeon-btn dungeon-btn-secondary dungeon-file-trigger">Importar .voxrpg.zip, .voxrpg.enc, .md ou .canvas</label>
@@ -281,15 +292,17 @@ function renderCampaignsSection(state) {
  * Renderiza a Tela 1 (Acampamento): campanhas locais + notas no topo e blocos de demonstração W-DRF abaixo.
  *
  * @param {object} state Estado atual da sessão AI Social Dungeon.
+ * @param {{lab?: boolean}} [opts] `lab`: força o teste de queda de nó ligado ou desligado (padrão: a flag `vox.lab.mesa-rede`).
  * @returns {string} HTML interno para a moldura `.dungeon-sanctum`.
  */
-export function renderCampScreen(state) {
+export function renderCampScreen(state, opts = {}) {
+  const lab = opts.lab ?? isMesaRedeLabEnabled();
   const utilPct = Math.round((state.stability?.utilization || 0.4) * 100);
   return `
     ${renderCampaignsSection(state)}
     ${state.campaignId ? renderNotesPanel(state) : ""}
     ${state.campaignId ? renderPartyPanel(state) + renderLootPanel(state) : ""}
-    ${renderCampHero(state)}
+    ${renderCampHero(state, lab)}
     ${renderTablesSection(state)}
     ${renderGuardiansPanel(state)}
     ${renderFavoriteSliderSection(state)}
