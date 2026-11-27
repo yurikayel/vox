@@ -165,7 +165,8 @@ test("o) ação de perícia fora do pacote (Ofício de Forja) aparece nas duas g
 });
 
 test("p) a semente act-* coberta pelo pacote continua escondida (sem repetir o botão)", () => {
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("act-furtividade", "Furtividade")] } });
+  const seed = { ...custom("act-furtividade", "Furtividade"), roll: "1d20+@des" };
+  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [seed] } });
   assert.equal(actionIds(playTab(state)).includes("act-furtividade"), false);
 });
 
@@ -179,12 +180,21 @@ test("q) ação importada ou criada na interface (id do nome, fórmula só com @
   assert.equal(actionIds(playTab(withActions([plain("furtividade", "Furtividade", "1d20+@des+2")]))).length, 2, "com bônus fixo próprio, rola");
 });
 
-test("r) o escondido exige tag de perícia e o prefixo act- exato", () => {
-  const ataque = { ...plain("act-furtividade", "Furtividade", "1d20+5"), tag: "ataque" };
+test("r) o escondido exige tag de perícia", () => {
+  const ataque = { ...plain("act-furtividade", "Furtividade"), tag: "ataque" };
   assert.equal(actionIds(playTab(withActions([ataque]))).includes("act-furtividade"), true, "ataque com o nome da perícia fica");
-  for (const id of ["acto-furtividade", "x-act-furtividade"]) {
-    assert.equal(actionIds(playTab(withActions([plain(id, "Furtividade", "1d20+5")]))).includes(id), true, id);
-  }
+});
+
+test("u) só some a fórmula exata do pacote: outro atributo, d20 puro, outro dado ou subtração ficam", () => {
+  const visible = (roll) => actionIds(playTab(withActions([plain("x", "Furtividade", roll)]))).includes("x");
+  for (const roll of ["1d20+@for", "1d20", "1d20+1d20+@des", "1d20+@des-1", "1d20+@des+@for", "2d20kh1+@des", "1d20+@des+@prof+@prof"]) assert.equal(visible(roll), true, roll);
+  for (const roll of ["1d20+@des", "1D20 + @DES", "1d20+@destreza", "1d20+@des+@prof"]) assert.equal(visible(roll), false, roll);
+});
+
+test("v) o painel Habilidades do HUD aplica o mesmo dedupe", () => {
+  const hudIds = (roll) => actionIds(renderHudPanel({ ...withActions([plain("x", "Furtividade", roll)]), hudPanel: "abilities" }));
+  assert.equal(hudIds("1d20+@des").includes("x"), false);
+  assert.equal(hudIds("1d20+@for").includes("x"), true);
 });
 
 test("s) renderPlayTab sem o 3º argumento mantém a frase do cabeçalho (padrão true)", () => {

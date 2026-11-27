@@ -6,6 +6,7 @@
  * @module dungeon/screen-sheet-tabs
  */
 import { escapeHtml } from "../shared/html.js";
+import { ABILITY_ALIASES } from "./dice-engine.js";
 
 /** Abas da ficha, na ordem em que aparecem. */
 export const SHEET_TABS = Object.freeze([
@@ -54,20 +55,21 @@ export function renderActionGrid(actions, withDamage = false) {
   return `<div class="dungeon-brain-grid">${actions.map((a) => actionButton(a, withDamage)).join("")}</div>`;
 }
 
-/** Fórmula só de d20 mais `@var` (a semente da ficha e as perícias importadas): o botão do pacote já faz essa conta, certa para o sistema. */
-const PLAIN_SKILL_FORMULA = /^\s*1d20(\s*\+\s*@\w+)*\s*$/i;
+/** `1d20+@atributo` com `+@prof` opcional, e nada mais (sem outro dado, sem bônus fixo, sem subtração). */
+const PACK_SKILL_FORMULA = /^1d20\+@([a-z_]+)(\+@prof)?$/;
 
 /**
- * Some a ação de perícia que o botão do pacote já cobre: a semente da ficha (id `act-*`) ou a de fórmula só com `@var`
- * (importada ou criada pela interface, que ganha o id do nome). Uma ação com fórmula própria (bônus fixo, outro dado)
- * segue rolando pelo `roll-action`, mesmo com o nome de uma perícia do pacote.
+ * Some a ação de perícia que o botão do pacote já faz: o nome é o de uma perícia do pacote e a fórmula é exatamente
+ * `1d20+@atributo da perícia` (com `+@prof` opcional), como a semente da ficha e as importadas. Qualquer outra fórmula
+ * (outro atributo, d20 puro, bônus fixo, outro dado) segue rolando pelo `roll-action`.
  * @param {object} act Ação clicável.
- * @param {Set<string>} labels Rótulos das perícias do pacote.
+ * @param {object[]} skills Perícias derivadas do pacote (`ability` é a chave do atributo).
  * @returns {boolean} `true` se o botão do pacote já a cobre.
  */
-function isCoveredSeed(act, labels) {
-  if (act?.tag !== "pericia" || !labels.has(act.label)) return false;
-  return /^act-/.test(String(act.id || "")) || PLAIN_SKILL_FORMULA.test(String(act.roll || ""));
+function isCoveredSeed(act, skills) {
+  const skill = act?.tag === "pericia" ? skills.find((s) => s.label === act.label) : null;
+  const m = skill ? PACK_SKILL_FORMULA.exec(String(act.roll || "").replace(/\s+/g, "").toLowerCase()) : null;
+  return Boolean(m) && ABILITY_ALIASES[m[1]] === skill.ability;
 }
 
 function skillButton(skill) {
@@ -83,8 +85,7 @@ function skillButton(skill) {
  * @returns {string} HTML da grade, ou aviso quando não há perícias.
  */
 export function renderSkillGrid(skills, extraActions = []) {
-  const known = new Set(skills.map((s) => s.label));
-  const custom = extraActions.filter((a) => !isCoveredSeed(a, known));
+  const custom = extraActions.filter((a) => !isCoveredSeed(a, skills));
   if (!skills.length && !custom.length) return '<p class="dungeon-muted">Nada cadastrado ainda nesta ficha.</p>';
   return `<div class="dungeon-brain-grid">${skills.map(skillButton).join("")}${custom.map((a) => actionButton(a, false)).join("")}</div>`;
 }
@@ -100,8 +101,7 @@ export function renderSkillGrid(skills, extraActions = []) {
 export function renderPlayTab(actions, derivedSkills = [], hasAbilities = true) {
   const list = Array.isArray(actions) ? actions : [];
   const { skills } = splitSheetActions(list);
-  const covered = new Set(derivedSkills.map((s) => s.label));
-  const usable = list.filter((a) => !isCoveredSeed(a, covered));
+  const usable = list.filter((a) => !isCoveredSeed(a, derivedSkills));
   const note = hasAbilities ? '<p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>' : "";
   return `
     <h3 class="dungeon-eyebrow">Mais usados</h3>
