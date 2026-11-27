@@ -13,16 +13,35 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TRIGGER_ORDER = ["pr", "nightly"];
 
+/** Eventos do `on:` em bloco: as chaves (ou itens de lista) no recuo da primeira linha do bloco. */
+function blockEvents(block) {
+  const lines = block.split(/\r?\n/).filter((l) => l.trim() !== "" && !l.trim().startsWith("#"));
+  const indent = lines[0]?.match(/^[ \t]*/)[0];
+  return lines.filter((l) => l.startsWith(indent) && !/^[ \t]/.test(l.slice(indent.length)))
+    .map((l) => /^[ \t]*(?:-[ \t]+)?["']?([A-Za-z_]+)["']?[ \t]*(?::|$)/.exec(l)?.[1]).filter(Boolean);
+}
+
+/** Eventos de um `on:` na mesma linha: `on: push` ou `on: [push, pull_request]`; a forma `{…}` não é lida. */
+function inlineEvents(rest) {
+  if (rest.startsWith("{")) throw new Error(`on: em forma de mapa na mesma linha não é suportado: ${rest}`);
+  return rest.replace(/^\[|\]$/g, "").split(",").map((e) => e.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+}
+
 /**
- * Gatilhos de um workflow, lidos do bloco `on:` do YAML.
+ * Gatilhos de um workflow, lidos do `on:` do YAML (bloco, `on: evento` ou `on: [a, b]`, com ou sem aspas na chave).
  * @param {string} yaml Texto do workflow.
- * @returns {string[]} `pr` (tem `pull_request`) e/ou `nightly` (tem `schedule`), nessa ordem; vazio se nenhum.
+ * @returns {string[]} `pr` (evento `pull_request`) e/ou `nightly` (evento `schedule`), nessa ordem; vazio se nenhum.
+ * `pull_request_target` não conta como PR.
+ * @throws {Error} Se não houver `on:` ou ele estiver numa forma que não é lida (nunca devolve vazio em silêncio).
  */
 export function workflowTriggers(yaml) {
-  const block = /^on:\s*\r?\n((?:[ \t]+.*\r?\n|[ \t]*\r?\n)*)/m.exec(yaml.replace(/^﻿/, ""))?.[1] || "";
-  const found = new Set();
-  if (/^\s*pull_request\b/m.test(block)) found.add("pr");
-  if (/^\s*schedule\b/m.test(block)) found.add("nightly");
+  const text = yaml.replace(/^﻿/, "");
+  const head = /^["']?on["']?:[ \t]*([^\r\n]*)(?:\r?\n|$)/m.exec(text);
+  if (!head) throw new Error("workflow sem chave `on:` reconhecível");
+  const rest = head[1].replace(/[ \t]+#.*$/, "").trim();
+  const block = /^(?:[ \t]+.*\r?\n|[ \t]*\r?\n)*/.exec(text.slice(head.index + head[0].length))[0];
+  const events = new Set(rest ? inlineEvents(rest) : blockEvents(block));
+  const found = new Set([events.has("pull_request") && "pr", events.has("schedule") && "nightly"]);
   return TRIGGER_ORDER.filter((t) => found.has(t));
 }
 
@@ -48,13 +67,15 @@ function workflowsOf(root) {
   const dir = path.join(root, ".github", "workflows");
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()
-    .map((file) => ({ file, text: fs.readFileSync(path.join(dir, file), "utf8") }));
+    .map((file) => {
+      const text = fs.readFileSync(path.join(dir, file), "utf8");
+      return { file, text, triggers: workflowTriggers(text) };
+    });
 }
 
 function runsOf(workflows, usedBy) {
   return workflows.filter((w) => usedBy(w.text)).flatMap((w) => {
-    const triggers = workflowTriggers(w.text);
-    return triggers.length ? triggers.map((trigger) => ({ workflow: w.file, trigger })) : [{ workflow: w.file, trigger: "outro" }];
+    return w.triggers.length ? w.triggers.map((trigger) => ({ workflow: w.file, trigger })) : [{ workflow: w.file, trigger: "outro" }];
   });
 }
 
@@ -68,7 +89,7 @@ export function buildInventory(root = ROOT) {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
   const discover = parseDiscover(pkg.scripts?.["test:e2e"]);
   const workflows = workflowsOf(root);
-  const callsNpm = (text) => /npm run test:e2e\b/.test(text);
+  const callsNpm = (text) => /npm run test:e2e(?![\w:-])/.test(text);
   const python = listFiles(root, "e2e", (n) => n.endsWith(".py")).map((p) => {
     const runs = discover && p.startsWith(`${discover.dir}/`) && discover.pattern.test(path.basename(p)) ? runsOf(workflows, callsNpm) : [];
     return { path: p, kind: "python", runs };

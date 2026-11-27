@@ -117,6 +117,10 @@ Hoje **só `scripts/mesh-e2e.mjs` roda em PR**; os E2E Python (`npm run test:e2e
 | `scripts/mesh-e2e.mjs` | PR (ci.yml) |
 | `scripts/offline-e2e.mjs` | manual (nenhum workflow) |
 
+**Estado em 27/11 (texto à mão, fora da tabela gerada; envelhece):** `test_fairplay_e2e.py` (`test_01` e `test_02b`, 2 de 6) e `test_mesa_rede_e2e.py` (`test_02`, 1 de 2) falham em `develop` porque o seletor `.dungeon-fairplay-seal.is-verified` não aparece em 90 s. Erro observado: o tempo esgota no seletor. Causa confirmada: nenhuma ainda; a correção do E2E está em revisão no [PR #698](https://github.com/yurikayel/vox/pull/698). Cada falha vermelha leva até 90 s (`VOX_E2E_WAIT_MS=90000`), o que pesa no limite de 20 min da agenda.
+
+**Próximos passos do PM-117:** (1) corrigir os dois vermelhos, cada um com um `node:test` que falhe na base; (2) um job de PR com os E2E Python que passam, estáveis (uns 2,7 min, mais Playwright e Chromium); (3) só depois incluir fairplay e mesa em rede nesse job. Até lá, a nightly é o único gate dos E2E Python.
+
 ## 5. Complexidade
 
 `npm run audit:complexity` (ESLint, `scripts/complexity-audit.mjs`) aplica os limites de [HARDENING.md](./HARDENING.md) e escreve um baseline datado em `docs/metrics/`. Meta: **zero violações** ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)). `mock.js` fica de fora.

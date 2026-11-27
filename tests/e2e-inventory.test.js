@@ -21,7 +21,35 @@ test("workflowTriggers: pull_request vira PR, schedule vira nightly, push e manu
   assert.deepEqual(workflowTriggers(CRON), ["nightly"]);
   assert.deepEqual(workflowTriggers("on:\n  pull_request:\n  schedule:\n    - cron: x\n"), ["pr", "nightly"]);
   assert.deepEqual(workflowTriggers("on:\n  push:\n  workflow_dispatch:\n"), []);
-  assert.deepEqual(workflowTriggers("name: z\n"), []);
+});
+
+test("workflowTriggers: `on:` na mesma linha, em lista inline ou com a chave entre aspas também são lidos", () => {
+  assert.deepEqual(workflowTriggers("on: pull_request\njobs: {}\n"), ["pr"]);
+  assert.deepEqual(workflowTriggers("on: pull_request"), ["pr"], "sem quebra de linha no fim");
+  assert.deepEqual(workflowTriggers("on: [push, pull_request]  # comentário\n"), ["pr"]);
+  assert.deepEqual(workflowTriggers("on: [ \"schedule\", 'push' ]\n"), ["nightly"]);
+  assert.deepEqual(workflowTriggers("\"on\":\n  schedule:\n    - cron: x\n"), ["nightly"]);
+  assert.deepEqual(workflowTriggers("'on': pull_request\n"), ["pr"]);
+  assert.deepEqual(workflowTriggers("on:\n  - push\n  - pull_request\n"), ["pr"], "lista em bloco");
+  assert.deepEqual(workflowTriggers("on: pull_request_target\n"), []);
+  assert.deepEqual(workflowTriggers("on:\n      # comentário mais recuado que os eventos\n  pull_request:\n"), ["pr"]);
+});
+
+test("workflowTriggers: sem `on:` ou em forma que não se lê reprova alto, nunca devolve vazio em silêncio", () => {
+  assert.throws(() => workflowTriggers("name: z\njobs: {}\n"), /sem chave `on:`/);
+  assert.throws(() => workflowTriggers("on: { pull_request: { branches: [main] } }\n"), /forma de mapa/);
+});
+
+test("workflowTriggers: o bloco `on:` tem limite, `pull_request_target` não é PR e o nome tem de ser exato", () => {
+  const after = "on:\n  push:\njobs:\n  pull_request:\n    runs-on: x\n  schedule:\n    runs-on: x\n";
+  assert.deepEqual(workflowTriggers(after), [], "chaves de jobs: depois do bloco não contam");
+  assert.deepEqual(workflowTriggers("on:\n  pull_request_target:\n    types: [opened]\n"), []);
+  assert.deepEqual(workflowTriggers("on:\n  pull_request-lint:\n  scheduled:\n"), []);
+  assert.deepEqual(workflowTriggers("on:\n  push:\n    pull_request:\n    schedule:\n"), [], "só o nível dos eventos conta");
+});
+
+test("workflowTriggers: a chave `on:` é a do início da linha, não um texto que termina em `on:`", () => {
+  assert.deepEqual(workflowTriggers("name: lig-on:\n  pull_request:\non:\n  schedule:\n    - cron: x\n"), ["nightly"]);
 });
 
 test("workflowTriggers: BOM no início e palavra parecida fora do bloco `on:` não enganam", () => {
@@ -101,6 +129,33 @@ test("buildInventory: workflow sem gatilho de PR/agenda vira `outro` (manual), e
   }
 });
 
+test("buildInventory: só .yml/.yaml valem; test:e2e-x, test:e2e:fast e o texto solto não são `npm run test:e2e`", () => {
+  const root = fixture();
+  const wf = (name, text) => fs.writeFileSync(path.join(root, ".github/workflows", name), text);
+  try {
+    wf("night.yml", `${CRON}      - run: npm run test:e2e-x\n      - run: npm run test:e2e:fast\n      - run: echo test:e2e\n`);
+    wf("notas.txt", `${PR}      - run: npm run test:e2e\n`);
+    wf("ci.yml", `${PR}      - run: node tools/smoke-e2e.mjs\n`);
+    const byPath = Object.fromEntries(buildInventory(root).map((i) => [i.path, i]));
+    assert.equal(byPath["e2e/test_a.py"].where, "manual", "nenhuma das três formas, nem o .txt, chama o test:e2e");
+    assert.equal(byPath["scripts/smoke-e2e.mjs"].where, "manual", "o nome sem o caminho do script não vale");
+    wf("night.yaml", `${CRON}      - run: npm run test:e2e -- -v\n`);
+    assert.equal(buildInventory(root).find((i) => i.path === "e2e/test_a.py").where, "nightly", ".yaml vale e o final da linha também");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("buildInventory: workflow com `on:` que não se lê derruba o inventário em vez de virar manual", () => {
+  const root = fixture();
+  try {
+    fs.writeFileSync(path.join(root, ".github/workflows/estranho.yml"), "name: x\njobs: {}\n");
+    assert.throws(() => buildInventory(root), /sem chave `on:`/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("formatRows: uma linha por E2E com o rótulo e os workflows", () => {
   const rows = formatRows([
     { path: "a.py", runs: [{ workflow: "n.yml", trigger: "nightly" }], where: "nightly" },
@@ -124,5 +179,5 @@ test("docs/TESTES.md §4.1: a tabela bate com o que os workflows chamam hoje", (
   const section = /### 4\.1 Quais E2E rodam onde[\s\S]*?\n\| Arquivo \| Onde roda \|\n\|---\|---\|\n((?:\|.*\n?)+)/.exec(doc)?.[1];
   assert.ok(section, "a seção 4.1 e a tabela existem");
   assert.equal(section.trim(), formatRows(buildInventory(ROOT)), "rode `npm run audit:e2e` e cole as linhas na tabela");
-  assert.match(formatRows(buildInventory(ROOT)), /`scripts\/mesh-e2e\.mjs` \| PR \(ci\.yml\)/, "o job e2e-mesh roda em PR");
+  assert.match(formatRows(buildInventory(ROOT)), /`scripts\/mesh-e2e\.mjs` \| PR \(ci\.yml\)/, "o E2E da malha roda em PR");
 });
