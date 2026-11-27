@@ -9,6 +9,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+    # `edited`: o job audit-internal relê o título e o corpo do PR.
+    types: [ opened, synchronize, reopened, edited ]
   workflow_dispatch:
 
 # PM-95: o token do CI só lê o repositório.

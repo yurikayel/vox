@@ -82,26 +82,75 @@ test("trailer de coautoria em mensagem é ERROR; texto neutro passa", () => {
 });
 
 /** Repositório temporário com um commit por data de autoria dada, todos com o trailer. */
-function repoWithCommits(dates) {
+function repoWithCommits(commits) {
   const dir = plant({ "a.txt": "x\n" });
   const run = (args, env = {}) => execFileSync("git", args, { cwd: dir, env: { ...process.env, ...env }, stdio: "pipe" });
   run(["init", "-q"]);
   run(["add", "."]);
-  dates.forEach((date, i) => {
-    run(["-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "--allow-empty", "-m", `c${i}\n\n${WORDS.trailer}`], { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date });
+  commits.forEach(({ msg, author, committer }) => {
+    run(["-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "--allow-empty", "-m", msg], { GIT_AUTHOR_DATE: author, GIT_COMMITTER_DATE: committer });
   });
   return dir;
 }
 
-test("o corte é pela data de autoria: commit antigo é histórico, novo reprova", () => {
-  const dir = repoWithCommits(["2026-11-20T10:00:00Z", "2026-11-29T10:00:00Z"]);
-  const root = execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { cwd: dir }).toString().trim();
+test("o corte do .patterns.json: 27/11 23:59Z é histórico e 28/11 00:01Z reprova (data de autoria, não de commit)", () => {
+  const withTrailer = (name) => `${name}\n\n${WORDS.trailer}`;
+  const dir = repoWithCommits([
+    { msg: "base", author: "2026-11-01T10:00:00Z", committer: "2026-11-01T10:00:00Z" },
+    { msg: withTrailer("antes"), author: "2026-11-27T23:59:00Z", committer: "2026-11-28T00:01:00Z" },
+    { msg: withTrailer("depois"), author: "2026-11-28T00:01:00Z", committer: "2026-11-27T23:59:00Z" },
+  ]);
+  const base = execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { cwd: dir }).toString().trim();
   const rules = need("loadRules")();
-  const found = need("newCommitMessages")(dir, root, rules.since);
-  assert.equal(found.length, 1, "só o commit depois do corte entra");
-  assert.match(found[0][1], /^c1/);
-  const hits = need("scanMessage")("commit:x", found[0][1], rules);
-  assert.ok(hits.some((h) => h.error), "o trailer depois do corte reprova");
+  const found = need("newCommitMessages")(dir, base, rules.since);
+  assert.deepEqual(found.map(([, msg]) => msg.split("\n")[0]), ["depois"], "só o commit de autoria depois do corte entra");
+  const errors = (msg) => need("scanMessage")("commit:x", msg, rules).filter((h) => h.error);
+  assert.ok(errors(found[0][1]).length > 0, "o trailer depois do corte reprova");
+});
+
+test("corte ausente ou inválido falha alto, não deixa de escanear", () => {
+  const dir = plant({ "scripts/internal-audit.patterns.json": JSON.stringify({ commitsSince: "nao-e-data", patterns: [] }), "scripts/internal-audit.allow.json": "{}" });
+  assert.throws(() => need("loadRules")(dir), /commitsSince/);
+});
+
+test("padrões não pegam o cursor de sync, o codec de áudio nem a classe de estilo; pegam o uso como ferramenta", () => {
+  const rules = need("loadRules")();
+  const dir = plant({
+    "docs/ok.md": ["O cur", "sor de sincronização avança.\nÁudio em Op", "us 32 kbps.\nClasse .agora-co", "dex na tela."].join(""),
+    "docs/ruim.md": ["Abrir no Cur", "sor IDE.\nUse Op", "us High aqui.\nVeja o co", "dex da ferramenta."].join(""),
+  });
+  const ok = need("scanFiles")(dir, ["docs/ok.md"], rules);
+  const ruim = need("scanFiles")(dir, ["docs/ruim.md"], rules);
+  assert.deepEqual(ok.patterns, {}, "texto legítimo não é ocorrência");
+  assert.deepEqual(Object.keys(ruim.patterns).sort(), ["tool-ai", "tool-ide", "tool-model"]);
+});
+
+/** Cópia das regras sem a exceção `entry` do grupo `group`. */
+function without(rules, group, entry) {
+  return { ...rules, allow: { ...rules.allow, [group]: rules.allow[group].filter((e) => e !== entry) } };
+}
+
+test("exceção morta reprova: toda entrada casa um arquivo versionado e muda o resultado", () => {
+  const rules = need("loadRules")();
+  const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: ROOT }).toString().split("\0").filter(Boolean);
+  const effect = (rel, r) => need("scanFiles")(ROOT, [rel], r);
+  for (const group of ["selfExempt", "pathExceptions"]) {
+    for (const entry of rules.allow[group]) {
+      assert.ok(tracked.includes(entry.path), `${group}: ${entry.path} não existe no repositório`);
+      const on = effect(entry.path, rules);
+      const off = effect(entry.path, without(rules, group, entry));
+      assert.ok(off.hits.length > on.hits.length, `${group}: ${entry.path} não isenta nada (entrada morta)`);
+    }
+  }
+  for (const entry of rules.allow.lineExceptions) {
+    const files = (entry.paths ?? tracked).filter((p) => tracked.includes(p));
+    const diff = files.some((p) => effect(p, without(rules, "lineExceptions", entry)).hits.length !== effect(p, rules).hits.length);
+    assert.ok(diff, `lineExceptions: ${entry.reason} não muda nada (entrada morta)`);
+  }
+  for (const prefix of rules.allow.agentRules) {
+    const files = tracked.filter((p) => p === prefix || (prefix.endsWith("/") && p.startsWith(prefix)));
+    assert.ok(files.length > 0, `agentRules: ${prefix} não casa nenhum arquivo versionado`);
+  }
 });
 
 test("baseline ausente é gravado; existente que subiria é recusado", () => {

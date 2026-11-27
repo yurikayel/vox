@@ -7,11 +7,8 @@
   ],
   "pathExceptions": [
     { "path": "relay/test_relay_error_sanitization.py", "ids": ["local-path"], "reason": "Fixture sintética de higienização de erro (caminho falso de propósito).", "owner": "mantenedor" },
-    { "path": "client/js/shared/bip39-pt.js", "ids": ["orch"], "reason": "Palavra comum da lista BIP-39 em português, não é orquestração.", "owner": "mantenedor" }
+    { "path": "client/js/data/bip39-pt.js", "ids": ["orch"], "reason": "Palavra comum da lista BIP-39 em português, não é orquestração.", "owner": "mantenedor" }
   ],
-  "lineExceptions": [
-    { "paths": ["README.md", "client/js/dungeon/system-pack-dnd5e-2024.js", "docs/legal/licenca-e-contribuicoes.md"], "skip": "SRD 5\\.2|CC-BY", "reason": "Atribuição exigida pela licença CC-BY-4.0 do SRD 5.2.", "owner": "mantenedor" },
-    { "strip": "github\\.com/yurikayel/vox", "reason": "URL pública do repositório: o dono só vale dentro dela.", "owner": "mantenedor" }
-  ],
-  "agentRules": ["CLAUDE.md", "AGENTS.md", ".agents/", "vox/CLAUDE.md", "vox/AGENTS.md"]
+  "lineExceptions": [],
+  "agentRules": ["CLAUDE.md", "AGENTS.md", ".agents/"]
 }

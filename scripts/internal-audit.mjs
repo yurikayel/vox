@@ -45,6 +45,7 @@ export function loadRules(root = ROOT, env = process.env) {
   const defs = read(path.join(root, "scripts", "internal-audit.patterns.json"));
   const allow = read(path.join(root, "scripts", "internal-audit.allow.json"));
   const extra = env.VOX_AUDIT_EXTRA_PATTERNS ? read(env.VOX_AUDIT_EXTRA_PATTERNS) : [];
+  if (Number.isNaN(Date.parse(defs.commitsSince))) throw new Error("internal-audit.patterns.json: commitsSince ausente ou inválido");
   allow.lineExceptions = allow.lineExceptions.map(compileLineException);
   return { patterns: [...defs.patterns, ...extra].map(compile), allow, since: defs.commitsSince };
 }
