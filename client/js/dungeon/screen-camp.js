@@ -106,7 +106,7 @@ function renderTablesSection(state) {
           <h3>${escapeHtml(state.tableName)}</h3>
           <p class="dungeon-muted">Investigação e cripta inundada, narrada por roteiro fixo. Sua ficha não sai do seu aparelho.</p>
           <div class="dungeon-card-actions">
-            <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${safeTable}">Entrar na Mesa →</a>
+            <a class="dungeon-btn dungeon-btn-secondary" href="#/dungeon/mesa/${safeTable}">Entrar na Mesa →</a>
             <a class="dungeon-btn dungeon-btn-ghost" href="${sheetHref}">Abrir Grimório</a>
           </div>
         </article>
@@ -194,7 +194,7 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
       <h3>${escapeHtml(camp.name)}</h3>
       <p class="dungeon-muted">${Number(camp.sheetCount) || 1} ficha(s) · ${Number(camp.chronicleCount) || 0} entrada(s) na crônica.</p>
       <div class="dungeon-card-actions">
-        <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Jogar na Mesa →</a>
+        <a class="dungeon-btn dungeon-btn-secondary" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Jogar na Mesa →</a>
         <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
         ${deleteControl}
       </div>
@@ -204,7 +204,9 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
 function renderCalendarPanel(state) {
   const label = state.worldDateLabel || "Calendário disponível ao abrir uma campanha.";
   return `
-    <div class="dungeon-action-form" aria-label="Calendário do mundo">
+    <details class="sv-camp-details" data-dungeon-details="camp-rest">
+      <summary>Descanso e tempo do mundo</summary>
+      <div class="dungeon-action-form" aria-label="Calendário do mundo">
       <span class="dungeon-eyebrow">Tempo do Mundo</span>
       <p class="dungeon-inline-status" role="status">${escapeHtml(label)}</p>
       <div class="dungeon-card-actions">
@@ -213,7 +215,8 @@ function renderCalendarPanel(state) {
         <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-short-rest">Descanso Curto</button>
         <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="calendar-long-rest">Descanso Longo</button>
       </div>
-    </div>`;
+      </div>
+    </details>`;
 }
 
 function renderBackupControls() {
@@ -262,7 +265,7 @@ function renderCampaignsSection(state) {
           <input id="dungeon-campaign-name" class="dungeon-input" type="text" name="campaignName" maxlength="80" placeholder="Nome da campanha (ex.: Crônicas de Vila Nova)" autocomplete="off" />
           <label class="sr-only" for="dungeon-campaign-system">Sistema / preset da campanha</label>
           <select id="dungeon-campaign-system" class="dungeon-input dungeon-select-preset">${presetOpts}</select>
-          <button type="submit" class="dungeon-btn dungeon-btn-primary">Criar Campanha</button>
+          <button type="submit" class="dungeon-btn dungeon-btn-secondary">Criar Campanha</button>
         </div>
       </form>
       ${noticeHtml}

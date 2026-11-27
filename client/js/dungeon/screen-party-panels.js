@@ -1,13 +1,28 @@
 /**
  * @file Painéis de grupo, espólios e salvaguardas do Subversus: só renderização, com os dados de
- * `party-view-model.js`. Sem botões nem ações (elas pedem tratadores novos, fora deste módulo).
+ * `party-view-model.js`. Sem botões nem ações (elas pedem tratadores novos, fora deste módulo). O grupo é uma lista
+ * de linhas com barra de PV; os espólios ficam num `<details>` fechado (estado guardado por `data-dungeon-details`).
  * @module dungeon/screen-party-panels
  */
 import { escapeHtml } from "../shared/html.js";
 import { buildLootView, buildPartyView, buildSavesView } from "./party-view-model.js";
 
+/** Lê "atual / máximo PV" do texto do PV; sem os dois números (ficha sem dado) não há barra. */
+function hpFraction(hpText) {
+  const m = /^(-?\d+) \/ (\d+) PV$/.exec(String(hpText));
+  if (!m || Number(m[2]) <= 0) return null;
+  return { now: Math.max(0, Number(m[1])), max: Number(m[2]) };
+}
+
+function hpBar(member) {
+  const hp = hpFraction(member.hp);
+  if (!hp) return "";
+  const pct = Math.min(100, Math.round((hp.now / hp.max) * 100));
+  return `<div class="dungeon-bar sv-party-bar" role="progressbar" aria-label="PV de ${escapeHtml(member.name)}" aria-valuemin="0" aria-valuemax="${hp.max}" aria-valuenow="${hp.now}"><div class="dungeon-bar-fill" style="width:${pct}%"></div></div>`;
+}
+
 function partyRow(member) {
-  return `<li><strong>${escapeHtml(member.name)}</strong><span class="dungeon-muted">${escapeHtml(member.role)} · nível ${escapeHtml(member.level)} · ${escapeHtml(member.hp)}</span></li>`;
+  return `<li class="sv-party-row"><span class="sv-party-who"><strong>${escapeHtml(member.name)}</strong><span class="dungeon-muted">${escapeHtml(member.role)} · nível ${escapeHtml(member.level)}</span></span>${hpBar(member)}<span class="dungeon-muted sv-party-hp">${escapeHtml(member.hp)}</span></li>`;
 }
 
 /**
@@ -41,10 +56,11 @@ export function renderLootPanel(state) {
     ? `<ul class="dungeon-clean-list">${loot.holders.map(lootHolder).join("")}</ul>`
     : `<p class="dungeon-muted">Ninguém do grupo carrega itens ainda.</p>`;
   return `
-    <section class="dungeon-panel" aria-label="Espólios do grupo">
-      <div class="dungeon-section-head"><div><span class="dungeon-eyebrow">O que o grupo carrega</span><h2>Espólios</h2></div><span class="dungeon-code-tag">${loot.totalItems} ${loot.totalItems === 1 ? "item" : "itens"}</span></div>
+    <details class="dungeon-panel sv-camp-details" data-dungeon-details="camp-loot" aria-label="Espólios do grupo">
+      <summary>Espólios · ${loot.totalItems} ${loot.totalItems === 1 ? "item" : "itens"}</summary>
+      <p class="dungeon-eyebrow">O que o grupo carrega</p>
       ${body}
-    </section>`;
+    </details>`;
 }
 
 function savesRow(row) {
