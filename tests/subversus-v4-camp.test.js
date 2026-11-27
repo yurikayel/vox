@@ -137,3 +137,13 @@ test("sv-camp.css e o index não usam rede externa, não suprimem o foco e não 
   const index = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
   assert.doesNotMatch(index, /user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0)?\b/i, "o viewport permite zoom");
 });
+
+test("o <summary> das sanfonas mostra um marcador (chevron) que gira quando aberta", () => {
+  const sheetCss = campCss();
+  const marker = css.ruleBody(sheetCss, ".sv-camp-details > summary::before");
+  assert.ok(marker, "há ::before no summary");
+  assert.match(marker, /content:\s*""/, "o marcador tem content");
+  assert.match(marker, /border-(right|bottom):\s*2px solid var\(--sa-/, "chevron desenhado com token do tema");
+  const open = css.ruleBody(sheetCss, ".sv-camp-details[open] > summary::before");
+  assert.match(open, /transform:\s*rotate\(45deg\)/, "gira ao abrir");
+});

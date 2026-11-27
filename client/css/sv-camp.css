@@ -14,6 +14,22 @@
   cursor: pointer;
   color: var(--sa-on-surface);
   font-weight: 600;
+  list-style: none;
+}
+
+.sv-camp-details > summary::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.75rem;
+  border-right: 2px solid var(--sa-on-surface);
+  border-bottom: 2px solid var(--sa-on-surface);
+  transform: rotate(-45deg);
+}
+
+.sv-camp-details[open] > summary::before {
+  transform: rotate(45deg);
 }
 
 .sv-camp-details .dungeon-btn {
