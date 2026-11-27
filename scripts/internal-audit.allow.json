@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "selfExempt": [
+    { "path": "scripts/internal-audit.patterns.json", "reason": "Define os padrões: precisa conter as palavras que procura.", "owner": "mantenedor" },
+    { "path": "scripts/internal-audit.allow.json", "reason": "Lista as exceções, que citam o que é permitido.", "owner": "mantenedor" },
+    { "path": "docs/metrics/internal-audit-baseline.json", "reason": "Gerado pelo scanner; as chaves são caminhos de arquivos com ocorrência.", "owner": "mantenedor" }
+  ],
+  "pathExceptions": [
+    { "path": "relay/test_relay_error_sanitization.py", "ids": ["local-path"], "reason": "Fixture sintética de higienização de erro (caminho falso de propósito).", "owner": "mantenedor" },
+    { "path": "client/js/shared/bip39-pt.js", "ids": ["orch"], "reason": "Palavra comum da lista BIP-39 em português, não é orquestração.", "owner": "mantenedor" }
+  ],
+  "lineExceptions": [
+    { "paths": ["README.md", "client/js/dungeon/system-pack-dnd5e-2024.js", "docs/legal/licenca-e-contribuicoes.md"], "skip": "SRD 5\\.2|CC-BY", "reason": "Atribuição exigida pela licença CC-BY-4.0 do SRD 5.2.", "owner": "mantenedor" },
+    { "strip": "github\\.com/yurikayel/vox", "reason": "URL pública do repositório: o dono só vale dentro dela.", "owner": "mantenedor" }
+  ],
+  "agentRules": ["CLAUDE.md", "AGENTS.md", ".agents/", "vox/CLAUDE.md", "vox/AGENTS.md"]
+}

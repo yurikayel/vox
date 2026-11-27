@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "patterns": {
+    "tool-ide": 79,
+    "orch": 61,
+    "orch-agente": 62,
+    "tool-design": 82,
+    "tool-ai": 143,
+    "local-path": 6,
+    "tool-model": 16,
+    "agent-report": 8,
+    "metrics-local": 27,
+    "prompt-doc": 1,
+    "personal": 3
+  },
+  "agentRules": 51,
+  "files": {
+    "ARCHITECTURE.md": {
+      "tool-ide": 2
+    },
+    "CHANGELOG.md": {
+      "orch": 2,
+      "orch-agente": 4,
+      "tool-design": 4,
+      "tool-ide": 1,
+      "tool-ai": 10
+    },
+    "CONTRIBUTING.md": {
+      "orch-agente": 1
+    },
+    "README.md": {
+      "orch-agente": 1
+    },
+    "android/build.ps1": {
+      "local-path": 1
+    },
+    "client/DEV.md": {
+      "tool-ai": 2,
+      "orch-agente": 1,
+      "orch": 1
+    },
+    "client/css/agora.css": {
+      "tool-design": 19,
+      "tool-ai": 4
+    },
+    "client/download.html": {
+      "tool-ide": 1
+    },
+    "client/download/index.html": {
+      "tool-ide": 1
+    },
+    "client/index.html": {
+      "tool-design": 1
+    },
+    "client/js/app/screens-dm-thread.js": {
+      "tool-design": 1
+    },
+    "client/js/central-memory-bundle.js": {
+      "tool-ide": 3
+    },
+    "client/js/central-memory.js": {
+      "tool-ide": 1
+    },
+    "client/js/data/bip39-pt.js": {
+      "orch": 1
+    },
+    "client/js/dungeon/dungeon-state.js": {
+      "orch": 1
+    },
+    "client/js/labs/parado/webxdc-crdt.js": {
+      "tool-ide": 1
+    },
+    "client/js/render/community-page.js": {
+      "tool-design": 2
+    },
+    "client/js/render/compose-chrome.js": {
+      "tool-design": 1
+    },
+    "client/js/render/feed-post-media.js": {
+      "tool-model": 1
+    },
+    "client/js/render/genesis-entry.js": {
+      "tool-design": 1
+    },
+    "client/js/render/oauth-modals.js": {
+      "tool-design": 1
+    },
+    "client/js/render/profile-wallet.js": {
+      "tool-design": 1
+    },
+    "client/js/render/proposal.js": {
+      "tool-design": 3
+    },
+    "client/js/render/shell-layout.js": {
+      "tool-design": 1
+    },
+    "client/js/render/shell-nav.js": {
+      "tool-design": 3
+    },
+    "client/js/render/topic.js": {
+      "tool-design": 1
+    },
+    "client/js/render/util.js": {
+      "tool-design": 1
+    },
+    "client/js/render/vote.js": {
+      "tool-design": 1
+    },
+    "client/js/render/voxpedia.js": {
+      "tool-design": 1,
+      "tool-ai": 1
+    },
+    "docs/CONTRIBUTING-DOCS.md": {
+      "orch-agente": 4,
+      "orch": 1
+    },
+    "docs/FEATURES.md": {
+      "tool-design": 1
+    },
+    "docs/HARDENING.md": {
+      "tool-ai": 1,
+      "orch-agente": 1
+    },
+    "docs/README.md": {
+      "tool-ai": 9,
+      "orch-agente": 4,
+      "tool-model": 1,
+      "tool-design": 1
+    },
+    "docs/ROADMAP.md": {
+      "orch-agente": 4,
+      "orch": 5,
+      "tool-ai": 1
+    },
+    "docs/adr/007-zero-complexity-monolith-decomposition.md": {
+      "orch-agente": 2
+    },
+    "docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md": {
+      "tool-design": 10,
+      "tool-ai": 1
+    },
+    "docs/agent-reports/2026-11-05-auditoria-independente.md": {
+      "agent-report": 1,
+      "orch-agente": 3,
+      "tool-ai": 1
+    },
+    "docs/archive/brainstorm-dez-tarefas-estrategia-2026-10.md": {
+      "agent-report": 1,
+      "tool-ai": 3,
+      "orch": 2
+    },
+    "docs/archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md": {
+      "agent-report": 1,
+      "tool-ai": 6,
+      "orch": 3,
+      "tool-ide": 13
+    },
+    "docs/archive/dossie-geral-inventario-master-breakdown-2026-11.md": {
+      "agent-report": 1,
+      "orch": 2,
+      "orch-agente": 1,
+      "tool-ide": 9,
+      "tool-ai": 3
+    },
+    "docs/archive/gateway-honest-fallback-brainstorm.md": {
+      "agent-report": 1
+    },
+    "docs/archive/inventario-estado-e-tarefas-documentacao-2026-11.md": {
+      "agent-report": 1,
+      "orch": 4,
+      "orch-agente": 1,
+      "tool-ai": 7,
+      "tool-ide": 9
+    },
+    "docs/archive/revisao-estado-2026-10-25.md": {
+      "agent-report": 1,
+      "orch-agente": 3,
+      "tool-ai": 1
+    },
+    "docs/archive/steward-wizard-brainstorm.md": {
+      "agent-report": 1
+    },
+    "docs/audits/auditoria-features-arquitetura-2026-11.md": {
+      "tool-ai": 1,
+      "orch": 1
+    },
+    "docs/audits/branding-audit-2026-11-01.md": {
+      "local-path": 1
+    },
+    "docs/audits/honest-copy-audit-2026-10-23.md": {
+      "tool-ide": 1
+    },
+    "docs/audits/revisao-devsecops-2026-11-10.md": {
+      "orch-agente": 1
+    },
+    "docs/brainstorms/brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md": {
+      "orch": 8,
+      "orch-agente": 7,
+      "tool-ai": 4,
+      "tool-ide": 3
+    },
+    "docs/brainstorms/brainstorm-auto-escala-organica-2026-10.md": {
+      "orch-agente": 1
+    },
+    "docs/brainstorms/brainstorm-autossustento-10-features-2026-11.md": {
+      "tool-ai": 3,
+      "orch-agente": 4
+    },
+    "docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md": {
+      "tool-ide": 1,
+      "orch-agente": 1
+    },
+    "docs/brainstorms/brainstorm-captacao-por-perfil-2026-11-10.md": {
+      "tool-ai": 1
+    },
+    "docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md": {
+      "tool-ai": 1
+    },
+    "docs/brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md": {
+      "tool-ai": 1
+    },
+    "docs/brainstorms/brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md": {
+      "tool-ai": 1
+    },
+    "docs/brainstorms/brainstorm-roadmap-2027.md": {
+      "orch-agente": 1
+    },
+    "docs/brainstorms/brainstorm-terceiro-lugar-2026-11-10.md": {
+      "tool-ai": 1
+    },
+    "docs/design/sovereign-agora.md": {
+      "tool-design": 1
+    },
+    "docs/design/stitch-captures/STITCH-MESA-GUIA.md": {
+      "tool-design": 4
+    },
+    "docs/design/stitch-telas-faltantes.md": {
+      "tool-design": 2
+    },
+    "docs/metrics/baseline-2026-10-24.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-10-24.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-10-30.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-10-30.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-10-31.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-10-31.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-01.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-01.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-04.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-04.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-05.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-05.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-06.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-06.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-08.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-08.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-09.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-09.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-10.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-10.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-17.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-17.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-18.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-18.md": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-26.json": {
+      "metrics-local": 1
+    },
+    "docs/metrics/baseline-2026-11-26.md": {
+      "metrics-local": 1
+    },
+    "docs/operations/gatilho-infra-50-ativos.md": {
+      "orch": 1
+    },
+    "docs/operations/pacote-anti-bus-factor.md": {
+      "orch": 1
+    },
+    "docs/process/antigravity-operating.md": {
+      "tool-ai": 13,
+      "tool-ide": 8,
+      "orch": 1
+    },
+    "docs/process/metodo-agentes-mutex-e-revisor.md": {
+      "orch-agente": 6,
+      "tool-ai": 1,
+      "orch": 8,
+      "tool-model": 7
+    },
+    "docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md": {
+      "prompt-doc": 1,
+      "tool-ai": 3,
+      "orch-agente": 2,
+      "tool-ide": 1,
+      "orch": 1
+    },
+    "docs/process/qualidade-e-evidencia.md": {
+      "orch-agente": 3
+    },
+    "docs/research/medicao-midia-v2-pm70-2026-11.md": {
+      "tool-model": 1
+    },
+    "docs/research/pesquisa-ancoragem-churn-infra-2026-11.md": {
+      "tool-ide": 4,
+      "tool-ai": 8
+    },
+    "docs/research/pesquisa-complementar-2026-11.md": {
+      "tool-ai": 10
+    },
+    "docs/research/pesquisa-deep-research-2026-11.md": {
+      "tool-ai": 6,
+      "orch-agente": 2
+    },
+    "docs/security/codeql-pr262-triagem.md": {
+      "orch": 1
+    },
+    "docs/specs/antigravity-blob-soft-priority-v0.md": {
+      "tool-ai": 4,
+      "orch": 2,
+      "tool-ide": 4
+    },
+    "docs/specs/antigravity-gossip-retract-v1.md": {
+      "tool-ai": 3,
+      "orch": 2,
+      "tool-ide": 5
+    },
+    "docs/specs/arvore-repasse-pm106.md": {
+      "tool-ai": 1
+    },
+    "docs/specs/cache-manifest-v0.md": {
+      "tool-ai": 2,
+      "orch": 2
+    },
+    "docs/specs/ficha-personagem-brainstorm-v0.md": {
+      "tool-design": 3
+    },
+    "docs/specs/lapide-conta-pm101.md": {
+      "tool-ai": 2
+    },
+    "docs/specs/listing-signed-gossip-v1.md": {
+      "tool-ai": 1
+    },
+    "docs/specs/midia-v2.md": {
+      "tool-model": 3
+    },
+    "docs/specs/subversus-vtt-v0.md": {
+      "tool-ai": 3
+    },
+    "docs/strategy/analise-repositorio-vox-2026-11.md": {
+      "orch": 4,
+      "tool-ai": 2
+    },
+    "docs/strategy/antigravity-estrategia-mantenedor-revisor-2026.md": {
+      "tool-ai": 12,
+      "orch": 3,
+      "tool-ide": 3
+    },
+    "docs/strategy/backlog-lancamento-publico-2026-11.md": {
+      "orch-agente": 1
+    },
+    "docs/strategy/backlog-participacao-rede.md": {
+      "orch": 1,
+      "tool-ide": 7,
+      "tool-ai": 1
+    },
+    "docs/strategy/direcionamento-crescimento-rede-2026-11.md": {
+      "tool-ai": 2
+    },
+    "docs/strategy/espacos-digitais-infra.md": {
+      "orch": 1
+    },
+    "docs/strategy/mvp-tecnico-vox-2026-11.md": {
+      "tool-model": 1
+    },
+    "docs/strategy/proposta-nlnet-restack-2027.md": {
+      "orch-agente": 2
+    },
+    "docs/strategy/rede-sustentada-participantes.md": {
+      "orch-agente": 1,
+      "tool-ai": 1,
+      "orch": 1
+    },
+    "e2e/capture_dungeon_stitch.py": {
+      "tool-design": 5
+    },
+    "e2e/verify_stitch_guide_refs.py": {
+      "tool-design": 4
+    },
+    "packaging/zero-central-memory-windows/src/ZeroCentralMemory.cs": {
+      "local-path": 2
+    },
+    "relay/test_relay_limites_e_rotas.py": {
+      "tool-ai": 1
+    },
+    "reports/mutation/mutation-report.json": {
+      "metrics-local": 1,
+      "local-path": 1
+    },
+    "scripts/docs-audit.mjs": {
+      "tool-ai": 1
+    },
+    "scripts/legal-compliance-audit.mjs": {
+      "tool-design": 1
+    },
+    "tests/achados-cobertura.test.js": {
+      "tool-ai": 1
+    },
+    "tests/author-resolution.test.js": {
+      "tool-ai": 2
+    },
+    "tests/brcode.test.js": {
+      "personal": 2
+    },
+    "tests/cov-t4-inline-voice.test.js": {
+      "tool-model": 1
+    },
+    "tests/helpers/cov-t7-gateway-fetch.mjs": {
+      "tool-ide": 1
+    },
+    "tests/keystore-storage-json.test.js": {
+      "orch": 1
+    },
+    "tests/legal-compliance-audit.test.js": {
+      "tool-design": 1
+    },
+    "tests/oauth-profile.test.js": {
+      "personal": 1
+    },
+    "tests/render.test.js": {
+      "tool-design": 1
+    },
+    "tests/sovereign-agora.test.js": {
+      "tool-design": 1
+    },
+    "tests/typography-civic.test.js": {
+      "tool-design": 2
+    },
+    "tests/vote-stitch.test.js": {
+      "tool-design": 3
+    },
+    "tests/vox-populi.test.js": {
+      "local-path": 1
+    },
+    "tools/media-bench/av.js": {
+      "tool-model": 1
+    }
+  }
+}

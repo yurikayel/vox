@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "commitCutoff": "ce990c8523da20ad3f6ae29c389c3cb3af41cad8",
+  "commitCutoffNote": "Commits alcançáveis deste SHA são histórico e não são escaneados. O trailer só é ERROR em commit novo.",
+  "patterns": [
+    { "id": "tool-ai", "regex": "\\b(claude|anthropic|antigravity|gemini|chatgpt|openai|copilot|codex(?![-\\w])|deep research|perplexity)\\b", "messages": true },
+    { "id": "tool-model", "regex": "^(?!.*(codec|audio|kbps|webm|ogg|voz|voice|mime|bitrate|opus-|\\.opus|ffmpeg|encoder)).*\\b(opus|sonnet|haiku)\\b", "messages": true },
+    { "id": "tool-ide", "regex": "\\bcursor\\b", "scope": "md-or-comment", "skipExt": [".css"] },
+    { "id": "tool-design", "regex": "\\bstitch\\b", "messages": true },
+    { "id": "orch", "regex": "\\blobby(\\.md)?\\b|\\bcanetas?\\b|\\b(maestro|escriv[aã]o)\\b|task (id|antigravity)|side.?session|worktrees? `?claude/|local_[0-9a-f]{8}", "messages": true },
+    { "id": "orch-agente", "regex": "\\bagentes?\\b", "scope": "md" },
+    { "id": "prompt-doc", "path": "^docs/(.*/)?prompt-" },
+    { "id": "agent-report", "path": "^docs/(agent-reports|archive)/" },
+    { "id": "local-path", "regex": "[A-Za-z]:\\\\{1,2}(Users|project)\\\\|/Users/[a-z]+/(Desktop|Documents|Downloads|Library|AppData)|/home/(?!runner/)[a-z]+/(\\.|Desktop|Documents|project|work)|AppData\\\\{1,2}Local\\\\{1,2}Temp", "messages": true },
+    { "id": "personal", "regex": "\\b[\\w.+-]+@(gmail|hotmail|outlook|yahoo|proton|protonmail|icloud)\\.[a-z.]+", "messages": true },
+    { "id": "metrics-local", "path": "^(docs/metrics/baseline-|reports/)" },
+    { "id": "trailer", "regex": "^\\s*co-authored-by:|generated with \\[", "messagesOnly": true, "error": true }
+  ]
+}
