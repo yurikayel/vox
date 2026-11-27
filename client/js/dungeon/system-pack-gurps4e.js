@@ -54,6 +54,8 @@ export const GURPS4E_PACK = Object.freeze({
     blocks: Object.freeze([]),
     hud: Object.freeze({ defense: "dodge" }),
   }),
+  /** Nenhuma: o teste é 3d6 sob o NH, e as sementes por `@atributo` são do d20. */
+  seedActions: Object.freeze([]),
   formulas: Object.freeze({
     /** Valor guardado = 10 + diferença para o padrão (o motor mostra só a diferença). */
     modifier: Object.freeze({ base: 10, step: 1 }),
