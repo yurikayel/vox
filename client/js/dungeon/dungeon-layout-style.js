@@ -14,6 +14,7 @@ const LINK_ID = "dungeon-layout-stylesheet";
  */
 export const SV_SHEETS = Object.freeze([
   { id: "sv-camp-stylesheet", href: "css/sv-camp.css" },
+  { id: "sv-estados-stylesheet", href: "css/sv-estados.css" },
 ]);
 
 function linkSheet(doc, id, href) {
