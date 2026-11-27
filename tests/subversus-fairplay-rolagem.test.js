@@ -144,14 +144,16 @@ test("rolagem: abortada não entra na Crônica e o aviso diz quem não entrou, p
   assert.match(html, /Bia: 1/);
 });
 
-test("rolagem: revelação que não aparece no log vira 'segurada no caminho' para quem a mandou", async () => {
+test("rolagem: revelação que não aparece no log vira falta; 'segurada no caminho' só se este aparelho a enviou", async () => {
   const doc = await buildDoc("done");
   delete doc.fairplay.rolls[ROLL].reveals.ana;
-  const mine = renderFairplayStatus({ fairplay: doc.fairplay, fairplayViewerId: "ana" });
-  assert.match(mine, /segurada no caminho/);
-  const other = renderFairplayStatus({ fairplay: doc.fairplay, fairplayViewerId: "bia", fairplayNames: { ana: "Ana" } });
-  assert.match(other, /A revelação de Ana não chegou/);
-  assert.doesNotMatch(other, /segurada no caminho/);
+  const base = { fairplay: doc.fairplay, fairplayViewerId: "ana", fairplayVerdicts: { [ROLL]: { status: "unverified" } } };
+  assert.match(renderFairplayStatus(base), /Você não revelou o seu número a tempo/);
+  const sent = { ...base, fairplayDriver: { revealSent: () => true } };
+  assert.match(renderFairplayStatus(sent), /segurada no caminho/);
+  const other = renderFairplayStatus({ ...base, fairplayViewerId: "bia", fairplayNames: { ana: "Ana" } });
+  assert.match(other, /Ana não revelou o número a tempo; a rolagem foi anulada/);
+  assert.doesNotMatch(other, /segurada no caminho|não chegou/);
 });
 
 test("selo: 'verificada pela mesa, sem você' tem classe e CSS próprios", () => {
