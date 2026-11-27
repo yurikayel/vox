@@ -81,9 +81,9 @@ function renderAddItemForm(sheet) {
         <div class="dungeon-input-row">
           <label class="sr-only" for="dungeon-item-label">Nome do novo item</label>
           <input id="dungeon-item-label" class="dungeon-input" name="itemLabel" maxlength="80" placeholder="Novo item (ex.: Tocha)" autocomplete="off" />
-          <label class="sr-only" for="dungeon-item-qty">Quantidade</label>
+          <label for="dungeon-item-qty">Quantidade</label>
           <input id="dungeon-item-qty" class="dungeon-input dungeon-input-qty" name="itemQty" type="number" min="1" max="99" value="1" aria-label="Quantidade" />
-          <label class="sr-only" for="dungeon-item-weight">Peso em libras (lb)</label>
+          <label for="dungeon-item-weight">Peso em libras (lb)</label>
           <input id="dungeon-item-weight" class="dungeon-input dungeon-input-qty" name="itemWeight" type="number" min="0" max="500" step="0.5" value="0.5" aria-label="Peso em libras (lb)" />
           ${renderArmorFields(sheet)}
           <button type="submit" class="dungeon-btn dungeon-btn-secondary">Adicionar</button>

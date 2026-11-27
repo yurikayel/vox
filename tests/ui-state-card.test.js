@@ -6,7 +6,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 const card = await import("../client/js/shared/state-card.js").catch(() => ({}));
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
@@ -14,6 +14,13 @@ import { SV_SHEETS } from "../client/js/dungeon/dungeon-layout-style.js";
 import * as css from "./helpers/css-contrato.js";
 
 const SHEET = "sv-estados.css";
+/* Nomes de outros produtos, fragmentados para o teste não os citar (mesma lista de sem-nomes-de-terceiros.test.js, mais um nome de nota). */
+const TERCEIROS = new RegExp(
+  [["Foun", "dry"], ["Owl", "bear"], ["Roll", "20"], ["Mini ", "Kraken"], ["ER", "PG"], ["Fantasy ", "Grounds"], ["Dia", "blo"], ["Obsi", "dian"]]
+    .map((partes) => partes.join(""))
+    .join("|"),
+  "i",
+);
 const GLOSSARIO = /ledger|imutável|\bnó #|SIG:|ponta a ponta|garantia criptográfica/i;
 
 function render(spec) {
@@ -138,7 +145,7 @@ test("o Acampamento sem campanha mostra o cartão vazio e, com campanha, não mo
   assert.ok(cartao, "o cartão vazio está na tela");
   assert.doesNotMatch(cartao, /<button/, "o vazio do Acampamento não traz botão (o formulário acima já cria a campanha)");
   assert.doesNotMatch(textoVisivel(cartao), GLOSSARIO, "o texto do Acampamento também passa pelo glossário");
-  assert.doesNotMatch(textoVisivel(cartao), /Obsidian/, "texto descreve a função, não cita produto");
+  assert.doesNotMatch(textoVisivel(cartao), TERCEIROS, "texto descreve a função, não cita produto de terceiros");
   const cheio = createDungeonSessionState({});
   cheio.campaigns = [{ id: "c1", name: "Crônicas", system: "d20_fantasy", sheetCount: 1, chronicleCount: 0 }];
   assert.doesNotMatch(renderCampScreen(cheio), /sv-state--empty/);
@@ -153,4 +160,35 @@ test(".sr-only é global (sv-tokens.css), visualmente oculto e sem !important", 
   assert.match(regra, /overflow:\s*hidden/);
   assert.match(regra, /clip:\s*rect\(0,\s*0,\s*0,\s*0\)/);
   assert.doesNotMatch(regra, /!important/);
+});
+
+test(".sr-only: nowrap, margem, padding e borda fixos, e nenhuma outra regra a desfaz", () => {
+  const regra = css.ruleBody(css.readCss("sv-tokens.css"), ".sr-only");
+  assert.match(regra, /white-space:\s*nowrap/);
+  assert.match(regra, /margin:\s*-1px/);
+  assert.match(regra, /padding:\s*0/);
+  assert.match(regra, /border:\s*0/);
+  const pasta = new URL("../client/css/", import.meta.url);
+  const definem = readdirSync(pasta).filter((nome) => nome.endsWith(".css") && /(^|[\s,}])\.sr-only\s*[,{]/.test(readFileSync(new URL(nome, pasta), "utf8").replace(/\/\*[\s\S]*?\*\//g, "")));
+  assert.deepEqual(definem, ["sv-tokens.css"], ".sr-only é definido em uma só folha");
+  const tokens = readFileSync(new URL("sv-tokens.css", pasta), "utf8");
+  assert.equal((tokens.match(/(^|[\s,}])\.sr-only\s*\{/g) || []).length, 1, "uma só regra .sr-only, sem override depois");
+});
+
+test("os 4 seletores de arquivo escondidos têm o botão visível logo antes do campo e mostram o foco dele", () => {
+  const telas = ["screen-camp.js", "screen-sheet-levelup.js", "screen-table.js", "sheet-wizard-view.js"];
+  for (const tela of telas) {
+    const fonte = readFileSync(new URL(`../client/js/dungeon/${tela}`, import.meta.url), "utf8");
+    assert.match(fonte, /<label for="[^"]+" class="[^"]*dungeon-file-trigger">[^<]+<\/label>\s*<input id="[^"]+" class="sr-only" type="file"/, `${tela}: rótulo visível irmão do campo`);
+  }
+  const foco = css.ruleBody(css.readCss("sv-tokens.css"), '.dungeon-file-trigger:has(+ input.sr-only[type="file"]:focus-visible)');
+  assert.match(foco, /outline:\s*2px solid var\(--sa-primary\)/, "o rótulo ganha contorno quando o campo recebe foco");
+});
+
+test("Quantidade e Peso do item mantêm a legenda visível (sem placeholder, ela é a única pista)", async () => {
+  const { renderInventoryPanel } = await import("../client/js/dungeon/screen-sheet-inventory.js");
+  const html = renderInventoryPanel({ sheet: { inventoryItems: [], attributes_lww: {} } });
+  assert.match(html, /<label for="dungeon-item-qty">Quantidade<\/label>/);
+  assert.match(html, /<label for="dungeon-item-weight">Peso em libras \(lb\)<\/label>/);
+  assert.match(html, /<label class="sr-only" for="dungeon-item-label">/, "o nome do item segue só para leitor (tem placeholder)");
 });
