@@ -2,7 +2,7 @@
  * Guarda de cascata (sem navegador): a mochila 10×4 da ficha, a 320 px de tela, tem células de 24 px ou mais nos dois
  * eixos (WCAG 2.5.8) e a coluna da ficha não cresce com o conteúdo (sem rolagem horizontal).
  *
- * A conta lê as folhas na ordem em que a tela as carrega (`style.css`, `agora.css`, `dungeon-layout.css`) e percorre a
+ * A conta lê as folhas na ordem em que a tela as carrega (`style.css`, `agora.css`, `dungeon-layout.css`, `sv-ficha.css`) e percorre a
  * cadeia de elementos que o código monta: moldura → `main` → grade da ficha → coluna → painel → mochila. Não há largura
  * medida nem constante: o padding, a borda, o gap, o número de colunas e a altura da linha vêm das regras que valem a 320 px.
  */
@@ -14,7 +14,7 @@ import { readCss } from "./helpers/css-contrato.js";
 const VIEWPORT = 320;
 const MIN_TARGET = 24;
 const REM_PX = 16;
-const SHEETS = ["style.css", "agora.css", "dungeon-layout.css"];
+const SHEETS = ["style.css", "agora.css", "dungeon-layout.css", "sv-ficha.css"];
 /** Cadeia do DOM da ficha, da moldura à mochila (origem: screen-sheet.js e screen-sheet-inventory.js). */
 const CHAIN = [["dungeon-sanctum"], ["dungeon-main"], ["dungeon-sheet-layout"], ["dungeon-sheet-main"], ["dungeon-panel"], ["dungeon-backpack-grid"]];
 

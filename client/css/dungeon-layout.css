@@ -335,13 +335,6 @@
 
 /* Ficha em abas (spec da ficha §5.1/§5.2): uma coluna no celular, duas no desktop */
 .dungeon-sheet-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-/* Telas estreitas: o 1fr puro (minmax(auto, 1fr)) deixava a coluna crescer até a menor palavra de cada item da mochila e a
-   página rolava na horizontal; com minmax(0, 1fr) a coluna fica no espaço que existe. Margens menores (tokens de espaçamento)
-   devolvem largura à mochila 10×4: a 320 px cada célula tem de ficar com 24 px ou mais (WCAG 2.5.8). */
-@media (max-width: 360px) {
-  .dungeon-sanctum .dungeon-main { padding-inline: var(--space-sm); }
-  .dungeon-sheet-main .dungeon-panel { padding-inline: var(--space-md); }
-}
 @media (min-width: 1024px) {
   .dungeon-sheet-layout { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); align-items: start; }
   .dungeon-sheet-aside { position: sticky; top: 0.5rem; }
