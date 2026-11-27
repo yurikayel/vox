@@ -40,37 +40,46 @@ export function renderStoriesStrip(customProfiles = null) {
   return `<div class="stories-strip" aria-label="Stories em destaque">${items}</div>`;
 }
 
-const FEED_TAB_ICONS = {
-  social: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>`,
-  vox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M2 10 12 3l10 7Z"/></svg>`,
-  external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`,
-  all: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
-  following: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>`,
-};
+const FEED_SEGMENTS = [
+  { key: "for-you", href: "#/", label: "Social" },
+  { key: "civic", href: "#/?feed=civic", label: "Cívico" },
+];
+
+const FEED_FILTERS = [
+  { key: "following", href: "#/?feed=following", label: "Seguindo" },
+  { key: "external", href: "#/?feed=external", label: "Redes externas" },
+  { key: "all", href: "#/?feed=all", label: "Tudo" },
+];
+
+const currentAttr = (on) => (on ? ' aria-current="page"' : "");
+
+function renderFeedSegments(activeFeed) {
+  const links = FEED_SEGMENTS.map((s) => `<a href="${s.href}" class="sv-seg-btn"${currentAttr(activeFeed === s.key)}>${s.label}</a>`).join("");
+  return `<div class="sv-seg">${links}</div>`;
+}
+
+function renderFeedFilter(activeFeed) {
+  const active = FEED_FILTERS.find((f) => f.key === activeFeed);
+  const links = FEED_FILTERS.map((f) => `<a href="${f.href}"${currentAttr(f === active)}>${f.label}</a>`).join("");
+  const clear = active
+    ? `<a href="#/" class="sv-filtro-chip" aria-label="Tirar o filtro ${active.label}">${active.label} <span aria-hidden="true">✕</span></a>`
+    : "";
+  return `<details class="sv-filtro"><summary>${active ? `Filtro: ${active.label}` : "Filtro"}</summary><div class="sv-filtro-menu">${links}</div></details>${clear}`;
+}
 
 /**
- * Chips de filtro de feed no topo da Ágora (mesmas chaves que a query `?feed=`).
+ * Barra de feeds no topo da Ágora (mesmas chaves que a query `?feed=`): 2 segmentos (Social e Cívico) e o menu Filtro
+ * com Seguindo, Redes externas e Tudo. É navegação por links, sem JS: o segmento do feed aberto leva
+ * `aria-current="page"`; com um filtro ativo nenhum segmento leva, e o chip "✕" volta ao Social.
  * @param {string} [activeFeed="for-you"] Feed selecionado.
- * @returns {string} HTML da barra de abas.
+ * @returns {string} HTML da barra `nav.sv-feedbar`.
  */
 export function renderFeedTabsBar(activeFeed = "for-you") {
-  const tabs = [
-    { key: "for-you", href: "#/", icon: FEED_TAB_ICONS.social, label: "Social" },
-    { key: "civic", href: "#/?feed=civic", icon: FEED_TAB_ICONS.vox, label: "Cívico" },
-    { key: "external", href: "#/?feed=external", icon: FEED_TAB_ICONS.external, label: "Redes (Bluesky)" },
-    { key: "all", href: "#/?feed=all", icon: FEED_TAB_ICONS.all, label: "Tudo" },
-    { key: "following", href: "#/?feed=following", icon: FEED_TAB_ICONS.following, label: "Seguindo" },
-  ];
-  const items = tabs
-    .map((t) => {
-      const active = activeFeed === t.key;
-      return `<a href="${t.href}" class="feed-tab-chip ${active ? "active" : ""}" role="tab" aria-selected="${active}">${t.icon}<span>${t.label}</span></a>`;
-    })
-    .join("\n      ");
   return `
-    <div class="feed-tabs-bar" role="tablist" aria-label="Filtro de feeds">
-      ${items}
-    </div>`;
+    <nav class="sv-feedbar" aria-label="Feeds">
+      ${renderFeedSegments(activeFeed)}
+      ${renderFeedFilter(activeFeed)}
+    </nav>`;
 }
 
 /**

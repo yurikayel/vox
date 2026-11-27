@@ -216,5 +216,10 @@ Where decorative geometry occurs, it borrows strictly from classical Greek trigl
 ### Chips, Badges & Quorum Indicators
 - Monospaced, rectangular stone stamps. Quorum badges feature a leading solid square pylon indicator (green `#4BBF8F` or teal `#4BACA5`) rather than rounded dots.
 
+### Barra de feeds da Ágora
+- **Dois segmentos e um menu:** Social e Cívico são links (`.sv-seg-btn`); Seguindo, Redes externas e Tudo ficam no menu **Filtro**, um `<details>` fechado com 3 links, sem JS. As chaves `?feed=` não mudam.
+- **ARIA:** o segmento do feed aberto leva `aria-current="page"`. Com um filtro ativo nenhum segmento leva; o resumo vira "Filtro: <nome>" e o chip "<nome> ✕" volta ao Social. No máximo 1 `aria-current` na barra.
+- **Folha:** `client/css/sv-agora.css`, ligada no `index.html` depois de `sv-tokens.css`. Alvos de 44 px, foco visível por token, contraste AA nos dois temas.
+
 ### Architectural Divisors & Colonnades
 - Replaces generic `<hr>` lines with **Entablature Friezes**: dual hairlines enclosing small central geometric rhombuses or Greek key glyph markers, creating visual rhythm across deliberative chambers.

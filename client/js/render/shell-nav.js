@@ -58,7 +58,7 @@ export function renderFeedNav(activeFeed = "for-you") {
       </a>
       <a href="#/?feed=external" class="sidebar-feed-tab ${isExternal ? "active" : ""}"${isExternal ? ' aria-current="page"' : ""}>
         <span class="sidebar-feed-icon" aria-hidden="true">🌐</span>
-        <span class="sidebar-feed-label">Redes (Bluesky)</span>
+        <span class="sidebar-feed-label">Redes externas</span>
       </a>
       <a href="#/?feed=all" class="sidebar-feed-tab ${isAll ? "active" : ""}"${isAll ? ' aria-current="page"' : ""}>
         <span class="sidebar-feed-icon" aria-hidden="true">🔀</span>
