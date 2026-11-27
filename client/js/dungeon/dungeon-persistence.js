@@ -116,12 +116,14 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
 
 /**
  * Avalia uma fórmula de dados (`/roll`, `/gmroll`, `2d20kh1+@for`), registra na crônica e persiste/sincroniza.
+ * Desliga o chip `state.rollSecret`: ele só vale para o teste de atributo ou perícia da ficha, que lê o chip antes de chamar.
  * @param {object} state Estado da sessão.
  * @param {string} rawInput Comando ou fórmula de dados.
  * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
  * @returns {Promise<object>} Resultado de `rollDiceFormula`.
  */
 export async function recordFormulaRoll(state, rawInput, opts = {}) {
+  state.rollSecret = false; // o chip "Só para o Mestre" vale só para o teste da ficha, que já o leu; qualquer rolagem o desliga
   const store = opts.store || getDefaultVttStore();
   const mode = opts.mode || state.rollMode || "normal";
   const viaTable = await tryStartFairplayRoll(state, rawInput, { ...opts, store, mode });

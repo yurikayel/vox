@@ -103,7 +103,8 @@ function renderRollStatusBanner(state) {
   if (state.rollError) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`;
   const last = state.lastFormulaRoll;
   if (!last?.ok) return "";
-  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
+  const secret = last.visibility === "gm" ? ` <span class="dungeon-secret-tag"><span aria-hidden="true">🔒</span> Só para o Mestre</span>` : "";
+  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong>${secret}</p>`;
 }
 
 /** Chip "Só para o Mestre": a próxima rolagem de atributo ou perícia sai só para o autor e o Mestre. */

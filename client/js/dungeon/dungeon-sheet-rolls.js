@@ -22,8 +22,8 @@ export function d20Formula(bonus, label, secret = false) {
 
 /**
  * Rola o teste da ficha, secreto se pedido (`opts.secret`) ou se o chip "Só para o Mestre" está ligado
- * (`state.rollSecret`); o chip desliga depois da rolagem (vale uma vez só). Atributo ou perícia que a ficha não tem
- * falha antes e deixa o chip como estava.
+ * (`state.rollSecret`); `recordFormulaRoll` desliga o chip (vale uma vez só). Atributo ou perícia que a ficha não tem
+ * falha antes e deixa o chip como estava. No painel do HUD o chip é ignorado (e desligado).
  * @param {object} state Estado da sessão.
  * @param {number} bonus Bônus do teste.
  * @param {string} label Texto da rolagem.
@@ -32,9 +32,12 @@ export function d20Formula(bonus, label, secret = false) {
  */
 async function rollSheetTest(state, bonus, label, opts) {
   const { secret = Boolean(state.rollSecret), ...rest } = opts;
-  const result = await recordFormulaRoll(state, d20Formula(bonus, label, secret), rest);
-  state.rollSecret = false;
-  return result;
+  return recordFormulaRoll(state, d20Formula(bonus, label, secret), rest);
+}
+
+/** Opções do clique: no painel do HUD o chip não aparece, então ali a rolagem nunca é secreta por ele. */
+function clickOpts(el, opts) {
+  return { store: opts.store, secret: el.closest?.("[data-hud-panel]") ? false : undefined };
 }
 
 function failRoll(state, message) {
@@ -72,6 +75,6 @@ export async function recordSkillRoll(state, skillId, opts = {}) {
 /** Tratadores de clique do controlador: `roll-ability` (`data-ability`), `roll-skill` (`data-skill`) e `roll-secret` (liga/desliga o chip "Só para o Mestre"). */
 export const SHEET_ROLL_HANDLERS = Object.freeze({
   "roll-secret": (state) => { state.rollSecret = !state.rollSecret; },
-  "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, { store: opts.store }),
-  "roll-skill": (state, el, _c, opts) => recordSkillRoll(state, el.dataset.skill, { store: opts.store }),
+  "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, clickOpts(el, opts)),
+  "roll-skill": (state, el, _c, opts) => recordSkillRoll(state, el.dataset.skill, clickOpts(el, opts)),
 });

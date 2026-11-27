@@ -8,6 +8,8 @@ import assert from "node:assert/strict";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { d20Formula, recordAbilityRoll, recordSkillRoll } from "../client/js/dungeon/dungeon-sheet-rolls.js";
+import { recordFormulaRoll } from "../client/js/dungeon/dungeon-persistence.js";
+import { filterOpForPlayer } from "../client/js/dungeon/vtt-sync.js";
 import { renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
 import { renderPlayTab } from "../client/js/dungeon/screen-sheet-tabs.js";
 
@@ -85,4 +87,64 @@ test("g) d20Formula só ganha o prefixo /gmroll com secret", () => {
 test("h) perícia sem atributo declarado e fórmula com @var desconhecida não some da aba Jogar", () => {
   const html = renderPlayTab([{ id: "x", label: "Ofício", roll: "1d20+@xyz", damage: "", tag: "pericia" }], [{ id: "oficio", label: "Ofício", bonus: 0 }]);
   assert.match(html, /data-dungeon="roll-action" data-action-id="x"/);
+});
+
+/** Estado que captura a op `ROLL_RECORDED` que iria para o Mestre. */
+function stateWithPeer() {
+  const state = stateFor();
+  state.vttKeypair = { routeId: "autor" };
+  state.sent = [];
+  state.syncPeer = { dispatchOp: async (op) => { state.sent.push(op); return null; } };
+  return state;
+}
+
+test("i) a op da rolagem do chip não chega a um jogador que não é o autor (filterOpForPlayer)", async () => {
+  const state = stateWithPeer();
+  state.rollSecret = true;
+  await recordSkillRoll(state, "acrobacia");
+  const [op] = state.sent;
+  assert.equal(op.type, "ROLL_RECORDED");
+  assert.equal(op.payload.rollResult.visibility, "gm");
+  assert.equal(filterOpForPlayer(null, op, "outro-jogador"), null, "outro jogador não recebe");
+  assert.equal(filterOpForPlayer(null, op, "autor"), op, "o autor recebe o eco");
+  await recordSkillRoll(state, "acrobacia");
+  assert.equal(filterOpForPlayer(null, state.sent[1], "outro-jogador"), state.sent[1], "controle: a pública chega");
+});
+
+test("j) ação clicável e fórmula livre ignoram o chip e o desligam: saem públicas e o chip não fica ligado", async () => {
+  const state = stateFor();
+  state.sheet.sheet_meta = { clickable_actions: [{ id: "a1", label: "Espada", roll: "1d20+2", damage: "", tag: "ataque" }] };
+  state.rollSecret = true;
+  await ACTION_HANDLERS["roll-action"](state, { dataset: { actionId: "a1" } }, null, {});
+  assert.equal(state.lastFormulaRoll.visibility, "public");
+  assert.equal(state.rollSecret, false);
+  state.rollSecret = true;
+  await recordFormulaRoll(state, "1d6");
+  assert.equal(state.lastFormulaRoll.visibility, "public");
+  assert.equal(state.rollSecret, false);
+  state.rollSecret = true;
+  await ACTION_HANDLERS["roll-quick"](state, { dataset: { formula: "1d20" } }, null, {});
+  assert.equal(state.rollSecret, false);
+});
+
+test("k) clique no painel do HUD ignora o chip (que ali não aparece) e o desliga", async () => {
+  const state = stateFor();
+  state.rollSecret = true;
+  const el = { dataset: { ability: "dex" }, closest: (sel) => (sel === "[data-hud-panel]" ? {} : null) };
+  await ACTION_HANDLERS["roll-ability"](state, el, null, {});
+  assert.equal(state.lastFormulaRoll.visibility, "public");
+  assert.equal(state.rollSecret, false);
+  state.rollSecret = true;
+  await ACTION_HANDLERS["roll-skill"](state, { ...el, dataset: { skill: "acrobacia" } }, null, {});
+  assert.equal(state.lastFormulaRoll.visibility, "public");
+  assert.equal(state.rollSecret, false);
+});
+
+test("l) 'Última rolagem' da rolagem secreta mostra 🔒 e 'Só para o Mestre'; a pública não", async () => {
+  const state = stateFor();
+  await recordSkillRoll(state, "acrobacia", { secret: true });
+  const banner = (html) => /<p class="dungeon-inline-status"[^>]*>.*?<\/p>/s.exec(html)?.[0] || "";
+  assert.match(banner(renderSheetScreen(state)), /<span aria-hidden="true">🔒<\/span> Só para o Mestre/);
+  await recordSkillRoll(state, "acrobacia");
+  assert.doesNotMatch(banner(renderSheetScreen(state)), /🔒|Só para o Mestre/);
 });
