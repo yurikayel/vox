@@ -22,8 +22,9 @@ const EXCLUDED = new Set(["sem-esperas-fixas.test.js", "helpers/wait-until.js"])
  * `globalThis.setTimeout`) aparece hoje nos testes: o teto cresce só pelo que passou a ser varrido.
  * SUB-20, fatia 1: 37 → 30. Provas de ausência sobre stubs em memória (`cov-t1-circles`, `cov-t1-home-more`,
  * `cov-t6-explode-events`, `cov-t6-photo-lightbox`) passaram a `drainMicrotasks` (sem relógio), e `cov-t6-contact-notify`
- * espera um contato sentinela em vez de dormir. Seguem com timer real, por usar E/S ou criptografia reais:
- * `cov-t6-post-more-menu` e `cov-t7-labs-webxdc`.
+ * espera um contato sentinela em vez de dormir. Seguem com timer real, para uma fatia seguinte:
+ * `cov-t6-post-more-menu` (cadeia de `import()` dinâmico; fica verde com `drainMicrotasks(300)`, falta só trocar) e
+ * `cov-t7-labs-webxdc` (criptografia real: microtarefas não bastam).
  */
 const CEILING = 30;
 
