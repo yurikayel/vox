@@ -78,7 +78,7 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 
 ## Contraste e estado: seguimentos conhecidos
 
-Contraste AA (texto ≥ 4,5:1, contorno ≥ 3:1) e estado desativado/foco são medidos na cascata real por [`tests/ui-foco-desativado-aa.test.js`](../tests/ui-foco-desativado-aa.test.js) (motor em `tests/helpers/css-cascata.js`: ancestral, classes de variante, estados e ordem das folhas). Dois pontos ficaram de fora e seguem abertos:
+Contraste AA (texto ≥ 4,5:1, contorno ≥ 3:1) e estado desativado/foco são medidos na cascata real por [`tests/ui-foco-desativado-aa.test.js`](../tests/ui-foco-desativado-aa.test.js) (motor em `tests/helpers/css-cascata.js`: ancestral, classes de variante, estados, `@media (prefers-color-scheme)` com o bloco do atributo aninhado, e ordem das folhas; `themeTokens` resolve as variáveis de cada ambiente pela mesma cascata). O `resolveTheme` de `css-tema.js` é o leitor legado e não lê esse bloco aninhado: os testes novos usam `themeTokens`. Dois pontos ficaram de fora e seguem abertos:
 
 - **`.btn-zap-post.disabled`** (`style.css`): desativa por classe, não por `:disabled`/`[disabled]`, com opacidade de 0,35 (texto em 1,68:1 no escuro e 1,19:1 no claro). Conserto: levar o seletor à regra de desativado de `sv-tokens.css` e listar o botão inteiro no teste.
 - **`.btn-post-more-menu:focus-visible`** (`style.css`): anel próprio, fora do anel global; medir o contraste do anel sobre as superfícies do cartão e, se falhar, apontar para o token do anel.
