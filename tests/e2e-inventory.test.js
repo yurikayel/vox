@@ -206,12 +206,12 @@ test("docs/TESTES.md §4.2: lista os mesmos arquivos da §4.1, sem repetir, e ne
   }
 });
 
-test("docs/TESTES.md §4.2: tempo é número medido com comando, ou NOT RUN com motivo (nada de estimativa)", () => {
+test("docs/TESTES.md §4.2: tempo é número medido com comando, ou NOT RUN/BLOCKED com motivo (nada de estimativa)", () => {
   const rows = linhasDaSecao42(fs.readFileSync(path.join(ROOT, "docs", "TESTES.md"), "utf8"));
   for (const { path: p, cells } of rows) {
     const tempo = cells[2];
     const medido = /^\d+,\d s \(`[^`]+`/.test(tempo);
-    const naoRodou = /^NOT RUN: \S/.test(tempo);
+    const naoRodou = /^(?:NOT RUN|BLOCKED): \S/.test(tempo);
     assert.ok(medido || naoRodou, `${p}: tempo deve ser "N,N s (\`comando\`)" ou "NOT RUN: motivo", veio: ${tempo}`);
   }
 });
