@@ -1,4 +1,4 @@
-/** @file Peças compartilhadas do compositor (Stitch tela 9): tipo de registro e painel de assinatura. */
+/** @file Peças compartilhadas do compositor (tela 9 do guia de design): tipo de registro e painel de assinatura. */
 import { escapeHtml } from "./util.js";
 
 const COMPOSE_TYPES = [

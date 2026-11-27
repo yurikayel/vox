@@ -8,7 +8,7 @@
  *  3. `param`    — toda função exportada documenta cada parâmetro com `@param`;
  *  4. `returns`  — toda função exportada que devolve valor tem `@returns`;
  *  5. `link`     — todo link relativo em Markdown aponta para um arquivo que existe;
- *  6. `orphan`   — todo doc em docs/ é alcançável a partir do índice docs/README.md;
+ *  6. `orphan`   — todo doc em docs/ (menos os gerados em docs/metrics/) é alcançável a partir do índice docs/README.md;
  *  7. `status`   — todo doc em docs/ (menos os gerados em docs/metrics/) abre com o banner `**Status:**`,
  *                  e a primeira palavra dele está no vocabulário fechado de docs/CONTRIBUTING-DOCS.md §2.1.
  *
@@ -207,7 +207,7 @@ function orphanFindings(graph) {
     seen.add(file);
     queue.push(...linkTargets(file, graph));
   }
-  const docs = [...graph.keys()].filter((f) => rel(f).startsWith("docs/"));
+  const docs = [...graph.keys()].filter((f) => rel(f).startsWith("docs/") && !rel(f).startsWith(STATUS_SKIP));
   return Object.fromEntries(docs.filter((f) => !seen.has(f)).map((f) => [rel(f), ["orphan"]]));
 }
 

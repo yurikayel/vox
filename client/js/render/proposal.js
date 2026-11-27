@@ -1,5 +1,5 @@
 /**
- * Tela da pauta de governança (Stitch tela 8). Saiu de `render/community.js` para a página da comunidade e a
+ * Tela da pauta de governança (tela 8 do guia de design). Saiu de `render/community.js` para a página da comunidade e a
  * da pauta não dividirem o mesmo arquivo de mais de mil linhas.
  */
 import * as gov from "../governance.js";
@@ -57,7 +57,7 @@ function renderProposalArticle(proposal, labels, timeLabel, state, diffHtml) {
 }
 
 /**
- * Tela da pauta (`#/c/:id/proposal/:id`, Stitch tela 8): trilha, estela da proposta e, em telas largas,
+ * Tela da pauta (`#/c/:id/proposal/:id`, tela 8 do guia de design): trilha, estela da proposta e, em telas largas,
  * coluna com a apuração e a cédula; abaixo, a lista pública de votos.
  * @param {HTMLElement} main Contêiner da rota.
  * @param {object} proposal Pauta `governance-proposal` (título, corpo, autor, `closesAt`, `diffText`).
@@ -115,7 +115,7 @@ export function renderProposalDiff(diffText) {
 }
 
 /**
- * Uma opção da apuração: rótulo, votos, porcentagem e barra própria (Stitch tela 8).
+ * Uma opção da apuração: rótulo, votos, porcentagem e barra própria (tela 8 do guia de design).
  * @param {"yes"|"no"|"abstain"} key Opção (vira a cor da barra).
  * @param {string} label Rótulo em português.
  * @param {number} count Votos computados na opção.
