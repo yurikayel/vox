@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
-import { renderSheetHero } from "../client/js/dungeon/screen-sheet.js";
+import { renderSheetHero, renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
 import { renderPlayTab } from "../client/js/dungeon/screen-sheet-tabs.js";
 import { resolveSheetSystem } from "../client/js/dungeon/screen-sheet-derived.js";
 
@@ -111,4 +111,59 @@ test("j) controle: 5e e T20 seguem com os seis botões de atributo", () => {
     const html = renderSheetHero(stateFor(id).sheet);
     assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
   }
+});
+
+const FRASE_ATRIBUTO = "clique em um atributo";
+const FRASE_CABECALHO = "Os testes de atributo estão no cabeçalho";
+const countAbility = (html) => (html.match(/data-dungeon="roll-ability"/g) || []).length;
+
+/** Ficha por pacote, pronta para a tela inteira (cabeçalho e aba Jogar). */
+function screenFor(systemId, extra) {
+  const state = stateFor(systemId, extra);
+  state.loreNodes = [];
+  return { state, hero: renderSheetHero(state.sheet), screen: renderSheetScreen(state) };
+}
+
+test("k) GURPS (sem botão de atributo): nem o cabeçalho nem a aba Jogar falam em testes de atributo", () => {
+  const { hero, screen } = screenFor("gurps4e");
+  assert.equal(hero.includes(FRASE_ATRIBUTO), false);
+  assert.equal(screen.includes(FRASE_CABECALHO), false);
+  assert.equal(renderPlayTab([], [], false).includes(FRASE_CABECALHO), false);
+});
+
+test("l) controle: 5e e T20 mantêm as duas frases", () => {
+  for (const id of ["dnd5e-2024", "t20"]) {
+    const { hero, screen } = screenFor(id);
+    assert.ok(hero.includes(FRASE_ATRIBUTO), id);
+    assert.ok(screen.includes(FRASE_CABECALHO), id);
+  }
+});
+
+test("m) pacote desconhecido não mostra os seis botões nem as frases; ficha sem system segue 5e", () => {
+  const { hero, screen } = screenFor("nao-existe");
+  assert.equal(countAbility(hero), 0);
+  assert.equal(hero.includes(FRASE_ATRIBUTO), false);
+  assert.equal(screen.includes(FRASE_CABECALHO), false);
+  const legada = stateFor("dnd5e-2024");
+  delete legada.sheet.system;
+  assert.equal(countAbility(renderSheetHero(legada.sheet)), 6);
+});
+
+const custom = (id, label) => ({ id, label, roll: "1d20+@des+2", damage: "", tag: "pericia" });
+const actionIds = (html) => [...html.matchAll(/data-dungeon="roll-action" data-action-id="([^"]+)"/g)].map((m) => m[1]);
+
+test("n) ação cadastrada com o nome de uma perícia do pacote, mas com id próprio, continua rolando", () => {
+  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("x1", "Furtividade")] } });
+  const ids = actionIds(playTab(state));
+  assert.equal(ids.filter((id) => id === "x1").length, 2, "em Mais usados e em Todos os testes");
+});
+
+test("o) ação de perícia fora do pacote (Ofício de Forja) aparece nas duas grades", () => {
+  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("x2", "Ofício de Forja")] } });
+  assert.equal(actionIds(playTab(state)).filter((id) => id === "x2").length, 2);
+});
+
+test("p) a semente act-* coberta pelo pacote continua escondida (sem repetir o botão)", () => {
+  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("act-furtividade", "Furtividade")] } });
+  assert.equal(actionIds(playTab(state)).includes("act-furtividade"), false);
 });

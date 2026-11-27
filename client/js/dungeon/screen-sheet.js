@@ -36,10 +36,16 @@ function derivePortraitCode(sheet) {
   return (letters.slice(0, 3) || "AVT").toUpperCase();
 }
 
+/** O pacote tem algum atributo da lista de botões (GURPS e pacote desconhecido não têm). */
+function hasAbilityButtons(sys) {
+  const derived = sys?.derived.abilities || [];
+  return ABILITY_META.some((item) => derived.some((a) => a.id === item.key));
+}
+
 function renderAbilityButtons(sheet) {
   const ab = sheet.attributes_lww?.abilities || {};
   const derived = resolveSheetSystem(sheet)?.derived.abilities || [];
-  const own = derived.length ? ABILITY_META.filter((item) => derived.some((a) => a.id === item.key)) : ABILITY_META;
+  const own = ABILITY_META.filter((item) => derived.some((a) => a.id === item.key));
   return own.map((item) => {
     const score = Number(ab[item.key]) || 10;
     const mod = derived.find((a) => a.id === item.key)?.modifier;
@@ -58,6 +64,8 @@ export function renderSheetHero(sheet) {
   const level = Number(attrs.level) || 1;
   const sys = resolveSheetSystem(sheet);
   const ac = sys?.derived.armored ? sys.derived.armorClass : Number(attrs.armor_class) || 10;
+  const buttons = renderAbilityButtons(sheet);
+  const hint = buttons ? " — clique em um atributo para rolar direto na crônica." : "";
   const subtitle = sheet.role_title || attrs.class_name || "Aventureiro";
   return `
     <section class="dungeon-sheet-hero">
@@ -65,9 +73,9 @@ export function renderSheetHero(sheet) {
       <div class="dungeon-hero-copy">
         <span class="dungeon-eyebrow">Ficha guardada neste aparelho, funciona sem internet · Nível ${level} · CA ${ac}</span>
         <h1>${escapeHtml(sheet.name)}</h1>
-        <p class="dungeon-muted">${escapeHtml(subtitle)} — clique em um atributo para rolar direto na crônica.</p>
+        <p class="dungeon-muted">${escapeHtml(subtitle)}${hint}</p>
         <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="level-up-open">Subir de Nível</button>
-        <div class="dungeon-attr-row">${renderAbilityButtons(sheet)}</div>
+        <div class="dungeon-attr-row">${buttons}</div>
       </div>
     </section>`;
 }
@@ -252,8 +260,9 @@ export function renderSheetScreen(state) {
   const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
+  const sys = resolveSheetSystem(state.sheet);
   const panels = {
-    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions, resolveSheetSystem(state.sheet)?.derived.skills)}`,
+    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions, sys?.derived.skills, hasAbilityButtons(sys))}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
     about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft, link: state.voxcharLink, over: state.voxcharOver })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,

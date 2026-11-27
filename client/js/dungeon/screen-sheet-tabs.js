@@ -54,6 +54,17 @@ export function renderActionGrid(actions, withDamage = false) {
   return `<div class="dungeon-brain-grid">${actions.map((a) => actionButton(a, withDamage)).join("")}</div>`;
 }
 
+/**
+ * Só a perícia semeada pela ficha (`act-*`) some quando o pacote já tem o botão do mesmo nome; uma ação cadastrada
+ * à mão, com id e fórmula próprios, segue rolando pelo `roll-action`.
+ * @param {object} act Ação clicável.
+ * @param {Set<string>} labels Rótulos das perícias do pacote.
+ * @returns {boolean} `true` se é semente coberta pelo pacote.
+ */
+function isCoveredSeed(act, labels) {
+  return act?.tag === "pericia" && String(act.id || "").startsWith("act-") && labels.has(act.label);
+}
+
 function skillButton(skill) {
   const bonus = skill.bonus >= 0 ? `+${skill.bonus}` : String(skill.bonus);
   return `<button type="button" class="dungeon-choice-card" data-dungeon="roll-skill" data-skill="${escapeHtml(skill.id)}" aria-label="Rolar ${escapeHtml(skill.label)} ${bonus}"><strong>${escapeHtml(skill.label)}</strong><span>${bonus}${skill.proficient ? " · treinada" : ""}</span></button>`;
@@ -68,7 +79,7 @@ function skillButton(skill) {
  */
 export function renderSkillGrid(skills, extraActions = []) {
   const known = new Set(skills.map((s) => s.label));
-  const custom = extraActions.filter((a) => !known.has(a.label));
+  const custom = extraActions.filter((a) => !isCoveredSeed(a, known));
   if (!skills.length && !custom.length) return '<p class="dungeon-muted">Nada cadastrado ainda nesta ficha.</p>';
   return `<div class="dungeon-brain-grid">${skills.map(skillButton).join("")}${custom.map((a) => actionButton(a, false)).join("")}</div>`;
 }
@@ -78,18 +89,20 @@ export function renderSkillGrid(skills, extraActions = []) {
  * vista no cabeçalho da ficha, então não se repetem aqui.
  * @param {object[]} actions Ações clicáveis da ficha.
  * @param {object[]} [derivedSkills] Perícias derivadas do pacote; sem elas, a grade usa só as ações de perícia.
+ * @param {boolean} [hasAbilities] A ficha tem botões de atributo no cabeçalho; sem eles a frase sobre eles some.
  * @returns {string} HTML da aba.
  */
-export function renderPlayTab(actions, derivedSkills = []) {
+export function renderPlayTab(actions, derivedSkills = [], hasAbilities = true) {
   const list = Array.isArray(actions) ? actions : [];
   const { skills } = splitSheetActions(list);
   const covered = new Set(derivedSkills.map((s) => s.label));
-  const usable = list.filter((a) => !(a?.tag === "pericia" && covered.has(a.label)));
+  const usable = list.filter((a) => !isCoveredSeed(a, covered));
+  const note = hasAbilities ? '<p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>' : "";
   return `
     <h3 class="dungeon-eyebrow">Mais usados</h3>
     ${renderActionGrid(pickMostUsed(usable))}
     <h3 class="dungeon-eyebrow">Todos os testes</h3>
-    <p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>
+    ${note}
     ${renderSkillGrid(derivedSkills, skills)}`;
 }
 
