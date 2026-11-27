@@ -5,7 +5,7 @@
 > **Horizonte:** 2026-Q4 → 2027-Q3  
 > **Tese:** O repositório publica cliente estático e **governa código**; a malha social escala **sem loop do mantenedor** (relay, mod, T&S, suporte 24/7).
 
-Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [operação do ferramenta de protocolo](../process/antigravity-operating.md) e [GOVERNANCE.md](../../GOVERNANCE.md).
+Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [operação da ferramenta de protocolo](../process/antigravity-operating.md) e [GOVERNANCE.md](../../GOVERNANCE.md).
 
 Índice das dez tarefas estratégicas: [brainstorm-dez-tarefas-estrategia-2026-10.md](../archive/brainstorm-dez-tarefas-estrategia-2026-10.md) (**T1** = este documento).
 
@@ -16,24 +16,24 @@ Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.m
 | Faz (revisor/aprovador) | Não faz (por design) |
 |-------------------------|----------------------|
 | Merge em `main`, CI verde, bump SW quando shell muda | Relay/TURN/inbox **global** do projeto |
-| RFCs, specs do ferramenta de protocolo, tags release quando necessário | Moderação central de timeline ou “central de denúncias” |
-| Pages + workflow deploy; documentar 2º espelho | VPS obrigatória, hotline WhatsApp oficial, impulsionamento |
+| RFCs, specs da ferramenta de protocolo, tags release quando necessário | Moderação central de timeline ou “central de denúncias” |
+| Pages + workflow deploy; documentar 2º espelho | VPS obrigatória, linha de atendimento oficial por mensageiro, impulsionamento |
 | Revisar PRs de protocolo (malha, relay, gossip) | Comprar infra para “salvar” comunidade lenta |
 | Usar o app como **cidadão** nas próprias comunidades | Ser NOC único, DPO operacional ou CNPJ de plataforma |
 
-**Ferramenta de protocolo × ferramenta de integração:** protocolo em `feat/*`; integração e `origin/main` no ferramenta de integração ([operação do ferramenta de protocolo](../process/antigravity-operating.md)). Mantenedor **humano** ≈ dono de merge + qualidade de release, não coordenador de ops da malha.
+**Ferramenta de protocolo × ferramenta de integração:** protocolo em `feat/*`; integração e `origin/main` na ferramenta de integração ([operação da ferramenta de protocolo](../process/antigravity-operating.md)). Mantenedor **humano** ≈ dono de merge + qualidade de release, não coordenador de ops da malha.
 
 ---
 
 ## 2. Cenários de adoção (2026-Q4 → 2027-Q3)
 
-Premissa: crescimento **relacional** (WhatsApp, feira, deliberação), não campanha nacional paga ([brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) §A).
+Premissa: crescimento **relacional** (grupos de mensagens, feira, deliberação), não campanha nacional paga ([brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) §A).
 
 | Cenário | Sinais | Papel do mantenedor | Risco se ignorado |
 |---------|--------|---------------------|-------------------|
 | **A — Piloto fechado** | 1–3 comunidades, V-P09 em curso, ≥1 steward/ coletivo | Só CI/docs; participa como membro | Tentação de “hostear relay de emergência” |
 | **B — Orgânico lento** | Cantina + feira, poucos stewards, pill reserva frequente | Reforçar copy honesta; merge V-P06/V-I08 | Usuários acham “rede quebrada”; maintainer vira suporte |
-| **C — Onda local** | Migração de grupo (install party), pico 100–300 MAU numa região | **Congelar features**; hardening + runbooks V-P08 | Burnout steward único (modelo Mastodon) |
+| **C — Onda local** | Migração de grupo (install party), pico 100–300 MAU numa região | **Congelar features**; hardening + runbooks V-P08 | Burnout steward único (modelo de rede federada) |
 | **D — Estagnação** | Comunidades fantasma, cold start | Não resgatar com VPS; empurrar V-P05 seed | Mantenedor vira “growth team” central |
 | **E — Pressão regulatória** | Art. 19 a **espelho/steward**, não ao repo | Atualizar [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md); zero inbox jurídico central | Narrativa “blindagem total” gera falsa segurança |
 
@@ -63,7 +63,7 @@ Premissa: crescimento **relacional** (WhatsApp, feira, deliberação), não camp
 | Piloto + retrospectiva | Animador local | V-P09 template |
 | 2º espelho shell | Voluntário espelho | [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) |
 | Sucessão relay | Buddy comunitário | V-P08 |
-| Wire protocolo pesado | branch do ferramenta de protocolo → merge do ferramenta de integração | specs `docs/antigravity-*` |
+| Wire protocolo pesado | branch da ferramenta de protocolo → merge da ferramenta de integração | specs de protocolo em `docs/specs/` |
 | Oficina / install party | ONG, grêmio, biblioteca | `proposta-vox.html` |
 
 **Anti-loop:** se um item da coluna humana vira “só o Yuri resolve”, o cenário **regrediu** — tratar como incidente de produto, não heroísmo ops.
@@ -84,7 +84,7 @@ Horizonte trimestral alinhado ao [backlog-participacao-rede.md](./backlog-partic
 | Tripé docs participação linkado no lobby | `rede-sustentada`, auto-escala, infra-participativa |
 | V-P02, V-P01, V-P04, V-P05 em `main` | Painel vizinhos + seed; SW documentado |
 | Checklist mantenedor “Pages + CI only” acordado | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) §A |
-| Ferramenta de protocolo sem push `main` | [operação do ferramenta de protocolo](../process/antigravity-operating.md) |
+| Ferramenta de protocolo sem push `main` | [operação da ferramenta de protocolo](../process/antigravity-operating.md) |
 
 ### T2 — Loop sustentação sem maintainer (2027-Q1)
 
@@ -151,7 +151,7 @@ Horizonte trimestral alinhado ao [backlog-participacao-rede.md](./backlog-partic
 |-------|---------|---------|
 | Steward único | Relay cai, fundador paga VPS | V-P08 buddy; quotas disco; 1 steward / 3–5 comunidades |
 | Mod fundador | Emotional labor infinito | Trio E1; rotação; fork comunitário |
-| Mantenedor | PRs + “suporte Telegram” | Recusar scope creep; freeze features; ferramenta de protocolo só protocolo |
+| Mantenedor | PRs + “suporte por mensageiro alternativo” | Recusar scope creep; freeze features; ferramenta de protocolo só protocolo |
 
 ---
 
@@ -161,7 +161,7 @@ Horizonte trimestral alinhado ao [backlog-participacao-rede.md](./backlog-partic
 
 | Decisão | Motivo |
 |---------|--------|
-| Sem relay/TURN **global** do projeto | Evita SPOF Mastodon + custo + Art. 19 central |
+| Sem relay/TURN **global** do projeto | Evita SPOF de rede federada + custo + Art. 19 central |
 | Sem moderação/T&S central no repo | Editorial e legal na comunidade |
 | Sem ranking público de contribuição de nós | ADR-001 opt-in; Apoiador tímido |
 | Cliente PWA open-source; identidade criptográfica local | Soberania e minimização LGPD |
@@ -182,13 +182,13 @@ Horizonte trimestral alinhado ao [backlog-participacao-rede.md](./backlog-partic
 
 ## 7. Freeze vs hardening (orientação release)
 
-Alinhado ao perfil global de hardening (`~/.gemini/config/AGENTS.md`) **no código**; aqui aplica-se à **estratégia de release**.
+Alinhado ao perfil global de hardening (arquivo de regras global da ferramenta de IA) **no código**; aqui aplica-se à **estratégia de release**.
 
 | Modo | Quando | O que entra | O que não entra |
 |------|--------|-------------|-----------------|
 | **Hardening** | Pré-piloto, pós-onda local (cenário C), antes tag | V-P06, V-I08, testes malha, mirror validate, copy audit | Novas superfícies sociais (OAuth enrich, feed experiments) |
 | **Feature freeze** | 2–4 semanas durante piloto V-P09 | Bugfix, SW bump, docs | XL UI, novos tipos TX sem spec |
-| **Protocol window** | Ferramenta de protocolo `feat/*` pronta | Merge do ferramenta de integração + regressão | Paralelizar &gt;1 XL malha |
+| **Protocol window** | Ferramenta de protocolo `feat/*` pronta | Merge da ferramenta de integração + regressão | Paralelizar &gt;1 XL malha |
 
 **Regra:** freeze **não** significa parar merge de segurança ou retratação/gossip regressão; significa **não** expandir escopo de produto até T2 exit criteria parcialmente verdes.
 
@@ -202,7 +202,7 @@ Alinhado ao perfil global de hardening (`~/.gemini/config/AGENTS.md`) **no códi
 | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) | Flywheel, SLOs, mod ladder, checklist maintainer |
 | [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) | 4 camadas, painel honesto, regulatório |
 | [backlog-participacao-rede.md](./backlog-participacao-rede.md) | V-P* / V-I* rastreio |
-| [operação do ferramenta de protocolo](../process/antigravity-operating.md) | Handoff branch → `main` |
+| [operação da ferramenta de protocolo](../process/antigravity-operating.md) | Handoff branch → `main` |
 | [piloto-comunidade-retrospectiva-template.md](../pilot/piloto-comunidade-retrospectiva-template.md) | T4 validação |
 
 ---
