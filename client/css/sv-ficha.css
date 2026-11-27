@@ -1,4 +1,0 @@
-/* @file Ficha (tela v4): faixa de derivados fixa, perícias agrupadas, ganchos de rolagem.
- * Injetada sob demanda por `dungeon-layout-style.js` (fora do precache; não toca `sw.js`). Só tokens `--sa-*`,
- * alvos de toque >= 44 px, sem `!important`. Contrato testado em `tests/helpers/css-contrato.js`.
- */

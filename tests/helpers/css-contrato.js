@@ -123,7 +123,7 @@ function toPx(value) {
 }
 
 /**
- * Falha se a regra de `selector` não declara `min-height` (e `min-width`, quando declarado) de pelo menos `minPx`.
+ * Falha se a regra de `selector` não declara `min-height` e `min-width` de pelo menos `minPx`.
  * @param {string} css Texto da folha.
  * @param {string} selector Seletor do elemento clicável.
  * @param {number} [minPx=44] Alvo mínimo em px (`rem` vale 16 px).
@@ -131,7 +131,27 @@ function toPx(value) {
  */
 export function assertMinTarget(css, selector, minPx = 44) {
   const props = declarations(ruleBody(css, selector));
-  assert.ok(props.has("min-height"), `${selector}: sem min-height`);
-  assert.ok(toPx(props.get("min-height")) >= minPx, `${selector}: min-height ${props.get("min-height")} < ${minPx}px`);
-  if (props.has("min-width")) assert.ok(toPx(props.get("min-width")) >= minPx, `${selector}: min-width ${props.get("min-width")} < ${minPx}px`);
+  for (const prop of ["min-height", "min-width"]) {
+    assert.ok(props.has(prop), `${selector}: sem ${prop}`);
+    assert.ok(toPx(props.get(prop)) >= minPx, `${selector}: ${prop} ${props.get(prop)} < ${minPx}px`);
+  }
+}
+
+function definedProps() {
+  const names = new Set();
+  for (const file of ["agora.css", "style.css"]) for (const m of stripComments(readCss(file)).matchAll(/(--[\w-]+)\s*:/g)) names.add(m[1]);
+  return names;
+}
+
+/**
+ * Falha se a folha usa `var(--x)` com `--x` não definida em `agora.css` nem em `style.css`; o fallback literal não conta.
+ * @param {string} css Texto da folha.
+ * @param {string} [label="folha"] Nome para a mensagem.
+ * @returns {void}
+ */
+export function assertVarsDefined(css, label = "folha") {
+  const defined = definedProps();
+  const used = new Set([...stripComments(css).matchAll(/var\(\s*(--[\w-]+)/g)].map((m) => m[1]));
+  const missing = [...used].filter((name) => !defined.has(name));
+  assert.deepEqual(missing, [], `${label}: var() sem definição no tema`);
 }

@@ -1,4 +1,0 @@
-/* @file Acampamento (tela v4): grupo em linhas com barra de PV, Descanso e Saque recolhíveis.
- * Injetada sob demanda por `dungeon-layout-style.js` (fora do precache; não toca `sw.js`). Só tokens `--sa-*`,
- * alvos de toque >= 44 px, sem `!important`. Contrato testado em `tests/helpers/css-contrato.js`.
- */

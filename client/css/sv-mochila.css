@@ -1,4 +1,0 @@
-/* @file Mochila (tela v4): grade 10x4 com células de 44 px, inspeção do item, carga com texto.
- * Injetada sob demanda por `dungeon-layout-style.js` (fora do precache; não toca `sw.js`). Só tokens `--sa-*`,
- * alvos de toque >= 44 px, sem `!important`. Contrato testado em `tests/helpers/css-contrato.js`.
- */
