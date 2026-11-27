@@ -196,7 +196,7 @@ function renderWalletAsideHtml() {
 }
 
 /**
- * Tela Carteira Soberana (Stitch tela 14): saldo Arweave, Pix e importação JWK.
+ * Tela Carteira Soberana (tela 14 do guia de design): saldo Arweave, Pix e importação JWK.
  * @param {HTMLElement} main Container da rota `#/wallet`.
  * @param {object} [options={}]
  * @param {string|null} [options.address=null] Endereço AR conectado.
