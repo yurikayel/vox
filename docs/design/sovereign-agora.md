@@ -236,3 +236,8 @@ Where decorative geometry occurs, it borrows strictly from classical Greek trigl
 - **Link secundário:** `link = { label, href }` vira um `<a class="sv-state-link">` depois do botão, só para rota interna (`#/…`; qualquer outro endereço lança erro). Uma ação primária (botão) e uma secundária (link), nunca duas iguais.
 - **Folha:** `client/css/sv-estados.css`, carregada pela tela que usa o cartão (`SV_SHEETS`, no Subversus). Só tokens do tema, alvo de 44 px e esqueleto animado apenas sem preferência de redução de movimento.
 - **Raios:** `--sv-radius` (8 px) e `--sv-radius-sm` (4 px) em `client/css/sv-tokens.css`, apontando para `--radius` e `--radius-sm` de `agora.css`. Não usar `--radius-md`: o nome diz 10 px e entrega 8.
+
+### Descansos da ficha (sanfona fechada)
+- **Onde:** aba Jogar, bloco de condições. Condições e Exaustão seguem à vista; Dados de Vida e os descansos curto e longo ficam num `<details class="sv-rest-details" data-dungeon-details="sheet-rest">` fechado, com o resumo "Descansos (Dados de Vida 3/3)".
+- **Estado:** `data-dungeon-details` faz o aberto/fechado sobreviver ao redesenho que cada botão provoca.
+- **Folha:** `client/css/sv-ficha.css`, em `SV_SHEETS`. Resumo e botões de 44 px, foco visível por token, seta que gira quando aberta; só tokens do tema.
