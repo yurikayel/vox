@@ -1,4 +1,4 @@
-# Contrato operacional — Antigravity × Cursor (Vox)
+# Contrato operacional — ferramenta de protocolo × ferramenta de integração (Vox)
 
 > **Status:** canônico (contrato operacional; baseline e fluxo de PR abaixo atualizados em 2026-11-17) · **Owner:** mantenedor · **Revisado:** 2026-11-17
 
@@ -11,20 +11,20 @@
 
 ## English summary (coordinator signal)
 
-Antigravity implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `develop` or `main`**. Cursor owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green **`npm run validate`**, PRs, and **`origin/main` deploy only with explicit maintainer OK**. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1** and **cache-manifest v0 mesh wire (V-I05)** are on `develop`/`main` (`client/js/peers-cache-manifest.js` imported by `client/js/peers.js`). **Flow:** feature PRs → **`develop`**; **`develop` → `main`** by PR at end of batch. **`develop` and `main` are protected** (branch up to date + five required checks: Cliente PWA Node 22/24, Relay & Signaling Python 3.11/3.12, Auditoria de Segurança). Next Antigravity missions kick off from **`git rev-parse --short origin/develop`** on the day (not a fixed SHA): gossip **v1.1 hardening**, **signed listings** protocol. Specs: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
+A ferramenta de protocolo implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `develop` or `main`**. A ferramenta de integração owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green **`npm run validate`**, PRs, and **`origin/main` deploy only with explicit maintainer OK**. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1** and **cache-manifest v0 mesh wire (V-I05)** are on `develop`/`main` (`client/js/peers-cache-manifest.js` imported by `client/js/peers.js`). **Flow:** feature PRs → **`develop`**; **`develop` → `main`** by PR at end of batch. **`develop` and `main` are protected** (branch up to date + five required checks: Cliente PWA Node 22/24, Relay & Signaling Python 3.11/3.12, Auditoria de Segurança). Next a ferramenta de protocolo missions kick off from **`git rev-parse --short origin/develop`** on the day (not a fixed SHA): gossip **v1.1 hardening**, **signed listings** protocol. Specs: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
 
 ---
 
 ## 1. Divisão de responsabilidade
 
-| Papel | Antigravity | Cursor |
+| Papel | Protocolo | Integração |
 |-------|-------------|--------|
 | **Git** | Branch `feat/<missão>` a partir de `origin/develop` atualizado | `develop` e `main` blindadas; PR feature → `develop`; PR lote `develop` → `main` **somente com OK explícito do mantenedor** |
 | **Escopo** | Protocolo malha, relay, signaling, payloads assinados, specs | UI, integração, docs drift, CI, conflitos multi-branch |
 | **Entrega** | Push da branch + SHA + contagem de testes na branch | PR/merge em `develop`; verificação pós-merge; publicação `main` no fechamento do lote |
 | **Deploy** | Não dispara Pages | Push em `main` → GitHub Pages |
 
-**Regra dura:** Antigravity **não** faz merge em `develop`/`main`, **não** faz push em `main`, **não** resolve conflitos de integração entre features paralelas.
+**Regra dura:** a ferramenta de protocolo **não** faz merge em `develop`/`main`, **não** faz push em `main`, **não** resolve conflitos de integração entre features paralelas.
 
 ---
 
@@ -39,7 +39,7 @@ Antigravity implements **network/protocol** work on **`feat/*` branches only**; 
 
 ## 3. Escopo técnico (malha Vox)
 
-Trabalho Antigravity concentra-se em:
+Trabalho da ferramenta de protocolo concentra-se em:
 
 | Área | Módulos / wire típicos |
 |------|-------------------------|
@@ -50,7 +50,7 @@ Trabalho Antigravity concentra-se em:
 | **Payloads assinados** | ECDSA P-256 via `local-account.js` / `verifyPayload` |
 | **Manifesto cache (v0)** | `Type: cache-manifest`, helpers `cache-manifest.js`, wire malha `peers-cache-manifest.js` em `peers.js` |
 
-**Fora do escopo Antigravity (salvo spec explícita):** chrome UI (`render.js`), i18n de produto, seed demo, política de moderação visual, refactors amplos de `app.js`.
+**Fora do escopo da ferramenta de protocolo (salvo spec explícita):** chrome UI (`render.js`), i18n de produto, seed demo, política de moderação visual, refactors amplos de `app.js`.
 
 ---
 
@@ -66,22 +66,22 @@ Antes de sinalizar “pronto para merge”:
 | **Spec linkada** | Kickoff em `docs/` referenciado no topo do PR mental da branch |
 | **Sem segredos** | Nada de chaves, `.env`, URLs privadas hardcoded |
 
-Cursor repete `npm run validate` após merge em `develop`/`main` antes de pedir merge do PR.
+A ferramenta de integração repete `npm run validate` após merge em `develop`/`main` antes de pedir merge do PR.
 
 ---
 
-## 5. Handoff Antigravity → Cursor
+## 5. Handoff ferramenta de protocolo → ferramenta de integração
 
-| Etapa | Antigravity | Cursor |
+| Etapa | Protocolo | Integração |
 |-------|-------------|--------|
 | 1 | Branch `feat/...` pushed | — |
 | 2 | Informa **SHA da branch** + **N testes** + doc/spec tocada | Confere diff vs `origin/develop` |
 | 3 | — | Rebase/merge em worktree limpo se necessário |
 | 4 | — | Resolve conflitos (SW, `render.js`, etc.) |
 | 5 | — | `npm run validate` verde → PR/merge em **`develop`**; no fechamento do lote, PR **`develop` → `main`** com OK do mantenedor |
-| 6 | — | Log uma linha em `politica/lobby.md` + SHA final |
+| 6 | — | Registro de uma linha no log de handoff + SHA final |
 
-**Antigravity entrega branch; Cursor integra via `develop` e publica `main` no lote.**
+**A ferramenta de protocolo entrega branch; a ferramenta de integração integra via `develop` e publica `main` no lote.**
 
 ---
 
@@ -96,7 +96,7 @@ Cursor repete `npm run validate` após merge em `develop`/`main` antes de pedir 
 
 ---
 
-## 7. Próximas missões Antigravity (ordem sugerida)
+## 7. Próximas missões da ferramenta de protocolo (ordem sugerida)
 
 1. **Gossip v1.1 hardening** — Dedupe, fan-out e edge cases pós-integração UI; regressão T1–T10 + novos casos; ADR curto se mudar semântica LWW.
 2. **Listing signed** — Protocolo de oferta/classificado assinado na malha (shape TX + gossip); spec kickoff em `docs/` antes da impl.
@@ -116,4 +116,4 @@ Cada missão: branch própria, baseline = **`git rev-parse --short origin/develo
 
 ---
 
-*Contrato operacional doc-only — Cursor mantém; Antigravity segue branches e handoff acima.*
+*Contrato operacional doc-only — a ferramenta de integração mantém; a ferramenta de protocolo segue branches e handoff acima.*

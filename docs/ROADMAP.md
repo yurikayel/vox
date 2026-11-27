@@ -360,7 +360,7 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 | [x] | **REV-13** | code | **Aviso nos Pix Zaps:** UI informa que o nome civil do DICT aparece ao pagador e oferece Zap para chave do coletivo (B2) | ✅ PR #17 · [complementar §1-E](./research/pesquisa-complementar-2026-11.md#e-pix-e-privacidade-do-recebedor) |
 | [x] | **REV-19** | code | **Teste de fumaça Nostr (B7):** workflow semanal que publica e lê evento efêmero no pool de relays | ✅ PR #17 · [complementar §1-G](./research/pesquisa-complementar-2026-11.md#g-nostr-para-sinalização) |
 | [x] | **REV-03** | code | Teste que falha se `docs/release-metadata.json.cache_name` ≠ `CACHE_NAME` do `sw.js` | ✅ PR #22 · `tests/release-metadata-drift.test.js` · [TESTES.md](./TESTES.md) |
-| [x] | **CODE-04** | doc | Documentar a flag V-I09 (soft priority, padrão desligado) | ✅ [antigravity-blob-soft-priority-v0](./specs/antigravity-blob-soft-priority-v0.md) |
+| [x] | **CODE-04** | doc | Documentar a flag V-I09 (soft priority, padrão desligado) | ✅ [prioridade-suave-blobs-v0](./specs/prioridade-suave-blobs-v0.md) |
 | [x] | **CODE-03** | code | V-P07: UI de exportação de atestação (ADR-001) | ✅ `contribution-attestation.js` em `#/settings/network` |
 | [x] | **CODE-05** | doc | ADR de fallback de gateway | ✅ [ADR-004](./adr/004-gateway-honest-fallback.md) (accepted) |
 | [x] | **REV-17** | doc | Busca complementar (Prompt 4) incorporada | ✅ [pesquisa-complementar-2026-11.md](./research/pesquisa-complementar-2026-11.md) |

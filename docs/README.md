@@ -114,7 +114,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ### Specs de protocolo (malha, cache, módulos)
 
 - [antigravity-gossip-retract-v1.md](./specs/antigravity-gossip-retract-v1.md): retratação no gossip (implementado)
-- [antigravity-blob-soft-priority-v0.md](./specs/antigravity-blob-soft-priority-v0.md): prioridade suave de blobs (flag desligada)
+- [prioridade-suave-blobs-v0.md](./specs/prioridade-suave-blobs-v0.md): prioridade suave de blobs (flag desligada)
 - [cache-manifest-v0.md](./specs/cache-manifest-v0.md): manifestos de cache assinados
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
 - [listing-signed-gossip-v1.md](./specs/listing-signed-gossip-v1.md): ofertas da Feira assinadas
@@ -176,7 +176,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md): espelhos shell A/B · [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md) · [ops-pages-rollback.md](./operations/ops-pages-rollback.md)
 - [pacote-anti-bus-factor.md](./operations/pacote-anti-bus-factor.md): release, rollback e plantão para segunda pessoa (LAN-30)
 - [gatilho-infra-50-ativos.md](./operations/gatilho-infra-50-ativos.md): quando abrir TURN, 2º nó e relay de produção (>50 ativos)
-- [antigravity-operating.md](./process/antigravity-operating.md): operação da malha
+- [operacao-protocolo-integracao.md](./process/operacao-protocolo-integracao.md): operação da malha
 - Emergência de **72 h** (relay + TTL do inbox): restaurar ou usar URL alternativa. Se o PWA cair, use o shell A/B. Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)).
 - Componentes: [relay/README.md](../relay/README.md) · [relay/deploy/README.md](../relay/deploy/README.md) (VPS + TURN) · [vox-populi/README.md](../vox-populi/README.md) · [android/README.md](../android/README.md) · [vox-bridge/README.md](../vox-bridge/README.md)
 - Ferramentas: [desktop-linux](../packaging/desktop-linux/README.md) · [desktop-seeder-windows](../packaging/desktop-seeder-windows/README.md) · [desktop-windows-native](../packaging/desktop-windows-native/README.md) · [node-macos](../packaging/node-macos/README.md) · [node-zero-windows](../packaging/node-zero-windows/README.md) · [steward-kit-windows](../packaging/steward-kit-windows/README.md) · [posse-cli](../tools/posse-cli/README.md)
