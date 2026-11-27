@@ -46,7 +46,7 @@ Este documento fixa **referenciais de mercado** (Mesa C, Mesa hospedada A, Mesa 
 | **Contras** | Superfície enorme → engasgos; F5 nem sempre resolve; risco de **clone/trava** de jogador na sala ao reconectar. |
 | **Para a Mesa** | Manter poder tático (fog, AoE, portas, iniciativa) e automação de rolagem. **Evitar** marketplace infinito e estado pesado. **E5:** reconexão P2P com **um** `routeId` ativo, ops idempotentes por `opId` (`vtt-reducer.js`, `vtt-sync.js`). |
 
-### 1.3 Mesa hospedada D ([erpg.app](https://example.com/ref-mesa-d))
+### 1.3 Mesa hospedada D
 
 Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OBS). Fontes: [guia do usuário](https://example.com/ref-mesa-d), [planos](https://example.com/ref-mesa-d), material oficial de comparação com Mesa A e Mesa B.
 

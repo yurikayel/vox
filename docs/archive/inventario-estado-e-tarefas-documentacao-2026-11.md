@@ -92,7 +92,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 | [adr/002-oauth-profile-enrich-client.md](../adr/002-oauth-profile-enrich-client.md), [adr/003-profile-card-gossip.md](../adr/003-profile-card-gossip.md) | **fresh** |
 | [rfc/0001-posse-export.md](../rfc/0001-posse-export.md), [rfc/README.md](../rfc/README.md) | **spec** |
 | [embed-integration.md](../specs/embed-integration.md), [vox-bridge-spike.md](../product/vox-bridge-spike.md) | **brainstorm** → P2 |
-| [metrics/baseline-2026-10-24.md](../metrics/baseline-2026-10-24.md) | **stale** (rebaseline pós 355) |
+| `metrics/baseline-2026-10-24.md` | **stale** (rebaseline pós 355) |
 | [HARDENING.md](../HARDENING.md), [DNS-HANDLES.md](../specs/DNS-HANDLES.md) | **fresh** |
 | [incubacao-p2-backlog.md](../strategy/incubacao-p2-backlog.md) | **brainstorm** |
 | [proposta-vox.html](../product/proposta-vox.html) | **fresh** (copy leigo) |
@@ -193,7 +193,7 @@ Cada tarefa: **objetivo**, **DoD revisado**, **owner**, **prioridade**, **links*
 | **DOC-03** | `doc` | Índice mestre docs (§2.5) no README ou `docs/README.md` | Entrada única com 4 trilhas; link deste inventário | Community-doc | **P0** | §2.5 acima |
 | **DOC-04** | `doc` | Re-audit copy honesta pós painel vizinhos + steward | Checklist P0 hashtag/gateway/steward; delta vs out/23 | Cursor | **P0** | [honest-copy-audit](../audits/honest-copy-audit-2026-10-23.md) |
 | **DOC-05** | `doc` | Arquivar/markdown histórico steward-wizard brainstorm | Banner «superseded by V-I08» + link kit | Community-doc | P1 | [steward-wizard-brainstorm](./steward-wizard-brainstorm.md) |
-| **DOC-06** | `doc` | Rebaseline métricas doc `metrics/baseline` | Novo snapshot 355 testes + áreas teste | Cursor | P1 | [metrics/baseline](../metrics/baseline-2026-10-24.md) |
+| **DOC-06** | `doc` | Rebaseline métricas doc `metrics/baseline` | Novo snapshot 355 testes + áreas teste | Cursor | P1 | `metrics/baseline` |
 | **DOC-07** | `doc` | Cross-link inventário ↔ ambos brainstorms T1–T10 | Tabelas §3 espelham índices; zero ID orphan | Community-doc | P1 | §3 deste doc |
 | **DOC-08** | `doc` | docs/product/POSITIONING.md vs T2 (out/2026) — gaps copy | Tabela audiência/mensagem/evitar sincronizada | Community-doc | P2 | [POSITIONING](../product/POSITIONING.md), [brainstorm-dez T2](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
 

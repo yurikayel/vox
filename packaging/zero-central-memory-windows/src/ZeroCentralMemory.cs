@@ -288,12 +288,14 @@ namespace Vox.ZeroMemory {
         }
 
         public string GetDashboardHtml() {
+            string root = Environment.GetEnvironmentVariable("VOX_ROOT") ?? "";
             string[] candidates = new string[] {
                 Path.Combine(dataDir, "dashboard.html"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dashboard.html"),
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "dashboard.html"),
-                @"C:\project\politica\vox\packaging\zero-central-memory-windows\dashboard.html",
-                @"C:\project\politica\vox\dist\dashboard.html"
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "packaging", "zero-central-memory-windows", "dashboard.html"),
+                Path.Combine(root, "packaging", "zero-central-memory-windows", "dashboard.html"),
+                Path.Combine(root, "dist", "dashboard.html")
             };
             foreach (string p in candidates) {
                 try {

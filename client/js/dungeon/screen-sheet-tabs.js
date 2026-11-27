@@ -54,20 +54,43 @@ export function renderActionGrid(actions, withDamage = false) {
   return `<div class="dungeon-brain-grid">${actions.map((a) => actionButton(a, withDamage)).join("")}</div>`;
 }
 
+function skillButton(skill) {
+  const bonus = skill.bonus >= 0 ? `+${skill.bonus}` : String(skill.bonus);
+  return `<button type="button" class="dungeon-choice-card" data-dungeon="roll-skill" data-skill="${escapeHtml(skill.id)}" aria-label="Rolar ${escapeHtml(skill.label)} ${bonus}"><strong>${escapeHtml(skill.label)}</strong><span>${bonus}${skill.proficient ? " · treinada" : ""}</span></button>`;
+}
+
 /**
- * Aba Jogar: "Mais usados" e "Todos os testes" (perícias da ficha). Os testes de atributo ficam sempre à vista no
- * cabeçalho da ficha, então não se repetem aqui.
+ * Todas as perícias do pacote da ficha como botões `roll-skill` (bônus do derivado), mais as ações de perícia
+ * cadastradas à mão que o pacote não tem, que seguem rolando pelo `roll-action`.
+ * @param {object[]} skills Perícias derivadas (`deriveSheet(...).skills`).
+ * @param {object[]} [extraActions] Ações de perícia da ficha (`tag: "pericia"`).
+ * @returns {string} HTML da grade, ou aviso quando não há perícias.
+ */
+export function renderSkillGrid(skills, extraActions = []) {
+  const known = new Set(skills.map((s) => s.label));
+  const custom = extraActions.filter((a) => !known.has(a.label));
+  if (!skills.length && !custom.length) return '<p class="dungeon-muted">Nada cadastrado ainda nesta ficha.</p>';
+  return `<div class="dungeon-brain-grid">${skills.map(skillButton).join("")}${custom.map((a) => actionButton(a, false)).join("")}</div>`;
+}
+
+/**
+ * Aba Jogar: "Mais usados" e "Todos os testes" (todas as perícias do pacote). Os testes de atributo ficam sempre à
+ * vista no cabeçalho da ficha, então não se repetem aqui.
  * @param {object[]} actions Ações clicáveis da ficha.
+ * @param {object[]} [derivedSkills] Perícias derivadas do pacote; sem elas, a grade usa só as ações de perícia.
  * @returns {string} HTML da aba.
  */
-export function renderPlayTab(actions) {
-  const { skills } = splitSheetActions(actions);
+export function renderPlayTab(actions, derivedSkills = []) {
+  const list = Array.isArray(actions) ? actions : [];
+  const { skills } = splitSheetActions(list);
+  const covered = new Set(derivedSkills.map((s) => s.label));
+  const usable = list.filter((a) => !(a?.tag === "pericia" && covered.has(a.label)));
   return `
     <h3 class="dungeon-eyebrow">Mais usados</h3>
-    ${renderActionGrid(pickMostUsed(actions))}
+    ${renderActionGrid(pickMostUsed(usable))}
     <h3 class="dungeon-eyebrow">Todos os testes</h3>
     <p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>
-    ${renderActionGrid(skills)}`;
+    ${renderSkillGrid(derivedSkills, skills)}`;
 }
 
 function renderTabControls(activeId) {
