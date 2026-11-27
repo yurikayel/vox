@@ -1,8 +1,9 @@
 /**
- * @file Contraste dos pares "texto sobre cor" (`--sa-on-*` sobre `--sa-*`) nos dois temas, com a mesma fórmula WCAG do
- * `a11y-wcag-aa.test.js`. No tema claro, `--sa-on-primary`, `--sa-on-secondary` e `--sa-on-tertiary` não eram
- * redefinidos (ficavam com o valor do escuro, ~2:1 sobre botão primário e selos) e `--sa-error-container` não tinha
- * cor de texto. Resolve os temas a partir de `style.css`, `agora.css` e das folhas `sv-*.css`.
+ * @file Contraste do texto sobre cor cheia nos dois temas, com a mesma fórmula WCAG do `a11y-wcag-aa.test.js`.
+ * No tema claro, `--sa-on-primary` e `--sa-on-secondary` ficavam com o valor do escuro (~2:1) e o botão primário da
+ * mesa e a célula do jogador fixavam `#00201e`. Os pares `--sv-on-*` de `sv-tokens.css` corrigem, e os seletores que
+ * falhavam apontam para eles. Mede o par e o seletor renderizado (cor e fundo resolvidos pela ordem das folhas), e
+ * cada caminho de tema separado: atributo `data-color-mode` e `@media (prefers-color-scheme)` sem atributo.
  */
 import "./setup.js";
 import { describe, it } from "node:test";
@@ -17,9 +18,8 @@ const SV_SHEETS = fs.readdirSync(CSS_DIR).filter((f) => /^sv-.*\.css$/.test(f)).
 const PAIRS = [
   ["--sv-on-primary", "--sa-primary"],
   ["--sv-on-civic", "--sa-secondary"],
-  ["--sv-on-ok", "--sa-tertiary"],
-  ["--sv-on-error-container", "--sa-error-container"],
 ];
+const CONSUMERS = [".dungeon-btn-primary", ".dungeon-grid-cell.is-player", ".agora-dm-badge"];
 
 /** Blocos `{ selector, body }` de um nível, com chaves casadas. */
 function blocks(css) {
@@ -54,20 +54,20 @@ const SELECTORS = {
   light: { media: "prefers-color-scheme: light", inMedia: ':root:not([data-color-mode="dark"])', attr: '[data-color-mode="light"]' },
 };
 
-/** Variáveis de um tema: `:root`, o bloco de mídia do tema e o atributo `data-color-mode`, na ordem do CSS. */
-function themeVars(css, theme, into) {
+/** Variáveis de um tema pelo caminho pedido: `attr` (atributo), `media` (modo automático) ou `both`. */
+function themeVars(css, theme, route, into) {
   const sel = SELECTORS[theme];
   for (const blk of blocks(css)) {
-    if (blk.selector === ":root" || blk.selector.includes(sel.attr)) addVars(blk.body, into);
-    else if (blk.selector.startsWith("@media") && blk.selector.includes(sel.media)) {
+    if (blk.selector === ":root" || (route !== "media" && blk.selector.includes(sel.attr))) addVars(blk.body, into);
+    else if (route !== "attr" && blk.selector.startsWith("@media") && blk.selector.includes(sel.media)) {
       for (const inner of blocks(blk.body)) if (inner.selector === sel.inMedia) addVars(inner.body, into);
     }
   }
 }
 
-function resolveTheme(theme) {
+function resolveTheme(theme, route = "both") {
   const tokens = new Map();
-  for (const file of ["style.css", "agora.css", ...SV_SHEETS]) themeVars(readCss(file), theme, tokens);
+  for (const file of ["style.css", "agora.css", ...SV_SHEETS]) themeVars(readCss(file), theme, route, tokens);
   return tokens;
 }
 
@@ -75,7 +75,7 @@ function hexOf(tokens, key, depth = 0) {
   const raw = key.startsWith("#") || key.startsWith("var(") ? key : tokens.get(key);
   if (!raw || depth > 10) return null;
   if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
-  const ref = raw.match(/^var\(\s*(--[a-z0-9-]+)\s*\)$/i);
+  const ref = raw.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,[^)]*)?\)$/i);
   return ref ? hexOf(tokens, ref[1], depth + 1) : null;
 }
 
@@ -93,43 +93,50 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function assertPairs(theme) {
-  const tokens = resolveTheme(theme);
-  for (const [fgKey, bgKey] of PAIRS) {
-    const fg = hexOf(tokens, fgKey);
-    const bg = hexOf(tokens, bgKey);
-    assert.ok(fg, `${theme}: ${fgKey} não resolveu para hex`);
-    assert.ok(bg, `${theme}: ${bgKey} não resolveu para hex`);
-    const ratio = contrast(fg, bg);
-    assert.ok(ratio >= 4.5, `${theme}: ${fgKey} (${fg}) sobre ${bgKey} (${bg}) = ${ratio.toFixed(2)}:1 (< 4.5:1)`);
-  }
+function assertRatio(label, fg, bg) {
+  assert.ok(fg && bg, `${label}: cor não resolveu (texto ${fg}, fundo ${bg})`);
+  const ratio = contrast(fg, bg);
+  assert.ok(ratio >= 4.5, `${label}: ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< 4.5:1)`);
 }
 
-/** Valor de `prop` na última regra de seletor exato, na ordem em que as folhas carregam. */
+function assertPairs(theme, route) {
+  const tokens = resolveTheme(theme, route);
+  for (const [fgKey, bgKey] of PAIRS) assertRatio(`${theme}/${route}: ${fgKey} sobre ${bgKey}`, hexOf(tokens, fgKey), hexOf(tokens, bgKey));
+}
+
+/** Valor de `prop` na última regra que cita o seletor (sozinho ou em lista), na ordem em que as folhas carregam. */
 function renderedDecl(selector, prop) {
   let value = null;
   for (const file of ["agora.css", ...SV_SHEETS]) {
     for (const blk of blocks(readCss(file))) {
-      const m = blk.selector === selector && blk.body.match(new RegExp(`(?:^|;|\\s)${prop}\\s*:\\s*([^;]+)`));
+      const listed = blk.selector.split(",").map((s) => s.trim());
+      const m = listed.includes(selector) && blk.body.match(new RegExp(`(?:^|;|\\s)${prop}\\s*:\\s*([^;]+)`));
       if (m) value = m[1].trim();
     }
   }
   return value;
 }
 
-describe("contraste dos pares on-* sobre a cor cheia", () => {
-  it("tema claro: botão primário, selos e fundo de erro têm texto legível (AA, 4,5:1)", () => assertPairs("light"));
-  it("tema escuro: os mesmos pares seguem legíveis (AA, 4,5:1)", () => assertPairs("dark"));
-  for (const theme of ["light", "dark"]) {
-    it(`${theme}: o contador de mensagens renderizado (.agora-dm-badge) lê AA sobre o seu fundo`, () => {
-      const tokens = resolveTheme(theme);
-      const fg = hexOf(tokens, renderedDecl(".agora-dm-badge", "color"));
-      const bg = hexOf(tokens, renderedDecl(".agora-dm-badge", "background"));
-      assert.ok(fg && bg, `${theme}: cor do contador não resolveu`);
-      const ratio = contrast(fg, bg);
-      assert.ok(ratio >= 4.5, `${theme}: contador ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< 4.5:1)`);
+function assertConsumers(theme, route) {
+  const tokens = resolveTheme(theme, route);
+  for (const selector of CONSUMERS) {
+    const fg = hexOf(tokens, renderedDecl(selector, "color") ?? "");
+    const bg = hexOf(tokens, renderedDecl(selector, "background") ?? "");
+    assertRatio(`${theme}/${route}: ${selector}`, fg, bg);
+  }
+}
+
+describe("contraste do texto sobre cor cheia (pares --sv-on-* e seletores renderizados)", () => {
+  for (const route of ["attr", "media"]) {
+    it(`tema claro pelo caminho ${route === "attr" ? "do atributo data-color-mode" : "@media prefers-color-scheme (modo automático)"}`, () => {
+      assertPairs("light", route);
+      assertConsumers("light", route);
     });
   }
+  it("tema escuro: pares e seletores seguem legíveis", () => {
+    assertPairs("dark", "both");
+    assertConsumers("dark", "both");
+  });
   it("o index.html liga sv-tokens.css depois de agora.css, para a folha vencer a cascata", () => {
     const html = fs.readFileSync(path.join(CSS_DIR, "../index.html"), "utf8");
     const agora = html.indexOf('href="css/agora.css"');
