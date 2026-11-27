@@ -254,6 +254,12 @@ class VoxPlaywrightE2ETests(PlaywrightE2EHarness):
         self.assertEqual(page.locator("#app-sidebar").count(), 0)
         self.assertIn("DEMONSTRAÇÃO", page.locator(".dungeon-fiction-badge").inner_text())
         self.assertIn("esta mesa é uma demonstração", page.locator(".dungeon-demo-note").inner_text())
+        # O teste de queda de nó é de laboratório: sem a flag o botão não existe; com ela (e recarregando, como no fluxo real) aparece.
+        self.assertEqual(page.locator("button[data-dungeon='failover']").count(), 0)
+        page.evaluate("localStorage.setItem('vox.lab.mesa-rede', '1')")
+        page.reload(wait_until="domcontentloaded")
+        page.locator(".dungeon-sanctum").wait_for(state="visible", timeout=10000)
+        page.locator("button[data-dungeon='failover']").wait_for(state="visible", timeout=10000)
         page.locator("#dungeon-fav-slider").fill("80")
         page.locator("#dungeon-fav-slider").dispatch_event("input")
         self.assertIn("80%", page.locator(".dungeon-slider-labels").inner_text())
