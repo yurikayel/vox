@@ -86,6 +86,43 @@ test("i) o painel mostra só as 50 rolagens mais recentes", () => {
   assert.doesNotMatch(all, /Jogador9<|Jogador0</);
 });
 
+test("j) texto digitado pelo jogador (rótulo, fórmula, total e nome) nunca vira marcação no navegador do Mestre", () => {
+  const hostile = [
+    roll({ id: "x1", label: "<img src=x onerror=alert(1)>" }),
+    roll({ id: "x2", label: '"><script>alert(2)</script>' }),
+    roll({ id: "x3", label: "", formula: "<svg onload=alert(3)>" }),
+    roll({ id: "x4", total: "<b>9</b>", speaker: '"><i>' }),
+  ];
+  const html = renderDmRollPanel({ rolls: hostile });
+  for (const tag of ["<img", "<script", "<svg onload", "<b>9", "<i>"]) assert.equal(html.includes(tag), false, `sem ${tag} cru`);
+  assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;"), "o rótulo vira texto");
+  assert.ok(html.includes("&quot;&gt;&lt;script&gt;alert(2)&lt;/script&gt;"), "aspas e script do rótulo viram texto");
+  assert.ok(html.includes("&lt;svg onload=alert(3)&gt;"), "a fórmula vira texto");
+  assert.ok(html.includes("&lt;b&gt;9&lt;/b&gt;"), "o total vira texto");
+});
+
+test("k) as abas são rádios do mesmo grupo (as setas trocam de aba), o grupo tem nome e os textos de reserva aparecem", () => {
+  const html = renderDmRollPanel({ rolls: [roll({ speaker: "", visibility: "blind" })] });
+  const names = [...html.matchAll(/<input type="radio"[^>]*\bname="([^"]*)"/g)].map((m) => m[1]);
+  assert.equal(names.length, ROLL_FILTERS.length);
+  assert.equal(new Set(names).size, 1, "todos os rádios compartilham o mesmo name");
+  assert.match(html, /role="group" aria-label="Filtro de rolagens"/);
+  assert.match(html, /<th scope="row">Aventureiro<\/th>/);
+  assert.match(html, /🔒<\/span> Cega<\/td>/);
+  assert.match(html, /<span class="dungeon-eyebrow">Só vista<\/span>/);
+});
+
+test("l) CSS: o rádio fica na árvore de acessibilidade e cada aba tem anel de foco de 2 px", () => {
+  const text = css.readCss("sv-rolagens.css");
+  const input = css.ruleBody(text, ".sv-rolls-input");
+  assert.ok(input.length > 0, "a regra do rádio existe");
+  assert.doesNotMatch(input, /display\s*:\s*none|visibility\s*:\s*hidden|\bhidden\b/, "rádio escondido por display/visibility sai da ordem de Tab");
+  for (const f of ROLL_FILTERS) {
+    const selector = `#dm-rolls-${f.id}:focus-visible ~ .sv-rolls-list [for="dm-rolls-${f.id}"]`;
+    assert.match(css.ruleBody(text, selector), /outline\s*:\s*2px solid/, `anel de foco da aba ${f.label}`);
+  }
+});
+
 test("h) sv-rolagens.css: sem !important, só tokens do tema, alvo de 44 px, só o painel da aba marcada e registrada no carregador", () => {
   const text = css.readCss("sv-rolagens.css");
   css.assertNoImportant(text, "sv-rolagens.css");
