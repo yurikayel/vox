@@ -1,5 +1,6 @@
 /** @file Página #/status — telemetria honesta local. */
 import { escapeHtml } from "./util.js";
+import { scrollableTableHtml } from "../shared/table-scroll.js";
 import {
   DEFAULT_WINDOWS_HOURS,
   formatAvailabilityNum,
@@ -191,10 +192,10 @@ function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirro
           <div class="agora-kv-row"><dt>Versão salva do app</dt><dd class="is-hash"><code id="status-sw-cache">…</code></dd></div>
         </dl>
         <div class="status-mirror-line">${renderMirrorExportLineHtml(mirrorExport)}</div>
-        <table class="status-gw-table agora-table">
+        ${scrollableTableHtml("Pontos de leitura", `<table class="status-gw-table agora-table">
           <thead><tr><th>Ponto de leitura</th><th>OK</th><th>Falhas</th></tr></thead>
           <tbody>${renderGatewayTableRowsHtml(gatewayHealth)}</tbody>
-        </table>
+        </table>`)}
       </section>`;
 }
 
@@ -252,7 +253,7 @@ function renderSignalingTelemetryTabletHtml(signalingStats) {
         </div>
         <p class="desc">Contadores só neste aparelho — nada disso é enviado para fora.</p>
         <p class="desc"><strong>Tempo até o 1º aparelho:</strong> ${renderFirstPeerLineHtml(signalingStats?.firstPeer)}</p>
-        <table class="status-gw-table agora-table">
+        ${scrollableTableHtml("Caminhos de conexão", `<table class="status-gw-table agora-table">
           <thead><tr><th>Caminho</th><th>Tentativas</th><th>Sucessos</th><th>Falhas</th><th>Tempo médio</th></tr></thead>
           <tbody>
             ${renderSignalingRowHtml("Canal WebSocket", ch.ws)}
@@ -260,7 +261,7 @@ function renderSignalingTelemetryTabletHtml(signalingStats) {
             ${renderSignalingRowHtml("Aparelhos via WebSocket", peers.ws)}
             ${renderSignalingRowHtml("Aparelhos via Nostr", peers.nostr)}
           </tbody>
-        </table>
+        </table>`)}
         <p class="desc" id="status-signaling-feedback" aria-live="polite"></p>
       </section>`;
 }
@@ -337,10 +338,10 @@ function renderAvailabilityTabletHtml(availabilityReport) {
         </div>
         <p class="desc">Medição 100% local (zero telemetria central): % de posts acessíveis com o autor offline nas janelas <strong>1 h</strong>, <strong>6 h</strong> e <strong>24 h</strong>.</p>
         <p class="desc" id="status-availability-summary">${renderAvailabilitySummaryLineHtml(availabilityReport)}</p>
-        <table class="status-gw-table agora-table" id="status-availability-table">
+        ${scrollableTableHtml("Disponibilidade por janela", `<table class="status-gw-table agora-table" id="status-availability-table">
           <thead><tr><th>Janela</th><th>Elegíveis</th><th>Acessíveis</th><th>Disponibilidade</th><th>Média de réplicas</th></tr></thead>
           <tbody>${rows}</tbody>
-        </table>
+        </table>`)}
         <p class="desc" id="status-availability-feedback" aria-live="polite"></p>
       </section>`;
 }

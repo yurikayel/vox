@@ -109,3 +109,14 @@
   outline: 2px solid var(--sa-primary);
   outline-offset: 2px;
 }
+
+/* Tabela larga: rolagem própria no contêiner, a página não rola de lado. */
+.sv-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sv-table-scroll:focus-visible {
+  outline: 2px solid var(--sa-primary);
+  outline-offset: 2px;
+}
