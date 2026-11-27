@@ -10,7 +10,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { getActiveScene } from "../client/js/dungeon/dungeon-scene-actions.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
-import { ensureDungeonLayoutStyles } from "../client/js/dungeon/dungeon-layout-style.js";
+import { ensureDungeonLayoutStyles, SV_SHEETS } from "../client/js/dungeon/dungeon-layout-style.js";
 
 const SHEETS = {
   s1: { character_id: "s1", attributes_lww: { name: "Gareth" }, pools_base: { hp_max: 31 } },
@@ -119,13 +119,14 @@ test("o link de sv-token-tray.css só entra quando a bandeja abre, uma vez, e a 
   ensureDungeonLayoutStyles(doc);
   ensureDungeonLayoutStyles(doc);
   assert.equal(doc.listeners.toggle?.capture, true, "toggle não borbulha: escuta em captura");
-  assert.deepEqual(doc.links.map((l) => l.href), ["css/dungeon-layout.css"], "fechada: só a folha da Mesa");
+  const mesa = ["css/dungeon-layout.css", ...SV_SHEETS.map((s) => s.href)];
+  assert.deepEqual(doc.links.map((l) => l.href), mesa, "fechada: só as folhas da Mesa, sem a da bandeja");
   doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: false });
   doc.fire("toggle", { dataset: { dungeonDetails: "sheet-audit" }, open: true });
-  assert.equal(doc.links.length, 1, "fechar a bandeja ou abrir outro details não injeta");
+  assert.equal(doc.links.length, mesa.length, "fechar a bandeja ou abrir outro details não injeta");
   doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: true });
   doc.fire("toggle", { dataset: { dungeonDetails: "token-tray" }, open: true });
-  assert.deepEqual(doc.links.map((l) => l.href), ["css/dungeon-layout.css", "css/sv-token-tray.css"]);
+  assert.deepEqual(doc.links.map((l) => l.href), [...mesa, "css/sv-token-tray.css"]);
   const legacy = readFileSync(new URL("../client/css/dungeon-layout.css", import.meta.url), "utf8").split("\n").length;
   assert.ok(legacy <= 369, `dungeon-layout.css é legado acima de 350 linhas e não cresce (${legacy})`);
 });
