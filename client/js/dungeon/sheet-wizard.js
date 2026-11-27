@@ -16,7 +16,7 @@ import { ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 
 /** Sistema da ficha criada pelo assistente. */
-export const WIZARD_SYSTEM_ID = "dnd5e-2024";
+export const WIZARD_SYSTEM_ID = "5e";
 /** Passos do Guiado, na ordem. */
 export const WIZARD_STEPS = Object.freeze(["Quem é", "Atributos", "Perícias", "Salvaguardas", "Defesa e movimento", "Equipamento", "Resumo"]);
 /** Limite de texto de nome, classe e ancestralidade. */

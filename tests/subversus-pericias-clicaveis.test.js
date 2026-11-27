@@ -63,14 +63,14 @@ test("c) T20 com Des 14: o teste de Destreza soma +4 e o cabeçalho mostra +4", 
 });
 
 test("d) 5e com Des 14 (controle): Furtividade e teste de Destreza somam +2", async () => {
-  const state = stateFor("dnd5e-2024");
+  const state = stateFor("5e");
   assert.equal(bonusOf(await click(state, "roll-skill", { skill: "stealth" })), 2);
   assert.equal(bonusOf(await click(state, "roll-ability", { ability: "dex" })), 2);
 });
 
 test("e) perícia treinada soma a proficiência do derivado", async () => {
   const trained = { id: "act-furtividade", label: "Furtividade", roll: "1d20+@des+@prof", damage: "", tag: "pericia" };
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [trained] } });
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [trained] } });
   const { derived } = resolveSheetSystem(state.sheet);
   const expected = derived.skills.find((s) => s.id === "stealth").bonus;
   assert.equal(expected, 2 + derived.proficiency);
@@ -108,7 +108,7 @@ test("i) pacote sem os seis atributos da 5e (GURPS) não mostra botão de atribu
 });
 
 test("j) controle: 5e e T20 seguem com os seis botões de atributo", () => {
-  for (const id of ["dnd5e-2024", "t20"]) {
+  for (const id of ["5e", "t20"]) {
     const html = renderSheetHero(stateFor(id).sheet);
     assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
   }
@@ -133,7 +133,7 @@ test("k) GURPS (sem botão de atributo): nem o cabeçalho nem a aba Jogar falam 
 });
 
 test("l) controle: 5e e T20 mantêm as duas frases", () => {
-  for (const id of ["dnd5e-2024", "t20"]) {
+  for (const id of ["5e", "t20"]) {
     const { hero, screen } = screenFor(id);
     assert.ok(hero.includes(FRASE_ATRIBUTO), id);
     assert.ok(screen.includes(FRASE_CABECALHO), id);
@@ -145,7 +145,7 @@ test("m) pacote desconhecido não mostra os seis botões nem as frases; ficha se
   assert.equal(countAbility(hero), 0);
   assert.equal(hero.includes(FRASE_ATRIBUTO), false);
   assert.equal(screen.includes(FRASE_CABECALHO), false);
-  const legada = stateFor("dnd5e-2024");
+  const legada = stateFor("5e");
   delete legada.sheet.system;
   assert.equal(countAbility(renderSheetHero(legada.sheet)), 6);
 });
@@ -154,23 +154,23 @@ const custom = (id, label) => ({ id, label, roll: "1d20+@des+2", damage: "", tag
 const actionIds = (html) => [...html.matchAll(/data-dungeon="roll-action" data-action-id="([^"]+)"/g)].map((m) => m[1]);
 
 test("n) ação cadastrada com o nome de uma perícia do pacote, mas com id próprio, continua rolando", () => {
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("x1", "Furtividade")] } });
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [custom("x1", "Furtividade")] } });
   const ids = actionIds(playTab(state));
   assert.equal(ids.filter((id) => id === "x1").length, 2, "em Mais usados e em Todos os testes");
 });
 
 test("o) ação de perícia fora do pacote (Ofício de Forja) aparece nas duas grades", () => {
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [custom("x2", "Ofício de Forja")] } });
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [custom("x2", "Ofício de Forja")] } });
   assert.equal(actionIds(playTab(state)).filter((id) => id === "x2").length, 2);
 });
 
 test("p) a semente act-* coberta pelo pacote continua escondida (sem repetir o botão)", () => {
   const seed = { ...custom("act-furtividade", "Furtividade"), roll: "1d20+@des" };
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [seed] } });
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [seed] } });
   assert.equal(actionIds(playTab(state)).includes("act-furtividade"), false);
 });
 
-const withActions = (actions, id = "dnd5e-2024") => stateFor(id, { sheet_meta: { clickable_actions: actions } });
+const withActions = (actions, id = "5e") => stateFor(id, { sheet_meta: { clickable_actions: actions } });
 const plain = (id, label, roll = "1d20+@des") => ({ ...custom(id, label), roll });
 
 test("q) ação importada ou criada na interface (id do nome, fórmula só com @var) não repete o botão do pacote", () => {
@@ -204,5 +204,32 @@ test("s) renderPlayTab sem o 3º argumento mantém a frase do cabeçalho (padrã
 test("t) o painel Habilidades do HUD também só fala em atributo quando há botão", () => {
   const hud = (id) => renderHudPanel({ ...stateFor(id), hudPanel: "abilities" });
   for (const id of ["gurps4e", "nao-existe"]) assert.equal(hud(id).includes(FRASE_CABECALHO), false, id);
-  for (const id of ["dnd5e-2024", "t20"]) assert.ok(hud(id).includes(FRASE_CABECALHO), id);
+  for (const id of ["5e", "t20"]) assert.ok(hud(id).includes(FRASE_CABECALHO), id);
+});
+
+test("w) outros dados e subtração ficam: 2d20+@des, 3d20+@des e 1d20-@des seguem rolando", () => {
+  const visible = (roll) => actionIds(playTab(withActions([plain("x", "Furtividade", roll)]))).includes("x");
+  for (const roll of ["2d20+@des", "3d20+@des", "1d20-@des", "10d20+@des"]) assert.equal(visible(roll), true, roll);
+});
+
+test("x) o nome tem de ser o de uma perícia do pacote, por inteiro", () => {
+  const visible = (label) => actionIds(playTab(withActions([plain("x", label)]))).includes("x");
+  assert.equal(visible("Culinária"), true, "nome fora do pacote");
+  assert.equal(visible("Furtividade Superior"), true, "prefixo do nome de uma perícia");
+  assert.equal(visible("Furtiv"), true, "começo do nome");
+  assert.equal(visible("furtividade"), true, "caixa diferente");
+  assert.equal(visible(" Furtividade"), true, "espaço sobrando");
+  assert.equal(visible("Furtividade"), false, "nome exato some");
+});
+
+test("y) a perícia certa é a do nome: o atributo da fórmula tem de ser o dela", () => {
+  assert.ok(actionIds(playTab(withActions([plain("x", "Acrobacia", "1d20+@for")]))).includes("x"), "Acrobacia é de Destreza: @for fica");
+  assert.ok(actionIds(playTab(withActions([plain("y", "Atletismo")]))).includes("y"), "Atletismo é de Força: @des fica");
+});
+
+test("z) semente act-* com fórmula editada continua rolando", () => {
+  const ids = (roll) => actionIds(playTab(withActions([plain("act-furtividade", "Furtividade", roll)])));
+  assert.ok(ids("1d20+@des+3").includes("act-furtividade"));
+  assert.ok(ids("1d20+@for").includes("act-furtividade"));
+  assert.equal(ids("1d20+@des").includes("act-furtividade"), false, "a semente intacta some");
 });

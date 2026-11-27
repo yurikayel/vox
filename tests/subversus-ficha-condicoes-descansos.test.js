@@ -1,6 +1,6 @@
 /**
  * @file Condições (marcas do SRD 5.2), Exaustão (nível 0–6, efeito só informativo), Dados de Vida e descansos
- * curto e longo da ficha com o pacote dnd5e-2024.
+ * curto e longo da ficha com o pacote 5e.
  */
 import "./setup.js";
 import test from "node:test";
@@ -11,7 +11,7 @@ import { longRestSheet, shortRestSheet, spendSheetHitDie, stepSheetExhaustion, t
 import { markSheetDeathSave } from "../client/js/dungeon/dungeon-persistence-sheet-system.js";
 import { updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
 import { renderDerivedStrip } from "../client/js/dungeon/screen-sheet-derived.js";
-import { DND5E_2024_PACK as pack } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E as pack } from "../client/js/dungeon/system-pack-5e.js";
 import { exhaustionEffect, longRestPlan, normalizeRestChoices, shortRestPlan, spendHitDie, toggleCondition } from "../client/js/dungeon/system-rest.js";
 
 const pools = (state) => projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger).pools;

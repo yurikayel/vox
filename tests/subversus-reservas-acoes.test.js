@@ -52,14 +52,14 @@ test("máximo: grava limitado por SHEET_UPSERT; baixar o máximo muda o atual (a
   assert.equal("zzz_max" in s.sheet.pools_base, false);
 });
 
-test("controles: PM com máximo mostra atual/máximo e botões; sem máximo só o campo; D&D não desenha", async () => {
+test("controles: PM com máximo mostra atual/máximo e botões; sem máximo só o campo; 5e não desenha", async () => {
   const withMax = renderReserveControls((await local(8)).sheet, t20());
   assert.match(withMax, /8\/8/);
   assert.match(withMax, /data-hud-op="reserve-spend"[^>]*data-delta="-1"/);
   const none = renderReserveControls((await local()).sheet, t20());
   assert.match(none, /sem máximo/);
   assert.equal(none.includes("reserve-spend"), false);
-  assert.equal(renderReserveControls({}, getSystemPack("dnd5e-2024")), "");
+  assert.equal(renderReserveControls({}, getSystemPack("5e")), "");
   assert.match(renderDerivedStrip((await local(8)).sheet), /Reservas/);
 });
 
@@ -89,7 +89,7 @@ test("botão de máximo leva aria-label com o nome da reserva", async () => {
   assert.match(renderReserveControls({ pools_base: { fp_max: 3 } }, getSystemPack("gurps4e")), /aria-label="Definir máximo de PF"/);
 });
 
-test("HUD: GURPS mostra Esquiva calculada (com o peso do inventário); D&D e T20 seguem com armor_class", async () => {
+test("HUD: GURPS mostra Esquiva calculada (com o peso do inventário); 5e e T20 seguem com armor_class", async () => {
   const { buildHudStatus } = await import("../client/js/dungeon/hud-status-model.js");
   const g = { character_id: "g", system: { id: "gurps4e", version: 1 }, attributes_lww: { armor_class: 99, abilities: { st: 10, dx: 10, iq: 10, ht: 10 } }, pools_base: { hp_max: 10 }, delta_ledger: [], inventory_orset: {} };
   const own = buildHudStatus({ sheet: g }, { tokens: [] }).own;

@@ -23,7 +23,7 @@ async function freshState() {
   return state;
 }
 
-const submit = (state, values) => dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "dnd5e-2024", ...values }), ctx);
+const submit = (state, values) => dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "5e", ...values }), ctx);
 
 test("envio: select hitDie = 10 grava d10 em system_choices", async () => {
   const state = await freshState();
@@ -58,7 +58,7 @@ test("envio: valor fora de d4–d12 vindo do form é rejeitado", async () => {
 
 test("envio: ficha de sistema sem pacote ou form sem o campo não quebra nem grava lixo", async () => {
   const state = await freshState();
-  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "dnd5e-2024" }), ctx);
+  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "5e" }), ctx);
   assert.equal("hitDie" in state.sheet.system_choices, false, "sem o campo hitDie nada é gravado");
   await submit(state, { sheetSystem: "sistema-inexistente", hitDie: "10" });
   assert.equal(state.sheetEditIssues.length > 0, true, "sistema desconhecido recusa o Salvar");

@@ -71,7 +71,7 @@ test("carga: acima do limite marca excesso com o motivo; sem Força o limite é 
   const sheet = { attributes_lww: { abilities: { str: 10 } } };
   const light = buildLoadView(sheet, [{ weightLb: 10, qty: 1 }]);
   assert.equal(light.over, false);
-  assert.match(light.reason, /Dentro do limite de 68,0 kg \(Força 10 × 15 lb, regra do D&D\)/);
+  assert.match(light.reason, /Dentro do limite de 68,0 kg \(Força 10 × 15 lb, regra da 5e\)/);
   const heavy = buildLoadView(sheet, [{ weightLb: 200, qty: 1 }]);
   assert.equal(heavy.over, true);
   assert.match(heavy.reason, /Carga de 90,7 kg acima do limite de 68,0 kg/);
