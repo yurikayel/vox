@@ -22,14 +22,18 @@ Por construção: o pedido com CD oculta não tem campo `dc` na op nem no estado
 
 ## Vínculo da rolagem
 
-`recordFormulaRoll` aceita `opts.requestId` e grava `rollResult.requestId`; o redutor guarda em `state.rolls[].requestId`. O resultado de cada alvo vem da primeira rolagem dele com esse `requestId`, feita até a revelação:
+`recordFormulaRoll` aceita `opts.requestId` e grava `rollResult.requestId`; o redutor guarda em `state.rolls[].requestId` (com `lamport` e `opId` da op). O autor da rolagem ligada a um pedido é sempre quem enviou a op (`op.actor`), nunca o `author` do payload.
+
+## Resultado (determinístico)
+
+A Crônica grava só `<rótulo> · CD <dc>` e o ponteiro `checkRequestId`. Os ✓/✗ saem de `checkResults`, uma função pura calculada na hora de exibir sobre o log ordenado por `(lamport, opId)`, a mesma ordem do replay. Por isso o texto é igual em todo par, na ordem de chegada que for, e igual ao recarregar a mesa.
+
+Para cada alvo vale a PRIMEIRA rolagem pública dele com esse `requestId` até a revelação (rolagem posterior é ignorada):
 
 - pública: `total >= dc` dá ✓ ou ✗, com o total;
-- do Mestre: "resultado com o Mestre", sem o total;
-- nenhuma: "não rolou".
+- nenhuma rolagem pública, pedido com rolagem do Mestre: "resultado com o Mestre", sem o total, para todos os alvos (nem todo par recebe a rolagem do Mestre, então ela não entra na conta);
+- nenhuma rolagem pública, pedido público: "não rolou".
 
 ## Limites conhecidos
 
-- O texto da revelação sai das rolagens que o próprio redutor viu. Um par de jogador que não recebeu a rolagem do Mestre pode mostrar "não rolou" até o próximo estado completo. Não vaza nada; só diverge na tela.
-- Um cliente do Mestre com defeito que monte a op sem passar pelo construtor pode gravar a `dc`. Fora de escopo.
 - O caminho de rolagem com prova de justiça não leva `requestId` nesta versão.

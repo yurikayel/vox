@@ -2,7 +2,8 @@
  * @file Pedir teste (SUB-24, modelo): o Mestre pede um teste de perícia a até 8 jogadores, com a CD pública ou oculta.
  * O sigilo vem por construção: um pedido com CD oculta não tem campo `dc` na op nem no estado; a CD só entra no log com
  * a op de revelação, que é pública. Sem filtro novo de envio nem projeção nova.
- * Aqui: normalização, os dois sub-redutores (`CHECK_REQUEST`, `CHECK_REVEAL`) e o construtor da op. A tela vem depois.
+ * O texto dos ✓/✗ não é gravado: sai de `checkResults` na hora de exibir, sobre o log ordenado por `(lamport, opId)`.
+ * Aqui: normalização, os dois sub-redutores (`CHECK_REQUEST`, `CHECK_REVEAL`), o resultado puro e o construtor da op.
  * @module dungeon/vtt-check-request
  */
 import { createChronicleEntry, isValidVttId } from "./vtt-schema.js";
@@ -68,12 +69,31 @@ function applyCheckRequest(state, op) {
   };
 }
 
-/** Resultado de um alvo: só a rolagem pública dá ✓/✗; a do Mestre vira "resultado com o Mestre" e o total nunca sai. */
-function resultOf(state, request, target, dc, ts) {
-  const own = (state.rolls || []).filter((r) => r.requestId === request.requestId && r.author === target && r.ts <= ts);
-  const open = own.find((r) => r.visibility === "public");
-  if (open) return { target, speaker: open.speaker, outcome: open.total >= dc ? "pass" : "fail", total: open.total };
-  return { target, speaker: own[0]?.speaker || "", outcome: own.length ? "gm" : "none" };
+/** Ordem de duas ops no log: `(lamport, opId)`, a mesma do replay. */
+function compareOrder(a, b) {
+  return (Number(a.lamport) || 0) - (Number(b.lamport) || 0) || String(a.opId || "").localeCompare(String(b.opId || ""));
+}
+
+/** Rolagens públicas do alvo ligadas ao pedido, até a revelação (na ordem do log). Rolagem `gm` não conta: nem todo par a recebe. */
+function publicRollsOf(state, request, target) {
+  return (state.rolls || [])
+    .filter((r) => r.requestId === request.requestId && r.author === target && r.visibility === "public" && compareOrder(r, request.revealKey) <= 0)
+    .sort(compareOrder);
+}
+
+/**
+ * Resultado por alvo de um pedido revelado: função pura do log ordenado por `(lamport, opId)`, igual em todo par e no replay.
+ * Vale a PRIMEIRA rolagem pública do alvo até a revelação; sem ela, o alvo é "com o Mestre" (pedido com rolagem do Mestre) ou "não rolou".
+ * @param {object} state Estado da campanha.
+ * @param {object} request Pedido já revelado (`dc`, `revealKey`).
+ * @returns {Array<{ target: string, speaker: string, outcome: "pass"|"fail"|"gm"|"none", total?: number }>} Um item por alvo.
+ */
+export function checkResults(state, request) {
+  return request.targets.map((target) => {
+    const first = publicRollsOf(state, request, target)[0];
+    if (first) return { target, speaker: first.speaker, outcome: first.total >= request.dc ? "pass" : "fail", total: first.total };
+    return { target, speaker: "", outcome: request.rollVisibility === "gm" ? "gm" : "none" };
+  });
 }
 
 function resultLine(result, index) {
@@ -83,18 +103,28 @@ function resultLine(result, index) {
   return `${name} ${result.outcome === "pass" ? "✓" : "✗"} ${result.total}`;
 }
 
+/**
+ * Texto de exibição de uma entrada da Crônica ligada a um pedido: a linha "Resultado" ganha os ✓/✗ calculados na hora.
+ * @param {object} entry Entrada da Crônica.
+ * @param {object} state Estado da campanha.
+ * @returns {string} Texto a mostrar (o gravado, se não for linha de resultado).
+ */
+export function checkEntryText(entry, state) {
+  const request = entry.badge === "Resultado" ? state.checkRequestsById?.[entry.checkRequestId] : null;
+  if (!request || request.status !== "revealed") return entry.text;
+  return `${entry.text}: ${checkResults(state, request).map(resultLine).join("; ")}`;
+}
+
 function applyCheckReveal(state, op) {
   const request = state.checkRequestsById?.[op.payload?.requestId];
   if (!request || request.status !== "open") return state;
   const dc = request.dcHidden ? validDc(op.payload?.dc) : request.dc;
   if (dc === null) return state;
-  const results = request.targets.map((t) => resultOf(state, request, t, dc, op.ts));
-  const revealed = { ...request, status: "revealed", dc, results, revealedTs: op.ts };
-  const text = `${request.label} · CD ${dc}: ${results.map(resultLine).join("; ")}`;
+  const revealed = { ...request, status: "revealed", dc, revealKey: { lamport: op.lamport, opId: op.opId } };
   return {
     ...state,
     checkRequestsById: { ...state.checkRequestsById, [request.requestId]: revealed },
-    chronicle: chronicleOf(state, { id: `reveal-${request.requestId}`, speaker: "Mesa", badge: "Resultado", text, visibility: "public", author: op.actor, ts: op.ts, checkRequestId: request.requestId }),
+    chronicle: chronicleOf(state, { id: `reveal-${request.requestId}`, speaker: "Mesa", badge: "Resultado", text: `${request.label} · CD ${dc}`, visibility: "public", author: op.actor, ts: op.ts, checkRequestId: request.requestId }),
   };
 }
 
