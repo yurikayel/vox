@@ -108,6 +108,13 @@ function assertPairs(theme) {
 describe("contraste dos pares on-* sobre a cor cheia", () => {
   it("tema claro: botão primário, selos e fundo de erro têm texto legível (AA, 4,5:1)", () => assertPairs("light"));
   it("tema escuro: os mesmos pares seguem legíveis (AA, 4,5:1)", () => assertPairs("dark"));
+  it("o index.html liga sv-tokens.css depois de agora.css, para a folha vencer a cascata", () => {
+    const html = fs.readFileSync(path.join(CSS_DIR, "../index.html"), "utf8");
+    const agora = html.indexOf('href="css/agora.css"');
+    const tokens = html.indexOf('href="css/sv-tokens.css"');
+    assert.ok(agora >= 0, "agora.css não está ligado no index.html");
+    assert.ok(tokens > agora, "sv-tokens.css precisa vir depois de agora.css no index.html");
+  });
   it("a fórmula mede o par conhecido ruim: texto escuro sobre botão escuro dá menos de 3:1", () => {
     assert.ok(contrast("#003734", "#006a65") < 3);
     assert.ok(contrast("#ffffff", "#006a65") >= 4.5);
