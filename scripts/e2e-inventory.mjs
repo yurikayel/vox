@@ -73,8 +73,26 @@ function workflowsOf(root) {
     });
 }
 
+/**
+ * Só o texto das chaves `run:` de um workflow (em linha ou em bloco `|`/`>`); `name:` e comentário que citam o comando não contam.
+ * @param {string} yaml Texto do workflow.
+ * @returns {string} Comandos dos passos, um por linha.
+ */
+export function runCommands(yaml) {
+  const lines = yaml.split(/\r?\n/);
+  const out = [];
+  lines.forEach((line, i) => {
+    const m = /^([ \t]*(?:-[ \t]+)?)run:[ \t]*(.*)$/.exec(line);
+    if (!m) return;
+    const value = m[2].replace(/[ \t]+#.*$/, "").trim();
+    if (!/^[|>][+-]?$/.test(value)) return void out.push(value);
+    for (let j = i + 1; j < lines.length && (lines[j].trim() === "" || lines[j].search(/\S/) > m[1].length); j++) out.push(lines[j].trim());
+  });
+  return out.join("\n");
+}
+
 function runsOf(workflows, usedBy) {
-  return workflows.filter((w) => usedBy(w.text)).flatMap((w) => {
+  return workflows.filter((w) => usedBy(runCommands(w.text))).flatMap((w) => {
     return w.triggers.length ? w.triggers.map((trigger) => ({ workflow: w.file, trigger })) : [{ workflow: w.file, trigger: "outro" }];
   });
 }

@@ -9,7 +9,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildInventory, formatRows, parseDiscover, runCli, workflowTriggers } from "../scripts/e2e-inventory.mjs";
+import { buildInventory, formatRows, parseDiscover, runCli, runCommands, workflowTriggers } from "../scripts/e2e-inventory.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -180,4 +180,38 @@ test("docs/TESTES.md §4.1: a tabela bate com o que os workflows chamam hoje", (
   assert.ok(section, "a seção 4.1 e a tabela existem");
   assert.equal(section.trim(), formatRows(buildInventory(ROOT)), "rode `npm run audit:e2e` e cole as linhas na tabela");
   assert.match(formatRows(buildInventory(ROOT)), /`scripts\/mesh-e2e\.mjs` \| PR \(ci\.yml\)/, "o E2E da malha roda em PR");
+});
+
+test("runCommands: lê só as chaves `run:` (em linha ou em bloco); name, comentário e outras chaves ficam de fora", () => {
+  const yaml = [
+    "steps:",
+    "  # npm run test:e2e (comentário)",
+    "  - name: npm run test:e2e",
+    "    run: node a.mjs # npm run test:e2e",
+    "  - run: |",
+    "      echo um",
+    "",
+    "      npm run test:e2e",
+    "    env:",
+    "      X: npm run test:e2e",
+    "  - run: >-",
+    "      node b.mjs",
+  ].join("\n");
+  assert.deepEqual(runCommands(yaml).split("\n"), ["node a.mjs", "echo um", "", "npm run test:e2e", "node b.mjs"]);
+});
+
+test("buildInventory: `npm run test:e2e` em name:, comentário ou env não conta; em `run:` de bloco conta", () => {
+  const root = fixture();
+  const wf = (name, text) => fs.writeFileSync(path.join(root, ".github/workflows", name), text);
+  try {
+    wf("night.yml", `${CRON}      - name: npm run test:e2e\n        run: echo desligado\n      # run: npm run test:e2e\n        env:\n          CMD: npm run test:e2e\n`);
+    wf("ci.yml", `${PR}      - name: node scripts/smoke-e2e.mjs\n        run: echo desligado\n`);
+    const find = (p) => buildInventory(root).find((i) => i.path === p).where;
+    assert.equal(find("e2e/test_a.py"), "manual", "só name/comentário/env citam o comando");
+    assert.equal(find("scripts/smoke-e2e.mjs"), "manual", "o caminho do script só aparece no name");
+    wf("night.yml", `${CRON}      - name: rodar\n        run: |\n          echo antes\n          npm run test:e2e\n`);
+    assert.equal(find("e2e/test_a.py"), "nightly", "`run:` em bloco conta");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
