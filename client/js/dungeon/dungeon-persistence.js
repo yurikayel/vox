@@ -110,7 +110,7 @@ export async function openSavedCampaign(state, campaignId, store = getDefaultVtt
  * Desliga o chip `state.rollSecret`: ele só vale para o teste de atributo ou perícia da ficha, que lê o chip antes de chamar.
  * @param {object} state Estado da sessão.
  * @param {string} rawInput Comando ou fórmula de dados.
- * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
+ * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`, `requestId` do pedido de teste).
  * @returns {Promise<object>} Resultado de `rollDiceFormula`.
  */
 export async function recordFormulaRoll(state, rawInput, opts = {}) {
@@ -126,7 +126,7 @@ export async function recordFormulaRoll(state, rawInput, opts = {}) {
   }
   state.rollError = "";
   state.lastFormulaRoll = result;
-  await dispatchCampaignOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult: result }, { store, refreshCampaignsList: true });
+  await dispatchCampaignOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult: opts.requestId ? { ...result, requestId: opts.requestId } : result }, { store, refreshCampaignsList: true });
   return result;
 }
 
