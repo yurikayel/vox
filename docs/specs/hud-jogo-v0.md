@@ -19,7 +19,7 @@ Fecha o desenho do HUD de jogo da mesa (`SUB-06`). A §7 do brainstorm descreve 
 | :-- | :-- | :-- |
 | Retrato + nome + condições | Token próprio (`tokenId`, `initials`, `color`, `name`) e `system_choices.conditions` da ficha (lista do pacote, `normalizeTokenConditions` no token) | Iniciais sobre a cor do token (sem bitmap); até 4 condições como chips com texto; excedente vira "+N" |
 | Retratos do grupo + PV | Tokens `layer === "player"` da cena (`projectSceneForPlayer`, `vtt-reducer.js:311`) | Linha compacta abaixo do retrato; PV conforme §4 |
-| Indicador de magia | Recurso `spell-slots` do pacote; máximo em `pools_base.spell_slots_max` (`vtt-schema.js:217`) | Só aparece se o total de recursos de magia for > 0; rótulo vem do pacote (espaços de magia no D&D, PM no T20, PF no GURPS com magias) |
+| Indicador de magia | Recurso `spell-slots` do pacote; máximo em `pools_base.spell_slots_max` (`vtt-schema.js:217`) | Só aparece se o total de recursos de magia for > 0; rótulo vem do pacote (espaços de magia na 5e, PM no T20, PF no GURPS com magias) |
 | Cinto 4×1 | `inventory_orset` (item com `id`, `label`, `qty`, `tags`, `vtt-inventory.js`) | 4 vagas de consumíveis (`tags` com `consumivel`); clique usa 1 (`SHEET_UPSERT`); vaga vazia mostra "vazio" |
 | Barra de 6 favoritos | Novo campo `sheet_meta.favorites` (lista de até 6 ids de ação ou item) | Substitui os atalhos livres de `buildHudShortcuts`; `roll-d20`, `move`, `sheet` continuam fixos à esquerda |
 | Painéis em meia tela | Ficha (C), Itens (I), Habilidades (S), Mapa (Tab), Crônica | Abrem sobre a metade do tabuleiro, sem modal; Esc fecha; o canvas continua visível. Atalhos C, I, S, M e R (Tab não é atalho: continua navegando o foco) |

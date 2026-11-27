@@ -1,5 +1,5 @@
 /**
- * @file Fatia 1 do SUB-17: o `display` do pacote leva a faixa de derivados e o rótulo da defesa no HUD, com o D&D
+ * @file Fatia 1 do SUB-17: o `display` do pacote leva a faixa de derivados e o rótulo da defesa no HUD, com a 5e
  * idêntico ao de antes, validação fechada (tetos, texto puro, fonte desconhecida ignorada) e fallback sem `display`.
  */
 import "./setup.js";
@@ -7,34 +7,34 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { renderDerivedStrip } from "../client/js/dungeon/screen-sheet-derived.js";
-import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E } from "../client/js/dungeon/system-pack-5e.js";
 import { validateSystemPack, getSystemPack } from "../client/js/dungeon/system-pack.js";
 import { deriveSheet } from "../client/js/dungeon/system-derive.js";
 import { COMPUTED_STATS, DISPLAY_ENTRIES_MAX, defenseLabel, derivedStats, showBlock, validateDisplay } from "../client/js/dungeon/system-display.js";
 import { buildMobileLine } from "../client/js/dungeon/hud-status-model.js";
 
-const sheet = () => ({ character_id: "a", system: { id: "dnd5e-2024", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
+const sheet = () => ({ character_id: "a", system: { id: "5e", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
 const entry = (id, label = "Rótulo", source = { formula: "speed" }) => ({ id, label, source });
-const derived = () => deriveSheet(DND5E_2024_PACK, { level: 5, abilities: { dex: 14, wis: 12 } }, []);
+const derived = () => deriveSheet(PACK_5E, { level: 5, abilities: { dex: 14, wis: 12 } }, []);
 
-test("D&D: a faixa continua byte a byte igual à de antes do display (golden)", () => {
+test("5e: a faixa continua byte a byte igual à de antes do display (golden)", () => {
   const html = renderDerivedStrip(sheet(), 18);
   assert.equal(html.length, 5051);
-  assert.equal(createHash("sha256").update(html).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(createHash("sha256").update(html).digest("hex"), "2b13fcd781b73b098d59382150b9ccae4200ca2c12ece7015dbd1cb34e4c47e2");
   assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Proficiência<\/dt><dd>\+3<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>CA sem armadura<\/dt><dd>12<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa<\/dt><dd>\+2<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Percepção passiva<\/dt><dd>11<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
 });
 
 test("fallback: pacote sem display mostra os mesmos cinco números que o pacote com display", () => {
-  const { display, ...bare } = DND5E_2024_PACK;
+  const { display, ...bare } = PACK_5E;
   assert.ok(display);
-  assert.deepEqual(derivedStats(bare, derived()), derivedStats(DND5E_2024_PACK, derived()));
+  assert.deepEqual(derivedStats(bare, derived()), derivedStats(PACK_5E, derived()));
   assert.equal(derivedStats(bare, derived()).length, 5);
   assert.equal(defenseLabel(bare), "CA");
 });
 
-test("validação: o pacote do D&D com display continua válido e o registro o guarda", () => {
-  assert.deepEqual(validateSystemPack(DND5E_2024_PACK), { ok: true, errors: [] });
-  assert.equal(getSystemPack("dnd5e-2024").display.hud.defense, "armorClass");
+test("validação: o pacote da 5e com display continua válido e o registro o guarda", () => {
+  assert.deepEqual(validateSystemPack(PACK_5E), { ok: true, errors: [] });
+  assert.equal(getSystemPack("5e").display.hud.defense, "armorClass");
 });
 
 test("validação: tetos, rótulo e ids repetidos recusam o pacote", () => {
@@ -67,7 +67,7 @@ test("computed registrado roda; saída malformada é descartada; nomes herdados 
 
 test("texto puro: rótulo com HTML é escapado na faixa e no HUD", () => {
   const mal = "<b>x</b>";
-  const pack = { ...DND5E_2024_PACK, display: { derived: [entry("armorClass", mal, { formula: "armorClass" })], hud: { defense: "armorClass" } } };
+  const pack = { ...PACK_5E, display: { derived: [entry("armorClass", mal, { formula: "armorClass" })], hud: { defense: "armorClass" } } };
   assert.equal(defenseLabel(pack), mal);
   const hud = buildMobileLine({ name: "A", hp: null, ac: 12, acLabel: defenseLabel(pack) });
   assert.equal(hud, `A · ${mal} 12`);
@@ -93,8 +93,8 @@ test("registro herdado não vale e pacote sem validar é cortado no teto de entr
 test("HUD: rótulo da defesa com HTML vindo do pacote sai escapado no HTML renderizado", async () => {
   const { renderHudStatus } = await import("../client/js/dungeon/screen-hud-status.js");
   const { registerSystemPack } = await import("../client/js/dungeon/system-pack.js");
-  const display = { ...DND5E_2024_PACK.display, derived: DND5E_2024_PACK.display.derived.map((e) => (e.id === "armorClass" ? { ...e, label: "<b>x</b>" } : e)) };
-  registerSystemPack({ ...DND5E_2024_PACK, id: "pacote-rotulo-html", display });
+  const display = { ...PACK_5E.display, derived: PACK_5E.display.derived.map((e) => (e.id === "armorClass" ? { ...e, label: "<b>x</b>" } : e)) };
+  registerSystemPack({ ...PACK_5E, id: "pacote-rotulo-html", display });
   const own = { character_id: "ana", char_id: "ana", name: "Lyra", system: { id: "pacote-rotulo-html" }, attributes_lww: { armor_class: 12 }, pools_base: { hp_max: 10 }, delta_ledger: [] };
   const html = renderHudStatus({ sheet: own }, { tokens: [] });
   assert.match(html, /&lt;b&gt;x&lt;\/b&gt; 12/);
@@ -102,9 +102,9 @@ test("HUD: rótulo da defesa com HTML vindo do pacote sai escapado no HTML rende
 });
 
 test("faixa: deslocamento fracionário usa vírgula decimal (25 pés = 7,5 m)", () => {
-  const d = deriveSheet(DND5E_2024_PACK, { level: 5, abilities: { dex: 14, wis: 12 }, speedFt: 25 }, []);
+  const d = deriveSheet(PACK_5E, { level: 5, abilities: { dex: 14, wis: 12 }, speedFt: 25 }, []);
   assert.equal(d.speed.meters, 7.5);
-  assert.deepEqual(derivedStats(DND5E_2024_PACK, d).at(-1), { label: "Deslocamento", value: "7,5 m" });
+  assert.deepEqual(derivedStats(PACK_5E, d).at(-1), { label: "Deslocamento", value: "7,5 m" });
 });
 
 const t20Sheet = () => ({ ...sheet(), system: { id: "t20", version: 1 } });
@@ -118,11 +118,11 @@ test("T20: a faixa mostra Defesa, Iniciativa e Deslocamento, sem salvaguardas po
   for (const gone of ["Proficiência", "Percepção passiva", "Salvaguardas", "Testes contra a morte", "Sucessos", "Descanso"]) assert.equal(html.includes(gone), false, gone);
 });
 
-test("T20: o HUD chama a defesa de Defesa; o D&D segue com o mesmo hash e com CA", () => {
+test("T20: o HUD chama a defesa de Defesa; a 5e segue com o mesmo hash e com CA", () => {
   assert.equal(defenseLabel(getSystemPack("t20")), "Defesa");
-  assert.equal(defenseLabel(getSystemPack("dnd5e-2024")), "CA");
+  assert.equal(defenseLabel(getSystemPack("5e")), "CA");
   assert.equal(buildMobileLine({ name: "A", hp: "18/24", ac: 14, acLabel: defenseLabel(getSystemPack("t20")) }), "A · PV 18/24 · Defesa 14");
-  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "2b13fcd781b73b098d59382150b9ccae4200ca2c12ece7015dbd1cb34e4c47e2");
 });
 
 test("blocos: sem display.blocks valem todos; com a lista, só os listados; blocks que não é lista recusa o pacote", () => {
@@ -145,18 +145,18 @@ test("blocos: teto de 8, só textos, e o erro de blocks não esconde erro de der
   assert.match(ruins.join("|"), /display\.derived\[0\]/);
 });
 
-test("Defesa sem sufixo em pacote sem armadura; D&D mantém o sufixo", () => {
+test("Defesa sem sufixo em pacote sem armadura; 5e mantém o sufixo", () => {
   const nua = { ...derived(), armored: false };
   const semArmor = { labels: {}, formulas: {}, display: { derived: [entry("armorClass", "Defesa", { formula: "armorClass" })] } };
   assert.equal(derivedStats(semArmor, nua)[0].label, "Defesa");
-  assert.equal(derivedStats(DND5E_2024_PACK, nua).find((s) => s.label.startsWith("CA")).label, "CA sem armadura");
+  assert.equal(derivedStats(PACK_5E, nua).find((s) => s.label.startsWith("CA")).label, "CA sem armadura");
 });
 
 const gurpsSheet = (inv = {}) => ({ character_id: "g", system: { id: "gurps4e", version: 1 }, attributes_lww: { abilities: { st: 13, dx: 11, iq: 10, ht: 12 } }, pools_base: { hp_max: 12, hp_current: 12 }, inventory_orset: inv });
 const gstat = (html, label) => html.match(new RegExp(`<dt>${label.replace(/[.()]/g, (c) => `\\${c}`)}</dt><dd>([^<]*)</dd>`))?.[1];
 const bag = (weightLb, extra = {}) => ({ saco: { id: "saco", label: "Saco", qty: 1, weightLb, equipped: false, tags: [], ...extra } });
 
-test("GURPS: a faixa mostra PV, PF, Esquiva, Deslocamento, Desloc. Básico, Velocidade Básica e Carga, sem blocos do D&D", () => {
+test("GURPS: a faixa mostra PV, PF, Esquiva, Deslocamento, Desloc. Básico, Velocidade Básica e Carga, sem blocos da 5e", () => {
   const html = renderDerivedStrip(gurpsSheet());
   const got = Object.fromEntries(["PV (ST)", "PF (HT)", "Esquiva", "Deslocamento", "Desloc. Básico", "Velocidade Básica", "Carga"].map((l) => [l, gstat(html, l)]));
   assert.deepEqual(got, { "PV (ST)": "13", "PF (HT)": "12", Esquiva: "8", Deslocamento: "5", "Desloc. Básico": "5", "Velocidade Básica": "5,75", Carga: "Nenhuma" });
@@ -171,10 +171,10 @@ test("GURPS: o peso do inventário muda Carga, Deslocamento e Esquiva; item sem 
   assert.equal(gstat(sem, "Carga"), "Nenhuma (itens sem peso)");
 });
 
-test("GURPS: o registro de computed é fechado (só nomes gurps.*) e D&D e T20 seguem iguais", () => {
+test("GURPS: o registro de computed é fechado (só nomes gurps.*) e 5e e T20 seguem iguais", () => {
   assert.deepEqual(Object.keys(COMPUTED_STATS).sort(), ["gurps.basicMove", "gurps.basicSpeed", "gurps.dodge", "gurps.fp", "gurps.hp", "gurps.load", "gurps.move"]);
   assert.deepEqual(validateSystemPack(getSystemPack("gurps4e")), { ok: true, errors: [] });
-  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "2b13fcd781b73b098d59382150b9ccae4200ca2c12ece7015dbd1cb34e4c47e2");
   assert.equal(gstat(renderDerivedStrip(t20Sheet()), "Defesa"), "14");
 });
 

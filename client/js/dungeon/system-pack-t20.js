@@ -8,7 +8,7 @@
  * além dos nomes curtos de atributos e perícias.
  *
  * Rótulos fora de Defesa, Iniciativa e Deslocamento são os genéricos do motor atual (a tela de derivados ainda é
- * a do D&D; adaptá-la ao T20 é trabalho futuro, veja a spec).
+ * a da 5e; adaptá-la ao T20 é trabalho futuro, veja a spec).
  *
  * @module dungeon/system-pack-t20
  *

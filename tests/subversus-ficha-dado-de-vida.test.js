@@ -1,5 +1,5 @@
 /**
- * @file Dado de Vida da ficha (dnd5e-2024): aviso de que vale d8 até o jogador definir, campo no painel Editar
+ * @file Dado de Vida da ficha (5e): aviso de que vale d8 até o jogador definir, campo no painel Editar
  * (d4–d12), validação e escape.
  */
 import "./setup.js";
@@ -9,7 +9,7 @@ import { createDungeonSessionState, applySheetResourceDelta } from "../client/js
 import { updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
 import { spendSheetHitDie } from "../client/js/dungeon/dungeon-persistence-sheet-rest.js";
 import { renderDerivedStrip, renderSystemEditFields } from "../client/js/dungeon/screen-sheet-derived.js";
-import { DND5E_2024_PACK as pack } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E as pack } from "../client/js/dungeon/system-pack-5e.js";
 import { normalizeRestChoices, validHitDie } from "../client/js/dungeon/system-rest.js";
 
 test("dado válido: só d4, d6, d8, d10, d12 (número ou texto); o resto é nulo", () => {
@@ -67,7 +67,7 @@ test("o dado definido vale na cura: d4 com CON 10 nunca passa de +4", async () =
 });
 
 test("escape: valor sujo no dado não vira marcação no editor", () => {
-  const sheet = { schema_version: "1.0.0", name: "A", attributes_lww: {}, system: { id: "dnd5e-2024", version: 1 }, system_choices: { hitDie: '"><img src=x onerror=alert(1)>' } };
+  const sheet = { schema_version: "1.0.0", name: "A", attributes_lww: {}, system: { id: "5e", version: 1 }, system_choices: { hitDie: '"><img src=x onerror=alert(1)>' } };
   assert.equal(renderSystemEditFields(sheet).includes("<img"), false);
   assert.equal(renderDerivedStrip(sheet).includes("<img"), false);
 });
