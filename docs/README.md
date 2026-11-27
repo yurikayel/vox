@@ -35,7 +35,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | [`process/`](./process/) | Como trabalhamos: mutex de agentes, operação Antigravity, lições |
 | [`legal/`](./legal/) | Conformidade (LGPD, Marco Civil) e licença |
 | [`design/`](./design/) · [`branding/`](./branding/) | Design system Sovereign Agora e arquivos de marca |
-| [`metrics/`](./metrics/) | Baselines de complexidade geradas por `npm run audit:complexity` |
+| `docs/metrics/` | Métricas geradas localmente por `npm run audit:complexity`, fora do git |
 | [`security/`](./security/) | Triagens de CodeQL e notas de release de segurança |
 | [`archive/`](./archive/) | Planos e brainstorms SUPERSEDED, mantidos como histórico |
 | [`agent-reports/`](./agent-reports/) | Relatórios de agentes (template do workspace) |
