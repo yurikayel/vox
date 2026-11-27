@@ -1,4 +1,4 @@
-# Proposta ao NLnet NGI Zero / Restack (PM-42 / LAN-36): rascunho de trabalho
+# Proposta ao NLnet NGI Zero / Restack (LAN-36): rascunho de trabalho
 
 > **Status:** rascunho (revisão humana final obrigatória antes de submeter) · **Owner:** mantenedor (quem submete) · **Revisado:** 2026-11-26 · **Prazo:** 03/01/2027, 12:00 CET
 > Não substitui o [ROADMAP](../ROADMAP.md). Este documento reúne fatos verificados do repositório, riscos eliminatórios, um recorte técnico honesto e rascunhos em inglês dentro dos limites do formulário. **Atualização de 26/11:** entram o Subversus com o Fairplay ([ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md)), a mesa pela rede (laboratório) e a linha de release `v7.174` ([release-metadata.json](../release-metadata.json)); o estado do `vox-node` passa a refletir o que já está em `main`. O que depende do mantenedor está na [§7 Pendências](#7-pendências-perguntas-ao-mantenedor). **Cold Readiness preservada:** nenhuma submissão externa é feita por agentes; a versão enviada deve ser revisada e reescrita pelo mantenedor.
@@ -73,16 +73,16 @@ Os textos abaixo servem como base factual verificada e respeitam os limites de c
 
 ### Budget breakdown (máx. 4.000 caracteres)
 
-O valor/hora (€50/h) e o total de EUR 30,000 aguardam a decisão do mantenedor em [§7, P3](#7-pendências-perguntas-ao-mantenedor).
+O valor total e o valor por hora são definidos pelo mantenedor em [§7, P3](#7-pendências-perguntas-ao-mantenedor).
 
-> We request EUR 30,000 for 600 hours of engineering and documentation at EUR 50/hour, paid strictly upon verifiable milestone delivery. No hardware, travel, or commercial hosting costs are requested.
+> We request a total amount (defined by the maintainer, see P3) for 600 hours of engineering and documentation, paid strictly upon verifiable milestone delivery. No hardware, travel, or commercial hosting costs are requested.
 >
-> - M1 — Standalone P2P mesh library (120 h, EUR 6,000): extract the browser WebRTC mesh, gossip deduplication, and signalling adapter from `client/` into a standalone plain-JS module with a documented API, automated tests, and a minimal working example for third-party local-first apps.
-> - M2 — Multi-relay serverless signalling (100 h, EUR 5,000): harden ephemeral Nostr signalling (kind 25050) across multiple public relays with automatic failover, connection success metrics on mobile/NAT networks, and clear UI degradation states, eliminating the single hosted Render signalling server as a hard dependency.
-> - M3 — Open protocol specifications (60 h, EUR 3,000): publish complete, implementation-independent specs for message envelopes, gossip sync/retraction, community manifests, and encrypted WebRTC signalling, and submit a draft NIP for the ephemeral signalling format.
-> - M4 — Unified Rust node `vox-node` (160 h, EUR 8,000): complete and release the `vox-node` binary, whose core (WebSocket signalling, HTTP relay parity, memory mode, C-ABI/JNI facade) is already implemented on top of `rust/vox-core`. Remaining work: validate 1-to-1 compatibility with the existing Python black-box contract test suite, pass the 500-peer load benchmark (0 connection drops, p95 <= 100 ms, RSS <= 25 MB), and ship reproducible cross-compiled packages so cooperatives can self-host on modest hardware.
-> - M5 — Browser key hardening and encrypted backup (80 h, EUR 4,000): migrate local browser identity custody to standard non-extractable WebCrypto keys (`extractable: false`) with an encrypted, user-held backup format and tested migration path, using only standard browser cryptography.
-> - M6 — Reproducible supply chain, i18n, and European adoption docs (80 h, EUR 4,000): produce reproducible release artefacts with hash-pinned CI/dependencies, deliver full English UI and i18n scaffolding ready for European languages, and publish self-hosting and data-minimization guides tailored to European associations and cooperatives.
+> - M1 — Standalone P2P mesh library (120 h): extract the browser WebRTC mesh, gossip deduplication, and signalling adapter from `client/` into a standalone plain-JS module with a documented API, automated tests, and a minimal working example for third-party local-first apps.
+> - M2 — Multi-relay serverless signalling (100 h): harden ephemeral Nostr signalling (kind 25050) across multiple public relays with automatic failover, connection success metrics on mobile/NAT networks, and clear UI degradation states, eliminating the single hosted Render signalling server as a hard dependency.
+> - M3 — Open protocol specifications (60 h): publish complete, implementation-independent specs for message envelopes, gossip sync/retraction, community manifests, and encrypted WebRTC signalling, and submit a draft NIP for the ephemeral signalling format.
+> - M4 — Unified Rust node `vox-node` (160 h): complete and release the `vox-node` binary, whose core (WebSocket signalling, HTTP relay parity, memory mode, C-ABI/JNI facade) is already implemented on top of `rust/vox-core`. Remaining work: validate 1-to-1 compatibility with the existing Python black-box contract test suite, pass the 500-peer load benchmark (0 connection drops, p95 <= 100 ms, RSS <= 25 MB), and ship reproducible cross-compiled packages so cooperatives can self-host on modest hardware.
+> - M5 — Browser key hardening and encrypted backup (80 h): migrate local browser identity custody to standard non-extractable WebCrypto keys (`extractable: false`) with an encrypted, user-held backup format and tested migration path, using only standard browser cryptography.
+> - M6 — Reproducible supply chain, i18n, and European adoption docs (80 h): produce reproducible release artefacts with hash-pinned CI/dependencies, deliver full English UI and i18n scaffolding ready for European languages, and publish self-hosting and data-minimization guides tailored to European associations and cooperatives.
 
 ### Comparison with existing efforts (máx. 4.000 caracteres)
 
@@ -133,9 +133,9 @@ Fatos objetivos do repositório que o mantenedor pode incluir ao redigir sua tra
 | **M2** Sinalização multi-relay | Failover Nostr `kind 25050`, medição de conectividade e degradação honesta na UI (Render deixa de ser obrigatório) | 100 h | NET-01, REV-09 |
 | **M3** Especificação aberta | Specs de envelopes, gossip, retração, manifestos e rascunho de NIP de sinalização | 60 h | `docs/specs/` |
 | **M4** Binário `rust/vox-node` | Núcleo já em `main`; entrega da bolsa: paridade caixa-preta completa com a suíte Python, meta `LAN-09` (500 pares, p95 ≤ 100 ms, ≤ 25 MB RSS) e pacotes cross-compilados reproduzíveis | 160 h | ADR-039-F4 (`PR4.1a`–`PR4.4` em `main`; falta NDK/`.so` e campo), [vox-node-rust-fase4.md](../specs/vox-node-rust-fase4.md) |
-| **M5** Chaves não exportáveis | WebCrypto `extractable: false`, backup cifrado sob controle do usuário e migração testada (sem cripto customizada) | 80 h | PM-12 |
-| **M6** Cadeia de suprimentos e i18n UE | Releases reproduzíveis com hashes fixados, interface em inglês + base i18n europeia e guia de auto-hospedagem | 80 h | PM-01, PM-14, LAN-20 |
-| **Total** | **6 marcos verificáveis** | **600 h** | **€30.000 (€50/h de referência)** |
+| **M5** Chaves não exportáveis | WebCrypto `extractable: false`, backup cifrado sob controle do usuário e migração testada (sem cripto customizada) | 80 h | PM-93 |
+| **M6** Cadeia de suprimentos e i18n UE | Releases reproduzíveis com hashes fixados, interface em inglês + base i18n europeia e guia de auto-hospedagem | 80 h | PM-01, LAN-20 |
+| **Total** | **6 marcos verificáveis** | **600 h** | **definido pelo mantenedor (P3)** |
 
 ---
 
@@ -169,7 +169,7 @@ Nada abaixo é decidido por agente. Cada item precisa de resposta antes do envio
 
 1. **P1 · Dimensão europeia (eliminatória):** enviar ao NLnet a pergunta de elegibilidade de proponente individual no Brasil? O texto e o prazo (05/12) estão no passo 1 da §5.
 2. **P2 · Co-proponente na UE:** existe pessoa ou organização europeia que assuma parte real do trabalho (implementação, interoperabilidade ou tradução/empacotamento)? Se não houver, a proposta segue só com o recorte de bens públicos abertos, conforme a resposta de P1.
-3. **P3 · Valor e distribuição das horas:** manter EUR 50/h, 600 h e EUR 30,000? Como o núcleo do `vox-node` já está em `main`, as 160 h de M4 podem ficar como estão (validação, benchmark e empacotamento) ou parte delas passar para M1 ou M3. Qual opção?
+3. **P3 · Valor e distribuição das horas:** manter 600 h, com valor por hora de EUR 50 e total de EUR 30,000? Como o núcleo do `vox-node` já está em `main`, as 160 h de M4 podem ficar como estão (validação, benchmark e empacotamento) ou parte delas passar para M1 ou M3. Qual opção?
 4. **P4 · Background pessoal:** o mantenedor redige a trajetória e a motivação no campo `Background`.
 5. **P5 · Outras fontes de financiamento:** confirma a declaração "None so far" ou há apoio a declarar?
 6. **P6 · Subversus na proposta:** manter como caso de uso de referência sem compromisso de entrega (como na §2) ou retirar do texto enviado?
