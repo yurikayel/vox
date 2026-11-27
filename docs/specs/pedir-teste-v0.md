@@ -37,4 +37,4 @@ Para cada alvo vale a PRIMEIRA rolagem pública dele com esse `requestId` até a
 ## Limites conhecidos
 
 - O caminho de rolagem com prova de justiça não leva `requestId` nesta versão.
-- O total e o `lamport` da rolagem são autodeclarados por quem a envia. Um jogador que já rolou, vê a revelação e manda outra rolagem com `lamport` anterior à revelação (inclusive 0) e o total que quiser entra como resultado, no estado vivo e no replay. "Rolagem posterior é ignorada" vale só para cliente honesto. É o modelo de confiança atual de `ROLL_RECORDED` (o total já era autodeclarado). O ✓/✗ é conveniência de mesa, não prova; a prova de justiça é o caminho Fairplay.
+- O total e o `lamport` são declarados por quem rola; o ✓/✗ é conveniência de mesa, não prova. A prova de justiça é o caminho Fairplay.
