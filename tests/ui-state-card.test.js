@@ -21,6 +21,8 @@ function render(spec) {
   return card.renderStateCard(spec);
 }
 
+const textoVisivel = (html) => html.replace(/<[^>]+>/g, " ") + (html.match(/(?:aria-label|title|placeholder|alt)="[^"]*"/g) || []).join(" ");
+
 const sheetCss = () => {
   assert.ok(existsSync(new URL(`../client/css/${SHEET}`, import.meta.url)), `${SHEET} existe`);
   return css.readCss(SHEET);
@@ -47,6 +49,9 @@ test("rows do esqueleto vai de 1 a 8 e o loading com texto mostra o texto em vez
   const enviando = render({ kind: "loading", text: "Enviando…" });
   assert.match(enviando, /<p class="sv-state-text">Enviando…<\/p>/);
   assert.doesNotMatch(enviando, /sr-only/);
+  const hostil = render({ kind: "loading", text: "<img src=x onerror=1> & mais" });
+  assert.doesNotMatch(hostil, /<img/, "o texto do loading é escapado");
+  assert.match(hostil, /&lt;img src=x onerror=1&gt; &amp; mais/);
 });
 
 test("kind fora da lista lança erro", () => {
@@ -114,6 +119,10 @@ test("o esqueleto só anima sem preferência de redução de movimento, e o raio
   const foraDaMedia = text.replace(/@media[^{]*\{[\s\S]*?\}\s*\}/, "");
   assert.doesNotMatch(css.ruleBody(foraDaMedia, ".sv-skeleton-row"), /animation/);
   assert.match(text, /@media \(prefers-reduced-motion: no-preference\)\s*\{\s*\.sv-skeleton-row\s*\{[^}]*animation:/);
+  for (const selector of [".sv-state", ".sv-state-action", ".sv-skeleton-row"]) {
+    const raio = /border-radius:\s*([^;]+)/.exec(css.ruleBody(text, selector))?.[1];
+    assert.match(raio || "", /^var\(--sv-radius(-sm)?\)$/, `${selector}: raio vem do token --sv-radius`);
+  }
   const raiz = css.ruleBody(css.readCss("sv-tokens.css"), ":root");
   assert.match(raiz, /--sv-radius:\s*var\(--radius\)/);
   assert.match(raiz, /--sv-radius-sm:\s*var\(--radius-sm\)/);
@@ -125,7 +134,23 @@ test("o Acampamento sem campanha mostra o cartão vazio e, com campanha, não mo
   assert.match(vazio, /class="sv-state sv-state--empty" role="status"/);
   assert.match(vazio, /Nenhuma campanha salva ainda neste aparelho/);
   assert.doesNotMatch(vazio, /dungeon-muted">Nenhuma campanha/, "o <p> solto saiu");
+  const cartao = /<div class="sv-state sv-state--empty"[\s\S]*?<\/div>/.exec(vazio)?.[0] || "";
+  assert.ok(cartao, "o cartão vazio está na tela");
+  assert.doesNotMatch(cartao, /<button/, "o vazio do Acampamento não traz botão (o formulário acima já cria a campanha)");
+  assert.doesNotMatch(textoVisivel(cartao), GLOSSARIO, "o texto do Acampamento também passa pelo glossário");
+  assert.doesNotMatch(textoVisivel(cartao), /Obsidian/, "texto descreve a função, não cita produto");
   const cheio = createDungeonSessionState({});
   cheio.campaigns = [{ id: "c1", name: "Crônicas", system: "d20_fantasy", sheetCount: 1, chronicleCount: 0 }];
   assert.doesNotMatch(renderCampScreen(cheio), /sv-state--empty/);
+});
+
+test(".sr-only é global (sv-tokens.css), visualmente oculto e sem !important", () => {
+  const regra = css.ruleBody(css.readCss("sv-tokens.css"), ".sr-only");
+  assert.ok(regra, ".sr-only está definido em sv-tokens.css");
+  assert.match(regra, /position:\s*absolute/);
+  assert.match(regra, /width:\s*1px/);
+  assert.match(regra, /height:\s*1px/);
+  assert.match(regra, /overflow:\s*hidden/);
+  assert.match(regra, /clip:\s*rect\(0,\s*0,\s*0,\s*0\)/);
+  assert.doesNotMatch(regra, /!important/);
 });
