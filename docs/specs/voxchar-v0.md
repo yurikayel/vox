@@ -37,6 +37,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
 - `name`, `ancestry` (ancestralidade, como "Humano") e `class_name` ficam em `attributes_lww`, como na ficha real; `ancestry` é da ficha-base, não identidade.
 - `format` é o inteiro da versão do arquivo; maior que o conhecido: recusa com o motivo. `system.version` maior que a do pacote instalado: recusa com o motivo.
 - `exportedAt` é informativo: validado como data ISO ou ignorado; nunca decide nada.
+- Cada item de `inventory_orset` pode levar a posição na mochila 10×4: `x` e `y` (inteiros, célula de cima à esquerda) e `rot` (`true` quando girado; só em item não quadrado). Sem `x`/`y` o item entra pelo first-fit; valor fora da grade ou não inteiro é descartado na leitura (o item volta a "sem posição"), e `rot` que não seja booleano é recusado ao gravar. Item equipado não leva posição.
 - `system_choices` só leva o que o pacote de sistema declara (perícias, salvaguardas, especialização, Deslocamento, Dado de Vida).
 
 ## 3. O que fica de fora

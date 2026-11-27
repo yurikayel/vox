@@ -165,7 +165,7 @@ O mantenedor é uma pessoa só; no máximo três frentes ao mesmo tempo.
 1. **"O Pix é nosso. E a praça?"** O Pix venceu porque é protocolo público que todo banco implementa. O Vox se apresenta como formato aberto de avisos, atas e decisões assinados, não como mais um app. O Pix entra só como comparação na fala, nunca no nome ou no logo (a marca é do Banco Central).
 2. **Contribuição técnica aos projetos de lei, igual para todos.** Na Câmara, o **PL 5.746/2026** (Política Nacional de Soberania Digital, apresentado em 03/11/2026 pelo deputado Jorge Solla) prevê interoperabilidade entre plataformas; comissão e relator não foram encontrados. No Senado há o **PL 4.097/2023** (senador Angelo Coronel), também sobre soberania digital, aguardando relator desde 19/05/2026; o conteúdo dele ainda não foi conferido. **Regra:** a mesma nota técnica, pública, sobre formatos abertos e interoperabilidade, a qualquer projeto do tema, de qualquer autor, nas duas Casas. Nunca apoio a partido ou a mandato.
 3. **"Do megafone à praça"** para a militância depois de 2026: núcleo, formação e decisão. **"Seu núcleo continua de pé se o canal cair."**
-4. **No exterior, mais tarde:** financiamento europeu de ferramentas soberanas ([proposta ao NLnet](../strategy/proposta-nlnet-restack-2027.md)) e versão em espanhol.
+4. **No exterior, mais tarde:** financiamento europeu de ferramentas soberanas (proposta de financiamento, mantida fora do repositório) e versão em espanhol.
 5. **Não surfar:** a migração de usuários para redes alternativas, que está murchando, e o discurso anti big tech para leigos. Para leigos, a mensagem é a dor: golpe, papelada, briga pelo dinheiro do grupo.
 
 ## 9. Neutralidade: o mapa que faltava

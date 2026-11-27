@@ -35,7 +35,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | [`process/`](./process/) | Como trabalhamos: mutex de agentes, operação Antigravity, lições |
 | [`legal/`](./legal/) | Conformidade (LGPD, Marco Civil) e licença |
 | [`design/`](./design/) · [`branding/`](./branding/) | Design system Sovereign Agora e arquivos de marca |
-| [`metrics/`](./metrics/) | Baselines de complexidade geradas por `npm run audit:complexity` |
+| `docs/metrics/` | Métricas geradas localmente por `npm run audit:complexity`, fora do git |
 | [`security/`](./security/) | Triagens de CodeQL e notas de release de segurança |
 | [`archive/`](./archive/) | Planos e brainstorms SUPERSEDED, mantidos como histórico |
 | [`agent-reports/`](./agent-reports/) | Relatórios de agentes (template do workspace) |
@@ -59,6 +59,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
+| O que é interno e o que é público (o que entra no git) | [interno-e-publico.md](./process/interno-e-publico.md) |
 | Prompt Claude: auditoria features, docs e MVP técnico (nov/2026) | [prompt-claude-auditoria-mvp-tecnico-2026-11.md](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
@@ -89,7 +90,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [pacote-t20-v0.md](./specs/pacote-t20-v0.md): pacote de sistema `t20` (Tormenta20), só estrutura e matemática, sem texto do livro; limites da tela de derivados e do HUD
 - [derivados-por-sistema-v0.md](./specs/derivados-por-sistema-v0.md): como cada pacote de sistema declara os derivados e o HUD que a ficha mostra (D&D, Tormenta20, GURPS), com fallback, compatibilidade `.voxchar` e decisões D1 a D7 (não implementado)
 - [pacote-gurps4e-v0.md](./specs/pacote-gurps4e-v0.md): pacote de sistema `gurps4e` (GURPS 4e), só matemática (3d6 sob NH, secundários, níveis de carga), sem texto do livro
-- [ficha-personagem-brainstorm-v0.md](./specs/ficha-personagem-brainstorm-v0.md): brainstorm da ficha de personagem multi-sistema (D&D 2024, GURPS 4e, Tormenta20) para leigos e do HUD de jogo do **Subversus VTT** no estilo Diablo II, com inventário em grade e mapa em grade vista de cima (não implementado)
+- [ficha-personagem-brainstorm-v0.md](./specs/ficha-personagem-brainstorm-v0.md): brainstorm da ficha de personagem multi-sistema (D&D 2024, GURPS 4e, Tormenta20) para leigos e do HUD de jogo do **Subversus VTT** no estilo de RPG de ação clássico, com inventário em grade e mapa em grade vista de cima (não implementado)
 - [voxchar-v0.md](./specs/voxchar-v0.md): proposta do arquivo `.voxchar` da ficha portátil (exportar, importar com validação, ameaças do import; link só leitura como opção), aguarda aceite do mantenedor (não implementado)
 - [hud-jogo-v0.md](./specs/hud-jogo-v0.md): HUD de jogo da mesa (`SUB-06`): elementos, origem dos dados, acessibilidade, visão do jogador (lista de permissão para fichas alheias) e decisões D1–D10 aceitas (v0); código ainda não implementado
 - [mesa-rede-v0.md](./specs/mesa-rede-v0.md): proposta da mesa entre aparelhos pela rede (`SUB-08`): o que existe (BroadcastChannel, hub em memória, sinalização, relay cego), opções WebRTC/relay/os dois, segurança e decisões do mantenedor (rascunho, não implementado)
@@ -139,7 +140,6 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ### Rede pública (portões G1–G3)
 
 - [backlog-lancamento-publico-2026-11.md](./strategy/backlog-lancamento-publico-2026-11.md): **caminho até a rede pública** — 10 critérios, portões G1–G3, backlog LAN-01…36 por épico, ordem e cortes de escopo
-- [proposta-nlnet-restack-2027.md](./strategy/proposta-nlnet-restack-2027.md): rascunho da proposta ao NLnet Restack (PM-42, prazo 03/01/2027), riscos e checklist
 - [plano-lancamento-ondas.md](./strategy/plano-lancamento-ondas.md): ondas 0–3, quem decide abrir e pausar, gatilhos de pausa (LAN-34, rascunho)
 
 ### Pesquisa verificada
@@ -192,7 +192,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 5. Desenvolvimento, qualidade e governança do repo
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
-- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-10](./metrics/baseline-2026-11-10.md))
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (geradas localmente, fora do git)
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [documentacao.md](./process/documentacao.md) (norma de documentação no código) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
 - Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](design/sovereign-agora.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
 - [proposta-vox.html](./product/proposta-vox.html): proposta em linguagem leiga
@@ -215,6 +215,5 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./archive/brainstorm-dez-tarefas-estrategia-2026-10.md) → ROADMAP
 - [revisao-estado-2026-10-25.md](./archive/revisao-estado-2026-10-25.md): snapshot de 25/out
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
-- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
 **Versão:** 2.6 · 2026-11-12 (a mesma do cabeçalho)

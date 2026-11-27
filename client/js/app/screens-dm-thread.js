@@ -163,7 +163,7 @@ function bindDmThreadFormEvents(main, user, peerAddress, peerDmPub) {
   }
 }
 
-/** Desktop largo: lista de conversas ao lado da conversa aberta (Stitch "Mensagens desktop"). */
+/** Desktop largo: lista de conversas ao lado da conversa aberta (tela de referência "Mensagens desktop"). */
 function isDmSplitViewport() {
   return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 1100px)").matches;
 }

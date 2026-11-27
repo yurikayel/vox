@@ -38,9 +38,13 @@ function derivePortraitCode(sheet) {
 
 function renderAbilityButtons(sheet) {
   const ab = sheet.attributes_lww?.abilities || {};
-  return ABILITY_META.map((item) => {
+  const derived = resolveSheetSystem(sheet)?.derived.abilities || [];
+  const own = derived.length ? ABILITY_META.filter((item) => derived.some((a) => a.id === item.key)) : ABILITY_META;
+  return own.map((item) => {
     const score = Number(ab[item.key]) || 10;
-    return `<button type="button" class="dungeon-choice-card dungeon-attr-box" data-dungeon="roll-ability" data-ability="${item.key}" aria-label="Rolar teste de ${item.label}"><strong>${score} (${formatMod(score)})</strong><span>${item.short} · Rolar</span></button>`;
+    const mod = derived.find((a) => a.id === item.key)?.modifier;
+    const shown = mod === undefined ? formatMod(score) : mod >= 0 ? `+${mod}` : String(mod);
+    return `<button type="button" class="dungeon-choice-card dungeon-attr-box" data-dungeon="roll-ability" data-ability="${item.key}" aria-label="Rolar teste de ${item.label}"><strong>${score} (${shown})</strong><span>${item.short} · Rolar</span></button>`;
   }).join("");
 }
 
@@ -249,7 +253,7 @@ export function renderSheetScreen(state) {
   const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const panels = {
-    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions)}`,
+    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions, resolveSheetSystem(state.sheet)?.derived.skills)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
     about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft, link: state.voxcharLink, over: state.voxcharOver })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,

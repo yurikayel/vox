@@ -47,7 +47,7 @@ const form = (fields, dataset = {}) => ({
 test("tabelas de ações - formulários e rolagens com overlay 3D conhecidos", () => {
   assert.equal(SUBMIT_FORMS.size, 9);
   assert.ok(SUBMIT_FORMS.has("add-door-form"));
-  assert.deepEqual([...DICE3D_CLICK_ACTIONS].sort(), ["roll-ability", "roll-action", "roll-d20", "roll-quick"]);
+  assert.deepEqual([...DICE3D_CLICK_ACTIONS].sort(), ["roll-ability", "roll-action", "roll-d20", "roll-quick", "roll-skill"]);
 });
 
 test("câmera - zoom in/out limitado, reset e ajuste ao canvas", () => {
