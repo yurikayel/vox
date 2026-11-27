@@ -4,6 +4,7 @@
 import fs from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { drainMicrotasks } from "./helpers/wait-until.js";
 import "./setup.js";
 import * as keyLock from "../client/js/identity/key-lock.js";
 import * as localAccount from "../client/js/identity/local-account.js";
@@ -22,7 +23,7 @@ test("LT-06a: withLocalAccountCreationLock serializa trabalho concorrente", asyn
     withLocalAccountCreationLock(async () => {
       depth += 1;
       maxDepth = Math.max(maxDepth, depth);
-      await new Promise((r) => setTimeout(r, 10));
+      await drainMicrotasks(50);
       depth -= 1;
     });
   await Promise.all([work(), work()]);

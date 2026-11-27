@@ -29,11 +29,13 @@ FLAG_ON = "localStorage.setItem('vox.lab.fairplay', '1')"
 _RECORD_JS = """async ({ rollId, offset }) => {
   const st = %s;
   const log = await import('/js/dungeon/vtt-fairplay-log.js');
+  const dice = await import('/js/dungeon/dice-engine.js');
   const verdict = await log.verifyFairplayRecord({ fairplay: st.fairplay }, rollId);
   const truth = verdict.value ?? 1;
   const value = offset ? (truth + offset - 1) %% 20 + 1 : truth;
-  const rollResult = { formula: '1d20', label: 'Fairplay', visibility: 'public', total: value,
-    rolls: [{ sides: 20, value, kept: true }], fairplay: { rollId, value } };
+  // O resultado sai do motor de dados, como no fluxo real (vtt-fairplay-roll-flow.js): o selo refaz dados, críticos e
+  // total, então um registro escrito à mão (sem `exploded`, `crits`, `fumbles`) nunca fecha a conta.
+  const rollResult = { ...dice.rollDiceFormula('1d20', { fairplayValue: value }), label: 'Fairplay', fairplay: { rollId, value } };
   await st.syncPeer.dispatchOp({ type: 'ROLL_RECORDED', payload: { rollResult } });
   return { truth, value };
 }""" % _SESSION

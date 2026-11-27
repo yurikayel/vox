@@ -11,6 +11,7 @@ import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
 import { renderPartyPanel } from "../client/js/dungeon/screen-party-panels.js";
 import { SV_SHEETS } from "../client/js/dungeon/dungeon-layout-style.js";
 import * as css from "./helpers/css-contrato.js";
+import { assertRatio, hexOf, resolveTheme } from "./helpers/css-tema.js";
 
 const CAMP_CSS = "sv-camp.css";
 const sheet = (id, name, extra = {}) => ({
@@ -155,4 +156,18 @@ test("o <summary> das sanfonas mostra um marcador (chevron) que gira quando aber
   assert.match(marker, /border-(right|bottom):\s*2px solid var\(--sa-/, "chevron desenhado com token do tema");
   const open = css.ruleBody(sheetCss, ".sv-camp-details[open] > summary::before");
   assert.match(open, /transform:\s*rotate\(45deg\)/, "gira ao abrir");
+  assert.doesNotMatch(open, /border|color/, "aberta só gira: a cor do marcador não muda");
+});
+
+test("o marcador (chevron) do <summary> tem contraste de 3:1 contra a superfície nos dois temas e nos dois caminhos do claro", () => {
+  const marker = css.ruleBody(campCss(), ".sv-camp-details > summary::before");
+  const cores = [...marker.matchAll(/border-(right|bottom):\s*2px solid (var\(--[a-z0-9-]+\))/g)].map((m) => m[2]);
+  assert.equal(cores.length, 2, "as duas bordas do chevron");
+  assert.equal(cores[0], cores[1], "as duas bordas têm a mesma cor");
+  for (const [theme, route] of [["dark", "both"], ["light", "attr"], ["light", "media"]]) {
+    const tokens = resolveTheme(theme, route);
+    for (const superficie of ["--sa-surface", "--sa-surface-container"]) {
+      assertRatio(`${theme}/${route}: chevron ${cores[0]} sobre ${superficie}`, hexOf(tokens, cores[0]), hexOf(tokens, superficie), 3);
+    }
+  }
 });
