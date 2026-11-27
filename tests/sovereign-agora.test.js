@@ -73,7 +73,7 @@ test("sovereign agora — saúde do nó mostra pares reais e mantém IDs de hidr
   assert.ok(main.innerHTML.includes('id="status-sw-cache"'));
 });
 
-test("sovereign agora — onboarding Stitch preserva fluxos e IDs", () => {
+test("sovereign agora — onboarding do design preserva fluxos e IDs", () => {
   const container = { innerHTML: "" };
   render.renderOAuthEnrich(container);
   const html = container.innerHTML;

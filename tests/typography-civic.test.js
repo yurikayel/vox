@@ -13,12 +13,12 @@ const agoraCss = fs.readFileSync(path.join(root, "css/agora.css"), "utf8");
 test("typography civic — CSS tokens and display pairing", () => {
   assert.match(css, /--font-sans:\s*"Inter"/);
   assert.match(css, /--font-display:\s*"Noto Serif"/);
-  // Sovereign Agora (Stitch): Domine epigráfica + Work Sans, com Noto Serif/Inter como fallback local.
+  // Sovereign Agora: Domine epigráfica + Work Sans, com Noto Serif/Inter como fallback local.
   assert.match(agoraCss, /--font-epigraphic:\s*"Domine",\s*"Noto Serif"/);
   assert.match(agoraCss, /--font-telemetry:\s*"Work Sans",\s*"Inter"/);
   assert.match(css, /--font-weight-nav:\s*600/);
   assert.ok(css.includes("font-family: var(--font-sans)"));
-  // O wordmark V/O/X tricolor (.brand-word/.brand-letter-*) saiu do shell no rework Stitch; o CSS morto foi
+  // O wordmark V/O/X tricolor (.brand-word/.brand-letter-*) saiu do shell no rework do design; o CSS morto foi
   // removido em 2026-11-11. O wordmark atual é o .agora-wordmark, coberto pelos testes do shell; a fonte de
   // títulos é aplicada pela camada agora.css (--font-epigraphic, que é o --font-display).
   assert.ok(agoraCss.includes("var(--font-epigraphic)"));
