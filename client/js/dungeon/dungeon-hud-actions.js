@@ -61,5 +61,6 @@ export async function runHudOp(state, el, opts = {}) {
   if (op === "reserve-max") return setReserveMaxFor(state, el.dataset.reserveId, el.closest("[data-reserve]")?.querySelector("input")?.value, opts);
   if (op === "panel-open") return toggleHudPanel(state, el.dataset.panelId);
   if (op === "panel-close") return closeHudPanel(state);
+  if (op === "voxchar-over") return (await import("./voxchar-over.js")).runVoxcharOver(state, el.dataset.step, { checked: el.checked, store: opts.store });
   return undefined;
 }

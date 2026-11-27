@@ -100,11 +100,28 @@ export function renderVoxcharLinkBlock(link) {
 }
 
 /**
- * Linha de arquivo e link da ficha: exportar, importar, copiar link e, se houver, a confirmação do link.
+ * "Importar por cima": a caixa que arma a substituição desta ficha e, com um arquivo já lido, a confirmação antes de gravar.
+ * @param {{armed?: boolean, pending?: {name?: string}|null}|null|undefined} over Estado de `state.voxcharOver`.
+ * @returns {string} HTML da caixa e do bloco de confirmação (vazio de bloco sem arquivo pendente).
+ */
+export function renderVoxcharOverBlock(over) {
+  const box = `<label class="dungeon-check"><input type="checkbox" data-dungeon="hud-op" data-hud-op="voxchar-over" data-step="arm"${over?.armed ? " checked" : ""} /> Importar por cima desta ficha (em vez de criar outra)</label>`;
+  if (!over?.pending) return box;
+  return `${box}<div class="dungeon-alert-warn" role="alert" data-dungeon-voxchar-over>
+    <strong>Substituir os dados desta ficha por "${escapeHtml(over.pending.name || "ficha do arquivo")}"?</strong>
+    <p>Trocam nome, atributos, escolhas do sistema, itens, notas públicas e máximos. Ficam: o id, o dono, o PV atual, as condições e as notas do Mestre.</p>
+    <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="hud-op" data-hud-op="voxchar-over" data-step="confirm">Substituir</button>
+    <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="hud-op" data-hud-op="voxchar-over" data-step="cancel">Cancelar</button>
+  </div>`;
+}
+
+/**
+ * Linha de arquivo e link da ficha: exportar, importar (nova ou por cima), copiar link e, se houver, as confirmações.
  * @param {object|null|undefined} link Estado do link (`state.voxcharLink`).
+ * @param {object|null|undefined} over Estado de `state.voxcharOver`.
  * @returns {string} HTML da linha de ações.
  */
-function renderSheetShareRow(link) {
+function renderSheetShareRow(link, over) {
   return `
     <div class="dungeon-input-row">
       <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="export-voxchar">Exportar ficha (.voxchar)</button>
@@ -112,13 +129,14 @@ function renderSheetShareRow(link) {
       <input id="dungeon-import-voxchar" class="sr-only" type="file" accept=".voxchar,application/json" data-dungeon="import-voxchar" />
       <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="share-voxchar-link">Copiar link da ficha</button>
     </div>
+    ${renderVoxcharOverBlock(over)}
     ${renderVoxcharLinkBlock(link)}`;
 }
 
 /**
  * Renderiza o painel retrátil de edição básica da ficha (nome, classe, CA e atributos FOR–CAR).
  * @param {object} sheet Ficha ativa.
- * @param {{issues?: Array<{field: string, message: string}>, draft?: object|null, link?: object|null}} [edit] Avisos e valores digitados do último Salvar recusado, e o estado do link de ficha.
+ * @param {{issues?: Array<{field: string, message: string}>, draft?: object|null, link?: object|null, over?: object|null}} [edit] Avisos e valores digitados do último Salvar recusado, o estado do link de ficha e o do "importar por cima".
  * @returns {string} HTML do formulário de edição.
  */
 export function renderSheetEditPanel(sheet, edit = {}) {
@@ -143,6 +161,6 @@ export function renderSheetEditPanel(sheet, edit = {}) {
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>
-      ${renderSheetShareRow(edit.link)}
+      ${renderSheetShareRow(edit.link, edit.over)}
     </details>`;
 }
