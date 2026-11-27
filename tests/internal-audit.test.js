@@ -133,6 +133,7 @@ test("nome próprio da IDE (maiúscula) casa em .md e comentário; cursor de CSS
     "client/js/a.js": `// feito no ${name}\nconst x = 1;\n`,
     "client/css/a.css": `/* ${name} */\n.a { cursor: pointer; }\n`,
     "client/js/b.js": "const next = page.cursor; // cursor de sincronização\n",
+    "client/js/c.js": `/** ${name} da sincronização: revisão e data do servidor. */\nexport const syncCursor = {};\n`,
     "docs/sync.md": "O cursor de sync avança; cursor: pointer no botão.\n",
   });
   const tally = (rel) => need("scanFiles")(dir, [rel], rules).patterns["tool-ide-nome"] ?? 0;
@@ -140,6 +141,7 @@ test("nome próprio da IDE (maiúscula) casa em .md e comentário; cursor de CSS
   assert.equal(tally("client/js/a.js"), 1, "nome próprio em comentário casa");
   assert.equal(tally("client/css/a.css"), 0, "CSS fica de fora");
   assert.equal(tally("client/js/b.js"), 0, "cursor minúsculo de sync não casa");
+  assert.equal(tally("client/js/c.js"), 0, "'Cursor da sincronização' (começo de frase em português) não casa");
   assert.equal(tally("docs/sync.md"), 0, "cursor minúsculo e cursor: pointer não casam");
 });
 
@@ -183,6 +185,7 @@ test("cópia e apagar+recriar com texto diferente não são renomeação", () =>
   const outro = Array.from({ length: 20 }, (_, i) => `conteúdo próprio ${i * 3}`).join("\n");
   const { dir, git } = gitRepo({ "scripts/velho.txt": velho, "scripts/outro.txt": outro, "base.json": "{}\n" });
   fs.copyFileSync(path.join(dir, "scripts/velho.txt"), path.join(dir, "scripts/copia.txt"));
+  fs.appendFileSync(path.join(dir, "scripts/velho.txt"), "\nlinha editada no mesmo commit da cópia\n");
   fs.rmSync(path.join(dir, "scripts/outro.txt"));
   const parecido = outro.split("\n").map((l, i) => (i < 6 ? l : `nada em comum ${i * 7}`));
   fs.writeFileSync(path.join(dir, "scripts/recriado.txt"), parecido.join("\n"));

@@ -1,0 +1,65 @@
+/* @file Cartão de estado de tela da Vox (carregando, vazio, erro, sem conexão), desenhado por `shared/state-card.js`.
+ * Só tokens do tema (`--sa-*`, `--sv-*`), sem `!important`; o esqueleto só anima para quem não pede menos movimento.
+ */
+
+.sv-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--sv-radius);
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface);
+}
+
+.sv-state--loading {
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.sv-state-icon {
+  flex-shrink: 0;
+  color: var(--sa-on-surface-variant);
+}
+
+.sv-state--error .sv-state-icon {
+  color: var(--sa-error);
+}
+
+.sv-state-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.sv-state-action {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--sa-outline);
+  border-radius: var(--sv-radius-sm);
+  background: transparent;
+  color: var(--sa-on-surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sv-skeleton-row {
+  display: block;
+  height: 1rem;
+  border-radius: var(--sv-radius-sm);
+  background: var(--sa-outline-variant);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sv-skeleton-row {
+    animation: sv-state-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sv-state-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}

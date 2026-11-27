@@ -218,3 +218,9 @@ Where decorative geometry occurs, it borrows strictly from classical Greek trigl
 
 ### Architectural Divisors & Colonnades
 - Replaces generic `<hr>` lines with **Entablature Friezes**: dual hairlines enclosing small central geometric rhombuses or Greek key glyph markers, creating visual rhythm across deliberative chambers.
+
+### Estados de tela (`--sv-*` e cartão de estado)
+- **Quatro estados, um cartão:** `renderStateCard({ kind, text, action, rows })` em `client/js/shared/state-card.js` (na camada base, porque o `dungeon/` não pode importar de `render/`) desenha `loading`, `empty`, `error` e `offline`. Todos têm `role="status"`; o `loading` ainda tem `aria-busy` e de 1 a 8 barras de esqueleto (padrão 3); os outros 3 têm ícone decorativo e uma frase. Estados particulares ("enviando", "mestre ausente") são um dos quatro com texto próprio, nunca um kind novo; `kind` fora da lista lança erro.
+- **Botão só com `action`:** `action = { label, data }` vira um único `<button>` com `data-*` escapado. Sem `data` o cartão recusa, porque o tratador da tela não acharia o botão. O `error` de cada tela leva "Tentar de novo".
+- **Folha:** `client/css/sv-estados.css`, carregada pela tela que usa o cartão (`SV_SHEETS`, no Subversus). Só tokens do tema, alvo de 44 px e esqueleto animado apenas sem preferência de redução de movimento.
+- **Raios:** `--sv-radius` (8 px) e `--sv-radius-sm` (4 px) em `client/css/sv-tokens.css`, apontando para `--radius` e `--radius-sm` de `agora.css`. Não usar `--radius-md`: o nome diz 10 px e entrega 8.
