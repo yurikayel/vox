@@ -108,7 +108,7 @@ test("link secundário do cartão: só rota interna, com rótulo, escapado e dep
   const html = renderStateCard({ kind: "empty", text: "x", action: { label: "Ir", data: { a: "b" } }, link: { label: "<i>Ver</i>", href: "#/a?b=1&c=2" } });
   assert.match(html, /<button[^>]*>Ir<\/button><a class="sv-state-link" href="#\/a\?b=1&amp;c=2">&lt;i&gt;Ver&lt;\/i&gt;<\/a><\/div>$/);
   assert.doesNotMatch(renderStateCard({ kind: "empty", text: "x" }), /<a /, "sem link não há <a>");
-  for (const href of ["https://exemplo.org", "javascript:alert(1)", "//exemplo.org", "#", "#/a b", '#/"x', ""]) {
+  for (const href of ["https://exemplo.org", "javascript:alert(1)", "//exemplo.org", "#", "#/a b", '#/"x', "", "https://x/#/a", "javascript:x//#/a"]) {
     assert.throws(() => renderStateCard({ kind: "empty", link: { label: "Ver", href } }), /rota interna/, href);
   }
   assert.throws(() => renderStateCard({ kind: "empty", link: { label: " ", href: "#/" } }), /sem rótulo/);
@@ -162,6 +162,19 @@ test("'Tentar de novo' recarrega o feed e 'Encontrar pessoas' navega só para ro
   await waitUntil(() => !dom.main.innerHTML.includes("MARCA-ANTIGA"));
   assert.equal(dom.main.innerHTML.includes("MARCA-ANTIGA"), false, "a Ágora foi remontada");
   assert.match(dom.main.innerHTML, /sv-state--offline/);
+});
+
+test("'Tentar de novo' recarrega o MESMO feed: Seguindo (sem ninguém, sem rede) segue vazio e não vira o Para você", async () => {
+  semConexao();
+  const botao = makeEl();
+  dom.group(".feed-chrome ~ .sv-state", [botao]);
+  await home.showHome("following");
+  assert.match(dom.main.innerHTML, /sv-state--empty/);
+  dom.main.innerHTML = "MARCA-ANTIGA";
+  botao.fire("click", { target: { closest: (s) => (s === "[data-feed-retry]" ? { dataset: {} } : null) } });
+  await waitUntil(() => !dom.main.innerHTML.includes("MARCA-ANTIGA"));
+  assert.match(dom.main.innerHTML, /sv-state--empty/, "recarregou Seguindo");
+  assert.doesNotMatch(dom.main.innerHTML, /sv-state--offline/, "não trocou para o feed Para você (que, sem rede, mostra 'sem rede')");
 });
 
 test("Seguindo com alguém acompanhado e sem rede mostra 'sem rede', não 'você não acompanha ninguém'", async () => {
