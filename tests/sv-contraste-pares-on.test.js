@@ -15,6 +15,8 @@ import { assertRatio, contrast, hexOf, readSheet, renderedDecl, resolveTheme, SV
 const PAIRS = [
   ["--sv-on-primary", "--sa-primary"],
   ["--sv-on-civic", "--sa-secondary"],
+  ["--sv-on-primary-container", "--sa-primary-container"],
+  ["--sv-on-error-container", "--sa-error-container"],
 ];
 const CONSUMERS = [".dungeon-btn-primary", ".dungeon-grid-cell.is-player", ".agora-dm-badge"];
 const ROUTES = [
