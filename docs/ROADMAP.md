@@ -289,7 +289,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
-| [ ] | **LAN-36** | ops-humano | **Proposta ao NLnet Restack até 03/01/2027** usando o backlog como plano de trabalho. 🚧 PM-42 / **em `main` (#480, via #464):** rascunho reescrito e riscos em [proposta-nlnet-restack-2027.md](./strategy/proposta-nlnet-restack-2027.md) (aguarda revisão humana e envio real). **Dimensão europeia é eliminatória**: perguntar ao NLnet antes; reescrever com as próprias palavras e declarar o uso de IA | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-36** | ops-humano | **Proposta ao NLnet Restack até 03/01/2027** usando o backlog como plano de trabalho. 🚧 PM-42 / **em `main` (#480, via #464):** proposta de financiamento mantida fora do repositório (aguarda revisão humana e envio real). **Dimensão europeia é eliminatória**: perguntar ao NLnet antes; reescrever com as próprias palavras e declarar o uso de IA | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
