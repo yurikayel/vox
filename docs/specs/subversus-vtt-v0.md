@@ -178,6 +178,21 @@ Camada **100% desacoplada** do renderizador Diorama e sujeita integralmente a `A
 
 ---
 
+## 8.5 Primeira mesa: roteiro de 5 minutos (`SUB-32`)
+
+O Escudo do Mestre mostra uma lista de seis passos que se marcam sozinhos pelo estado real da mesa. O Mestre não clica em nada para marcar: o passo fica feito quando o dado existe.
+
+| # | Passo | O que o Mestre faz | Marca como feito quando |
+|---|---|---|---|
+| 1 | Criar a campanha | Cria uma campanha no acampamento | a sessão tem `campaignId` |
+| 2 | Pôr um mapa | Envia uma imagem de mapa na Mesa | algum piso da cena ativa tem `mapBlobHash` |
+| 3 | Colocar um token | Adiciona uma ficha ou token simples ao mapa | a cena ativa tem ao menos um token |
+| 4 | Ligar a névoa | Liga a névoa de guerra num piso | algum piso tem `fog.enabled` |
+| 5 | Fazer uma rolagem | Rola um dado na Mesa | a sessão tem ao menos uma rolagem |
+| 6 | Gerar o convite | Gera o convite da mesa e manda aos jogadores | a sessão tem `inviteHref` |
+
+O painel mostra o próximo passo aberto com o texto da ação e some quando os seis estão feitos ou quando `dungeonPrefs.firstTableDismissed` é `true`. Código: `client/js/dungeon/first-table-checklist.js`.
+
 ## 9. Orçamento de Recursos e Conformidade de CI
 
 | Métrica / Portão | Teto / Exigência |
