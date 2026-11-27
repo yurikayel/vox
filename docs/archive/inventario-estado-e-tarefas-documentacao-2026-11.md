@@ -16,7 +16,7 @@ Complementa [direcionamento-crescimento-rede-2026-11.md](../strategy/direcioname
 
 | Área | Entregue em código (referência) | Docs / specs | Testes (amostra) |
 |------|----------------------------------|--------------|------------------|
-| **Rede / malha P2P** | `peers.js`, `cache-node.js`, `peers-cache-manifest.js`, `peers-blob-affinity.js` (V-I09, flag default off), `webrtc-peer.js`, gossip retratação (`gossip-retract-ui.js`) | [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md), [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md), [prioridade-suave-blobs-v0.md](../specs/prioridade-suave-blobs-v0.md) | `peers*.test.js`, `gossip-retract*.test.js`, `cache-manifest.test.js` |
+| **Rede / malha P2P** | `peers.js`, `cache-node.js`, `peers-cache-manifest.js`, `peers-blob-affinity.js` (V-I09, flag default off), `webrtc-peer.js`, gossip retratação (`gossip-retract-ui.js`) | [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md), [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md), [prioridade-suave-blobs-v0.md](../specs/prioridade-suave-blobs-v0.md) | `peers*.test.js`, `gossip-retract*.test.js`, `cache-manifest.test.js` |
 | **Gateway / leitura reserva** | `gateway-telemetry.js`, `graphql.js`, pill honesta | V-P02 · [honest-copy-audit-2026-10-23.md](../audits/honest-copy-audit-2026-10-23.md) | `gateway-telemetry.test.js` |
 | **Comunidade / espelho local** | `community-mirror.js`, `community-seed-checklist.js`, painel «Sustentada por vizinhos» | V-I03, V-P04, V-P05 · [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md) | `community-mirror.test.js`, `community-seed-checklist.test.js` |
 | **Steward / relay** | `steward-wizard.js`, relay Python (`/vox/mirror`, `/health`), kits `packaging/steward-kit-*` | V-I08 ✓ · [steward-relay-kit.md](../operations/steward-relay-kit.md), [steward-seed-15min.md](../operations/steward-seed-15min.md), [mirror-validate-v1.md](../specs/mirror-validate-v1.md) | `steward-wizard.test.js`, relay `test_*.py` (22) |
@@ -76,7 +76,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 | [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) | **fresh** (T2/T9 — espelho B ainda não registrado como vivo) |
 | [mirror-validate-v1.md](../specs/mirror-validate-v1.md) | **fresh** (V-P06 ✓ código) |
 | [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md) | **fresh** |
-| [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md) | **spec** ✓ impl |
+| [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md) | **spec** ✓ impl |
 | [prioridade-suave-blobs-v0.md](../specs/prioridade-suave-blobs-v0.md) | **spec** ✓ impl |
 | [cache-manifest-v0.md](../specs/cache-manifest-v0.md) | **spec** |
 | [listing-signed-gossip-v1.md](../specs/listing-signed-gossip-v1.md) | **spec** ✓ UI |

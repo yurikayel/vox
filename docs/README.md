@@ -113,7 +113,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ### Specs de protocolo (malha, cache, módulos)
 
-- [antigravity-gossip-retract-v1.md](./specs/antigravity-gossip-retract-v1.md): retratação no gossip (implementado)
+- [retratacao-gossip-v1.md](./specs/retratacao-gossip-v1.md): retratação no gossip (implementado)
 - [prioridade-suave-blobs-v0.md](./specs/prioridade-suave-blobs-v0.md): prioridade suave de blobs (flag desligada)
 - [cache-manifest-v0.md](./specs/cache-manifest-v0.md): manifestos de cache assinados
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)

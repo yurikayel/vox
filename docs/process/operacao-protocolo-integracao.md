@@ -11,7 +11,7 @@
 
 ## English summary (coordinator signal)
 
-A ferramenta de protocolo implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `develop` or `main`**. A ferramenta de integração owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green **`npm run validate`**, PRs, and **`origin/main` deploy only with explicit maintainer OK**. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1** and **cache-manifest v0 mesh wire (V-I05)** are on `develop`/`main` (`client/js/peers-cache-manifest.js` imported by `client/js/peers.js`). **Flow:** feature PRs → **`develop`**; **`develop` → `main`** by PR at end of batch. **`develop` and `main` are protected** (branch up to date + five required checks: Cliente PWA Node 22/24, Relay & Signaling Python 3.11/3.12, Auditoria de Segurança). Next a ferramenta de protocolo missions kick off from **`git rev-parse --short origin/develop`** on the day (not a fixed SHA): gossip **v1.1 hardening**, **signed listings** protocol. Specs: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
+A ferramenta de protocolo implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `develop` or `main`**. A ferramenta de integração owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green **`npm run validate`**, PRs, and **`origin/main` deploy only with explicit maintainer OK**. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1** and **cache-manifest v0 mesh wire (V-I05)** are on `develop`/`main` (`client/js/peers-cache-manifest.js` imported by `client/js/peers.js`). **Flow:** feature PRs → **`develop`**; **`develop` → `main`** by PR at end of batch. **`develop` and `main` are protected** (branch up to date + five required checks: Cliente PWA Node 22/24, Relay & Signaling Python 3.11/3.12, Auditoria de Segurança). Next a ferramenta de protocolo missions kick off from **`git rev-parse --short origin/develop`** on the day (not a fixed SHA): gossip **v1.1 hardening**, **signed listings** protocol. Specs: [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
 
 ---
 
@@ -89,7 +89,7 @@ A ferramenta de integração repete `npm run validate` após merge em `develop`/
 
 | Item | Estado |
 |------|--------|
-| **Gossip retratação v1** | **Integrado** — `GOSSIP_UPDATE` / `GOSSIP_DELETE`, testes T1–T10, UI prep (`GOSSIP_RETRACT_UI=true`). Spec: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md). |
+| **Gossip retratação v1** | **Integrado** — `GOSSIP_UPDATE` / `GOSSIP_DELETE`, testes T1–T10, UI prep (`GOSSIP_RETRACT_UI=true`). Spec: [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md). |
 | **Cache manifest v0 (helpers + spec)** | **Integrado** — `cache-manifest.js`, testes M1–M4, doc [cache-manifest-v0.md](../specs/cache-manifest-v0.md). |
 | **V-I05 wire malha cache-manifest** | **Integrado em `develop`/`main`** — `client/js/peers-cache-manifest.js` importado por `client/js/peers.js` (fan-out / handling `cache-manifest` na malha). |
 | **Relay HTTP configurável (V-I04)** | **Integrado** — SW `vox-pwa-v6.13-configurable-relay-http`. |
@@ -109,7 +109,7 @@ Cada missão: branch própria, baseline = **`git rev-parse --short origin/develo
 
 | Documento | Uso |
 |-----------|-----|
-| [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md) | Spec gossip UPDATE/DELETE (v1 merged) |
+| [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md) | Spec gossip UPDATE/DELETE (v1 merged) |
 | [cache-manifest-v0.md](../specs/cache-manifest-v0.md) | Spec manifesto Arweave + helpers + wire malha (V-I05) |
 | [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md) | Mapa infra / steward / mirror |
 | [client/DEV.md](../../client/DEV.md) | Fluxo git, contagem de testes, flags de rede |
