@@ -5,13 +5,14 @@
     "orch-agente": 62,
     "tool-design": 82,
     "tool-ai": 138,
+    "tool-ide-nome": 64,
     "agent-report": 8,
     "tool-ide": 17,
     "metrics-local": 27,
     "tool-model": 7,
     "prompt-doc": 1
   },
-  "agentRules": 47,
+  "agentRules": 51,
   "files": {
     "CHANGELOG.md": {
       "orch": 2,
@@ -38,6 +39,9 @@
     },
     "client/js/app/screens-dm-thread.js": {
       "tool-design": 1
+    },
+    "client/js/central-memory-bundle.js": {
+      "tool-ide-nome": 1
     },
     "client/js/dungeon/dungeon-state.js": {
       "orch": 1
@@ -120,12 +124,14 @@
       "agent-report": 1,
       "tool-ai": 6,
       "orch": 3,
+      "tool-ide-nome": 13,
       "tool-ide": 4
     },
     "docs/archive/dossie-geral-inventario-master-breakdown-2026-11.md": {
       "agent-report": 1,
       "orch": 2,
       "orch-agente": 1,
+      "tool-ide-nome": 9,
       "tool-ai": 3
     },
     "docs/archive/gateway-honest-fallback-brainstorm.md": {
@@ -136,6 +142,7 @@
       "orch": 4,
       "orch-agente": 1,
       "tool-ai": 7,
+      "tool-ide-nome": 9,
       "tool-ide": 1
     },
     "docs/archive/revisao-estado-2026-10-25.md": {
@@ -150,6 +157,9 @@
       "tool-ai": 1,
       "orch": 1
     },
+    "docs/audits/honest-copy-audit-2026-10-23.md": {
+      "tool-ide-nome": 1
+    },
     "docs/audits/revisao-devsecops-2026-11-10.md": {
       "orch-agente": 1
     },
@@ -157,7 +167,8 @@
       "orch": 8,
       "orch-agente": 7,
       "tool-ai": 4,
-      "tool-ide": 1
+      "tool-ide": 1,
+      "tool-ide-nome": 3
     },
     "docs/brainstorms/brainstorm-auto-escala-organica-2026-10.md": {
       "orch-agente": 1
@@ -283,6 +294,7 @@
     "docs/process/antigravity-operating.md": {
       "tool-ai": 13,
       "tool-ide": 6,
+      "tool-ide-nome": 8,
       "orch": 1
     },
     "docs/process/metodo-agentes-mutex-e-revisor.md": {
@@ -296,6 +308,7 @@
       "tool-ai": 3,
       "orch-agente": 2,
       "tool-ide": 1,
+      "tool-ide-nome": 1,
       "orch": 1
     },
     "docs/process/qualidade-e-evidencia.md": {
@@ -317,11 +330,13 @@
     "docs/specs/antigravity-blob-soft-priority-v0.md": {
       "tool-ai": 4,
       "orch": 2,
+      "tool-ide-nome": 4,
       "tool-ide": 1
     },
     "docs/specs/antigravity-gossip-retract-v1.md": {
       "tool-ai": 3,
-      "orch": 2
+      "orch": 2,
+      "tool-ide-nome": 5
     },
     "docs/specs/arvore-repasse-pm106.md": {
       "tool-ai": 1
@@ -349,13 +364,15 @@
     "docs/strategy/antigravity-estrategia-mantenedor-revisor-2026.md": {
       "tool-ai": 12,
       "orch": 3,
-      "tool-ide": 3
+      "tool-ide": 3,
+      "tool-ide-nome": 3
     },
     "docs/strategy/backlog-lancamento-publico-2026-11.md": {
       "orch-agente": 1
     },
     "docs/strategy/backlog-participacao-rede.md": {
       "orch": 1,
+      "tool-ide-nome": 7,
       "tool-ai": 1
     },
     "docs/strategy/direcionamento-crescimento-rede-2026-11.md": {

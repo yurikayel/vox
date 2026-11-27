@@ -122,7 +122,25 @@ test("padrões não pegam o cursor de sync, o codec de áudio nem a classe de es
   const ok = need("scanFiles")(dir, ["docs/ok.md"], rules);
   const ruim = need("scanFiles")(dir, ["docs/ruim.md"], rules);
   assert.deepEqual(ok.patterns, {}, "texto legítimo não é ocorrência");
-  assert.deepEqual(Object.keys(ruim.patterns).sort(), ["tool-ai", "tool-ide", "tool-model"]);
+  assert.deepEqual(Object.keys(ruim.patterns).sort(), ["tool-ai", "tool-ide", "tool-ide-nome", "tool-model"]);
+});
+
+test("nome próprio da IDE (maiúscula) casa em .md e comentário; cursor de CSS e de sync não casam", () => {
+  const rules = need("loadRules")();
+  const name = ["Cur", "sor"].join("");
+  const dir = plant({
+    "docs/dono.md": `| Owner: ${name} | P1 |\n`,
+    "client/js/a.js": `// feito no ${name}\nconst x = 1;\n`,
+    "client/css/a.css": `/* ${name} */\n.a { cursor: pointer; }\n`,
+    "client/js/b.js": "const next = page.cursor; // cursor de sincronização\n",
+    "docs/sync.md": "O cursor de sync avança; cursor: pointer no botão.\n",
+  });
+  const tally = (rel) => need("scanFiles")(dir, [rel], rules).patterns["tool-ide-nome"] ?? 0;
+  assert.equal(tally("docs/dono.md"), 1, "Owner: nome próprio em .md casa");
+  assert.equal(tally("client/js/a.js"), 1, "nome próprio em comentário casa");
+  assert.equal(tally("client/css/a.css"), 0, "CSS fica de fora");
+  assert.equal(tally("client/js/b.js"), 0, "cursor minúsculo de sync não casa");
+  assert.equal(tally("docs/sync.md"), 0, "cursor minúsculo e cursor: pointer não casam");
 });
 
 /** Cópia das regras sem a exceção `entry` do grupo `group`. */
