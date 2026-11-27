@@ -19,6 +19,9 @@ const NAMES = [
   ["ER", "PG"],
   ["Fantasy ", "Grounds"],
   ["Dia", "blo"],
+  ["D", "&D"],
+  ["Dun", "geons & Dra", "gons"],
+  ["dnd", "5e-2024"],
 ].map((parts) => parts.join(""));
 const PATTERN = new RegExp(`(?<![A-Za-z0-9])(?:${NAMES.join("|")})(?![A-Za-z0-9])`, "i");
 const SKIP_DIRS = new Set(["node_modules", "vendor", ".git"]);
