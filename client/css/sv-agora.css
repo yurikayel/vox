@@ -65,7 +65,9 @@
 .sv-filtro-menu {
   position: absolute;
   z-index: 5;
+  inset-inline-end: 0;
   min-width: 12rem;
+  max-width: calc(100vw - 1rem);
   margin-top: 0.25rem;
   padding: 0.25rem;
   border: 1px solid var(--sa-outline);
