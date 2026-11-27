@@ -221,11 +221,18 @@ Where decorative geometry occurs, it borrows strictly from classical Greek trigl
 - **ARIA:** o segmento do feed aberto leva `aria-current="page"`. Com um filtro ativo nenhum segmento leva; o resumo vira "Filtro: <nome>" e o chip "<nome> ✕" volta ao Social. No máximo 1 `aria-current` na barra.
 - **Folha:** `client/css/sv-agora.css`, ligada no `index.html` depois de `sv-tokens.css`. Alvos de 44 px, foco visível por token, contraste AA nos dois temas.
 
+### Estados do feed da Ágora
+- **Cartão no lugar do vazio:** sem posts, o feed desenha `renderStateCard` (`render/feed-chrome.js`), sem o markup antigo `.empty`. `sv-estados.css` é global (`index.html`, com o id do carregador do Subversus, então não carrega duas vezes).
+- **Vazio por feed:** Cívico e Redes externas só explicam (sem botão nem link morto). Seguindo: "Encontrar pessoas" (botão primário, `data-feed-go="#/pessoas"`) e "Ver o feed Social" (link secundário). Feed geral: "Criar publicação" (botão primário, abre o compositor) e "Encontrar pessoas" (link secundário). Os textos não usam termo em inglês nem nome de outra rede.
+- **Sem rede e erro:** a falha vence o vazio, porque lista vazia sem conexão ou depois de erro não quer dizer que ninguém publicou. `navigator.onLine === false` mostra "sem rede"; falha ao montar a lista, sem posts, mostra "erro"; os dois levam "Tentar de novo" (`data-feed-retry`), que recarrega o feed. Com posts na lista a falha não aparece. Seguindo sem ninguém acompanhado continua sendo o vazio, porque essa lista é local e não depende da rede.
+- **Tratadores:** `attachFeedStateActions` (`app/screens-home.js`) liga os botões do cartão; `data-feed-go` só navega para rota interna (`#/…`).
+
 ### Architectural Divisors & Colonnades
 - Replaces generic `<hr>` lines with **Entablature Friezes**: dual hairlines enclosing small central geometric rhombuses or Greek key glyph markers, creating visual rhythm across deliberative chambers.
 
 ### Estados de tela (`--sv-*` e cartão de estado)
 - **Quatro estados, um cartão:** `renderStateCard({ kind, text, action, rows })` em `client/js/shared/state-card.js` (na camada base, porque o `dungeon/` não pode importar de `render/`) desenha `loading`, `empty`, `error` e `offline`. Todos têm `role="status"`; o `loading` ainda tem `aria-busy` e de 1 a 8 barras de esqueleto (padrão 3); os outros 3 têm ícone decorativo e uma frase. Estados particulares ("enviando", "mestre ausente") são um dos quatro com texto próprio, nunca um kind novo; `kind` fora da lista lança erro.
 - **Botão só com `action`:** `action = { label, data }` vira um único `<button>` com `data-*` escapado. Sem `data` o cartão recusa, porque o tratador da tela não acharia o botão. O `error` de cada tela leva "Tentar de novo".
+- **Link secundário:** `link = { label, href }` vira um `<a class="sv-state-link">` depois do botão, só para rota interna (`#/…`; qualquer outro endereço lança erro). Uma ação primária (botão) e uma secundária (link), nunca duas iguais.
 - **Folha:** `client/css/sv-estados.css`, carregada pela tela que usa o cartão (`SV_SHEETS`, no Subversus). Só tokens do tema, alvo de 44 px e esqueleto animado apenas sem preferência de redução de movimento.
 - **Raios:** `--sv-radius` (8 px) e `--sv-radius-sm` (4 px) em `client/css/sv-tokens.css`, apontando para `--radius` e `--radius-sm` de `agora.css`. Não usar `--radius-md`: o nome diz 10 px e entrega 8.
