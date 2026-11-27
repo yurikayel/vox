@@ -7,6 +7,7 @@
   ],
   "pathExceptions": [
     { "path": "relay/test_relay_error_sanitization.py", "ids": ["local-path"], "reason": "Fixture sintética de higienização de erro (caminho falso de propósito).", "owner": "mantenedor" },
+    { "path": "tests/higiene-caminhos-e-email.test.js", "ids": ["local-path"], "reason": "O teste de higiene precisa citar o padrão de caminho local que ele proíbe.", "owner": "mantenedor" },
     { "path": "client/js/data/bip39-pt.js", "ids": ["orch"], "reason": "Palavra comum da lista BIP-39 em português, não é orquestração.", "owner": "mantenedor" }
   ],
   "lineExceptions": [],

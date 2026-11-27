@@ -5,13 +5,11 @@
     "orch-agente": 62,
     "tool-design": 82,
     "tool-ai": 138,
-    "local-path": 6,
     "agent-report": 8,
     "tool-ide": 17,
     "metrics-local": 27,
     "tool-model": 7,
-    "prompt-doc": 1,
-    "personal": 3
+    "prompt-doc": 1
   },
   "agentRules": 47,
   "files": {
@@ -26,9 +24,6 @@
     },
     "README.md": {
       "orch-agente": 1
-    },
-    "android/build.ps1": {
-      "local-path": 1
     },
     "client/DEV.md": {
       "tool-ai": 2,
@@ -154,9 +149,6 @@
     "docs/audits/auditoria-features-arquitetura-2026-11.md": {
       "tool-ai": 1,
       "orch": 1
-    },
-    "docs/audits/branding-audit-2026-11-01.md": {
-      "local-path": 1
     },
     "docs/audits/revisao-devsecops-2026-11-10.md": {
       "orch-agente": 1
@@ -386,15 +378,11 @@
     "e2e/verify_stitch_guide_refs.py": {
       "tool-design": 4
     },
-    "packaging/zero-central-memory-windows/src/ZeroCentralMemory.cs": {
-      "local-path": 2
-    },
     "relay/test_relay_limites_e_rotas.py": {
       "tool-ai": 1
     },
     "reports/mutation/mutation-report.json": {
-      "metrics-local": 1,
-      "local-path": 1
+      "metrics-local": 1
     },
     "scripts/docs-audit.mjs": {
       "tool-ai": 1
@@ -408,17 +396,11 @@
     "tests/author-resolution.test.js": {
       "tool-ai": 2
     },
-    "tests/brcode.test.js": {
-      "personal": 2
-    },
     "tests/keystore-storage-json.test.js": {
       "orch": 1
     },
     "tests/legal-compliance-audit.test.js": {
       "tool-design": 1
-    },
-    "tests/oauth-profile.test.js": {
-      "personal": 1
     },
     "tests/render.test.js": {
       "tool-design": 1
@@ -431,9 +413,6 @@
     },
     "tests/vote-stitch.test.js": {
       "tool-design": 3
-    },
-    "tests/vox-populi.test.js": {
-      "local-path": 1
     }
   }
 }
