@@ -3,13 +3,13 @@
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-24
 > **Relacionados:** [subversus-vtt-v0.md](./subversus-vtt-v0.md) · [mesa-ui-brainstorm-v0.md](./mesa-ui-brainstorm-v0.md) · [ai-social-dungeon-v0.md](./ai-social-dungeon-v0.md) · [STITCH-MESA-GUIA.md](../design/stitch-captures/STITCH-MESA-GUIA.md) · `client/js/dungeon/vtt-schema.js` · `client/js/dungeon/screen-sheet-levelup.js`
 
-Ideias para a ficha de personagem do **Subversus VTT** (rótulo na barra do Vox: **Subversus**) — criar, salvar, editar, compartilhar e usar na partida em **D&D 2024**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)** — e para a tela de jogo com HUD no estilo de RPG de ação clássico. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
+Ideias para a ficha de personagem do **Subversus VTT** (rótulo na barra do Vox: **Subversus**) — criar, salvar, editar, compartilhar e usar na partida em **5e**, **GURPS 4e** e **Tormenta20 (Jogo do Ano)** — e para a tela de jogo com HUD no estilo de RPG de ação clássico. A ficha vem primeiro porque é a fonte dos números, dos rótulos e do vocabulário que o HUD, o token e a crônica exibem. É brainstorm, não contrato: o que já foi decidido e o que segue em aberto está na §9.
 
 ---
 
 ## 1. Ponto de partida
 
-- A ficha atual é presa a D&D: seis atributos fixos (`str`…`cha`), `pools_base` com `hp_max`, `gold_initial` e `spell_slots_max`, e rolagens `1d20+@for+@prof` (`vtt-schema.js`, `dungeon-state.js`).
+- A ficha atual é presa a 5e: seis atributos fixos (`str`…`cha`), `pools_base` com `hp_max`, `gold_initial` e `spell_slots_max`, e rolagens `1d20+@for+@prof` (`vtt-schema.js`, `dungeon-state.js`).
 - Tormenta20 só existe como preset de subida de nível (`LEVELUP_PRESETS.tormenta20` em `screen-sheet-levelup.js`).
 - GURPS não cabe nesse modelo: não usa d20, as perícias são roladas com 3d6 contra o nível de habilidade (NH) e a evolução é por pontos.
 - Os rascunhos do Stitch têm a base certa, mas vêm cheios de ruído técnico (§2).
@@ -57,7 +57,7 @@ São 20 rascunhos (`code.html` e `screen.png`), guardados fora do repo. Este doc
 5. Busca "Rolar…": três letras encontram qualquer teste, ataque ou magia.
 6. Favoritos: o jogador fixa até 6 itens em "Mais usados". Essa mesma lista vira a barra de habilidades do HUD (§7).
 7. O que é técnico (sincronização, `delta_ledger`, cofres, `@tag`, auditoria) sai da frente: vai para "Detalhes técnicos", recolhido, ou deixa de aparecer.
-8. Uma palavra por conceito, a do sistema: "CA" no D&D, "Defesa" no Tormenta20, "Esquiva" no GURPS. Nada de rótulo genérico inventado.
+8. Uma palavra por conceito, a do sistema: "CA" na 5e, "Defesa" no Tormenta20, "Esquiva" no GURPS. Nada de rótulo genérico inventado.
 
 ## 4. Modelo multi-sistema
 
@@ -74,21 +74,21 @@ flowchart LR
 ```
 
 - **Teste** é o conceito único, com dois tipos de resolução:
-  - `d20_vs_cd`: d20 + bônus contra uma CD (D&D, Tormenta20), com vantagem/desvantagem onde o sistema prevê.
+  - `d20_vs_cd`: d20 + bônus contra uma CD (5e, Tormenta20), com vantagem/desvantagem onde o sistema prevê.
   - `3d6_sob_nh`: 3d6, passa se tirar até o NH; crítico e falha crítica dependem do NH (GURPS).
 - **Recurso** é tudo que tem máximo e atual: PV, PM, PF, espaços de magia, usos por descanso. O HUD desenha recursos sem saber de qual sistema vêm.
 - Derivados nunca são gravados. Assim, edições simultâneas na ficha compartilhada conflitam menos e subir de nível atualiza tudo sozinho.
-- A ficha atual (Lyra) migra para o pacote `dnd5e-2024`.
+- A ficha atual (Lyra) migra para o pacote `5e`.
 
 | Sistema | Atributos | Testes | Recursos | Evolução |
 | :--- | :--- | :--- | :--- | :--- |
-| D&D 2024 | 6, com resistência | 18 perícias, ataques | PV, Dados de Vida, espaços de magia, Inspiração Heroica | nível |
+| 5e | 6, com resistência | 18 perícias, ataques | PV, Dados de Vida, espaços de magia, Inspiração Heroica | nível |
 | GURPS 4e | ST, DX, IQ, HT | perícias com NH e dificuldade F/M/D/MD | PV, PF | pontos |
 | Tormenta20 | 6 | cerca de 29 perícias (Fortitude, Reflexos, Vontade, Luta, Pontaria e Iniciativa incluídas) | PV, PM | nível |
 
 Detalhes por sistema:
 
-- **D&D 2024:** CA, Iniciativa, Deslocamento, testes contra a morte, maestria de arma.
+- **5e:** CA, Iniciativa, Deslocamento, testes contra a morte, maestria de arma.
 - **GURPS 4e:** secundários (Vontade, Percepção, Velocidade e Deslocamento Básicos, Esquiva); vantagens e desvantagens com custo; pontos totais e não gastos; níveis de carga; dano GdP/GeB.
 - **Tormenta20:** a edição atual do livro básico (Jogo do Ano). Defesa; poderes; magias por círculo com custo em PM. Resistência, ataque e iniciativa são perícias, então a lista de testes é a mesma para tudo. O cartão de atributo mostra um número só, o modificador que entra nas rolagens; a forma exata de gerar atributos segue o livro e é conferida quando o pacote for escrito.
 
@@ -98,7 +98,7 @@ Detalhes por sistema:
 
 ```
 +------------------------------------+
-| [retrato] Lyra      D&D 2024 [lapis]|
+| [retrato] Lyra      5e [lapis]|
 |           Guerreira 3              |
 | PV ########---- 18/24      [-] [+] |
 | Condicoes: (Envenenada x)          |
@@ -175,7 +175,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 | `2×2` | escudo leve/médio, elmo, botas, manoplas, grimório/tomo, kit de aventura |
 | `2×3` | armadura (leve/média/pesada), escudo de corpo/torre, besta pesada |
 
-- A grade é a forma de ver e arrumar; o limite de carga continua sendo a regra do sistema (peso no D&D e no GURPS, espaços no Tormenta20). Se a carga estoura, o indicador fica vermelho e o motivo aparece por escrito.
+- A grade é a forma de ver e arrumar; o limite de carga continua sendo a regra do sistema (peso na 5e e no GURPS, espaços no Tormenta20). Se a carga estoura, o indicador fica vermelho e o motivo aparece por escrito.
 - Arrastar um item para o boneco equipa; arrastar para o cinto (`4×1`) põe no atalho rápido do HUD. No mobile, tocar no item abre Equipar / Cinto / Usar / Descartar, sem precisar arrastar.
 - **Posição guardada:** cada item solto pode ter `x`, `y` (inteiros, célula de cima à esquerda) e `rot` (booleano; troca `w`↔`h`, só em item não quadrado). Sem `x`/`y` o item entra por `first-fit`; `x`/`y` fora da grade caem na leitura; item equipado não tem posição. O desenho da mochila usa `layoutBackpack`: primeiro os itens com posição válida (por `id` crescente; quem colide com um já posto perde a posição só no cálculo), depois os sem posição por `first-fit`; o que não cabe vai para "Não coube na mochila". Mesma entrada, mesma saída em qualquer aparelho. Ficha antiga, sem `x`/`y`, desenha como antes. `x`, `y` e `rot` viajam no `.voxchar`.
 - **Mutações** (mesma op assinada `INVENTORY_MUTATE`, sem op nova): `place {itemId, x, y, rot?}` só grava se o item cabe na grade e não toca o layout atual dos outros; senão não muda nada (a op é revalidada ao aplicar, então o resultado é o mesmo em todos). `organize` grava o `first-fit` abaixo em todos os itens soltos e tira a posição de quem não coube.
@@ -186,7 +186,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 - **Criar:** assistente por sistema com três entradas: **Rápido** (personagem pronto), **Guiado** (5 a 7 passos) e **Importar**.
 - **Salvar:** automático e local; sem botão Salvar.
-- **Editar:** modo lápis com validação que explica o que falta ("faltam 12 pontos" no GURPS, "escolha 2 perícias" no D&D).
+- **Editar:** modo lápis com validação que explica o que falta ("faltam 12 pontos" no GURPS, "escolha 2 perícias" na 5e).
 - **Compartilhar:** com o Mestre na mesa, por link só de leitura, por arquivo `.voxchar` dentro do `.voxrpg.zip` ou como cópia que serve de modelo.
 - **Usar na partida:** rolar, gastar recurso, marcar condição e descansar (curto e longo onde o sistema prevê).
 
@@ -209,7 +209,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 - Canto superior esquerdo: retrato, nome e condições. Logo abaixo, os retratos do grupo com PV resumido.
 - Base da tela: indicador de PV, indicador de magia, cinto com 4 consumíveis e a barra com os 6 "Mais usados" da ficha.
 - O formato do indicador é livre (barra, orbe, contador); o que importa é ler PV de relance. Orbes literais são opcionais e ficam para a direção de arte.
-- O indicador de magia só aparece se o personagem tem um recurso de magia com máximo acima de zero, e usa o rótulo do sistema: PM no Tormenta20, espaços de magia no D&D (pontos por nível de círculo), PF no GURPS quando o personagem tem magias. Guerreiro sem magia vê só PV.
+- O indicador de magia só aparece se o personagem tem um recurso de magia com máximo acima de zero, e usa o rótulo do sistema: PM no Tormenta20, espaços de magia na 5e (pontos por nível de círculo), PF no GURPS quando o personagem tem magias. Guerreiro sem magia vê só PV.
 - Ficha (C), Itens (I), Habilidades (S), Mapa (Tab) e Crônica abrem painéis que cobrem metade do mapa, como em RPGs de ação clássicos, sem modais. O painel Ficha é a própria ficha da §5 em largura reduzida, e o painel Itens é a grade da §5.4, não versões paralelas.
 - Todos os rótulos vêm do pacote de sistema, então o HUD fala a mesma língua da ficha.
 - **Direção de arte do HUD:** base de tokens Sovereign Agora (`--sa-*`, garantindo contraste WCAG AA e zero requisição externa ou bitmap pesado) com superfície escura de pedra ("Sovereign Sanctum") aplicada aos painéis de meio-ecrã (Ficha `C`, Itens `I`, Habilidades `S`, Crônica) e à barra inferior do HUD, sem molduras góticas ornamentais que roubem área útil no mobile 390 px.
@@ -226,7 +226,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 **Licença de conteúdo:**
 
-- **D&D 2024:** SRD 5.2 sob **CC-BY-4.0** (atribuição canônica no pacote `dnd5e-2024`; zero conteúdo fora do SRD).
+- **5e:** SRD 5.2 sob **CC-BY-4.0** (atribuição canônica no pacote `5e`; zero conteúdo fora do SRD).
 - **Tormenta20 (Jogo do Ano):** confirmada a ausência de licença aberta para texto editorial e Product Identity da Jambô (Arton, divindades, textos de poderes e magias). O pacote `t20` embute **apenas estrutura, matemática (`d20_vs_cd`), nomes das perícias básicas e campos de recursos (PV/PM)**; descrições de poderes e magias entram pelo usuário ou por importação local (`.md`/`.voxchar`).
 - **GURPS 4e (Steve Jackson Games):** confirmada a ausência de licença aberta (a SJ Games Online Policy veda redistribuir catálogos e tabelas do Basic Set). O pacote `gurps4e` embute **apenas matemática pura (`3d6_sob_nh`, ST/DX/IQ/HT, PV/PF/Vontade/Percepção/Vel/Desl/Esquiva, níveis de carga e curva de pontos F/M/D/MD)**; vantagens, desvantagens e perícias entram como estrutura editável/importada pelo jogador.
 
@@ -237,7 +237,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 - **Inventário e tamanhos na grade (`10×4` + cinto `4×1`):** grade como em RPGs de ação clássicos com tabela padrão por categoria (`1×1` a `2×3`), botão **Organizar** determinístico (`first-fit` por maior área `w×h`, altura `h` e nome) e limite de carga do sistema (§5.4).
 - **Mapa:** grade quadrada vista de cima; isométrico fora até existir arte isométrica (§8).
 - **Direção de arte do HUD:** tokens Sovereign Agora (`--sa-*`, WCAG AA, zero requisição externa/bitmap pesado) com superfície escura de pedra ("Sovereign Sanctum") nos painéis de meio-ecrã (`C`, `I`, `S`, Crônica) e barra inferior, sem molduras góticas ornamentais no mobile 390 px (§7).
-- **Licença de conteúdo (D&D 2024, Tormenta20 e GURPS 4e):** SRD 5.2 sob CC-BY-4.0 no `dnd5e-2024`; apenas estrutura e matemática pura nos pacotes `t20` e `gurps4e`, com textos e catálogos fornecidos/importados localmente pelo jogador (§9).
+- **Licença de conteúdo (5e, Tormenta20 e GURPS 4e):** SRD 5.2 sob CC-BY-4.0 no `5e`; apenas estrutura e matemática pura nos pacotes `t20` e `gurps4e`, com textos e catálogos fornecidos/importados localmente pelo jogador (§9).
 
 **Em aberto:**
 
@@ -245,7 +245,7 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 
 **Fases sugeridas:**
 
-1. Pacote de sistema e ficha D&D 2024 (migração da Lyra), já com o inventário em grade.
+1. Pacote de sistema e ficha 5e (migração da Lyra), já com o inventário em grade.
 2. Tormenta20.
 3. GURPS 4e.
 4. HUD de jogo sobre o mapa atual.

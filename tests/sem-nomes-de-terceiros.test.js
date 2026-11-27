@@ -1,7 +1,7 @@
 /**
  * Regra do mantenedor: nenhum nome de outro produto ou serviço entra no repositório
  * (docs/, client/, README). Exceções: a atribuição CC-BY do SRD 5.2 (dndbeyond.com/srd)
- * e os sistemas suportados (Tormenta20, GURPS, D&D 5e), que não constam da lista.
+ * e os sistemas suportados (Tormenta20, GURPS, 5e), que não constam da lista.
  * Os nomes ficam fragmentados aqui para o próprio teste não os citar.
  */
 import test from "node:test";

@@ -62,14 +62,14 @@ test("c) T20 com Des 14: o teste de Destreza soma +4 e o cabeçalho mostra +4", 
 });
 
 test("d) 5e com Des 14 (controle): Furtividade e teste de Destreza somam +2", async () => {
-  const state = stateFor("dnd5e-2024");
+  const state = stateFor("5e");
   assert.equal(bonusOf(await click(state, "roll-skill", { skill: "stealth" })), 2);
   assert.equal(bonusOf(await click(state, "roll-ability", { ability: "dex" })), 2);
 });
 
 test("e) perícia treinada soma a proficiência do derivado", async () => {
   const trained = { id: "act-furtividade", label: "Furtividade", roll: "1d20+@des+@prof", damage: "", tag: "pericia" };
-  const state = stateFor("dnd5e-2024", { sheet_meta: { clickable_actions: [trained] } });
+  const state = stateFor("5e", { sheet_meta: { clickable_actions: [trained] } });
   const { derived } = resolveSheetSystem(state.sheet);
   const expected = derived.skills.find((s) => s.id === "stealth").bonus;
   assert.equal(expected, 2 + derived.proficiency);
@@ -107,7 +107,7 @@ test("i) pacote sem os seis atributos da 5e (GURPS) não mostra botão de atribu
 });
 
 test("j) controle: 5e e T20 seguem com os seis botões de atributo", () => {
-  for (const id of ["dnd5e-2024", "t20"]) {
+  for (const id of ["5e", "t20"]) {
     const html = renderSheetHero(stateFor(id).sheet);
     assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
   }

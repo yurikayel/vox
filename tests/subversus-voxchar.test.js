@@ -29,7 +29,7 @@ async function richState() {
 }
 
 const valid = (over = {}) => ({
-  kind: "voxchar", format: 1, system: { id: "dnd5e-2024", version: 1 },
+  kind: "voxchar", format: 1, system: { id: "5e", version: 1 },
   sheet: { attributes_lww: { name: "Lyra", class_name: "Ladina", level: 3, armor_class: 14, abilities: { str: 10, dex: 16 } }, ...over },
 });
 
@@ -82,7 +82,7 @@ test("malformado, tipo errado, formato e sistema inválidos são recusados com m
     [enc({ ...valid(), kind: "outro" }), /Não é um arquivo \.voxchar/],
     [enc({ ...valid(), format: 2 }), /formato 2/],
     [enc({ ...valid(), system: { id: "sistema-inexistente", version: 1 } }), /não está instalado/],
-    [enc({ ...valid(), system: { id: "dnd5e-2024", version: 99 } }), /versão 99/],
+    [enc({ ...valid(), system: { id: "5e", version: 99 } }), /versão 99/],
     [new Uint8Array(0), /vazio/],
   ];
   for (const [bytes, re] of cases) {
@@ -105,7 +105,7 @@ test("número fora da faixa e itens em excesso são recusados com o campo e o mo
 });
 
 test("campos extras, __proto__ e constructor são descartados sem efeito", async () => {
-  const hostile = '{"kind":"voxchar","format":1,"system":{"id":"dnd5e-2024","version":1},"__proto__":{"polluted":true},"constructor":{"prototype":{"polluted":true}},'
+  const hostile = '{"kind":"voxchar","format":1,"system":{"id":"5e","version":1},"__proto__":{"polluted":true},"constructor":{"prototype":{"polluted":true}},'
     + '"sheet":{"__proto__":{"polluted":true},"constructor":{"x":1},"owner_pubkey_p256":"ROUBADA","attributes_lww":{"name":"Mal","__proto__":{"polluted":true},"constructor":"x","abilities":{"str":12}},'
     + '"system_choices":{"deathSaves":{"failures":2},"conditions":["prone"],"constructor":{"prototype":{"polluted":true}}}}}';
   const state = createDungeonSessionState();
@@ -160,7 +160,7 @@ test("valor longo em número fora da faixa aparece truncado no aviso", () => {
 
 test("item com id __proto__, constructor ou prototype é recusado", () => {
   for (const key of ["__proto__", "constructor", "prototype"]) {
-    const byKey = checkVoxchar(enc(`{"kind":"voxchar","format":1,"system":{"id":"dnd5e-2024","version":1},"sheet":{"attributes_lww":{"name":"A"},"inventory_orset":{"${key}":{"label":"x"}}}}`));
+    const byKey = checkVoxchar(enc(`{"kind":"voxchar","format":1,"system":{"id":"5e","version":1},"sheet":{"attributes_lww":{"name":"A"},"inventory_orset":{"${key}":{"label":"x"}}}}`));
     assert.match(byKey.issues[0], /identificador não permitido/, key);
     const byId = checkVoxchar(enc(valid({ attributes_lww: { name: "A" }, inventory_orset: { ok: { id: key, label: "x" } } })));
     assert.match(byId.issues[0], /identificador não permitido/, key);

@@ -16,7 +16,7 @@ function getActiveFloor(scene) {
 
 /**
  * Fórmula de iniciativa da ficha ativa: o mesmo número que a faixa de derivados mostra quando o pacote
- * é conhecido; sem pacote, o modificador de Destreza do D&D (`@des`).
+ * é conhecido; sem pacote, o modificador de Destreza da 5e (`@des`).
  * @param {object|null} sheet Ficha ativa.
  * @returns {string} Fórmula de dados (`1d20+4`, `1d20-1`, `1d20` ou `1d20+@des`).
  */
