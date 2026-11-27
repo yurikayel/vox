@@ -4,7 +4,8 @@
  *
  * Só renderização: usa apenas as ações já existentes (`inv-equip`, `inv-remove`, `add-item-form`).
  * A posição de cada item vem de `layoutBackpack`: a guardada na ficha (`x`, `y`, `rot`) quando vale, first-fit para
- * o resto. Fora daqui ficam o cinto, o boneco de equipamento e o arrastar, que pedem ações novas.
+ * o resto. Cada célula leva `data-inv-*` para o arrastar (`inventory-drag-ui.js`); o cinto e o boneco de equipamento
+ * ficam fora daqui.
  * @module dungeon/screen-sheet-inventory
  */
 import { escapeHtml } from "../shared/html.js";
@@ -19,7 +20,8 @@ function itemLabel(it) {
 
 function gridCell(it, spot) {
   const style = `grid-column:${spot.x + 1} / span ${spot.w};grid-row:${spot.y + 1} / span ${spot.h}`;
-  return `<button type="button" class="dungeon-backpack-item" style="${style}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-label="Equipar ${escapeHtml(it.label)}, ${it.qty} na mochila" title="${escapeHtml(it.label)} ×${it.qty}">${itemLabel(it)}</button>`;
+  const drag = `data-inv-cell="${escapeHtml(it.id)}" data-inv-w="${spot.w}" data-inv-h="${spot.h}"${spot.rot ? ` data-inv-rot="1"` : ""} aria-keyshortcuts="Enter"`;
+  return `<button type="button" class="dungeon-backpack-item" style="${style}" ${drag} data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-label="Equipar ${escapeHtml(it.label)}, ${it.qty} na mochila" title="${escapeHtml(it.label)} ×${it.qty}">${itemLabel(it)}</button>`;
 }
 
 function renderBackpackGrid(items) {
@@ -28,7 +30,8 @@ function renderBackpackGrid(items) {
   const cells = placements.map((spot) => gridCell(byId.get(spot.id), spot)).join("");
   const lost = overflow.map((id) => escapeHtml(byId.get(id).label)).join(", ");
   const warn = overflow.length ? `<p class="dungeon-alert-warn" role="status">Não coube na mochila (${BACKPACK_COLS}×${BACKPACK_ROWS}): ${lost}.</p>` : "";
-  return `<div class="dungeon-backpack-grid" role="group" aria-label="Mochila ${BACKPACK_COLS} por ${BACKPACK_ROWS}">${cells}</div>${warn}`;
+  const hint = `<p class="dungeon-muted" data-inv-hint>Arraste um item (no toque, segure 300 ms) ou foque e aperte Enter: setas movem, R gira, Enter solta, Esc cancela.</p><p class="sv-inv-notice" role="status" data-inv-notice></p>`;
+  return `<div class="dungeon-backpack-grid" data-inv-grid role="group" aria-label="Mochila ${BACKPACK_COLS} por ${BACKPACK_ROWS}">${cells}</div>${hint}${warn}`;
 }
 
 function renderEquipped(items) {
