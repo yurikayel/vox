@@ -1,6 +1,6 @@
 # Triagem módulo a módulo de `client/js/labs/parado/` (REV-02)
 
-> **Status:** rascunho (triagem REV-02 dos 21 módulos em `labs/parado/` para decisão do mantenedor) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-22
+> **Status:** auditoria (triagem REV-02 dos 21 módulos em `labs/parado/`, decidida em 27/11/2026 com o REV-02 fechado) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-27
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Complementa [client/js/labs/parado/README.md](../../client/js/labs/parado/README.md), [FEATURES.md](../FEATURES.md), [ADR-035](../adr/035-camadas-e-contextos.md) e o orçamento do shell (`LAN-23`, [scripts/shell-budget-check.mjs](../../scripts/shell-budget-check.mjs)).
 
 ## 0. Atualização de 27/11/2026 (código real de `develop`)
