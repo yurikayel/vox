@@ -9,7 +9,7 @@ Tudo abaixo foi medido no `main` (`e7f1343`) e nos serviços no ar nesta data.
 
 | Área | Estado | Evidência |
 |---|---|---|
-| Código e CI | PRs #1–#35 mergeados. CI verde. **936 testes** (847 JS + 89 Python). Complexidade com 0 violações em 181 arquivos. SW **v7.41** | [release-metadata.json](../release-metadata.json), [baseline 2026-11-09](../metrics/baseline-2026-11-09.md) |
+| Código e CI | PRs #1–#35 mergeados. CI verde. **936 testes** (847 JS + 89 Python). Complexidade com 0 violações em 181 arquivos. SW **v7.41** | [release-metadata.json](../release-metadata.json) |
 | Shells | **A** (GitHub Pages) e **B** (Cloudflare, `vox-9df.pages.dev`) servem a versão publicada. Os dois deploys rodam a cada push no `main` | `sw.js` dos dois em 09/11; `gh run list` |
 | Sinalização | Render, com keepalive passando, e Nostr em paralelo (6 relays) **com reconexão exponencial e troca de relay reserva (PM-17 ✅ PR #35)**. O teste de fumaça Nostr ainda aguarda 1ª execução agendada | `sentinel-keepalive.yml`, `nostr-smoke.yml`, `nostr-transport.js` |
 | ROADMAP | **59 itens abertos**, dos quais **40 são só `ops-humano` ou `doc`**. Só o parecer do REV-12 trava 8 itens (LAN-02, 03, 04, 13, REV-18, 20, 23, LAN-19) | [ROADMAP](../ROADMAP.md) |

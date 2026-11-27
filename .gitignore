@@ -31,6 +31,10 @@ yarn-error.log*
 *.tmp
 *~
 
+# Métricas e relatórios gerados localmente (npm run audit:complexity, mutação): não vão para o git
+docs/metrics/baseline-*
+reports/
+
 # PM-45: binários saem do CI (release-binarios.yml), não do git
 android/*.apk
 android/*.idsig
