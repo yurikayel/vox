@@ -206,3 +206,30 @@ test("t) o painel Habilidades do HUD também só fala em atributo quando há bot
   for (const id of ["gurps4e", "nao-existe"]) assert.equal(hud(id).includes(FRASE_CABECALHO), false, id);
   for (const id of ["dnd5e-2024", "t20"]) assert.ok(hud(id).includes(FRASE_CABECALHO), id);
 });
+
+test("w) outros dados e subtração ficam: 2d20+@des, 3d20+@des e 1d20-@des seguem rolando", () => {
+  const visible = (roll) => actionIds(playTab(withActions([plain("x", "Furtividade", roll)]))).includes("x");
+  for (const roll of ["2d20+@des", "3d20+@des", "1d20-@des", "10d20+@des"]) assert.equal(visible(roll), true, roll);
+});
+
+test("x) o nome tem de ser o de uma perícia do pacote, por inteiro", () => {
+  const visible = (label) => actionIds(playTab(withActions([plain("x", label)]))).includes("x");
+  assert.equal(visible("Culinária"), true, "nome fora do pacote");
+  assert.equal(visible("Furtividade Superior"), true, "prefixo do nome de uma perícia");
+  assert.equal(visible("Furtiv"), true, "começo do nome");
+  assert.equal(visible("furtividade"), true, "caixa diferente");
+  assert.equal(visible(" Furtividade"), true, "espaço sobrando");
+  assert.equal(visible("Furtividade"), false, "nome exato some");
+});
+
+test("y) a perícia certa é a do nome: o atributo da fórmula tem de ser o dela", () => {
+  assert.ok(actionIds(playTab(withActions([plain("x", "Acrobacia", "1d20+@for")]))).includes("x"), "Acrobacia é de Destreza: @for fica");
+  assert.ok(actionIds(playTab(withActions([plain("y", "Atletismo")]))).includes("y"), "Atletismo é de Força: @des fica");
+});
+
+test("z) semente act-* com fórmula editada continua rolando", () => {
+  const ids = (roll) => actionIds(playTab(withActions([plain("act-furtividade", "Furtividade", roll)])));
+  assert.ok(ids("1d20+@des+3").includes("act-furtividade"));
+  assert.ok(ids("1d20+@for").includes("act-furtividade"));
+  assert.equal(ids("1d20+@des").includes("act-furtividade"), false, "a semente intacta some");
+});
