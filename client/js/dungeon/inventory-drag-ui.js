@@ -77,24 +77,11 @@ function showHeld(container, cell, held, ok) {
   if (!held || !cell) return;
   cell.classList.add("is-held");
   paintGhost(cell.closest("[data-inv-grid]"), held, sizeOf(cell, held.rot), ok);
-  setRotateVisible(container, true);
 }
 
 function bindKeyboard(container, ctx) {
   let held = null;
-  const turn = () => {
-    if (!held) return false;
-    const items = itemsOf(ctx);
-    held = keyboardStep(held, "r", { items, focusId: held.id }).state;
-    const cell = [...container.querySelectorAll(CELL)].find((c) => c.dataset.invCell === held.id);
-    showHeld(container, cell, held, dropVerdict(items, held.id, held).ok);
-    cell?.focus?.();
-    return true;
-  };
-  ctx.turners.push(turn);
-  container.addEventListener("focusout", (ev) => {
-    if (held && !ev.relatedTarget?.closest?.(ROTATE)) { held = null; clearGhost(container); }
-  });
+  container.addEventListener("focusout", () => { if (held) { held = null; clearGhost(container); } });
   container.addEventListener("keydown", (ev) => {
     const cell = ev.target?.closest?.(CELL);
     if (!held && !cell) return;
@@ -126,7 +113,7 @@ function dropHeld(container, ctx, held, spot) {
   else if (verdict) showNotice(container, verdict.message);
 }
 
-/** Girar pelo botão o item que o dedo segura: item quadrado não muda de pegada; devolve `true` se há arrasto em curso. */
+/** Girar pelo botão (só no arrasto por ponteiro; no teclado vale a tecla R) o item que o dedo segura: item quadrado não muda de pegada; devolve `true` se há arrasto em curso. */
 function pointerTurner(getHeld, isActive, repaint) {
   return () => {
     const held = getHeld();
@@ -137,6 +124,11 @@ function pointerTurner(getHeld, isActive, repaint) {
     if (held.spot) repaint({ ...held.spot, rot: held.rot });
     return true;
   };
+}
+
+/** Ouve `type` no contêiner e só repassa o evento do ponteiro que segura o item (`getOwner()`); os demais dedos são ignorados. */
+function listenAsOwner(container, getOwner, type, fn) {
+  container.addEventListener(type, (ev) => { if (ev.pointerId === getOwner()) fn(ev); });
 }
 
 function bindPointer(container, ctx) {
@@ -163,10 +155,10 @@ function bindPointer(container, ctx) {
     cell.setPointerCapture?.(ev.pointerId);
     pointer.down({ id: held.id, pointerType: ev.pointerType === "touch" ? "touch" : "mouse", x: ev.clientX, y: ev.clientY });
   });
-  // Só o dedo que segura o item conduz o arrasto: o segundo dedo no botão "Girar item" não solta nem move nada.
-  container.addEventListener("pointermove", (ev) => { if (ev.pointerId === owner) pointer.move({ x: ev.clientX, y: ev.clientY }); });
-  container.addEventListener("pointerup", (ev) => { if (ev.pointerId === owner) pointer.up({ x: ev.clientX, y: ev.clientY }); });
-  container.addEventListener("pointercancel", () => { pointer.cancel(); finish(); });
+  // Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada.
+  listenAsOwner(container, () => owner, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, () => owner, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, () => owner, "pointercancel", () => { pointer.cancel(); finish(); });
   container.addEventListener("touchmove", (ev) => { if (pointer.active) ev.preventDefault(); }, { passive: false });
   container.addEventListener("contextmenu", (ev) => { if (pointer.active) ev.preventDefault(); });
 }

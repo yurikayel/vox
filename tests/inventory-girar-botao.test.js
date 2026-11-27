@@ -15,7 +15,7 @@ const sheet = applyInventoryMutation(applyInventoryMutation({}, "add", { label: 
 const state = { sheet: { inventoryItems: listInventoryItems(sheet.inventory_orset) } };
 
 /** Contêiner de mentira: guarda os ouvintes e entrega a célula, a grade, o fantasma e o botão. */
-function fakeMount(dims = { w: "1", h: "3" }) {
+function fakeMount(dims = { w: "1", h: "3" }, { realFocus = false } = {}) {
   const handlers = {};
   const grid = { ghost: null, ownerDocument: { createElement: () => ({ style: {}, setAttribute() {}, remove: () => { grid.ghost = null; } }) }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 1000, height: 400 }) };
   grid.querySelector = () => grid.ghost;
@@ -33,7 +33,14 @@ function fakeMount(dims = { w: "1", h: "3" }) {
   };
   bindInventoryDrag(container, { state, store: {} }, async () => {});
   const fire = (type, ev) => (handlers[type] || []).forEach((fn) => fn({ preventDefault() {}, stopImmediatePropagation() {}, ...ev }));
-  return { fire, cell, button, grid, held: () => classes.has("is-held") };
+  // Foco como no navegador: focus() em quem já tem o foco não dispara nada; blur() dispara focusout sem destino.
+  let focusouts = 0;
+  let focused = null;
+  if (realFocus) cell.focus = () => { if (focused !== cell) { if (focused) { focusouts += 1; fire("focusout", { relatedTarget: cell }); } focused = cell; } };
+  const blur = () => { focused = null; focusouts += 1; fire("focusout", { relatedTarget: null }); };
+  const origFire = fire;
+  const fireTracked = (type, ev) => { if (realFocus && ev?.target === cell && !focused) cell.focus(); origFire(type, ev); };
+  return { fire: realFocus ? fireTracked : fire, cell, button, grid, blur, focusouts: () => focusouts, held: () => classes.has("is-held") };
 }
 
 const span = (grid) => /span (\d+)$/.exec(grid.ghost.style.gridColumn)?.[1];
@@ -54,20 +61,20 @@ test("b) o botão tem área de toque de 44 px e o atributo hidden vence a classe
   assert.match(css, /\.sv-inv-rotate\[hidden\]\s*\{\s*display:\s*none/);
 });
 
-test("c) teclado: o botão aparece com o item em mãos, gira sem soltar o item e some ao soltar o foco", () => {
-  const m = fakeMount();
-  assert.equal(m.button.hidden, true);
+test("c) teclado: o botão não aparece, o R gira sem soltar o item e só perder o foco o devolve", () => {
+  const m = fakeMount({ w: "1", h: "3" }, { realFocus: true });
   m.fire("keydown", { target: m.cell, key: "Enter" });
-  assert.equal(m.button.hidden, false, "item em mãos mostra o botão");
+  assert.equal(m.button.hidden, true, "no teclado o botão nunca aparece");
   assert.equal(span(m.grid), "1");
-  m.fire("focusout", { relatedTarget: m.button });
-  m.fire("click", { target: m.button });
-  assert.equal(m.button.hidden, false, "ir para o botão não solta o item");
-  assert.equal(span(m.grid), "3", "girou: a pegada passa de 1×3 para 3×1");
-  m.fire("click", { target: m.button });
-  assert.equal(span(m.grid), "1", "girou de volta");
-  m.fire("focusout", { relatedTarget: null });
-  assert.equal(m.button.hidden, true, "perder o foco devolve o item e esconde o botão");
+  m.fire("keydown", { target: m.cell, key: "r" });
+  assert.equal(span(m.grid), "3", "R girou: a pegada passa de 1×3 para 3×1");
+  assert.equal(m.focusouts(), 0, "girar não move o foco");
+  m.fire("keydown", { target: m.cell, key: "r" });
+  assert.equal(span(m.grid), "1", "o item segue em mãos: R gira de volta");
+  assert.equal(m.button.hidden, true);
+  m.blur();
+  assert.equal(m.grid.ghost, null, "perder o foco devolve o item");
+  assert.equal(m.held(), false);
 });
 
 test("d) toque: com o item preso por um dedo, o botão gira o item e o segundo dedo não solta nem move o arrasto", () => {
@@ -84,8 +91,20 @@ test("d) toque: com o item preso por um dedo, o botão gira o item e o segundo d
   m.fire("click", { target: m.button });
   assert.equal(m.button.hidden, false, "o segundo dedo não soltou o item");
   assert.equal(span(m.grid), "3", "girou o item que o primeiro dedo segura");
-  m.fire("pointercancel", {});
+  m.fire("pointercancel", { pointerId: 1 });
   assert.equal(m.button.hidden, true, "sem arrasto, sem botão");
+});
+
+test("g) toque: o pointercancel do segundo dedo não cancela o arrasto do primeiro", () => {
+  const m = fakeMount();
+  m.fire("pointerdown", { target: m.cell, pointerId: 1, pointerType: "mouse", button: 0, clientX: 250, clientY: 50 });
+  m.fire("pointermove", { pointerId: 1, clientX: 260, clientY: 50 });
+  m.fire("pointercancel", { pointerId: 2 });
+  assert.equal(m.button.hidden, false, "o arrasto do primeiro dedo segue");
+  assert.notEqual(m.grid.ghost, null);
+  assert.equal(m.held(), true);
+  m.fire("pointercancel", { pointerId: 1 });
+  assert.equal(m.grid.ghost, null, "o cancel do dono cancela");
 });
 
 test("f) item quadrado não gira pelo botão (a pegada não muda)", () => {
