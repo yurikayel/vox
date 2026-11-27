@@ -76,6 +76,14 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.
 - Não afrouxe limite nem teste para ficar verde: quebre a função com semântica própria (extract method) ou registre waiver acima com motivo, responsável e data.
 
+## Contraste e estado: seguimentos conhecidos
+
+Contraste AA (texto ≥ 4,5:1, contorno ≥ 3:1) e estado desativado/foco são medidos na cascata real por [`tests/ui-foco-desativado-aa.test.js`](../tests/ui-foco-desativado-aa.test.js) (motor em `tests/helpers/css-cascata.js`: ancestral, classes de variante, estados e ordem das folhas). Dois pontos ficaram de fora e seguem abertos:
+
+- **`.btn-zap-post.disabled`** (`style.css`): desativa por classe, não por `:disabled`/`[disabled]`, com opacidade de 0,35 (texto em 1,68:1 no escuro e 1,19:1 no claro). Conserto: levar o seletor à regra de desativado de `sv-tokens.css` e listar o botão inteiro no teste.
+- **`.btn-post-more-menu:focus-visible`** (`style.css`): anel próprio, fora do anel global; medir o contraste do anel sobre as superfícies do cartão e, se falhar, apontar para o token do anel.
+- Anel de foco sobre faixa de container forte (`--sa-primary-container`, `--sa-error-container`: o anel global fica em 1,4–1,6:1): os pares `--sv-on-*-container` existem, mas a classe da faixa só entra junto do primeiro consumidor real, e deve medir o anel pela cascata dentro de `.dungeon-sanctum` (a regra `.dungeon-sanctum :is(a, button, input, summary):focus-visible` tem 0,2,1).
+
 ## Peso do precache (PM-02)
 
 **O precache não tem teto de bytes** (decisão do mantenedor em 2026-11-12). O teste [`tests/shell-reachability.test.js`](../tests/shell-reachability.test.js) soma o shell offline e imprime o total, mas nenhum número reprova o CI, e ninguém precisa "pagar" bytes com cortes para uma mudança entrar.
