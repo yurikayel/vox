@@ -5,8 +5,8 @@
     "orch-agente": 60,
     "tool-design": 32,
     "tool-ai": 138,
-    "tool-ide-nome": 64,
     "agent-report": 8,
+    "tool-ide-nome": 63,
     "tool-ide": 17,
     "tool-model": 7,
     "prompt-doc": 1
@@ -29,9 +29,6 @@
       "tool-ai": 2,
       "orch-agente": 1,
       "orch": 1
-    },
-    "client/js/central-memory-bundle.js": {
-      "tool-ide-nome": 1
     },
     "client/js/dungeon/dungeon-state.js": {
       "orch": 1
