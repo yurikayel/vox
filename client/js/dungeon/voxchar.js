@@ -124,13 +124,15 @@ export function buildImportedSheet(state, doc, pack) {
 }
 
 /**
- * Importa um `.voxchar` como ficha nova (nunca sobrescreve uma existente). Arquivo inválido não grava nada.
+ * Importa um `.voxchar` como ficha nova (nunca sobrescreve uma existente). Arquivo inválido não grava nada. Com "importar
+ * por cima" armado (`state.voxcharOver.armed`), só deixa o arquivo pendente para confirmação (`voxchar-over.js`).
  * @param {object} state Estado da sessão.
  * @param {{bytes: Uint8Array}} file Conteúdo do arquivo lido.
  * @param {{store?: object}} [opts] Opções (`store`).
  * @returns {Promise<{ok: boolean, issues?: string[]}>} Resultado; em recusa, os motivos em português.
  */
 export async function importVoxchar(state, file, opts = {}) {
+  if (state.voxcharOver?.armed) return (await import("./voxchar-over.js")).stageVoxcharOver(state, file);
   const checked = checkVoxchar(file?.bytes);
   if (!checked.ok) return checked;
   const sheet = buildImportedSheet(state, checked.doc, checked.pack);
