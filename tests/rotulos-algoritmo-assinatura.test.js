@@ -1,7 +1,7 @@
 /**
  * Honestidade de segurança (ADR-024): o texto que a pessoa lê não pode prometer um algoritmo
  * que a conta não usa. A conta assina com ECDSA P-256 (`key-lock.js`, `local-account.js`).
- * Ed25519 só existe em `vox-identity.js`, escrito e ainda não plugado (docs/FEATURES.md).
+ * Ed25519 não existe no código da conta: o `vox-identity.js` que o trazia foi removido (REV-02).
  */
 import test from "node:test";
 import assert from "node:assert/strict";
