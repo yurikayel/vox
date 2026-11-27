@@ -4,6 +4,8 @@
  * @module dungeon/dice-engine
  */
 import { sampleUnbiasedDieFromDigest } from "../rpg-crypto-table.js";
+import { abilityModifier as packModifier, proficiencyBonus } from "./system-derive.js";
+import { getSystemPack } from "./system-pack.js";
 
 /** Máximo de explosões extras permitidas por termo para evitar laço infinito em `1d1!` ou afins. */
 export const MAX_EXPLOSIONS = 20;
@@ -51,8 +53,16 @@ export function abilityModifier(score) {
   return Number.isFinite(num) ? Math.floor((num - 10) / 2) : 0;
 }
 
+/** Bônus de proficiência: o guardado na ficha, ou o do pacote pelo nível. */
+function sheetProficiency(sheet, pack, level) {
+  const stored = Number(sheet?.sheet_meta?.proficiency_bonus);
+  return Number.isFinite(stored) ? Math.trunc(stored) : proficiencyBonus(pack, level);
+}
+
 /**
  * Extrai variáveis numéricas utilizáveis em fórmulas (`@for`, `@des`, `@prof`, `@nivel`, etc.) de uma ficha CRDT.
+ * O modificador e o bônus de proficiência seguem o pacote do sistema da ficha (T20: valor − 10 e sem proficiência;
+ * GURPS: sem proficiência); ficha sem `system` ou com pacote desconhecido usa a regra da 5e, como a migração.
  * @param {object|null} [sheet] Documento `VoxCRDTCharacterSheet`.
  * @returns {Record<string, number>} Mapa de chaves em minúsculas para valores inteiros.
  */
@@ -60,12 +70,11 @@ export function resolveSheetVars(sheet = null) {
   const attrs = sheet?.attributes_lww || {};
   const ab = attrs.abilities || {};
   const level = Math.max(1, Math.trunc(Number(attrs.level) || 1));
-  const prof = Number.isFinite(Number(sheet?.sheet_meta?.proficiency_bonus))
-    ? Math.trunc(Number(sheet.sheet_meta.proficiency_bonus))
-    : 2 + Math.floor((level - 1) / 4);
+  const pack = getSystemPack(sheet?.system?.id) || getSystemPack("5e");
+  const prof = sheetProficiency(sheet, pack, level);
   const out = { level, nivel: level, prof, ca: Math.trunc(Number(attrs.armor_class) || 10), ac: Math.trunc(Number(attrs.armor_class) || 10) };
   for (const [alias, key] of Object.entries(ABILITY_ALIASES)) {
-    out[alias] = abilityModifier(ab[key] ?? 10);
+    out[alias] = packModifier(pack, ab[key] ?? 10);
   }
   return out;
 }

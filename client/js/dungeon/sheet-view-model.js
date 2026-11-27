@@ -10,6 +10,7 @@
  * @see docs/specs/subversus-vtt-v0.md (seção 3.1, "Fonte única de estado")
  */
 import { lbToKg } from "./vtt-inventory.js";
+import { isHiddenSeed } from "./vtt-schema.js";
 
 /** Texto mostrado no lugar de um dado que a ficha não tem. @type {string} */
 export const MISSING_VALUE = "—";
@@ -89,7 +90,8 @@ function favoriteShortcut(fav) {
 
 /**
  * Atalhos do HUD rápido, derivados da ficha ativa: primeiro as ações clicáveis (ataque/perícia), depois
- * "Rolar d20", "Mover" (só com token da ficha na cena) e "Abrir ficha". Nunca passa de `HUD_MAX_SHORTCUTS`;
+ * "Rolar d20", "Mover" (só com token da ficha na cena) e "Abrir ficha". As sementes que o botão do pacote já cobre, ou que
+ * são de outro sistema, ficam de fora (favoritos continuam como o jogador marcou). Nunca passa de `HUD_MAX_SHORTCUTS`;
  * os atalhos fixos têm vaga garantida e as ações da ficha ocupam o que sobra, na ordem da ficha.
  * @param {{char_id?: string, sheet_meta?: {clickable_actions?: Array<{id: string, label: string}>}}|null|undefined} sheet Ficha ativa.
  * @param {{ownTokenId?: string, favorites?: Array<{key: string, kind: string, id: string, label: string}>}} [opts] `ownTokenId`: token da ficha na cena; `favorites`: favoritos resolvidos, que ocupam as vagas das ações.
@@ -103,7 +105,7 @@ export function buildHudShortcuts(sheet, opts = {}) {
   const favorites = (opts.favorites || []).slice(0, room).map(favoriteShortcut);
   if (favorites.length) return [...favorites, ...fixed];
   const actions = (sheet?.sheet_meta?.clickable_actions || [])
-    .filter((a) => a?.id && a?.label)
+    .filter((a) => a?.id && a?.label && !isHiddenSeed(a, sheet?.system?.id))
     .slice(0, room)
     .map((a) => ({ id: `action:${a.id}`, label: String(a.label), kind: "action", action: "roll-action", attrs: { "data-action-id": String(a.id) } }));
   return [...actions, ...fixed];
