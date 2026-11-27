@@ -13,7 +13,6 @@ import { rememberVisible } from "../repost-index.js";
 import { renderCivicFeedIntro } from "./civic-block.js";
 import { renderInlineComposer } from "./feed-composer.js";
 import { renderPostItem } from "./feed-post-item.js";
-import { renderStateCard } from "../shared/state-card.js";
 
 /**
  * Faixa horizontal de stories (perfis demo ou lista customizada).
@@ -165,47 +164,45 @@ export function renderExternalFeedManagerHtml(subscriptions = []) {
     </div>`;
 }
 
-const COMPOSER_TARGET = "#feed-inline-composer .inline-composer-collapsed";
-
-/** Estado vazio de cada feed: frase, botão primário (`data-*`) e link secundário. Só os feeds que levam a algum lugar têm ação. */
-const EMPTY_STATES = Object.freeze({
-  civic: {
-    text: "Nenhum post cívico ainda. Publique uma pauta, ideia, debate ou enquete com título e argumento: ela aparece aqui para posicionamento assinado.",
-  },
-  external: {
-    text: "Nenhum post de redes externas ainda. Adicione um perfil no campo acima ou confira sua conexão.",
-  },
-  following: {
-    text: "Você ainda não acompanha ninguém. Toque em Acompanhar no perfil de uma pessoa para ver as publicações dela aqui.",
-    action: { label: "Encontrar pessoas", data: { "feed-go": "#/pessoas" } },
-    link: { label: "Ver o feed Social", href: "#/" },
-  },
-  default: {
-    text: "Nenhuma publicação ainda. Seja a primeira pessoa a compartilhar uma ideia, foto, áudio ou vídeo.",
-    action: { label: "Criar publicação", data: { "click-target": COMPOSER_TARGET } },
-    link: { label: "Encontrar pessoas", href: "#/pessoas" },
-  },
-});
-
-/** Falhas do feed: "sem rede" (aparelho offline) e "erro" (a busca falhou); as duas oferecem tentar de novo. */
-const FAILURE_STATES = Object.freeze({
-  offline: { text: "Você está sem conexão. O feed mostra só o que já está neste aparelho." },
-  error: { text: "Não deu para carregar o feed agora." },
-});
+const CIVIC_EMPTY_HTML = `<div class="empty civic-empty">
+    <p><strong>Nenhum post cívico ainda.</strong></p>
+    <p class="desc">Publique uma pauta, ideia, debate ou enquete com título e argumento — ela aparece aqui para posicionamento assinado.</p>
+  </div>`;
 
 /**
- * Cartão do feed sem posts: a falha (`offline` ou `error`) vem antes do vazio, porque lista vazia sem rede ou depois de
- * erro não quer dizer que ninguém publicou.
- * @param {string} activeFeed Feed ativo.
- * @param {"offline"|"error"|""} [failure=""] Falha da carga do feed, se houve.
- * @returns {string} HTML de `renderStateCard`.
+ * Estado vazio do feed ativo.
+ *
+ * @param {string} activeFeed
+ * @returns {string}
  */
-function renderFeedEmptyState(activeFeed, failure = "") {
-  if (FAILURE_STATES[failure]) {
-    const { text } = FAILURE_STATES[failure];
-    return renderStateCard({ kind: failure, text, action: { label: "Tentar de novo", data: { "feed-retry": "1" } } });
+function renderFeedEmptyState(activeFeed) {
+  if (activeFeed === "civic") return CIVIC_EMPTY_HTML;
+  if (activeFeed === "external") {
+    return `<div class="empty external-empty">
+      <p><strong>Nenhum post externo encontrado.</strong></p>
+      <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Adicione um perfil do Bluesky acima ou verifique sua conexão com a internet.</p>
+    </div>`;
   }
-  return renderStateCard({ kind: "empty", ...(EMPTY_STATES[activeFeed] || EMPTY_STATES.default) });
+  if (activeFeed === "following") {
+    return `<div class="empty following-empty">
+      <div style="font-size:2rem; margin-bottom:0.5rem;">👥</div>
+      <p><strong>Você ainda não acompanha ninguém.</strong></p>
+      <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Clique em <strong>👁️ Acompanhar (Watch)</strong> nos perfis de autores para ver as publicações deles reunidas nesta aba.</p>
+      <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+        <a class="btn btn-primary btn-sm" href="#/">Explorar feed "Para você"</a>
+        <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas na rede</a>
+      </div>
+    </div>`;
+  }
+  return `<div class="empty">
+    <div style="font-size:2rem; margin-bottom:0.5rem;">🌱</div>
+    <p><strong>Nenhuma publicação no feed ainda.</strong></p>
+    <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Seja a primeira voz soberana a compartilhar uma ideia, foto Lo-Fi, áudio ou vídeo nesta rede.</p>
+    <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+      <button type="button" class="btn btn-primary btn-sm" data-click-target="#feed-inline-composer .inline-composer-collapsed">Criar publicação</button>
+      <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas</a>
+    </div>
+  </div>`;
 }
 
 /**
@@ -216,7 +213,6 @@ function renderFeedEmptyState(activeFeed, failure = "") {
  * @param {string} [opts.activeFeed] Filtro ativo (`civic`, `external`, etc.).
  * @param {string} [opts.userRouteId] Conta para o composer.
  * @param {string[]} [opts.externalSubs] Handles Bluesky quando `activeFeed === "external"`.
- * @param {"offline"|"error"} [opts.failure] Falha da carga: sem posts, mostra o cartão "sem rede" ou "erro" no lugar do vazio.
  * @returns {void}
  */
 export function renderFeed(main, topics = [], opts = {}) {
@@ -238,7 +234,7 @@ export function renderFeed(main, topics = [], opts = {}) {
     </div>`;
 
   if (!topics.length) {
-    main.innerHTML += html + renderFeedEmptyState(activeFeed, opts.failure);
+    main.innerHTML += html + renderFeedEmptyState(activeFeed);
     return;
   }
 

@@ -95,8 +95,6 @@ export const T20_PACK = Object.freeze({
     blocks: Object.freeze([]),
     hud: Object.freeze({ defense: "armorClass", secondary: "mp" }),
   }),
-  /** Só o ataque: as perícias já têm botão próprio no pacote, com o bônus certo. */
-  seedActions: Object.freeze([Object.freeze({ id: "act-ataque", label: "Espada Longa", roll: "1d20+@for+@prof", damage: "1d8+@for", tag: "ataque" })]),
   formulas: Object.freeze({
     /** Valor guardado = 10 + modificador (o cartão mostra só o modificador). */
     modifier: Object.freeze({ base: 10, step: 1 }),

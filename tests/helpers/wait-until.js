@@ -29,14 +29,3 @@ export async function waitUntil(probe, timeoutMs = 5000) {
 export async function settlePeers(...peers) {
   for (let pass = 0; pass < 5; pass += 1) await Promise.all(peers.map((p) => p.flush()));
 }
-
-/**
- * Esvazia a fila de microtarefas sem relógio: o que já está encadeado em promessas resolvidas (stubs em memória) termina,
- * e o resultado não depende da carga da máquina. Serve para provar ausência quando o código sob teste só usa `await` de
- * stubs; quem espera timer ou E/S real continua usando `waitUntil` na condição observável.
- * @param {number} [rounds] Quantidade de passadas.
- * @returns {Promise<void>} Resolve depois das passadas.
- */
-export async function drainMicrotasks(rounds = 50) {
-  for (let pass = 0; pass < rounds; pass += 1) await Promise.resolve();
-}

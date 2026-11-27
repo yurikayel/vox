@@ -22,9 +22,7 @@ Levantado por busca de texto (`git grep`) nos nomes de algoritmo do WebCrypto e 
 | Carteira e itens do Arweave | RSA-PSS 4096 | `wallet.js`, `ans104.js` | definido pelo Arweave | quebra; depende do Arweave |
 | Ponte Nostr | Schnorr secp256k1 (BIP-340, código próprio) | `nostr-event.js`, `nostr-transport.js` | definido pelo Nostr | quebra; depende do Nostr |
 | Ponte Bluesky (DPoP) | ECDSA P-256 | `bsky-oauth.js` | definido pelo atproto | quebra; depende do Bluesky |
-| Laboratório | ECDSA, RSA-PSS | `labs/parado/identity-link.js` (não plugado, PM-04), `labs/collective-mofn.js` | — | fora do app |
-
-*Erratum (27/11/2026):* a linha do laboratório citava `labs/parado/vox-identity.js` (Ed25519, X25519), removido no REV-02; ela agora lista só o que existe no código.
+| Laboratório | Ed25519, X25519, ECDSA | `labs/parado/vox-identity.js`, `labs/parado/identity-link.js` (não plugados, PM-04), `labs/collective-mofn.js` | — | fora do app |
 
 ### 1.2 O que o Vox já tem a favor
 

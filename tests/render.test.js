@@ -801,16 +801,12 @@ test("render - feed sem abas duplicadas no chrome", () => {
   assert.ok(!main.innerHTML.includes("feed-segmented-nav"));
   assert.ok(main.innerHTML.includes("feed-chrome"));
 
-  // Aba 'Seguindo' vazia: cartão de estado compartilhado (o markup `.following-empty` e o termo "(Watch)" saíram)
+  // Aba 'Seguindo' vazia
   const mainFollowingEmpty = createContainer();
   render.renderFeed(mainFollowingEmpty, [], { activeFeed: "following" });
-  assert.ok(mainFollowingEmpty.innerHTML.includes('class="sv-state sv-state--empty" role="status"'));
-  assert.ok(!mainFollowingEmpty.innerHTML.includes("following-empty"), "o markup antigo não volta");
+  assert.ok(mainFollowingEmpty.innerHTML.includes("following-empty"));
   assert.ok(mainFollowingEmpty.innerHTML.includes("Você ainda não acompanha ninguém"));
-  assert.ok(mainFollowingEmpty.innerHTML.includes("Toque em Acompanhar no perfil de uma pessoa"));
-  assert.ok(!mainFollowingEmpty.innerHTML.includes("(Watch)"), "sem o termo em inglês");
-  assert.ok(mainFollowingEmpty.innerHTML.includes('data-feed-go="#/pessoas"'), "ação primária: encontrar pessoas");
-  assert.ok(mainFollowingEmpty.innerHTML.includes('href="#/"'), "ação secundária: voltar ao feed Social");
+  assert.ok(mainFollowingEmpty.innerHTML.includes("Acompanhar (Watch)"));
 });
 
 test("render - formatPostMarkdown formata citação padrão com link", (t) => {

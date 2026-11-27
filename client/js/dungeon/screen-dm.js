@@ -4,7 +4,6 @@
 import { escapeHtml } from "../shared/html.js";
 import { buildFullInviteUrl } from "./dungeon-dom-focus.js";
 import { inspectPeerPromptForRole } from "./dungeon-state.js";
-import { renderDmRollPanel } from "./dm-roll-panel.js";
 import { dungeonIcon, renderShamirSealSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
 import { renderSavesPanel } from "./screen-party-panels.js";
@@ -167,7 +166,6 @@ export function renderDmScreen(state) {
     ${renderP2pInvitePanel(state)}
     ${renderCompactWorldClock(state, true)}
     ${renderSavesPanel(state)}
-    ${renderDmRollPanel(state)}
     ${renderGmNotesPanel(state)}
     ${(state.notes || []).length ? renderNotesPanel(state) : ""}
     <div class="dungeon-two-col">

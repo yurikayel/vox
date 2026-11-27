@@ -107,7 +107,7 @@ Conforme [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimen
 | Item | Motivo do corte | Referência |
 |---|---|---|
 | **Gravação no Arweave** | Pausada (`arweaveUpload: false`); cota vitalícia por carteira/IP | `REV-07`, [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md) |
-| **Webxdc + CRDT plugado, `polis.js`, `bridging-rank.js`, `airgap-webrtc.js`, `node-health-*`, `seeder-guardian.js`** | Isolados em `client/js/labs/parado/` (`UNPLUGGED_MODULES`); sem peso no shell | `REV-02`, `PM-04` |
+| **Webxdc + CRDT plugado, `polis.js`, `bridging-rank.js`, `vox-identity.js`, `airgap-webrtc.js`, `node-health-*`, `seeder-guardian.js`, `idb-store.js`** | Isolados em `client/js/labs/parado/` (`UNPLUGGED_MODULES`); sem peso no shell | `REV-02`, `PM-04` |
 | **AI Social Dungeon** (`#/dungeon`) | Demonstração de laboratório sem IA nem rede | [ADR-033](../adr/033-ia-so-no-rpg-local-primeiro.md) |
 | **Piloto humano (`V-P09`), escolha de nicho G1, campanha pública** | Adiados por decisão do mantenedor; dependem de portão jurídico/bus factor | `PIL-01…05`, `REV-12`, `LAN-30` |
 | **Stewards públicos, relay completo público, TURN em produção, 2º nó, `enforce`** | Congelados até >50 usuários ativos | `INF-01…04`, `REV-04` |

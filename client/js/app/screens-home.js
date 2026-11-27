@@ -214,38 +214,11 @@ function attachWelcomeTopicDismissHandlers(onDismiss) {
 }
 
 /**
- * Liga os botões do cartão de estado do feed: "Tentar de novo" recarrega o feed e o botão que leva a outra tela
- * (`data-feed-go`) só navega para rota interna (`#/…`).
- *
- * @param {Function} onRetry Recarrega o feed.
- */
-function attachFeedStateActions(onRetry) {
-  document.querySelector(".feed-chrome ~ .sv-state")?.addEventListener("click", (e) => {
-    if (e.target.closest("[data-feed-retry]")) return onRetry();
-    const go = e.target.closest("[data-feed-go]")?.dataset.feedGo;
-    if (go?.startsWith("#/")) window.location.hash = go;
-  });
-}
-
-/**
- * Falha de rede que torna a lista vazia suspeita: aparelho sem conexão. "Seguindo" sem ninguém acompanhado não depende
- * da rede (a lista é local), então ali o vazio continua sendo o vazio.
- *
- * @param {string} activeFeed Feed ativo.
- * @returns {"offline"|""}
- */
-function offlineFailure(activeFeed) {
-  if (globalThis.navigator?.onLine !== false) return "";
-  return activeFeed === "following" && !social.getWatchedProfiles().length ? "" : "offline";
-}
-
-/**
  * Liga os tratadores interativos da Ágora.
  *
  * @param {string} activeFeed Feed ativo.
  */
 function wireHomeInteractiveHandlers(activeFeed) {
-  attachFeedStateActions(() => showHome(activeFeed));
   attachPostShareHandlers();
   attachPostMoreMenuHandlers();
   attachPostOverlayActionMenuHandlers();
@@ -363,7 +336,6 @@ export async function showHome(feed = "for-you") {
   render.renderLoading(main);
   const externalSubs = bskyFeed.loadBskySubscriptions();
   let finalTopics = [];
-  let failure = offlineFailure(activeFeed);
 
   try {
     const { items: remoteItems, gateway } = await fetchRemoteHomeItems(activeFeed);
@@ -372,13 +344,12 @@ export async function showHome(feed = "for-you") {
 
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure });
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   } catch {
-    failure ||= "error";
     main.innerHTML = "";
     const fallbackItems = mock.mockRecentTopics()?.items || [];
     finalTopics = await assembleHomeFeedTopics(fallbackItems, new Map(), user, activeFeed);
-    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure });
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }
 
   wireHomeInteractiveHandlers(activeFeed);

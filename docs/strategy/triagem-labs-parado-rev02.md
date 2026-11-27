@@ -1,24 +1,9 @@
 # Triagem módulo a módulo de `client/js/labs/parado/` (REV-02)
 
-> **Status:** auditoria (triagem REV-02 dos 21 módulos em `labs/parado/`, decidida em 27/11/2026 com o REV-02 fechado) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-27
+> **Status:** rascunho (triagem REV-02 dos 21 módulos em `labs/parado/` para decisão do mantenedor) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-22
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Complementa [client/js/labs/parado/README.md](../../client/js/labs/parado/README.md), [FEATURES.md](../FEATURES.md), [ADR-035](../adr/035-camadas-e-contextos.md) e o orçamento do shell (`LAN-23`, [scripts/shell-budget-check.mjs](../../scripts/shell-budget-check.mjs)).
 
-## 0. Atualização de 27/11/2026 (código real de `develop`)
-
-A triagem abaixo foi escrita em 22/11; o código andou. O que mudou, conferido na árvore:
-
-| Item | Em 22/11 | Hoje |
-|---|---|---|
-| `idb-store.js` e `vox-identity.js` | Arquivar | **Já removidos** de `labs/parado/` (sem importador, sem entrada em `UNPLUGGED_MODULES`). Não há nada a arquivar; a decisão está cumprida. |
-| `kit-genesis.js` | Plugar após fatiar (412 LLOC) | **Fatiado e plugado sob demanda**: `kit-genesis.js` (185 linhas), `kit-genesis-data.js` (237) e `kit-genesis-validate.js` (172), carregado por `import()` em `app/compose-community-kit.js`. Fora de `UNPLUGGED_MODULES`. Ainda mora em `labs/parado/`, pendente de mudar de pasta (ADR-035). |
-| Plugar: `chunked-transfer`, `airgap-webrtc`, `seeder-guardian`, `settings-guardian` | Plugar em T2–T3/2027 | **Sem mudança**: seguem em `UNPLUGGED_MODULES`, sem importador, à espera dos gatilhos (`PM-71`, F2, `REV-15`). |
-| Manter em laboratório (14) | 14 | **14, sem mudança** (gatilhos intactos). |
-
-Estado atual: **21 arquivos** em `labs/parado/` (18 desligados, listados em `UNPLUGGED_MODULES`, mais os 3 do `kit-genesis`, carregados sob demanda). Os números de linhas, LLOC e bytes das seções 1 e 2 são de 22/11 e **não foram remedidos**; o `kit-genesis` mudou de tamanho com o fatiamento.
-
-**REV-02 fechado no ROADMAP em 27/11:** a decisão está tomada e executada no que dependia só dela. Os quatro módulos a plugar e os 14 em laboratório esperam o gatilho de cada um, não trabalho de agora. Fica de fora, por sua conta: mover `kit-genesis*` para a pasta do assunto (ADR-035).
-
-## 1. Resumo executivo e estado medido (de 22/11)
+## 1. Resumo executivo e estado medido
 
 Os **21 módulos** isolados em [`client/js/labs/parado/`](../../client/js/labs/parado/README.md) somam **4.241 linhas totais**, **2.888 LLOC** (tokens AST via `espree`), **139.348 bytes brutos** (**43.377 bytes gzip**). Hoje nenhum ponto de entrada do PWA os importa e todos permanecem listados em `UNPLUGGED_MODULES` em [`client/sw.js`](../../client/sw.js), com **0 byte** de impacto no precache offline.
 

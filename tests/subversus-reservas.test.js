@@ -121,5 +121,5 @@ test(".voxchar: a ficha com reservas exporta e passa na validação; pools (esta
 
 test("5e: a faixa continua com o mesmo hash (golden)", () => {
   const s = { character_id: "a", system: { id: "5e", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} };
-  assert.equal(createHash("sha256").update(renderDerivedStrip(s, 18)).digest("hex"), "2a81793865e326036473983ac44af6e4a9ff7fa2525c22deaa141bf28166104b");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(s, 18)).digest("hex"), "2b13fcd781b73b098d59382150b9ccae4200ca2c12ece7015dbd1cb34e4c47e2");
 });

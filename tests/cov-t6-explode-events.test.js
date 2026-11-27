@@ -5,7 +5,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
+import { waitUntil } from "./helpers/wait-until.js";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
 
 const doc = installFakeDom();
@@ -31,7 +31,7 @@ doc.createElement = ((make) => (tag) => {
   return el;
 })(doc.createElement.bind(doc));
 
-const settle = () => drainMicrotasks();
+const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
 const buttonHtml = (id) => `<button class="btn-explode-post" data-id="${id}" data-title="Título ${id}" data-body="Corpo #causa" data-author="vx_a" data-comm="geral"><span class="count-explodes"></span></button>`;
 const sheet = () => doc.getElementById(ui.EXPLODE_SHEET_ID);
 const act = async (name) => { click(sheet().querySelector(`[data-explode-action="${name}"]`)); await settle(); };

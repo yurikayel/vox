@@ -3,8 +3,7 @@
  * (HTML em texto); o CSS fica em `client/css/sv-estados.css`, carregado pela tela que usa o cartão.
  *
  * O botão é opcional e só existe com `action`: ele leva `data-*` para o tratador da tela (sem `data-*` não há como o
- * tratador achar o botão, então o cartão recusa). Assim nenhum estado traz botão morto. O link secundário (`link`) é
- * só navegação interna (`#/…`), sem tratador, e vem depois do botão.
+ * tratador achar o botão, então o cartão recusa). Assim nenhum estado traz botão morto.
  * @module shared/state-card
  */
 import { escapeHtml } from "./html.js";
@@ -15,7 +14,6 @@ export const STATE_KINDS = Object.freeze(["loading", "empty", "error", "offline"
 const DEFAULT_ROWS = 3;
 const MAX_ROWS = 8;
 const DATA_KEY_RE = /^[a-z][a-z0-9-]*$/;
-const LINK_HREF_RE = /^#\/[A-Za-z0-9\-._~%/?=&]*$/;
 
 const ICONS = Object.freeze({
   empty: `<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>`,
@@ -45,14 +43,6 @@ function actionButton(action) {
   return `<button type="button" class="sv-state-action" ${dataAttributes(action.data)}>${escapeHtml(label)}</button>`;
 }
 
-function secondaryLink(link) {
-  if (!link) return "";
-  const label = String(link.label || "").trim();
-  if (!label) throw new Error("Link de estado sem rótulo.");
-  if (!LINK_HREF_RE.test(String(link.href || ""))) throw new Error(`Link de estado só aceita rota interna (#/…): ${link.href}`);
-  return `<a class="sv-state-link" href="${escapeHtml(link.href)}">${escapeHtml(label)}</a>`;
-}
-
 function skeletonRows(rows) {
   const count = Math.min(MAX_ROWS, Math.max(1, Math.trunc(Number(rows)) || DEFAULT_ROWS));
   return `<span class="sv-skeleton-row"></span>`.repeat(count);
@@ -67,18 +57,17 @@ function loadingCard({ text, rows }) {
 /**
  * Desenha o cartão de um dos 4 estados de tela.
  * - `loading`: `aria-busy`, `rows` barras de esqueleto (padrão 3) e "Carregando…" só para leitor de tela, ou o `text` visível.
- * - `empty`, `error`, `offline`: ícone decorativo, uma frase, no máximo 1 botão e no máximo 1 link secundário.
+ * - `empty`, `error`, `offline`: ícone decorativo, uma frase e no máximo 1 botão.
  * @param {object} spec Descrição do cartão.
  * @param {"loading"|"empty"|"error"|"offline"} spec.kind Estado; qualquer outro valor lança erro.
  * @param {string} [spec.text] Frase do estado (escapada); nos 3 últimos kinds é o corpo do cartão.
  * @param {{label: string, data: Object<string, string>}} [spec.action] Botão único; `data` vira `data-*` escapado e
  * não pode ser vazio. Sem `action` não há `<button>`.
- * @param {{label: string, href: string}} [spec.link] Link secundário para uma rota interna (`#/…`); outro endereço lança erro.
  * @param {number} [spec.rows=3] Barras do esqueleto (de 1 a 8), só em `loading`.
  * @returns {string} HTML do cartão, com `role="status"`.
  */
-export function renderStateCard({ kind, text = "", action = null, link = null, rows = DEFAULT_ROWS } = {}) {
+export function renderStateCard({ kind, text = "", action = null, rows = DEFAULT_ROWS } = {}) {
   if (!STATE_KINDS.includes(kind)) throw new Error(`Estado de tela desconhecido: ${kind}`);
   if (kind === "loading") return loadingCard({ text, rows });
-  return `<div class="sv-state sv-state--${kind}" role="status">${iconSvg(kind)}<p class="sv-state-text">${escapeHtml(text)}</p>${actionButton(action)}${secondaryLink(link)}</div>`;
+  return `<div class="sv-state sv-state--${kind}" role="status">${iconSvg(kind)}<p class="sv-state-text">${escapeHtml(text)}</p>${actionButton(action)}</div>`;
 }

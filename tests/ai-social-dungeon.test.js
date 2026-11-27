@@ -228,13 +228,7 @@ test("rpg-maritaca-router & lab: tier routing, XGrammar check and HTML lab rende
   assert.equal(valid.valid, true);
   const html = renderDungeonLab();
   assert.ok(html.includes("Lab AI Social Dungeon"));
-  assert.ok(!html.includes("data-dungeon=\"failover\""), "sem a flag de laboratório o teste de queda não aparece");
-  globalThis.localStorage.setItem("vox.lab.mesa-rede", "1");
-  try {
-    assert.ok(renderDungeonLab().includes("data-dungeon=\"failover\""), "com a flag de laboratório o botão aparece");
-  } finally {
-    globalThis.localStorage.removeItem("vox.lab.mesa-rede");
-  }
+  assert.ok(html.includes("data-dungeon=\"failover\""));
 });
 
 test("rpg-maritaca-router: MoA k-1 aggregation, overhearing Co-DM and HTTP request builder", () => {

@@ -45,15 +45,6 @@
   cursor: pointer;
 }
 
-.sv-state-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--sa-on-surface);
-  font-weight: 600;
-  text-decoration: underline;
-}
-
 .sv-skeleton-row {
   display: block;
   height: 1rem;

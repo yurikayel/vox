@@ -58,9 +58,7 @@ test("adicionar contato: só o contato novo dispara aviso; repetido ou vazio nã
   assert.equal(contacts.hasContact("vx_bia"), true);
   const again = sendDeps();
   assert.equal(flow.addContactAndNotify("vx_bia", "Bia", again), true);
-  const sentinel = sendDeps();
-  assert.equal(flow.addContactAndNotify("vx_caio", "Caio", sentinel), true);
-  await waitUntil(() => sentinel.sent.length === 1);
+  await new Promise((resolve) => setTimeout(resolve, 20));
   assert.equal(again.sent.length, 0, "já era contato");
 });
 

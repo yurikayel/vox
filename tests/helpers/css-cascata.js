@@ -5,9 +5,8 @@
  * combinadores descendente e filho, `:is`, `:where`, `:not`, `:disabled`, estados (`:hover`, `:focus-visible`…) e
  * atributos. Lê `@media (prefers-color-scheme: …)` (inclusive o bloco do atributo `data-color-mode` dentro do `@media`
  * do outro tema) e o escolhe pelo ambiente `{scheme}` passado à busca; ignora o que não tem como ser medido num
- * elemento isolado: outros `@media`/`@supports`, irmãos (`+`, `~`), `:has` e `:nth-*`; as regras que o
- * motor não lê contam em `unsupported`. Pseudo-elemento (`::before`) só casa quando o último pedaço do caminho de
- * `buildChain` o pede (`summary::before`), e então só regras que o trazem. É o que o `renderedDecl` de `css-tema.js` não faz (ele compara só o último
+ * elemento isolado: outros `@media`/`@supports`, irmãos (`+`, `~`), `:has`, `:nth-*` e pseudo-elementos; as regras que o
+ * motor não lê contam em `unsupported`. É o que o `renderedDecl` de `css-tema.js` não faz (ele compara só o último
  * pedaço do seletor e ignora ancestral, classe de variante e `@media`).
  */
 import { blocks, readSheet, SV_SHEETS } from "./css-tema.js";
@@ -132,7 +131,7 @@ function matchAttr(a, el) {
 
 function matchPseudo(p, chain, i) {
   const el = chain[i];
-  if (p.element) return true; // `matchCompound` já conferiu o pseudo-elemento do caminho
+  if (p.element) return false;
   if (STATES.has(p.name)) return el.states.has(p.name);
   const off = el.attrs.disabled !== undefined;
   const any = () => (p.arg === null ? [] : listOf(p.arg)).some((s) => matchComplex(s, chain, i));
@@ -149,7 +148,6 @@ function matchPseudo(p, chain, i) {
 
 function matchCompound(c, chain, i) {
   const el = chain[i];
-  if ((c.pseudos.find((p) => p.element)?.name ?? null) !== el.pseudoElement) return false;
   if (c.tag && c.tag !== "*" && c.tag !== el.tag) return false;
   if (c.id && c.id !== el.attrs.id) return false;
   return c.classes.every((k) => el.classes.includes(k)) && c.attrs.every((a) => matchAttr(a, el)) && c.pseudos.every((p) => matchPseudo(p, chain, i));
@@ -248,10 +246,9 @@ const appliesIn = (rule, env) => rule.scheme === null || rule.scheme === env.sch
 
 /**
  * Monta a árvore de um elemento: do mais externo ao elemento, com estados só no último.
- * @param {string} path Caminho com `>` e espaço, por exemplo `html > body > div.app-layout.agora-ui > button#x.btn[disabled]`;
- * o último pedaço pode pedir um pseudo-elemento (`summary::before`).
+ * @param {string} path Caminho com `>` e espaço, por exemplo `html > body > div.app-layout.agora-ui > button#x.btn[disabled]`.
  * @param {string[]} [states] Estados do elemento (`hover`, `focus-visible`…).
- * @returns {object[]} Elementos `{tag, classes, attrs, states, pseudoElement}`.
+ * @returns {object[]} Elementos `{tag, classes, attrs, states}`.
  */
 export function buildChain(path, states = []) {
   const { compounds } = parseSelector(path);
@@ -261,8 +258,7 @@ export function buildChain(path, states = []) {
     if (c.classes.length) attrs.class = c.classes.join(" ");
     const last = i === compounds.length - 1;
     const mine = last ? [...states, ...(states.includes("focus-visible") ? ["focus"] : [])] : [];
-    const pseudoElement = last ? (c.pseudos.find((p) => p.element)?.name ?? null) : null;
-    return { tag: c.tag ?? "div", classes: c.classes, attrs, states: new Set(mine), pseudoElement };
+    return { tag: c.tag ?? "div", classes: c.classes, attrs, states: new Set(mine) };
   });
 }
 

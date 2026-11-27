@@ -11,7 +11,7 @@ import * as bsky from "../client/js/bsky-feed.js";
 import * as unread from "../client/js/community-unread.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as home from "../client/js/app/screens-home.js";
-import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
+import { waitUntil } from "./helpers/wait-until.js";
 
 const dom = installFakeDom();
 const realFetch = globalThis.fetch;
@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 const offline = () => { globalThis.fetch = async () => { throw new Error("offline"); }; };
-const settle = () => drainMicrotasks();
+const settle = (ms = 60) => new Promise((r) => setTimeout(r, ms));
 
 function bskyForm() {
   return {
