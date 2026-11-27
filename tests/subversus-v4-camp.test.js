@@ -113,3 +113,27 @@ test("screen-camp.js continua com no máximo 350 linhas", () => {
   const lines = readFileSync(new URL("../client/js/dungeon/screen-camp.js", import.meta.url), "utf8").split("\n").length - 1;
   assert.ok(lines <= 350, `screen-camp.js tem ${lines} linhas (teto 350)`);
 });
+
+const GLOSSARIO_BANIDO = /ledger|imutável|\bnó #|SIG:|ponta a ponta|garantia criptográfica/i;
+
+test("o texto do Acampamento não usa jargão de cripto nem promete o que o sistema não garante", () => {
+  const telas = [renderCampScreen(campState()), renderCampScreen(createDungeonSessionState({})), renderPartyPanel(campState())];
+  for (const html of telas) {
+    const texto = html.replace(/<[^>]+>/g, " ");
+    assert.doesNotMatch(texto, GLOSSARIO_BANIDO, "termo do glossário banido na tela");
+  }
+});
+
+test("sem campanha o Acampamento mostra o estado vazio: uma frase e o caminho da ação", () => {
+  const html = renderCampScreen(createDungeonSessionState({}));
+  assert.match(html, /Nenhuma campanha salva ainda neste aparelho\. Crie sua primeira campanha acima/);
+  assert.match(html, /create-campaign-form/, "o formulário de criar fica na tela");
+});
+
+test("sv-camp.css e o index não usam rede externa, não suprimem o foco e não travam o zoom", () => {
+  const sheetCss = campCss().replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(sheetCss, /outline\s*:\s*(none|0)\b/i, "foco visível não pode ser suprimido");
+  assert.doesNotMatch(sheetCss, /@import|url\(\s*["']?(https?:)?\/\//i, "nada de recurso externo na folha");
+  const index = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
+  assert.doesNotMatch(index, /user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0)?\b/i, "o viewport permite zoom");
+});
