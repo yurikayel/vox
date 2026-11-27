@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { drainMicrotasks } from "./helpers/wait-until.js";
 import "./setup.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import { LOCAL_ACCOUNT_CREATE_LOCK } from "../client/js/identity/tab-sync.js";
@@ -76,7 +77,7 @@ test("LT-06a: duas abas simuladas — Web Lock serializa e uma só conta no stor
     return orig(name, opts, async () => {
       lockDepth += 1;
       maxLockDepth = Math.max(maxLockDepth, lockDepth);
-      await new Promise((r) => setTimeout(r, 8));
+      await drainMicrotasks(50);
       const out = await cb();
       lockDepth -= 1;
       return out;
@@ -87,7 +88,7 @@ test("LT-06a: duas abas simuladas — Web Lock serializa e uma só conta no stor
       localAccount.__resetEnsureLocalAccountInflightForTests();
       return localAccount.ensureLocalAccount();
     })();
-    await new Promise((r) => setTimeout(r, 2));
+    await drainMicrotasks(50);
     const tabB = (async () => {
       localAccount.__resetEnsureLocalAccountInflightForTests();
       return localAccount.ensureLocalAccount();
