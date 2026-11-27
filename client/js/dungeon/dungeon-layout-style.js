@@ -39,12 +39,13 @@ export function ensureSvSheets(doc = document, sheets = SV_SHEETS) {
  * Garante que a folha de layout da Mesa e as folhas `sv-*.css` estão linkadas no documento.
  *
  * @param {Document} [doc=document] Documento alvo.
+ * @param {ReadonlyArray<{ id: string, href: string }>} [sheets=SV_SHEETS] Folhas `sv-*.css` a linkar junto do layout.
  * @returns {void}
  */
-export function ensureDungeonLayoutStyles(doc = document) {
+export function ensureDungeonLayoutStyles(doc = document, sheets = SV_SHEETS) {
   watchTokenTrayStyles(doc);
   if (!doc?.head) return;
   /* Relativo à URL do cliente (`client/` servido na raiz); ver `client/DEV.md` se houver `<base href>`. */
   linkSheet(doc, LINK_ID, "css/dungeon-layout.css");
-  ensureSvSheets(doc);
+  ensureSvSheets(doc, sheets);
 }
