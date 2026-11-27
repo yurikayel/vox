@@ -34,7 +34,7 @@ export function normalizePostAspect(aspect) {
 export const root = () => document.getElementById("app-root");
 
 /**
- * Trilha de navegação no padrão Stitch ("Comunidades / Vila Teste / Tópico").
+ * Trilha de navegação no padrão do guia de design ("Comunidades / Vila Teste / Tópico").
  * @param {Array<{label: string, href?: string}>} items Do mais geral ao atual; item sem `href` é a página atual.
  * @returns {string} HTML do `<nav class="agora-breadcrumb">` com os rótulos escapados.
  */

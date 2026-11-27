@@ -192,7 +192,7 @@ function renderCommunityNavTabs(communityId, activeTab, proposalCount = 0) {
 }
 
 /**
- * Monólitos da comunidade com o que o aparelho sabe de verdade (Stitch tela 7, sem tesouro nem ZK).
+ * Monólitos da comunidade com o que o aparelho sabe de verdade (tela 7 do guia de design, sem tesouro nem ZK).
  * @param {number|null} memberCount Membros conhecidos (ou `null` quando ainda não há contagem).
  * @param {object[]} topics Tópicos carregados nesta tela.
  * @param {object[]} proposals Pautas da comunidade conhecidas pelo aparelho.
@@ -209,7 +209,7 @@ function renderCommunityStatRowHtml(memberCount, topics, proposals) {
 }
 
 /**
- * Pauta aberta em destaque no topo dos posts (a "assembleia aberta" do Stitch), com prazo real.
+ * Pauta aberta em destaque no topo dos posts (a "assembleia aberta" do guia de design), com prazo real.
  * @param {string} communityId Id da comunidade.
  * @param {object[]} proposals Pautas conhecidas; usa a primeira em votação.
  * @returns {string} HTML do cartão `.agora-deliberation`, ou vazio se nenhuma pauta estiver aberta.

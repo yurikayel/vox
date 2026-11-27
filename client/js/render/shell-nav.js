@@ -7,7 +7,7 @@
  */
 import { escapeHtml } from "./util.js";
 
-/** Ícones de linha no vocabulário Stitch (Material Symbols outline, traço 1.75). */
+/** Ícones de linha no vocabulário do guia de design (Material Symbols outline, traço 1.75). */
 const svg = (body, cls = "tab-svg", size = 22) =>
   `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
@@ -81,7 +81,7 @@ export function renderFeedNavSlot(showFeedNav, activeFeed) {
 }
 
 /**
- * Itens de navegação primária (Stitch / ADR-016): Ágora, Vote, Comunidades, Mensagens, Perfil.
+ * Itens de navegação primária (guia de design / ADR-016): Ágora, Vote, Comunidades, Mensagens, Perfil.
  * Pessoas e Voxpedia são secundários — ficam no menu lateral do desktop e na gaveta de identidade
  * no celular (a barra inferior mostra só os cinco primários).
  */
@@ -136,7 +136,7 @@ export function renderSidebarNav(activeTab) {
 }
 
 /**
- * Círculos territoriais (Stitch): comunidades locais deste aparelho. Renderizado vazio e
+ * Círculos territoriais (guia de design): comunidades locais deste aparelho. Renderizado vazio e
  * hidratado de forma assíncrona a partir do IndexedDB — nenhuma contagem fictícia.
  * @param {Array<{id:string,name?:string,title?:string,unread?:number}>} communities Comunidades locais conhecidas.
  * @returns {string} HTML da seção de círculos, ou `""` se a lista estiver vazia.

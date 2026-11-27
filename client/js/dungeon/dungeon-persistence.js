@@ -138,19 +138,6 @@ export async function recordFormulaRoll(state, rawInput, opts = {}) {
 }
 
 /**
- * Rola um teste de atributo (`str`, `dex`, `con`, `int`, `wis`, `cha`) a partir da ficha clicável.
- * @param {object} state Estado da sessão.
- * @param {string} abilityKey Chave do atributo (`str`..`cha`).
- * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
- * @returns {Promise<object>} Resultado da rolagem.
- */
-export async function recordAbilityRoll(state, abilityKey, opts = {}) {
-  const key = String(abilityKey || "").toLowerCase();
-  const label = ABILITY_LABELS_PTBR[key] || key.toUpperCase();
-  return recordFormulaRoll(state, `1d20+@${key} # Teste de ${label}`, opts);
-}
-
-/**
  * Rola uma ação clicável da ficha (`sheet_meta.clickable_actions`), incluindo dano quando definido.
  * @param {object} state Estado da sessão.
  * @param {string} actionId Identificador da ação clicável.

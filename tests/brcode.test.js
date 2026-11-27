@@ -45,7 +45,7 @@ test("brcode - calculateCrc16 calcula checksum CCITT de 4 caracteres hexadecimai
 test("brcode - buildPixPayload gera string Copia e Cola válida para diversos tipos de chaves", () => {
   // 1. Chave de E-mail com valor fixo R$ 5
   const emailPayload = brcode.buildPixPayload({
-    key: "helena.vox@gmail.com",
+    key: "helena.vox@example.org",
     name: "Helena Soares",
     city: "Sao Paulo",
     amount: 5,
@@ -53,7 +53,7 @@ test("brcode - buildPixPayload gera string Copia e Cola válida para diversos ti
   });
   assert.ok(emailPayload.startsWith("00020101021126"));
   assert.ok(emailPayload.includes("br.gov.bcb.pix"));
-  assert.ok(emailPayload.includes("helena.vox@gmail.com"));
+  assert.ok(emailPayload.includes("helena.vox@example.org"));
   assert.ok(emailPayload.includes("54045.00")); // Valor R$ 5.00
   assert.ok(emailPayload.includes("5802BR"));
   assert.ok(emailPayload.includes("5913HELENA SOARES"));
