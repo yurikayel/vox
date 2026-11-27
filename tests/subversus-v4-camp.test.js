@@ -116,11 +116,20 @@ test("screen-camp.js continua com no máximo 350 linhas", () => {
 
 const GLOSSARIO_BANIDO = /ledger|imutável|\bnó #|SIG:|ponta a ponta|garantia criptográfica/i;
 
-test("o texto do Acampamento não usa jargão de cripto nem promete o que o sistema não garante", () => {
+/** Tudo o que um leitor de tela lê: o texto visível e os atributos aria-label, title, placeholder e alt. */
+function textoLido(html) {
+  const atributos = [...html.matchAll(/\s(?:aria-label|title|placeholder|alt)="([^"]*)"/g)].map((m) => m[1]);
+  return [html.replace(/<[^>]+>/g, " "), ...atributos].join(" ");
+}
+
+test("o texto lido do Acampamento (visível, aria-label, title, placeholder) não usa jargão nem promessa vazia", () => {
   const telas = [renderCampScreen(campState()), renderCampScreen(createDungeonSessionState({})), renderPartyPanel(campState())];
-  for (const html of telas) {
-    const texto = html.replace(/<[^>]+>/g, " ");
-    assert.doesNotMatch(texto, GLOSSARIO_BANIDO, "termo do glossário banido na tela");
+  for (const html of telas) assert.doesNotMatch(textoLido(html), GLOSSARIO_BANIDO, "termo do glossário banido na tela");
+});
+
+test("a checagem do glossário enxerga o termo banido em aria-label, title, placeholder e no texto", () => {
+  for (const mutado of ['<a aria-label="Cofre imutável">x</a>', '<b title="ledger local">x</b>', '<input placeholder="SIG: abc">', "<p>nó #4881</p>"]) {
+    assert.match(textoLido(mutado), GLOSSARIO_BANIDO, mutado);
   }
 });
 
