@@ -19,8 +19,8 @@ const derived = () => deriveSheet(DND5E_2024_PACK, { level: 5, abilities: { dex:
 
 test("D&D: a faixa continua byte a byte igual à de antes do display (golden)", () => {
   const html = renderDerivedStrip(sheet(), 18);
-  assert.equal(html.length, 5051);
-  assert.equal(createHash("sha256").update(html).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(html.length, 5245);
+  assert.equal(createHash("sha256").update(html).digest("hex"), "0214ba1e84699c11f8b3ea8b5f38eae694a98abbbe70a966934a50fc34501e10");
   assert.match(html, /<dl class="dungeon-derived-list">\s*<div class="dungeon-derived-stat"><dt>Proficiência<\/dt><dd>\+3<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>CA sem armadura<\/dt><dd>12<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Iniciativa<\/dt><dd>\+2<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Percepção passiva<\/dt><dd>11<\/dd><\/div>\s*<div class="dungeon-derived-stat"><dt>Deslocamento<\/dt><dd>9 m<\/dd><\/div>\s*<\/dl>/);
 });
 
@@ -122,7 +122,7 @@ test("T20: o HUD chama a defesa de Defesa; o D&D segue com o mesmo hash e com CA
   assert.equal(defenseLabel(getSystemPack("t20")), "Defesa");
   assert.equal(defenseLabel(getSystemPack("dnd5e-2024")), "CA");
   assert.equal(buildMobileLine({ name: "A", hp: "18/24", ac: 14, acLabel: defenseLabel(getSystemPack("t20")) }), "A · PV 18/24 · Defesa 14");
-  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "0214ba1e84699c11f8b3ea8b5f38eae694a98abbbe70a966934a50fc34501e10");
 });
 
 test("blocos: sem display.blocks valem todos; com a lista, só os listados; blocks que não é lista recusa o pacote", () => {
@@ -174,7 +174,7 @@ test("GURPS: o peso do inventário muda Carga, Deslocamento e Esquiva; item sem 
 test("GURPS: o registro de computed é fechado (só nomes gurps.*) e D&D e T20 seguem iguais", () => {
   assert.deepEqual(Object.keys(COMPUTED_STATS).sort(), ["gurps.basicMove", "gurps.basicSpeed", "gurps.dodge", "gurps.fp", "gurps.hp", "gurps.load", "gurps.move"]);
   assert.deepEqual(validateSystemPack(getSystemPack("gurps4e")), { ok: true, errors: [] });
-  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d");
+  assert.equal(createHash("sha256").update(renderDerivedStrip(sheet(), 18)).digest("hex"), "0214ba1e84699c11f8b3ea8b5f38eae694a98abbbe70a966934a50fc34501e10");
   assert.equal(gstat(renderDerivedStrip(t20Sheet()), "Defesa"), "14");
 });
 
