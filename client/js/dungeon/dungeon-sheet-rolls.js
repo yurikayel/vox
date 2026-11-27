@@ -25,7 +25,7 @@ function failRoll(state, message) {
 }
 
 /**
- * Rola o teste de um atributo da ficha com o modificador derivado do pacote (não o `@atr` de D&D).
+ * Rola o teste de um atributo da ficha com o modificador derivado do pacote (não o `@atr` de 5e).
  * @param {object} state Estado da sessão.
  * @param {string} abilityKey Id do atributo do pacote (`str`, `dex`, …).
  * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).

@@ -1,6 +1,6 @@
 /**
  * @file PM-111 do SUB-21: toda perícia do pacote vira botão que rola pelo derivado (o mesmo número da ficha) e o
- * teste de atributo usa o modificador do sistema, não o `@atr` de D&D (T20 com Des 14 = +4, não +2).
+ * teste de atributo usa o modificador do sistema, não o `@atr` de 5e (T20 com Des 14 = +4, não +2).
  */
 import "./setup.js";
 import test from "node:test";
@@ -61,7 +61,7 @@ test("c) T20 com Des 14: o teste de Destreza soma +4 e o cabeçalho mostra +4", 
   assert.match(renderSheetHero(state.sheet), /data-ability="dex"[^>]*><strong>14 \(\+4\)</);
 });
 
-test("d) D&D com Des 14 (controle): Furtividade e teste de Destreza somam +2", async () => {
+test("d) 5e com Des 14 (controle): Furtividade e teste de Destreza somam +2", async () => {
   const state = stateFor("dnd5e-2024");
   assert.equal(bonusOf(await click(state, "roll-skill", { skill: "stealth" })), 2);
   assert.equal(bonusOf(await click(state, "roll-ability", { ability: "dex" })), 2);
@@ -101,12 +101,12 @@ test("h) 'Mais usados' não repete perícia do pacote com fórmula @var: só o b
   assert.equal(bonusOf(await click(state, "roll-skill", { skill: "furtividade" })), 4);
 });
 
-test("i) pacote sem os seis atributos de D&D (GURPS) não mostra botão de atributo que daria alerta", () => {
+test("i) pacote sem os seis atributos da 5e (GURPS) não mostra botão de atributo que daria alerta", () => {
   const html = renderSheetHero(stateFor("gurps4e").sheet);
   assert.equal(html.includes('data-dungeon="roll-ability"'), false);
 });
 
-test("j) controle: D&D e T20 seguem com os seis botões de atributo", () => {
+test("j) controle: 5e e T20 seguem com os seis botões de atributo", () => {
   for (const id of ["dnd5e-2024", "t20"]) {
     const html = renderSheetHero(stateFor(id).sheet);
     assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
