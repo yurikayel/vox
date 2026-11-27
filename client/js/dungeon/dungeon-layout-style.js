@@ -16,6 +16,7 @@ export const SV_SHEETS = Object.freeze([
   { id: "sv-camp-stylesheet", href: "css/sv-camp.css" },
   { id: "sv-estados-stylesheet", href: "css/sv-estados.css" },
   { id: "sv-rolagens-stylesheet", href: "css/sv-rolagens.css" },
+  { id: "sv-ficha-stylesheet", href: "css/sv-ficha.css" },
 ]);
 
 function linkSheet(doc, id, href) {
