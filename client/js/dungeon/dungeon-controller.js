@@ -16,6 +16,7 @@ import {
   showDice3dAfterRedraw,
 } from "./dungeon-dom-focus.js";
 import { ensureDungeonLayoutStyles } from "./dungeon-layout-style.js";
+import { bindInventoryDrag } from "./inventory-drag-ui.js";
 import {
   bootstrapDungeonPersistence,
   hasStoredDungeonPrefs,
@@ -368,14 +369,13 @@ function applyDungeonWirePrefs(sessionState, viewOpts) {
  */
 export function wireDungeonView(container, opts = {}) {
   if (!container || container.dataset.dungeonWired === "1") return;
-  const layoutDoc = container.ownerDocument;
-  if (layoutDoc) ensureDungeonLayoutStyles(layoutDoc);
-  else if (typeof document !== "undefined") ensureDungeonLayoutStyles(document);
+  ensureDungeonLayoutStyles(container.ownerDocument ?? (typeof document !== "undefined" ? document : null));
   container.dataset.dungeonWired = "1";
   const viewOpts = { ...opts };
   const sessionState = viewOpts.state || getDungeonSession();
   sessionState._onSyncUpdate = () => redrawContainer(container, viewOpts, "", true);
   applyDungeonWirePrefs(sessionState, viewOpts);
+  bindInventoryDrag(container, viewOpts, (job, extra) => settleAndRedraw(job, container, viewOpts, extra));
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));
   container.addEventListener("input", (ev) => {
     const target = ev.target;
