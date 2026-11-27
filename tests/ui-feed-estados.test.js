@@ -327,6 +327,14 @@ test("Para você online com os gateways fora do ar: aviso de erro com Tentar de 
   assert.doesNotMatch(html, /sv-state--(empty|offline)/);
 });
 
+test("Redes externas online com os gateways fora do ar: sem 'Não deu para carregar', o feed não depende deles", async () => {
+  gateway(null);
+  await home.showHome("external");
+  const html = dom.main.innerHTML;
+  assert.doesNotMatch(sem(html), /Não deu para carregar o feed agora/);
+  assert.doesNotMatch(html, /sv-state--error/);
+});
+
 test("Para você online com o gateway respondendo: sem aviso nenhum, só a lista", async () => {
   localStorage.removeItem(DISMISS_KEY);
   gateway([]);

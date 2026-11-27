@@ -377,7 +377,8 @@ export async function showHome(feed = "for-you") {
 
   try {
     const { items: remoteItems, gateway, failed } = await fetchRemoteHomeItems(activeFeed);
-    if (failed) failure ||= "error";
+    // "Redes externas" vem direto do Bluesky, não dos gateways: gateway fora do ar não é falha desse feed.
+    if (failed && activeFeed !== "external") failure ||= "error";
     const commMap = await buildCommunityTitleMap();
     finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
 
