@@ -20,7 +20,7 @@ Arquivo JSON em UTF-8, no máximo 256 KiB, extensão `.voxchar`. Os nomes dos ca
 {
   "kind": "voxchar",
   "format": 1,
-  "system": { "id": "dnd5e-2024", "version": 1 },
+  "system": { "id": "5e", "version": 1 },
   "exportedAt": "2026-11-25T12:00:00.000Z",
   "sheet": {
     "attributes_lww": { "name": "", "ancestry": "", "class_name": "", "armor_class": 10, "abilities": {}, "level": 1, "speed_ft": 30 },
@@ -201,7 +201,7 @@ Campo opcional `sheet.pools_base`, objeto plano só com:
 
 - **Chaves aceitas:** `hp_max` (se o pacote declarado tem recurso `hp`) e `<id>_max` para cada `id` de `reserveIds(pack)` (recursos `pool` que não são PV). Qualquer outra chave é **descartada** (lista branca), inclusive `gold_initial`, `spell_slots_max`, `hp_current`, `*_current`, `__proto__`, `constructor`.
 - **Valores:** inteiro de 0 a 9999 (`RESERVE_CAP`); mesmas regras da ficha (`reserveMax`). Fora da faixa, não inteiro ou não numérico: **recusa com o campo e o motivo** (igual a `qty`, §4), não trunca em silêncio. 0 é aceito e equivale a "sem o recurso".
-- **Só ids do pacote declarado:** `mp_max` num arquivo de `dnd5e-2024` (que não declara `mp`) é descartado, não recusado (o arquivo continua válido). Pacote desconhecido já recusa o arquivo inteiro (§4).
+- **Só ids do pacote declarado:** `mp_max` num arquivo de `5e` (que não declara `mp`) é descartado, não recusado (o arquivo continua válido). Pacote desconhecido já recusa o arquivo inteiro (§4).
 - **Limites:** o campo tem no máximo `1 + nº de reservas` chaves e conta nos limites existentes (`maxNodes`, 256 KiB). Nenhum limite novo.
 
 ### 10.4 Versão e compatibilidade **(proposta)**

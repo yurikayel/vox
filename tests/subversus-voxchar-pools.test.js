@@ -69,7 +69,7 @@ test("4. valor fora de 0–9999, fracionário, negativo, texto ou nulo é recusa
 });
 
 test("5. id de outro pacote e chave desconhecida são descartados; __proto__ e constructor não têm efeito", async () => {
-  const raw = '{"kind":"voxchar","format":1,"system":{"id":"dnd5e-2024","version":1},"sheet":{"attributes_lww":{"name":"Lyra"},"pools_base":{"hp_max":30,"mp_max":8,"fp_max":3,"xyz":9,"__proto__":{"hp_max":1},"constructor":{"x":1}}}}';
+  const raw = '{"kind":"voxchar","format":1,"system":{"id":"5e","version":1},"sheet":{"attributes_lww":{"name":"Lyra"},"pools_base":{"hp_max":30,"mp_max":8,"fp_max":3,"xyz":9,"__proto__":{"hp_max":1},"constructor":{"x":1}}}}';
   const { state, out } = await importTo(enc(raw));
   assert.equal(out.ok, true);
   assert.equal(state.sheet.pools_base.hp_max, 30);
@@ -115,7 +115,7 @@ test("10. aviso ao importar sistema com reservas sem máximos; sem aviso quando 
   const warned = await importTo(file(undefined));
   assert.match(warned.state.campaignNotice, /não traz os máximos/);
   assert.doesNotMatch((await importTo(file({ hp_max: 20, mp_max: 6 }))).state.campaignNotice, /máximos/);
-  assert.doesNotMatch((await importTo(file(undefined, { system: "dnd5e-2024" }))).state.campaignNotice, /máximos/);
+  assert.doesNotMatch((await importTo(file(undefined, { system: "5e" }))).state.campaignNotice, /máximos/);
 });
 
 test("chaves permitidas: hp_max só se o pacote tem PV; reservas pelo id e rótulo do pacote", async () => {

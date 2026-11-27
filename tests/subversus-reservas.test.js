@@ -31,10 +31,10 @@ test("máximo: inteiro de 0 a 9999; ausente, negativo, texto e infinito valem 0 
   assert.equal(reserveMax(undefined, "mp"), 0);
 });
 
-test("ids de reserva: recursos pool que não são PV (T20 mp, GURPS fp, D&D nenhum)", () => {
+test("ids de reserva: recursos pool que não são PV (T20 mp, GURPS fp, 5e nenhum)", () => {
   assert.deepEqual(reserveIds(t20()), ["mp"]);
   assert.deepEqual(reserveIds(gurps()), ["fp"]);
-  assert.deepEqual(reserveIds(getSystemPack("dnd5e-2024")), []);
+  assert.deepEqual(reserveIds(getSystemPack("5e")), []);
 });
 
 test("atual: máximo mais deltas do ledger, nunca abaixo de 0 nem acima do máximo; delta infinito não conta", () => {
@@ -78,11 +78,11 @@ test("faixa: T20 mostra PM atual/máximo e GURPS mostra PV e PF atuais", () => {
   assert.equal(stat(html, "PF (HT)"), "12");
 });
 
-test("HUD: T20 mostra o indicador de PM só com máximo; GURPS não; D&D segue com espaços de magia", () => {
+test("HUD: T20 mostra o indicador de PM só com máximo; GURPS não; 5e segue com espaços de magia", () => {
   assert.equal(buildHudMagic(sheet("t20")), null);
   assert.deepEqual(buildHudMagic(spend(sheet("t20", { mp_max: 8 }), "mp_current", -3)), { label: "PM", text: "5/8" });
   assert.equal(buildHudMagic(sheet("gurps4e", { fp_max: 12 })), null);
-  assert.notEqual(buildHudMagic(sheet("dnd5e-2024", { spell_slots_max: { l1: 2 } })), null);
+  assert.notEqual(buildHudMagic(sheet("5e", { spell_slots_max: { l1: 2 } })), null);
 });
 
 test("pacote: resource que aponta para recurso inexistente recusa o pacote", () => {
@@ -119,7 +119,7 @@ test(".voxchar: a ficha com reservas exporta e passa na validação; pools (esta
   assert.equal(checkVoxchar(exportVoxchar(sheet("t20")).bytes).ok, true);
 });
 
-test("D&D: a faixa continua com o mesmo hash (golden)", () => {
-  const s = { character_id: "a", system: { id: "dnd5e-2024", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} };
-  assert.equal(createHash("sha256").update(renderDerivedStrip(s, 18)).digest("hex"), "0214ba1e84699c11f8b3ea8b5f38eae694a98abbbe70a966934a50fc34501e10");
+test("5e: a faixa continua com o mesmo hash (golden)", () => {
+  const s = { character_id: "a", system: { id: "5e", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} };
+  assert.equal(createHash("sha256").update(renderDerivedStrip(s, 18)).digest("hex"), "2a81793865e326036473983ac44af6e4a9ff7fa2525c22deaa141bf28166104b");
 });

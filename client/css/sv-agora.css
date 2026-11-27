@@ -1,0 +1,111 @@
+/* @file Barra de feeds da Ágora (UI v4, PR2): 2 segmentos (Social, Cívico) e o menu Filtro em `<details>`, tudo links, sem JS.
+ * Carrega no `index.html` logo depois de `sv-tokens.css`; só tokens do tema, sem `!important`, foco sempre visível
+ * (nenhum contêiner usa `overflow`, que cortaria o anel de foco; os botões das pontas levam o raio do contêiner).
+ */
+
+.sv-feedbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0 1rem;
+}
+
+.sv-seg {
+  display: inline-flex;
+  border: 1px solid var(--sa-outline);
+  border-radius: var(--radius);
+}
+
+.sv-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 1rem;
+  color: var(--sa-on-surface);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sv-seg-btn:first-child {
+  border-radius: calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);
+}
+
+.sv-seg-btn:last-child {
+  border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
+}
+
+.sv-seg-btn[aria-current="page"] {
+  background: var(--sa-primary);
+  color: var(--sa-on-primary-fixed);
+}
+
+.sv-filtro {
+  position: relative;
+}
+
+.sv-filtro > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--sa-outline);
+  border-radius: var(--radius);
+  color: var(--sa-on-surface);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sv-filtro-menu {
+  position: absolute;
+  z-index: 5;
+  min-width: 12rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--sa-outline);
+  border-radius: var(--radius);
+  background: var(--sa-surface-high);
+}
+
+.sv-filtro-menu a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.75rem;
+  color: var(--sa-on-surface);
+  text-decoration: none;
+}
+
+.sv-filtro-menu a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.sv-filtro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.sv-seg-btn:focus-visible,
+.sv-filtro > summary:focus-visible,
+.sv-filtro-menu a:focus-visible,
+.sv-filtro-chip:focus-visible {
+  outline: 2px solid var(--sa-primary);
+  outline-offset: 2px;
+}

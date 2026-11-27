@@ -15,7 +15,7 @@ import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { updateSheetBasicInfo, mutateSheetInventory } from "../client/js/dungeon/dungeon-persistence.js";
 import { toggleHudFavorite, useBeltItem } from "../client/js/dungeon/dungeon-hud-actions.js";
-import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E } from "../client/js/dungeon/system-pack-5e.js";
 
 const item = (id, label, qty, tags = ["consumivel"]) => ({ id, label, qty, weightLb: 0, equipped: false, tags });
 const inv = (...items) => Object.fromEntries(items.map((i) => [i.id, i]));
@@ -53,7 +53,7 @@ test("cinto: 4 vagas, só consumíveis com quantidade, por rótulo; vaga vazia �
 });
 
 test("magia: só com máximo acima de zero; atual vem dos espaços restantes; rótulo do pacote", () => {
-  const sheet = { system: { id: DND5E_2024_PACK.id }, pools_base: { hp_max: 10, spell_slots_max: { l1: 3, l2: 1, l3: 0 } }, delta_ledger: [] };
+  const sheet = { system: { id: PACK_5E.id }, pools_base: { hp_max: 10, spell_slots_max: { l1: 3, l2: 1, l3: 0 } }, delta_ledger: [] };
   assert.deepEqual(buildHudMagic(sheet), { label: "Espaços de magia", text: "4/4" });
   assert.equal(buildHudMagic({ pools_base: { hp_max: 10, spell_slots_max: { l1: 0, l2: 0, l3: 0 } } }), null);
   assert.equal(buildHudMagic(null), null);

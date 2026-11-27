@@ -12,8 +12,8 @@ import { SV_SHEETS } from "../client/js/dungeon/dungeon-layout-style.js";
 import * as css from "./helpers/css-contrato.js";
 
 const SHEET = "sv-ficha.css";
-const OLD_GOLDEN = "d99b75c71813aa2c29c82c81b2fdf7d9aa01e619ef706c3423b7af6ac5e1f85d";
-const sheet = () => ({ character_id: "a", system: { id: "dnd5e-2024", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
+const OLD_GOLDEN = "2b13fcd781b73b098d59382150b9ccae4200ca2c12ece7015dbd1cb34e4c47e2";
+const sheet = () => ({ character_id: "a", system: { id: "5e", version: 1 }, attributes_lww: { level: 5, armor_class: 16, abilities: { dex: 14, wis: 12 } }, pools_base: { hp_max: 24, hp_current: 18 }, inventory_orset: {} });
 const DETAILS = /<details class="sv-rest-details"[^>]*>[\s\S]*?<\/details>/;
 
 const strip = () => renderDerivedStrip(sheet(), 18);

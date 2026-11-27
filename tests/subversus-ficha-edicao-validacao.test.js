@@ -7,11 +7,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { validateSheetEdit } from "../client/js/dungeon/sheet-edit-validate.js";
-import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E } from "../client/js/dungeon/system-pack-5e.js";
 import { renderSheetEditPanel } from "../client/js/dungeon/screen-sheet-levelup.js";
 import { dispatchDungeonFormSubmit } from "../client/js/dungeon/dungeon-controller-actions.js";
 
-const ok = { name: "Kael", armor_class: 15, system: "dnd5e-2024", str: 10, dex: 14 };
+const ok = { name: "Kael", armor_class: 15, system: "5e", str: 10, dex: 14 };
 const field = (issues, f) => issues.find((i) => i.field === f)?.message || "";
 
 test("validação: edição boa passa; campos de atributo ausentes não são cobrados", () => {
@@ -53,39 +53,39 @@ const ctx = { viewOpts: {}, settle: (p) => p };
 test("Salvar com valor inválido: recusa, guarda avisos e rascunho e não grava a ficha", async () => {
   const state = createDungeonSessionState();
   const before = JSON.stringify(state.sheet);
-  const form = fakeForm({ sheetName: "Kael", armorClass: "99", sheetSystem: "dnd5e-2024", str: "10" });
+  const form = fakeForm({ sheetName: "Kael", armorClass: "99", sheetSystem: "5e", str: "10" });
   await dispatchDungeonFormSubmit("edit-sheet-form", state, form, ctx);
   assert.equal(state.sheetEditIssues.length, 1);
   assert.equal(state.sheetEditDraft.armor_class, "99");
   assert.equal(JSON.stringify(state.sheet), before, "nada gravado");
-  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "15", sheetSystem: "dnd5e-2024" }), ctx);
+  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "15", sheetSystem: "5e" }), ctx);
   assert.deepEqual(state.sheetEditIssues, []);
   assert.equal(state.sheetEditDraft, null);
   assert.equal(state.sheet.attributes_lww.armor_class, 15);
 });
 
 test("Salvar recusado: classe e sistema digitados continuam no formulário", () => {
-  const sheet = { name: "Lyra", role_title: "Paladina", attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
-  const html = renderSheetEditPanel(sheet, { issues: [{ field: "armorClass", message: "x" }], draft: { name: "Kael", class_name: "Bardo", armor_class: 99, system: "dnd5e-2024" } });
+  const sheet = { name: "Lyra", role_title: "Paladina", attributes_lww: { armor_class: 12 }, system: { id: "5e", version: 1 } };
+  const html = renderSheetEditPanel(sheet, { issues: [{ field: "armorClass", message: "x" }], draft: { name: "Kael", class_name: "Bardo", armor_class: 99, system: "5e" } });
   assert.match(html, /name="sheetClass"[^>]*value="Bardo"/);
-  assert.match(html, /<option value="dnd5e-2024" selected>/);
+  assert.match(html, /<option value="5e" selected>/);
 });
 
 test("Salvar recusado pelo formulário: a classe digitada vai para o rascunho", async () => {
   const state = createDungeonSessionState();
-  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", sheetClass: "Bardo", armorClass: "", sheetSystem: "dnd5e-2024" }), ctx);
+  await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", sheetClass: "Bardo", armorClass: "", sheetSystem: "5e" }), ctx);
   assert.equal(state.sheetEditDraft.class_name, "Bardo");
   assert.match(state.sheetEditIssues[0].message, /em branco/);
 });
 
 test("XSS: nome, classe e sistema com marcação não geram tag no painel", () => {
   const evil = '"><img src=x onerror=alert(1)>';
-  const sheet = { name: evil, role_title: evil, attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
+  const sheet = { name: evil, role_title: evil, attributes_lww: { armor_class: 12 }, system: { id: "5e", version: 1 } };
   const draft = { name: evil, class_name: evil, system: evil };
   for (const html of [renderSheetEditPanel(sheet), renderSheetEditPanel(sheet, { issues: [{ field: "sheetSystem", message: evil }], draft })]) assert.equal(html.includes("<img"), false);
 });
 
-const sysCtx = { pack: DND5E_2024_PACK, trainedSkills: ["perception"] };
+const sysCtx = { pack: PACK_5E, trainedSkills: ["perception"] };
 
 test("validação do pacote: Deslocamento fora do intervalo, em branco ou não inteiro", () => {
   const r = (speedFt) => validateSheetEdit({ name: "A", armor_class: 10, speedFt }, sysCtx);
@@ -117,7 +117,7 @@ function richForm(values, lists = {}) {
 test("Salvar com Deslocamento absurdo e especialização sem treino: recusa, nada é gravado e o digitado volta ao painel", async () => {
   const state = createDungeonSessionState();
   const before = JSON.stringify(state.sheet);
-  const form = richForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "dnd5e-2024", speedFt: "999" }, { saveProf: ["con"], expertSkill: ["arcana"] });
+  const form = richForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "5e", speedFt: "999" }, { saveProf: ["con"], expertSkill: ["arcana"] });
   await dispatchDungeonFormSubmit("edit-sheet-form", state, form, ctx);
   assert.deepEqual(state.sheetEditIssues.map((i) => i.field).sort(), ["expertSkill", "speedFt"]);
   assert.equal(JSON.stringify(state.sheet), before);
@@ -128,7 +128,7 @@ test("Salvar com Deslocamento absurdo e especialização sem treino: recusa, nad
 
 test("Salvar válido com Deslocamento e salvaguardas grava os campos do pacote", async () => {
   const state = createDungeonSessionState();
-  const form = richForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "dnd5e-2024", speedFt: "25" }, { saveProf: ["con"], expertSkill: [] });
+  const form = richForm({ sheetName: "Kael", armorClass: "12", sheetSystem: "5e", speedFt: "25" }, { saveProf: ["con"], expertSkill: [] });
   await dispatchDungeonFormSubmit("edit-sheet-form", state, form, ctx);
   assert.deepEqual(state.sheetEditIssues, []);
   assert.equal(state.sheet.attributes_lww.speed_ft, 25);
@@ -137,13 +137,13 @@ test("Salvar válido com Deslocamento e salvaguardas grava os campos do pacote",
 
 test("XSS: Deslocamento digitado com marcação não vira tag", () => {
   const evil = '"><img src=x onerror=alert(1)>';
-  const html = renderSheetEditPanel({ name: "A", attributes_lww: {}, system: { id: "dnd5e-2024", version: 1 } }, { issues: [{ field: "speedFt", message: evil }], draft: { speedFt: evil } });
+  const html = renderSheetEditPanel({ name: "A", attributes_lww: {}, system: { id: "5e", version: 1 } }, { issues: [{ field: "speedFt", message: evil }], draft: { speedFt: evil } });
   assert.equal(html.includes("<img"), false);
 });
 
 test("painel: CA e atributos do rascunho (texto cru) são escapados no valor", () => {
   const evil = '"><img src=x onerror=alert(1)>';
-  const sheet = { name: "A", attributes_lww: { armor_class: 12 }, system: { id: "dnd5e-2024", version: 1 } };
+  const sheet = { name: "A", attributes_lww: { armor_class: 12 }, system: { id: "5e", version: 1 } };
   const html = renderSheetEditPanel(sheet, { issues: [{ field: "armorClass", message: "x" }], draft: { name: "A", armor_class: evil, str: evil, dex: evil } });
   assert.equal(html.includes("<img"), false);
   assert.match(html, /name="armorClass"[^>]*value="&quot;&gt;&lt;img/);

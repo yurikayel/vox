@@ -139,18 +139,19 @@ test("bsky - quoteExternalPostText formats markdown quote block with original li
   assert.ok(quote.includes("Denúncia aponta irregularidade fiscal grave."));
 });
 
-test("feed - renderFeedTabsBar renders Social, Cívico, Redes, Tudo e Seguindo", () => {
+test("feed - renderFeedTabsBar tem Social e Cívico e o filtro com Seguindo, Redes externas e Tudo", () => {
   const voxTabs = feed.renderFeedTabsBar("for-you");
-  assert.ok(voxTabs.includes("feed-tabs-bar"));
-  assert.ok(voxTabs.includes("<span>Social</span>"));
-  assert.ok(voxTabs.includes("<span>Cívico</span>"));
+  assert.ok(voxTabs.includes("sv-feedbar"));
+  assert.ok(voxTabs.includes(">Social</a>"));
+  assert.ok(voxTabs.includes(">Cívico</a>"));
   assert.ok(voxTabs.includes('href="#/?feed=civic"'));
-  assert.ok(voxTabs.includes("<span>Redes (Bluesky)</span>"));
-  assert.ok(voxTabs.includes("<span>Tudo</span>"));
-  assert.ok(voxTabs.includes("<span>Seguindo</span>"));
+  assert.ok(voxTabs.includes(">Redes externas</a>"));
+  assert.ok(voxTabs.includes(">Tudo</a>"));
+  assert.ok(voxTabs.includes(">Seguindo</a>"));
+  assert.ok(!voxTabs.includes("Bluesky"), "a barra cita o serviço pela função");
 
   const extTabs = feed.renderFeedTabsBar("external");
-  assert.ok(extTabs.includes('href="#/?feed=external" class="feed-tab-chip active"'));
+  assert.ok(extTabs.includes('<a href="#/?feed=external" aria-current="page">Redes externas</a>'));
 });
 
 test("feed - renderExternalFeedManagerHtml renders citizen shield, input, import follows and civic suggestions", () => {

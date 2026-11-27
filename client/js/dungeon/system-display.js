@@ -2,7 +2,7 @@
  * @file O que a faixa de derivados e o HUD mostram por sistema (spec derivados-por-sistema-v0, fatia 1). O pacote
  * declara `display` como dado puro; este módulo valida o formato e resolve cada entrada por nome em registros
  * fechados em código (`formula` e `computed`). Nada vindo do pacote é executado, e texto nenhum entra como HTML:
- * quem desenha escapa os rótulos. Sem `display`, vale a lista de hoje (os cinco números do D&D).
+ * quem desenha escapa os rótulos. Sem `display`, vale a lista de hoje (os cinco números da 5e).
  *
  * @module dungeon/system-display
  * @see docs/specs/derivados-por-sistema-v0.md
@@ -144,7 +144,7 @@ export function defenseLabel(pack) {
 }
 
 /**
- * Se um bloco opcional da faixa aparece. Sem `display.blocks` valem todos (o conjunto de hoje, do D&D).
+ * Se um bloco opcional da faixa aparece. Sem `display.blocks` valem todos (o conjunto de hoje, da 5e).
  * @param {object|null|undefined} pack Pacote de sistema.
  * @param {string} id Um de `DISPLAY_BLOCKS`.
  * @returns {boolean} `true` quando o bloco deve ser desenhado.
