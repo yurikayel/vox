@@ -2,13 +2,12 @@
   "version": 1,
   "patterns": {
     "orch": 60,
-    "orch-agente": 62,
-    "tool-design": 82,
+    "orch-agente": 60,
+    "tool-design": 32,
     "tool-ai": 138,
     "tool-ide-nome": 64,
     "agent-report": 8,
     "tool-ide": 17,
-    "metrics-local": 27,
     "tool-model": 7,
     "prompt-doc": 1
   },
@@ -31,63 +30,15 @@
       "orch-agente": 1,
       "orch": 1
     },
-    "client/css/agora.css": {
-      "tool-design": 19
-    },
-    "client/index.html": {
-      "tool-design": 1
-    },
-    "client/js/app/screens-dm-thread.js": {
-      "tool-design": 1
-    },
     "client/js/central-memory-bundle.js": {
       "tool-ide-nome": 1
     },
     "client/js/dungeon/dungeon-state.js": {
       "orch": 1
     },
-    "client/js/render/community-page.js": {
-      "tool-design": 2
-    },
-    "client/js/render/compose-chrome.js": {
-      "tool-design": 1
-    },
-    "client/js/render/genesis-entry.js": {
-      "tool-design": 1
-    },
-    "client/js/render/oauth-modals.js": {
-      "tool-design": 1
-    },
-    "client/js/render/profile-wallet.js": {
-      "tool-design": 1
-    },
-    "client/js/render/proposal.js": {
-      "tool-design": 3
-    },
-    "client/js/render/shell-layout.js": {
-      "tool-design": 1
-    },
-    "client/js/render/shell-nav.js": {
-      "tool-design": 3
-    },
-    "client/js/render/topic.js": {
-      "tool-design": 1
-    },
-    "client/js/render/util.js": {
-      "tool-design": 1
-    },
-    "client/js/render/vote.js": {
-      "tool-design": 1
-    },
-    "client/js/render/voxpedia.js": {
-      "tool-design": 1
-    },
     "docs/CONTRIBUTING-DOCS.md": {
       "orch-agente": 4,
       "orch": 1
-    },
-    "docs/FEATURES.md": {
-      "tool-design": 1
     },
     "docs/HARDENING.md": {
       "tool-ai": 1,
@@ -207,84 +158,6 @@
     "docs/design/stitch-telas-faltantes.md": {
       "tool-design": 2
     },
-    "docs/metrics/baseline-2026-10-24.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-10-24.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-10-30.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-10-30.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-10-31.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-10-31.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-01.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-01.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-04.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-04.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-05.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-05.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-06.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-06.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-08.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-08.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-09.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-09.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-10.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-10.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-17.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-17.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-18.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-18.md": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-26.json": {
-      "metrics-local": 1
-    },
-    "docs/metrics/baseline-2026-11-26.md": {
-      "metrics-local": 1
-    },
     "docs/operations/gatilho-infra-50-ativos.md": {
       "orch": 1
     },
@@ -381,25 +254,19 @@
     "docs/strategy/espacos-digitais-infra.md": {
       "orch": 1
     },
-    "docs/strategy/proposta-nlnet-restack-2027.md": {
-      "orch-agente": 2
-    },
     "docs/strategy/rede-sustentada-participantes.md": {
       "orch-agente": 1,
       "tool-ai": 1,
       "orch": 1
     },
-    "e2e/capture_dungeon_stitch.py": {
-      "tool-design": 5
+    "e2e/capture_dungeon_ui.py": {
+      "tool-design": 2
     },
-    "e2e/verify_stitch_guide_refs.py": {
-      "tool-design": 4
+    "e2e/verify_mesa_guide_refs.py": {
+      "tool-design": 3
     },
     "relay/test_relay_limites_e_rotas.py": {
       "tool-ai": 1
-    },
-    "reports/mutation/mutation-report.json": {
-      "metrics-local": 1
     },
     "scripts/docs-audit.mjs": {
       "tool-ai": 1
@@ -418,18 +285,6 @@
     },
     "tests/legal-compliance-audit.test.js": {
       "tool-design": 1
-    },
-    "tests/render.test.js": {
-      "tool-design": 1
-    },
-    "tests/sovereign-agora.test.js": {
-      "tool-design": 1
-    },
-    "tests/typography-civic.test.js": {
-      "tool-design": 2
-    },
-    "tests/vote-stitch.test.js": {
-      "tool-design": 3
     }
   }
 }

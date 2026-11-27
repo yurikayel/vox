@@ -143,6 +143,40 @@ test("nome próprio da IDE (maiúscula) casa em .md e comentário; cursor de CSS
   assert.equal(tally("docs/sync.md"), 0, "cursor minúsculo e cursor: pointer não casam");
 });
 
+test("arquivo renomeado com a mesma contagem herda a entrada do baseline e não é novo", () => {
+  const cur = { patterns: { orch: 2 }, files: { "e2e/novo.py": { orch: 2 } } };
+  const base = { patterns: { orch: 2 }, files: { "e2e/velho.py": { orch: 2 } } };
+  assert.ok(need("compareBaseline")(cur, base).length > 0, "sem a renomeação, é arquivo novo");
+  assert.deepEqual(need("compareBaseline")(cur, base, { "e2e/novo.py": "e2e/velho.py" }), []);
+});
+
+test("arquivo renomeado com contagem maior que a do antigo reprova", () => {
+  const cur = { patterns: { orch: 3 }, files: { "e2e/novo.py": { orch: 3 } } };
+  const base = { patterns: { orch: 3 }, files: { "e2e/velho.py": { orch: 2 } } };
+  const bad = need("compareBaseline")(cur, base, { "e2e/novo.py": "e2e/velho.py" });
+  assert.match(bad.join("\n"), /e2e\/novo\.py: orch subiu de 2 para 3/);
+});
+
+test("findRenames acha as renomeações feitas depois do último commit do baseline", () => {
+  const dir = plant({ "scripts/velho.txt": "uma linha bem longa para o git reconhecer a renomeação\noutra linha\n", "base.json": "{}\n" });
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.org", ...args], { cwd: dir, stdio: "pipe" });
+  git("init", "-q");
+  git("add", ".");
+  git("commit", "-q", "-m", "baseline");
+  git("mv", "scripts/velho.txt", "scripts/novo.txt");
+  git("commit", "-q", "-m", "renomeia");
+  assert.deepEqual(need("findRenames")(dir, "base.json"), { "scripts/novo.txt": "scripts/velho.txt" });
+});
+
+test("writeBaseline regrava com a chave nova quando o arquivo foi renomeado, sem subir", () => {
+  const dir = plant({});
+  const file = path.join(dir, "baseline.json");
+  fs.writeFileSync(file, JSON.stringify({ patterns: { orch: 2 }, files: { "velho.py": { orch: 2 } } }));
+  const cur = { files: { "novo.py": { orch: 2 } }, patterns: { orch: 2 }, agentRules: 0 };
+  assert.equal(need("writeBaseline")(cur, file, { "novo.py": "velho.py" }), 0);
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(file, "utf8")).files), ["novo.py"]);
+});
+
 /** Cópia das regras sem a exceção `entry` do grupo `group`. */
 function without(rules, group, entry) {
   return { ...rules, allow: { ...rules.allow, [group]: rules.allow[group].filter((e) => e !== entry) } };

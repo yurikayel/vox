@@ -167,17 +167,46 @@ export function scanTree(root, rules) {
  * Catraca: o que passou do baseline.
  * @param {{files: object, patterns: object}} cur Medição atual.
  * @param {{files?: object, patterns?: object}} base Baseline versionado.
+ * @param {Record<string, string>} [renames] Renomeações `{caminho novo: caminho antigo}`: o arquivo renomeado herda a entrada do antigo.
  * @returns {string[]} Violações em português; vazio = passa.
  */
-export function compareBaseline(cur, base) {
+export function compareBaseline(cur, base, renames = {}) {
   const bad = [];
   for (const [rel, ids] of Object.entries(cur.files)) {
-    const old = base.files?.[rel];
-    if (!old) { bad.push(`${rel}: arquivo novo com ocorrência (${Object.keys(ids).join(", ")})`); continue; }
-    for (const [id, n] of Object.entries(ids)) if (n > (old[id] ?? 0)) bad.push(`${rel}: ${id} subiu de ${old[id] ?? 0} para ${n}`);
+    bad.push(...compareFile(rel, ids, base.files?.[rel] ?? base.files?.[renames[rel]]));
   }
   for (const [id, n] of Object.entries(cur.patterns)) if (n > (base.patterns?.[id] ?? 0)) bad.push(`total ${id}: ${n} acima do baseline ${base.patterns?.[id] ?? 0}`);
   return bad;
+}
+
+/**
+ * Compara as contagens de um arquivo com a entrada herdada do baseline.
+ * @param {string} rel Caminho do arquivo.
+ * @param {Record<string, number>} ids Contagem por padrão agora.
+ * @param {Record<string, number>|undefined} old Entrada do baseline (do próprio caminho ou do antigo, se renomeado).
+ * @returns {string[]} Violações do arquivo.
+ */
+function compareFile(rel, ids, old) {
+  if (!old) return [`${rel}: arquivo novo com ocorrência (${Object.keys(ids).join(", ")})`];
+  return Object.entries(ids)
+    .filter(([id, n]) => n > (old[id] ?? 0))
+    .map(([id, n]) => `${rel}: ${id} subiu de ${old[id] ?? 0} para ${n}`);
+}
+
+/**
+ * Renomeações de arquivos desde o último commit que mexeu no baseline (`git diff -M`), para o renomeado herdar a entrada.
+ * @param {string} root Raiz do repositório.
+ * @param {string} baselineRel Caminho do baseline, relativo à raiz.
+ * @returns {Record<string, string>} `{caminho novo: caminho antigo}`; vazio se o baseline ainda não tem commit.
+ */
+export function findRenames(root, baselineRel) {
+  const git = (args) => execFileSync("git", args, { cwd: root, maxBuffer: 64 * 1024 * 1024 }).toString("utf8");
+  const sha = git(["log", "-1", "--format=%H", "--", baselineRel]).trim();
+  if (!sha) return {};
+  const parts = git(["diff", "-M", "--name-status", "--diff-filter=R", "-z", sha]).split("\0").filter(Boolean);
+  const renames = {};
+  for (let i = 0; i + 2 < parts.length; i += 3) renames[parts[i + 2]] = parts[i + 1];
+  return renames;
 }
 
 /**
@@ -228,11 +257,12 @@ function readPrior(file) {
  * Grava o baseline medido; recusa se algum número subiria em relação ao existente.
  * @param {{files: object, patterns: object, agentRules: number}} cur Medição atual.
  * @param {string} file Caminho do baseline.
+ * @param {Record<string, string>} [renames] Renomeações `{novo: antigo}`: a entrada antiga vira a chave nova, sem subir.
  * @returns {number} Código de saída: 0 gravou, 1 recusou.
  */
-export function writeBaseline(cur, file) {
+export function writeBaseline(cur, file, renames = {}) {
   const prior = readPrior(file);
-  const bad = prior ? compareBaseline(cur, prior) : [];
+  const bad = prior ? compareBaseline(cur, prior, renames) : [];
   if (bad.length) { console.error(`Recusado: o baseline só pode descer.\n${bad.join("\n")}`); return 1; }
   const body = { version: 1, patterns: cur.patterns, agentRules: cur.agentRules, files: cur.files };
   const tmp = `${file}.${process.pid}.tmp`;
@@ -245,7 +275,7 @@ export function writeBaseline(cur, file) {
 /** Resultado de `--check`: violações da catraca e das mensagens; devolve o código de saída. */
 function runCheck(cur, args, rules) {
   const base = JSON.parse(fs.readFileSync(path.join(ROOT, BASELINE), "utf8"));
-  const bad = compareBaseline(cur, base);
+  const bad = compareBaseline(cur, base, findRenames(ROOT, BASELINE));
   const msgs = messageHits(args, rules);
   for (const h of msgs) console.log(`${h.error ? "ERROR" : "WARN"} ${h.rel}:${h.line}:${h.id}`);
   for (const b of bad) console.error(`ERROR ${b}`);
@@ -259,7 +289,7 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const rules = loadRules();
   const cur = scanTree(ROOT, rules);
-  if (args.write) process.exit(writeBaseline(cur, path.join(ROOT, BASELINE)));
+  if (args.write) process.exit(writeBaseline(cur, path.join(ROOT, BASELINE), findRenames(ROOT, BASELINE)));
   if (args.check) process.exit(runCheck(cur, args, rules));
   for (const h of cur.hits) console.log(`${h.rel}:${h.line}:${h.id}`);
   console.log(`Total por padrão: ${JSON.stringify(cur.patterns)} · regras de agente (à parte): ${cur.agentRules}`);
