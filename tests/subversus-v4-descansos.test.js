@@ -84,3 +84,12 @@ test("contraste AA nos dois temas: resumo e contagem sobre o fundo da ficha", ()
 test("a folha sv-ficha.css está registrada no carregador sob demanda", () => {
   assert.ok(SV_SHEETS.some((s) => s.href === `css/${SHEET}` && s.id === "sv-ficha-stylesheet"), "SV_SHEETS lista sv-ficha.css");
 });
+
+test("o botão de gastar Dado de Vida fica desativado sem dados e ativo com dados", () => {
+  const botao = (html) => /<button[^>]*data-dungeon="hit-die"[^>]*>/.exec(html)?.[0] || "";
+  assert.doesNotMatch(botao(strip()), /\sdisabled/, "com dados sobrando, ativo");
+  const gasto = renderDerivedStrip({ ...sheet(), system_choices: { hitDiceSpent: 5 } }, 18);
+  assert.match(gasto, /Dados de Vida \d+\/\d+/);
+  assert.match(botao(gasto), /\sdisabled/, "sem dados sobrando, desativado");
+  assert.match(gasto, /\(Dados de Vida 0\/5\)/, "o resumo mostra 0/5");
+});
