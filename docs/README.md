@@ -35,7 +35,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | [`process/`](./process/) | Como trabalhamos: mutex de agentes, operação Antigravity, lições |
 | [`legal/`](./legal/) | Conformidade (LGPD, Marco Civil) e licença |
 | [`design/`](./design/) · [`branding/`](./branding/) | Design system Sovereign Agora e arquivos de marca |
-| [`metrics/`](./metrics/) | Baselines de complexidade geradas por `npm run audit:complexity` |
+| `docs/metrics/` | Métricas geradas localmente por `npm run audit:complexity`, fora do git |
 | [`security/`](./security/) | Triagens de CodeQL e notas de release de segurança |
 | [`archive/`](./archive/) | Planos e brainstorms SUPERSEDED, mantidos como histórico |
 | [`agent-reports/`](./agent-reports/) | Relatórios de agentes (template do workspace) |
@@ -89,7 +89,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [pacote-t20-v0.md](./specs/pacote-t20-v0.md): pacote de sistema `t20` (Tormenta20), só estrutura e matemática, sem texto do livro; limites da tela de derivados e do HUD
 - [derivados-por-sistema-v0.md](./specs/derivados-por-sistema-v0.md): como cada pacote de sistema declara os derivados e o HUD que a ficha mostra (D&D, Tormenta20, GURPS), com fallback, compatibilidade `.voxchar` e decisões D1 a D7 (não implementado)
 - [pacote-gurps4e-v0.md](./specs/pacote-gurps4e-v0.md): pacote de sistema `gurps4e` (GURPS 4e), só matemática (3d6 sob NH, secundários, níveis de carga), sem texto do livro
-- [ficha-personagem-brainstorm-v0.md](./specs/ficha-personagem-brainstorm-v0.md): brainstorm da ficha de personagem multi-sistema (D&D 2024, GURPS 4e, Tormenta20) para leigos e do HUD de jogo do **Subversus VTT** no estilo Diablo II, com inventário em grade e mapa em grade vista de cima (não implementado)
+- [ficha-personagem-brainstorm-v0.md](./specs/ficha-personagem-brainstorm-v0.md): brainstorm da ficha de personagem multi-sistema (D&D 2024, GURPS 4e, Tormenta20) para leigos e do HUD de jogo do **Subversus VTT** no estilo de RPG de ação clássico, com inventário em grade e mapa em grade vista de cima (não implementado)
 - [voxchar-v0.md](./specs/voxchar-v0.md): proposta do arquivo `.voxchar` da ficha portátil (exportar, importar com validação, ameaças do import; link só leitura como opção), aguarda aceite do mantenedor (não implementado)
 - [hud-jogo-v0.md](./specs/hud-jogo-v0.md): HUD de jogo da mesa (`SUB-06`): elementos, origem dos dados, acessibilidade, visão do jogador (lista de permissão para fichas alheias) e decisões D1–D10 aceitas (v0); código ainda não implementado
 - [mesa-rede-v0.md](./specs/mesa-rede-v0.md): proposta da mesa entre aparelhos pela rede (`SUB-08`): o que existe (BroadcastChannel, hub em memória, sinalização, relay cego), opções WebRTC/relay/os dois, segurança e decisões do mantenedor (rascunho, não implementado)
@@ -191,7 +191,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 5. Desenvolvimento, qualidade e governança do repo
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
-- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-10](./metrics/baseline-2026-11-10.md))
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (geradas localmente, fora do git)
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [documentacao.md](./process/documentacao.md) (norma de documentação no código) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
 - Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](design/sovereign-agora.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
 - [proposta-vox.html](./product/proposta-vox.html): proposta em linguagem leiga
@@ -214,6 +214,5 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./archive/brainstorm-dez-tarefas-estrategia-2026-10.md) → ROADMAP
 - [revisao-estado-2026-10-25.md](./archive/revisao-estado-2026-10-25.md): snapshot de 25/out
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
-- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
 **Versão:** 2.6 · 2026-11-12 (a mesma do cabeçalho)

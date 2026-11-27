@@ -1,0 +1,56 @@
+/* Bandeja de tokens do Mestre (SUB-26): bottom sheet no celular, gaveta à esquerda no desktop. Alvos de 44 px sempre. */
+.dungeon-token-tray {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--surface-1);
+  color: var(--text);
+  border-top: 1px solid var(--border);
+}
+
+.dungeon-token-tray summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dungeon-token-tray .dungeon-chip-btn,
+.dungeon-token-tray .dungeon-input {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.dungeon-token-tray-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+}
+
+.dungeon-token-tray-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+}
+
+@media (min-width: 768px) {
+  .dungeon-token-tray {
+    top: 6rem;
+    right: auto;
+    bottom: auto;
+    left: 0;
+    width: min(20rem, 90vw);
+    max-height: calc(100vh - 8rem);
+    border-top: 0;
+    border-right: 1px solid var(--border);
+  }
+}
