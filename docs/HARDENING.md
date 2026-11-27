@@ -26,7 +26,7 @@ A coluna **Enforcement hoje** diz o que a ferramenta faz de fato; a coluna **Alv
 | Acoplamento CBO / coesão LCOM | por camada | por camada | **não medidos** | — | — | Ratchet |
 | Herança DIT | composição | exceção justificada | revisão | arquitetural | — | — |
 
-**Ratchet por símbolo:** ainda **não há ferramenta** que compare cada função com o baseline anterior. Até existir, vale como regra de revisão (o PR não piora métrica de símbolo tocado) e o baseline de `docs/metrics/` serve de referência.
+**Ratchet por símbolo:** `npm run audit:symbols` (`scripts/symbol-ratchet.mjs`, árvore sintática com espree) compara cada arquivo `.js`/`.mjs` alterado com a sua versão na base (`origin/develop`, via `git show`; não há arquivo de baseline). Mede por função de produção (linhas, parâmetros, aninhamento, complexidade), por caso de teste (`test`/`it`, só linhas) e por módulo (só linhas), e só julga o que passa do **Máximo**: símbolo novo, ou que cruza o Máximo, reprova; símbolo legado que já estava acima não pode piorar. Um arquivo movido ou renomeado conta como novo (saída: justificar no PR ou dividir o arquivo). Limite conhecido: função anônima é identificada pela ordem (`<anon>`, `<anon>#2`…); acima de 30 linhas, tirar ou incluir uma antes dela pode dar falso alarme ou deixar passar, e o autor justifica no PR. As métricas são uma aproximação das regras do ESLint (não contam `?.` nem valor padrão de parâmetro): vale a mesma medição na base e no código atual. **Ainda fora do CI** (o comando sai com 1 se houver violação; religar no `validate` e no workflow é o próximo passo, com `fetch-depth` que alcance a base). Enquanto isso, rode antes de pedir merge; a regra de revisão (o PR não piora métrica de símbolo tocado) continua valendo para o que fica abaixo do Máximo.
 
 ### Semântica e Regras Complementares
 1. **Ideal vs. Máximo:** `Ideal` é meta de design (não bloqueia CI); `Máximo` é o limite de violação.
@@ -75,6 +75,14 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 - `audit:complexity` gera o artefato de baseline em `docs/metrics/` e não quebra o build.
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.
 - Não afrouxe limite nem teste para ficar verde: quebre a função com semântica própria (extract method) ou registre waiver acima com motivo, responsável e data.
+
+## Contraste e estado: seguimentos conhecidos
+
+Contraste AA (texto ≥ 4,5:1, contorno ≥ 3:1) e estado desativado/foco são medidos na cascata real por [`tests/ui-foco-desativado-aa.test.js`](../tests/ui-foco-desativado-aa.test.js) (motor em `tests/helpers/css-cascata.js`: ancestral, classes de variante, estados e ordem das folhas). Dois pontos ficaram de fora e seguem abertos:
+
+- **`.btn-zap-post.disabled`** (`style.css`): desativa por classe, não por `:disabled`/`[disabled]`, com opacidade de 0,35 (texto em 1,68:1 no escuro e 1,19:1 no claro). Conserto: levar o seletor à regra de desativado de `sv-tokens.css` e listar o botão inteiro no teste.
+- **`.btn-post-more-menu:focus-visible`** (`style.css`): anel próprio, fora do anel global; medir o contraste do anel sobre as superfícies do cartão e, se falhar, apontar para o token do anel.
+- Anel de foco sobre faixa de container forte (`--sa-primary-container`, `--sa-error-container`: o anel global fica em 1,4–1,6:1): os pares `--sv-on-*-container` existem, mas a classe da faixa só entra junto do primeiro consumidor real, e deve medir o anel pela cascata dentro de `.dungeon-sanctum` (a regra `.dungeon-sanctum :is(a, button, input, summary):focus-visible` tem 0,2,1).
 
 ## Peso do precache (PM-02)
 
