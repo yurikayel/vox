@@ -36,7 +36,7 @@ import {
   renderAssemblyMinutesMarkdown,
   tallyAssembly,
 } from "../scripts/assembly-minutes.mjs";
-import { waitUntil } from "./helpers/wait-until.js";
+import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
 
 const T0 = Date.UTC(2026, 10, 15, 14, 0, 0);
 
@@ -205,7 +205,7 @@ function makeHostStub() {
   const click = async (dataset) => {
     btnRef = makeBtn(dataset);
     listeners.click({ target: btnRef });
-    await new Promise((r) => setTimeout(r, 25));
+    await drainMicrotasks(50);
   };
   return { main, slot, listeners, click };
 }

@@ -6,7 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
-import { waitUntil } from "./helpers/wait-until.js";
+import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
 
 const doc = installFakeDom();
 const toasts = captureToasts(doc);
@@ -22,7 +22,7 @@ const menu = await import("../client/js/app/post-more-menu.js");
 const social = await import("../client/js/social.js");
 const moderation = await import("../client/js/moderation.js");
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 40));
+const settle = () => drainMicrotasks(400);
 const sheet = () => doc.getElementById("post-more-sheet");
 const lastToast = () => toasts.at(-1)?.text;
 const POST = (id, extra = "") => `<article class="post"><p class="post-body"> Texto do post ${id} </p>
