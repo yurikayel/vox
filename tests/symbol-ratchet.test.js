@@ -4,7 +4,10 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
 import { classifyFile, compareSymbols, LIMITS, measureSource } from "../scripts/symbol-metrics-lib.mjs";
 
 const lines = (...l) => l.join("\n");
@@ -154,4 +157,131 @@ test("l) a linha de comando recusa ref com caractere perigoso e sai com erro", (
   const r = spawnSync(process.execPath, ["scripts/symbol-ratchet.mjs", "--base", "a;b"], { encoding: "utf8" });
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /ref inválida/);
+});
+
+test("o) caractere astral (emoji) antes de comentário não desloca a medição: mesmo lloc que o texto em ASCII", () => {
+  const body = (mark) => lines(`const m = "${mark}";`, "// c1", "// c2", "function f() {", "  // dentro", "  return 1;", "}", "const z = 2;");
+  const emoji = measureSource(body("🛡️🚧✅🎲🔒"), "prod");
+  const ascii = measureSource(body("abcde"), "prod");
+  assert.equal(emoji.get("<módulo>").lloc, ascii.get("<módulo>").lloc);
+  assert.equal(emoji.get("f").lloc, 3, "function f, return, }");
+  assert.equal(emoji.get("<módulo>").lloc, 5);
+});
+
+const SCRIPT = path.resolve("scripts/symbol-ratchet.mjs");
+
+function repo(files, change) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ratchet-"));
+  const run = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, stdio: "ignore" });
+  const put = (rel, text) => { fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true }); fs.writeFileSync(path.join(dir, rel), text); };
+  run("init", "-q", "-b", "base");
+  for (const [rel, text] of Object.entries(files)) put(rel, text);
+  run("add", "-A");
+  run("commit", "-q", "-m", "base");
+  run("checkout", "-q", "-b", "work");
+  change(put, run);
+  return dir;
+}
+
+function cli(dir, ...args) {
+  return spawnSync(process.execPath, [SCRIPT, "--base", "base", ...args], { encoding: "utf8", env: { ...process.env, SYMBOL_RATCHET_ROOT: dir } });
+}
+
+const big = (name, n) => `function ${name}() {\n${"  work();\n".repeat(n)}}\n`;
+
+test("p) CLI: função nova acima do máximo reprova com saída 1 e a mensagem; --json traz o mesmo", () => {
+  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put) => put("scripts/new.mjs", big("grande", 31)));
+  try {
+    const r = cli(dir);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /scripts\/new\.mjs/);
+    assert.match(r.stdout, /grande: lloc 33 > 30/);
+    const j = JSON.parse(cli(dir, "--json").stdout);
+    assert.equal(j.files, 1);
+    assert.equal(Object.keys(j.violations)[0], "scripts/new.mjs");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("q) CLI: sem violação sai com 0; arquivo novo já commitado e arquivo só alterado entram na conta", () => {
+  const dir = repo({ "scripts/a.mjs": big("pequena", 5) }, (put, run) => {
+    put("scripts/a.mjs", big("pequena", 6));
+    put("scripts/b.mjs", big("outra", 3));
+    run("add", "-A");
+    run("commit", "-q", "-m", "work");
+  });
+  try {
+    const r = cli(dir);
+    assert.equal(r.status, 0);
+    assert.match(r.stdout, /2 arquivo\(s\) medido\(s\) contra base, 0 violação/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("r) CLI: arquivo novo commitado acima do máximo e legado que piora reprovam; arquivo sem rastreio é medido; fora da catraca não", () => {
+  const dir = repo({ "scripts/old.mjs": big("legado", 40) }, (put, run) => {
+    put("scripts/old.mjs", big("legado", 41));
+    put("scripts/added.mjs", big("novo", 35));
+    run("add", "scripts/added.mjs");
+    run("commit", "-q", "-m", "work");
+    put("scripts/loose.mjs", big("solto", 35));
+    put("docs/ignorado.js", big("fora", 60));
+  });
+  try {
+    const out = cli(dir, "--json");
+    const v = JSON.parse(out.stdout).violations;
+    assert.deepEqual(Object.keys(v).sort(), ["scripts/added.mjs", "scripts/loose.mjs", "scripts/old.mjs"]);
+    assert.match(v["scripts/old.mjs"].join(), /legado: lloc 42 → 43 \(legado acima do máximo piorou\)|lloc \d+ → \d+/);
+    assert.equal(JSON.parse(out.stdout).files, 3, "docs/ fica de fora da conta");
+    assert.equal(out.status, 1);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("t) CLI: arquivo renomeado conta como novo (e reprova se passa do máximo), como diz o cabeçalho", () => {
+  const dir = repo({ "scripts/velho.mjs": big("legado", 40) }, (put, run) => {
+    run("mv", "scripts/velho.mjs", "scripts/novo.mjs");
+    run("commit", "-q", "-m", "mv");
+  });
+  try {
+    const r = cli(dir);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /scripts\/novo\.mjs/);
+    assert.match(r.stdout, /legado: lloc 42 > 30 \(símbolo novo/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("u) CLI: o que a base mudou depois do desvio não conta contra a branch (compara com o merge-base)", () => {
+  const dir = repo({ "scripts/a.mjs": big("legado", 40) }, (put, run) => {
+    run("checkout", "-q", "base");
+    put("scripts/a.mjs", big("legado", 10));
+    run("commit", "-qam", "base avançou");
+    run("checkout", "-q", "work");
+    put("scripts/b.mjs", big("b", 3));
+    run("add", "-A");
+    run("commit", "-q", "-m", "work");
+  });
+  try {
+    const out = JSON.parse(cli(dir, "--json").stdout);
+    assert.deepEqual(out.violations, {});
+    assert.equal(out.files, 1, "só b.mjs; a.mjs não foi tocado pela branch");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("s) CLI: arquivo que não parseia reprova com 'não foi possível medir' (nunca passa como limpo)", () => {
+  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put) => put("scripts/quebrado.mjs", "function (\n"));
+  try {
+    const r = cli(dir);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /scripts\/quebrado\.mjs\n {2}não foi possível medir:/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

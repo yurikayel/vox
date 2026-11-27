@@ -15,7 +15,8 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { classifyFile, compareSymbols, measureSource } from "./symbol-metrics-lib.mjs";
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+/** Raiz do repositório; `SYMBOL_RATCHET_ROOT` aponta outra (usado pelo teste, que roda num repositório temporário). */
+const ROOT = process.env.SYMBOL_RATCHET_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function git(...args) {
   return execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });

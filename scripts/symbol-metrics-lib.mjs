@@ -48,7 +48,7 @@ function parseSource(source) {
  * @returns {(from: number, to: number) => number} Linhas de código entre as linhas `from` e `to` (1 a n).
  */
 function makeLineCounter(source, comments) {
-  const chars = [...source];
+  const chars = source.split("");
   for (const c of comments) {
     for (let i = c.range[0]; i < c.range[1]; i += 1) if (chars[i] !== "\n" && chars[i] !== "\r") chars[i] = " ";
   }
