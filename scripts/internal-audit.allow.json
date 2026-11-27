@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "selfExempt": [
+    { "path": "scripts/internal-audit.patterns.json", "reason": "Define os padrões: precisa conter as palavras que procura.", "owner": "mantenedor" },
+    { "path": "scripts/internal-audit.allow.json", "reason": "Lista as exceções, que citam o que é permitido.", "owner": "mantenedor" },
+    { "path": "docs/metrics/internal-audit-baseline.json", "reason": "Gerado pelo scanner; as chaves são caminhos de arquivos com ocorrência.", "owner": "mantenedor" }
+  ],
+  "pathExceptions": [
+    { "path": "relay/test_relay_error_sanitization.py", "ids": ["local-path"], "reason": "Fixture sintética de higienização de erro (caminho falso de propósito).", "owner": "mantenedor" },
+    { "path": "tests/higiene-caminhos-e-email.test.js", "ids": ["local-path"], "reason": "O teste de higiene precisa citar o padrão de caminho local que ele proíbe.", "owner": "mantenedor" },
+    { "path": "client/js/data/bip39-pt.js", "ids": ["orch"], "reason": "Palavra comum da lista BIP-39 em português, não é orquestração.", "owner": "mantenedor" }
+  ],
+  "lineExceptions": [],
+  "agentRules": ["CLAUDE.md", "AGENTS.md", ".agents/"]
+}
