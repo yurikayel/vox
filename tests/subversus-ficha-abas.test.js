@@ -54,7 +54,8 @@ test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' l
   assert.match(play, /<h3 class="dungeon-eyebrow">Mais usados<\/h3>/);
   assert.match(play, /<h3 class="dungeon-eyebrow">Todos os testes<\/h3>/);
   assert.ok(play.indexOf("Mais usados") < play.indexOf("Todos os testes"));
-  assert.match(play, /data-dungeon="roll-action" data-action-id="s1"><strong>Furtividade<\/strong>/);
+  assert.match(play, /data-dungeon="roll-skill" data-skill="[a-z]+"[^>]*><strong>Furtividade<\/strong>/);
+  assert.doesNotMatch(play, /data-dungeon="roll-action" data-action-id="s1"/);
   assert.doesNotMatch(play, /data-dungeon="remove-action"/);
   assert.match(panel(html, "abilities"), /data-dungeon="roll-action" data-action-id="h1"><strong>Golpe Furioso<\/strong>/);
   assert.match(panel(html, "abilities"), /data-dungeon="remove-action" data-action-id="h1"/);
