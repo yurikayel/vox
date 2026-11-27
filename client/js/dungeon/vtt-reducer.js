@@ -84,15 +84,22 @@ function applyChronicleAppend(state, op) {
   return { ...state, chronicle: [...state.chronicle, entry] };
 }
 
+/** Autor da rolagem: a prova de justiça e o vínculo com pedido de teste exigem quem enviou a op; senão vale o rótulo do payload. */
+function rollAuthor(op, result) {
+  return result?.fairplay?.rollId || result?.requestId ? op.actor : op.payload?.author || op.actor;
+}
+
 function applyRollRecorded(state, op) {
-  const fairplay = (op.payload?.rollResult || op.payload)?.fairplay || {};
-  const roll = createDiceRollEntry({
+  const result = op.payload?.rollResult || op.payload;
+  const fairplay = result?.fairplay || {};
+  const created = createDiceRollEntry({
     id: op.payload?.id || `roll-${op.opId}`,
-    author: fairplay.rollId ? op.actor : op.payload?.author || op.actor,
+    author: rollAuthor(op, result),
     speaker: op.payload?.speaker,
-    rollResult: op.payload?.rollResult || op.payload,
+    rollResult: result,
     ts: op.ts,
   });
+  const roll = created.requestId ? { ...created, lamport: op.lamport, opId: op.opId } : created;
   const entry = createChronicleEntry({
     id: `turn-${roll.id}`,
     speaker: roll.speaker,
