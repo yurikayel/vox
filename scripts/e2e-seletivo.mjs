@@ -20,7 +20,7 @@ export const E2E_PATHS = [
   /^client\/js\/dungeon\/dice-engine\.js$/,
   /^client\/js\/dungeon\/dungeon-state\.js$/,
   /^client\/js\/rpg-crypto-table\.js$/,
-  /^client\/js\/dungeon\/vtt-(?:rtc-transport|rede-escolha|sync|host-wire)\.js$/,
+  /^client\/js\/dungeon\/vtt-(?:rtc-transport|rtc-auth|rede-escolha|signaling-client|sync|sync-codec|host-wire)\.js$/,
   /^client\/js\/dungeon\/dungeon-(?:sync-bridge|vtt-join)\.js$/,
   /^relay\/signaling\.py$/,
   /^e2e\/test_(?:fairplay|mesa_rede|mesa_sync|mesa_ttrpg|vox)_e2e\.py$/,
@@ -49,7 +49,7 @@ function git(args, cwd) {
 function main() {
   const root = git(["rev-parse", "--show-toplevel"], process.cwd());
   const base = git(["merge-base", process.env.BASE_REF || process.argv[2] || "origin/develop", "HEAD"], root);
-  const changed = git(["diff", "--name-only", base, "HEAD"], root).split("\n").filter(Boolean);
+  const changed = git(["diff", "--name-only", "--no-renames", base, "HEAD"], root).split("\n").filter(Boolean);
   const hits = touched(changed);
   const run = hits.length > 0;
   const markdown = run
