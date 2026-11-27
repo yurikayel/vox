@@ -27,8 +27,6 @@ import { migrateLegacySheet } from "./system-migrate.js";
 import { systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
-export { recordAbilityRoll } from "./dungeon-sheet-rolls.js";
-
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
