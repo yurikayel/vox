@@ -9,6 +9,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+    # `edited`: o job audit-internal relê o título e o corpo do PR.
+    types: [ opened, synchronize, reopened, edited ]
   workflow_dispatch:
 
 # PM-95: o token do CI só lê o repositório.
@@ -75,6 +77,30 @@ jobs:
       - name: Testes do cliente com cobertura (catraca em scripts/coverage-floor.json)
         if: matrix.node-version == '24'
         run: npm run coverage:js
+
+  audit-internal:
+    name: Interno × público (catraca)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout com histórico (mensagens dos commits novos)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Catraca na árvore (docs/process/interno-e-publico.md)
+        if: github.event_name != 'pull_request'
+        run: node scripts/internal-audit.mjs --check
+
+      - name: Catraca na árvore, nos commits novos e no título e corpo do PR
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/internal-audit.mjs --check --base "$BASE_SHA" --event "$GITHUB_EVENT_PATH"
 
   test-relay:
     name: Relay & Signaling (Python ${{ matrix.python-version }})
