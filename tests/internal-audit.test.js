@@ -104,6 +104,21 @@ test("o corte é pela data de autoria: commit antigo é histórico, novo reprova
   assert.ok(hits.some((h) => h.error), "o trailer depois do corte reprova");
 });
 
+test("baseline ausente é gravado; existente que subiria é recusado", () => {
+  const write = need("writeBaseline");
+  const dir = plant({});
+  const file = path.join(dir, "baseline.json");
+  const two = { files: { "a.md": { orch: 2 } }, patterns: { orch: 2 }, agentRules: 0 };
+  assert.equal(write(two, file), 0, "ausente grava");
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")).patterns, { orch: 2 });
+  const three = { files: { "a.md": { orch: 3 } }, patterns: { orch: 3 }, agentRules: 0 };
+  assert.equal(write(three, file), 1, "subir é recusado");
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")).patterns, { orch: 2 }, "o arquivo não muda");
+  const one = { files: { "a.md": { orch: 1 } }, patterns: { orch: 1 }, agentRules: 0 };
+  assert.equal(write(one, file), 0, "descer grava");
+  assert.deepEqual(fs.readdirSync(dir), ["baseline.json"], "sem sobra de arquivo temporário");
+});
+
 test("toda exceção tem motivo e dono", () => {
   const { allow } = need("loadRules")();
   const all = [...allow.selfExempt, ...allow.pathExceptions, ...allow.lineExceptions];

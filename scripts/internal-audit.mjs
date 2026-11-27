@@ -213,13 +213,30 @@ function parseArgs(argv) {
   return { check: argv.includes("--check"), write: argv.includes("--write-baseline"), base: get("--base"), event: get("--event") };
 }
 
-/** Grava o baseline medido; recusa se algum número subiria em relação ao existente. */
-function writeBaseline(cur, file) {
-  const prior = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : null;
+/** Baseline existente, ou null se o arquivo ainda não existe (sem checar antes de abrir). */
+function readPrior(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+    return null;
+  }
+}
+
+/**
+ * Grava o baseline medido; recusa se algum número subiria em relação ao existente.
+ * @param {{files: object, patterns: object, agentRules: number}} cur Medição atual.
+ * @param {string} file Caminho do baseline.
+ * @returns {number} Código de saída: 0 gravou, 1 recusou.
+ */
+export function writeBaseline(cur, file) {
+  const prior = readPrior(file);
   const bad = prior ? compareBaseline(cur, prior) : [];
   if (bad.length) { console.error(`Recusado: o baseline só pode descer.\n${bad.join("\n")}`); return 1; }
   const body = { version: 1, patterns: cur.patterns, agentRules: cur.agentRules, files: cur.files };
-  fs.writeFileSync(file, `${JSON.stringify(body, null, 2)}\n`);
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, `${JSON.stringify(body, null, 2)}\n`);
+  fs.renameSync(tmp, file);
   console.log(`Baseline gravado: ${Object.values(cur.patterns).reduce((a, b) => a + b, 0)} ocorrências em ${Object.keys(cur.files).length} arquivos.`);
   return 0;
 }
