@@ -121,6 +121,26 @@ Hoje **só `scripts/mesh-e2e.mjs` roda em PR**; os E2E Python (`npm run test:e2e
 
 **Próximos passos do PM-117:** (1) corrigir os dois vermelhos, cada um com um `node:test` que falhe na base; (2) um job de PR com os E2E Python que passam, estáveis (uns 2,7 min, mais Playwright e Chromium); (3) só depois incluir fairplay e mesa em rede nesse job. Até lá, a nightly é o único gate dos E2E Python.
 
+### 4.2 O que cada E2E cobre, quanto leva e em que estado está (PM-117)
+
+Medido em 27/11/2026, na máquina do mantenedor (Windows, Python 3.12 com Playwright, Chromium 151), em `feat/pm117-inventario-e2e`. Tempo = mediana de 3 execuções em série, em segundos de parede, com o comando da coluna. Cada módulo Python roda com `python -m unittest e2e.<módulo> -v`. Tabela escrita à mão; `tests/e2e-inventory.test.js` confere que ela lista os mesmos arquivos da §4.1. Os números envelhecem: remeça ao mudar o teste.
+
+| Arquivo | Cobre | Tempo (mediana de 3) | Estado |
+| --- | --- | --- | --- |
+| `e2e/capture_dungeon_ui.py` | captura de telas da Dungeon | NOT RUN: não é teste, só gera imagens | n/a |
+| `e2e/test_diorama_e2e.py` | diorama: o mestre vê e clica tudo, o jogador não clica fora da área revelada, gestos, o estado não carrega nada dentro da névoa (5 testes) | 60,5 s (`python -m unittest e2e.test_diorama_e2e -v`) | estável (3 de 3 verdes) |
+| `e2e/test_fairplay_e2e.py` | selo verificado em três abas, valor errado não verifica, flag desligada não cria ops, mestre aprova e recusa entrada, aba fechada antes do commit (6 testes) | 124,4 s (`python -m unittest e2e.test_fairplay_e2e -v`) | com nota de flake: vermelho em 3 de 3, `test_01` e `test_02b`; causa no [#698](https://github.com/yurikayel/vox/pull/698) (aberto) |
+| `e2e/test_ficha_assistente_e2e.py` | F5 no meio do modo guiado descarta o rascunho; modo rápido cria ficha só com o nome (2 testes) | 10,6 s (`python -m unittest e2e.test_ficha_assistente_e2e -v`) | estável (3 de 3 verdes) |
+| `e2e/test_hud_painel_e2e.py` | painel alto em 1280×840 e em 390×844 (2 testes) | 8,0 s (`python -m unittest e2e.test_hud_painel_e2e -v`) | estável (3 de 3 verdes) |
+| `e2e/test_mesa_rede_e2e.py` | dois contextos conectam e o token chega ao jogador por RTC; rolagem verificada pela rede (2 testes) | 48,5 s (`python -m unittest e2e.test_mesa_rede_e2e -v`) | com nota de flake: vermelho em 3 de 3, `test_02`; causa no [#698](https://github.com/yurikayel/vox/pull/698) (aberto) |
+| `e2e/test_mesa_sync_e2e.py` | criar campanha, entrar com snapshot, mover o próprio token, não mover o do mestre, camada do mestre nunca chega ao jogador, rolagem pública nas duas crônicas (6 testes) | 25,2 s (`python -m unittest e2e.test_mesa_sync_e2e -v`) | estável (3 de 3 verdes) |
+| `e2e/test_mesa_ttrpg_e2e.py` | fluxos da Mesa TTRPG, testes 07 a 15 (10 testes) | 47,0 s (`python -m unittest e2e.test_mesa_ttrpg_e2e -v`; execuções de 34,1 a 53,3 s) | em observação: verde em 3 de 3, tempo varia ±20 s |
+| `e2e/test_vox_e2e.py` | onboarding e recarga do IndexedDB, rotas cívicas e tema, telas de demonstração honestas, viewport móvel, malha WebRTC entre dois pares, assistentes e quadros abertos (6 testes) | 53,2 s (`python -m unittest e2e.test_vox_e2e -v`) | com nota de flake: vermelho em 3 de 3, `test_03` (erro, não falha). Erro observado: o tempo esgota (30 s) esperando `button[data-dungeon='failover']`. Causa provável: o botão só renderiza com a flag de laboratório da Mesa em rede (`client/js/dungeon/screen-camp.js`). Sem PR aberto para isso |
+| `e2e/verify_mesa_guide_refs.py` | confere referências do guia da Mesa | NOT RUN: não é teste, é verificação de referências | n/a |
+| `scripts/login-e2e.mjs` | LT-08: login de ponta a ponta | NOT RUN: BLOCKED, `playwright` não está instalado para o Node nesta máquina (`node scripts/login-e2e.mjs` sai com código 1 em 0,1 s) | não medido |
+| `scripts/mesh-e2e.mjs` | PM-113: smokes da malha, mais rodadas P2P por WebSocket e Nostr | NOT RUN: BLOCKED, mesmo motivo (`node scripts/mesh-e2e.mjs`); a §4.1 diz que roda no PR (`ci.yml`) | não medido aqui |
+| `scripts/offline-e2e.mjs` | S30: smoke do PWA offline | NOT RUN: BLOCKED, mesmo motivo (`node scripts/offline-e2e.mjs`) | não medido |
+
 ## 5. Complexidade
 
 `npm run audit:complexity` (ESLint, `scripts/complexity-audit.mjs`) aplica os limites de [HARDENING.md](./HARDENING.md) e escreve um baseline datado em `docs/metrics/`. Meta: **zero violações** ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)). `mock.js` fica de fora.

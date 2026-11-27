@@ -182,6 +182,44 @@ test("docs/TESTES.md §4.1: a tabela bate com o que os workflows chamam hoje", (
   assert.match(formatRows(buildInventory(ROOT)), /`scripts\/mesh-e2e\.mjs` \| PR \(ci\.yml\)/, "o E2E da malha roda em PR");
 });
 
+/**
+ * Lê as linhas da tabela §4.2 de um texto de `TESTES.md`.
+ * @param {string} doc conteúdo do `TESTES.md`
+ * @returns {{ path: string, cells: string[] }[]} uma entrada por linha: o caminho do arquivo e as 4 células
+ */
+function linhasDaSecao42(doc) {
+  const corpo = /### 4\.2 [^\n]*\n[\s\S]*?\n\| Arquivo \| Cobre \| Tempo \(mediana de 3\) \| Estado \|\n\| --- \| --- \| --- \| --- \|\n((?:\|.*\n?)+)/.exec(doc)?.[1];
+  if (!corpo) return [];
+  return corpo.trim().split("\n").map((l) => {
+    const cells = l.replace(/^\|\s*|\s*\|$/g, "").split(/\s\|\s/);
+    return { path: cells[0].replace(/`/g, ""), cells };
+  });
+}
+
+test("docs/TESTES.md §4.2: lista os mesmos arquivos da §4.1, sem repetir, e nenhuma célula fica vazia", () => {
+  const rows = linhasDaSecao42(fs.readFileSync(path.join(ROOT, "docs", "TESTES.md"), "utf8"));
+  assert.ok(rows.length > 0, "a seção 4.2 e a tabela existem");
+  assert.deepEqual(rows.map((r) => r.path), buildInventory(ROOT).map((i) => i.path), "mesmos arquivos, na mesma ordem da §4.1");
+  for (const r of rows) {
+    assert.equal(r.cells.length, 4, `${r.path}: 4 células`);
+    assert.ok(r.cells.every((c) => c.trim() !== ""), `${r.path}: célula vazia`);
+  }
+});
+
+test("docs/TESTES.md §4.2: tempo é número medido com comando, ou NOT RUN com motivo (nada de estimativa)", () => {
+  const rows = linhasDaSecao42(fs.readFileSync(path.join(ROOT, "docs", "TESTES.md"), "utf8"));
+  for (const { path: p, cells } of rows) {
+    const tempo = cells[2];
+    const medido = /^\d+,\d s \(`[^`]+`/.test(tempo);
+    const naoRodou = /^NOT RUN: \S/.test(tempo);
+    assert.ok(medido || naoRodou, `${p}: tempo deve ser "N,N s (\`comando\`)" ou "NOT RUN: motivo", veio: ${tempo}`);
+  }
+});
+
+test("linhasDaSecao42: texto sem a tabela devolve lista vazia", () => {
+  assert.deepEqual(linhasDaSecao42("### 4.2 x\n\nsem tabela\n"), []);
+});
+
 test("runCommands: lê só as chaves `run:` (em linha ou em bloco); name, comentário e outras chaves ficam de fora", () => {
   const yaml = [
     "steps:",
