@@ -1,6 +1,7 @@
 /**
  * @file Condições, Exaustão, Dados de Vida e descansos na aba Jogar. Só desenha o que recebe do pacote e das
  * escolhas normalizadas (`system-rest.js`); a Exaustão mostra o efeito, mas ele não é aplicado aos números.
+ * Os descansos ficam num `<details>` fechado (`sv-ficha.css`); o estado aberto sobrevive ao redesenho por `data-dungeon-details`.
  *
  * @module dungeon/screen-sheet-rest
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §5)
@@ -33,16 +34,20 @@ function renderExhaustion(pack, level) {
 
 function renderRests(pack, rest) {
   const left = rest.hitDiceTotal - rest.hitDiceSpent;
+  const hint = `${escapeHtml(pack.labels.hitDice)} ${left}/${rest.hitDiceTotal}`;
   return `
-    <div class="dungeon-rests" role="group" aria-label="Descansos">
-      <p>${escapeHtml(pack.labels.hitDice)}: ${left}/${rest.hitDiceTotal} (d${rest.hitDie})</p>
-      ${rest.hitDieSet ? "" : `<p class="dungeon-muted" role="note">O Dado de Vida está em d${rest.hitDie} até você definir o seu em Editar Dados da Ficha.</p>`}
-      <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-chip-btn" data-dungeon="hit-die"${left <= 0 ? " disabled" : ""}>Gastar Dado de Vida</button>
-        <button type="button" class="dungeon-chip-btn" data-dungeon="rest-short">${escapeHtml(pack.labels.shortRest)}</button>
-        <button type="button" class="dungeon-chip-btn" data-dungeon="rest-long">${escapeHtml(pack.labels.longRest)}</button>
+    <details class="sv-rest-details" data-dungeon-details="sheet-rest">
+      <summary>Descansos <span class="sv-rest-hint">(${hint})</span></summary>
+      <div class="dungeon-rests" role="group" aria-label="Descansos">
+        <p>${escapeHtml(pack.labels.hitDice)}: ${left}/${rest.hitDiceTotal} (d${rest.hitDie})</p>
+        ${rest.hitDieSet ? "" : `<p class="dungeon-muted" role="note">O Dado de Vida está em d${rest.hitDie} até você definir o seu em Editar Dados da Ficha.</p>`}
+        <div class="dungeon-card-actions">
+          <button type="button" class="dungeon-chip-btn" data-dungeon="hit-die"${left <= 0 ? " disabled" : ""}>Gastar Dado de Vida</button>
+          <button type="button" class="dungeon-chip-btn" data-dungeon="rest-short">${escapeHtml(pack.labels.shortRest)}</button>
+          <button type="button" class="dungeon-chip-btn" data-dungeon="rest-long">${escapeHtml(pack.labels.longRest)}</button>
+        </div>
       </div>
-    </div>`;
+    </details>`;
 }
 
 /**
