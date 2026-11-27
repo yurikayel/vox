@@ -9,12 +9,12 @@
  *     --aurora-gradient…) viram ALIASES dos tokens novos — todo seletor já escrito herda a
  *     paleta nova sem reescrita.
  *  3. Os tokens semânticos legados de style.css (--bg, --surface-*, --text, --accent…) são
- *     remapeados para a paleta Stitch, re-tematizando as 10k linhas legadas.
+ *     remapeados para a paleta da tela de referência, re-tematizando as 10k linhas legadas.
  *  4. Componentes com prefixo `agora-` ou escopados em `.agora-ui`.
  * Regra para próximos lotes: não adicionar novos :root em style.css; migrar regras para cá.
  */
 
-/* ── 1. Tokens do design system (o tema escuro é o canônico do Stitch) ── */
+/* ── 1. Tokens do design system (o tema escuro é o canônico do guia de design) ── */
 :root {
   /* Sovereign Agora — paleta canônica */
   --sa-surface: #111316;
@@ -93,7 +93,7 @@
   --agora-topbar-h: 64px;
 }
 
-/* ── 2. Remapeamento dos tokens legados no tema escuro (padrão Stitch) ── */
+/* ── 2. Remapeamento dos tokens legados no tema escuro (padrão do guia de design) ── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) {
     --theme-chrome: var(--sa-surface-low);
@@ -174,7 +174,7 @@
   --shadow: none;
 }
 
-/* Tema claro: o Stitch só definiu o escuro. Variante "mármore pentélico" — calcário claro com
+/* Tema claro: o guia de design só definiu o escuro. Variante "mármore pentélico" — calcário claro com
    teal profundo (inverse-primary) e bronze oxidado, mantendo contraste AA. */
 @media (prefers-color-scheme: light) {
   :root:not([data-color-mode="dark"]) {
@@ -730,7 +730,7 @@ body,
   height: 18px;
 }
 
-/* Gaveta de identidade/rede (Stitch: "Menu da Rede P2P") */
+/* Gaveta de identidade/rede (tela de referência: "Menu da Rede P2P") */
 .agora-drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -1134,7 +1134,7 @@ body,
   }
 }
 
-/* ── 7. Comunidades (Stitch: Células Vicinais) ── */
+/* ── 7. Comunidades (tela de referência: Células Vicinais) ── */
 .agora-ui .agora-community-list {
   max-width: var(--agora-content-max);
   margin: 0 auto;
@@ -1567,7 +1567,7 @@ body,
   line-height: 1.55;
 }
 
-/* ── 9. Perfil (Stitch: Identidade Cívica) ── */
+/* ── 9. Perfil (tela de referência: Identidade Cívica) ── */
 .agora-ui .profile-grid-avatar-wrap {
   width: 112px;
   height: 112px;
@@ -2520,7 +2520,7 @@ body,
   overflow-wrap: anywhere;
 }
 
-/* Mobile: barra inferior Stitch — Ágora · Vote · [Publicar] · Comunidades · Perfil */
+/* Mobile: barra inferior do guia de design — Ágora · Vote · [Publicar] · Comunidades · Perfil */
 @media (max-width: 767px) {
 
   .agora-topbar-tools { gap: 0; }
@@ -2587,7 +2587,7 @@ body,
   .agora-tile-value { font-size: 1.25rem; }
 }
 
-/* ── 13. Onboarding — "Entrada criptográfica" (Stitch tela 12) ── */
+/* ── 13. Onboarding — "Entrada criptográfica" (guia de design, tela 12) ── */
 .genesis-overlay.modal-overlay {
   position: fixed;
   inset: 0;
@@ -2843,7 +2843,7 @@ body,
   }
 }
 
-/* ── 15. Diretório de Cidadãos (Stitch tela 10) ── */
+/* ── 15. Diretório de Cidadãos (guia de design, tela 10) ── */
 .agora-directory .agora-page-head { max-width: none; }
 
 .agora-ui .agora-directory-search {
@@ -2895,7 +2895,7 @@ body,
   font-weight: 600;
 }
 
-/* Linhas separadas por fio, não cartões (prompt 5 do Stitch). */
+/* Linhas separadas por fio, não cartões (prompt 5 do guia de design). */
 .agora-ui .card.people-result.agora-citizen {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
@@ -2980,7 +2980,7 @@ body,
   .agora-ui .agora-directory-search { margin: 0 0 1rem; }
 }
 
-/* ── 16. Voxpedia — Códex (Stitch tela 13) ── */
+/* ── 16. Voxpedia — Códex (guia de design, tela 13) ── */
 .agora-ui[data-active-tab="voxpedia"] main#app-main {
   max-width: calc(var(--agora-content-max) + 3rem);
 }
@@ -3162,7 +3162,7 @@ body,
   .agora-ui .agora-entry-title { font-size: 1.3rem; }
 }
 
-/* ── 17. Saúde do nó e Carteira Soberana (Stitch telas 11 e 14) ── */
+/* ── 17. Saúde do nó e Carteira Soberana (guia de design, telas 11 e 14) ── */
 .agora-node-health .agora-tablet + .agora-tablet,
 .agora-wallet .agora-tablet + .agora-tablet { margin-top: 1rem; }
 
@@ -3272,7 +3272,7 @@ body,
 .agora-ui .agora-wallet .wallet-import .form-actions { margin-top: 0.75rem; display: flex; justify-content: flex-end; }
 .agora-wallet .agora-split-aside .agora-btn--block { margin-top: 0.5rem; min-height: 44px; }
 
-/* ── 18. Compositor unificado (Stitch tela 9) ── */
+/* ── 18. Compositor unificado (guia de design, tela 9) ── */
 .agora-ui .compose-card.agora-composer {
   max-width: 820px;
   margin: 0 auto;
@@ -3446,7 +3446,7 @@ body,
 /* ── 19. Remapeamento das variáveis de marca legadas (--brand-*) ──
  * style.css tinge --brand-chrome por período do dia (data-sky-period) com seletores de até
  * (0,3,0). O Sovereign Agora é tema único: `:not(#sa-brand)` soma especificidade de ID e
- * garante que a paleta Stitch prevaleça sem !important. Amarelo/azul ficam (letras do logo). */
+ * garante que a paleta do guia de design prevaleça sem !important. Amarelo/azul ficam (letras do logo). */
 :root:not(#sa-brand) {
   --brand-chrome: var(--sa-primary-container);
   --brand-chrome-hover: var(--sa-primary);
@@ -3911,7 +3911,7 @@ body,
   object-fit: cover;
 }
 
-/* ── 34. Tópico (Stitch tela 6): trilha, estela, divisor ◆ da árvore, guias de nível e doca de resposta ── */
+/* ── 34. Tópico (guia de design, tela 6): trilha, estela, divisor ◆ da árvore, guias de nível e doca de resposta ── */
 .agora-breadcrumb {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem;
   margin: 0 auto 1rem; max-width: var(--feed-max, 640px);
@@ -3981,7 +3981,7 @@ body,
   .agora-reply-dock { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* ── 35. Página da comunidade (Stitch tela 7): números, pauta em destaque e coluna lateral ≥1100px ── */
+/* ── 35. Página da comunidade (guia de design, tela 7): números, pauta em destaque e coluna lateral ≥1100px ── */
 .community-vox-stats { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 640px) {
   .community-vox-stats { gap: 0.5rem; }
@@ -3998,7 +3998,7 @@ body,
   .community-vox-aside { display: flex; flex-direction: column; gap: 0.85rem; position: sticky; top: 1rem; }
 }
 
-/* ── 36. Pauta de governança (Stitch tela 8): estela da proposta + coluna de apuração e voto ── */
+/* ── 36. Pauta de governança (guia de design, tela 8): estela da proposta + coluna de apuração e voto ── */
 .agora-proposal-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
 .agora-proposal-main, .agora-proposal-aside { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
 @media (min-width: 1100px) {
@@ -4036,7 +4036,7 @@ body,
 .agora-ui .agora-ballot .vote-btn-abstain.selected { background: var(--sa-surface-highest); color: var(--sa-on-surface); outline: none; }
 .agora-ui .agora-ballot .vote-btn.selected:focus-visible { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
 
-/* ── 37. Lote UI 1 (telas sem layout do Stitch): título da Voxpedia e guias com cartões de opção ── */
+/* ── 37. Lote UI 1 (telas sem layout no guia de design): título da Voxpedia e guias com cartões de opção ── */
 /* Voxpedia: o título abre a página em toda a largura; índice e conteúdo vêm depois. */
 .agora-ui .agora-codex > .agora-codex-hero { grid-column: 1 / -1; }
 /* Guias (rede, carteira): escolha em cartões de rádio, uma opção por linha, marcada com a borda esmeralda. */

@@ -140,7 +140,7 @@ function renderGenesisStepsHtml(currentName, invite = null) {
 }
 
 /**
- * Onboarding — Stitch tela 12, em etapas (uma decisão por tela).
+ * Onboarding — tela 12 do guia de design, em etapas (uma decisão por tela).
  * @param {HTMLElement} container
  * @param {{ invite?: { name: string } | null, mode?: "entry" | "import" }} [opts] `invite`: a entrada diz quem chamou;
  *   `mode: "import"`: só importar nome e foto (Perfil), sem a entrada

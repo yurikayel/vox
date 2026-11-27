@@ -8,7 +8,7 @@ import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { HUD_PANELS, isHudPanelEnabled } from "./hud-panels.js";
 import { renderAbilitiesPanel, renderSheetHero } from "./screen-sheet.js";
-import { renderDerivedStrip } from "./screen-sheet-derived.js";
+import { renderDerivedStrip, resolveSheetSystem } from "./screen-sheet-derived.js";
 import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 import { renderPlayTab } from "./screen-sheet-tabs.js";
 import { canViewChronicleEntry, renderChronicleEntry } from "./screen-table-layout.js";
@@ -37,7 +37,7 @@ function chronicleBody(state) {
 const BODIES = {
   sheet: (state) => sheetBody(state),
   items: (state) => renderInventoryPanel(state),
-  abilities: (state) => renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || []),
+  abilities: (state) => renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || [], resolveSheetSystem(state.sheet)?.derived.skills),
   map: (state, scene) => mapBody(state, scene),
   chronicle: (state) => chronicleBody(state),
 };

@@ -1,7 +1,7 @@
 # Matriz de Editais Brasileiros e Financiamento Cívico (PM-108)
 
 > **Status:** rascunho · **Owner:** mantenedor · **Revisado:** 2026-11-22
-> Não substitui o [ROADMAP](../ROADMAP.md). Plano B de sustentabilidade complementar ao **LAN-36** ([proposta-nlnet-restack-2027.md](./proposta-nlnet-restack-2027.md)), após o encerramento do NGI Zero Commons Fund em 01/06/2026 ([pesquisa-complementar §1-H](../research/pesquisa-complementar-2026-11.md#h-financiamento)). Alimenta o orçamento de 12 meses (**LAN-32**).
+> Não substitui o [ROADMAP](../ROADMAP.md). Plano B de sustentabilidade complementar ao **LAN-36** (proposta de financiamento, mantida fora do repositório), após o encerramento do NGI Zero Commons Fund em 01/06/2026 ([pesquisa-complementar §1-H](../research/pesquisa-complementar-2026-11.md#h-financiamento)). Alimenta o orçamento de 12 meses (**LAN-32**).
 
 > **Regra estrita de honestidade (zero invenção):** nenhuma data-limite de ciclo futuro (2027/2028) nem teto de valor não verificado em edital aberto é presumido aqui. Todos os campos dependentes do calendário vigente trazem o marcador **`[confirmar no edital vigente]`** para conferência na fonte oficial antes de iniciar a escrita.
 
@@ -51,7 +51,7 @@ A escolha de onde investir horas de escrita segue o estado institucional do proj
 
 | Momento institucional | Prioridade | Onde aplicar primeiro | Condição de entrada (não aplicar no escuro) |
 |---|---|---|---|
-| **Agora → T1/2027 (Sem CNPJ / PF)** | **1ª** | **NLnet Restack (`LAN-36`, até 03/01/2027)** + **GitHub Sponsors (`REV-22`)** | Confirmar por e-mail a elegibilidade de proponente brasileiro ou fechar co-proponente na UE ([proposta-nlnet-restack-2027.md §1.1](./proposta-nlnet-restack-2027.md#11-dimensão-europeia-critério-eliminatório-o-maior-risco)) |
+| **Agora → T1/2027 (Sem CNPJ / PF)** | **1ª** | **NLnet Restack (`LAN-36`, até 03/01/2027)** + **GitHub Sponsors (`REV-22`)** | Confirmar por e-mail a elegibilidade de proponente brasileiro ou fechar co-proponente na UE (proposta de financiamento, mantida fora do repositório) |
 | **T1–T2/2027 (Sem CNPJ, via parceria ICT)** | **2ª** | **Extensão Universitária (PROEX / `PM-107`)** + **FAP estadual via docente** | Professor parceiro nomeado e interessado em adotar o Vox como caso real de extensão/pesquisa (destrava também revisão técnica para `LAN-18` e testes em celulares) |
 | **T2/2027+ (Sem CNPJ, com piloto G1 medido)** | **3ª** | **OTF Internet Freedom Fund** + **Fundo Brasil** *(só se o edital vigente aceitar coletivo sem CNPJ)* | Ter **relatório real do piloto (`PIL-03`)** + dados de campo de `PM-18` publicados no [PM-103](./relatorio-trimestral-estado-praca-pm103.md) |
 | **Pós-`REV-18` (Associação/PJ com CNPJ ativo e governança `LAN-31`)** | **4ª** | **NIC.br/CGI.br (projetos PJ)**, **FINEP/CNPq (sociedade civil)**, **Instituto Lafer / fundações de democracia BR**, **Luminate/OSF** | CNPJ regularizado, conta bancária da associação, bus factor ≥ 2 (`LAN-30`) e contabilidade estimada cabendo na verba do edital |

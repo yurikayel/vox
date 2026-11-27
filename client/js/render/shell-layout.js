@@ -57,7 +57,7 @@ export function mountDemoModeBanner(main) {
 }
 
 /**
- * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações).
+ * Cabeçalho de página no padrão do guia de design (título epigráfico + subtítulo + ações).
  * @param {object} options
  * @param {string} options.title Título principal (H1).
  * @param {string} [options.subtitle=""] Linha de apoio.

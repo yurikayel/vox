@@ -1,8 +1,8 @@
-"""Captura screenshots das telas #/dungeon para handoff Stitch (desktop + mobile).
+"""Captura screenshots das telas #/dungeon para handoff de design (desktop + mobile).
 
 Uso (servidor em client/ na porta 8080):
-  python e2e/capture_dungeon_stitch.py
-  python e2e/capture_dungeon_stitch.py --base-url http://127.0.0.1:8080
+  python e2e/capture_dungeon_ui.py
+  python e2e/capture_dungeon_ui.py --base-url http://127.0.0.1:8080
 
 Saída: docs/design/stitch-captures/dungeon-ui-<data>/ + .zip no mesmo nível.
 """
@@ -126,7 +126,7 @@ def _capture_set(
   try:
       page.goto(f"{base_url}/#/", wait_until="domcontentloaded")
       _apply_color_mode_dom(page, color_mode)
-      _complete_onboarding(page, "Stitch Capture")
+      _complete_onboarding(page, "Captura Design")
       _dismiss_banners(page)
       _apply_color_mode_dom(page, color_mode)
 
@@ -191,7 +191,7 @@ def main():
   for stale in out_dir.glob("*.png"):
       stale.unlink()
 
-  readme = f"""Dungeon UI — capturas para Stitch ({stamp})
+  readme = f"""Dungeon UI — capturas para o design ({stamp})
 Base: {args.base_url}
 
 Arquivos (cada tela × viewport × tema):
