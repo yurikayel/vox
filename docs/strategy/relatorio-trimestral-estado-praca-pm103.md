@@ -44,7 +44,7 @@ Registrar valores efetivamente pagos no trimestre (média mensal e acumulado do 
 
 **Receitas e cobertura (`REV-22` / `LAN-32`):**
 - **GitHub Sponsors (PF / org):** `R$ [valor]` (`[número]` apoiadores)
-- **Editais / bolsas ([proposta NLnet](./proposta-nlnet-restack-2027.md) / [editais BR](./editais-brasileiros-pm108.md)):** `R$ [valor]`
+- **Editais / bolsas (proposta de financiamento, mantida fora do repositório / [editais BR](./editais-brasileiros-pm108.md)):** `R$ [valor]`
 - **Saldo reservado / meses de operação cobertos (`LAN-32`, meta ≥ 12 meses):** `[N meses]`
 
 ---

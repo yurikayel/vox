@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica PNG citados em STITCH-MESA-GUIA.md (apenas capturas dungeon-ui próprias)."""
+"""Verifica os PNG citados no guia de capturas da Mesa (apenas capturas dungeon-ui próprias)."""
 
 from __future__ import annotations
 

@@ -34,7 +34,7 @@ function resolvePersonStampsHtml(p, isSelf) {
 }
 
 /**
- * Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome, @ e selos, mais as ações.
+ * Linha do Diretório de Cidadãos (tela 10 do guia de design): avatar, nome, @ e selos, mais as ações.
  * A chave `vx_…` não aparece aqui (não diz nada a quem lê); ela fica no perfil, como dado complementar.
  */
 function renderPeopleResultRow(p) {

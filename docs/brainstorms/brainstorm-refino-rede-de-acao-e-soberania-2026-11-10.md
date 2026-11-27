@@ -106,7 +106,7 @@ Para essa neutralidade ser real, **falta mapear a direita pró-democrática.** E
 2. **PL 5.746/2026 e interoperabilidade.** Mandar uma contribuição técnica e posicionar o Vox como implementação de referência. Se a interoperabilidade virar lei, o Vox já está pronto. Antes, confirmar na Câmara como o projeto está tramitando.
 3. **"Do megafone à praça"** para a militância depois de 2026: núcleo, formação e decisão, exatamente o que o Le Monde Diplomatique propôs ao Exército do Lula.
 4. **Plano B fora da terra da Meta.** A eleição de 2026 mostrou o quanto a militância depende dos canais de WhatsApp. O argumento: "seu núcleo continua de pé se o canal cair".
-5. **No exterior, mais tarde:** financiamento europeu de ferramentas soberanas (a [proposta ao NLnet](../strategy/proposta-nlnet-restack-2027.md) já está no repo) e versão em espanhol para as cópias do modelo na Argentina e na Espanha.
+5. **No exterior, mais tarde:** financiamento europeu de ferramentas soberanas (proposta de financiamento, mantida fora do repositório) e versão em espanhol para as cópias do modelo na Argentina e na Espanha.
 6. **O que não surfar:** a onda de migração de usuários, que está murchando, e o discurso anti big tech para leigos.
 
 ## 6. Próximos passos sem código

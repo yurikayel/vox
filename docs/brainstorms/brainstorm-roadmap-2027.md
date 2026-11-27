@@ -39,7 +39,7 @@ O **piso** é o mínimo para chamar o ano de bem-sucedido. A **meta** é o que d
 | Data | O que acontece | Efeito no ano |
 |---|---|---|
 | 24/11/2026 | Os aparelhos passam a assinar no formato v2 (`SIGV2_FROM` em `client/js/sig-format.js`) | Em 2027 dá para fechar a convivência com o v1 nos itens novos (PM-102) |
-| 02/01/2027 | Submeter ao NLnet (prazo: 03/01/2027, 12:00 CET) | LAN-36. Se aprovado, os marcos M1–M8 da [proposta](../strategy/proposta-nlnet-restack-2027.md) viram trabalho pago por entrega |
+| 02/01/2027 | Submeter ao NLnet (prazo: 03/01/2027, 12:00 CET) | LAN-36. Se aprovado, os marcos M1–M8 da proposta de financiamento, mantida fora do repositório, viram trabalho pago por entrega |
 | Começo de 2027 | Condomínios fazem a assembleia anual que aprova orçamento e contas (Código Civil, art. 1.350), e muitas associações seguem o mesmo ritmo | Janela da cunha do piloto: modo assembleia (PM-23) |
 | Fev e ago/2027 | Começam os semestres letivos | Coluna 3 (escola, só adultos) e coluna 8 (universidades) entram por semestre |
 | 2027 | Ano sem eleição | Crescer em uso comunitário longe do modo eleitoral |

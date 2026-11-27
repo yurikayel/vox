@@ -355,7 +355,7 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", i
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply" aria-label="Ocultar resposta da rede" title="Ocultar resposta da rede"><span aria-hidden="true">🛡️</span></button>` : "";
   const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;
   const replyBtn = (topicId && !isLocked) ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
-  // Até 4 níveis de recuo, cada um com a sua linha-guia (Stitch tela 6); daí para baixo fica no 4º.
+  // Até 4 níveis de recuo, cada um com a sua linha-guia (tela 6 do guia de design); daí para baixo fica no 4º.
   const level = Math.min(depth, 4);
 
   return `
