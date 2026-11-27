@@ -1,0 +1,61 @@
+/* @file Acampamento (UI v4, V1): "Entrar" como único botão primário, grupo em linhas com barra de PV, Descanso e Espólios
+ * em `<details>` fechados, selo "Ativa" sem quebra de linha. Injetada sob demanda por `ensureSvSheets`; só tokens `--sa-*`.
+ */
+
+.sv-camp-details {
+  margin-top: 0.75rem;
+}
+
+.sv-camp-details > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  color: var(--sa-on-surface);
+  font-weight: 600;
+}
+
+.sv-camp-details .dungeon-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.dungeon-clean-list .sv-party-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(3.5rem, 7rem) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+}
+
+.sv-party-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sv-party-who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sv-party-bar {
+  margin-top: 0;
+}
+
+.sv-party-hp {
+  grid-column: 3;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+
+.dungeon-table-meta .dungeon-badge-ok {
+  flex-shrink: 0;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--sa-surface-high);
+  color: var(--sa-tertiary);
+  white-space: nowrap;
+}
