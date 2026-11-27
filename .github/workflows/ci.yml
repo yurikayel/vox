@@ -294,3 +294,26 @@ jobs:
           fi
           echo "::error::PILOT_FREEZE ativo: PR altera client/js/**. Use label pilot-hotfix ou desative o freeze."
           exit 1
+
+  sw-release:
+    name: Service Worker só no corte de release
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      # O nome da branch entra por variável de ambiente, nunca interpolado no script (injeção).
+      - name: Reprovar PR que altera client/sw.js fora de um corte
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: node scripts/check-sw-release.mjs
