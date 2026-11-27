@@ -5,13 +5,13 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom, makeEl } from "./helpers/cov-t1-dom.mjs";
-import { waitUntil } from "./helpers/wait-until.js";
+import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import { renderShell } from "../client/js/render/shell.js";
 import { wireSidebarCirclesLive } from "../client/js/app/sidebar-circles-live.js";
 
 const dom = installFakeDom();
-const settle = () => new Promise((r) => setTimeout(r, 40));
+const settle = () => drainMicrotasks();
 
 /** Host de linhas com a lista ligada que o reconciliador usa (firstChild, insertBefore, removeChild). */
 function makeRowsHost() {
