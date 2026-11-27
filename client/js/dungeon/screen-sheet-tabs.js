@@ -81,9 +81,10 @@ export function renderSkillGrid(skills, extraActions = []) {
  * @returns {string} HTML da aba.
  */
 export function renderPlayTab(actions, derivedSkills = []) {
-  const { skills } = splitSheetActions(actions);
+  const list = Array.isArray(actions) ? actions : [];
+  const { skills } = splitSheetActions(list);
   const covered = new Set(derivedSkills.map((s) => s.label));
-  const usable = actions.filter((a) => !(a?.tag === "pericia" && covered.has(a.label)));
+  const usable = list.filter((a) => !(a?.tag === "pericia" && covered.has(a.label)));
   return `
     <h3 class="dungeon-eyebrow">Mais usados</h3>
     ${renderActionGrid(pickMostUsed(usable))}

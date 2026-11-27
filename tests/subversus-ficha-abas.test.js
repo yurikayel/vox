@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { renderSheetScreen } from "../client/js/dungeon/screen-sheet.js";
-import { SHEET_TABS, pickMostUsed, renderSheetTabs, splitSheetActions } from "../client/js/dungeon/screen-sheet-tabs.js";
+import { SHEET_TABS, pickMostUsed, renderPlayTab, renderSheetTabs, splitSheetActions } from "../client/js/dungeon/screen-sheet-tabs.js";
 import { captureUiViewState, restoreUiViewState } from "../client/js/dungeon/dungeon-dom-focus.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 
@@ -17,6 +17,7 @@ const actions = [
   { id: "s1", label: "Furtividade", roll: "1d20+@des", damage: "", tag: "pericia" },
   { id: "s2", label: "Percepção", roll: "1d20+@sab", damage: "", tag: "pericia" },
   { id: "h1", label: "Golpe Furioso", roll: "1d20+@for", damage: "2d6", tag: "poder" },
+  { id: "s3", label: "Ofício de Forja", roll: "1d20+@int", damage: "", tag: "pericia" },
 ];
 
 function sheetState() {
@@ -46,8 +47,8 @@ test("abas: Jogar, Habilidades, Itens e Sobre, com Jogar aberta por padrão", ()
 });
 
 test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' lista as perícias", () => {
-  assert.deepEqual(splitSheetActions(actions).skills.map((a) => a.id), ["s1", "s2"]);
-  assert.deepEqual(pickMostUsed(actions).map((a) => a.id), ["a1", "h1", "s1", "s2"]);
+  assert.deepEqual(splitSheetActions(actions).skills.map((a) => a.id), ["s1", "s2", "s3"]);
+  assert.deepEqual(pickMostUsed(actions).map((a) => a.id), ["a1", "h1", "s1", "s2", "s3"]);
   assert.equal(pickMostUsed(actions, 2).length, 2);
   const html = renderSheetScreen(sheetState());
   const play = panel(html, "play");
@@ -56,9 +57,20 @@ test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' l
   assert.ok(play.indexOf("Mais usados") < play.indexOf("Todos os testes"));
   assert.match(play, /data-dungeon="roll-skill" data-skill="[a-z]+"[^>]*><strong>Furtividade<\/strong>/);
   assert.doesNotMatch(play, /data-dungeon="roll-action" data-action-id="s1"/);
+  const [mostUsed, allTests] = play.split('<h3 class="dungeon-eyebrow">Todos os testes</h3>');
+  const forge = /data-dungeon="roll-action" data-action-id="s3"><strong>Ofício de Forja<\/strong>/;
+  assert.match(mostUsed, forge);
+  assert.match(allTests, forge);
   assert.doesNotMatch(play, /data-dungeon="remove-action"/);
   assert.match(panel(html, "abilities"), /data-dungeon="roll-action" data-action-id="h1"><strong>Golpe Furioso<\/strong>/);
   assert.match(panel(html, "abilities"), /data-dungeon="remove-action" data-action-id="h1"/);
+});
+
+test("abas: a aba Jogar tolera ações que não sejam lista", () => {
+  for (const bad of [undefined, null, {}, "texto"]) {
+    assert.doesNotThrow(() => renderPlayTab(bad, []), `renderPlayTab(${JSON.stringify(bad)})`);
+    assert.match(renderPlayTab(bad, []), /Nada cadastrado ainda nesta ficha\./);
+  }
 });
 
 test("abas: modo de rolagem, aviso de resultado ou erro e 'Subir de Nível' ficam fora das abas, sempre à vista", () => {
