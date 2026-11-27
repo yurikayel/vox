@@ -104,7 +104,7 @@ function renderPromptInspector(state) {
 
 function renderInviteBox(fullUrl) {
   if (!fullUrl) {
-    return `<p class="dungeon-muted">Gere um link de convite para sincronizar a sala com outros aparelhos, sem servidor guardando a partida. A chave da sala vai no fragmento <code>#k=</code> do link.</p>`;
+    return `<p class="dungeon-muted">Gere um link de convite para sincronizar a sala com outros aparelhos, sem servidor guardando a partida. O link já leva a chave da sala; mande só para quem vai jogar.</p>`;
   }
   return `<div class="dungeon-invite-row">
     <pre class="dungeon-prompt-preview">${escapeHtml(fullUrl)}</pre>
