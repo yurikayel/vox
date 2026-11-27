@@ -38,7 +38,7 @@ function compileLineException(ex) {
  * `VOX_AUDIT_EXTRA_PATTERNS`, um JSON com a lista no mesmo formato.
  * @param {string} [root] Raiz do repositório.
  * @param {object} [env] Variáveis de ambiente.
- * @returns {{patterns: object[], allow: object, cutoff: string}} Regras prontas.
+ * @returns {{patterns: object[], allow: object, since: string}} Regras prontas.
  */
 export function loadRules(root = ROOT, env = process.env) {
   const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
@@ -46,7 +46,7 @@ export function loadRules(root = ROOT, env = process.env) {
   const allow = read(path.join(root, "scripts", "internal-audit.allow.json"));
   const extra = env.VOX_AUDIT_EXTRA_PATTERNS ? read(env.VOX_AUDIT_EXTRA_PATTERNS) : [];
   allow.lineExceptions = allow.lineExceptions.map(compileLineException);
-  return { patterns: [...defs.patterns, ...extra].map(compile), allow, cutoff: defs.commitCutoff };
+  return { patterns: [...defs.patterns, ...extra].map(compile), allow, since: defs.commitsSince };
 }
 
 /** O padrão vale para este arquivo e esta linha? */
@@ -179,11 +179,18 @@ export function compareBaseline(cur, base) {
   return bad;
 }
 
-/** Mensagens dos commits novos (fora da base e fora do histórico até o corte). */
-function newCommitMessages(root, base, cutoff) {
-  const args = ["log", "HEAD", `^${base}`, `^${cutoff}`, "--format=%H%x1f%B%x1e"];
+/**
+ * Mensagens dos commits novos (fora da base e com data de autoria a partir de `since`).
+ * @param {string} root Raiz do repositório.
+ * @param {string} base Commit ou ref da base do PR.
+ * @param {string} since Data ISO de corte.
+ * @returns {Array<[string, string]>} Pares `[sha, mensagem]`.
+ */
+export function newCommitMessages(root, base, since) {
+  const args = ["log", "HEAD", `^${base}`, "--format=%H%x1f%aI%x1f%B%x1e"];
   const raw = execFileSync("git", args, { cwd: root, maxBuffer: 64 * 1024 * 1024 }).toString("utf8");
-  return raw.split("\x1e").map((r) => r.trim()).filter(Boolean).map((r) => r.split("\x1f"));
+  const rows = raw.split("\x1e").map((r) => r.trim()).filter(Boolean).map((r) => r.split("\x1f"));
+  return rows.filter(([, date]) => Date.parse(date) >= Date.parse(since)).map(([sha, , msg]) => [sha, msg]);
 }
 
 /** Título e corpo do PR a partir do arquivo do evento (`GITHUB_EVENT_PATH`); nada vem de variável de shell. */
@@ -195,7 +202,7 @@ function prText(eventFile) {
 /** Ocorrências em commits novos e no PR. */
 function messageHits(args, rules) {
   const hits = [];
-  if (args.base) for (const [sha, msg] of newCommitMessages(ROOT, args.base, rules.cutoff)) hits.push(...scanMessage(`commit:${sha.slice(0, 8)}`, msg, rules));
+  if (args.base) for (const [sha, msg] of newCommitMessages(ROOT, args.base, rules.since)) hits.push(...scanMessage(`commit:${sha.slice(0, 8)}`, msg, rules));
   if (args.event) hits.push(...scanMessage("pr", prText(args.event), rules));
   return hits;
 }

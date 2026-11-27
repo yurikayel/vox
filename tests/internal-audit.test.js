@@ -3,6 +3,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -78,6 +79,26 @@ test("trailer de coautoria em mensagem é ERROR; texto neutro passa", () => {
   const bad = need("scanMessage")("commit:abc", `feat: algo\n\n${WORDS.trailer}\n`, rules);
   assert.ok(bad.some((h) => h.id === "trailer" && h.error), "trailer deve ser erro");
   assert.deepEqual(need("scanMessage")("commit:def", "feat: algo neutro\n", rules), []);
+});
+
+/** Repositório temporário com um commit por data de autoria dada, todos com o trailer. */
+function repoWithCommits(dates) {
+  const dir = plant({ "a.txt": "x\n" });
+  const run = (args, env = {}) => execFileSync("git", args, { cwd: dir, env: { ...process.env, ...env }, stdio: "pipe" });
+  run(["init", "-q"]);
+  run(["add", "."]);
+  dates.forEach((date, i) => {
+    run(["-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "--allow-empty", "-m", `c${i}\n\n${WORDS.trailer}`], { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date });
+  });
+  return dir;
+}
+
+test("o corte é pela data de autoria: commit antigo é histórico, novo reprova", () => {
+  const dir = repoWithCommits(["2026-11-20T10:00:00Z", "2026-11-28T10:00:00Z"]);
+  const root = execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { cwd: dir }).toString().trim();
+  const found = need("newCommitMessages")(dir, root, "2026-11-27T12:00:00Z");
+  assert.equal(found.length, 1);
+  assert.match(found[0][1], /^c1/);
 });
 
 test("toda exceção tem motivo e dono", () => {
