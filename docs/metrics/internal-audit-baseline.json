@@ -1,14 +1,13 @@
 {
   "version": 1,
   "patterns": {
-    "orch": 60,
-    "orch-agente": 60,
+    "orch": 52,
+    "orch-agente": 56,
     "tool-design": 32,
-    "tool-ai": 138,
+    "tool-ai": 137,
     "agent-report": 8,
     "tool-ide-nome": 63,
     "tool-ide": 17,
-    "tool-model": 7,
     "prompt-doc": 1
   },
   "agentRules": 51,
@@ -168,10 +167,7 @@
       "orch": 1
     },
     "docs/process/metodo-agentes-mutex-e-revisor.md": {
-      "orch-agente": 6,
-      "tool-ai": 1,
-      "orch": 8,
-      "tool-model": 7
+      "orch-agente": 2
     },
     "docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md": {
       "prompt-doc": 1,
