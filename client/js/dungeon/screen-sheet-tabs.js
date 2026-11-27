@@ -69,7 +69,7 @@ const PACK_SKILL_FORMULA = /^1d20\+@([a-z_]+)(\+@prof)?$/;
 function isCoveredSeed(act, skills) {
   const skill = act?.tag === "pericia" ? skills.find((s) => s.label === act.label) : null;
   const m = skill ? PACK_SKILL_FORMULA.exec(String(act.roll || "").replace(/\s+/g, "").toLowerCase()) : null;
-  return Boolean(m) && ABILITY_ALIASES[m[1]] === skill.ability;
+  return Boolean(m) && skill.ability !== undefined && ABILITY_ALIASES[m[1]] === skill.ability;
 }
 
 function skillButton(skill) {
