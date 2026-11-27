@@ -103,7 +103,14 @@ function renderRollStatusBanner(state) {
   if (state.rollError) return `<p class="dungeon-alert-warn" role="alert">${escapeHtml(state.rollError)}</p>`;
   const last = state.lastFormulaRoll;
   if (!last?.ok) return "";
-  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong></p>`;
+  const secret = last.visibility === "gm" ? ` <span class="dungeon-secret-tag"><span aria-hidden="true">🔒</span> Só para o Mestre</span>` : "";
+  return `<p class="dungeon-inline-status" role="status">Última rolagem (${escapeHtml(last.label || last.formula)}): <strong>${last.total}</strong>${secret}</p>`;
+}
+
+/** Chip "Só para o Mestre": a próxima rolagem de atributo ou perícia sai só para o autor e o Mestre. */
+function renderSecretChip(state) {
+  const on = Boolean(state.rollSecret);
+  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="roll-secret" aria-pressed="${on}" aria-describedby="dungeon-secret-hint">Só para o Mestre</button>`;
 }
 
 function renderRollModes(state) {
@@ -112,7 +119,8 @@ function renderRollModes(state) {
     const cls = m.id === mode ? " is-selected" : "";
     return `<button type="button" class="dungeon-chip-btn${cls}" data-dungeon="roll-mode" data-mode="${m.id}" aria-pressed="${m.id === mode}">${escapeHtml(m.label)}</button>`;
   }).join("");
-  return `<div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${chips}</div>${renderRollStatusBanner(state)}`;
+  const hint = `<span id="dungeon-secret-hint" class="dungeon-muted">Vale para testes de atributo e perícia, uma rolagem por vez.</span>`;
+  return `<div class="dungeon-chips-row" role="group" aria-label="Modo de rolagem">${chips}${renderSecretChip(state)}</div>${hint}${renderRollStatusBanner(state)}`;
 }
 
 function renderActionCard(act) {
