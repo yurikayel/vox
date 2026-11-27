@@ -228,3 +228,22 @@ test("nostr-transport - PM-17: stop() cancela a reconexão agendada", (t) => {
   t.mock.timers.tick(1000);
   assert.equal(net.created.length, 1);
 });
+
+test("nostr-transport - PM-17: stop() + start() na janela não deixa o timer do ciclo anterior abrir a vaga em dobro", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const net = createFlakyNet(new Set(["wss://morto"]));
+  const T = createNostrTransport({ relays: ["wss://morto"], peerId: "p1", onMessage: () => {}, WebSocketImpl: net.FlakyWS, reconnectBaseMs: 30 });
+  T.start();
+  t.mock.timers.tick(1);
+  T.stop();
+  T.start();
+  const antes = net.created.length;
+  try {
+    t.mock.timers.tick(61);
+    assert.equal(net.created.length - antes, 0, "o timer do ciclo parado (60 ms) foi cancelado e não abre a vaga");
+    t.mock.timers.tick(130);
+    assert.equal(net.created.length - antes, 1, "controle: o timer do ciclo atual abre uma vez");
+  } finally {
+    T.stop();
+  }
+});
