@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "commitsSince": "2026-11-27T12:00:00Z",
+  "commitsSince": "2026-11-28T00:00:00Z",
   "commitsSinceNote": "Só valem os commits cuja data de autoria é igual ou posterior. Commits anteriores (inclusive PRs já em voo) são histórico e não são escaneados.",
   "patterns": [
     { "id": "tool-ai", "regex": "\\b(claude|anthropic|antigravity|gemini|chatgpt|openai|copilot|codex(?![-\\w])|deep research|perplexity)\\b", "messages": true },

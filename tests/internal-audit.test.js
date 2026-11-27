@@ -94,11 +94,14 @@ function repoWithCommits(dates) {
 }
 
 test("o corte é pela data de autoria: commit antigo é histórico, novo reprova", () => {
-  const dir = repoWithCommits(["2026-11-20T10:00:00Z", "2026-11-28T10:00:00Z"]);
+  const dir = repoWithCommits(["2026-11-20T10:00:00Z", "2026-11-29T10:00:00Z"]);
   const root = execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { cwd: dir }).toString().trim();
-  const found = need("newCommitMessages")(dir, root, "2026-11-27T12:00:00Z");
-  assert.equal(found.length, 1);
+  const rules = need("loadRules")();
+  const found = need("newCommitMessages")(dir, root, rules.since);
+  assert.equal(found.length, 1, "só o commit depois do corte entra");
   assert.match(found[0][1], /^c1/);
+  const hits = need("scanMessage")("commit:x", found[0][1], rules);
+  assert.ok(hits.some((h) => h.error), "o trailer depois do corte reprova");
 });
 
 test("toda exceção tem motivo e dono", () => {
