@@ -1,5 +1,6 @@
 /* @file Barra de feeds da Ágora (UI v4, PR2): 2 segmentos (Social, Cívico) e o menu Filtro em `<details>`, tudo links, sem JS.
- * Carrega no `index.html` logo depois de `sv-tokens.css`; só tokens do tema, sem `!important`, foco sempre visível.
+ * Carrega no `index.html` logo depois de `sv-tokens.css`; só tokens do tema, sem `!important`, foco sempre visível
+ * (nenhum contêiner usa `overflow`, que cortaria o anel de foco; os botões das pontas levam o raio do contêiner).
  */
 
 .sv-feedbar {
@@ -14,7 +15,6 @@
   display: inline-flex;
   border: 1px solid var(--sa-outline);
   border-radius: var(--radius);
-  overflow: hidden;
 }
 
 .sv-seg-btn {
@@ -28,6 +28,14 @@
   font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+.sv-seg-btn:first-child {
+  border-radius: calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);
+}
+
+.sv-seg-btn:last-child {
+  border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
 }
 
 .sv-seg-btn[aria-current="page"] {

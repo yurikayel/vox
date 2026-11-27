@@ -115,3 +115,31 @@ test("o index.html liga sv-agora.css depois de sv-tokens.css", () => {
   const agora = html.indexOf('href="css/sv-agora.css"');
   assert.ok(agora > tokens && tokens > 0, "sv-agora.css vem depois de sv-tokens.css");
 });
+
+/** Blocos `seletores { corpo }` da folha, sem comentários e sem @media. */
+const blocos = (text) => [...text.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletores: m[1].split(",").map((s) => s.trim()), corpo: m[2] }));
+
+test("nenhum contêiner da barra usa overflow (cortaria o anel de foco) e as pontas do segmento levam o raio", () => {
+  const text = sheetCss();
+  for (const seletor of [".sv-feedbar", ".sv-seg", ".sv-filtro", ".sv-filtro-menu", ".sv-seg-btn"]) {
+    assert.doesNotMatch(css.ruleBody(text, seletor), /overflow/, `${seletor}: sem overflow`);
+  }
+  assert.match(css.ruleBody(text, ".sv-seg-btn:first-child"), /border-radius:\s*calc\(var\(--radius\) - 1px\) 0 0 calc\(var\(--radius\) - 1px\)/);
+  assert.match(css.ruleBody(text, ".sv-seg-btn:last-child"), /border-radius:\s*0 calc\(var\(--radius\) - 1px\) calc\(var\(--radius\) - 1px\) 0/);
+});
+
+test("foco visível nos 4 controles: segmento, resumo do Filtro, item do menu e chip", () => {
+  const comFoco = blocos(sheetCss()).filter((b) => b.seletores.some((s) => s.endsWith(":focus-visible")));
+  for (const seletor of [".sv-seg-btn", ".sv-filtro > summary", ".sv-filtro-menu a", ".sv-filtro-chip"]) {
+    const bloco = comFoco.find((b) => b.seletores.includes(`${seletor}:focus-visible`));
+    assert.ok(bloco, `${seletor}:focus-visible tem regra`);
+    assert.match(bloco.corpo, /outline:\s*2px solid var\(--sa-primary\)/, `${seletor}: anel de 2 px no token`);
+    assert.match(bloco.corpo, /outline-offset:\s*2px/, `${seletor}: afastado do controle`);
+  }
+});
+
+test("o menu do Filtro fica acima do feed: absolute com z-index positivo", () => {
+  const menu = css.ruleBody(sheetCss(), ".sv-filtro-menu");
+  assert.match(menu, /position:\s*absolute/);
+  assert.match(menu, /z-index:\s*[1-9]\d*/);
+});
