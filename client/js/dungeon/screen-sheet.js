@@ -36,8 +36,12 @@ function derivePortraitCode(sheet) {
   return (letters.slice(0, 3) || "AVT").toUpperCase();
 }
 
-/** O pacote tem algum atributo da lista de botões (GURPS e pacote desconhecido não têm). */
-function hasAbilityButtons(sys) {
+/**
+ * O pacote tem algum atributo da lista de botões (GURPS e pacote desconhecido não têm).
+ * @param {{derived: {abilities: object[]}}|null} sys Pacote e derivados da ficha (`resolveSheetSystem`).
+ * @returns {boolean} `true` se o cabeçalho mostra botão de atributo.
+ */
+export function hasAbilityButtons(sys) {
   const derived = sys?.derived.abilities || [];
   return ABILITY_META.some((item) => derived.some((a) => a.id === item.key));
 }

@@ -7,7 +7,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { HUD_PANELS, isHudPanelEnabled } from "./hud-panels.js";
-import { renderAbilitiesPanel, renderSheetHero } from "./screen-sheet.js";
+import { hasAbilityButtons, renderAbilitiesPanel, renderSheetHero } from "./screen-sheet.js";
 import { renderDerivedStrip, resolveSheetSystem } from "./screen-sheet-derived.js";
 import { renderInventoryPanel } from "./screen-sheet-inventory.js";
 import { renderPlayTab } from "./screen-sheet-tabs.js";
@@ -19,6 +19,11 @@ export const CHRONICLE_LIMIT = 20;
 function sheetBody(state) {
   const hp = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger).pools?.hp_current ?? null;
   return `${renderSheetHero(state.sheet)}${renderDerivedStrip(state.sheet, hp)}${renderAbilitiesPanel(state)}`;
+}
+
+function abilitiesBody(state) {
+  const sys = resolveSheetSystem(state.sheet);
+  return renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || [], sys?.derived.skills, hasAbilityButtons(sys));
 }
 
 function mapBody(state, scene) {
@@ -37,7 +42,7 @@ function chronicleBody(state) {
 const BODIES = {
   sheet: (state) => sheetBody(state),
   items: (state) => renderInventoryPanel(state),
-  abilities: (state) => renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || [], resolveSheetSystem(state.sheet)?.derived.skills),
+  abilities: (state) => abilitiesBody(state),
   map: (state, scene) => mapBody(state, scene),
   chronicle: (state) => chronicleBody(state),
 };

@@ -54,15 +54,20 @@ export function renderActionGrid(actions, withDamage = false) {
   return `<div class="dungeon-brain-grid">${actions.map((a) => actionButton(a, withDamage)).join("")}</div>`;
 }
 
+/** Fórmula só de d20 mais `@var` (a semente da ficha e as perícias importadas): o botão do pacote já faz essa conta, certa para o sistema. */
+const PLAIN_SKILL_FORMULA = /^\s*1d20(\s*\+\s*@\w+)*\s*$/i;
+
 /**
- * Só a perícia semeada pela ficha (`act-*`) some quando o pacote já tem o botão do mesmo nome; uma ação cadastrada
- * à mão, com id e fórmula próprios, segue rolando pelo `roll-action`.
+ * Some a ação de perícia que o botão do pacote já cobre: a semente da ficha (id `act-*`) ou a de fórmula só com `@var`
+ * (importada ou criada pela interface, que ganha o id do nome). Uma ação com fórmula própria (bônus fixo, outro dado)
+ * segue rolando pelo `roll-action`, mesmo com o nome de uma perícia do pacote.
  * @param {object} act Ação clicável.
  * @param {Set<string>} labels Rótulos das perícias do pacote.
- * @returns {boolean} `true` se é semente coberta pelo pacote.
+ * @returns {boolean} `true` se o botão do pacote já a cobre.
  */
 function isCoveredSeed(act, labels) {
-  return act?.tag === "pericia" && String(act.id || "").startsWith("act-") && labels.has(act.label);
+  if (act?.tag !== "pericia" || !labels.has(act.label)) return false;
+  return /^act-/.test(String(act.id || "")) || PLAIN_SKILL_FORMULA.test(String(act.roll || ""));
 }
 
 function skillButton(skill) {
