@@ -19,7 +19,7 @@ import {
 } from "./obsidian-bridge.js";
 import { formatInWorldDate } from "./vtt-calendar.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
-import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
+import { packEncryptedVoxRpg, packVoxRpg, referencedBlobHashes, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
@@ -293,6 +293,7 @@ export async function persistD20RollIfActive(state, value, store = getDefaultVtt
 
 /**
  * Exporta a campanha ativa em `.voxrpg.zip`, `.voxrpg.enc` (cifrado via Senha Soberana) ou crônica `.md` (Obsidian).
+ * Os formatos `zip` e `enc` levam só os blobs referenciados pela campanha (mapas dos pisos e avatares dos tokens).
  * @param {object} state Estado da sessão.
  * @param {object} [opts={}] Opções (`format`: `"zip"|"enc"|"md"`, `passphrase`, `includeGmSecrets`, `store`).
  * @returns {Promise<{ filename: string, bytes: Uint8Array, mime: string }>} Artefato pronto para download.
@@ -305,7 +306,7 @@ export async function exportCampaignBackup(state, opts = {}) {
     const md = chronicleToMarkdown(doc, { includePrivate: opts.includeGmSecrets !== false });
     return { filename: `${doc.id}-cronica.md`, bytes: ENC.encode(md), mime: "text/markdown;charset=utf-8" };
   }
-  const blobs = await store.getAllBlobsMap();
+  const blobs = await store.getBlobsMap(referencedBlobHashes(doc));
   if (format === "enc") {
     const json = await packEncryptedVoxRpg(doc, opts.passphrase, blobs);
     return { filename: `${doc.id}.voxrpg.enc`, bytes: ENC.encode(json), mime: "application/json;charset=utf-8" };
