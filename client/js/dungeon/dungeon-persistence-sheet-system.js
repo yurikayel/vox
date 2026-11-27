@@ -13,6 +13,26 @@ import { liveTrainedSkills, migrateLegacySheet } from "./system-migrate.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 
+const ABILITY_KEYS = Object.freeze(["str", "dex", "con", "int", "wis", "cha"]);
+
+/**
+ * Atributos da ficha com os valores editados no painel (FOR–CAR): valor inválido ou ausente mantém o atual,
+ * e o resultado fica entre 1 e 30.
+ * @param {object} [baseAbilities] Atributos vivos da ficha.
+ * @param {object} patch Campos do painel Editar (`str`, `dex`, `con`, `int`, `wis`, `cha`).
+ * @returns {object} Novo objeto de atributos.
+ */
+export function mergePatchedAbilities(baseAbilities, patch) {
+  const ab = { ...(baseAbilities || {}) };
+  for (const key of ABILITY_KEYS) {
+    const num = Number(patch[key]);
+    if (patch[key] !== undefined && Number.isFinite(num)) {
+      ab[key] = Math.max(1, Math.min(30, Math.trunc(num)));
+    }
+  }
+  return ab;
+}
+
 /** Lista vinda do formulário só substitui a atual quando o painel a enviou (array); senão fica como estava. */
 function listOr(patchList, current) {
   return Array.isArray(patchList) ? patchList : current;

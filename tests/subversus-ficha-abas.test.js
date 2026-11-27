@@ -92,7 +92,8 @@ test("abas: modo de rolagem, aviso de resultado ou erro e 'Subir de Nível' fica
 test("abas: só usa botões que o controlador já trata", () => {
   const html = renderSheetScreen(sheetState());
   const used = new Set([...html.matchAll(/data-dungeon="([a-z0-9-]+)"/g)].map((m) => m[1]));
-  const known = readFileSync(new URL("../client/js/dungeon/dungeon-controller-actions.js", import.meta.url), "utf8");
+  const read = (name) => readFileSync(new URL(`../client/js/dungeon/${name}`, import.meta.url), "utf8");
+  const known = `${read("dungeon-controller-actions.js")}${read("dungeon-sheet-rolls.js")}`;
   const submit = new Set(["add-action-form", "add-item-form", "edit-sheet-form"]);
   for (const name of used) assert.ok(known.includes(`"${name}"`) || submit.has(name), `sem tratador para ${name}`);
 });
