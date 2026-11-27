@@ -15,10 +15,10 @@ const CSS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../c
 const readCss = (name) => fs.readFileSync(path.join(CSS_DIR, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const SV_SHEETS = fs.readdirSync(CSS_DIR).filter((f) => /^sv-.*\.css$/.test(f)).sort();
 const PAIRS = [
-  ["--sa-on-primary", "--sa-primary"],
-  ["--sa-on-secondary", "--sa-secondary"],
-  ["--sa-on-tertiary", "--sa-tertiary"],
-  ["--sa-on-error-container", "--sa-error-container"],
+  ["--sv-on-primary", "--sa-primary"],
+  ["--sv-on-civic", "--sa-secondary"],
+  ["--sv-on-ok", "--sa-tertiary"],
+  ["--sv-on-error-container", "--sa-error-container"],
 ];
 
 /** Blocos `{ selector, body }` de um nível, com chaves casadas. */
@@ -72,7 +72,7 @@ function resolveTheme(theme) {
 }
 
 function hexOf(tokens, key, depth = 0) {
-  const raw = key.startsWith("#") ? key : tokens.get(key);
+  const raw = key.startsWith("#") || key.startsWith("var(") ? key : tokens.get(key);
   if (!raw || depth > 10) return null;
   if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
   const ref = raw.match(/^var\(\s*(--[a-z0-9-]+)\s*\)$/i);
@@ -105,9 +105,31 @@ function assertPairs(theme) {
   }
 }
 
+/** Valor de `prop` na última regra de seletor exato, na ordem em que as folhas carregam. */
+function renderedDecl(selector, prop) {
+  let value = null;
+  for (const file of ["agora.css", ...SV_SHEETS]) {
+    for (const blk of blocks(readCss(file))) {
+      const m = blk.selector === selector && blk.body.match(new RegExp(`(?:^|;|\\s)${prop}\\s*:\\s*([^;]+)`));
+      if (m) value = m[1].trim();
+    }
+  }
+  return value;
+}
+
 describe("contraste dos pares on-* sobre a cor cheia", () => {
   it("tema claro: botão primário, selos e fundo de erro têm texto legível (AA, 4,5:1)", () => assertPairs("light"));
   it("tema escuro: os mesmos pares seguem legíveis (AA, 4,5:1)", () => assertPairs("dark"));
+  for (const theme of ["light", "dark"]) {
+    it(`${theme}: o contador de mensagens renderizado (.agora-dm-badge) lê AA sobre o seu fundo`, () => {
+      const tokens = resolveTheme(theme);
+      const fg = hexOf(tokens, renderedDecl(".agora-dm-badge", "color"));
+      const bg = hexOf(tokens, renderedDecl(".agora-dm-badge", "background"));
+      assert.ok(fg && bg, `${theme}: cor do contador não resolveu`);
+      const ratio = contrast(fg, bg);
+      assert.ok(ratio >= 4.5, `${theme}: contador ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< 4.5:1)`);
+    });
+  }
   it("o index.html liga sv-tokens.css depois de agora.css, para a folha vencer a cascata", () => {
     const html = fs.readFileSync(path.join(CSS_DIR, "../index.html"), "utf8");
     const agora = html.indexOf('href="css/agora.css"');
