@@ -16,7 +16,7 @@ A triagem abaixo foi escrita em 22/11; o código andou. O que mudou, conferido n
 
 Estado atual: **21 arquivos** em `labs/parado/` (18 desligados, listados em `UNPLUGGED_MODULES`, mais os 3 do `kit-genesis`, carregados sob demanda). Os números de linhas, LLOC e bytes das seções 1 e 2 são de 22/11 e **não foram remedidos**; o `kit-genesis` mudou de tamanho com o fatiamento.
 
-**Pendente de aceite do mantenedor:** mover `kit-genesis*` para a pasta do assunto e fechar o REV-02 no ROADMAP (restam quatro módulos a plugar por gatilho e 14 em laboratório; isso é decisão por gatilho, não trabalho de agora).
+**REV-02 fechado no ROADMAP em 27/11:** a decisão está tomada e executada no que dependia só dela. Os quatro módulos a plugar e os 14 em laboratório esperam o gatilho de cada um, não trabalho de agora. Fica de fora, por sua conta: mover `kit-genesis*` para a pasta do assunto (ADR-035).
 
 ## 1. Resumo executivo e estado medido (de 22/11)
 
