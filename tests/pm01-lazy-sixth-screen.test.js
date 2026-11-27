@@ -9,7 +9,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as facade from "../client/js/app/screens-network.js";
 import * as view from "../client/js/app/screens-network-view.js";
-import * as identitySync from "../client/js/app/network-identity-sync.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const STATIC_IMPORT_RE = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\s*["']([^"']+)["']/g;
@@ -56,21 +55,8 @@ test("PM-01 passo 7: fachada screens-network usa import() dinâmico sem imports 
 test("PM-01 passo 7: telas de rede e dependências exclusivas ficam fora do grafo estático de boot", () => {
   const bootStatic = collectStaticGraph(path.join(ROOT, "js/app.js"));
   assert.ok(bootStatic.has("./js/app/screens-network.js"), "fachada mínima segue no grafo de boot");
-  assert.ok(bootStatic.has("./js/app/network-identity-sync.js"), "syncIdentity segue no boot");
   for (const rel of LAZY_ONLY_MODULES) {
     assert.ok(!bootStatic.has(rel), `${rel} não entra no boot estático`);
-  }
-});
-
-test("PM-01 passo 7: módulos sob demanda ficam fora de SHELL_ASSETS e fora de UNPLUGGED_MODULES", () => {
-  const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-  const shellSection = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
-  const unpluggedSection = sw.split("const UNPLUGGED_MODULES")[1].split("];")[0];
-  assert.ok(shellSection.includes('"./js/app/screens-network.js"'), "fachada continua no SHELL_ASSETS");
-  assert.ok(shellSection.includes('"./js/app/network-identity-sync.js"'), "syncIdentity continua no SHELL_ASSETS");
-  for (const rel of LAZY_ONLY_MODULES) {
-    assert.ok(!shellSection.includes(`"${rel}"`), `${rel} deve ficar fora do precache SHELL_ASSETS`);
-    assert.ok(!unpluggedSection.includes(`"${rel}"`), `${rel} é alcançável sob demanda, não UNPLUGGED`);
   }
 });
 
@@ -78,7 +64,7 @@ test("PM-01 passo 7: a fachada expõe as telas e syncIdentity; a view traz a imp
   assert.equal(typeof facade.showNetworkSettings, "function");
   assert.equal(typeof facade.showStewardWizard, "function");
   assert.equal(typeof facade.showLinkedAccounts, "function");
-  assert.equal(facade.syncIdentity, identitySync.syncIdentity);
+  assert.equal(typeof facade.syncIdentity, "function");
   assert.equal(typeof view.showNetworkSettings, "function");
   assert.equal(typeof view.showStewardWizard, "function");
   assert.equal(typeof view.showLinkedAccounts, "function");

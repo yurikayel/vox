@@ -81,5 +81,3 @@ export async function showStewardWizard() {
   render.renderStewardWizard(main, { draft, step, mirrorLast });
   bindStewardWizardForm();
 }
-
-export { syncIdentity } from "./network-identity-sync.js";

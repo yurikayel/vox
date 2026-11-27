@@ -23,6 +23,7 @@ URL.revokeObjectURL = () => {};
 
 const settings = await import("../client/js/app/network-screen-settings.js");
 const steward = await import("../client/js/app/network-screen-steward.js");
+const facade = await import("../client/js/app/screens-network.js");
 const moderation = await import("../client/js/app/network-screen-moderation.js");
 const peers = await import("../client/js/peers.js");
 const mod = await import("../client/js/moderation.js");
@@ -326,7 +327,7 @@ test("syncIdentity: anuncia a conta e a chave de DM com nome e avatar do perfil"
   const { routeId } = await localAccount.ensureLocalAccount();
   localAccount.setProfileEnrichment({ displayName: "Ana Voz", avatarUrl: "https://x.exemplo/a.png" });
   installDom();
-  await steward.syncIdentity();
+  await facade.syncIdentity();
   assert.equal(webrtcState.getCurrentAddress(), routeId);
   assert.equal(webrtcState.getCurrentDmPub().displayName, "Ana Voz");
   assert.equal(webrtcState.getCurrentDmPub().avatarUrl, "https://x.exemplo/a.png");

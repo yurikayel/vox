@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.175-pm01-lazy-sixth-screen";
+const CACHE_NAME = "vox-pwa-v7.174-mesa-rede-aperto";
 
 const SHELL_ASSETS = [
 
@@ -105,7 +105,11 @@ const SHELL_ASSETS = [
   "./js/app/screens-home.js",
 
   "./js/app/screens-network.js",
-  "./js/app/network-identity-sync.js",
+  "./js/app/network-screen-linked.js",
+  "./js/app/network-screen-moderation.js",
+  "./js/app/network-screen-settings.js",
+  "./js/app/network-screen-steward.js",
+  "./js/app/own-posts-ui.js",
   "./js/own-posts.js",
   "./js/post-supersede.js",
 
@@ -232,6 +236,7 @@ const SHELL_ASSETS = [
   "./js/linked-accounts-store.js",
   "./js/linked-accounts-verify.js",
   "./js/bsky-oauth.js",
+  "./js/social-login.js",
   "./js/render/linked-accounts-ui.js",
 
   "./js/render/markdown-body.js",
@@ -259,7 +264,6 @@ const SHELL_ASSETS = [
   "./js/identity/account-backup-wrap.js",
 
   "./js/contribution-attestation.js",
-
 
   "./js/voxels.js",
 
@@ -322,6 +326,7 @@ const SHELL_ASSETS = [
   "./js/mock.js",
 
   "./js/moderation.js",
+  "./js/moderation-log.js",
 
   "./js/reply-thread.js",
 
@@ -491,6 +496,7 @@ const SHELL_ASSETS = [
 
   "./js/qr-url-layout.js",
 
+  "./js/steward-wizard.js",
 
   "./js/social.js",
 
