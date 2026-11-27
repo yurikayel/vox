@@ -157,7 +157,7 @@ test("gaveta de identidade - abre, fecha por botão/fundo/Escape/link e copia o 
   find("agora-drawer-backdrop").dispatch("click");
   assert.equal(drawer.hidden, true);
   toggle.dispatch("click");
-  drawer.dispatch("keydown", { key: "Escape" });
+  dom.document.dispatch("keydown", { key: "Escape" });
   assert.equal(drawer.hidden, true);
   toggle.dispatch("click");
   drawer.dispatch("click", { target: { closest: () => ({}) } });
