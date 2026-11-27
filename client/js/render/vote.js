@@ -1,5 +1,5 @@
 /**
- * @fileoverview Vote — Democracia Direta (layout Stitch, ADR-016).
+ * @fileoverview Vote — Democracia Direta (layout do guia de design, ADR-016).
  *
  * Mostra as pautas reais de governança (`governance-proposal`) das comunidades conhecidas por este
  * aparelho, com a apuração de `governance.computeTally` (1 membro = 1 voto, último voto vale,
