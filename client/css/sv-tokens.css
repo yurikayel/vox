@@ -4,8 +4,12 @@
  * (≈2:1) e alguns botões trazem o texto escuro fixo. Os `--sa-on-*` não mudam (outros usos seguem como estão); os
  * pares abaixo trazem o texto certo por tema e só os seletores que falhavam apontam para eles.
  * Contraste conferido por `tests/sv-contraste-pares-on.test.js`.
+ * Raios de borda: `--sv-radius` e `--sv-radius-sm` apontam para `--radius` (8 px) e `--radius-sm` (4 px) de `agora.css`;
+ * `--radius-md` não serve (o nome diz 10 px e entrega 8).
  */
 :root {
+  --sv-radius: var(--radius);
+  --sv-radius-sm: var(--radius-sm);
   --sv-on-primary: var(--sa-on-primary-fixed);
   --sv-on-civic: var(--sa-on-secondary);
 }
