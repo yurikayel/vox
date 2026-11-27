@@ -1,0 +1,32 @@
+/*
+ * Tokens `--sv-*` do Vox. Carrega logo depois de `agora.css` para vencer a cascata, com os mesmos blocos por tema.
+ * Pares "texto sobre cor cheia": no tema claro, `--sa-on-primary` e `--sa-on-secondary` seguem com o valor do escuro
+ * (≈2:1) e alguns botões trazem o texto escuro fixo. Os `--sa-on-*` não mudam (outros usos seguem como estão); os
+ * pares abaixo trazem o texto certo por tema e só os seletores que falhavam apontam para eles.
+ * Contraste conferido por `tests/sv-contraste-pares-on.test.js`.
+ */
+:root {
+  --sv-on-primary: var(--sa-on-primary-fixed);
+  --sv-on-civic: var(--sa-on-secondary);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-color-mode="dark"]) {
+    --sv-on-civic: #ffffff;
+  }
+}
+
+:root[data-color-mode="light"] {
+  --sv-on-civic: #ffffff;
+}
+
+/* Fundo `--sa-primary`: botão primário da mesa e célula do jogador (agora.css fixa #00201e). */
+.dungeon-btn-primary,
+.dungeon-grid-cell.is-player {
+  color: var(--sv-on-primary);
+}
+
+/* Contador de mensagens não lidas: fundo `--sa-secondary` (selo cívico). */
+.agora-dm-badge {
+  color: var(--sv-on-civic);
+}

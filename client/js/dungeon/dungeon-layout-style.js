@@ -12,7 +12,9 @@ const LINK_ID = "dungeon-layout-stylesheet";
  * só a sua linha aqui, junto com o arquivo em `client/css/`.
  * @type {ReadonlyArray<{ id: string, href: string }>}
  */
-export const SV_SHEETS = Object.freeze([]);
+export const SV_SHEETS = Object.freeze([
+  { id: "sv-camp-stylesheet", href: "css/sv-camp.css" },
+]);
 
 function linkSheet(doc, id, href) {
   if (doc.getElementById(id)) return;
