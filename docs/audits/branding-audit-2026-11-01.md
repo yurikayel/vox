@@ -31,5 +31,5 @@ A bandeja é uma aplicação sem janela principal. A tentativa de abrir `VoxPopu
 ## Evidências e limites
 
 - Specs, scripts de build, README desktop, README do Node Zero, serviço systemd, tray, launcher, README Android, textos do app, posicionamento e ADR-010 foram inspecionados.
-- Os dois builds PyInstaller 6.22.3 terminaram em `C:\Users\yurik\AppData\Local\Temp\vox-brand-audit-1dd007409d52489ea57240158db3cd50`; os dois recursos PE exibem os nomes e versões esperados, conferidos com `pyi-grab_version`. O build desktop emitiu um aviso não fatal porque uma coleta opcional tentou importar o módulo Android do WebView, ausente no Windows.
+- Os dois builds PyInstaller 6.22.3 terminaram em `%TEMP%\vox-brand-audit-<id>` (pasta temporária); os dois recursos PE exibem os nomes e versões esperados, conferidos com `pyi-grab_version`. O build desktop emitiu um aviso não fatal porque uma coleta opcional tentou importar o módulo Android do WebView, ausente no Windows.
 - Nenhum instalador foi executado, nenhum autostart foi ativado e nenhum executável ativo foi substituído.
