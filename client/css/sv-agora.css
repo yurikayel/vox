@@ -109,3 +109,25 @@
   outline: 2px solid var(--sa-primary);
   outline-offset: 2px;
 }
+
+/* Alvos de toque de pelo menos 24 px (WCAG 2.5.8): controles que mediam 16 a 21 px de altura em Chromium. */
+.app-footer-feedback,
+.link-alt,
+.btn-dismiss-welcome-topic,
+.community-orkut-members-more,
+.post-author {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.btn-dismiss-welcome-topic {
+  min-width: 24px;
+  justify-content: center;
+}
+
+.dungeon-range,
+.aviso-skills input[type="text"],
+summary {
+  min-height: 24px;
+}
