@@ -84,13 +84,13 @@ function showHeld(container, cell, held, ok) {
   paintGhost(cell.closest("[data-inv-grid]"), held, sizeOf(cell, held.rot), ok);
 }
 
-/** Legenda do item focado pelo teclado: o nome inteiro na área de aviso, que a célula estreita não mostra; sai com o foco. */
+/** Legenda do item focado pelo teclado: o nome inteiro, só visual (a célula já anuncia o `aria-label`); sai com o foco e não mexe na legenda do arrasto. */
 function bindCaption(container, ctx) {
   container.addEventListener("focusin", (ev) => {
     const cell = ev.target?.closest?.(CELL);
     if (cell) ctx.caption.show(itemById(ctx, cell.dataset.invCell));
   });
-  container.addEventListener("focusout", () => ctx.caption.clear());
+  container.addEventListener("focusout", () => ctx.caption.clearFocus());
 }
 
 function bindKeyboard(container, ctx) {

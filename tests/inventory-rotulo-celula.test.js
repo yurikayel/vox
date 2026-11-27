@@ -1,7 +1,9 @@
 /**
- * @file Nome inteiro do item da mochila na área de aviso: a célula estreita corta o rótulo, o `title` não aparece no
- * toque e tocar equipa. Ao segurar o item (começo do arrasto) ou focar a célula, `[data-inv-notice]` diz o nome e a
- * quantidade; soltar, cancelar ou sair do foco apaga a legenda, e ela não reescreve o aviso a cada movimento.
+ * @file Nome inteiro do item da mochila: a célula estreita corta o rótulo, o `title` não aparece no toque e tocar
+ * equipa. Ao segurar o item (começo do arrasto), `[data-inv-notice]` (`role="status"`) diz o nome e a quantidade; ao
+ * focar a célula, só a legenda visual `[data-inv-caption]` (a célula já anuncia o `aria-label`: a região viva não repete).
+ * Soltar, cancelar ou sair do foco apaga a legenda, ela não reescreve o aviso a cada movimento e o foco não mexe na
+ * legenda de quem está em mãos.
  */
 import "./setup.js";
 import test from "node:test";
@@ -29,16 +31,18 @@ function fakeMount() {
   };
   const cell = makeCell(idOf(LONG), 200);
   const cell2 = makeCell(idOf("Tocha"), 600);
-  const notice = { text: "", writes: 0, get textContent() { return this.text; }, set textContent(v) { this.text = v; this.writes += 1; } };
+  const counter = () => ({ text: "", writes: 0, get textContent() { return this.text; }, set textContent(v) { this.text = v; this.writes += 1; } });
+  const notice = counter();
+  const caption = counter();
   const container = {
     ownerDocument: null,
     addEventListener: (type, fn) => { (handlers[type] ||= []).push(fn); },
-    querySelector: (sel) => (sel === "[data-inv-notice]" ? notice : null),
+    querySelector: (sel) => (sel === "[data-inv-notice]" ? notice : sel === "[data-inv-caption]" ? caption : null),
     querySelectorAll: (sel) => (sel === "[data-inv-cell]" ? [cell, cell2] : sel === ".sv-inv-ghost" ? [grid.ghost].filter(Boolean) : []),
   };
   bindInventoryDrag(container, { state, store: {} }, async () => {});
   const fire = (type, ev) => (handlers[type] || []).forEach((fn) => fn({ preventDefault() {}, stopImmediatePropagation() {}, ...ev }));
-  return { fire, cell, cell2, notice };
+  return { fire, cell, cell2, notice, caption };
 }
 
 const grab = (m, cell = m.cell, pointerId = 1) => m.fire("pointerdown", { target: cell, pointerId, pointerType: "mouse", button: 0, clientX: 250, clientY: 50 });
@@ -98,27 +102,57 @@ test("e) o segundo dedo não troca a legenda do item que o primeiro segura", () 
   assert.equal(m.notice.text, `Segurando: ${LONG} ×3.`);
 });
 
-test("f) teclado: focar a célula mostra o nome inteiro e a quantidade; sair do foco apaga; trocar de célula troca o texto", () => {
+test("f) teclado: focar a célula mostra o nome inteiro e a quantidade na legenda visual; sair do foco apaga; trocar de célula troca o texto", () => {
   const m = fakeMount();
   m.fire("focusin", { target: m.cell });
-  assert.equal(m.notice.text, `Item: ${LONG} ×3.`);
+  assert.equal(m.caption.text, `Item: ${LONG} ×3.`);
   m.fire("focusout", { relatedTarget: m.cell2 });
   m.fire("focusin", { target: m.cell2 });
-  assert.equal(m.notice.text, "Item: Tocha ×1.");
+  assert.equal(m.caption.text, "Item: Tocha ×1.");
   m.fire("focusout", { relatedTarget: null });
+  assert.equal(m.caption.text, "");
+});
+
+test("f2) o foco não escreve na região viva: a célula já anuncia o aria-label, e repetir faria cada foco ser lido duas vezes", () => {
+  const m = fakeMount();
+  m.fire("focusin", { target: m.cell });
+  m.fire("focusout", { relatedTarget: m.cell2 });
+  m.fire("focusin", { target: m.cell2 });
+  assert.equal(m.notice.writes, 0, "role=status fica quieto no foco");
   assert.equal(m.notice.text, "");
+});
+
+test("f3) durante o arrasto, focar ou sair do foco não troca nem apaga o 'Segurando'", () => {
+  const m = fakeMount();
+  grab(m);
+  drag(m);
+  m.fire("focusin", { target: m.cell2 });
+  assert.equal(m.notice.text, `Segurando: ${LONG} ×3.`, "focar outra célula não troca");
+  assert.equal(m.caption.text, "", "nem põe legenda de foco por cima");
+  m.fire("focusout", { relatedTarget: null });
+  assert.equal(m.notice.text, `Segurando: ${LONG} ×3.`, "sair do foco não apaga o item que está em mãos");
+});
+
+test("f4) segurar o item tira a legenda de foco que estava na tela: uma legenda por vez", () => {
+  const m = fakeMount();
+  m.fire("focusin", { target: m.cell });
+  assert.match(m.caption.text, /^Item:/);
+  grab(m);
+  drag(m);
+  assert.equal(m.caption.text, "");
+  assert.match(m.notice.text, /^Segurando:/);
 });
 
 test("g) foco fora de uma célula, ou de célula que a ficha não conhece, não escreve nada", () => {
   const m = fakeMount();
   m.fire("focusin", { target: { closest: () => null } });
   m.fire("focusin", { target: { closest: () => ({ dataset: { invCell: "fantasma" } }) } });
-  assert.equal(m.notice.writes, 0);
+  assert.equal(m.notice.writes + m.caption.writes, 0);
 });
 
 test("h) focar de novo a mesma célula não reescreve o mesmo texto", () => {
   const m = fakeMount();
   m.fire("focusin", { target: m.cell });
   m.fire("focusin", { target: m.cell });
-  assert.equal(m.notice.writes, 1);
+  assert.equal(m.caption.writes, 1);
 });
