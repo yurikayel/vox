@@ -144,6 +144,8 @@ Duas colunas: cabeçalho, PV, condições e atributos fixos à esquerda; as quat
 2. O resultado aparece sobre o item ("18 · Total 23") e entra na crônica como "Lyra · Atletismo · 23".
 3. Toque longo (ou o "i"): mostra a conta e o botão de fixar nos favoritos.
 
+**Perícias clicáveis (SUB-21):** toda perícia do pacote de sistema (`deriveSheet(...).skills`) tem botão em "Todos os testes", na aba Jogar e no painel do HUD, com o bônus à vista (atributo + proficiência + especialização). O toque rola `1d20±bônus # Perícia: nome` por `recordFormulaRoll` (mesmo caminho, mesma op `ROLL_RECORDED`, sem op nova). O teste de atributo do cabeçalho usa o modificador derivado do pacote. Regra de código: o bônus entra na fórmula como número literal vindo do derivado, nunca como `@atr`/`@prof`, porque `@atr` aplica a conta de D&D e erra nos demais sistemas (T20 com Des 14: ficha e dado mostram +4). Ações de perícia cadastradas à mão que o pacote não tem seguem como botões `roll-action`. Código: `client/js/dungeon/dungeon-sheet-rolls.js`.
+
 ### 5.4 Inventário em grade (estilo Diablo II)
 
 ```
