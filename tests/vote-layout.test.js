@@ -19,7 +19,7 @@ function withLocation({ hash = "", search = "" }, fn) {
   }
 }
 
-describe("vote-stitch — rotas e painel de votação", () => {
+describe("vote-layout — rotas e painel de votação", () => {
   it("parseRoute resolves #/vote and #/votacao", () => {
     withLocation({ hash: "#/vote" }, () => {
       assert.deepEqual(parseRoute(), { name: "vote" });
@@ -51,7 +51,7 @@ describe("vote-stitch — rotas e painel de votação", () => {
   });
 });
 
-describe("vote-stitch — apuração e elegibilidade", () => {
+describe("vote-layout — apuração e elegibilidade", () => {
   it("renderVoteDashboard renderiza apuração real e ações conforme elegibilidade", () => {
     const base = {
       communityId: "vox",
@@ -80,7 +80,7 @@ describe("vote-stitch — apuração e elegibilidade", () => {
   });
 });
 
-describe("vote-stitch — perfis e navegação no shell", () => {
+describe("vote-layout — perfis e navegação no shell", () => {
   it("perfil próprio mostra catálogo real de selos (bloqueados sem recibos)", () => {
     const dummyMain = { innerHTML: "" };
     renderProfile(dummyMain, "vx_test_user_123", [], true, {
