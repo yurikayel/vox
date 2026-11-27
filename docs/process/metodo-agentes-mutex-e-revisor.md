@@ -54,7 +54,7 @@ Desde 26/11/2026 (decisão do mantenedor): **ler é livre, escrever pede vez.** 
 ### Mantenedor **não faz**
 
 - VPS relay/comunidade, TURN ou inbox global do projeto.
-- Suporte **1:1** (WhatsApp/Zap “salva minha comunidade”).
+- Suporte **1:1** (app de mensagens: “salva minha comunidade”).
 - Ritual de **SHA à mão** em chat — quando existir, usar [`release-metadata.json`](../release-metadata.json) gerado no CI (até lá: tag/release notes no PR).
 
 ### Definição: semana em **modo revisor**
