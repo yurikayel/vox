@@ -16,7 +16,6 @@ import {
   persistSheetDeltaIfActive,
   persistTableTurnIfActive,
   pinNoteToScene,
-  recordAbilityRoll,
   recordFormulaRoll,
   recordSheetActionRoll,
   removeCustomSheetAction,
@@ -24,6 +23,7 @@ import {
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
+import { SHEET_ROLL_HANDLERS } from "./dungeon-sheet-rolls.js";
 import { handleTrayAdd, submitAddToken } from "./token-tray-actions.js";
 import { validateSheetEdit } from "./sheet-edit-validate.js";
 import { resolveSheetSystem } from "./screen-sheet-derived.js";
@@ -69,7 +69,7 @@ import { FAIRPLAY_ACCESS_ID, handleFairplayRequest, handleFairplayRetry } from "
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
 
 /** Ações de clique que disparam overlay 3D após o redesenho quando habilitado. */
-export const DICE3D_CLICK_ACTIONS = new Set(["roll-d20", "roll-quick", "roll-ability", "roll-action"]);
+export const DICE3D_CLICK_ACTIONS = new Set(["roll-d20", "roll-quick", "roll-ability", "roll-skill", "roll-action"]);
 
 /** Formulários interceptados pelo controlador da Mesa. */
 export const SUBMIT_FORMS = new Set([
@@ -262,7 +262,7 @@ export const ACTION_HANDLERS = {
   "confirm-delete-campaign": (state, el, _c, opts) => deleteSavedCampaign(state, el.dataset.campaignId, opts.store),
   "roll-mode": (state, el) => { state.rollMode = el.dataset.mode || "normal"; },
   "roll-quick": (state, el, _c, opts) => recordFormulaRoll(state, el.dataset.formula, { store: opts.store }),
-  "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, { store: opts.store }),
+  ...SHEET_ROLL_HANDLERS,
   "roll-action": (state, el, _c, opts) => recordSheetActionRoll(state, el.dataset.actionId, { store: opts.store }),
   "remove-action": (state, el, _c, opts) => removeCustomSheetAction(state, el.dataset.actionId, { store: opts.store }),
   "export-voxchar": (state, _el, _c, opts) => runVoxcharExport(state, opts),

@@ -10,10 +10,10 @@ import {
   importCampaignFile,
   openSavedCampaign,
   persistSheetDeltaIfActive,
-  recordAbilityRoll,
   recordFormulaRoll,
   recordSheetActionRoll,
 } from "../client/js/dungeon/dungeon-persistence.js";
+import { recordAbilityRoll } from "../client/js/dungeon/dungeon-sheet-rolls.js";
 import { projectCharacterPools } from "../client/js/rpg-sheet-and-lore.js";
 
 function makeDeterministicRng(seedValues) {
