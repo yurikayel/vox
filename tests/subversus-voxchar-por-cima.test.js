@@ -11,6 +11,7 @@ import { mutateSheetInventory, updateSheetBasicInfo } from "../client/js/dungeon
 import { markSheetDeathSave } from "../client/js/dungeon/dungeon-persistence-sheet-system.js";
 import { toggleSheetCondition } from "../client/js/dungeon/dungeon-persistence-sheet-rest.js";
 import { importVoxchar } from "../client/js/dungeon/voxchar.js";
+import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { checkVoxchar } from "../client/js/dungeon/voxchar-check.js";
 import { renderSheetEditPanel } from "../client/js/dungeon/screen-sheet-levelup.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
@@ -190,4 +191,63 @@ test("o spec do importar por cima existe e cita a lista de campos mantidos", () 
   assert.match(doc, /character_id/);
   assert.match(doc, /delta_ledger/);
   assert.match(doc, /confirma/i);
+});
+
+const FOCUS_ARM = '[data-hud-op="voxchar-over"][data-step="arm"]';
+const FOCUS_CONFIRM = '[data-hud-op="voxchar-over"][data-step="confirm"]';
+
+/** Estado com par P2P simulado: `accept` diz se o portão grava ou devolve a campanha como estava. */
+async function peerState(accept) {
+  const state = await currentState();
+  const before = state.sheet;
+  const campaign = { ...createCampaign({ id: "camp_p" }), sheetsById: { [before.character_id]: before }, activeSheetId: before.character_id };
+  const accepted = (op) => ({ ...campaign, sheetsById: { [before.character_id]: op.payload.sheet } });
+  state.syncPeer = { dispatchOp: async (op) => (accept ? accepted(op) : campaign) };
+  return state;
+}
+
+async function stageAndConfirm(state) {
+  await need("runVoxcharOver")(state, "arm", { checked: true });
+  await importVoxchar(state, { bytes: enc(incoming()) });
+  return need("runVoxcharOver")(state, "confirm", {});
+}
+
+test("portão recusa (intruso): a ficha não muda e o aviso não diz 'atualizada'", async () => {
+  const state = await peerState(false);
+  const out = await stageAndConfirm(state);
+  assert.equal(out.ok, false);
+  assert.equal(sheetOf(state).attributes_lww.name, "Kael");
+  assert.doesNotMatch(state.campaignNotice, /atualizada/);
+  assert.match(state.campaignNotice, /Não foi possível substituir/);
+});
+
+test("portão aceita: o aviso 'atualizada' aparece e o resultado é ok", async () => {
+  const state = await peerState(true);
+  const out = await stageAndConfirm(state);
+  assert.equal(out.ok, true);
+  assert.match(state.campaignNotice, /Lyra.*atualizada/);
+});
+
+test("jogador no par P2P: o pedido segue ao Mestre sem afirmar 'atualizada' nem recusa", async () => {
+  const state = await peerState(false);
+  state.joinMode = "p2p_player";
+  const out = await stageAndConfirm(state);
+  assert.equal(out.ok, true);
+  assert.doesNotMatch(state.campaignNotice, /atualizada|Não foi possível/);
+  assert.match(state.campaignNotice, /Mestre/);
+});
+
+test("foco volta a um ponto previsível: Substituir após escolher o arquivo, a caixa após cancelar ou confirmar", async () => {
+  const state = await peerState(true);
+  await need("runVoxcharOver")(state, "arm", { checked: true });
+  await importVoxchar(state, { bytes: enc(incoming()) });
+  assert.equal(state.hudPanelFocus, FOCUS_CONFIRM);
+  state.hudPanelFocus = "";
+  await need("runVoxcharOver")(state, "cancel", {});
+  assert.equal(state.hudPanelFocus, FOCUS_ARM);
+  await need("runVoxcharOver")(state, "arm", { checked: true });
+  await importVoxchar(state, { bytes: enc(incoming()) });
+  state.hudPanelFocus = "";
+  await need("runVoxcharOver")(state, "confirm", {});
+  assert.equal(state.hudPanelFocus, FOCUS_ARM);
 });

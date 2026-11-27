@@ -12,6 +12,10 @@ import { portableSheet } from "./voxchar.js";
 import { ensureSheetMeta } from "./vtt-schema.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 
+/** Foco pedido ao redesenhar: a caixa que arma (origem) e o botão Substituir (próximo passo, depois de escolher o arquivo). */
+const FOCUS_ARM = '[data-hud-op="voxchar-over"][data-step="arm"]';
+const FOCUS_CONFIRM = '[data-hud-op="voxchar-over"][data-step="confirm"]';
+
 /**
  * Ficha atual com a lista branca do arquivo por cima. Tudo o que a lista branca não cobre vem da ficha atual.
  * @param {object} current Ficha aberta.
@@ -44,6 +48,7 @@ export async function stageVoxcharOver(state, file) {
   if (!state.sheet?.character_id) return { ok: false, issues: ["Não há ficha aberta para substituir."] };
   const name = portableSheet(checked.doc.sheet, checked.pack).attributes_lww.name;
   state.voxcharOver = { armed: true, pending: { doc: checked.doc, pack: checked.pack, name, characterId: state.sheet.character_id } };
+  state.hudPanelFocus = FOCUS_CONFIRM;
   return { ok: true };
 }
 
@@ -54,7 +59,21 @@ export async function stageVoxcharOver(state, file) {
  */
 export function cancelVoxcharOver(state) {
   state.voxcharOver = { armed: false, pending: null };
+  state.hudPanelFocus = FOCUS_ARM;
   return { ok: true };
+}
+
+/** Só afirma sucesso se a ficha devolvida pelo portão traz o que foi enviado; no par P2P o Mestre decide depois. */
+function reportOutcome(state, sent) {
+  if (state.joinMode === "p2p_player") {
+    state.campaignNotice = "Pedido enviado; a ficha muda quando o Mestre aceitar.";
+    return { ok: true };
+  }
+  const now = state.sheet;
+  const same = now?.attributes_lww?.name === sent.attributes_lww.name && now?.attributes_lww?.level === sent.attributes_lww.level
+    && now?.sheet_meta?.notes_public === sent.sheet_meta.notes_public;
+  state.campaignNotice = same ? `Ficha "${sent.attributes_lww.name}" atualizada pelo arquivo .voxchar.` : "Não foi possível substituir a ficha: só o dono ou o Mestre podem.";
+  return { ok: same };
 }
 
 /**
@@ -73,8 +92,7 @@ export async function confirmVoxcharOver(state, opts = {}) {
   }
   const sheet = buildOverwrittenSheet(state.sheet, pending.doc, pending.pack);
   await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet }, { store: opts.store || getDefaultVttStore() });
-  state.campaignNotice = `Ficha "${sheet.attributes_lww.name}" atualizada pelo arquivo .voxchar.`;
-  return { ok: true };
+  return reportOutcome(state, sheet);
 }
 
 /**
