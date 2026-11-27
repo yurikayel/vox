@@ -11,7 +11,7 @@ Set-Location $ROOT
 $env:JAVA_HOME = if ($env:VOX_JAVA_HOME) { $env:VOX_JAVA_HOME } else { "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot" }
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
-$SDK = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { "C:\Users\yurik\AppData\Local\Android\Sdk" }
+$SDK = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA "Android\Sdk" }
 $BUILD_TOOLS_VERSION = if ($env:VOX_BUILD_TOOLS) { $env:VOX_BUILD_TOOLS } else { "35.0.0" }
 $BUILD_TOOLS = "$SDK\build-tools\$BUILD_TOOLS_VERSION"
 $PLATFORM = "$SDK\platforms\android-35\android.jar"

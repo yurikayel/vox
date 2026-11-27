@@ -237,7 +237,7 @@ test("oauth-vault - re-login Google não duplica perfil em profileDirectory e pe
 
   const fakePayload = {
     sub: "google_yuri_12345",
-    email: "yuri.kayel@gmail.com",
+    email: "pessoa.teste@example.org",
     name: "Yuri Kayel",
     picture: "https://lh3.googleusercontent.com/ogw/AF2bZq_fake=s96-c",
   };
