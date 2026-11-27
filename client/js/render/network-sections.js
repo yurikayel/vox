@@ -51,8 +51,8 @@ export function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealt
   const isEnabled = Boolean(settings?.enabled);
   const meshChip = renderMeshStatusChip(renderNetworkChip(metrics, rtcStatus, settings));
   const statusBadge = isEnabled
-    ? `<span class="pill" style="background:var(--success); color:#fff;">🟢 Ajudando a rede</span>`
-    : `<span class="pill" style="background:var(--danger); color:#fff;">⏸️ Ajuda pausada</span>`;
+    ? `<span class="pill" style="background:var(--success); color:var(--on-accent);">🟢 Ajudando a rede</span>`
+    : `<span class="pill" style="background:var(--danger); color:var(--on-accent);">⏸️ Ajuda pausada</span>`;
   const peerBadge = renderPeerBadge(rtcStatus);
   const signalingNotice = rtcStatus?.signalingDown
     ? `<p class="desc network-signaling-down" role="status" style="margin-top:0.5rem;">${honestMessage("signalingDown")}</p>`
