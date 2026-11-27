@@ -56,16 +56,15 @@ const sha256 = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
  * @returns {string}
  */
 const toPosix = (filePath) => filePath.replace(/\\/g, "/");
-/** Teto da saída do git: o diff contra a árvore vazia (rodada semanal) passa de 1 MiB, o padrão do Node, e estourava com `ENOBUFS`. */
-const GIT_MAX_BUFFER = 512 * 1024 * 1024;
 
 /**
- * Roda o git com os argumentos dados e devolve a saída padrão.
+ * Roda o git com os argumentos dados e devolve a saída padrão. O teto de saída (512 MiB) é de segurança, não o tamanho
+ * esperado: o diff contra a árvore vazia (rodada semanal) passa de 1 MiB, o padrão do Node, e estourava com `ENOBUFS`.
  * @param {string[]} args Argumentos do git.
  * @param {string} cwd Diretório de trabalho.
  * @returns {string}
  */
-const git = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: GIT_MAX_BUFFER, stdio: ["ignore", "pipe", "pipe"] });
+const git = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 512 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
 
 /**
  * Converte e valida o piso percentual de mutação (`0` a `100`).
