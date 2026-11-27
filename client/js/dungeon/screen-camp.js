@@ -242,7 +242,7 @@ function renderBackupControls() {
 
 function renderSavedCampaignsGrid(state, list) {
   if (!list.length) {
-    return renderStateCard({ kind: "empty", text: "Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha acima ou importe um pacote .voxrpg.zip, nota .md ou quadro .canvas do Obsidian." });
+    return renderStateCard({ kind: "empty", text: "Nenhuma campanha salva ainda neste aparelho. Crie sua primeira campanha acima ou importe um pacote .voxrpg.zip, nota .md ou quadro .canvas." });
   }
   return `<div class="dungeon-tables-grid">${list.map((c) => renderSavedCampaignCard(c, state.campaignId, state.pendingDeleteId)).join("")}</div>`;
 }

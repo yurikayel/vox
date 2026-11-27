@@ -39,7 +39,7 @@ test("1. Rápido cria a ficha com o nome dado e os padrões do pacote, com id no
   assert.equal((await finishQuick(state, "  Bram  ", { store })).ok, true);
   assert.equal(state.sheet.attributes_lww.name, "Bram");
   assert.equal(state.sheet.attributes_lww.armor_class, 10);
-  assert.equal(state.sheet.system.id, "dnd5e-2024");
+  assert.equal(state.sheet.system.id, "5e");
   assert.notEqual(state.sheet.character_id, before);
   assert.deepEqual(writes, ["SHEET_UPSERT"]);
 });
@@ -83,7 +83,7 @@ test("4 e 12. nada é gravado antes do resumo (inclusive o equipamento); o resum
 
 test("5. o resumo mostra os derivados iguais aos do system-derive para os mesmos valores", () => {
   const wz = { ...createWizard(), mode: "guided", step: 7, draft: okDraft() };
-  const pack = getSystemPack("dnd5e-2024");
+  const pack = getSystemPack("5e");
   const view = deriveSheet(pack, { level: 1, abilities: wz.draft.abilities, proficientSkills: ["stealth"], expertSkills: ["stealth"], proficientSaves: ["dex"] }, {});
   const html = renderWizard(wz);
   assert.match(html, new RegExp(`Bônus de proficiência \\+${view.proficiency}`));
@@ -94,7 +94,7 @@ test("6. a ficha do Guiado é igual à do import de um .voxchar com os mesmos va
   const a = await ready();
   const b = await ready();
   await finishGuided(a.state, okDraft(), { store: a.store });
-  const doc = draftToDoc(okDraft(), getSystemPack("dnd5e-2024"));
+  const doc = draftToDoc(okDraft(), getSystemPack("5e"));
   await importVoxchar(b.state, { bytes: new TextEncoder().encode(JSON.stringify(doc)) }, { store: b.store });
   const strip = (s) => JSON.stringify({ attrs: s.attributes_lww, choices: s.system_choices, inv: Object.values(s.inventory_orset).map(({ label, qty }) => [label, qty]), pools: s.pools_base });
   assert.equal(strip(a.state.sheet), strip(b.state.sheet));

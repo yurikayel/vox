@@ -47,12 +47,12 @@ A **AGPLv3** foi concebida especificamente para fechar essa brecha. A **Seção 
 
 ---
 
-## 4. Material de terceiros embutido (SRD 5.2 / D&D)
+## 4. Material de terceiros embutido (SRD 5.2 / 5e)
 
-O pacote de sistema `client/js/dungeon/system-pack-dnd5e-2024.js` inclui **somente** estrutura, nomes e matemática do System Reference Document 5.2 (atributos, perícias, fórmulas). Não inclui descrições de magias, tabelas de classe nem texto de regra dos livros comerciais.
+O pacote de sistema `client/js/dungeon/system-pack-5e.js` inclui **somente** estrutura, nomes e matemática do System Reference Document 5.2 (atributos, perícias, fórmulas). Não inclui descrições de magias, tabelas de classe nem texto de regra dos livros comerciais.
 
 - **Licença do material embutido:** Creative Commons Attribution 4.0 International (**CC-BY-4.0**).
-- **Atribuição canônica no código:** constante exportada `DND5E_2024_ATTRIBUTION` (e espelho em `DND5E_2024_PACK.license`).
+- **Atribuição canônica no código:** constante exportada `ATTRIBUTION_5E` (e espelho em `PACK_5E.license`).
 - **Fonte:** [SRD 5.2](https://www.dndbeyond.com/srd) · [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 Qualquer expansão desse pacote deve manter a atribuição visível e restringir-se ao que a SRD permite sob CC-BY-4.0.

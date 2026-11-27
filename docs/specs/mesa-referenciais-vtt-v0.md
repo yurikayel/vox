@@ -14,7 +14,7 @@ Este documento fixa **referenciais de mercado** (Mesa C, Mesa hospedada A, Mesa 
 | Filosofia | Sala única SaaS; mapa + chat + sheets | Canvas minimalista; ficha em geral fora (PDF) | Self-host + módulos; GM “dono” do servidor | SaaS all-in-one no browser | **Local-first** + sync P2P Vox; cópia CRDT por participante |
 | UI sessão | Três colunas (chat, mapa, journal) | Canvas quase fullscreen | Dock + canvas + sidebar tabs | Hub → VTT + escudo mestre | **Mapa hero + drawer Z3** (ver UI brainstorm) |
 | Onboarding | Conta + curva de abas | Quase instantâneo | Pesado (host, módulos, updates) | Link; curva média | Campanha no aparelho; módulo `#/dungeon` **lazy** |
-| Ficha | Abas na coluna direita | Externa ao VTT | Builder rico + automação | Schemas + fórmulas (D&D, Tormenta, Ordem, etc.) | Ficha **CRDT clicável** + export Obsidian / `.voxrpg.zip` |
+| Ficha | Abas na coluna direita | Externa ao VTT | Builder rico + automação | Schemas + fórmulas (5e, Tormenta, Ordem, etc.) | Ficha **CRDT clicável** + export Obsidian / `.voxrpg.zip` |
 | Mapa | 2D; páginas; tokens | 2D leve, fog, tokens | 2D/3D, extensível | 2D/3D, fog, GM screen, som | Canvas **2D em 8 camadas** (E3); sem VTT 3D no v1 |
 | Performance | Denso em mobile | Pouca UI → menos lag | Risco de engasgo, F5, clone de jogador | Infra gerenciada; foco mobile | Canvas **0% CPU em repouso**; projeção Zero-Spoiler fail-closed |
 | Áudio / mídia | Integrações limitadas | Player de áudio do SO + mídia na conta | Depende de módulos/setup | Soundboard, mixer, storage na nuvem | **Fora do escopo civil v1** (sem áudio/vídeo no precache) |
@@ -52,7 +52,7 @@ Referência **brasileira** all-in-one (ficha, VTT 3D, wiki, handouts, Discord/OB
 
 | | |
 | :--- | :--- |
-| **Prós** | Fluxo integrado (menos abas); quadro investigativo; escudo do mestre; som/mixer; mobile; PT/BRL; templates Tormenta, Ordem, D&D; free tier para começar; extensões que levam ficha/handout para Mesa A ou Mesa B. |
+| **Prós** | Fluxo integrado (menos abas); quadro investigativo; escudo do mestre; som/mixer; mobile; PT/BRL; templates Tormenta, Ordem, 5e; free tier para começar; extensões que levam ficha/handout para Mesa A ou Mesa B. |
 | **Contras** | Mais complexo que Mesa A; **hosted** (limites de cenas/storage no free); ecossistema menor que Mesa B; produto mais novo; usar integração ainda depende de outra mesa para o mapa em alguns fluxos. |
 | **Para a Mesa** | Mesmo “pacote mental” (campanha + ficha + pistas + mapa), com **soberania**: dados no aparelho, backup `.voxrpg.zip`, sem servidor central obrigatório. **Não competir** no v1 com VTT 3D full, Discord Activity ou storage em nuvem. |
 

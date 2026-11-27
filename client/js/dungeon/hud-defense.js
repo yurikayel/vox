@@ -1,6 +1,6 @@
 /**
  * @file Número da defesa no HUD quando o pacote aponta `display.hud.defense` para uma entrada calculada (GURPS:
- * Esquiva, que depende do peso do inventário). Pacote com defesa por fórmula (D&D, T20) segue pelo `armor_class` da ficha.
+ * Esquiva, que depende do peso do inventário). Pacote com defesa por fórmula (5e, T20) segue pelo `armor_class` da ficha.
  *
  * @module dungeon/hud-defense
  * @see docs/specs/derivados-por-sistema-v0.md

@@ -24,7 +24,7 @@ const panel = (html, id) => {
 test("jogar: a faixa mostra proficiência, CA base, iniciativa e percepção passiva da Lyra com os rótulos do pacote", () => {
   const html = renderSheetScreen({ ...createDungeonSessionState(), sheet: legacy() });
   const play = panel(html, "play");
-  assert.match(play, /<h3 class="dungeon-eyebrow">Números do personagem · D&amp;D 2024<\/h3>/);
+  assert.match(play, /<h3 class="dungeon-eyebrow">Números do personagem · 5e \(SRD 5\.2\)<\/h3>/);
   assert.match(play, /<dt>Proficiência<\/dt><dd>\+2<\/dd>/);
   assert.match(play, /<dt>CA sem armadura<\/dt><dd>11<\/dd>/);
   assert.match(play, /<dt>Iniciativa<\/dt><dd>\+1<\/dd>/);
@@ -57,15 +57,15 @@ test("exibir uma ficha legada não grava nada nela", () => {
 });
 
 test("editar: o seletor de sistema lista o pacote, vem marcado e vai dentro do formulário de edição", () => {
-  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem" aria-describedby="sheet-system-notices"><option value="dnd5e-2024" selected>D&amp;D 2024<\/option><option value="t20">Tormenta20 \(estrutura\)<\/option><option value="gurps4e">GURPS 4e \(matemática\)<\/option><\/select>/);
+  assert.match(renderSystemSelect(legacy()), /<select class="dungeon-input" name="sheetSystem" aria-describedby="sheet-system-notices"><option value="5e" selected>5e \(SRD 5\.2\)<\/option><option value="t20">Tormenta20 \(estrutura\)<\/option><option value="gurps4e">GURPS 4e \(matemática\)<\/option><\/select>/);
   const about = panel(renderSheetScreen({ ...createDungeonSessionState(), sheet: legacy() }), "about");
   assert.match(about, /<form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>[\s\S]*name="sheetSystem"[\s\S]*<\/form>/);
 });
 
 test("editar: salvar grava system e system_choices (atributos em sincronia) e o derivado acompanha", async () => {
   const state = createDungeonSessionState();
-  await updateSheetBasicInfo(state, { name: "Kael", dex: 16, system: "dnd5e-2024" });
-  assert.deepEqual(state.sheet.system, { id: "dnd5e-2024", version: 1 });
+  await updateSheetBasicInfo(state, { name: "Kael", dex: 16, system: "5e" });
+  assert.deepEqual(state.sheet.system, { id: "5e", version: 1 });
   assert.equal(state.sheet.system_choices.abilities.dex, 16);
   assert.equal(state.sheet.attributes_lww.abilities.dex, 16);
   assert.match(renderDerivedStrip(state.sheet), /<dt>Iniciativa<\/dt><dd>\+3<\/dd>/);
@@ -113,5 +113,5 @@ test("migração: atributo ausente (null, vazio, indefinido) vale 10 e não 1; o
 test("editar: sistema desconhecido no formulário é ignorado e o atual permanece", async () => {
   const state = createDungeonSessionState();
   await updateSheetBasicInfo(state, { system: "sistema-inexistente" });
-  assert.equal(state.sheet.system.id, "dnd5e-2024");
+  assert.equal(state.sheet.system.id, "5e");
 });
