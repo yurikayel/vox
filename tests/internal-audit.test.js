@@ -3,7 +3,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -166,6 +166,63 @@ test("findRenames acha as renomeações feitas depois do último commit do basel
   git("mv", "scripts/velho.txt", "scripts/novo.txt");
   git("commit", "-q", "-m", "renomeia");
   assert.deepEqual(need("findRenames")(dir, "base.json"), { "scripts/novo.txt": "scripts/velho.txt" });
+});
+
+/** Repositório git temporário com os arquivos dados, já commitado; devolve a pasta e um atalho `git`. */
+function gitRepo(files) {
+  const dir = plant(files);
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.org", ...args], { cwd: dir, stdio: "pipe" }).toString("utf8");
+  git("init", "-q");
+  git("add", ".");
+  git("commit", "-q", "-m", "inicio");
+  return { dir, git };
+}
+
+test("cópia e apagar+recriar com texto diferente não são renomeação", () => {
+  const velho = Array.from({ length: 20 }, (_, i) => `linha ${i} do arquivo antigo`).join("\n");
+  const outro = Array.from({ length: 20 }, (_, i) => `conteúdo próprio ${i * 3}`).join("\n");
+  const { dir, git } = gitRepo({ "scripts/velho.txt": velho, "scripts/outro.txt": outro, "base.json": "{}\n" });
+  fs.copyFileSync(path.join(dir, "scripts/velho.txt"), path.join(dir, "scripts/copia.txt"));
+  fs.rmSync(path.join(dir, "scripts/outro.txt"));
+  const parecido = outro.split("\n").map((l, i) => (i < 6 ? l : `nada em comum ${i * 7}`));
+  fs.writeFileSync(path.join(dir, "scripts/recriado.txt"), parecido.join("\n"));
+  git("add", "-A");
+  git("commit", "-q", "-m", "copia e recria");
+  assert.deepEqual(need("findRenames")(dir, "base.json"), {});
+  const cur = { patterns: { orch: 1 }, files: { "scripts/copia.txt": { orch: 1 }, "scripts/recriado.txt": { orch: 1 } } };
+  const base = { patterns: { orch: 1 }, files: { "scripts/velho.txt": { orch: 1 }, "scripts/outro.txt": { orch: 1 } } };
+  assert.equal(need("compareBaseline")(cur, base, need("findRenames")(dir, "base.json")).length, 2, "os dois contam como arquivo novo");
+});
+
+/** Roda o CLI copiado na pasta temporária. */
+function cli(dir, ...args) {
+  const r = spawnSync("node", ["scripts/internal-audit.mjs", ...args], { cwd: dir, encoding: "utf8" });
+  return { status: r.status, out: `${r.stdout}${r.stderr}` };
+}
+
+test("CLI: --check e --write-baseline herdam a renomeação; uma ocorrência a mais reprova", () => {
+  const texto = `${Array.from({ length: 20 }, (_, i) => `linha ${i} de texto comum`).join("\n")}\nVer o ${WORDS.orq} do time.\n`;
+  const files = { "docs/velho.md": texto, "docs/README.md": "# Índice\n" };
+  for (const f of ["internal-audit.mjs", "internal-audit.patterns.json", "internal-audit.allow.json"]) files[`scripts/${f}`] = fs.readFileSync(path.join(ROOT, "scripts", f), "utf8");
+  const { dir, git } = gitRepo(files);
+  fs.mkdirSync(path.join(dir, "docs/metrics"), { recursive: true });
+  const first = cli(dir, "--write-baseline");
+  assert.equal(first.status, 0, first.out);
+  git("add", ".");
+  git("commit", "-q", "-m", "baseline");
+  git("mv", "docs/velho.md", "docs/novo.md");
+  git("commit", "-q", "-m", "renomeia");
+  const check = cli(dir, "--check");
+  assert.equal(check.status, 0, check.out);
+  const write = cli(dir, "--write-baseline");
+  assert.equal(write.status, 0, write.out);
+  const keys = Object.keys(JSON.parse(fs.readFileSync(path.join(dir, "docs/metrics/internal-audit-baseline.json"), "utf8")).files);
+  assert.ok(keys.includes("docs/novo.md") && !keys.includes("docs/velho.md"), keys.join());
+  fs.appendFileSync(path.join(dir, "docs/novo.md"), `Mais um ${WORDS.orq}.\n`);
+  git("commit", "-qam", "mais uma");
+  const extra = cli(dir, "--check");
+  assert.equal(extra.status, 1, extra.out);
+  assert.match(extra.out, /docs\/novo\.md: orch subiu/);
 });
 
 test("writeBaseline regrava com a chave nova quando o arquivo foi renomeado, sem subir", () => {
