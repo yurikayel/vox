@@ -293,6 +293,7 @@ namespace Vox.ZeroMemory {
                 Path.Combine(dataDir, "dashboard.html"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dashboard.html"),
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "dashboard.html"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "packaging", "zero-central-memory-windows", "dashboard.html"),
                 Path.Combine(root, "packaging", "zero-central-memory-windows", "dashboard.html"),
                 Path.Combine(root, "dist", "dashboard.html")
             };

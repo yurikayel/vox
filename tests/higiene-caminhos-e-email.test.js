@@ -42,3 +42,10 @@ test("fixtures de tests/ não usam e-mail de provedor de conta real (usam exampl
     .filter((f) => [...read(f).matchAll(EMAIL)].some((m) => REAL_PROVIDER.test(m[0].split("@")[1])));
   assert.deepEqual(hits, []);
 });
+
+test("o painel do ZeroCentralMemory acha o dashboard a partir do executável em dist, sem VOX_ROOT", () => {
+  const source = read("packaging/zero-central-memory-windows/src/ZeroCentralMemory.cs");
+  const body = source.slice(source.indexOf("GetDashboardHtml()"));
+  const candidates = body.slice(0, body.indexOf("foreach"));
+  assert.match(candidates, /AppDomain\.CurrentDomain\.BaseDirectory, "\.\.", "packaging", "zero-central-memory-windows", "dashboard\.html"/);
+});
