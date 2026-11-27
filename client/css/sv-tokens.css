@@ -4,10 +4,13 @@
  * (≈2:1) e alguns botões trazem o texto escuro fixo. Os `--sa-on-*` não mudam (outros usos seguem como estão); os
  * pares abaixo trazem o texto certo por tema e só os seletores que falhavam apontam para eles.
  * Contraste conferido por `tests/sv-contraste-pares-on.test.js`.
- * Foco e desativado (`tests/ui-foco-desativado-aa.test.js`): o anel global (`--sa-primary`) some sobre faixa de
- * container primário ou de erro (1,4–1,6:1), então `.sv-faixa-primaria` e `.sv-faixa-erro` trazem o fundo, o texto e o
- * anel do par do fundo. O desativado não usa `opacity` (que arrasta texto e contorno para baixo de 3:1): usa fundo,
- * texto e contorno de token, medidos nos dois temas.
+ * Desativado (`tests/ui-foco-desativado-aa.test.js`, na cascata real): não usa `opacity` (que arrasta texto e contorno
+ * para baixo de 3:1); usa fundo, texto e contorno de token, medidos nos dois temas. `.agora-ui .btn.btn-primary` e
+ * `.agora-ui .btn.btn-outline` (0,3,0) vencem um `.btn:disabled` (0,2,0) em fundo e texto, e o botão desativado ficava
+ * igual ao ativo; por isso a regra vem também como `.agora-ui .btn:disabled` (0,3,0), e o empate se resolve pela ordem
+ * (esta folha carrega depois de `agora.css`).
+ * Os pares `--sv-on-primary-container` e `--sv-on-error-container` ficam prontos para a primeira faixa de container
+ * forte (o anel global some sobre ela, 1,4–1,6:1); a classe e a regra do anel entram com o primeiro consumidor real.
  * Raios de borda: `--sv-radius` e `--sv-radius-sm` apontam para `--radius` (8 px) e `--radius-sm` (4 px) de `agora.css`;
  * `--radius-md` não serve (o nome diz 10 px e entrega 8).
  */
@@ -46,25 +49,6 @@
   color: var(--sv-on-civic);
 }
 
-/* Faixas de container forte: controle dentro delas mostra o foco com a cor do par do fundo (o anel global some aqui). */
-.sv-faixa-primaria {
-  background: var(--sa-primary-container);
-  color: var(--sv-on-primary-container);
-}
-
-.sv-faixa-erro {
-  background: var(--sa-error-container);
-  color: var(--sv-on-error-container);
-}
-
-.sv-faixa-primaria :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline-color: var(--sv-on-primary-container);
-}
-
-.sv-faixa-erro :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline-color: var(--sv-on-error-container);
-}
-
 /* Desativado sem `opacity`: texto, fundo e contorno de token (as folhas antigas usam opacidade de 0,35 a 0,6). */
 .dungeon-btn[disabled],
 .dungeon-btn[disabled]:hover,
@@ -80,7 +64,8 @@
 .btn-pact-settings:disabled,
 .civic-choice-btn:disabled,
 .civic-poll-remove:disabled,
-#btn-civic-poll-add:disabled {
+#btn-civic-poll-add:disabled,
+.agora-ui .btn:disabled {
   opacity: 1;
   background: var(--sv-disabled-bg);
   color: var(--sv-disabled-text);

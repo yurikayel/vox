@@ -158,6 +158,8 @@ function reaches(listed, target) {
  * Valor de `prop` que vence para `selector` (um pedaço único, como `.dungeon-btn-primary` ou
  * `.dungeon-btn[disabled]`): entre as regras que atingem o mesmo elemento, a de maior especificidade e, no empate, a
  * que vem por último na ordem das folhas. Regras dentro de `@media` não entram.
+ * Aproximação de um seletor simples: ignora ancestral, classe de variante e estado. Para o elemento inteiro com os
+ * ancestrais (a cascata de verdade), use `cascade` de `css-cascata.js`.
  * @param {string} selector Seletor do elemento.
  * @param {string} prop Propriedade CSS.
  * @param {string[]} [files] Folhas na ordem de carga (padrão: `agora.css` e as `sv-*.css`).
