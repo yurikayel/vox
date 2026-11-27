@@ -6,7 +6,7 @@
  * @module dungeon/screen-sheet-tabs
  */
 import { escapeHtml } from "../shared/html.js";
-import { ABILITY_ALIASES } from "./dice-engine.js";
+import { isCoveredSeed } from "./vtt-schema.js";
 
 /** Abas da ficha, na ordem em que aparecem. */
 export const SHEET_TABS = Object.freeze([
@@ -53,23 +53,6 @@ function actionButton(act, withDamage) {
 export function renderActionGrid(actions, withDamage = false) {
   if (!actions.length) return '<p class="dungeon-muted">Nada cadastrado ainda nesta ficha.</p>';
   return `<div class="dungeon-brain-grid">${actions.map((a) => actionButton(a, withDamage)).join("")}</div>`;
-}
-
-/** `1d20+@atributo` com `+@prof` opcional, e nada mais (sem outro dado, sem bônus fixo, sem subtração). */
-const PACK_SKILL_FORMULA = /^1d20\+@([a-z_]+)(\+@prof)?$/;
-
-/**
- * Some a ação de perícia que o botão do pacote já faz: o nome é o de uma perícia do pacote e a fórmula é exatamente
- * `1d20+@atributo da perícia` (com `+@prof` opcional), como a semente da ficha e as importadas. Qualquer outra fórmula
- * (outro atributo, d20 puro, bônus fixo, outro dado) segue rolando pelo `roll-action`.
- * @param {object} act Ação clicável.
- * @param {object[]} skills Perícias derivadas do pacote (`ability` é a chave do atributo).
- * @returns {boolean} `true` se o botão do pacote já a cobre.
- */
-function isCoveredSeed(act, skills) {
-  const skill = act?.tag === "pericia" ? skills.find((s) => s.label === act.label) : null;
-  const m = skill ? PACK_SKILL_FORMULA.exec(String(act.roll || "").replace(/\s+/g, "").toLowerCase()) : null;
-  return Boolean(m) && skill.ability !== undefined && ABILITY_ALIASES[m[1]] === skill.ability;
 }
 
 function skillButton(skill) {

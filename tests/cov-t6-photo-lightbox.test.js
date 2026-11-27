@@ -5,6 +5,7 @@
 import "./setup.js";
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
+import { drainMicrotasks } from "./helpers/wait-until.js";
 import { installFakeDom, mount, click, captureToasts } from "./helpers/cov-t6-dom.mjs";
 
 const doc = installFakeDom();
@@ -25,7 +26,7 @@ const GALLERY = `<div class="feed">
 </div>`;
 
 const key = (k) => doc.dispatchEvent({ type: "keydown", key: k });
-const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+const settle = () => drainMicrotasks();
 
 test("lightbox: abrir mostra a imagem, foca o fechar e ignora chamada sem src", () => {
   const lb = mount(doc, LIGHTBOX);
