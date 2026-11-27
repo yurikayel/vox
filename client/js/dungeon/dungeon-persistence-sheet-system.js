@@ -15,6 +15,12 @@ import { getDefaultVttStore } from "./vtt-store.js";
 
 const ABILITY_KEYS = Object.freeze(["str", "dex", "con", "int", "wis", "cha"]);
 
+/** Número digitado: só número ou texto não vazio vale; `null`, texto em branco, booleano e lista não são valor (`NaN`). */
+function abilityNumber(raw) {
+  if (typeof raw === "number") return raw;
+  return typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+}
+
 /**
  * Atributos da ficha com os valores editados no painel (FOR–CAR): valor inválido ou ausente mantém o atual,
  * e o resultado fica entre 1 e 30.
@@ -25,8 +31,8 @@ const ABILITY_KEYS = Object.freeze(["str", "dex", "con", "int", "wis", "cha"]);
 export function mergePatchedAbilities(baseAbilities, patch) {
   const ab = { ...(baseAbilities || {}) };
   for (const key of ABILITY_KEYS) {
-    const num = Number(patch[key]);
-    if (patch[key] !== undefined && Number.isFinite(num)) {
+    const num = abilityNumber(patch[key]);
+    if (Number.isFinite(num)) {
       ab[key] = Math.max(1, Math.min(30, Math.trunc(num)));
     }
   }
