@@ -2,13 +2,13 @@
  * @file Formato do pacote de sistema da ficha multi-sistema (spec brainstorm v0, §4): dados, não telas.
  * Um pacote define atributos, testes, recursos e os parâmetros das fórmulas; as funções puras de
  * `system-derive.js` calculam os derivados a partir dele e das escolhas do jogador. A ficha nunca grava derivado.
- * Este módulo valida o formato e guarda o registro dos pacotes conhecidos (hoje: `dnd5e-2024`, `t20` e `gurps4e`).
+ * Este módulo valida o formato e guarda o registro dos pacotes conhecidos (hoje: `5e`, `t20` e `gurps4e`).
  *
  * @module dungeon/system-pack
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
 import { validateDisplay } from "./system-display.js";
-import { DND5E_2024_PACK } from "./system-pack-dnd5e-2024.js";
+import { PACK_5E } from "./system-pack-5e.js";
 import { T20_PACK } from "./system-pack-t20.js";
 import { GURPS4E_PACK } from "./system-pack-gurps4e.js";
 
@@ -18,7 +18,7 @@ export const TEST_KINDS = Object.freeze(["d20_vs_cd", "3d6_sob_nh"]);
 /** Tipos de recurso aceitos: reserva com máximo e atual, espaços por nível, usos por descanso e marcador sim/não. @type {readonly string[]} */
 export const RESOURCE_KINDS = Object.freeze(["pool", "slots", "uses", "flag"]);
 
-const ID = /^[a-z][a-z0-9_-]{0,31}$/;
+const ID = /^[a-z0-9][a-z0-9_-]{0,31}$/;
 const isId = (v) => typeof v === "string" && ID.test(v);
 const nonEmpty = (v) => typeof v === "string" && v.trim().length > 0;
 const unique = (list) => new Set(list).size === list.length;
@@ -93,7 +93,7 @@ export function registerSystemPack(pack) {
 
 /**
  * Busca um pacote registrado.
- * @param {string} id Id do pacote (ex.: `dnd5e-2024`).
+ * @param {string} id Id do pacote (ex.: `5e`).
  * @returns {object|null} Pacote, ou `null` se não existir.
  */
 export function getSystemPack(id) {
@@ -108,6 +108,6 @@ export function listSystemPackIds() {
   return [...REGISTRY.keys()];
 }
 
-registerSystemPack(DND5E_2024_PACK);
+registerSystemPack(PACK_5E);
 registerSystemPack(T20_PACK);
 registerSystemPack(GURPS4E_PACK);

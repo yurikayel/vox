@@ -71,13 +71,13 @@ test("4. link malformado, truncado ou de formato maior é recusado com motivo e 
     assert.equal(out.ok, false, bad);
     assert.ok(out.issues.length > 0);
   }
-  const newer = await hostile(JSON.stringify({ kind: "voxchar", format: 99, system: { id: "dnd5e-2024", version: 1 }, sheet: {} }));
+  const newer = await hostile(JSON.stringify({ kind: "voxchar", format: 99, system: { id: "5e", version: 1 }, sheet: {} }));
   assert.equal(newer.ok, false);
   assert.equal(stored(), before);
 });
 
 test("5. conteúdo hostil é recusado ou escapado, igual ao arquivo", async () => {
-  const proto = await hostile('{"kind":"voxchar","format":1,"system":{"id":"dnd5e-2024","version":1},"sheet":{"__proto__":{"x":1},"attributes_lww":{"name":"A","armor_class":9999}}}');
+  const proto = await hostile('{"kind":"voxchar","format":1,"system":{"id":"5e","version":1},"sheet":{"__proto__":{"x":1},"attributes_lww":{"name":"A","armor_class":9999}}}');
   assert.equal(proto.ok, false);
   assert.equal({}.x, undefined);
   const xss = "<img src=x onerror=alert(1)>";

@@ -3,11 +3,11 @@
 > **Status:** aceita (v0; decisões da §7 registradas em 2026-11-25; código liberado) · **Owner:** mantenedor · **Revisado:** 2026-11-25
 > **Relacionados:** [ficha-personagem-brainstorm-v0.md](./ficha-personagem-brainstorm-v0.md) (§6) · [voxchar-v0.md](./voxchar-v0.md) · [subversus-vtt-v0.md](./subversus-vtt-v0.md)
 
-Define o assistente que cria uma ficha nova no pacote `dnd5e-2024`, com três entradas: **Rápido**, **Guiado** e **Importar**. Nada aqui está implementado.
+Define o assistente que cria uma ficha nova no pacote `5e`, com três entradas: **Rápido**, **Guiado** e **Importar**. Nada aqui está implementado.
 
 ## 1. O que a spec anterior já define e o que falta
 
-A [§6 do brainstorm](./ficha-personagem-brainstorm-v0.md) diz só: "assistente por sistema com três entradas: **Rápido** (personagem pronto), **Guiado** (5 a 7 passos) e **Importar**". Não define os passos, o que cada um grava, as validações nem de onde vêm os valores prontos do Rápido. Esta proposta preenche isso **sem criar regra de sistema fora do pacote**: o pacote `dnd5e-2024` hoje traz atributos, perícias, salvaguardas, CA por armadura, recursos e condições, e **não traz** classes, ancestralidades, antecedentes, compra de pontos nem lista padrão de atributos. Onde o Guiado ou o Rápido precisariam desses dados, a §7 pede decisão do mantenedor em vez de inventar.
+A [§6 do brainstorm](./ficha-personagem-brainstorm-v0.md) diz só: "assistente por sistema com três entradas: **Rápido** (personagem pronto), **Guiado** (5 a 7 passos) e **Importar**". Não define os passos, o que cada um grava, as validações nem de onde vêm os valores prontos do Rápido. Esta proposta preenche isso **sem criar regra de sistema fora do pacote**: o pacote `5e` hoje traz atributos, perícias, salvaguardas, CA por armadura, recursos e condições, e **não traz** classes, ancestralidades, antecedentes, compra de pontos nem lista padrão de atributos. Onde o Guiado ou o Rápido precisariam desses dados, a §7 pede decisão do mantenedor em vez de inventar.
 
 ## 2. Princípios
 
@@ -23,7 +23,7 @@ A [§6 do brainstorm](./ficha-personagem-brainstorm-v0.md) diz só: "assistente 
 Cria um personagem pronto com um toque: nome, e os valores iniciais do pacote.
 
 - Pergunta só o **nome**.
-- Grava a ficha com os padrões que a ficha nova já tem hoje (`createCharacterSheetDoc`: atributos 10, nível 1, CA 10, Deslocamento 30 pés, PV máximo 20) e o pacote `dnd5e-2024`. Esses padrões incluem **Classe "Guerreiro" e Ancestralidade "Humano"**, que vêm do código e não do jogador; é exatamente o que a D1 precisa decidir (manter, deixar em branco ou vir de modelo pronto).
+- Grava a ficha com os padrões que a ficha nova já tem hoje (`createCharacterSheetDoc`: atributos 10, nível 1, CA 10, Deslocamento 30 pés, PV máximo 20) e o pacote `5e`. Esses padrões incluem **Classe "Guerreiro" e Ancestralidade "Humano"**, que vêm do código e não do jogador; é exatamente o que a D1 precisa decidir (manter, deixar em branco ou vir de modelo pronto).
 - Depois de criada, a ficha abre no painel Editar para o jogador ajustar o resto.
 - **Pendente (§7, D1):** "personagem pronto" com classe e atributos de verdade exige dados que o pacote não tem.
 

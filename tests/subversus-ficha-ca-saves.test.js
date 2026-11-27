@@ -1,5 +1,5 @@
 /**
- * @file Ficha com o pacote dnd5e-2024: CA pela armadura equipada (campo opcional `armor`), salvaguardas e
+ * @file Ficha com o pacote 5e: CA pela armadura equipada (campo opcional `armor`), salvaguardas e
  * especialização editáveis, Deslocamento e testes contra a morte. Fichas e itens antigos não mudam.
  */
 import "./setup.js";
@@ -11,7 +11,7 @@ import { markSheetDeathSave } from "../client/js/dungeon/dungeon-persistence-she
 import { updateSheetBasicInfo, mutateSheetInventory } from "../client/js/dungeon/dungeon-persistence.js";
 import { renderDerivedStrip, renderSystemEditFields, resolveSheetSystem } from "../client/js/dungeon/screen-sheet-derived.js";
 import { renderInventoryPanel } from "../client/js/dungeon/screen-sheet-inventory.js";
-import { DND5E_2024_PACK as pack } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E as pack } from "../client/js/dungeon/system-pack-5e.js";
 import { armorClassFromItems, deathSaveStatus, markDeathSave, normalizeChoices } from "../client/js/dungeon/system-derive.js";
 import { applyInventoryMutation, normalizeInventoryOrset } from "../client/js/dungeon/vtt-inventory.js";
 

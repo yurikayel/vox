@@ -28,7 +28,7 @@ Não há licença aberta para o conteúdo editorial do sistema. O pacote traz s�
 
 ## 4. Limites conhecidos (não entram neste PR)
 
-- A tela de derivados é a do D&D: salvaguardas por atributo, testes contra a morte, dados de vida, descansos e percepção passiva aparecem com rótulos genéricos que não existem no T20.
+- A tela de derivados é a da 5e: salvaguardas por atributo, testes contra a morte, dados de vida, descansos e percepção passiva aparecem com rótulos genéricos que não existem no T20.
 - Treino por perícia e meio nível não são calculados.
 - HUD de magia por PM não é coberto (`hud-bar-model` lê o recurso `spell-slots`).
 - Registrar o pacote o torna selecionável na ficha; por isso o nome visível é "Tormenta20 (estrutura)".

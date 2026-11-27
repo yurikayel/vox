@@ -1,5 +1,5 @@
 /**
- * @file Pacote de sistema da ficha multi-sistema (spec brainstorm v0, §4/§9): formato, pacote `dnd5e-2024`
+ * @file Pacote de sistema da ficha multi-sistema (spec brainstorm v0, §4/§9): formato, pacote `5e`
  * (nomes e matemática, com a atribuição CC-BY-4.0), derivados puros e migração da Lyra a partir de uma ficha
  * legada real (`tests/fixtures/ficha-lyra-legado.json`, gerada pelo `createCampaign` antes dos pacotes).
  */
@@ -8,19 +8,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { RESOURCE_KINDS, TEST_KINDS, getSystemPack, listSystemPackIds, registerSystemPack, validateSystemPack } from "../client/js/dungeon/system-pack.js";
-import { DND5E_2024_ATTRIBUTION, DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { ATTRIBUTION_5E, PACK_5E } from "../client/js/dungeon/system-pack-5e.js";
 import { abilityModifier, deriveSheet, normalizeChoices, proficiencyBonus } from "../client/js/dungeon/system-derive.js";
 import { hasSystemPack, migrateLegacySheet } from "../client/js/dungeon/system-migrate.js";
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 
 const legacy = () => JSON.parse(readFileSync(new URL("./fixtures/ficha-lyra-legado.json", import.meta.url), "utf8"));
-const pack = DND5E_2024_PACK;
+const pack = PACK_5E;
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
-test("pacote: dnd5e-2024 é válido, está registrado e traz 6 atributos, 18 perícias e os recursos da spec", () => {
+test("pacote: 5e é válido, está registrado e traz 6 atributos, 18 perícias e os recursos da spec", () => {
   assert.deepEqual(validateSystemPack(pack), { ok: true, errors: [] });
-  assert.equal(getSystemPack("dnd5e-2024"), pack);
-  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024", "t20", "gurps4e"]);
+  assert.equal(getSystemPack("5e"), pack);
+  assert.deepEqual(listSystemPackIds(), ["5e", "t20", "gurps4e"]);
   assert.equal(pack.abilities.length, 6);
   assert.equal(pack.skills.length, 18);
   assert.deepEqual(pack.resources.map((r) => r.id), ["hp", "hit-dice", "spell-slots", "heroic-inspiration", "death-saves"]);
@@ -30,11 +30,11 @@ test("pacote: dnd5e-2024 é válido, está registrado e traz 6 atributos, 18 per
 
 test("pacote: licença CC-BY-4.0 com atribuição ao SRD 5.2 e sem texto de regra no pacote", () => {
   assert.equal(pack.license.spdx, "CC-BY-4.0");
-  assert.equal(pack.license.attribution, DND5E_2024_ATTRIBUTION);
+  assert.equal(pack.license.attribution, ATTRIBUTION_5E);
   assert.match(pack.license.attribution, /System Reference Document 5\.2/);
   assert.match(pack.license.attribution, /Creative Commons Attribution 4\.0/);
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
-  assert.ok(readme.includes(DND5E_2024_ATTRIBUTION), "o README repete a atribuição exata do pacote");
+  assert.ok(readme.includes(ATTRIBUTION_5E), "o README repete a atribuição exata do pacote");
   const keys = new Set(JSON.stringify(pack).match(/"[a-zA-Z]+":/g));
   for (const forbidden of ['"description":', '"text":', '"rules":', '"spells":', '"classes":']) assert.equal(keys.has(forbidden), false, forbidden);
 });
@@ -42,7 +42,7 @@ test("pacote: licença CC-BY-4.0 com atribuição ao SRD 5.2 e sem texto de regr
 test("pacote: formato recusa o que está faltando, com o motivo", () => {
   assert.equal(validateSystemPack(null).ok, false);
   const bad = clone(pack);
-  bad.id = "D&D";
+  bad.id = "Ruim!";
   bad.license = { spdx: "CC-BY-4.0" };
   bad.abilities.push({ ...bad.abilities[0] });
   bad.skills[0].ability = "xyz";
@@ -98,12 +98,12 @@ test("derivados: escolhas sujas viram valores seguros e o derivado nunca vira ca
   assert.deepEqual(before, legacy(), "derivar não altera a ficha");
 });
 
-test("migração: a Lyra legada vira dnd5e-2024 sem perder nenhum campo antigo", () => {
+test("migração: a Lyra legada vira 5e sem perder nenhum campo antigo", () => {
   const old = legacy();
   const frozen = clone(old);
   const lyra = migrateLegacySheet(old);
   assert.deepEqual(old, frozen, "a entrada não é alterada");
-  assert.deepEqual(lyra.system, { id: "dnd5e-2024", version: 1 });
+  assert.deepEqual(lyra.system, { id: "5e", version: 1 });
   for (const key of Object.keys(frozen)) assert.deepEqual(lyra[key], frozen[key], `campo legado ${key} preservado`);
   assert.equal(lyra.system_choices.level, 1);
   assert.deepEqual(lyra.system_choices.abilities, { str: 16, dex: 12, con: 14, int: 11, wis: 14, cha: 15 });
@@ -142,5 +142,5 @@ test("migração: é idempotente, reconhece pacote existente e guarda o que não
 test("migração: a campanha nova ainda cria a Lyra no formato legado, que migra sem erro", () => {
   const sheet = createCampaign({ id: "mesa-x", name: "Mesa", gmRouteId: "gm" }).sheetsById.lyra;
   assert.equal(hasSystemPack(sheet), false);
-  assert.deepEqual(migrateLegacySheet(sheet).system, { id: "dnd5e-2024", version: 1 });
+  assert.deepEqual(migrateLegacySheet(sheet).system, { id: "5e", version: 1 });
 });
