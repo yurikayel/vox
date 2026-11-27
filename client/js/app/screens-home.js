@@ -259,8 +259,9 @@ function wireHomeInteractiveHandlers(activeFeed) {
  * Busca nos gateways os itens remotos do feed ativo.
  *
  * @param {string} activeFeed Feed ativo.
- * @returns {Promise<{items: object[], gateway: string, failed: boolean}>} `failed`: em "Seguindo" com alguém acompanhado,
- * os gateways não responderam (a lista vazia não quer dizer que ninguém publicou). Os outros feeds seguem com o plano B.
+ * @returns {Promise<{items: object[], gateway: string, failed: boolean}>} `failed`: os gateways não responderam. Em
+ * "Seguindo" com alguém acompanhado a lista vem vazia (não quer dizer que ninguém publicou); nos outros feeds vem o plano
+ * B (conteúdo de demonstração), que a tela avisa que não é o feed de verdade.
  */
 async function fetchRemoteHomeItems(activeFeed) {
   if (activeFeed === "following") {
@@ -273,8 +274,13 @@ async function fetchRemoteHomeItems(activeFeed) {
       return { items: [], gateway: "", failed: true };
     }
   }
-  const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-  return { items: res.items || [], gateway: res.gateway || "", failed: false };
+  try {
+    const res = await gql.fetchRecentTopics();
+    return { items: res.items || [], gateway: res.gateway || "", failed: false };
+  } catch {
+    const res = await mock.mockRecentTopics();
+    return { items: res.items || [], gateway: res.gateway || "", failed: true };
+  }
 }
 
 /**
