@@ -145,7 +145,8 @@ function mutateItem(sheet, inv, itemId, updater) {
 /** `place`: grava x/y/rot só se o item cabe na grade e não toca o layout atual dos outros; senão a ficha segue igual. */
 function placeItem(sheet, inv, itemId, payload) {
   const current = inv[itemId];
-  const moved = current && !current.equipped ? normalizeItem({ ...withoutSpot(current), x: payload.x, y: payload.y, rot: payload.rot }) : null;
+  if (payload.rot !== undefined && typeof payload.rot !== "boolean") return { ...sheet, inventory_orset: inv };
+  const moved =current && !current.equipped ? normalizeItem({ ...withoutSpot(current), x: payload.x, y: payload.y, rot: payload.rot }) : null;
   if (!moved || !("x" in moved)) return { ...sheet, inventory_orset: inv };
   const others = Object.values(inv).filter((it) => it.id !== itemId);
   const rect = { x: moved.x, y: moved.y, ...footprint(moved) };

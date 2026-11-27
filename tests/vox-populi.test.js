@@ -167,7 +167,7 @@ test("vox-populi - teste de integracao funcional em tempo de execucao (boot, cac
 
   const randomPort = 3980 + Math.floor(Math.random() * 50);
   const pythonBin = process.platform === "win32"
-    ? "C:\\Users\\yurik\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+    ? (process.env.VOX_PYTHON || "python")
     : "python3";
 
   const proc = spawn(pythonBin, ["-m", "relay.server", "--port", String(randomPort), "--host", "127.0.0.1"], {
