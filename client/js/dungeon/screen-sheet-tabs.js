@@ -82,9 +82,11 @@ export function renderSkillGrid(skills, extraActions = []) {
  */
 export function renderPlayTab(actions, derivedSkills = []) {
   const { skills } = splitSheetActions(actions);
+  const covered = new Set(derivedSkills.map((s) => s.label));
+  const usable = actions.filter((a) => !(a?.tag === "pericia" && covered.has(a.label)));
   return `
     <h3 class="dungeon-eyebrow">Mais usados</h3>
-    ${renderActionGrid(pickMostUsed(actions))}
+    ${renderActionGrid(pickMostUsed(usable))}
     <h3 class="dungeon-eyebrow">Todos os testes</h3>
     <p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>
     ${renderSkillGrid(derivedSkills, skills)}`;

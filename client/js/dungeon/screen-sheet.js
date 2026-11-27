@@ -39,7 +39,8 @@ function derivePortraitCode(sheet) {
 function renderAbilityButtons(sheet) {
   const ab = sheet.attributes_lww?.abilities || {};
   const derived = resolveSheetSystem(sheet)?.derived.abilities || [];
-  return ABILITY_META.map((item) => {
+  const own = derived.length ? ABILITY_META.filter((item) => derived.some((a) => a.id === item.key)) : ABILITY_META;
+  return own.map((item) => {
     const score = Number(ab[item.key]) || 10;
     const mod = derived.find((a) => a.id === item.key)?.modifier;
     const shown = mod === undefined ? formatMod(score) : mod >= 0 ? `+${mod}` : String(mod);

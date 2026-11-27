@@ -91,3 +91,24 @@ test("g) a rolagem entra na crônica com o nome da perícia (mesmo caminho do re
   assert.match(state.lastFormulaRoll.label, /Perícia: Acrobacia/);
   assert.equal(state.rolls.at(-1).label, state.lastFormulaRoll.label);
 });
+
+test("h) 'Mais usados' não repete perícia do pacote com fórmula @var: só o botão do derivado rola", async () => {
+  const state = stateFor("t20");
+  const html = playTab(state);
+  assert.equal(html.includes('data-action-id="act-furtividade"'), false);
+  assert.equal(html.includes("@des"), false);
+  assert.equal((html.match(/data-skill="furtividade"/g) || []).length, 1);
+  assert.equal(bonusOf(await click(state, "roll-skill", { skill: "furtividade" })), 4);
+});
+
+test("i) pacote sem os seis atributos de D&D (GURPS) não mostra botão de atributo que daria alerta", () => {
+  const html = renderSheetHero(stateFor("gurps4e").sheet);
+  assert.equal(html.includes('data-dungeon="roll-ability"'), false);
+});
+
+test("j) controle: D&D e T20 seguem com os seis botões de atributo", () => {
+  for (const id of ["dnd5e-2024", "t20"]) {
+    const html = renderSheetHero(stateFor(id).sheet);
+    assert.equal((html.match(/data-dungeon="roll-ability"/g) || []).length, 6, id);
+  }
+});
