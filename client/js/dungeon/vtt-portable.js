@@ -287,7 +287,7 @@ function base64ToBytes(b64) {
  */
 export async function packEncryptedVoxRpg(campaign, passphrase, blobs = new Map()) {
   const clean = String(passphrase || "").trim();
-  if (clean.length < MIN_BACKUP_PASS_LEN) throw new Error(`Use uma Senha Soberana com pelo menos ${MIN_BACKUP_PASS_LEN} caracteres.`);
+  if (clean.length < MIN_BACKUP_PASS_LEN) throw new Error(`Use uma senha do backup com pelo menos ${MIN_BACKUP_PASS_LEN} caracteres.`);
   const zipBytes = await packVoxRpg(campaign, blobs);
   const record = await encryptVaultV2({ zipB64: bytesToBase64(zipBytes), campaignId: campaign.id }, clean);
   return JSON.stringify({ kind: VOXRPG_ENCRYPTED_KIND, record }, null, 2);
