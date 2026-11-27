@@ -4,7 +4,7 @@
     "orch": 51,
     "orch-agente": 56,
     "tool-design": 32,
-    "tool-ai": 120,
+    "tool-ai": 118,
     "agent-report": 8,
     "tool-ide-nome": 60,
     "tool-ide": 14,
@@ -239,7 +239,7 @@
       "orch": 1
     },
     "docs/strategy/estrategia-mantenedor-revisor-2026.md": {
-      "tool-ai": 6,
+      "tool-ai": 4,
       "orch": 2
     },
     "docs/strategy/rede-sustentada-participantes.md": {
