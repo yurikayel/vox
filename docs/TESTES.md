@@ -97,6 +97,26 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 | `deploy-relay-hf.yml` (push em `main` que toque `relay/**`; também manual) | Sincroniza `relay/` no Space do Hugging Face; sem `HF_TOKEN`/`HF_SPACE` só avisa e não publica | Não (deploy) |
 | `release-binarios.yml` (PR que toque `android/**` ou `packaging/*-windows*/**`; tag `v*`; manual) | No Windows: PyInstaller (`VoxPopuli.exe`), `Vox.exe` (csc + WebView2) e APKs, com `SHA256SUMS` e atestado (atestado e Release num job `publicar` separado, com `contents: write`, que não roda em PR); roda nos PRs como build de prova | Não listado no `ci.yml`; **a confirmar** se o ruleset o exige |
 
+### 4.1 Quais E2E rodam onde (PM-117)
+
+Hoje **só `scripts/mesh-e2e.mjs` roda em PR**; os E2E Python (`npm run test:e2e`) rodam na agenda diária (`nightly-audit.yml`), então um defeito achado por eles só aparece no dia seguinte. Os de apoio e os manuais não rodam em workflow nenhum. A tabela sai de `npm run audit:e2e` e um teste a confere com os workflows: se um E2E mudar de lugar ou aparecer, a tabela precisa mudar junto. O gatilho é o do workflow que chama o E2E; `if:` de job não é lido.
+
+| Arquivo | Onde roda |
+|---|---|
+| `e2e/capture_dungeon_ui.py` | manual (nenhum workflow) |
+| `e2e/test_diorama_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_fairplay_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_ficha_assistente_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_hud_painel_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_mesa_rede_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_mesa_sync_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_mesa_ttrpg_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/test_vox_e2e.py` | nightly (nightly-audit.yml) |
+| `e2e/verify_mesa_guide_refs.py` | manual (nenhum workflow) |
+| `scripts/login-e2e.mjs` | manual (nenhum workflow) |
+| `scripts/mesh-e2e.mjs` | PR (ci.yml) |
+| `scripts/offline-e2e.mjs` | manual (nenhum workflow) |
+
 ## 5. Complexidade
 
 `npm run audit:complexity` (ESLint, `scripts/complexity-audit.mjs`) aplica os limites de [HARDENING.md](./HARDENING.md) e escreve um baseline datado em `docs/metrics/`. Meta: **zero violações** ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)). `mock.js` fica de fora.
