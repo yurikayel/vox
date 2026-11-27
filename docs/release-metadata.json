@@ -1,9 +1,9 @@
 {
   "git_sha": "a9bc98fd",
-  "branch": "chore/release-v7.174",
+  "branch": "chore/release-v7.175-precache-vazado",
   "test_js": 4030,
   "test_python": 364,
   "test_total": 4394,
-  "cache_name": "vox-pwa-v7.174-mesa-rede-aperto",
+  "cache_name": "vox-pwa-v7.175-precache-fecha-imports",
   "generated_at": "2026-11-26T20:46:01Z"
 }

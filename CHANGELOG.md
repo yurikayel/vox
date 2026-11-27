@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Shell offline (corte do SW `v7.175-precache-fecha-imports`): o precache passa a incluir 36 módulos que arquivos do próprio shell importam de forma estática (inclui `shared/state-card.js` e `render/feed-chrome.js`) e as folhas `sv-tokens`, `sv-agora` e `sv-estados` ligadas pelo `index.html`; antes ficavam fora do precache e só vinham da rede. Novo teste: todo import estático de um arquivo do precache está no precache. Ficam de fora, de propósito, 3 módulos fixados como sob demanda (`availability-metrics`, `ajuda-teste`, `voxpedia`). Teto do precache sobe ao medido (raw 3 016 916 B, gzip 967 626 B).
+
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
 - Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
 

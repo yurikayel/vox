@@ -69,6 +69,54 @@ test("PM-04: todo módulo do precache é alcançável; todo inalcançável está
   assert.deepEqual(pluggedButListed, [], "módulo já plugado: tire de UNPLUGGED_MODULES e ponha no SHELL_ASSETS");
 });
 
+const STATIC_IMPORT_RE = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|(?:^|[\n;])\s*import\s*["']([^"']+)["']/g;
+
+/**
+ * Lista os módulos que um arquivo importa de forma estática (`import … from`, `export … from`, `import "x"`).
+ * O `import()` dinâmico fica de fora: carrega sob demanda e pode ficar fora do precache.
+ * @param {string} file caminho absoluto do módulo
+ * @returns {string[]} caminhos relativos ao cliente (`./js/…`) dos módulos importados por caminho relativo
+ */
+function staticImportsOf(file) {
+  const found = [];
+  const code = fs.readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  for (const m of code.matchAll(STATIC_IMPORT_RE)) {
+    const spec = m[1] || m[2];
+    if (spec.startsWith(".")) found.push(toRel(path.resolve(path.dirname(file), spec)));
+  }
+  return found;
+}
+
+/**
+ * Módulos que outros testes fixam FORA do precache de propósito (carga sob demanda):
+ * `tests/pm01-lazy-fifth-screen.test.js` (availability-metrics) e `tests/depurple-paper.test.js` (ajuda-teste, voxpedia).
+ * Hoje um arquivo do shell ainda os importa de forma estática; resolver isso é trabalho das telas sob demanda,
+ * não do corte. Tirar um daqui exige tirar a trava correspondente no outro teste.
+ */
+const FORA_DO_PRECACHE_DE_PROPOSITO = new Set(["./js/availability-metrics.js", "./js/render/ajuda-teste.js", "./js/render/voxpedia.js"]);
+
+test("PM-04: todo módulo importado de forma estática por um arquivo do precache também está no precache", () => {
+  const shell = new Set(listFrom("SHELL_ASSETS"));
+  const missing = [];
+  for (const asset of shell) {
+    if (!asset.endsWith(".js")) continue;
+    for (const dep of staticImportsOf(path.join(root, asset))) {
+      if (!shell.has(dep) && !FORA_DO_PRECACHE_DE_PROPOSITO.has(dep)) missing.push(`${asset} importa ${dep}`);
+    }
+  }
+  assert.deepEqual(missing, [], "falta no SHELL_ASSETS: offline, o import estático falha e a tela não abre");
+});
+
+test("PM-04: toda folha de estilo ligada pelo index.html está no precache", () => {
+  const shell = new Set(listFrom("SHELL_ASSETS"));
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const linked = [...html.matchAll(/<link[^>]*\srel="stylesheet"[^>]*\shref="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((href) => !/^https?:/.test(href))
+    .map((href) => "./" + href.replace(/^\.\//, ""));
+  assert.deepEqual(linked.filter((href) => !shell.has(href)), [], "folha de estilo do index.html fora do SHELL_ASSETS");
+});
+
 test("PM-02: o peso do precache é medido e informado, sem teto", (t) => {
   const assets = listFrom("SHELL_ASSETS").filter((asset) => asset !== "./");
   let total = 0;

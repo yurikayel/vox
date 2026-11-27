@@ -22,10 +22,15 @@ import zlib from "node:zlib";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Orçamentos padrão derivados da linha de base real + margem segura contra regressões. */
+/**
+ * Orçamentos padrão derivados da linha de base real + margem segura contra regressões.
+ * Corte v7.175: o teto subiu ao medido (raw 3 016 916 B, gzip 967 626 B). Os 39 arquivos que entraram
+ * (36 módulos que o shell já importava por import estático e 3 folhas de estilo do index.html) já existiam
+ * e eram pedidos à rede sob demanda; só faltavam no precache, então a tela falhava offline. Sem código novo.
+ */
 export const DEFAULT_BUDGETS = Object.freeze({
-  maxRawBytes: 2_800_000,
-  maxGzipBytes: 900_000,
+  maxRawBytes: 3_020_000,
+  maxGzipBytes: 970_000,
   maxBootMs: 3_000,
 });
 
