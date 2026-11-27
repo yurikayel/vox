@@ -24,22 +24,13 @@ import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js"
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 import { migrateLegacySheet } from "./system-migrate.js";
-import { systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
+import { mergePatchedAbilities, systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
 
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
-
-const ABILITY_LABELS_PTBR = Object.freeze({
-  str: "Força",
-  dex: "Destreza",
-  con: "Constituição",
-  int: "Inteligência",
-  wis: "Sabedoria",
-  cha: "Carisma",
-});
 
 async function refreshStoreSummary(state, store) {
   state.campaigns = await store.listCampaigns();
@@ -220,17 +211,6 @@ export async function addCustomSheetAction(state, action, opts = {}) {
 export async function removeCustomSheetAction(state, actionId, opts = {}) {
   const store = opts.store || getDefaultVttStore();
   return dispatchCampaignOp(state, "SHEET_ACTION_REMOVE", { sheetId: state.sheet?.character_id, actionId }, { store });
-}
-
-function mergePatchedAbilities(baseAbilities, patch) {
-  const ab = { ...(baseAbilities || {}) };
-  for (const key of Object.keys(ABILITY_LABELS_PTBR)) {
-    const num = Number(patch[key]);
-    if (patch[key] !== undefined && Number.isFinite(num)) {
-      ab[key] = Math.max(1, Math.min(30, Math.trunc(num)));
-    }
-  }
-  return ab;
 }
 
 /**

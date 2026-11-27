@@ -127,6 +127,22 @@ test("j) ação clicável e fórmula livre ignoram o chip e o desligam: saem pú
   assert.equal(state.rollSecret, false);
 });
 
+test("m) rolagem pela mesa de fair-play e fórmula inválida também desligam o chip", async () => {
+  const state = stateFor();
+  state.campaignId = "c1";
+  state.fairplayDriver = { openRoll: async () => "r1" };
+  const store = { loadCampaign: async () => ({ fairplay: { keys: { a: 1, b: 2 }, rolls: { r1: { phase: "done" } } } }) };
+  const storage = { getItem: () => "1" };
+  state.rollSecret = true;
+  const viaTable = await recordFormulaRoll(state, "1d20", { store, storage, maxWaitMs: 1, pollMs: 1, sleep: async () => {} });
+  assert.equal(viaTable.pending, true, "a rolagem foi pela mesa");
+  assert.equal(state.rollSecret, false);
+  state.rollSecret = true;
+  const bad = await recordFormulaRoll(state, "isso não é dado", { store });
+  assert.equal(bad.ok, false);
+  assert.equal(state.rollSecret, false);
+});
+
 test("k) clique no painel do HUD ignora o chip (que ali não aparece) e o desliga", async () => {
   const state = stateFor();
   state.rollSecret = true;
