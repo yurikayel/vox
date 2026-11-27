@@ -14,7 +14,7 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 const css = readFileSync(new URL("../client/css/dungeon-layout.css", import.meta.url), "utf8");
 const actions = [
   { id: "a1", label: "Espada", roll: "1d20+@for", damage: "1d8", tag: "ataque" },
-  { id: "s1", label: "Furtividade", roll: "1d20+@des", damage: "", tag: "pericia" },
+  { id: "act-furtividade", label: "Furtividade", roll: "1d20+@des", damage: "", tag: "pericia" },
   { id: "s2", label: "Percepção", roll: "1d20+@sab", damage: "", tag: "pericia" },
   { id: "h1", label: "Golpe Furioso", roll: "1d20+@for", damage: "2d6", tag: "poder" },
   { id: "s3", label: "Ofício de Forja", roll: "1d20+@int", damage: "", tag: "pericia" },
@@ -47,8 +47,8 @@ test("abas: Jogar, Habilidades, Itens e Sobre, com Jogar aberta por padrão", ()
 });
 
 test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' lista as perícias", () => {
-  assert.deepEqual(splitSheetActions(actions).skills.map((a) => a.id), ["s1", "s2", "s3"]);
-  assert.deepEqual(pickMostUsed(actions).map((a) => a.id), ["a1", "h1", "s1", "s2", "s3"]);
+  assert.deepEqual(splitSheetActions(actions).skills.map((a) => a.id), ["act-furtividade", "s2", "s3"]);
+  assert.deepEqual(pickMostUsed(actions).map((a) => a.id), ["a1", "h1", "act-furtividade", "s2", "s3"]);
   assert.equal(pickMostUsed(actions, 2).length, 2);
   const html = renderSheetScreen(sheetState());
   const play = panel(html, "play");
@@ -56,7 +56,7 @@ test("abas: 'Mais usados' põe ataques antes das perícias e 'Todos os testes' l
   assert.match(play, /<h3 class="dungeon-eyebrow">Todos os testes<\/h3>/);
   assert.ok(play.indexOf("Mais usados") < play.indexOf("Todos os testes"));
   assert.match(play, /data-dungeon="roll-skill" data-skill="[a-z]+"[^>]*><strong>Furtividade<\/strong>/);
-  assert.doesNotMatch(play, /data-dungeon="roll-action" data-action-id="s1"/);
+  assert.doesNotMatch(play, /data-dungeon="roll-action" data-action-id="act-furtividade"/);
   const [mostUsed, allTests] = play.split('<h3 class="dungeon-eyebrow">Todos os testes</h3>');
   const forge = /data-dungeon="roll-action" data-action-id="s3"><strong>Ofício de Forja<\/strong>/;
   assert.match(mostUsed, forge);

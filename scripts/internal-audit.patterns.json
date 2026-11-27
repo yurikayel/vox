@@ -6,7 +6,7 @@
     { "id": "tool-ai", "regex": "\\b(claude|anthropic|antigravity|gemini|chatgpt|openai|copilot|(?<![-\\w])codex(?![-\\w])|deep research|perplexity)\\b", "messages": true },
     { "id": "tool-model", "regex": "\\b(claude|anthropic)\\s+(opus|sonnet|haiku)\\b|\\b(opus|sonnet|haiku)\\s+(low|medium|high|extra|max)\\b|\\b(use|usar)\\s+(opus|sonnet|haiku)\\b|\\b(opus|sonnet|haiku)\\b[^\\n]{0,40}\\b(arquiteto|coordenador|senior|claude|cursor|antigravity)\\b|\\b(senior|modelo|agente|ia)\\b[^\\n]{0,20}\\b(opus|sonnet|haiku)\\b", "messages": true },
     { "id": "tool-ide", "regex": "\\bcursor\\s+(ide|editor|agent)\\b|\\b(claude|antigravity|opus|ide|editor|handoff)\\b[^\\n]{0,30}\\bcursor\\b|\\bcursor\\b[^\\n]{0,30}\\b(claude|antigravity|opus|handoff)\\b", "scope": "md-or-comment", "skipExt": [".css"] },
-    { "id": "tool-ide-nome", "regex": "\\bCursor\\b", "flags": "", "scope": "md-or-comment", "skipExt": [".css"] },
+    { "id": "tool-ide-nome", "regex": "\\bCursor\\b(?!\\s+(da|do|de|das|dos)\\b)", "flags": "", "scope": "md-or-comment", "skipExt": [".css"] },
     { "id": "tool-design", "regex": "\\bstitch\\b", "messages": true },
     { "id": "orch", "regex": "\\blobby(\\.md)?\\b|\\bcanetas?\\b|\\b(maestro|escriv[aã]o)\\b|task (id|antigravity)|side.?session|worktrees? `?claude/|local_[0-9a-f]{8}", "messages": true },
     { "id": "orch-agente", "regex": "\\bagentes?\\b", "scope": "md" },
