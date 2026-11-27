@@ -18,7 +18,7 @@ Somente capturas da **UI própria do Vox**. Referências de produtos VTT de terc
 
 ```bash
 python -m http.server 8080 --directory client
-python e2e/capture_dungeon_stitch.py
+python e2e/capture_dungeon_ui.py
 ```
 
 ---
@@ -84,5 +84,5 @@ Brief: segunda cena — mesma estrutura de chrome; validar contraste light/dark 
 
 - [ ] Só anexou `dungeon-ui-2026-11-20__*.png` (nenhum asset externo)
 - [ ] Desktop + mobile quando existir o par
-- [ ] Regenerou com `e2e/capture_dungeon_stitch.py` após mudança de UI
-- [ ] `python e2e/verify_stitch_guide_refs.py` → OK
+- [ ] Regenerou com `e2e/capture_dungeon_ui.py` após mudança de UI
+- [ ] `python e2e/verify_mesa_guide_refs.py` → OK

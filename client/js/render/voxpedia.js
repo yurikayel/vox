@@ -450,7 +450,7 @@ function renderVoxpediaToc() {
 }
 
 /**
- * HTML da página Voxpedia (Stitch tela 13: códex com índice lateral). O título vem antes do índice:
+ * HTML da página Voxpedia (tela 13 do guia de design: códex com índice lateral). O título vem antes do índice:
  * no celular a coluna lateral fica em cima, e a página abria pelo índice, sem dizer onde a pessoa estava.
  * @returns {string} HTML da página.
  */
