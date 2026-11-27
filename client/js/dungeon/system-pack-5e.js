@@ -1,27 +1,32 @@
 /**
- * @file Pacote de sistema `dnd5e-2024`: só estrutura, nomes e matemática da regra básica de D&D 2024.
+ * @file Pacote de sistema `5e`: só estrutura, nomes e matemática da regra básica da 5e (SRD 5.2).
  * Nomes dos atributos e das 18 perícias, perícia-atributo e a matemática do modificador e do bônus de proficiência.
  * Nenhuma descrição, tabela de classe, magia ou texto de regra do livro entra aqui.
  *
  * Licença do conteúdo: SRD 5.2 sob Creative Commons Atribuição 4.0 (CC-BY-4.0). A atribuição abaixo é
  * a que a licença exige e também aparece no README do projeto.
  *
- * @module dungeon/system-pack-dnd5e-2024
+ * @module dungeon/system-pack-5e
  * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4 e §9)
  */
 
 /** Atribuição exigida pela CC-BY-4.0 para o material do SRD 5.2 usado no pacote. @type {string} */
-export const DND5E_2024_ATTRIBUTION =
+export const ATTRIBUTION_5E =
   'Este trabalho inclui material do System Reference Document 5.2 ("SRD 5.2") da Wizards of the Coast LLC, disponível em https://www.dndbeyond.com/srd. O SRD 5.2 é licenciado sob a Creative Commons Attribution 4.0 International License (https://creativecommons.org/licenses/by/4.0/legalcode).';
 
-/** Pacote de sistema D&D 2024 (estrutura e matemática; sem texto de regra). @type {object} */
-export const DND5E_2024_PACK = Object.freeze({
-  id: "dnd5e-2024",
+/** Aviso curto de não afiliação, mostrado no seletor de sistema. @type {string} */
+const NOTICE_5E =
+  "Este pacote usa só o conteúdo livre do SRD 5.2 (CC-BY-4.0). O Vox não tem vínculo com os titulares da marca e não é endossado por eles.";
+
+/** Pacote de sistema 5e, SRD 5.2 (estrutura e matemática; sem texto de regra). @type {object} */
+export const PACK_5E = Object.freeze({
+  id: "5e",
   version: 1,
-  name: "D&D 2024",
+  name: "5e (SRD 5.2)",
   license: Object.freeze({
     spdx: "CC-BY-4.0",
-    attribution: DND5E_2024_ATTRIBUTION,
+    attribution: ATTRIBUTION_5E,
+    notice: NOTICE_5E,
     source: "System Reference Document 5.2",
     url: "https://creativecommons.org/licenses/by/4.0/legalcode",
   }),

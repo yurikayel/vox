@@ -14,10 +14,10 @@ import { updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.j
 
 const BASIC_SKILLS = ["Acrobacia", "Adestramento", "Atletismo", "Atuação", "Cavalgar", "Conhecimento", "Cura", "Diplomacia", "Enganação", "Fortitude", "Furtividade", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Ladinagem", "Luta", "Misticismo", "Nobreza", "Ofício", "Percepção", "Pilotagem", "Pontaria", "Reflexos", "Religião", "Sobrevivência", "Vontade"];
 
-test("t20: formato válido, registrado ao lado do D&D, resolução d20_vs_cd", () => {
+test("t20: formato válido, registrado ao lado da 5e, resolução d20_vs_cd", () => {
   assert.deepEqual(validateSystemPack(T20_PACK), { ok: true, errors: [] });
   assert.equal(getSystemPack("t20"), T20_PACK);
-  assert.deepEqual(listSystemPackIds(), ["dnd5e-2024", "t20", "gurps4e"]);
+  assert.deepEqual(listSystemPackIds(), ["5e", "t20", "gurps4e"]);
   assert.equal(T20_PACK.testKind, "d20_vs_cd");
 });
 

@@ -1,7 +1,7 @@
 /**
  * Regra do mantenedor: nenhum nome de outro produto ou serviço entra no repositório
  * (docs/, client/, README). Exceções: a atribuição CC-BY do SRD 5.2 (dndbeyond.com/srd)
- * e os sistemas suportados (Tormenta20, GURPS, D&D 5e), que não constam da lista.
+ * e os sistemas suportados (Tormenta20, GURPS, 5e), que não constam da lista.
  * Os nomes ficam fragmentados aqui para o próprio teste não os citar.
  */
 import test from "node:test";
@@ -19,6 +19,9 @@ const NAMES = [
   ["ER", "PG"],
   ["Fantasy ", "Grounds"],
   ["Dia", "blo"],
+  ["D", "&D"],
+  ["Dun", "geons & Dra", "gons"],
+  ["dnd", "5e-2024"],
 ].map((parts) => parts.join(""));
 const PATTERN = new RegExp(`(?<![A-Za-z0-9])(?:${NAMES.join("|")})(?![A-Za-z0-9])`, "i");
 const SKIP_DIRS = new Set(["node_modules", "vendor", ".git"]);

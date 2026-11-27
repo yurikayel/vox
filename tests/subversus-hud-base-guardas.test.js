@@ -11,7 +11,7 @@ import { runHudOp } from "../client/js/dungeon/dungeon-hud-actions.js";
 import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { mutateSheetInventory, updateSheetBasicInfo } from "../client/js/dungeon/dungeon-persistence.js";
-import { DND5E_2024_PACK } from "../client/js/dungeon/system-pack-dnd5e-2024.js";
+import { PACK_5E } from "../client/js/dungeon/system-pack-5e.js";
 import { registerSystemPack } from "../client/js/dungeon/system-pack.js";
 import { createAndSelectCampaign } from "../client/js/dungeon/dungeon-persistence.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
@@ -24,8 +24,8 @@ const HOSTILE = `"><img src=x onerror=alert(1)>`;
 const own = (extra = {}) => ({ character_id: "ana", char_id: "ana", name: "Lyra", attributes_lww: { armor_class: 12 }, pools_base: { hp_max: 10 }, delta_ledger: [], ...extra });
 
 test("escape: rótulo da magia vindo do pacote, id do item no cinto e chave do favorito na mochila", () => {
-  const resources = DND5E_2024_PACK.resources.map((r) => (r.id === "spell-slots" ? { ...r, label: HOSTILE } : r));
-  registerSystemPack({ ...DND5E_2024_PACK, id: "pacote-hostil", resources });
+  const resources = PACK_5E.resources.map((r) => (r.id === "spell-slots" ? { ...r, label: HOSTILE } : r));
+  registerSystemPack({ ...PACK_5E, id: "pacote-hostil", resources });
   const magic = renderHudStatus({ sheet: own({ system: { id: "pacote-hostil" }, pools_base: { hp_max: 10, spell_slots_max: { l1: 1 } } }) }, { tokens: [] });
   assert.match(magic, /data-hud-magic>&quot;&gt;&lt;img src=x onerror=alert\(1\)&gt; 1\/1</);
   assert.ok(!magic.includes("<img"));

@@ -23,7 +23,7 @@ const need = (name) => { assert.equal(typeof over[name], "function", `voxchar-ov
 const enc = (obj) => new TextEncoder().encode(JSON.stringify(obj));
 
 const incoming = (extra = {}) => ({
-  kind: "voxchar", format: 1, system: { id: "dnd5e-2024", version: 1 },
+  kind: "voxchar", format: 1, system: { id: "5e", version: 1 },
   sheet: {
     attributes_lww: { name: "Lyra", class_name: "Ladina", level: 3, armor_class: 14, abilities: { str: 10, dex: 16 } },
     inventory_orset: {},

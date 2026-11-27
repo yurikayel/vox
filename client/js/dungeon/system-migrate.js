@@ -1,6 +1,6 @@
 /**
  * @file Migração da ficha legada (a Lyra e qualquer ficha criada antes dos pacotes de sistema) para o pacote
- * `dnd5e-2024`. Só acrescenta: `system` (qual pacote) e `system_choices` (as escolhas do jogador, extraídas dos
+ * `5e`. Só acrescenta: `system` (qual pacote) e `system_choices` (as escolhas do jogador, extraídas dos
  * campos antigos). Os campos legados ficam como estão para as telas atuais; derivado nenhum é gravado.
  *
  * Perícia treinada vem de duas fontes legadas, ambas casadas com o pacote pelo nome (sem acento nem caixa):
@@ -10,13 +10,13 @@
  * Salvaguardas treinadas não existem na ficha legada e não são inventadas: começam vazias.
  *
  * @module dungeon/system-migrate
- * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4: "a ficha atual (Lyra) migra para o pacote dnd5e-2024")
+ * @see docs/specs/ficha-personagem-brainstorm-v0.md (§4: "a ficha atual (Lyra) migra para o pacote 5e")
  */
 import { getSystemPack } from "./system-pack.js";
 import { normalizeChoices } from "./system-derive.js";
 
 /** Pacote para o qual as fichas legadas migram. @type {string} */
-export const LEGACY_SYSTEM_ID = "dnd5e-2024";
+export const LEGACY_SYSTEM_ID = "5e";
 
 function plain(text) {
   return String(text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
@@ -61,7 +61,7 @@ export function hasSystemPack(sheet) {
 }
 
 /**
- * Migra uma ficha legada para o pacote `dnd5e-2024`, sem tocar nos campos antigos. Ficha que já tem pacote volta igual
+ * Migra uma ficha legada para o pacote `5e`, sem tocar nos campos antigos. Ficha que já tem pacote volta igual
  * (idempotente); a entrada nunca é alterada.
  * @param {object} sheet Ficha no formato legado (`attributes_lww`, `sheet_meta`).
  * @returns {object} Ficha com `system` e `system_choices`.

@@ -1,6 +1,6 @@
 /**
  * @file Controles das reservas PM/PF na aba Jogar (spec derivados-por-sistema-v0, D8): atual/máximo, botões de gastar
- * e recuperar, e o campo do máximo. Pacote sem reservas (D&D) não desenha nada. Texto do pacote sempre escapado.
+ * e recuperar, e o campo do máximo. Pacote sem reservas (5e) não desenha nada. Texto do pacote sempre escapado.
  *
  * @module dungeon/screen-sheet-reserves
  * @see docs/specs/derivados-por-sistema-v0.md

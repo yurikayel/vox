@@ -63,23 +63,23 @@ test("d) T20: gastar Dado de Vida devolve recusa em vez de lançar", () => {
   assert.match(out.error, /não usa Dado de Vida/);
 });
 
-test("e) controle D&D 5e: faixa +2, rolagem +2 e o painel Editar mantém o Dado de Vida", async () => {
-  const { hero, npc } = await initiativeRolls("dnd5e-2024");
-  assert.match(renderDerivedStrip(sheetOf("dnd5e-2024")), /<dt>Iniciativa<\/dt><dd>\+2<\/dd>/);
+test("e) controle 5e 5e: faixa +2, rolagem +2 e o painel Editar mantém o Dado de Vida", async () => {
+  const { hero, npc } = await initiativeRolls("5e");
+  assert.match(renderDerivedStrip(sheetOf("5e")), /<dt>Iniciativa<\/dt><dd>\+2<\/dd>/);
   assert.equal(hero, npc + 2);
-  const html = renderSystemEditFields(sheetOf("dnd5e-2024"));
+  const html = renderSystemEditFields(sheetOf("5e"));
   assert.match(html, /Dados? de Vida/);
   assert.match(html, /name="speedFt"/);
 });
 
-test("g) T20: o descanso longo não aplica cura automática; o D&D segue curando ao máximo", () => {
+test("g) T20: o descanso longo não aplica cura automática; a 5e segue curando ao máximo", () => {
   const state = { pools: { hp_current: 5 }, base: { hp_max: 20 } };
   assert.deepEqual(longRestPlan(T20_PACK, { level: 3 }, state).deltas, []);
-  const dnd = longRestPlan(getSystemPack("dnd5e-2024"), { level: 3 }, state);
+  const dnd = longRestPlan(getSystemPack("5e"), { level: 3 }, state);
   assert.deepEqual(dnd.deltas, [{ pool: "hp_current", delta: 15 }]);
 });
 
-test("f) o passo 5 do assistente com pacote T20 não mostra Dado de Vida; o D&D mostra", () => {
+test("f) o passo 5 do assistente com pacote T20 não mostra Dado de Vida; a 5e mostra", () => {
   const wz = { ...createWizard(), mode: "guided", step: 5 };
   assert.match(renderWizard(wz), /Dado de Vida/);
   assert.doesNotMatch(renderWizard({ ...wz, systemId: "t20" }), /Dado de Vida/);

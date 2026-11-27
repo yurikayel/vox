@@ -17,7 +17,7 @@ Não há licença aberta para o conteúdo editorial. O pacote traz nomes de mec�
 
 ## 3. Limites conhecidos (não entram neste PR)
 
-- O motor de derivados é o do D&D: o modificador mostra a diferença para 10, o campo de "classe de armadura" mostra o DX (não a Esquiva), a iniciativa e a percepção passiva não são as do GURPS. Use `gurpsSecondaries` para os números certos até a tela ser adaptada.
+- O motor de derivados é o da 5e: o modificador mostra a diferença para 10, o campo de "classe de armadura" mostra o DX (não a Esquiva), a iniciativa e a percepção passiva não são as do GURPS. Use `gurpsSecondaries` para os números certos até a tela ser adaptada.
 - Sem perícias, o cartão de perícias fica vazio; curva de pontos (F/M/D/MD), pontos totais e não gastos, e dano GdP/GeB ficam para depois.
 - As fórmulas e os limites vieram de memória, sem o livro à mão: o mantenedor precisa conferi-los.
 - Registrar o pacote o torna selecionável na ficha ("GURPS 4e (matemática)").
