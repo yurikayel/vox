@@ -140,7 +140,7 @@ function renderCampHero(state, lab) {
       <div class="dungeon-hero-copy">
         <span class="dungeon-eyebrow">Santuário da Guilda (exemplo)</span>
         <h2>${escapeHtml(state.tableName)}</h2>
-        <p class="dungeon-lead">A mesa roda nos aparelhos de quem joga, sem servidor central e sem mensalidade.</p>
+        <p class="dungeon-lead">A mesa roda no seu aparelho, sem servidor guardando a partida e sem mensalidade.</p>
         <div class="dungeon-hero-actions">
           <a class="dungeon-btn dungeon-btn-primary" href="#/dungeon/mesa/${encodeURIComponent(state.tableId)}">${dungeonIcon("sword", 16)}<span>Entrar na Mesa →</span></a>
 ${lab ? renderFailoverLab() : ""}

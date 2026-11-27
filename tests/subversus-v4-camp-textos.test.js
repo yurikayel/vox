@@ -19,8 +19,13 @@ const camp = (opts) => renderCampScreen(createDungeonSessionState({}), opts);
 
 test("o texto do herói descreve a função, sem 'guardiões virtuais'", () => {
   const html = camp({ lab: false });
-  assert.match(html, /<p class="dungeon-lead">A mesa roda nos aparelhos de quem joga, sem servidor central e sem mensalidade\.<\/p>/);
+  assert.match(html, /<p class="dungeon-lead">A mesa roda no seu aparelho, sem servidor guardando a partida e sem mensalidade\.<\/p>/);
   assert.doesNotMatch(textoLido(html), /guardiões virtuais/i);
+  // O nó de sinalização da mesa em rede é um servidor: "sem servidor central" não tem prova, e "nos aparelhos" (plural)
+  // promete a mesa entre aparelhos, que hoje é só laboratório.
+  const lead = html.match(/<p class="dungeon-lead">[^<]*<\/p>/)[0];
+  assert.doesNotMatch(lead, /servidor central/i);
+  assert.doesNotMatch(lead, /nos aparelhos/i);
 });
 
 test("o campo de senha do backup diz 'Senha do backup' (rótulo e placeholder), sem 'Senha Soberana'", () => {
