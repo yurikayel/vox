@@ -27,6 +27,7 @@ import { migrateLegacySheet } from "./system-migrate.js";
 import { systemFieldsForSave, withSpeed } from "./dungeon-persistence-sheet-system.js";
 
 export { buildCampaignFromSession, hydrateStateFromCampaign };
+export { recordAbilityRoll } from "./dungeon-sheet-rolls.js";
 
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 const ENC = new TextEncoder();
@@ -135,19 +136,6 @@ export async function recordFormulaRoll(state, rawInput, opts = {}) {
   state.lastFormulaRoll = result;
   await dispatchCampaignOp(state, "ROLL_RECORDED", { speaker: state.sheet?.name || "Aventureiro", rollResult: result }, { store, refreshCampaignsList: true });
   return result;
-}
-
-/**
- * Rola um teste de atributo (`str`, `dex`, `con`, `int`, `wis`, `cha`) a partir da ficha clicável.
- * @param {object} state Estado da sessão.
- * @param {string} abilityKey Chave do atributo (`str`..`cha`).
- * @param {object} [opts={}] Opções (`mode`, `randomBytesFn`, `store`).
- * @returns {Promise<object>} Resultado da rolagem.
- */
-export async function recordAbilityRoll(state, abilityKey, opts = {}) {
-  const key = String(abilityKey || "").toLowerCase();
-  const label = ABILITY_LABELS_PTBR[key] || key.toUpperCase();
-  return recordFormulaRoll(state, `1d20+@${key} # Teste de ${label}`, opts);
 }
 
 /**
