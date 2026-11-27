@@ -93,10 +93,10 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function assertRatio(label, fg, bg) {
+function assertRatio(label, fg, bg, min = 4.5) {
   assert.ok(fg && bg, `${label}: cor não resolveu (texto ${fg}, fundo ${bg})`);
   const ratio = contrast(fg, bg);
-  assert.ok(ratio >= 4.5, `${label}: ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< 4.5:1)`);
+  assert.ok(ratio >= min, `${label}: ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< ${min}:1)`);
 }
 
 function assertPairs(theme, route) {
@@ -126,16 +126,38 @@ function assertConsumers(theme, route) {
   }
 }
 
+const CHEVRON = ".sv-camp-details > summary::before";
+const CHEVRON_BACKGROUNDS = [".dungeon-sanctum", ".dungeon-panel"];
+const NON_TEXT_MIN = 3;
+
+/** Cor da borda do chevron das sanfonas (a mesma nas duas arestas) contra os fundos em que a sanfona aparece: 3:1 (WCAG 1.4.11). */
+function assertChevron(theme, route) {
+  const tokens = resolveTheme(theme, route);
+  const edges = ["border-right", "border-bottom"].map((prop) => (renderedDecl(CHEVRON, prop) ?? "").match(/var\([^)]*\)|#[0-9a-f]{6}/i)?.[0] ?? "");
+  for (const [i, edge] of edges.entries()) {
+    for (const bgSelector of CHEVRON_BACKGROUNDS) {
+      const bg = hexOf(tokens, renderedDecl(bgSelector, "background") ?? "");
+      assertRatio(`${theme}/${route}: chevron (${i ? "baixo" : "direita"}) sobre ${bgSelector}`, hexOf(tokens, edge), bg, NON_TEXT_MIN);
+    }
+  }
+}
+
 describe("contraste do texto sobre cor cheia (pares --sv-on-* e seletores renderizados)", () => {
   for (const route of ["attr", "media"]) {
     it(`tema claro pelo caminho ${route === "attr" ? "do atributo data-color-mode" : "@media prefers-color-scheme (modo automático)"}`, () => {
       assertPairs("light", route);
       assertConsumers("light", route);
+      assertChevron("light", route);
     });
   }
   it("tema escuro: pares e seletores seguem legíveis", () => {
     assertPairs("dark", "both");
     assertConsumers("dark", "both");
+    assertChevron("dark", "both");
+  });
+  it("o chevron das sanfonas é medido: marcador fraco (cinza claro sobre claro) reprova abaixo de 3:1", () => {
+    assert.ok(contrast("#cccccc", "#ffffff") < NON_TEXT_MIN);
+    assert.ok(contrast("#1a1c1f", "#ffffff") >= NON_TEXT_MIN);
   });
   it("o index.html liga sv-tokens.css depois de agora.css, para a folha vencer a cascata", () => {
     const html = fs.readFileSync(path.join(CSS_DIR, "../index.html"), "utf8");
