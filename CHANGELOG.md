@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-- Mesa: os avisos ("Ficha salva", "Link copiado" e afins) passam a ser anunciados por uma região viva fixa, que não é recriada a cada redesenho: o leitor de tela ouve cada aviso uma vez, em vez de repetir a cada clique ou não dizer nada. O aviso é zerado depois de anunciado, e o mesmo texto repetido de propósito é anunciado de novo. O texto continua desenhado na tela, sem ser região viva.
+- Mesa: os avisos ("Ficha salva", "Link copiado" e afins) passam a ser anunciados por uma região viva fixa, que não é recriada a cada redesenho: o leitor de tela ouve cada aviso uma vez, em vez de repetir a cada clique ou não dizer nada. O aviso pendente é zerado depois de anunciado, e o mesmo texto repetido de propósito é anunciado de novo. O texto continua visível na tela como antes (o <p> só deixa de ser região viva).
 - Editar ficha: depois de um Salvar recusado por erro de validação, ou de um `.voxchar` recusado, o foco vai para o resumo dos erros, em vez de cair no início da página. O resumo é um grupo nomeado e descrito (não mais `role="alert"`), para o leitor falar uma vez só.
 - Editar ficha: depois de um Salvar aceito o foco volta ao botão Salvar, em vez de cair no início da página, e o aviso passa a dizer "Ficha salva".
 - Ficha: no assistente de criar ficha e em "Editar ficha", o campo recusado passa a sair com `aria-invalid="true"` e `aria-describedby` apontando para a mensagem da lista de avisos (leitor de tela diz qual campo tem erro e por quê). Os campos do sistema (Deslocamento, salvaguardas, especialização) e o seletor de sistema ficam para depois.
