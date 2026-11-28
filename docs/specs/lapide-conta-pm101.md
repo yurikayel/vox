@@ -1,13 +1,13 @@
 # Lápide de conta (`account_tombstone` v1) — PM-101
 
 > **Status:** rascunho (spec PM-101 para revisão antes de implementação; alinhada ao ADR-034 e PM-13) · **Owner:** mantenedor / segurança · **Revisado:** 2026-11-22  
-> **Relacionados:** [ROADMAP (PM-101, PM-13, PM-104)](../ROADMAP.md), [ADR-034 (raiz e subchaves)](../adr/034-raiz-e-subchaves-por-aparelho.md), [antigravity-gossip-retract-v1.md](./antigravity-gossip-retract-v1.md), [profile-card-gossip-v0.md](./profile-card-gossip-v0.md), [relay-api.md](./relay-api.md), [THREAT-MODEL.md](../THREAT-MODEL.md).
+> **Relacionados:** [ROADMAP (PM-101, PM-13, PM-104)](../ROADMAP.md), [ADR-034 (raiz e subchaves)](../adr/034-raiz-e-subchaves-por-aparelho.md), [retratacao-gossip-v1.md](./retratacao-gossip-v1.md), [profile-card-gossip-v0.md](./profile-card-gossip-v0.md), [relay-api.md](./relay-api.md), [THREAT-MODEL.md](../THREAT-MODEL.md).
 
 ---
 
 ## 1. Problema e escopo
 
-Hoje o Vox possui apenas lápide por publicação (`postOwnership.createPostTombstone`, `kind: "post-tombstone"`, propagada via `GOSSIP_DELETE` em [antigravity-gossip-retract-v1.md](./antigravity-gossip-retract-v1.md)) e retirada individual de cartão de perfil (`discoverable: false` ou `GOSSIP_DELETE` em `pc_${routeId}` em [profile-card-gossip-v0.md](./profile-card-gossip-v0.md)). Além disso, `wipeLocalDevice()` / `wipeLocalAccount()` (`client/js/identity/local-account.js`) apagam somente o armazenamento do próprio navegador.
+Hoje o Vox possui apenas lápide por publicação (`postOwnership.createPostTombstone`, `kind: "post-tombstone"`, propagada via `GOSSIP_DELETE` em [retratacao-gossip-v1.md](./retratacao-gossip-v1.md)) e retirada individual de cartão de perfil (`discoverable: false` ou `GOSSIP_DELETE` em `pc_${routeId}` em [profile-card-gossip-v0.md](./profile-card-gossip-v0.md)). Além disso, `wipeLocalDevice()` / `wipeLocalAccount()` (`client/js/identity/local-account.js`) apagam somente o armazenamento do próprio navegador.
 
 Sem uma **lápide de conta** assinada:
 1. Cartões de perfil, posts e ofertas continuam replicados na malha P2P e na memória central mesmo após o usuário encerrar a conta.
