@@ -24,6 +24,18 @@ test("ação sem rolagem carrega com 1d20; tag e dano nulos valem o padrão", ()
   assert.equal(a.damage, "");
 });
 
+test("tag só com espaços (ou vazia) carrega como acao, não como vazia", () => {
+  for (const tag of ["   ", "", "\t\n", "   "]) {
+    const [a] = carregadas(salva([{ id: "act-gesto", label: "Gesto", tag }]));
+    assert.equal(a.tag, "acao", JSON.stringify(tag));
+  }
+});
+
+test("tag com espaços nas pontas perde só os espaços e respeita o limite de 24 letras", () => {
+  const [a] = carregadas(salva([{ id: "act-gesto", label: "Gesto", tag: `  ${"x".repeat(30)}  ` }]));
+  assert.equal(a.tag, "x".repeat(24));
+});
+
 test("tag e dano que existem continuam como estavam", () => {
   const [a] = carregadas(salva([{ id: "act-arco", label: "Arco", roll: "1d20+5", damage: "1d6+3", tag: "ataque" }]));
   assert.equal(a.tag, "ataque");

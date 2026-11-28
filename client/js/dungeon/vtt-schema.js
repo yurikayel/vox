@@ -109,7 +109,7 @@ function normalizeAction(raw, idx) {
     label,
     roll,
     damage: String(raw?.damage || "").trim().slice(0, 80),
-    tag: String(raw?.tag || "acao").trim().slice(0, 24),
+    tag: String(raw?.tag || "").trim().slice(0, 24) || "acao",
   };
 }
 
