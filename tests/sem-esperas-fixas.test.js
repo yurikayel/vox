@@ -23,10 +23,32 @@ const EXCLUDED = new Set(["sem-esperas-fixas.test.js", "helpers/wait-until.js"])
  * SUB-20, fatia 1: 37 → 30. Provas de ausência sobre stubs em memória (`cov-t1-circles`, `cov-t1-home-more`,
  * `cov-t6-explode-events`, `cov-t6-photo-lightbox`) passaram a `drainMicrotasks` (sem relógio), e `cov-t6-contact-notify`
  * espera um contato sentinela em vez de dormir. Seguem com timer real, para uma fatia seguinte:
- * `cov-t6-post-more-menu` (cadeia de `import()` dinâmico; fica verde com `drainMicrotasks(300)`, falta só trocar) e
  * `cov-t7-labs-webxdc` (criptografia real: microtarefas não bastam).
+ * Fatia 2: 30 → 19. `lead-tab`, `local-account-race`, `tab-sync`, `vazamentos-ws-labs`, `pm23-assembly-ui`,
+ * `pm23-presence-vote` e `cov-t6-post-more-menu` passaram a `drainMicrotasks` (rodadas ≥ 3× o mínimo medido: 3 em
+ * `lead-tab`, ~115 em `cov-t6-post-more-menu`, 1 nos demais).
+ * Fatia 3: 19 → 16. `nostr-transport` zerou: a partida do par B espera a assinatura do relay em memória (`relay.subscribed()`)
+ * em vez de dormir 150 ms, e o teste de `stop()` cancelar a reconexão usa `mock.timers` (sem relógio real, com controle:
+ * sem `stop()` o relay morto é tentado de novo).
+ * Teto final, 16, medido por AST. Seguem contadas, cada uma com o seu motivo (duas têm condição observável e ficam pendentes):
+ * - `cov-t7-labs-webxdc` (1): pendente. São 120 ms fixos após cada clique, e cada passo muda o `lab.html()`; um `waitUntil`
+ *   sobre essa mudança a trocaria numa fatia seguinte.
+ * - `vox-populi` (2): laço de retry esperando um processo real subir, e a limpeza ao fim.
+ * - `node-health-api` (1): tempo virtual sob `mock.timers` (`tick(320)`), sem espera real; só a AST o conta.
+ * - `cov-t6-aviso-flow` (1): prova de ausência depois de cancelar (80 ms): não há evento a esperar para "nada foi gravado".
+ * - `cov-t7-webrtc-signaling` (1): 4 voltas de `setImmediate` para drenar a sinalização simulada (config e criação de pares).
+ * - `login-rede-ruim` (1): guarda de 4,8 s que devolve "hung" se a restauração travar na rede ruim simulada.
+ * - `signals` (1): o recurso lento (40 ms) contra o rápido (5 ms): a ordem de chegada é o objeto do teste.
+ * - `webrtc` (1): a oferta que aborta depois de 20 ms simula o aborto de uma negociação em curso.
+ * - `subversus-fairplay-rede` (1): `realSleep(4)` deixa a cripto assíncrona (WebCrypto) terminar em tempo real, enquanto o
+ *   relógio das fases é virtual.
+ * - `app-own-posts-ui` (2): um laço de `setImmediate` (`settle`) e um `waitFor` caseiro com `setTimeout(5)`; este último é
+ *   cópia do `waitUntil` e fica pendente.
+ * - `cov-t2-dom` (2): um laço de `setImmediate` (`settle`) e a janela de silêncio de 80 ms de `settleToasts` (laço de
+ *   `setTimeout(10)`), prova de ausência de toast novo.
+ * - `cov-t3-dom` (1) e `cov-t5-dom` (1): laços de `setImmediate` que drenam promessas soltas do DOM simulado.
  */
-const CEILING = 30;
+const CEILING = 16;
 
 function listSources(dir = DIR, rel = "") {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

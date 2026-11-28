@@ -4,6 +4,13 @@
  * (≈2:1) e alguns botões trazem o texto escuro fixo. Os `--sa-on-*` não mudam (outros usos seguem como estão); os
  * pares abaixo trazem o texto certo por tema e só os seletores que falhavam apontam para eles.
  * Contraste conferido por `tests/sv-contraste-pares-on.test.js`.
+ * Desativado (`tests/ui-foco-desativado-aa.test.js`, na cascata real): não usa `opacity` (que arrasta texto e contorno
+ * para baixo de 3:1); usa fundo, texto e contorno de token, medidos nos dois temas. `.agora-ui .btn.btn-primary` e
+ * `.agora-ui .btn.btn-outline` (0,3,0) vencem um `.btn:disabled` (0,2,0) em fundo e texto, e o botão desativado ficava
+ * igual ao ativo; por isso a regra vem também como `.agora-ui .btn:disabled` (0,3,0), e o empate se resolve pela ordem
+ * (esta folha carrega depois de `agora.css`).
+ * Os pares `--sv-on-primary-container` e `--sv-on-error-container` ficam prontos para a primeira faixa de container
+ * forte (o anel global some sobre ela, 1,4–1,6:1); a classe e a regra do anel entram com o primeiro consumidor real.
  * Raios de borda: `--sv-radius` e `--sv-radius-sm` apontam para `--radius` (8 px) e `--radius-sm` (4 px) de `agora.css`;
  * `--radius-md` não serve (o nome diz 10 px e entrega 8).
  */
@@ -12,16 +19,23 @@
   --sv-radius-sm: var(--radius-sm);
   --sv-on-primary: var(--sa-on-primary-fixed);
   --sv-on-civic: var(--sa-on-secondary);
+  --sv-on-primary-container: var(--sa-on-primary-fixed);
+  --sv-on-error-container: var(--sa-on-surface);
+  --sv-disabled-bg: var(--sa-surface-highest);
+  --sv-disabled-text: var(--sa-on-surface-variant);
+  --sv-disabled-line: var(--sa-outline);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-color-mode="dark"]) {
     --sv-on-civic: #ffffff;
+    --sv-on-error-container: #ffffff;
   }
 }
 
 :root[data-color-mode="light"] {
   --sv-on-civic: #ffffff;
+  --sv-on-error-container: #ffffff;
 }
 
 /* Fundo `--sa-primary`: botão primário da mesa e célula do jogador (agora.css fixa #00201e). */
@@ -33,6 +47,46 @@
 /* Contador de mensagens não lidas: fundo `--sa-secondary` (selo cívico). */
 .agora-dm-badge {
   color: var(--sv-on-civic);
+}
+
+/* Selo "DEMONSTRAÇÃO" na faixa do Santuário (`#14181e` nos dois temas, mais 12% de dourado atrás do selo): o texto usava
+   `--sa-secondary`, que no tema claro é o dourado escuro (2,24:1 sobre o fundo do selo). Aqui usa o dourado claro do tema escuro.
+   Medido em `tests/dungeon-fiction-badge-contraste.test.js`. */
+.dungeon-segregation-strip {
+  --sv-strip-badge: #e7c26b;
+}
+.dungeon-segregation-strip .dungeon-fiction-badge {
+  color: var(--sv-strip-badge);
+}
+
+/* Desativado sem `opacity`: texto, fundo e contorno de token (as folhas antigas usam opacidade de 0,35 a 0,6). */
+.dungeon-btn[disabled],
+.dungeon-btn[disabled]:hover,
+.agora-btn[disabled],
+.agora-btn[disabled]:hover,
+.agora-btn[aria-disabled="true"],
+.agora-btn[aria-disabled="true"]:hover,
+.btn:disabled,
+.btn:disabled:hover,
+.btn-inline-submit:disabled,
+.btn-inline-echo:disabled,
+.btn-pact-continue:disabled,
+.btn-pact-settings:disabled,
+.civic-choice-btn:disabled,
+.civic-poll-remove:disabled,
+#btn-civic-poll-add:disabled,
+.agora-ui .btn:disabled {
+  opacity: 1;
+  background: var(--sv-disabled-bg);
+  color: var(--sv-disabled-text);
+  border-color: var(--sv-disabled-line);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.civic-choice-btn:disabled {
+  cursor: progress;
 }
 
 /* Só para leitor de tela: fora da vista, mas lido (usado pelo cartão de estado e pelo seletor de arquivo do Acampamento). */

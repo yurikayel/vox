@@ -1,14 +1,13 @@
 {
   "version": 1,
   "patterns": {
-    "orch": 60,
-    "orch-agente": 60,
+    "orch": 45,
+    "orch-agente": 56,
     "tool-design": 32,
-    "tool-ai": 138,
+    "tool-ai": 73,
     "agent-report": 8,
-    "tool-ide-nome": 63,
-    "tool-ide": 17,
-    "tool-model": 7,
+    "tool-ide-nome": 42,
+    "tool-ide": 5,
     "prompt-doc": 1
   },
   "agentRules": 51,
@@ -17,7 +16,7 @@
       "orch": 2,
       "orch-agente": 4,
       "tool-design": 4,
-      "tool-ai": 10
+      "tool-ai": 8
     },
     "CONTRIBUTING.md": {
       "orch-agente": 1
@@ -26,7 +25,6 @@
       "orch-agente": 1
     },
     "client/DEV.md": {
-      "tool-ai": 2,
       "orch-agente": 1,
       "orch": 1
     },
@@ -42,14 +40,13 @@
       "orch-agente": 1
     },
     "docs/README.md": {
-      "tool-ai": 9,
+      "tool-ai": 4,
       "orch-agente": 4,
       "tool-design": 1
     },
     "docs/ROADMAP.md": {
       "orch-agente": 4,
-      "orch": 5,
-      "tool-ai": 1
+      "orch": 5
     },
     "docs/adr/007-zero-complexity-monolith-decomposition.md": {
       "orch-agente": 2
@@ -65,12 +62,12 @@
     },
     "docs/archive/brainstorm-dez-tarefas-estrategia-2026-10.md": {
       "agent-report": 1,
-      "tool-ai": 3,
+      "tool-ai": 1,
       "orch": 2
     },
     "docs/archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md": {
       "agent-report": 1,
-      "tool-ai": 6,
+      "tool-ai": 5,
       "orch": 3,
       "tool-ide-nome": 13,
       "tool-ide": 4
@@ -89,9 +86,7 @@
       "agent-report": 1,
       "orch": 4,
       "orch-agente": 1,
-      "tool-ai": 7,
-      "tool-ide-nome": 9,
-      "tool-ide": 1
+      "tool-ide-nome": 9
     },
     "docs/archive/revisao-estado-2026-10-25.md": {
       "agent-report": 1,
@@ -102,7 +97,6 @@
       "agent-report": 1
     },
     "docs/audits/auditoria-features-arquitetura-2026-11.md": {
-      "tool-ai": 1,
       "orch": 1
     },
     "docs/audits/honest-copy-audit-2026-10-23.md": {
@@ -114,7 +108,7 @@
     "docs/brainstorms/brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md": {
       "orch": 8,
       "orch-agente": 7,
-      "tool-ai": 4,
+      "tool-ai": 2,
       "tool-ide": 1,
       "tool-ide-nome": 3
     },
@@ -161,25 +155,12 @@
     "docs/operations/pacote-anti-bus-factor.md": {
       "orch": 1
     },
-    "docs/process/antigravity-operating.md": {
-      "tool-ai": 13,
-      "tool-ide": 6,
-      "tool-ide-nome": 8,
-      "orch": 1
-    },
     "docs/process/metodo-agentes-mutex-e-revisor.md": {
-      "orch-agente": 6,
-      "tool-ai": 1,
-      "orch": 8,
-      "tool-model": 7
+      "orch-agente": 2
     },
-    "docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md": {
+    "docs/process/prompt-auditoria-mvp-tecnico-2026-11.md": {
       "prompt-doc": 1,
-      "tool-ai": 3,
-      "orch-agente": 2,
-      "tool-ide": 1,
-      "tool-ide-nome": 1,
-      "orch": 1
+      "orch-agente": 2
     },
     "docs/process/qualidade-e-evidencia.md": {
       "orch-agente": 3
@@ -197,29 +178,12 @@
     "docs/security/codeql-pr262-triagem.md": {
       "orch": 1
     },
-    "docs/specs/antigravity-blob-soft-priority-v0.md": {
-      "tool-ai": 4,
-      "orch": 2,
-      "tool-ide-nome": 4,
-      "tool-ide": 1
-    },
-    "docs/specs/antigravity-gossip-retract-v1.md": {
-      "tool-ai": 3,
-      "orch": 2,
-      "tool-ide-nome": 5
-    },
-    "docs/specs/arvore-repasse-pm106.md": {
-      "tool-ai": 1
-    },
     "docs/specs/cache-manifest-v0.md": {
       "tool-ai": 2,
       "orch": 2
     },
     "docs/specs/ficha-personagem-brainstorm-v0.md": {
       "tool-design": 3
-    },
-    "docs/specs/lapide-conta-pm101.md": {
-      "tool-ai": 2
     },
     "docs/specs/listing-signed-gossip-v1.md": {
       "tool-ai": 1
@@ -231,12 +195,6 @@
       "orch": 4,
       "tool-ai": 2
     },
-    "docs/strategy/antigravity-estrategia-mantenedor-revisor-2026.md": {
-      "tool-ai": 12,
-      "orch": 3,
-      "tool-ide": 3,
-      "tool-ide-nome": 3
-    },
     "docs/strategy/backlog-lancamento-publico-2026-11.md": {
       "orch-agente": 1
     },
@@ -245,15 +203,14 @@
       "tool-ide-nome": 7,
       "tool-ai": 1
     },
-    "docs/strategy/direcionamento-crescimento-rede-2026-11.md": {
-      "tool-ai": 2
-    },
     "docs/strategy/espacos-digitais-infra.md": {
       "orch": 1
     },
+    "docs/strategy/estrategia-mantenedor-revisor-2026.md": {
+      "orch": 2
+    },
     "docs/strategy/rede-sustentada-participantes.md": {
       "orch-agente": 1,
-      "tool-ai": 1,
       "orch": 1
     },
     "e2e/capture_dungeon_ui.py": {

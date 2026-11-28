@@ -39,18 +39,22 @@ export function getActiveScene(state) {
  */
 export async function uploadSceneMapBlob(state, fileSpec, opts = {}) {
   const store = opts.store || getDefaultVttStore();
+  const { checkMapUpload, mapNoticeFor } = await import("./map-image-size.js");
+  const check = checkMapUpload(fileSpec.bytes);
+  if (!check.ok) {
+    state.mapNotice = check.reason;
+    throw new Error(check.reason);
+  }
   const saved = await store.putBlob(fileSpec.bytes, fileSpec.mime || "image/png");
   const scene = getActiveScene(state);
   await dispatchCampaignOp(state, "SCENE_MAP_SET", {
     sceneId: scene.sceneId,
     floorZ: scene.activeFloorZ,
     mapBlobHash: saved.sha256,
-    widthPx: fileSpec.widthPx,
-    heightPx: fileSpec.heightPx,
+    widthPx: fileSpec.widthPx ?? check.widthPx,
+    heightPx: fileSpec.heightPx ?? check.heightPx,
   }, { store });
-  state.mapNotice = saved.deduplicated
-    ? `Mapa reutilizado sem duplicar disco (SHA-256 ${saved.sha256.slice(0, 10)}…).`
-    : `Mapa salvo localmente (SHA-256 ${saved.sha256.slice(0, 10)}…).`;
+  state.mapNotice = mapNoticeFor(saved);
   return saved;
 }
 
