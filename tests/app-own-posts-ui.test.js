@@ -34,10 +34,11 @@ async function freshAccountWithPost() {
   return signed;
 }
 
-test("renderOwnPostsSection: traz botão de baixar e campo de arquivo JSON oculto", () => {
+test("renderOwnPostsSection: traz botão de baixar e campo de arquivo JSON focável pelo teclado", () => {
   const html = ui.renderOwnPostsSection();
   assert.match(html, /id="btn-own-posts-export"/);
-  assert.match(html, /id="own-posts-import"[^>]*accept="\.json,application\/json"[^>]*hidden/);
+  assert.match(html, /id="own-posts-import"[^>]*class="sr-only"[^>]*accept="\.json,application\/json"/);
+  assert.doesNotMatch(html, /id="own-posts-import"[^>]*hidden/);
 });
 
 test("bindOwnPostsSection: sem os elementos no DOM não quebra", () => {
