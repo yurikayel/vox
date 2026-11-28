@@ -5,6 +5,7 @@
 import { createDefaultCalendar, advanceTime } from "./vtt-calendar.js";
 import { applyInventoryMutation, applyCurrencyDelta } from "./vtt-inventory.js";
 import { applyLevelUp } from "./vtt-levelup.js";
+import { CHECK_OP_HANDLERS } from "./vtt-check-request.js";
 import { createNoteDoc } from "./vtt-schema.js";
 import { isSheetOwner } from "./vtt-sheet-auth.js";
 
@@ -108,6 +109,7 @@ export const CAMPAIGN_OP_HANDLERS = {
   LEVEL_UP_APPLY: applyLevelUpOp,
   NOTE_PIN: applyNotePin,
   NOTE_VISIBILITY: applyNoteVisibility,
+  ...CHECK_OP_HANDLERS,
 };
 
 /**
@@ -119,7 +121,7 @@ export const CAMPAIGN_OP_HANDLERS = {
  */
 export function isPlayerAuthorizedForCampaignOp(state, op, isGm) {
   if (isGm) return true;
-  const gmOnly = new Set(["CALENDAR_SET", "CALENDAR_ADVANCE", "NOTE_PIN", "NOTE_VISIBILITY"]);
+  const gmOnly = new Set(["CALENDAR_SET", "CALENDAR_ADVANCE", "NOTE_PIN", "NOTE_VISIBILITY", "CHECK_REQUEST", "CHECK_REVEAL"]);
   if (gmOnly.has(op.type)) return false;
   if (op.type === "INVENTORY_MUTATE" || op.type === "CURRENCY_DELTA" || op.type === "LEVEL_UP_APPLY") {
     const sheetId = op.payload?.sheetId || state.activeSheetId;

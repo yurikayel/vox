@@ -233,3 +233,10 @@ test("z) semente act-* com fórmula editada continua rolando", () => {
   assert.ok(ids("1d20+@for").includes("act-furtividade"));
   assert.equal(ids("1d20+@des").includes("act-furtividade"), false, "a semente intacta some");
 });
+
+test("aa) perícia sem ability não cobre ação com atributo desconhecido (undefined não casa com undefined)", () => {
+  const skillWith = (ability) => [{ id: "stealth", label: "Furtividade", bonus: 0, proficient: false, ability }];
+  const ids = (ability, roll) => actionIds(renderPlayTab([plain("x", "Furtividade", roll)], skillWith(ability)));
+  for (const ability of [undefined, null]) assert.ok(ids(ability, "1d20+@xyz").includes("x"), `ability ${ability}`);
+  assert.equal(ids("dex", "1d20+@des").includes("x"), false, "controle: com ability a fórmula do pacote some");
+});
