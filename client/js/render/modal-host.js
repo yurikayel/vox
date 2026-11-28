@@ -46,7 +46,7 @@ export function modalHost(id, doc = globalThis.document) {
     doc.body.appendChild(el);
   }
   if (!hostTraps.has(el)) {
-    const trap = createFocusTrap(el, { doc });
+    const trap = createFocusTrap(el, { doc, focusOnActivate: true });
     hostTraps.set(el, trap);
     watchModalContent(el, trap);
   }

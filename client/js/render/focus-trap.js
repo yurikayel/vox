@@ -57,14 +57,30 @@ function handleTrapTab(e, root, doc) {
 }
 
 /**
+ * Leva o foco para dentro do diálogo: o `[autofocus]` visível ou o primeiro focável; não mexe se o foco já está dentro.
+ * @param {ParentNode} root Contêiner do diálogo.
+ * @param {Document} doc Documento alvo.
+ * @returns {void}
+ */
+function focusInitial(root, doc) {
+  const current = doc?.activeElement;
+  if (current && root.contains?.(current)) return;
+  const items = focusableIn(root);
+  const wanted = root.querySelector?.("[autofocus]");
+  const target = wanted && items.includes(wanted) ? wanted : items[0];
+  target?.focus?.();
+}
+
+/**
  * Cria um preso de foco reutilizável para modais e folhas.
  * @param {ParentNode} root Contêiner onde o foco deve ficar.
  * @param {object} [options]
  * @param {Document} [options.doc=globalThis.document] Documento alvo.
  * @param {((e: KeyboardEvent) => void)|null} [options.onEscape=null] Ação opcional ao pressionar Escape.
+ * @param {boolean} [options.focusOnActivate=false] Ao ativar, leva o foco para dentro (o `[autofocus]`, ou o primeiro focável), a menos que ele já esteja dentro. Desligado por padrão: quem já posiciona o foco (entrada, gaveta, folha ⋯) não muda.
  * @returns {{ activate: (opts?: { returnFocus?: Element|null }) => void, deactivate: () => void, active: () => boolean }}
  */
-export function createFocusTrap(root, { doc = globalThis.document, onEscape = null } = {}) {
+export function createFocusTrap(root, { doc = globalThis.document, onEscape = null, focusOnActivate = false } = {}) {
   let restoreFocus = null;
   let onKeyDown = null;
 
@@ -96,6 +112,7 @@ export function createFocusTrap(root, { doc = globalThis.document, onEscape = nu
       handleTrapTab(e, root, doc);
     };
     doc?.addEventListener?.("keydown", onKeyDown, true);
+    if (focusOnActivate) focusInitial(root, doc);
   }
 
   return { activate, deactivate, active: () => Boolean(onKeyDown) };
