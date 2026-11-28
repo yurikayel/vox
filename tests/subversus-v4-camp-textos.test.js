@@ -36,7 +36,7 @@ test("o aviso do convite no Escudo do Mestre usa a frase aprovada, sem 'servidor
   assert.ok(aviso, "o aviso do convite aparece enquanto não há link");
   assert.match(aviso, /sincronizar a sala com outros aparelhos, sem servidor guardando a partida\./);
   assert.match(aviso, /O link já leva a chave da sala; mande só para quem vai jogar\./, "avisa que o link leva a chave, sem jargão de fragmento");
-  assert.doesNotMatch(aviso, /servidor central|pares P2P|mesma origem/i);
+  assert.doesNotMatch(aviso, /servidor central|pares P2P|mesma origem|fragmento|#k=/i);
 });
 
 test("nenhuma tela da Mesa afirma 'sem servidor central' (o nó de sinalização é um servidor)", () => {

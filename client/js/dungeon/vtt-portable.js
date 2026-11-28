@@ -189,6 +189,21 @@ export function decodeZipStore(zipBytes) {
 }
 
 /**
+ * Hashes dos blobs que a campanha usa: imagem de mapa de cada piso e avatar de cada token. Mesma regra de
+ * `collectReferencedBlobHashes` em `vtt-sync.js`, que fica duplicada aqui porque aquele arquivo é do CODEOWNERS.
+ * @param {object} campaign Documento `CampaignDoc`.
+ * @returns {Set<string>} Hashes SHA-256 referenciados.
+ */
+export function referencedBlobHashes(campaign) {
+  const hashes = new Set();
+  for (const scene of Object.values(campaign?.scenesById || {})) {
+    for (const f of scene.floors || []) if (f.mapBlobHash) hashes.add(f.mapBlobHash);
+    for (const t of scene.tokens || []) if (t.avatarBlobHash) hashes.add(t.avatarBlobHash);
+  }
+  return hashes;
+}
+
+/**
  * Empacota uma campanha completa em `.voxrpg.zip` (Vault Obsidian + `campaign.json` + `manifest.json` SHA-256).
  * @param {object} campaign Documento `CampaignDoc`.
  * @param {Map<string, Uint8Array>} [blobs] Blobs binários opcionais (`sha256 -> Uint8Array`).
