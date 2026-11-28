@@ -170,11 +170,16 @@ function createOwnership(isBusy) {
   };
 }
 
-/** Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada. */
+/**
+ * Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada.
+ * O `pointercancel` e a perda da captura (`lostpointercapture`: redesenho da tela, rolagem tomando o gesto) encerram o arrasto sem soltar o item.
+ */
 function bindOwnerEvents(container, own, pointer, finish) {
+  const abort = () => { pointer.cancel(); finish(); };
   listenAsOwner(container, own.get, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
   listenAsOwner(container, own.get, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
-  listenAsOwner(container, own.get, "pointercancel", () => { pointer.cancel(); finish(); });
+  listenAsOwner(container, own.get, "pointercancel", abort);
+  listenAsOwner(container, own.get, "lostpointercapture", abort);
 }
 
 function bindPointer(container, ctx) {
