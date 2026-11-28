@@ -5,6 +5,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
 import { renderSystemEditFields, renderSystemSelect } from "./screen-sheet-derived.js";
+import { fieldErrorAttrs, issueId } from "./field-issues.js";
 
 const LEVELUP_PRESETS = [
   { id: "d20_fantasy", label: "d20 Fantasia (+8 PV + CON, +1 slot)" },
@@ -75,10 +76,12 @@ function draftOr(draft, key, fallback) {
   return draft[key] ?? fallback;
 }
 
+const EDIT_ISSUE_PREFIX = "sheet-edit-issue";
+
 /** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. */
 function renderEditIssues(issues) {
   if (!issues.length) return "";
-  const items = issues.map((i) => `<li>${escapeHtml(i.message)}</li>`).join("");
+  const items = issues.map((i, n) => `<li id="${issueId(EDIT_ISSUE_PREFIX, n)}">${escapeHtml(i.message)}</li>`).join("");
   return `<div class="dungeon-alert-warn" role="alert"><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
 }
 
@@ -146,18 +149,18 @@ export function renderSheetEditPanel(sheet, edit = {}) {
   const ab = attrs.abilities || {};
   const abInputs = ABILITY_FIELDS.map((f) => {
     const val = escapeHtml(String(draftOr(draft, f.key, Number(ab[f.key]) || 10)));
-    return `<label class="dungeon-field-mini"><span>${f.label}</span><input class="dungeon-input" name="${f.key}" type="number" min="1" max="30" value="${val}" /></label>`;
+    return `<label class="dungeon-field-mini"><span>${f.label}</span><input class="dungeon-input" name="${f.key}" type="number" min="1" max="30" value="${val}"${fieldErrorAttrs(issues, f.key, EDIT_ISSUE_PREFIX)} /></label>`;
   }).join("");
   return `
     <details class="dungeon-audit" data-dungeon-details="sheet-edit"${issues.length ? " open" : ""}>
       <summary>Editar Dados da Ficha (Nome, Classe, CA e Atributos)</summary>
       ${renderEditIssues(issues)}
       <form class="dungeon-token-edit-form" data-dungeon="edit-sheet-form" novalidate>
-        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "name", sheet?.name || ""))}" /></label>
+        <label class="dungeon-field-mini dungeon-field-wide"><span>Nome</span><input class="dungeon-input" name="sheetName" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "name", sheet?.name || ""))}"${fieldErrorAttrs(issues, "sheetName", EDIT_ISSUE_PREFIX)} /></label>
         <label class="dungeon-field-mini dungeon-field-wide"><span>Classe / Título</span><input class="dungeon-input" name="sheetClass" type="text" maxlength="60" value="${escapeHtml(draftOr(draft, "class_name", sheet?.role_title || attrs.class_name || ""))}" /></label>
         ${renderSystemSelect(sheet, draft.system)}
         ${renderSystemEditFields(sheet, draft)}
-        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${escapeHtml(String(draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)))}" /></label>
+        <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${escapeHtml(String(draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)))}"${fieldErrorAttrs(issues, "armorClass", EDIT_ISSUE_PREFIX)} /></label>
         ${abInputs}
         <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
       </form>
