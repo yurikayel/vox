@@ -7,7 +7,7 @@
 > **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sustentada por participantes)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md)
 
-Complementa [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md) (T1 estratégico out/2026), [backlog-participacao-rede.md](../strategy/backlog-participacao-rede.md), [rede-sustentada-participantes.md](../strategy/rede-sustentada-participantes.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
+Complementa [estrategia-mantenedor-revisor-2026.md](../strategy/estrategia-mantenedor-revisor-2026.md) (T1 estratégico out/2026), [backlog-participacao-rede.md](../strategy/backlog-participacao-rede.md), [rede-sustentada-participantes.md](../strategy/rede-sustentada-participantes.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
 
 **Task Antigravity (retry):** `95a45b1a-be79-4653-9afb-5e965237a9e8`
 
