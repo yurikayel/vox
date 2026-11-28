@@ -76,6 +76,20 @@ export function setPreviewVisible(el, visible) {
 }
 
 /**
+ * Marca qual botão de uma barra de escolha está ligado: a classe `active` (visual) e `aria-pressed` (leitor de tela).
+ * @param {Iterable<HTMLElement>} buttons Botões da barra.
+ * @param {(btn: HTMLElement) => boolean} isOn Diz se o botão é o escolhido.
+ * @returns {void}
+ */
+export function markChoice(buttons, isOn) {
+  for (const b of buttons) {
+    const on = isOn(b);
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  }
+}
+
+/**
  * Formata tamanho em bytes para KB ou MB.
  * @param {number} bytes Quantidade de bytes.
  * @returns {string} Texto formatado com unidade.
@@ -194,9 +208,9 @@ export function setupImagePreviewBars() {
   setPreviewVisible(previewAudioWrap, false);
   setPreviewVisible(previewVideoWrap, false);
   if (filterBar) filterBar.style.display = "flex";
-  filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.toggle("active", b.dataset.filter === "normal"));
+  if (filterBar) markChoice(filterBar.querySelectorAll(".lofi-filter-btn"), (b) => b.dataset.filter === "normal");
   if (aspectBar) aspectBar.style.display = "flex";
-  aspectBar?.querySelectorAll(".composer-aspect-btn").forEach((b) => b.classList.toggle("active", b.dataset.aspect === "original"));
+  if (aspectBar) markChoice(aspectBar.querySelectorAll(".composer-aspect-btn"), (b) => b.dataset.aspect === "original");
   if (tagBar) tagBar.style.display = "flex";
   if (tagsChips) tagsChips.innerHTML = "";
   previewImg?.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");

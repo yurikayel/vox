@@ -24,12 +24,12 @@ export function renderComposerStrip(displayName = "") {
  */
 function renderComposerFilterBar() {
   return `
-    <div class="lofi-filter-bar" id="lofi-filter-bar">
+    <div class="lofi-filter-bar" id="lofi-filter-bar" role="group" aria-label="Estilo Lo-Fi">
       <span class="meta lofi-filter-label">Estilo Lo-Fi:</span>
-      <button type="button" class="lofi-filter-btn active" data-filter="normal">Padrão</button>
-      <button type="button" class="lofi-filter-btn" data-filter="xerox">📰 Xerox</button>
-      <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
-      <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
+      <button type="button" class="lofi-filter-btn active" aria-pressed="true" data-filter="normal">Padrão</button>
+      <button type="button" class="lofi-filter-btn" aria-pressed="false" data-filter="xerox">📰 Xerox</button>
+      <button type="button" class="lofi-filter-btn" aria-pressed="false" data-filter="vhs">📼 VHS 90s</button>
+      <button type="button" class="lofi-filter-btn" aria-pressed="false" data-filter="risograph">🎨 Risógrafo</button>
     </div>`;
 }
 
@@ -40,14 +40,14 @@ function renderComposerFilterBar() {
  */
 function renderComposerAspectBar() {
   return `
-    <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
+    <div class="composer-aspect-bar" id="composer-aspect-bar" role="group" aria-label="Proporção da imagem" style="display:none;">
       <span class="meta composer-aspect-label">Proporção:</span>
-      <button type="button" class="composer-aspect-btn active" data-aspect="original">Original (padrão)</button>
-      <button type="button" class="composer-aspect-btn" data-aspect="16:9">16:9</button>
-      <button type="button" class="composer-aspect-btn" data-aspect="9:16">9:16</button>
-      <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
-      <button type="button" class="composer-aspect-btn" data-aspect="3:4">3:4</button>
-      <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
+      <button type="button" class="composer-aspect-btn active" aria-pressed="true" data-aspect="original">Original (padrão)</button>
+      <button type="button" class="composer-aspect-btn" aria-pressed="false" data-aspect="16:9">16:9</button>
+      <button type="button" class="composer-aspect-btn" aria-pressed="false" data-aspect="9:16">9:16</button>
+      <button type="button" class="composer-aspect-btn" aria-pressed="false" data-aspect="4:3">4:3</button>
+      <button type="button" class="composer-aspect-btn" aria-pressed="false" data-aspect="3:4">3:4</button>
+      <button type="button" class="composer-aspect-btn" aria-pressed="false" data-aspect="1:1">1:1</button>
     </div>`;
 }
 

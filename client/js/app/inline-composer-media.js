@@ -15,6 +15,7 @@ import {
   setAttachmentMeta,
   updateComposerMediaPreview,
   syncInlineComposerUi,
+  markChoice,
 } from "./inline-composer-state.js";
 
 /**
@@ -134,8 +135,7 @@ export function bindFilterAndAspectBars(state) {
     const btn = e.target.closest(".lofi-filter-btn");
     if (!btn || !state.rawSourceFile || inlineComposerMedia.type !== "image") return;
     e.preventDefault();
-    filterBar.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
+    markChoice(filterBar.querySelectorAll(".lofi-filter-btn"), (b) => b === btn);
     state.activeLofiFilter = btn.dataset.filter || "normal";
     await renderLofiPreview(state);
   });
@@ -145,8 +145,7 @@ export function bindFilterAndAspectBars(state) {
     const btn = e.target.closest(".composer-aspect-btn");
     if (!btn || inlineComposerMedia.type !== "image") return;
     e.preventDefault();
-    aspectBar.querySelectorAll(".composer-aspect-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
+    markChoice(aspectBar.querySelectorAll(".composer-aspect-btn"), (b) => b === btn);
     setComposerAspectRatio(btn.dataset.aspect || "original");
     const previewImg = document.getElementById("inline-topic-preview");
     if (previewImg) {
