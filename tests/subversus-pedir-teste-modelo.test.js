@@ -202,3 +202,36 @@ test("construtor: com CD oculta a op sai sem dc; inválido vira null", () => {
   assert.equal("dc" in built.payload, false);
   assert.equal(buildCheckRequestOp(request({ targets: [] })), null);
 });
+
+const HOSTIL = `<img src=x onerror="alert(1)">`;
+const htmlOf = (state, view = state) => state.chronicle.map((e) => renderChronicleEntry(e, view)).join("");
+
+test("escape: rótulo do Mestre e nome de quem fala aparecem como texto na Crônica, nunca como HTML", () => {
+  const forged = op("ROLL_RECORDED", { speaker: HOSTIL, rollResult: { formula: "1d20", total: 17, visibility: "public", requestId: "req-1" } }, "vx_a");
+  const s = run([op("CHECK_REQUEST", request({ label: HOSTIL })), forged, op("CHECK_REVEAL", { requestId: "req-1" })]);
+  const html = htmlOf(s);
+  assert.equal(html.includes("<img"), false, "nenhuma tag do texto hostil chega ao HTML");
+  assert.match(html, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt; · CD 14/, "rótulo escapado na linha de Resultado");
+  assert.match(html, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt; ✓ 17/, "nome de quem fala escapado nos ✓/✗");
+});
+
+test("fiação: a tela real passa o estado de sessão e o texto sai de `state.campaignDoc`", () => {
+  const campaign = revealed([roll("vx_a", 17, "public")]);
+  const session = { campaignDoc: campaign, viewerRole: "gm" };
+  assert.equal(session.checkRequestsById, undefined, "o estado de sessão não carrega os pedidos");
+  assert.match(htmlOf(campaign, session), /Percepção · CD 14: Lia ✓ 17/);
+});
+
+test("autoria: com fairplay.rollId o autor também é quem enviou a op; sem pedido nem prova vale o rótulo do payload", () => {
+  const withProof = op("ROLL_RECORDED", { author: "vx_b", speaker: "Lia", rollResult: { formula: "1d20", total: 12, visibility: "public", fairplay: { rollId: "fp-roll-1" } } }, "vx_a");
+  const plain = op("ROLL_RECORDED", { author: "vx_b", speaker: "Lia", rollResult: { formula: "1d20", total: 9, visibility: "public" } }, "vx_a");
+  const s = run([withProof, plain]);
+  assert.equal(s.rolls[0].author, "vx_a", "com a prova de justiça o autor é quem enviou");
+  assert.equal(s.rolls[1].author, "vx_b", "sem pedido nem prova, vale o autor do payload (rótulo)");
+});
+
+test("normalização: alvo com mais de 80 caracteres não entra", () => {
+  assert.deepEqual(normalizeCheckRequest(request({ targets: ["vx_a", "y".repeat(81)] })).targets, ["vx_a"]);
+  assert.equal(normalizeCheckRequest(request({ targets: ["y".repeat(81)] })), null);
+  assert.equal(normalizeCheckRequest(request({ targets: ["y".repeat(80)] })).targets[0].length, 80);
+});

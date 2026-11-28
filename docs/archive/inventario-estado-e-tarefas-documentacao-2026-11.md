@@ -61,7 +61,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 | [backlog-participacao-rede.md](../strategy/backlog-participacao-rede.md) | IDs V-P | **fresh** (V-P09 exec pendente) |
 | [infra-participativa-blindagem-crescimento.md](../strategy/infra-participativa-blindagem-crescimento.md) | 4 camadas + regulatório | **fresh** (25/out) |
 | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) | Flywheel + mod E1–E5 | **fresh** |
-| [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md) | T1 estratégico 12m | **fresh** |
+| [estrategia-mantenedor-revisor-2026.md](../strategy/estrategia-mantenedor-revisor-2026.md) | T1 estratégico 12m | **fresh** |
 | [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) | T1–T10 out/2026 (doc) | **fresh** |
 | [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) | T1–T10 pós-v82 v1.1 | **fresh** (baseline SHA `898509c`; produto já `99180f9`) |
 | [brainstorm-tracao-escalabilidade-incubacao.md](../brainstorms/brainstorm-tracao-escalabilidade-incubacao.md) | Incubação FOSS | **brainstorm** |
@@ -103,7 +103,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 Ver também [docs/README.md](../README.md) (DOC-03). Trilhas:
 
 1. Participação: **rede-sustentada** → **backlog V-P** → **infra-participativa** → **auto-escala**  
-2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **antigravity-estrategia** · plano master **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md)  
+2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **estratégia do revisor** · plano master **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md)  
 3. Ops steward: **steward-relay-kit** → **seed 15min** → **ops-shell-mirrors**  
 4. Dev: **DEV.md** + **README release line** + **`sw.js` CACHE_NAME**
 
