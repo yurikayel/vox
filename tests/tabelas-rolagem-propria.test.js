@@ -10,7 +10,9 @@ import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js
 import { renderSavesPanel } from "../client/js/dungeon/screen-party-panels.js";
 import * as render from "../client/js/render.js";
 import { renderProposalVotesList } from "../client/js/render/proposal.js";
-import { scrollableTableHtml } from "../client/js/shared/table-scroll.js";
+
+/** Módulo novo do conserto: na base ele não existe, e a ausência tem de falhar por asserção (não por import). */
+const tableScroll = await import("../client/js/shared/table-scroll.js").catch(() => null);
 
 const WRAP = /<div class="sv-table-scroll" role="region" tabindex="0" aria-label="[^"]+">\s*<table/g;
 
@@ -50,7 +52,8 @@ test("transparência de votos (com dados): a tabela está dentro de região rol�
 });
 
 test("o nome da região é escapado e as regiões do status têm nomes distintos", () => {
-  const html = scrollableTableHtml('A "b" <i>', "<table></table>");
+  assert.ok(tableScroll, "client/js/shared/table-scroll.js ausente");
+  const html = tableScroll.scrollableTableHtml('A "b" <i>', "<table></table>");
   assert.ok(html.includes('aria-label="A &quot;b&quot; &lt;i&gt;"'), html);
   const names = [...statusHtml().matchAll(/class="sv-table-scroll"[^>]*aria-label="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(names.length >= 2);
