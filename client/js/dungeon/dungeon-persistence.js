@@ -380,17 +380,17 @@ export function hasStoredDungeonPrefs() {
 }
 
 /**
- * Lê preferências locais da Mesa (dados 3D e papel visual) do `localStorage`.
- * @returns {{ dice3d: boolean, viewerRole: "gm"|"player" }}
+ * Lê preferências locais da Mesa (dados 3D, papel visual e roteiro da primeira mesa dispensado) do `localStorage`.
+ * @returns {{ dice3d: boolean, viewerRole: "gm"|"player", firstTableDismissed: boolean }}
  */
 export function loadDungeonPrefs() {
   try {
     const raw = globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
     const role = parsed.viewerRole === "player" ? "player" : "gm";
-    return { dice3d: parsed.dice3d !== false, viewerRole: role };
+    return { dice3d: parsed.dice3d !== false, viewerRole: role, firstTableDismissed: parsed.firstTableDismissed === true };
   } catch {
-    return { dice3d: true, viewerRole: "gm" };
+    return { dice3d: true, viewerRole: "gm", firstTableDismissed: false };
   }
 }
 

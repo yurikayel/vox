@@ -349,7 +349,7 @@ function hydrateViewPersistence(container, viewOpts) {
 function applyDungeonWirePrefs(sessionState, viewOpts) {
   if (sessionState._dungeonPrefsApplied || sessionState.joinMode === "p2p_player") return;
   const prefs = loadDungeonPrefs();
-  sessionState.dice3dEnabled = prefs.dice3d;
+  Object.assign(sessionState, { dice3dEnabled: prefs.dice3d, dungeonPrefs: { firstTableDismissed: prefs.firstTableDismissed } });
   const screen = viewOpts.screen || "acampamento";
   const stored = hasStoredDungeonPrefs();
   sessionState.viewerRole = !stored && screen === "mesa"
