@@ -53,7 +53,7 @@ test("waitForHealth devolve null quando nada sobe dentro do prazo", async () => 
 
 test("resposta que não é status ok (503) não conta como pronta", async () => {
   const port = await freePort();
-  const srv = http.createServer((_req, res) => { res.statusCode = 503; res.end("{}"); });
+  const srv = http.createServer((_req, res) => { res.statusCode = 503; res.end('{"status":"ok"}'); });
   await new Promise((resolve) => srv.listen(port, "127.0.0.1", resolve));
   try {
     assert.equal(await waitForHealth(port, { timeoutMs: 300 }), null);
