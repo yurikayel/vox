@@ -28,6 +28,9 @@
   color: var(--sa-on-surface);
 }
 
+/* Com a coluna "Conferida" a tabela passa de 254 para 337 px: ela rola dentro do painel, a página não rola de lado. */
+.sv-rolls-panels { overflow-x: auto; }
+
 .sv-rolls-panel { display: none; }
 
 #dm-rolls-todas:checked ~ .sv-rolls-panels .is-todas,
