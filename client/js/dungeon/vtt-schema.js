@@ -9,19 +9,68 @@ import { createInitiativeState } from "./vtt-tactics-schema.js";
 import { createDefaultCalendar } from "./vtt-calendar.js";
 import { normalizeFairplayState } from "./vtt-fairplay-log.js";
 import { normalizeFavorites } from "./hud-favorites.js";
+import { ABILITY_ALIASES } from "./dice-engine.js";
+import { getSystemPack } from "./system-pack.js";
 
 /** Versão canônica do schema de campanha da Mesa Soberana. */
 export const VTT_SCHEMA_VERSION = "1.0.0";
 
 const VTT_ID_RE = /^[a-z0-9][a-z0-9_-]{1,63}$/i;
 
-/** Ações clicáveis padrão anexadas a uma ficha inicial d20. */
-export const DEFAULT_CLICKABLE_ACTIONS = Object.freeze([
-  { id: "act-ataque", label: "Espada Longa", roll: "1d20+@for+@prof", damage: "1d8+@for", tag: "ataque" },
-  { id: "act-investigacao", label: "Investigação", roll: "1d20+@int+@prof", damage: "", tag: "pericia" },
-  { id: "act-percepcao", label: "Percepção", roll: "1d20+@sab+@prof", damage: "", tag: "pericia" },
-  { id: "act-furtividade", label: "Furtividade", roll: "1d20+@des", damage: "", tag: "pericia" },
-]);
+/** Ações clicáveis semeadas numa ficha 5e (as sementes de cada sistema moram em `seedActions` do pacote). */
+export const DEFAULT_CLICKABLE_ACTIONS = getSystemPack("5e").seedActions;
+
+/** Pacote da ficha; sem `system` ou com um id desconhecido vale a 5e, como na migração da ficha legada. */
+function packOf(systemId) {
+  return getSystemPack(systemId) || getSystemPack("5e");
+}
+
+/** `1d20+@atributo` com `+@prof` opcional, e nada mais (sem outro dado, sem bônus fixo, sem subtração). */
+const PACK_SKILL_FORMULA = /^1d20\+@([a-z_]+)(\+@prof)?$/;
+
+/**
+ * Some a ação de perícia que o botão do pacote já faz: o nome é o de uma perícia do pacote e a fórmula é exatamente
+ * `1d20+@atributo da perícia` (com `+@prof` opcional), como a semente da ficha e as importadas. Qualquer outra fórmula
+ * (outro atributo, d20 puro, bônus fixo, outro dado) segue rolando pelo `roll-action`.
+ * @param {object} act Ação clicável.
+ * @param {object[]} skills Perícias do pacote (`ability` é a chave do atributo).
+ * @returns {boolean} `true` se o botão do pacote já a cobre.
+ */
+export function isCoveredSeed(act, skills) {
+  const skill = act?.tag === "pericia" ? skills.find((s) => s.label === act.label) : null;
+  const m = skill ? PACK_SKILL_FORMULA.exec(String(act.roll || "").replace(/\s+/g, "").toLowerCase()) : null;
+  return Boolean(m) && skill.ability !== undefined && ABILITY_ALIASES[m[1]] === skill.ability;
+}
+
+/** A ação é a semente inteira: `id`, `label`, `roll`, `damage` e `tag`, com os padrões que a ficha grava (dano vazio, tag "acao"). */
+function isSeed(act, seed) {
+  return act?.id === seed.id && act.label === seed.label && act.roll === seed.roll
+    && String(act.damage || "") === String(seed.damage || "") && String(act.tag || "acao") === String(seed.tag || "acao");
+}
+
+/**
+ * Semente da 5e, intacta, numa ficha cujo pacote não a semeia (a ficha foi criada antes de cada sistema ter as suas):
+ * a fórmula `@atributo` dela é da regra errada. Ação editada (em qualquer campo: rótulo, fórmula, dano ou etiqueta) ou
+ * cadastrada à mão nunca é semente alheia.
+ * @param {object} act Ação clicável.
+ * @param {string} [systemId] Id do pacote da ficha.
+ * @returns {boolean} `true` se é uma semente da 5e que o pacote da ficha não tem.
+ */
+export function isForeignSeed(act, systemId) {
+  const own = packOf(systemId).seedActions || [];
+  return DEFAULT_CLICKABLE_ACTIONS.some((s) => isSeed(act, s)) && !own.some((s) => isSeed(act, s));
+}
+
+/**
+ * Ações que não devem aparecer como atalho: a semente que o botão do pacote já cobre e a semente de outro sistema.
+ * Só filtra a exibição; nada é apagado da ficha.
+ * @param {object} act Ação clicável.
+ * @param {string} [systemId] Id do pacote da ficha.
+ * @returns {boolean} `true` para esconder.
+ */
+export function isHiddenSeed(act, systemId) {
+  return isForeignSeed(act, systemId) || isCoveredSeed(act, packOf(systemId).skills || []);
+}
 
 /**
  * Verifica se um identificador da Mesa Soberana tem formato seguro (sem path traversal ou caracteres de controle).
@@ -72,7 +121,7 @@ function normalizeAction(raw, idx) {
 export function ensureSheetMeta(sheet = {}) {
   const base = sheet?.schema_version ? { ...sheet } : createCharacterSheetDoc(sheet);
   const meta = sheet?.sheet_meta || {};
-  const rawActions = Array.isArray(meta.clickable_actions) ? meta.clickable_actions : DEFAULT_CLICKABLE_ACTIONS;
+  const rawActions = Array.isArray(meta.clickable_actions) ? meta.clickable_actions : packOf(base.system?.id).seedActions;
   const actions = rawActions.map(normalizeAction).filter(Boolean);
   const skills = Array.isArray(meta.skill_refs) ? meta.skill_refs.map((s) => String(s).trim()).filter(Boolean) : [];
   return {
@@ -91,7 +140,7 @@ export function ensureSheetMeta(sheet = {}) {
 
 /**
  * Cria uma entrada padronizada da crônica da mesa.
- * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
+ * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `checkRequestId`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
  * @returns {object} Entrada normalizada da crônica.
  */
 export function createChronicleEntry(opts = {}) {
@@ -105,8 +154,14 @@ export function createChronicleEntry(opts = {}) {
     visibility,
     author: String(opts.author || ""),
     ts: Number.isFinite(Number(opts.ts)) ? Number(opts.ts) : Date.now(),
+    ...optionalId("checkRequestId", opts.checkRequestId),
     ...fairplayLink(opts),
   };
+}
+
+/** Campo de vínculo opcional: só entra se o valor for um id válido (o resto é descartado). */
+function optionalId(key, value) {
+  return VTT_ID_RE.test(String(value ?? "")) ? { [key]: String(value) } : {};
 }
 
 /** Vínculo com a rolagem Fairplay (só o id e o valor anunciado, ou a marca booleana de falta que o reducer só dá ao Mestre; nunca um "verificado" de outro par). */
@@ -147,6 +202,7 @@ export function createDiceRollEntry(opts = {}) {
     fumbles: nonNegInt(r.fumbles),
     visibility: ["public", "gm", "blind"].includes(r.visibility) ? r.visibility : "public",
     digestHex: String(r.digestHex || ""),
+    ...optionalId("requestId", r.requestId),
     ts: finiteOr(opts.ts, Date.now()),
   };
 }

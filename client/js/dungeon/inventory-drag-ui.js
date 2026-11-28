@@ -11,6 +11,7 @@ import { cellFromPoint, createPointerDrag, dropVerdict, keyboardStep } from "./i
 
 const STYLE_ID = "sv-inventario-arrastar-stylesheet";
 const CELL = "[data-inv-cell]";
+const ROTATE = "[data-inv-rotate]";
 
 /**
  * Garante que a folha do arrastar está linkada (injeção sob demanda, fora do precache civil).
@@ -31,9 +32,15 @@ function showNotice(container, text) {
   if (out) out.textContent = text;
 }
 
+function setRotateVisible(container, visible) {
+  const button = container.querySelector(ROTATE);
+  if (button) button.hidden = !visible;
+}
+
 function clearGhost(container) {
   container.querySelectorAll(".sv-inv-ghost").forEach((g) => g.remove());
   container.querySelectorAll(CELL).forEach((c) => c.classList.remove("is-held"));
+  setRotateVisible(container, false);
 }
 
 function paintGhost(grid, spot, size, ok) {
@@ -106,29 +113,74 @@ function dropHeld(container, ctx, held, spot) {
   else if (verdict) showNotice(container, verdict.message);
 }
 
+/** Girar pelo botão (só no arrasto por ponteiro; no teclado vale a tecla R) o item que o dedo segura: item quadrado não muda de pegada; devolve `true` se há arrasto em curso. */
+function pointerTurner(getHeld, isActive, repaint) {
+  return () => {
+    const held = getHeld();
+    if (!isActive() || !held) return false;
+    const size = sizeOf(held.cell, false);
+    if (size.w === size.h) return true;
+    held.rot = !held.rot;
+    if (held.spot) repaint({ ...held.spot, rot: held.rot });
+    return true;
+  };
+}
+
+/** Ouve `type` no contêiner e só repassa o evento do ponteiro que segura o item (`getOwner()`); os demais dedos são ignorados. */
+function listenAsOwner(container, getOwner, type, fn) {
+  container.addEventListener(type, (ev) => { if (ev.pointerId === getOwner()) fn(ev); });
+}
+
+/**
+ * Dono do arrasto por ponteiro: o `pointerId` do dedo que pegou o item. Enquanto há arrasto em curso (`isBusy()`), um
+ * `pointerdown` de outro ponteiro, em qualquer célula, não toma o arrasto; sem arrasto, o próximo dedo pega o item.
+ * @param {() => boolean} isBusy Há arrasto começado.
+ * @returns {{claim: (ev: {pointerId: number}) => boolean, get: () => number|null}} `claim` devolve `false` quando o ponteiro deve ser ignorado.
+ */
+function createOwnership(isBusy) {
+  let owner = null;
+  return {
+    claim(ev) {
+      if (isBusy() && ev.pointerId !== owner) return false;
+      owner = ev.pointerId;
+      return true;
+    },
+    get: () => owner,
+  };
+}
+
+/** Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada. */
+function bindOwnerEvents(container, own, pointer, finish) {
+  listenAsOwner(container, own.get, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, own.get, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, own.get, "pointercancel", () => { pointer.cancel(); finish(); });
+}
+
 function bindPointer(container, ctx) {
   let held = null;
+  const own = createOwnership(() => pointer.active);
   const spotAt = (p) => { const c = cellFromPoint(held.grid.getBoundingClientRect(), p, held.grab); return c && { ...c, rot: held.rot }; };
   const finish = () => { clearGhost(container); held = null; };
+  const paint = (spot) => paintGhost(held.grid, spot, sizeOf(held.cell, held.rot), dropVerdict(itemsOf(ctx), held.id, spot).ok);
   const pointer = createPointerDrag({
-    onStart: () => held.cell.classList.add("is-held"),
+    onStart: () => { held.cell.classList.add("is-held"); setRotateVisible(container, true); },
     onMove: (p) => {
-      const spot = spotAt(p);
-      if (spot) paintGhost(held.grid, spot, sizeOf(held.cell, held.rot), dropVerdict(itemsOf(ctx), held.id, spot).ok);
+      held.spot = spotAt(p);
+      if (held.spot) paint(held.spot);
     },
     onDrop: (p) => { const done = held; const spot = spotAt(p); finish(); dropHeld(container, ctx, done, spot); },
   });
+  ctx.turners.push(pointerTurner(() => held, () => pointer.active, (spot) => paint(spot)));
   container.addEventListener("pointerdown", (ev) => {
     const cell = ev.target?.closest?.(CELL);
     ctx.swallowClick = false;
-    if (!cell || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+    if (!cell || (ev.pointerType === "mouse" && ev.button !== 0) || !own.claim(ev)) return;
+    clearGhost(container);
     held = grabHeld(cell, ev);
     cell.setPointerCapture?.(ev.pointerId);
     pointer.down({ id: held.id, pointerType: ev.pointerType === "touch" ? "touch" : "mouse", x: ev.clientX, y: ev.clientY });
   });
-  container.addEventListener("pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
-  container.addEventListener("pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
-  container.addEventListener("pointercancel", () => { pointer.cancel(); finish(); });
+  bindOwnerEvents(container, own, pointer, finish);
   container.addEventListener("touchmove", (ev) => { if (pointer.active) ev.preventDefault(); }, { passive: false });
   container.addEventListener("contextmenu", (ev) => { if (pointer.active) ev.preventDefault(); });
 }
@@ -143,7 +195,11 @@ function bindPointer(container, ctx) {
 export function bindInventoryDrag(container, opts, settle) {
   const doc = container.ownerDocument || (typeof document !== "undefined" ? document : null);
   if (doc) ensureInventoryDragStyles(doc);
-  const ctx = { opts, settle, swallowClick: false, session: () => opts.state || getDungeonSession() };
+  const ctx = { opts, settle, swallowClick: false, turners: [], session: () => opts.state || getDungeonSession() };
+  container.addEventListener("click", (ev) => {
+    if (!ev.target?.closest?.(ROTATE)) return;
+    ctx.turners.some((turn) => turn());
+  });
   container.addEventListener("click", (ev) => {
     if (!ctx.swallowClick) return;
     ctx.swallowClick = false;

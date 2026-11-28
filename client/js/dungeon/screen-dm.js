@@ -4,6 +4,7 @@
 import { escapeHtml } from "../shared/html.js";
 import { buildFullInviteUrl } from "./dungeon-dom-focus.js";
 import { inspectPeerPromptForRole } from "./dungeon-state.js";
+import { renderDmRollPanel } from "./dm-roll-panel.js";
 import { dungeonIcon, renderShamirSealSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
 import { renderSavesPanel } from "./screen-party-panels.js";
@@ -103,7 +104,7 @@ function renderPromptInspector(state) {
 
 function renderInviteBox(fullUrl) {
   if (!fullUrl) {
-    return `<p class="dungeon-muted">Gere um link de convite com a chave da sala no fragmento <code>#k=</code> para sincronizar pares P2P na mesma origem (sem servidor central).</p>`;
+    return `<p class="dungeon-muted">Gere um link de convite para sincronizar a sala com outros aparelhos, sem servidor guardando a partida. O link já leva a chave da sala; mande só para quem vai jogar.</p>`;
   }
   return `<div class="dungeon-invite-row">
     <pre class="dungeon-prompt-preview">${escapeHtml(fullUrl)}</pre>
@@ -166,6 +167,7 @@ export function renderDmScreen(state) {
     ${renderP2pInvitePanel(state)}
     ${renderCompactWorldClock(state, true)}
     ${renderSavesPanel(state)}
+    ${renderDmRollPanel(state)}
     ${renderGmNotesPanel(state)}
     ${(state.notes || []).length ? renderNotesPanel(state) : ""}
     <div class="dungeon-two-col">
