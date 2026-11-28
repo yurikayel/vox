@@ -19,13 +19,18 @@ export function failureOutcome(error) {
 }
 
 /**
- * Devolve a primeira linha da mensagem do erro, limitada a 200 caracteres.
+ * Devolve a primeira linha da mensagem do erro, limitada a 200 caracteres. Um valor lançado sem `toString` (objeto sem
+ * protótipo, `Symbol.toPrimitive` que lança) faria `String()` estourar e derrubaria o reporter inteiro: vira um texto fixo.
  * @param {Error|unknown} error Erro do teste.
  * @returns {string}
  */
 function firstLine(error) {
-  const cause = error?.cause ?? error;
-  return String(cause?.message ?? cause ?? "").split("\n")[0].slice(0, 200);
+  try {
+    const cause = error?.cause ?? error;
+    return String(cause?.message ?? cause ?? "").split("\n")[0].slice(0, 200);
+  } catch {
+    return "(mensagem ilegível)";
+  }
 }
 
 /**
