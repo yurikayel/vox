@@ -6,7 +6,8 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getSystemPack } from "../client/js/dungeon/system-pack.js";
-import { createCampaign, ensureSheetMeta } from "../client/js/dungeon/vtt-schema.js";
+import { reduceCampaign } from "../client/js/dungeon/vtt-reducer.js";
+import { createCampaign, createVttOp, ensureSheetMeta } from "../client/js/dungeon/vtt-schema.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 
 const salva = (clickable_actions, system = "5e") => ({ system: { id: system, version: 1 }, sheet_meta: { clickable_actions } });
@@ -22,6 +23,39 @@ test("ação sem rolagem carrega com 1d20; tag e dano nulos valem o padrão", ()
   assert.equal(a.roll, "1d20");
   assert.equal(a.tag, "acao");
   assert.equal(a.damage, "");
+});
+
+test("tag só com espaços (ou vazia) carrega como acao, não como vazia", () => {
+  for (const tag of ["   ", "", "\t\n", "   "]) {
+    const [a] = carregadas(salva([{ id: "act-gesto", label: "Gesto", tag }]));
+    assert.equal(a.tag, "acao", JSON.stringify(tag));
+  }
+});
+
+test("tag com espaços nas pontas perde só os espaços e respeita o limite de 24 letras", () => {
+  const [a] = carregadas(salva([{ id: "act-gesto", label: "Gesto", tag: `  ${"x".repeat(30)}  ` }]));
+  assert.equal(a.tag, "x".repeat(24));
+});
+
+/** Cria a ação pelo reducer (`SHEET_ACTION_UPSERT`) e devolve a ação gravada na ficha ativa. */
+function criadaPeloReducer(action) {
+  const GM = "vx_gm";
+  const c0 = createCampaign({ id: "camp-tag", name: "Tag", gmRouteId: GM });
+  const op = createVttOp({ type: "SHEET_ACTION_UPSERT", actor: GM, lamport: 1, payload: { action } });
+  const c1 = reduceCampaign(c0, op);
+  return c1.sheetsById[c1.activeSheetId].sheet_meta.clickable_actions.find((a) => a.label === action.label);
+}
+
+test("reducer: tag só com espaços (ou vazia) vira acao, como ao carregar", () => {
+  for (const tag of ["   ", "", "\t\n", "   "]) {
+    assert.equal(criadaPeloReducer({ label: "Gesto", tag }).tag, "acao", JSON.stringify(tag));
+  }
+});
+
+test("reducer: tag com espaços nas pontas perde só os espaços e respeita as 24 letras; sem tag vale acao", () => {
+  assert.equal(criadaPeloReducer({ label: "Gesto", tag: `  ${"x".repeat(30)}  ` }).tag, "x".repeat(24));
+  assert.equal(criadaPeloReducer({ label: "Gesto" }).tag, "acao");
+  assert.equal(criadaPeloReducer({ label: "Gesto", tag: " ataque " }).tag, "ataque");
 });
 
 test("tag e dano que existem continuam como estavam", () => {
