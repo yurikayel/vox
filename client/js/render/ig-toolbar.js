@@ -101,11 +101,11 @@ export function renderIgToolbar(t, authorDisplay) {
 
   return `<div class="post-ig-toolbar" role="toolbar" aria-label="Ações da publicação">
     <div class="post-ig-toolbar-left">
-      <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${Number(t.likesCount) || 0}" aria-label="Gostei${likes > 0 ? `, ${likes}` : ""}">${iconHeart(liked)}${likeN}</button>
+      <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${Number(t.likesCount) || 0}" aria-label="Gostei${likes > 0 ? `, ${likes}` : ""}" aria-pressed="${liked}">${iconHeart(liked)}${likeN}</button>
       ${commentBtn(t)}
       ${renderRepostBtn(t, { size: 16 })}
       ${renderIgShareBtn(t, authorDisplay)}
     </div>
-    <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">${iconBookmark(saved)}</button>
+    <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post" aria-pressed="${saved}">${iconBookmark(saved)}</button>
   </div>`;
 }

@@ -54,6 +54,17 @@ function handleCommentReplyClick(btn) {
 }
 
 /**
+ * Marca o botão de alternância como ligado ou desligado: `aria-checked` no item de menu, `aria-pressed` nos demais.
+ *
+ * @param {HTMLElement} btn
+ * @param {boolean} on
+ */
+function setToggleState(btn, on) {
+  const attr = btn.getAttribute("role") === "menuitemcheckbox" ? "aria-checked" : "aria-pressed";
+  btn.setAttribute(attr, on ? "true" : "false");
+}
+
+/**
  * Alterna a curtida do post e atualiza o botão.
  *
  * @param {HTMLElement} btn
@@ -63,6 +74,7 @@ function handleLikeClick(btn) {
   const baseCount = btn.dataset.count || 0;
   const res = social.toggleLike(postId, baseCount);
   btn.classList.toggle("active", res.liked);
+  setToggleState(btn, res.liked);
   const icon = btn.querySelector(".icon-heart");
   if (icon) icon.setAttribute("fill", res.liked ? "currentColor" : "none");
   const countLabel = btn.querySelector(".count-likes");
@@ -79,6 +91,7 @@ function handleStarClick(btn) {
   const baseCount = btn.dataset.count || 0;
   const res = social.toggleStar(postId, baseCount);
   btn.classList.toggle("active", res.starred);
+  setToggleState(btn, res.starred);
   const icon = btn.querySelector(".icon-star");
   if (icon) icon.setAttribute("fill", res.starred ? "currentColor" : "none");
   const countLabel = btn.querySelector(".count-stars");
@@ -95,6 +108,7 @@ function handleSaveClick(btn) {
   const postId = btn.dataset.id;
   const saved = social.toggleSave(postId);
   btn.classList.toggle("active", saved);
+  setToggleState(btn, saved);
   const icon = btn.querySelector(".icon-bookmark");
   if (icon) icon.setAttribute("fill", saved ? "currentColor" : "none");
   share.showToast(saved ? "Post salvo nos seus favoritos!" : "Post removido dos favoritos.");

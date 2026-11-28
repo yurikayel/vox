@@ -79,7 +79,7 @@ export function renderPostToolbar(t, author, authorDisplay, authorHandle) {
       ${renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay)}
       <div class="toolbar-secondary">
         ${renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseStars, starred, stars })}
-        <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
+        <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post" aria-pressed="${saved}">
           <svg class="action-icon icon-bookmark" width="16" height="16" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
         </button>
       </div>
@@ -134,7 +134,7 @@ function renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseSta
     <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
     <div class="toolbar-overflow-menu" role="menu">
       ${renderZapToolbarBtn(t, author, authorDisplay)}
-      <button type="button" class="action-btn btn-star ${starred ? " active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitem" aria-label="Dar estrela ao post">
+      <button type="button" class="action-btn btn-star ${starred ? " active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitemcheckbox" aria-checked="${starred}" aria-label="Dar estrela ao post">
         <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
         <span class="toolbar-overflow-label">Estrela</span>
@@ -188,7 +188,7 @@ function renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay) {
 
   return `
     <div class="toolbar-primary">
-      <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
+      <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post" aria-pressed="${liked}">
         <svg class="action-icon icon-heart" width="16" height="16" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
         <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
       </button>
