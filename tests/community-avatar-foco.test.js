@@ -52,7 +52,7 @@ describe("link do avatar do cartão de comunidade (só imagem, sem texto)", () =
     assert.equal(winner(AVATAR, ["mask", "-webkit-mask", "mask-image"]), null, "sem máscara no link (ela fica no avatar de dentro)");
     assert.doesNotMatch(winner(AVATAR, ["outline-width"], ["focus-visible"]) ?? "", /^\s*0/);
   });
-  it("o avatar de dentro segue com a máscara de squircle (o visual não muda)", () => {
+  it("o avatar de dentro segue com a máscara de squircle", () => {
     const inner = `${AVATAR} > div.community-avatar-box.community-avatar-md.agora-community-avatar`;
     assert.ok(winner(inner, ["mask", "-webkit-mask", "mask-image"]), "o avatar interno tem a máscara");
   });
