@@ -198,8 +198,8 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
     ? `<span class="dungeon-badge-ok">Ativa neste aparelho</span>`
     : `<span class="dungeon-code-tag">Salva localmente</span>`;
   const deleteControl = isConfirming
-    ? `<button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="confirm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}">Confirmar exclusão</button><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="cancel-delete-campaign">Cancelar</button>`
-    : `<button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="arm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}">Excluir</button>`;
+    ? `<button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="confirm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}" aria-label="Confirmar exclusão de ${escapeHtml(camp.name)}">Confirmar exclusão</button><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="cancel-delete-campaign">Cancelar</button>`
+    : `<button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="arm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}" aria-label="Excluir ${escapeHtml(camp.name)}">Excluir</button>`;
   return `
     <article class="dungeon-table-card${isActive ? " is-featured" : ""}">
       <div class="dungeon-table-meta">${badge}<span class="dungeon-code-tag">${escapeHtml(camp.system || "d20_fantasy")}</span></div>

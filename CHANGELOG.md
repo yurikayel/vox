@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Acessibilidade (Subversus): os botões repetidos numa lista dizem a que item se referem no nome acessível ("Excluir Vila Nova", "Remover Espada longa", "Revelar Goblin", "Adicionar ao mapa: Lyra"); o texto visível continua no começo do nome.
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
 - Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
 

@@ -16,8 +16,8 @@ function renderSheetRow(sheet, onMap) {
   const name = escapeHtml(sheetName(sheet));
   const done = onMap.has(sheet.character_id);
   const button = done
-    ? `<button type="button" class="dungeon-chip-btn" disabled>No mapa</button>`
-    : `<button type="button" class="dungeon-chip-btn" data-dungeon="tray-add" data-tray-kind="sheet" data-sheet-id="${id}" aria-label="Adicionar ${name} ao mapa">Adicionar ao mapa</button>`;
+    ? `<button type="button" class="dungeon-chip-btn" disabled aria-label="No mapa: ${name}">No mapa</button>`
+    : `<button type="button" class="dungeon-chip-btn" data-dungeon="tray-add" data-tray-kind="sheet" data-sheet-id="${id}" aria-label="Adicionar ao mapa: ${name}">Adicionar ao mapa</button>`;
   return `<li class="dungeon-token-tray-row"><span>${name}</span>${button}</li>`;
 }
 
@@ -26,7 +26,7 @@ function renderSimpleRow() {
       <label for="dungeon-tray-name">Token simples</label>
       <input id="dungeon-tray-name" class="dungeon-input" type="text" maxlength="48" placeholder="Nome (ex.: Goblin)" autocomplete="off" />
       <label class="dungeon-token-tray-check"><input id="dungeon-tray-hidden" type="checkbox" /> Oculto até revelar</label>
-      <button type="button" class="dungeon-chip-btn" data-dungeon="tray-add" data-tray-kind="simple">Adicionar ao mapa</button>
+      <button type="button" class="dungeon-chip-btn" data-dungeon="tray-add" data-tray-kind="simple" aria-label="Adicionar ao mapa: token simples">Adicionar ao mapa</button>
     </li>`;
 }
 

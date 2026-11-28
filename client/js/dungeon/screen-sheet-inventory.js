@@ -60,7 +60,7 @@ function renderItemRow(it, favorites = []) {
       <div class="dungeon-card-actions">
         <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}">${it.equipped ? "Desequipar" : "Equipar"}</button>
         ${renderFavoriteToggle(it, favorites)}
-        <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}">Remover</button>
+        <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}" aria-label="Remover ${escapeHtml(it.label)}">Remover</button>
       </div>
     </li>`;
 }
