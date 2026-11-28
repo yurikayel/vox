@@ -29,14 +29,39 @@ function readGif(b) {
 /** Marcadores SOFn que carregam o tamanho (exclui DHT `C4`, JPG `C8` e DAC `CC`). */
 const isSof = (m) => m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc;
 
+/**
+ * Orientation (1 a 8) do EXIF de um segmento APP1, ou 1 quando não há EXIF legível. `at` é o início do marcador.
+ * O cabeçalho TIFF vem depois de "Exif\0\0"; só o primeiro IFD é lido, que é onde a câmera grava a Orientation.
+ */
+function readExifOrientation(b, at) {
+  const t = at + 10; // marcador (2) + tamanho (2) + "Exif\0\0" (6)
+  const end = Math.min(b.length, at + 2 + be16(b, at + 2));
+  if (ascii(b, at + 4, 6) !== "Exif\0\0" || t + 8 > end) return 1;
+  const little = ascii(b, t, 2) === "II";
+  if (!little && ascii(b, t, 2) !== "MM") return 1;
+  const u16 = (i) => (little ? le16(b, i) : be16(b, i));
+  const u32 = (i) => (little ? (le16(b, i) | (le16(b, i + 2) << 16)) >>> 0 : be32(b, i));
+  const ifd = t + u32(t + 4);
+  for (let n = 0, count = ifd + 2 <= end ? u16(ifd) : 0; n < count && ifd + 2 + n * 12 + 12 <= end; n += 1) {
+    const e = ifd + 2 + n * 12;
+    if (u16(e) === 0x0112) return u16(e + 8) >= 1 && u16(e + 8) <= 8 ? u16(e + 8) : 1;
+  }
+  return 1;
+}
+
+/** Com a Orientation 5 a 8 o navegador decodifica a imagem girada em 90°: largura e altura trocam. */
+const orientedSize = (width, height, orientation) => (orientation >= 5 ? { width: height, height: width } : { width, height });
+
 function readJpeg(b) {
   if (b.length < 4 || b[0] !== 0xff || b[1] !== 0xd8) return null;
   let i = 2;
+  let orientation = 1;
   while (i + 9 < b.length) {
     if (b[i] !== 0xff) return null;
     const marker = b[i + 1];
     if (marker === 0xff) { i += 1; continue; }
-    if (isSof(marker)) return { width: be16(b, i + 7), height: be16(b, i + 5) };
+    if (marker === 0xe1) orientation = readExifOrientation(b, i);
+    if (isSof(marker)) return orientedSize(be16(b, i + 7), be16(b, i + 5), orientation);
     i += 2 + be16(b, i + 2);
   }
   return null;
