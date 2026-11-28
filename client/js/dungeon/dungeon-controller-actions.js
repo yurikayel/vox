@@ -69,7 +69,7 @@ import { FAIRPLAY_ACCESS_ID, handleFairplayRequest, handleFairplayRetry } from "
 const SLASH_ROLL_RE = /^\/(gmroll|gm|blindroll|blind|roll|r)\b/i;
 
 /** Ações de clique que disparam overlay 3D após o redesenho quando habilitado. */
-export const DICE3D_CLICK_ACTIONS = new Set(["roll-d20", "roll-quick", "roll-ability", "roll-skill", "roll-action"]);
+export const DICE3D_CLICK_ACTIONS = new Set(["roll-d20", "roll-quick", "roll-ability", "roll-skill", "roll-action", "check-roll"]);
 
 /** Formulários interceptados pelo controlador da Mesa. */
 export const SUBMIT_FORMS = new Set([

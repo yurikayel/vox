@@ -4,6 +4,7 @@
  * ficha mostra, em qualquer sistema. A rolagem e o registro na crônica seguem por `recordFormulaRoll`.
  * @module dungeon/dungeon-sheet-rolls
  */
+import { rollableRequest } from "./check-roll-ui.js";
 import { recordFormulaRoll } from "./dungeon-persistence.js";
 import { resolveSheetSystem } from "./screen-sheet-derived.js";
 
@@ -72,8 +73,19 @@ export async function recordSkillRoll(state, skillId, opts = {}) {
   return rollSheetTest(state, skill.bonus, `Perícia: ${skill.label}`, opts);
 }
 
-/** Tratadores de clique do controlador: `roll-ability` (`data-ability`), `roll-skill` (`data-skill`) e `roll-secret` (liga/desliga o chip "Só para o Mestre"). */
+/**
+ * Rola a perícia ligada a um pedido de teste (`data-request-id`), com o `requestId` gravado na rolagem. O pedido pode
+ * pedir rolagem do Mestre (`rollVisibility: "gm"`): então a rolagem sai `gm`. Pedido já revelado, ou que não é do leitor, não rola.
+ */
+function rollCheckRequest(state, el, opts) {
+  const request = rollableRequest(state, el.dataset.requestId);
+  if (!request) return failRoll(state, "Este pedido de teste não está mais aberto para você.");
+  return recordSkillRoll(state, request.skillId, { store: opts.store, secret: request.rollVisibility === "gm", requestId: request.requestId });
+}
+
+/** Tratadores de clique do controlador: `roll-ability` (`data-ability`), `roll-skill` (`data-skill`), `check-roll` (`data-request-id`) e `roll-secret` (liga/desliga o chip "Só para o Mestre"). */
 export const SHEET_ROLL_HANDLERS = Object.freeze({
+  "check-roll": (state, el, _c, opts) => rollCheckRequest(state, el, opts),
   "roll-secret": (state) => { state.rollSecret = !state.rollSecret; },
   "roll-ability": (state, el, _c, opts) => recordAbilityRoll(state, el.dataset.ability, clickOpts(el, opts)),
   "roll-skill": (state, el, _c, opts) => recordSkillRoll(state, el.dataset.skill, clickOpts(el, opts)),
