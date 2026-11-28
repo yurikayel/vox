@@ -103,6 +103,7 @@ const SHELL_ASSETS = [
   "./js/app/screens-dm-thread.js",
 
   "./js/app/screens-home.js",
+  "./js/app/home-bsky-manager.js",
 
   "./js/app/screens-network.js",
   "./js/app/network-screen-linked.js",
@@ -297,6 +298,7 @@ const SHELL_ASSETS = [
   "./js/shamir-gf256.js",
   "./js/identity/guardians.js",
   "./js/identity/local-wipe.js",
+  "./js/app/lazy-module.js",
   "./js/app/guardians-flow.js",
   "./js/app/screens-guardians.js",
   "./js/identity/guardian-return.js",
