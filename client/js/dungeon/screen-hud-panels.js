@@ -23,7 +23,7 @@ function sheetBody(state) {
 
 function abilitiesBody(state) {
   const sys = resolveSheetSystem(state.sheet);
-  return renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || [], sys?.derived.skills, hasAbilityButtons(sys));
+  return renderPlayTab(state.sheet?.sheet_meta?.clickable_actions || [], sys?.derived.skills, hasAbilityButtons(sys), state.sheet?.system?.id);
 }
 
 function mapBody(state, scene) {

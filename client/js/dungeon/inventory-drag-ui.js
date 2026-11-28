@@ -131,9 +131,34 @@ function listenAsOwner(container, getOwner, type, fn) {
   container.addEventListener(type, (ev) => { if (ev.pointerId === getOwner()) fn(ev); });
 }
 
+/**
+ * Dono do arrasto por ponteiro: o `pointerId` do dedo que pegou o item. Enquanto há arrasto em curso (`isBusy()`), um
+ * `pointerdown` de outro ponteiro, em qualquer célula, não toma o arrasto; sem arrasto, o próximo dedo pega o item.
+ * @param {() => boolean} isBusy Há arrasto começado.
+ * @returns {{claim: (ev: {pointerId: number}) => boolean, get: () => number|null}} `claim` devolve `false` quando o ponteiro deve ser ignorado.
+ */
+function createOwnership(isBusy) {
+  let owner = null;
+  return {
+    claim(ev) {
+      if (isBusy() && ev.pointerId !== owner) return false;
+      owner = ev.pointerId;
+      return true;
+    },
+    get: () => owner,
+  };
+}
+
+/** Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada. */
+function bindOwnerEvents(container, own, pointer, finish) {
+  listenAsOwner(container, own.get, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, own.get, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, own.get, "pointercancel", () => { pointer.cancel(); finish(); });
+}
+
 function bindPointer(container, ctx) {
   let held = null;
-  let owner = null;
+  const own = createOwnership(() => pointer.active);
   const spotAt = (p) => { const c = cellFromPoint(held.grid.getBoundingClientRect(), p, held.grab); return c && { ...c, rot: held.rot }; };
   const finish = () => { clearGhost(container); held = null; };
   const paint = (spot) => paintGhost(held.grid, spot, sizeOf(held.cell, held.rot), dropVerdict(itemsOf(ctx), held.id, spot).ok);
@@ -149,16 +174,13 @@ function bindPointer(container, ctx) {
   container.addEventListener("pointerdown", (ev) => {
     const cell = ev.target?.closest?.(CELL);
     ctx.swallowClick = false;
-    if (!cell || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+    if (!cell || (ev.pointerType === "mouse" && ev.button !== 0) || !own.claim(ev)) return;
+    clearGhost(container);
     held = grabHeld(cell, ev);
-    owner = ev.pointerId;
     cell.setPointerCapture?.(ev.pointerId);
     pointer.down({ id: held.id, pointerType: ev.pointerType === "touch" ? "touch" : "mouse", x: ev.clientX, y: ev.clientY });
   });
-  // Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada.
-  listenAsOwner(container, () => owner, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
-  listenAsOwner(container, () => owner, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
-  listenAsOwner(container, () => owner, "pointercancel", () => { pointer.cancel(); finish(); });
+  bindOwnerEvents(container, own, pointer, finish);
   container.addEventListener("touchmove", (ev) => { if (pointer.active) ev.preventDefault(); }, { passive: false });
   container.addEventListener("contextmenu", (ev) => { if (pointer.active) ev.preventDefault(); });
 }
