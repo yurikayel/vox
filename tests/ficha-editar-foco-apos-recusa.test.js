@@ -48,12 +48,12 @@ test("o resumo dos erros é um grupo focável (sem role=alert, para não anuncia
   assert.doesNotMatch(renderSheetEditPanel({ name: "Lyra" }), /data-edit-focus/);
 });
 
-test("Salvar aceito não pede foco no resumo dos erros", async () => {
+test("Salvar aceito não pede foco no resumo dos erros (vai ao botão Salvar)", async () => {
   const state = createDungeonSessionState();
   const pedidos = [];
   const ctx = { viewOpts: {}, settle: (p, extra) => { pedidos.push(extra); return p; } };
   await dispatchDungeonFormSubmit("edit-sheet-form", state, fakeForm({ sheetName: "Kael", armorClass: "15", sheetSystem: "5e" }), ctx);
-  assert.equal(pedidos[0]?.focusSelector, undefined);
+  assert.equal(pedidos[0]?.focusSelector, "[data-edit-save]");
 });
 
 /**
