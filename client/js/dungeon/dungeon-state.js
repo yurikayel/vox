@@ -191,6 +191,7 @@ function createPersistenceDefaults() {
     lastFormulaRoll: null,
     rollError: "",
     campaignNotice: "",
+    pendingRestore: null,
     sheetEditIssues: [],
     sheetEditDraft: null,
     storageUsage: null,
