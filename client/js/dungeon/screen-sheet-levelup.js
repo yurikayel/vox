@@ -78,11 +78,15 @@ function draftOr(draft, key, fallback) {
 
 const EDIT_ISSUE_PREFIX = "sheet-edit-issue";
 
-/** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. */
+/**
+ * Avisos da última recusa (Salvar ou importar `.voxchar`): cada um diz o campo e o motivo; nada foi gravado. O resumo
+ * recebe o foco depois do redesenho, então não é `role="alert"` (focar um alerta recém-inserido pode anunciar duas
+ * vezes): é um grupo nomeado pelo título e descrito pela lista, que o leitor fala numa vez só ao receber o foco.
+ */
 function renderEditIssues(issues) {
   if (!issues.length) return "";
   const items = issues.map((i, n) => `<li id="${issueId(EDIT_ISSUE_PREFIX, n)}">${escapeHtml(i.message)}</li>`).join("");
-  return `<div class="dungeon-alert-warn" role="alert"><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
+  return `<div class="dungeon-alert-warn" role="group" tabindex="-1" data-edit-focus aria-labelledby="sheet-edit-issues-title" aria-describedby="sheet-edit-issues-list"><strong id="sheet-edit-issues-title">Nada foi salvo. Corrija:</strong><ul id="sheet-edit-issues-list">${items}</ul></div>`;
 }
 
 /**
