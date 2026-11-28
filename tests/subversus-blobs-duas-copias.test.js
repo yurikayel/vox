@@ -30,10 +30,10 @@ function campanha({ cenas, pisos, tokens, gmRouteId }) {
   const doc = createCampaign({ id: ID, name: "Mesa", gmRouteId });
   doc.scenesById = {};
   for (let s = 0; s < cenas; s += 1) {
-    const cena = comTodosOsCampos({ id: `cena-${s}`, floors: [], tokens: [] }, `c${s}`);
+    const cena = comTodosOsCampos({ sceneId: `cena-${s}`, name: `Cena ${s}`, floors: [], tokens: [] }, `c${s}`);
     for (let p = 0; p < pisos; p += 1) cena.floors.push(comTodosOsCampos({ z: p }, `c${s}p${p}`));
     for (let t = 0; t < tokens; t += 1) cena.tokens.push(comTodosOsCampos({ tokenId: `t${s}${t}`, layer: "player", floorZ: 0, x: 1, y: 1 }, `c${s}t${t}`));
-    doc.scenesById[cena.id] = cena;
+    doc.scenesById[cena.sceneId] = cena;
   }
   doc.activeSceneId = cenas ? "cena-0" : doc.activeSceneId;
   return doc;
@@ -73,7 +73,8 @@ test("exportação e sync enxergam os mesmos hashes de blob, para campanhas de f
 test("a amostra é útil: a campanha cheia chega ao jogador e gera um pedido por campo de blob que o esquema guarda", async () => {
   const gm = await generateVttKeypair();
   const { pedidos, salvo } = await hashesPedidosPeloJogador(campanha({ cenas: 2, pisos: 2, tokens: 3, gmRouteId: gm.routeId }), gm);
-  assert.ok(pedidos.size >= 2 + 3, `ao menos 2 pisos + 3 tokens: ${[...pedidos].join(",")}`);
+  assert.ok(pedidos.size >= 2 * (2 + 3), `2 cenas × (2 pisos + 3 tokens): ${[...pedidos].join(",")}`);
+  assert.deepEqual([...new Set([...pedidos].map((h) => h.slice(0, 2)))].sort(), ["c0", "c1"], "as duas cenas chegam, não uma só");
   assert.ok([...pedidos].every((h) => h.endsWith("BlobHash")), "só campos de blob viram pedido");
   assert.equal(referencedBlobHashes(salvo).size, pedidos.size);
 });
