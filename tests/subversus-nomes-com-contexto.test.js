@@ -12,6 +12,12 @@ import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
 import { renderInventoryPanel } from "../client/js/dungeon/screen-sheet-inventory.js";
 import { renderTableScreen } from "../client/js/dungeon/screen-table.js";
 
+/** Nome hostil (aspas, `<b>`, `&` e apóstrofo): em todo botão o nome acessível tem de sair escapado. */
+const HOSTIL = `Tio "Z" <b>&co'`;
+const ESC = "Tio &quot;Z&quot; &lt;b&gt;&amp;co&#39;";
+const HOSTIL2 = `${HOSTIL} II`;
+const ESC2 = `${ESC} II`;
+
 /** Os `<button>` do HTML com o texto visível e o nome acessível (`aria-label`, ou o texto quando não há). */
 function buttons(html) {
   return [...html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map((m) => {
@@ -34,29 +40,29 @@ function assertContexto(list, esperados) {
 
 test("campanhas: Excluir e Confirmar exclusão levam o nome da campanha", () => {
   const state = createDungeonSessionState({ viewerRole: "gm", campaignId: "", syncPeer: null });
-  state.campaigns = [{ id: "c1", name: "Vila Nova" }, { id: "c2", name: "Ilha <b>Perdida</b>" }];
-  assertContexto(group(renderCampScreen(state, { lab: false }), "arm-delete-campaign"), ["Excluir Vila Nova", "Excluir Ilha &lt;b&gt;Perdida&lt;/b&gt;"]);
-  state.pendingDeleteId = "c1";
-  assertContexto(group(renderCampScreen(state, { lab: false }), "confirm-delete-campaign"), ["Confirmar exclusão de Vila Nova"]);
+  state.campaigns = [{ id: "c1", name: "Vila Nova" }, { id: "c2", name: HOSTIL }];
+  assertContexto(group(renderCampScreen(state, { lab: false }), "arm-delete-campaign"), ["Excluir Vila Nova", `Excluir ${ESC}`]);
+  state.pendingDeleteId = "c2";
+  assertContexto(group(renderCampScreen(state, { lab: false }), "confirm-delete-campaign"), [`Confirmar exclusão de ${ESC}`]);
 });
 
 test("mochila: Remover leva o nome do item", () => {
-  const items = [{ id: "i1", label: "Espada longa", qty: 1, tags: [] }, { id: "i2", label: "Tocha", qty: 3, tags: [] }];
+  const items = [{ id: "i1", label: "Espada longa", qty: 1, tags: [] }, { id: "i2", label: HOSTIL, qty: 3, tags: [] }];
   const html = renderInventoryPanel({ sheet: { inventoryItems: items } });
-  assertContexto(group(html, "inv-remove"), ["Remover Espada longa", "Remover Tocha"]);
+  assertContexto(group(html, "inv-remove"), ["Remover Espada longa", `Remover ${ESC}`]);
 });
 
 test("mesa: Revelar, Ocultar GM e Remover dos tokens, e a bandeja, levam o nome", async () => {
   const state = createDungeonSessionState({ viewerRole: "gm", campaignId: "", syncPeer: null });
-  state.campaign = { sheetsById: { s1: { character_id: "s1", attributes_lww: { name: "Gareth" }, pools_base: { hp_max: 31 } }, s2: { character_id: "s2", attributes_lww: { name: "Lyra" }, pools_base: { hp_max: 18 } } } };
+  state.campaign = { sheetsById: { s1: { character_id: "s1", attributes_lww: { name: HOSTIL }, pools_base: { hp_max: 31 } }, s2: { character_id: "s2", attributes_lww: { name: `${HOSTIL} III` }, pools_base: { hp_max: 18 } } } };
   const root = (form) => ({ querySelector: (sel) => form[sel] ?? null });
   const click = (attrs, form = {}) => ACTION_HANDLERS["tray-add"](state, { dataset: attrs, closest: () => root(form) }, null, {});
   await click({ trayKind: "sheet", sheetId: "s1" });
-  await click({ trayKind: "simple" }, { "#dungeon-tray-name": { value: "Goblin" }, "#dungeon-tray-hidden": { checked: true } });
-  const html = renderTableScreen(state); // a cena já traz Lyra e Sentinela da Cripta
-  assertContexto(group(html, "toggle-token-layer"), ["Ocultar GM Lyra", "Revelar Sentinela da Cripta", "Ocultar GM Gareth", "Revelar Goblin"]);
-  assertContexto(group(html, "remove-token"), ["Remover Lyra", "Remover Sentinela da Cripta", "Remover Gareth", "Remover Goblin"]);
-  assertContexto(group(html, "sheet"), ["Adicionar ao mapa: Lyra"]);
+  await click({ trayKind: "simple" }, { "#dungeon-tray-name": { value: HOSTIL2 }, "#dungeon-tray-hidden": { checked: true } });
+  const html = renderTableScreen(state); // a cena já traz Lyra e Sentinela da Cripta (tokens da semente, sem ficha ligada)
+  assertContexto(group(html, "toggle-token-layer"), ["Ocultar GM Lyra", "Revelar Sentinela da Cripta", `Ocultar GM ${ESC}`, `Revelar ${ESC2}`]);
+  assertContexto(group(html, "remove-token"), ["Remover Lyra", "Remover Sentinela da Cripta", `Remover ${ESC}`, `Remover ${ESC2}`]);
+  assertContexto(group(html, "sheet"), [`Adicionar ao mapa: ${ESC} III`]);
   assertContexto(group(html, "simple"), ["Adicionar ao mapa: token simples"]);
-  assertContexto(group(html, "text:No mapa"), ["No mapa: Gareth"]);
+  assertContexto(group(html, "text:No mapa"), [`No mapa: ${ESC}`]);
 });
