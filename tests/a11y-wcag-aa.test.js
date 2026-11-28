@@ -323,7 +323,7 @@ describe("WCAG 2.2 AA — Alvos de Toque (SC 2.5.8)", () => {
     const coarseAgora = extractMediaBlockBody(AGORA_CSS, "(pointer: coarse), (max-width: 767px)");
     assert.match(coarseAgora, /\.agora-btn[\s\S]*min-height:\s*44px/);
     assert.match(coarseAgora, /\.agora-topbar-icon[\s\S]*min-height:\s*44px/);
-    const coarseStyle = extractMediaBlockBody(STYLE_CSS, "(pointer: coarse), (max-width: 767px)");
+    const coarseStyle = extractMediaBlockBody(STYLE_CSS, "(pointer: coarse), (max-width: 47.9375em)");
     assert.match(coarseStyle, /\.inline-composer-tool[\s\S]*min-height:\s*44px/);
   });
 });
