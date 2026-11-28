@@ -247,6 +247,26 @@ test("PM-112 CLI --json e --base: executa apenas linhas alteradas em módulo Tie
   }
 });
 
+test("PM-112 CLI --base na árvore vazia (rodada semanal): diff de mais de 1 MiB não estoura o buffer e muta o Tier A inteiro", () => {
+  const { dir } = createGitDiffFixture();
+  try {
+    const emptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+    const filler = Array.from({ length: 60000 }, (_, i) => `export const filler${i} = ${i};`).join("\n");
+    writeFile(dir, "client/js/render/dados-grandes.js", `${filler}\n`);
+    gitIn(dir, "add", "-A");
+    gitIn(dir, "commit", "-q", "-m", "arquivo grande");
+    const sized = spawnSync("git", ["diff", "--unified=0", emptyTree, "--", "client/js/"], { cwd: dir, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    assert.ok(sized.stdout.length > 1024 * 1024, "o diff passa de 1 MiB");
+    const run = spawnSync(process.execPath, [SCRIPT, "--base", emptyTree, "--json"], { cwd: dir, encoding: "utf8" });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const parsed = JSON.parse(run.stdout);
+    assert.equal(parsed.mode, "diff");
+    assert.ok(parsed.total >= 2, "os mutantes do módulo Tier A entram, mesmo sem ele ter mudado no último commit");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("PM-112 CLI --min-score: no-op sem diff Tier A encerra com 0 e grava summary", () => {
   const { dir, baseSha } = createGitDiffFixture();
   try {
