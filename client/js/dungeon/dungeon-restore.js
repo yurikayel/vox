@@ -6,12 +6,14 @@
 import { hydrateStateFromCampaign } from "./dungeon-sync-bridge.js";
 
 /**
- * Atualiza a lista de campanhas, o medidor de disco e o selo de persistência do estado.
+ * Atualiza a lista de campanhas, o medidor de disco e o selo de persistência do estado. Abrir ou excluir uma campanha
+ * passa por aqui e descarta a restauração pendente (o pacote aberto não fica em claro na memória).
  * @param {object} state Estado da sessão.
  * @param {object} store `VttStore`.
  * @returns {Promise<void>} Conclui com o estado atualizado.
  */
 export async function refreshStoreSummary(state, store) {
+  state.pendingRestore = null;
   state.campaigns = await store.listCampaigns();
   state.storageUsage = await store.estimateUsage();
   state.persistenceReady = true;
@@ -28,6 +30,13 @@ export async function restoreConflict(store, campaign) {
   return local && local.lamport > campaign.lamport ? local : null;
 }
 
+/** Recusa a troca: guarda o pacote com o `lamport` local visto agora (para reconferir no confirmar) e avisa. */
+function refuseRestore(state, { unpacked, label }, newer) {
+  state.pendingRestore = { unpacked, label, seenLamport: newer.lamport };
+  state.campaignNotice = `Este aparelho já tem "${newer.name}" mais recente que a cópia do arquivo. Nada foi trocado; confirme para substituir pela cópia do arquivo.`;
+  return { ok: false, error: "local_mais_nova", campaignId: newer.id };
+}
+
 /**
  * Grava o pacote restaurado. Se a campanha local é mais nova, recusa e guarda o pacote em `state.pendingRestore`,
  * a menos que `opts.overwrite` seja `true`.
@@ -40,11 +49,7 @@ export async function restoreConflict(store, campaign) {
  */
 export async function saveRestoredPackage(state, unpacked, store, label, opts = {}) {
   const newer = opts.overwrite ? null : await restoreConflict(store, unpacked.campaign);
-  if (newer) {
-    state.pendingRestore = { unpacked, label };
-    state.campaignNotice = `Este aparelho já tem "${newer.name}" mais recente que a cópia do arquivo. Nada foi trocado; confirme para substituir pela cópia do arquivo.`;
-    return { ok: false, error: "local_mais_nova", campaignId: newer.id };
-  }
+  if (newer) return refuseRestore(state, { unpacked, label }, newer);
   state.pendingRestore = null;
   for (const bytes of unpacked.blobs.values()) await store.putBlob(bytes);
   const saved = await store.saveCampaign(unpacked.campaign);
@@ -55,7 +60,18 @@ export async function saveRestoredPackage(state, unpacked, store, label, opts = 
 }
 
 /**
- * Confirma a restauração guardada em `state.pendingRestore`, trocando a versão local pela do arquivo.
+ * Descarta a restauração pendente e o pacote aberto que ela guarda (sair da tela, importar arquivo inválido).
+ * @param {object} state Estado da sessão.
+ * @returns {void}
+ */
+export function dropPendingRestore(state) {
+  state.pendingRestore = null;
+}
+
+/**
+ * Confirma a restauração guardada em `state.pendingRestore`, trocando a versão local pela do arquivo. Reconfere o
+ * aparelho: se a campanha local avançou depois da recusa, recusa de novo (o mestre confirmou trocar a versão que viu,
+ * não uma mais nova).
  * @param {object} state Estado da sessão.
  * @param {{ store: object }} opts Opções do controlador.
  * @returns {Promise<object|undefined>} Resultado da gravação, ou `undefined` sem restauração pendente.
@@ -63,5 +79,7 @@ export async function saveRestoredPackage(state, unpacked, store, label, opts = 
 export async function confirmPendingRestore(state, opts) {
   const pending = state.pendingRestore;
   if (!pending) return undefined;
+  const local = await restoreConflict(opts.store, pending.unpacked.campaign);
+  if (local && local.lamport > pending.seenLamport) return refuseRestore(state, pending, local);
   return saveRestoredPackage(state, pending.unpacked, opts.store, pending.label, { overwrite: true });
 }

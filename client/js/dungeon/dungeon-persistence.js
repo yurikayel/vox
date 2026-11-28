@@ -21,7 +21,7 @@ import { formatInWorldDate } from "./vtt-calendar.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
 import { packEncryptedVoxRpg, packVoxRpg, referencedBlobHashes, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
-import { refreshStoreSummary, saveRestoredPackage } from "./dungeon-restore.js";
+import { dropPendingRestore, refreshStoreSummary, saveRestoredPackage } from "./dungeon-restore.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 import { migrateLegacySheet } from "./system-migrate.js";
@@ -334,6 +334,7 @@ async function importMarkdownIntoCampaign(state, text, fileName, store) {
  * @returns {Promise<{ ok: boolean, kind?: string, campaignId?: string, error?: string }>} Resultado da importação (`error: "local_mais_nova"` quando recusou).
  */
 export async function importCampaignFile(state, fileSpec, opts = {}) {
+  dropPendingRestore(state);
   const store = opts.store || getDefaultVttStore();
   const name = String(fileSpec?.name || "").trim();
   const rawBytes = fileSpec?.bytes instanceof Uint8Array ? fileSpec.bytes : ENC.encode(String(fileSpec?.bytes ?? ""));
