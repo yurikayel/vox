@@ -76,11 +76,15 @@ export async function recordSkillRoll(state, skillId, opts = {}) {
 /**
  * Rola a perícia ligada a um pedido de teste (`data-request-id`), com o `requestId` gravado na rolagem. O pedido pode
  * pedir rolagem do Mestre (`rollVisibility: "gm"`): então a rolagem sai `gm`. Pedido já revelado, ou que não é do leitor, não rola.
+ * O chip "Só para o Mestre" do jogador não é consumido: a rolagem do pedido não o lê, então ele continua como estava.
  */
-function rollCheckRequest(state, el, opts) {
+async function rollCheckRequest(state, el, opts) {
   const request = rollableRequest(state, el.dataset.requestId);
   if (!request) return failRoll(state, "Este pedido de teste não está mais aberto para você.");
-  return recordSkillRoll(state, request.skillId, { store: opts.store, secret: request.rollVisibility === "gm", requestId: request.requestId });
+  const chip = state.rollSecret;
+  const result = await recordSkillRoll(state, request.skillId, { store: opts.store, secret: request.rollVisibility === "gm", requestId: request.requestId });
+  state.rollSecret = chip; // a visibilidade vem do pedido: o chip armado pelo jogador para o próximo teste dele fica como estava
+  return result;
 }
 
 /** Tratadores de clique do controlador: `roll-ability` (`data-ability`), `roll-skill` (`data-skill`), `check-roll` (`data-request-id`) e `roll-secret` (liga/desliga o chip "Só para o Mestre"). */
