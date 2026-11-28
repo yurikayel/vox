@@ -114,10 +114,15 @@
 .app-footer-feedback,
 .link-alt,
 .btn-dismiss-welcome-topic,
-.community-orkut-members-more,
-.post-author {
+.community-orkut-members-more {
   display: inline-flex;
   align-items: center;
+  min-height: 24px;
+}
+
+/* Fora do grupo: `inline-flex` mataria o `text-overflow: ellipsis` do autor no cabeçalho do feed. */
+.post-author {
+  display: inline-block;
   min-height: 24px;
 }
 
