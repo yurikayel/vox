@@ -100,6 +100,23 @@ function refocusReaction(msgId, emoji) {
 }
 
 /**
+ * Diz se a conversa com o par ainda é a tela aberta. Com a cifra lenta, a pessoa pode ter ido ao feed ou a outra
+ * conversa antes do redesenho; refocar então roubaria o foco da tela nova.
+ *
+ * @param {string} peerAddress Endereço do par.
+ * @returns {boolean}
+ */
+function isThreadOpen(peerAddress) {
+  const segment = String(location.hash || "").match(/^#\/dm\/([^/?]+)/)?.[1];
+  if (!segment) return false;
+  try {
+    return decodeURIComponent(segment) === peerAddress;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Alterna a reação a uma mensagem e avisa o par, se há chave dele.
  *
  * @param {string} user Rota de quem reage.
@@ -121,7 +138,7 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
     }
   }
   await showDmThread(peerAddress);
-  refocusReaction(msgId, emoji);
+  if (isThreadOpen(peerAddress)) refocusReaction(msgId, emoji);
 }
 
 /**

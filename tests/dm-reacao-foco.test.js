@@ -30,7 +30,11 @@ before(async () => {
 afterEach(() => {
   restoreEnv();
   dom.reset();
+  location.hash = "#/";
 });
+
+/** Rota da conversa com o par, como o roteador a escreve. */
+const rotaDaConversa = () => `#/dm/${encodeURIComponent(peer)}`;
 
 /** Botão de reação falso para a mensagem e o emoji, com a classe dada. */
 function controle(msgId, emoji, classe) {
@@ -40,7 +44,7 @@ function controle(msgId, emoji, classe) {
 }
 
 /** A cada redesenho da tela (`innerHTML` do `main`), registra e instala uma geração nova de controles. */
-function instalarRedesenho(montar) {
+function instalarRedesenho(montar, aoRefazer) {
   const geracoes = [];
   Object.defineProperty(dom.main, "innerHTML", {
     configurable: true,
@@ -49,18 +53,27 @@ function instalarRedesenho(montar) {
       const g = montar();
       geracoes.push(g);
       dom.group(CONTROLES, Object.values(g));
+      aoRefazer?.(geracoes.length);
     },
   });
   return geracoes;
 }
 
-/** Abre a conversa, clica no controle `qual` da primeira tela e espera o redesenho. */
-async function reagir(montar, qual) {
+/**
+ * Abre a conversa, clica no controle `qual` da primeira tela e espera o redesenho. `irPara` muda o hash durante o
+ * redesenho que o clique provoca, como a pessoa que sai da conversa enquanto a cifra ainda corre.
+ */
+async function reagir(montar, qual, irPara) {
   installRelay(me);
+  location.hash = rotaDaConversa();
   for (const id of ["m_foco_1", "m_foco_2"]) await cacheNode.saveDmMessage({ id, peerAddress: peer, from: peer, to: me, text: id, status: "received", ts: Date.now() });
-  const geracoes = instalarRedesenho(montar);
+  let clicou = false;
+  const geracoes = instalarRedesenho(montar, () => {
+    if (clicou && irPara) location.hash = irPara;
+  });
   await showDmThread(peer);
   const antes = geracoes.length;
+  clicou = true;
   geracoes[antes - 1][qual].fire("click");
   await settle(200);
   assert.ok(geracoes.length > antes, "a tela foi refeita depois do clique");
@@ -68,9 +81,9 @@ async function reagir(montar, qual) {
 }
 
 test("reagir devolve o foco à pílula da mesma reação na tela refeita", async () => {
-  const { velha, nova } = await reagir(() => ({ rapido: controle("m_foco_1", "👍", "btn-dm-react-pick"), pilula: controle("m_foco_1", "👍", "dm-reaction-pill"), outra: controle("m_foco_2", "👍", "dm-reaction-pill") }), "pilula");
+  const { velha, nova } = await reagir(() => ({ outra: controle("m_foco_2", "👍", "dm-reaction-pill"), outroEmoji: controle("m_foco_1", "❤️", "dm-reaction-pill"), rapido: controle("m_foco_1", "👍", "btn-dm-react-pick"), pilula: controle("m_foco_1", "👍", "dm-reaction-pill") }), "pilula");
   assert.equal(nova.pilula.focused, 1, "a pílula nova recebe o foco");
-  assert.equal(nova.rapido.focused + nova.outra.focused, 0, "nem o botão rápido, com a pílula presente, nem a pílula de outra mensagem");
+  assert.equal(nova.rapido.focused + nova.outra.focused + nova.outroEmoji.focused, 0, "nem o botão rápido, com a pílula presente, nem a pílula de outra mensagem ou de outro emoji");
   assert.equal(velha.pilula.focused, 0, "o foco não vai ao elemento da tela antiga");
 });
 
@@ -79,4 +92,34 @@ test("se a pílula sumiu, o foco vai ao botão de reação rápida da mesma mens
   assert.equal(nova.rapido.focused, 1, "o botão novo da mesma mensagem e emoji recebe o foco");
   assert.equal(nova.outroEmoji.focused + nova.outraMsg.focused, 0, "os de outro emoji ou de outra mensagem não");
   assert.equal(velha.rapido.focused, 0, "o foco não vai ao elemento da tela antiga");
+});
+
+/** Soma o foco de todos os controles de todas as gerações. */
+const focos = (...gs) => gs.flatMap((g) => Object.values(g)).reduce((n, c) => n + c.focused, 0);
+const montarPadrao = () => ({ rapido: controle("m_foco_1", "👍", "btn-dm-react-pick"), pilula: controle("m_foco_1", "👍", "dm-reaction-pill") });
+
+test("se a pessoa foi ao feed durante o redesenho, ninguém recebe o foco", async () => {
+  const { velha, nova } = await reagir(montarPadrao, "pilula", "#/");
+  assert.equal(focos(velha, nova), 0, "o foco não é roubado da tela em que a pessoa está");
+});
+
+test("se a pessoa foi a outra conversa durante o redesenho, ninguém recebe o foco", async () => {
+  const { velha, nova } = await reagir(montarPadrao, "pilula", `#/dm/${encodeURIComponent("vx_outro_par")}`);
+  assert.equal(focos(velha, nova), 0, "a conversa de outro par não é a desta reação");
+});
+
+test("sem controle da mesma reação na tela refeita, nada quebra e ninguém recebe o foco", async () => {
+  const rejeicoes = [];
+  const anota = (e) => rejeicoes.push(e);
+  process.on("unhandledRejection", anota);
+  try {
+    let desenhos = 0;
+    const montar = () => (desenhos++ === 0 ? { alvo: controle("m_foco_1", "👍", "dm-reaction-pill") } : { outra: controle("m_foco_2", "🔥", "dm-reaction-pill") });
+    const { velha, nova } = await reagir(montar, "alvo");
+    await settle(50);
+    assert.deepEqual(rejeicoes.map(String), [], "focar o que não existe não pode virar erro solto");
+    assert.equal(focos(velha, nova), 0);
+  } finally {
+    process.off("unhandledRejection", anota);
+  }
 });
