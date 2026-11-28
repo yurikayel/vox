@@ -34,12 +34,12 @@ import {
   computeFitCamera,
   generateTableInvite,
   getActiveScene,
-  nudgeTokenInScene,
   removeTokenFromScene,
   toggleSceneGridType,
   toggleTokenLayerInScene,
   updateTokenPropsInScene,
 } from "./dungeon-scene-actions.js";
+import { nudgeTokenAnnounced } from "./token-nudge-live.js";
 import {
   applySheetResourceDelta,
   attestLoreNodeInState,
@@ -282,7 +282,7 @@ export const ACTION_HANDLERS = {
   "toggle-viewer-role": (state) => toggleViewerRoleSafe(state),
   "select-token": (state, el) => { state.selectedTokenId = el.dataset.tokenId || ""; },
   "tray-add": (state, el, _c, opts) => handleTrayAdd(state, el, { store: opts.store }),
-  "nudge-token": (state, el, _c, opts) => nudgeTokenInScene(state, el.dataset.tokenId, Number(el.dataset.dx), Number(el.dataset.dy), { store: opts.store }),
+  "nudge-token": (state, el, _c, opts) => nudgeTokenAnnounced(state, el.dataset.tokenId, Number(el.dataset.dx), Number(el.dataset.dy), { store: opts.store }),
   "toggle-token-layer": (state, el, _c, opts) => toggleTokenLayerInScene(state, el.dataset.tokenId, { store: opts.store }),
   "remove-token": (state, el, _c, opts) => removeTokenFromScene(state, el.dataset.tokenId, { store: opts.store }),
   "generate-invite": (state, _el, _c, opts) => generateTableInvite(state, { store: opts.store, onSyncUpdate: opts.onSyncUpdate }),
