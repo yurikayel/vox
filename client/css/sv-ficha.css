@@ -47,3 +47,16 @@
   outline: 2px solid var(--sa-primary);
   outline-offset: 2px;
 }
+
+/* Telas estreitas (até 360 px): margens menores, com os tokens de espaçamento, devolvem largura à mochila 10×4; a 320 px
+ * cada célula tem de ficar com 24 px ou mais (WCAG 2.5.8). A coluna da ficha é `minmax(0, 1fr)` em dungeon-layout.css, para o
+ * texto dos itens não alargar a página. tests/ficha-inventario-320.test.js faz a conta pela cascata. */
+@media (max-width: 360px) {
+  .dungeon-sanctum .dungeon-main {
+    padding-inline: var(--space-sm);
+  }
+
+  .dungeon-sheet-main .dungeon-panel {
+    padding-inline: var(--space-md);
+  }
+}

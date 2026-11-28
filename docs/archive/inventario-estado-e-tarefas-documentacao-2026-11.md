@@ -16,7 +16,7 @@ Complementa [direcionamento-crescimento-rede-2026-11.md](../strategy/direcioname
 
 | Área | Entregue em código (referência) | Docs / specs | Testes (amostra) |
 |------|----------------------------------|--------------|------------------|
-| **Rede / malha P2P** | `peers.js`, `cache-node.js`, `peers-cache-manifest.js`, `peers-blob-affinity.js` (V-I09, flag default off), `webrtc-peer.js`, gossip retratação (`gossip-retract-ui.js`) | [antigravity-operating.md](../process/antigravity-operating.md), [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md), [antigravity-blob-soft-priority-v0.md](../specs/antigravity-blob-soft-priority-v0.md) | `peers*.test.js`, `gossip-retract*.test.js`, `cache-manifest.test.js` |
+| **Rede / malha P2P** | `peers.js`, `cache-node.js`, `peers-cache-manifest.js`, `peers-blob-affinity.js` (V-I09, flag default off), `webrtc-peer.js`, gossip retratação (`gossip-retract-ui.js`) | [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md), [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md), [prioridade-suave-blobs-v0.md](../specs/prioridade-suave-blobs-v0.md) | `peers*.test.js`, `gossip-retract*.test.js`, `cache-manifest.test.js` |
 | **Gateway / leitura reserva** | `gateway-telemetry.js`, `graphql.js`, pill honesta | V-P02 · [honest-copy-audit-2026-10-23.md](../audits/honest-copy-audit-2026-10-23.md) | `gateway-telemetry.test.js` |
 | **Comunidade / espelho local** | `community-mirror.js`, `community-seed-checklist.js`, painel «Sustentada por vizinhos» | V-I03, V-P04, V-P05 · [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md) | `community-mirror.test.js`, `community-seed-checklist.test.js` |
 | **Steward / relay** | `steward-wizard.js`, relay Python (`/vox/mirror`, `/health`), kits `packaging/steward-kit-*` | V-I08 ✓ · [steward-relay-kit.md](../operations/steward-relay-kit.md), [steward-seed-15min.md](../operations/steward-seed-15min.md), [mirror-validate-v1.md](../specs/mirror-validate-v1.md) | `steward-wizard.test.js`, relay `test_*.py` (22) |
@@ -61,7 +61,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 | [backlog-participacao-rede.md](../strategy/backlog-participacao-rede.md) | IDs V-P | **fresh** (V-P09 exec pendente) |
 | [infra-participativa-blindagem-crescimento.md](../strategy/infra-participativa-blindagem-crescimento.md) | 4 camadas + regulatório | **fresh** (25/out) |
 | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) | Flywheel + mod E1–E5 | **fresh** |
-| [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md) | T1 estratégico 12m | **fresh** |
+| [estrategia-mantenedor-revisor-2026.md](../strategy/estrategia-mantenedor-revisor-2026.md) | T1 estratégico 12m | **fresh** |
 | [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) | T1–T10 out/2026 (doc) | **fresh** |
 | [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) | T1–T10 pós-v82 v1.1 | **fresh** (baseline SHA `898509c`; produto já `99180f9`) |
 | [brainstorm-tracao-escalabilidade-incubacao.md](../brainstorms/brainstorm-tracao-escalabilidade-incubacao.md) | Incubação FOSS | **brainstorm** |
@@ -75,9 +75,9 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 | [steward-relay-kit.md](../operations/steward-relay-kit.md), [steward-seed-15min.md](../operations/steward-seed-15min.md) | **fresh** |
 | [ops-shell-mirrors.md](../operations/ops-shell-mirrors.md) | **fresh** (T2/T9 — espelho B ainda não registrado como vivo) |
 | [mirror-validate-v1.md](../specs/mirror-validate-v1.md) | **fresh** (V-P06 ✓ código) |
-| [antigravity-operating.md](../process/antigravity-operating.md) | **fresh** |
-| [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md) | **spec** ✓ impl |
-| [antigravity-blob-soft-priority-v0.md](../specs/antigravity-blob-soft-priority-v0.md) | **spec** ✓ impl |
+| [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md) | **fresh** |
+| [retratacao-gossip-v1.md](../specs/retratacao-gossip-v1.md) | **spec** ✓ impl |
+| [prioridade-suave-blobs-v0.md](../specs/prioridade-suave-blobs-v0.md) | **spec** ✓ impl |
 | [cache-manifest-v0.md](../specs/cache-manifest-v0.md) | **spec** |
 | [listing-signed-gossip-v1.md](../specs/listing-signed-gossip-v1.md) | **spec** ✓ UI |
 | [community-module-manifest-v0.md](../specs/community-module-manifest-v0.md) | **spec** backlog |
@@ -103,7 +103,7 @@ Legenda: **fresh** = alinhado a [README](../../README.md) + [release-metadata.js
 Ver também [docs/README.md](../README.md) (DOC-03). Trilhas:
 
 1. Participação: **rede-sustentada** → **backlog V-P** → **infra-participativa** → **auto-escala**  
-2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **antigravity-estrategia** · plano master **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md)  
+2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **estratégia do revisor** · plano master **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md)  
 3. Ops steward: **steward-relay-kit** → **seed 15min** → **ops-shell-mirrors**  
 4. Dev: **DEV.md** + **README release line** + **`sw.js` CACHE_NAME**
 
@@ -214,7 +214,7 @@ Cada tarefa: **objetivo**, **DoD revisado**, **owner**, **prioridade**, **links*
 | **CODE-01** | `code` | Feature freeze gate: só doc/fix durante piloto | Lobby + DEV § nota freeze; checklist PR | Mantenedor | **P0** | [brainstorm pós-v82 § freeze](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
 | **CODE-02** | `code` | Métricas honestas v2 (T5) — `read_origin` local | DoD T5 § checklist; testes render; sem API relay | Cursor | P1 | T5 pós-v82 |
 | **CODE-03** | `code` | V-P07 UI export atestação ADR-001 opt-in | Fluxo `#/settings` + testes; copy LGPD | Cursor | P2 | [adr/001](../adr/001-contribution-attestation-export.md) |
-| **CODE-04** | `doc` | Documentar flag V-I09 soft priority (default off) | DEV §24 + toggle futuro ou env doc | Cursor | P1 | [antigravity-blob-soft-priority-v0](../specs/antigravity-blob-soft-priority-v0.md) |
+| **CODE-04** | `doc` | Documentar flag V-I09 soft priority (default off) | DEV §24 + toggle futuro ou env doc | Cursor | P1 | [prioridade-suave-blobs-v0](../specs/prioridade-suave-blobs-v0.md) |
 | **CODE-05** | `doc` | Gateway fallback UX (brainstorm → spike ou wontfix) | ADR curto ou issues fechadas com rationale | Cursor | P2 | [gateway-honest-fallback-brainstorm](./gateway-honest-fallback-brainstorm.md) |
 
 ### D — Piloto humano
