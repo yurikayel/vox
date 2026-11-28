@@ -212,6 +212,24 @@ function bindPointer(container, ctx) {
 }
 
 /**
+ * Botão "Girar item". No mouse e no teclado vale o `click`. No toque, o dedo que segura o item já é o primeiro toque e
+ * o navegador não sintetiza `click` para o segundo dedo, então o giro sai do `pointerdown` desse dedo; o `click` que
+ * um navegador ainda mande depois desse toque é ignorado (uma vez), para não girar duas vezes.
+ */
+function bindRotateButton(container, ctx) {
+  let turnedByTouch = false;
+  const turn = () => ctx.turners.some((turner) => turner());
+  container.addEventListener("pointerdown", (ev) => {
+    turnedByTouch = ev.pointerType === "touch" && Boolean(ev.target?.closest?.(ROTATE)) && turn();
+  });
+  container.addEventListener("click", (ev) => {
+    if (!ev.target?.closest?.(ROTATE)) return;
+    if (turnedByTouch) turnedByTouch = false;
+    else turn();
+  });
+}
+
+/**
  * Liga o arrastar da mochila no contêiner da Mesa (delegação: vale para a mochila desenhada agora e as próximas).
  * @param {HTMLElement} container Contêiner montado pelo controlador.
  * @param {object} opts Opções da sub-tela (`state`, `store`).
@@ -222,10 +240,7 @@ export function bindInventoryDrag(container, opts, settle) {
   const doc = container.ownerDocument || (typeof document !== "undefined" ? document : null);
   if (doc) ensureInventoryDragStyles(doc);
   const ctx = { opts, settle, swallowClick: false, turners: [], caption: createCaption(container), session: () => opts.state || getDungeonSession() };
-  container.addEventListener("click", (ev) => {
-    if (!ev.target?.closest?.(ROTATE)) return;
-    ctx.turners.some((turn) => turn());
-  });
+  bindRotateButton(container, ctx);
   container.addEventListener("click", (ev) => {
     if (!ctx.swallowClick) return;
     ctx.swallowClick = false;
