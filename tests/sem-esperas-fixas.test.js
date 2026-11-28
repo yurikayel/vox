@@ -30,9 +30,10 @@ const EXCLUDED = new Set(["sem-esperas-fixas.test.js", "helpers/wait-until.js"])
  * Fatia 3: 19 → 16. `nostr-transport` zerou: a partida do par B espera a assinatura do relay em memória (`relay.subscribed()`)
  * em vez de dormir 150 ms, e o teste de `stop()` cancelar a reconexão usa `mock.timers` (sem relógio real, com controle:
  * sem `stop()` o relay morto é tentado de novo).
- * Teto final, 16, medido por AST. Seguem contadas, cada uma com o seu motivo (duas têm condição observável e ficam pendentes):
- * - `cov-t7-labs-webxdc` (1): pendente. São 120 ms fixos após cada clique, e cada passo muda o `lab.html()`; um `waitUntil`
- *   sobre essa mudança a trocaria numa fatia seguinte.
+ * Fatia 4: 16 → 14. `cov-t7-labs-webxdc` zerou: cada ação do laboratório repinta uma vez, no fim, e o clique espera essa
+ * repintura (`waitUntil` sobre a contagem de pinturas) em vez de dormir 120 ms. `app-own-posts-ui` trocou o `waitFor` caseiro
+ * (cópia do `waitUntil`) pelo `waitUntil` de `helpers/wait-until.js`.
+ * Teto final, 14, medido por AST. Seguem contadas, cada uma com o seu motivo:
  * - `vox-populi` (2): laço de retry esperando um processo real subir, e a limpeza ao fim.
  * - `node-health-api` (1): tempo virtual sob `mock.timers` (`tick(320)`), sem espera real; só a AST o conta.
  * - `cov-t6-aviso-flow` (1): prova de ausência depois de cancelar (80 ms): não há evento a esperar para "nada foi gravado".
@@ -42,13 +43,12 @@ const EXCLUDED = new Set(["sem-esperas-fixas.test.js", "helpers/wait-until.js"])
  * - `webrtc` (1): a oferta que aborta depois de 20 ms simula o aborto de uma negociação em curso.
  * - `subversus-fairplay-rede` (1): `realSleep(4)` deixa a cripto assíncrona (WebCrypto) terminar em tempo real, enquanto o
  *   relógio das fases é virtual.
- * - `app-own-posts-ui` (2): um laço de `setImmediate` (`settle`) e um `waitFor` caseiro com `setTimeout(5)`; este último é
- *   cópia do `waitUntil` e fica pendente.
+ * - `app-own-posts-ui` (1): um laço de `setImmediate` (`settle`) para drenar promessas soltas.
  * - `cov-t2-dom` (2): um laço de `setImmediate` (`settle`) e a janela de silêncio de 80 ms de `settleToasts` (laço de
  *   `setTimeout(10)`), prova de ausência de toast novo.
  * - `cov-t3-dom` (1) e `cov-t5-dom` (1): laços de `setImmediate` que drenam promessas soltas do DOM simulado.
  */
-const CEILING = 16;
+const CEILING = 14;
 
 function listSources(dir = DIR, rel = "") {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -71,6 +71,12 @@ test("esperas fixas nos testes não crescem além do medido", () => {
   const perFile = countSleeps();
   const total = Object.values(perFile).reduce((a, b) => a + b, 0);
   assert.ok(total <= CEILING, `${total} esperas fixas > ${CEILING}: use waitUntil. ${JSON.stringify(perFile)}`);
+});
+
+test("labs-webxdc e own-posts-ui não dormem tempo fixo nem têm espera caseira (só o `settle` de own-posts-ui)", () => {
+  const perFile = countSleeps();
+  assert.equal(perFile["cov-t7-labs-webxdc.test.js"] ?? 0, 0);
+  assert.equal(perFile["app-own-posts-ui.test.js"] ?? 0, 1);
 });
 
 test("a varredura chega às subpastas e aos .mjs de tests/", () => {

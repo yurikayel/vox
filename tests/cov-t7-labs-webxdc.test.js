@@ -10,6 +10,9 @@ import { renderMofnLab, wireMofnLab } from "../client/js/labs/mofn-lab.js";
 import * as host from "../client/js/labs/parado/webxdc-host.js";
 import * as loader from "../client/js/labs/parado/webxdc-loader.js";
 import { installFakeDocument } from "./helpers/cov-t7-fake-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
+
+const PAINTING_ACTIONS = new Set(["gen", "sign-m", "sign-m1", "tamper", "verify"]);
 
 /**
  * Raiz falsa do laboratório: campos de formulário, `outerHTML` do bloco e clique delegado.
@@ -19,14 +22,17 @@ import { installFakeDocument } from "./helpers/cov-t7-fake-dom.mjs";
 function fakeLabRoot(form = {}) {
   const fields = { "#mofn-n": form.n, "#mofn-m": form.m, "#mofn-name": form.name, "#mofn-text": form.text };
   let outer = "";
+  let paints = 0;
   let handler;
   const root = {
-    querySelector: (sel) => (sel === "#mofn-lab" ? { set outerHTML(v) { outer = v; } } : sel in fields ? { value: fields[sel] } : null),
+    querySelector: (sel) => (sel === "#mofn-lab" ? { set outerHTML(v) { outer = v; paints += 1; } } : sel in fields ? { value: fields[sel] } : null),
     addEventListener: (_ev, fn) => { handler = fn; },
   };
   const click = async (action) => {
+    const before = paints;
     handler({ target: { closest: () => (action ? { dataset: { mofn: action } } : null) } });
-    await new Promise((r) => setTimeout(r, 120));
+    // Cada ação conhecida repinta uma vez, no fim (a cripto é assíncrona); sem ação ou com ação desconhecida nada é pintado.
+    if (PAINTING_ACTIONS.has(action)) assert.ok(await waitUntil(() => paints > before), `a ação "${action}" não repintou o laboratório`);
   };
   return { root, click, html: () => outer };
 }
