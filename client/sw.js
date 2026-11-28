@@ -127,6 +127,9 @@ const SHELL_ASSETS = [
   "./js/app/screens-not-found.js",
 
   "./js/app/screens-status.js",
+  "./js/app/screens-status-view.js",
+  "./js/app/screens-voxpedia.js",
+  "./js/app/screens-ajuda-teste.js",
 
   "./js/render/status.js",
 

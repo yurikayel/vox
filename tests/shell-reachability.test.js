@@ -136,6 +136,24 @@ test("PM-04: a lista de pendentes só tem módulo real que ainda falta no precac
   }
 });
 
+/** Telas carregadas por `import()` em `route.js` / `screens-status.js` que têm de abrir offline (F27). */
+const ROTAS_OFFLINE = [
+  { rota: "#/status", modulo: "./js/app/screens-status-view.js" },
+  { rota: "#/voxpedia", modulo: "./js/app/screens-voxpedia.js" },
+  { rota: "#/ajuda/teste", modulo: "./js/app/screens-ajuda-teste.js" },
+];
+
+test("F27: as rotas #/status, #/voxpedia e #/ajuda/teste têm a tela e os imports estáticos no precache", () => {
+  const shell = new Set(listFrom("SHELL_ASSETS"));
+  const faltam = [];
+  for (const { rota, modulo } of ROTAS_OFFLINE) {
+    for (const rel of [modulo, ...staticImportsOf(path.join(root, modulo))]) {
+      if (!shell.has(rel)) faltam.push(`${rota}: ${rel}`);
+    }
+  }
+  assert.deepEqual(faltam, [], "offline, a tela lazy não abre: ponha no SHELL_ASSETS");
+});
+
 test("PM-04: todo script do index.html está no precache, então o grafo estático inteiro do shell também", () => {
   const shell = new Set(listFrom("SHELL_ASSETS"));
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");

@@ -31,7 +31,7 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/contribution-attestation.js"'));
   assert.ok(sw.includes('"./js/app/onboarding-oauth-ui.js"'));
   const shellOnly = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
-  assert.ok(!shellOnly.includes("screens-ajuda-teste.js"), "PM-01: tela ajuda-teste fora do precache");
+  assert.ok(shellOnly.includes("screens-ajuda-teste.js"), "F27: tela ajuda-teste no precache, a rota abre offline");
   // `render.js` reexporta estaticamente os dois: offline, sem eles no precache, o shell inteiro não sobe.
   assert.ok(shellOnly.includes("render/ajuda-teste.js"), "render ajuda-teste é importado de forma estática pelo shell: fica no precache");
   assert.ok(shellOnly.includes("render/voxpedia.js"), "render voxpedia é importado de forma estática pelo shell: fica no precache");

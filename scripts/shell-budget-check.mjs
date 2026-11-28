@@ -31,8 +31,8 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
  * a tela falhava offline. Sem código novo; o teto segue o medido, não é meta.
  */
 export const DEFAULT_BUDGETS = Object.freeze({
-  maxRawBytes: 3_080_000,
-  maxGzipBytes: 990_000,
+  maxRawBytes: 3_085_000,
+  maxGzipBytes: 992_000,
   maxBootMs: 3_000,
 });
 

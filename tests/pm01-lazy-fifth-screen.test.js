@@ -100,13 +100,13 @@ test("PM-01 passo 6: screens-status-view fica fora do grafo estático de boot", 
   }
 });
 
-test("PM-01 passo 6: módulos sob demanda ficam fora de SHELL_ASSETS e fora de UNPLUGGED_MODULES", () => {
+test("PM-01 passo 6: módulos sob demanda ficam no precache (rota offline, F27) e fora de UNPLUGGED_MODULES", () => {
   const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
   const shellSection = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
   const unpluggedSection = sw.split("const UNPLUGGED_MODULES")[1].split("];")[0];
   assert.ok(shellSection.includes('"./js/app/screens-status.js"'), "fachada continua no SHELL_ASSETS");
   for (const rel of LAZY_ONLY_MODULES) {
-    assert.ok(!shellSection.includes(`"${rel}"`), `${rel} deve ficar fora do precache SHELL_ASSETS`);
+    assert.ok(shellSection.includes(`"${rel}"`), `${rel} fica no precache SHELL_ASSETS: sem ele #/status não abre offline`);
     assert.ok(!unpluggedSection.includes(`"${rel}"`), `${rel} é alcançável sob demanda, não UNPLUGGED`);
   }
   // A fachada `screens-status.js` e a tela de status importam `availability-metrics` de forma estática: offline, sem ele no precache, a tela não abre.
