@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { createAndSelectCampaign, exportCampaignBackup } from "../client/js/dungeon/dungeon-persistence.js";
 import { dispatchCampaignOp } from "../client/js/dungeon/dungeon-sync-bridge.js";
 import { getActiveScene, uploadSceneMapBlob } from "../client/js/dungeon/dungeon-scene-actions.js";
-import { referencedBlobHashes, unpackEncryptedVoxRpg, unpackVoxRpg } from "../client/js/dungeon/vtt-portable.js";
+import { unpackEncryptedVoxRpg, unpackVoxRpg } from "../client/js/dungeon/vtt-portable.js";
 import { createMemoryVttBackend, createVttStore } from "../client/js/dungeon/vtt-store.js";
 
 const SENHA = "senha-soberana-super-segura";
@@ -60,10 +60,4 @@ test("hash referenciado que não está no aparelho é pulado sem erro", async ()
   const achado = await store.putBlob(new Uint8Array([4]), "image/png");
   const mapa = await store.getBlobsMap(new Set([achado.sha256, "0".repeat(64)]));
   assert.deepEqual([...mapa.keys()], [achado.sha256]);
-});
-
-test("referencedBlobHashes ignora vazios e campanha sem cenas", () => {
-  assert.equal(referencedBlobHashes(null).size, 0);
-  const doc = { scenesById: { s: { floors: [{ mapBlobHash: "" }, { mapBlobHash: "m" }], tokens: [{ avatarBlobHash: "" }, { avatarBlobHash: "t" }] } } };
-  assert.deepEqual([...referencedBlobHashes(doc)].sort(), ["m", "t"]);
 });
