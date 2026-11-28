@@ -74,12 +74,21 @@ test("cada ponto de quebra tem uma unidade só em todas as folhas (o par px/em n
   for (const [ponto, motivo] of BUCKETS_MISTOS) assert.equal(porPonto.get(ponto)?.size, 2, `${ponto}px já não mistura: ${motivo}`);
 });
 
-test("não sobra buraco entre o par estreito e o largo: o max-width em em fica a 0,01em do min-width, no máximo", () => {
+/** Pares max/min em `em` com o mesmo valor que já se sobrepunham na base (520 px dos dois lados), em regras sem par de layout. */
+const SOBREPOSTOS_NA_BASE = new Map([[32.5, "o 520 px de max-width e o de min-width da base já valiam juntos a 520 px; são regras de elementos diferentes, sem par"]]);
+
+test("o par estreito/largo não deixa buraco nem se sobrepõe: min − max fica entre 0,0099em e 0,0101em", () => {
   const em = TODAS.filter((c) => c.unit === "em");
-  const mins = new Set(em.filter((c) => c.kind === "min").map((c) => c.value));
-  const folgaMaior = (c) => [...mins].some((m) => m > c.value && m - c.value > 0.0101 && m - c.value < 0.5);
-  const buracos = em.filter((c) => c.kind === "max" && folgaMaior(c));
-  assert.deepEqual(buracos.map((c) => `${c.folha}: ${c.texto}`), [], "o par é max-width: (N − 0.01)em com min-width: Nem");
+  const mins = em.filter((c) => c.kind === "min").map((c) => c.value);
+  const folgaMaior = (c) => mins.some((m) => m > c.value && m - c.value > 0.0101 && m - c.value < 0.5);
+  const sobrepoe = (c) => !SOBREPOSTOS_NA_BASE.has(c.value) && mins.some((m) => m >= c.value && m - c.value < 0.0099);
+  const maxes = em.filter((c) => c.kind === "max");
+  assert.deepEqual(maxes.filter(folgaMaior).map((c) => `${c.folha}: ${c.texto} (buraco)`), [], "o par é max-width: (N − 0.01)em com min-width: Nem");
+  assert.deepEqual(maxes.filter(sobrepoe).map((c) => `${c.folha}: ${c.texto} (sobreposição)`), [], "com max-width: Nem e min-width: Nem os dois valem juntos a N");
+  for (const [valor, motivo] of SOBREPOSTOS_NA_BASE) {
+    assert.ok(motivo.length > 20, "a exceção diz o motivo");
+    assert.ok(maxes.some((c) => c.value === valor) && mins.includes(valor), `${valor}em já não se sobrepõe: tire-o de SOBREPOSTOS_NA_BASE`);
+  }
 });
 
 test("nenhuma folha usa sintaxe de intervalo de mídia (width < Nem, width >= Nem, Npx <= width)", () => {
