@@ -76,3 +76,70 @@ test("pedido recusado também não mexe no chip", async () => {
   await clickOn(state, "req-inexistente");
   assert.equal(state.rollSecret, true);
 });
+
+/** Store que só grava quando `liberar()` roda (gravação lenta), ou que rejeita a gravação. */
+function storeLento(state, { rejeita = false } = {}) {
+  let liberar;
+  const portao = new Promise((r) => { liberar = r; });
+  const appendOp = async () => { await portao; if (rejeita) throw new Error("cota"); return { campaign: state.campaignDoc }; };
+  return { store: { appendOp, listCampaigns: async () => [] }, liberar };
+}
+
+test("chip desligado continua desligado depois de rolar um pedido (nem público nem gm o ligam)", async () => {
+  for (const rollVisibility of ["public", "gm"]) {
+    const state = stateWith(request({ rollVisibility }));
+    state.rollSecret = false;
+    await clickOn(state, "req-1");
+    assert.equal(state.rollSecret, false, `pedido ${rollVisibility}`);
+  }
+});
+
+test("pedido do Mestre sai gm mesmo com o chip desligado de forma explícita, e o chip ligado fica ligado", async () => {
+  const off = stateWith(request({ rollVisibility: "gm" }));
+  off.rollSecret = false;
+  await clickOn(off, "req-1");
+  assert.equal(off.rolls.at(-1).visibility, "gm", "o pedido manda, o chip desligado não o torna público");
+  const on = stateWith(request({ rollVisibility: "gm" }));
+  on.rollSecret = true;
+  await clickOn(on, "req-1");
+  assert.equal(on.rolls.at(-1).visibility, "gm");
+  assert.equal(on.rollSecret, true);
+});
+
+test("a gravação falha (store rejeita): o chip armado continua armado", async () => {
+  const state = stateWith(request());
+  state.campaignId = "camp-lacunas";
+  state.rollSecret = true;
+  const { store, liberar } = storeLento(state, { rejeita: true });
+  const job = clickOn(state, "req-1", store);
+  assert.equal(state.rollSecret, true, "já restaurado antes de a gravação terminar");
+  liberar();
+  await assert.rejects(job, /cota/);
+  assert.equal(state.rollSecret, true, "a falha da gravação não leva o chip");
+});
+
+test("o jogador mexe no chip durante a gravação lenta: a escolha dele vale, não é sobrescrita", async () => {
+  const state = stateWith(request());
+  state.campaignId = "camp-lacunas";
+  state.rollSecret = true;
+  const { store, liberar } = storeLento(state);
+  const job = clickOn(state, "req-1", store);
+  ACTION_HANDLERS["roll-secret"](state);
+  assert.equal(state.rollSecret, false, "desligou durante a espera");
+  liberar();
+  await job;
+  assert.equal(state.rollSecret, false, "a gravação que termina depois não desfaz a escolha");
+});
+
+test("dois Rolar seguidos com gravação lenta (duplo clique ou dois pedidos) não perdem o chip", async () => {
+  const state = stateWith(request(), request({ requestId: "req-2", skillId: "furtividade", label: "Furtividade" }));
+  state.campaignId = "camp-lacunas";
+  state.rollSecret = true;
+  const { store, liberar } = storeLento(state);
+  const a = clickOn(state, "req-1", store);
+  const b = clickOn(state, "req-2", store);
+  liberar();
+  await Promise.all([a, b]);
+  assert.equal(state.rollSecret, true);
+});
+
