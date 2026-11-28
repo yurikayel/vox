@@ -51,11 +51,12 @@ _BTN_CRONICA = "button[data-hud-op='panel-open'][data-panel-id='chronicle']"
 class HudPainelAltoE2ETests(PlaywrightE2EHarness):
     """Painel alto: cabe, rola por dentro, não cobre a barra nem empurra o mapa.
 
-    No celular (390 px) o painel é uma folha fixa de até 75% da altura (spec hud-jogo-v0, D6a): ela só deixa a barra
-    à vista quando a barra está acima dela. Se a barra não está inteira na viewport, o clique do Playwright rola a
-    página e a centraliza (a 390 px ela fica sob a folha); por isso o teste leva a barra a 8 px do topo, inteira à
-    vista, e espera a condição de o botão receber o clique (altura, rolagem e posição estáveis por 12 quadros e
-    `elementFromPoint` no botão) antes de abrir o painel.
+    No celular (390 px) o painel é uma folha fixa na base (spec hud-jogo-v0, D6: "folha no celular"); o CSS limita a
+    folha a 75% da altura (`c95092b3`). Ela só deixa a barra à vista quando a barra está acima dela, e a posição da
+    barra na hora do clique depende do Playwright: ele rola a página para o botão e, se o botão já recebe o ponteiro na
+    posição centralizada, a barra fica a ~400 px, sob a folha (vermelho); se `elementFromPoint` ainda devolve o `html`,
+    ele rola de novo até a barra chegar ao topo (verde). Por isso o teste leva a barra a 8 px do topo e espera, por
+    condição, o botão receber o ponteiro (`elementFromPoint` no botão, com a geometria estável) antes de abrir o painel.
     """
 
     def _check(self, width, height):
