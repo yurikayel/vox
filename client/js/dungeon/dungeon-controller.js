@@ -205,6 +205,11 @@ async function importVoxcharFile(state, file, viewOpts) {
   return undefined;
 }
 
+/** Foco do `.voxchar`: no resumo dos motivos só se a importação foi recusada (lido depois de assentar, não antes). */
+function voxcharFocus(state) {
+  return { get focusSelector() { return state.sheetEditIssues.length ? "[data-edit-focus]" : ""; } };
+}
+
 function handleDungeonChange(container, viewOpts, ev) {
   const target = ev.target;
   const kind = target?.dataset?.dungeon;
@@ -212,7 +217,7 @@ function handleDungeonChange(container, viewOpts, ev) {
   if (!file || (kind !== "import-file" && kind !== "upload-map" && !FILE_CHANGE_ACTIONS.has(kind))) return undefined;
   const state = viewOpts.state || getDungeonSession();
   if (kind === "wizard-import") return settleAndRedraw(import("./sheet-wizard-actions.js").then((m) => m.importInWizard(state, file, { store: viewOpts.store })), container, viewOpts, { focusSelector: "[data-wizard-focus]" });
-  if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts);
+  if (kind === "import-voxchar") return settleAndRedraw(importVoxcharFile(state, file, viewOpts), container, viewOpts, voxcharFocus(state));
   if (kind === "upload-map") {
     const job = readUploadedBytes(file).then((bytes) => uploadSceneMapBlob(state, { bytes, mime: file.type }, { store: viewOpts.store }));
     return settleAndRedraw(job, container, viewOpts);

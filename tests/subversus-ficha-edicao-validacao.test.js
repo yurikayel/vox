@@ -38,11 +38,11 @@ test("validação: cada problema vem com campo e motivo em português", () => {
 test("painel: avisos aparecem num alerta, o painel abre e mostra o que foi digitado", () => {
   const html = renderSheetEditPanel({ name: "Lyra", attributes_lww: { armor_class: 12, abilities: { str: 10 } } }, { issues: [{ field: "armorClass", message: "CA: 99 está fora do intervalo 1–40; x." }], draft: { name: "Kael", armor_class: 99, str: 31 } });
   assert.match(html, /<details[^>]*data-dungeon-details="sheet-edit" open>/);
-  assert.match(html, /role="alert"[^>]*><strong>Nada foi salvo\. Corrija:<\/strong><ul><li id="[^"]+">CA: 99 está fora/);
+  assert.match(html, /role="group"[^>]*><strong id="[^"]+">Nada foi salvo\. Corrija:<\/strong><ul id="[^"]+"><li id="[^"]+">CA: 99 está fora/);
   assert.match(html, /name="sheetName"[^>]*value="Kael"/);
   assert.match(html, /name="armorClass"[^>]*value="99"/);
   assert.match(html, /name="str"[^>]*value="31"/);
-  assert.doesNotMatch(renderSheetEditPanel({ name: "Lyra" }), /role="alert"| open>/, "sem avisos: fechado e sem alerta");
+  assert.doesNotMatch(renderSheetEditPanel({ name: "Lyra" }), /data-edit-focus| open>/, "sem avisos: fechado e sem resumo");
 });
 
 function fakeForm(values) {

@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-- Editar ficha: depois de um Salvar recusado por erro de validação o foco vai para o resumo dos erros, em vez de cair no início da página.
+- Editar ficha: depois de um Salvar recusado por erro de validação, ou de um `.voxchar` recusado, o foco vai para o resumo dos erros, em vez de cair no início da página. O resumo é um grupo nomeado e descrito (não mais `role="alert"`), para o leitor falar uma vez só.
 - Ficha: no assistente de criar ficha e em "Editar ficha", o campo recusado passa a sair com `aria-invalid="true"` e `aria-describedby` apontando para a mensagem da lista de avisos (leitor de tela diz qual campo tem erro e por quê). Os campos do sistema (Deslocamento, salvaguardas, especialização) e o seletor de sistema ficam para depois.
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
 - Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
