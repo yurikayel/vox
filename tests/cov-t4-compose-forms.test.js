@@ -8,6 +8,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { FakeEl, installFakeDocument, captureToasts } from "./helpers/cov-t4-dom.mjs";
+import { waitUntil } from "./helpers/wait-until.js";
 
 globalThis.fetch = async () => { throw new Error("offline"); };
 
@@ -145,6 +146,10 @@ test("compose-listing — comunidade com comércio ativo abre o formulário e li
     let prevented = 0;
     await els["form-compose-listing"].fire("submit", { preventDefault: () => prevented++ });
     assert.ok(prevented >= 1, "submit não recarrega a página");
+    // O envio é disparado sem ser esperado pela escuta: espera terminar para a oferta não cair no teste seguinte.
+    toasts.stop(); // devolve o `setTimeout` real, que `waitUntil` usa
+    const publicada = await waitUntil(async () => (await cacheNode.getLocalPosts({ type: "listing" }))[0]);
+    assert.equal(publicada?.communityId, "feira_viva", "a oferta enviada termina de gravar antes do teste acabar");
   } finally {
     toasts.stop();
     dom.restore();

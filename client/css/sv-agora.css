@@ -136,3 +136,8 @@
 summary {
   min-height: 24px;
 }
+
+/* Caixa de DM: o item é filho flex da linha; sem min-width:0 a prévia em uma linha alarga o item (1722 px a 320). */
+.dm-inbox-item {
+  min-width: 0;
+}
