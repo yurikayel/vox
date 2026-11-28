@@ -534,6 +534,7 @@ const UNPLUGGED_MODULES = [
   "./js/labs/parado/webxdc-crdt.js",
   "./js/labs/parado/webxdc-host.js",
   "./js/labs/parado/webxdc-loader.js",
+  "./js/carousel-timeline.js",
 ];
 
 self.addEventListener("install", (event) => {
