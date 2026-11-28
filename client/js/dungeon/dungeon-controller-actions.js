@@ -20,7 +20,7 @@ import {
   recordSheetActionRoll,
   removeCustomSheetAction,
   saveDungeonPrefs,
-  toggleDice3dPref,
+  PREF_ACTION_HANDLERS,
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
@@ -307,8 +307,7 @@ export const ACTION_HANDLERS = {
   "level-up": (state, _el, _c, opts) => applySheetLevelUp(state, opts.store, state.levelUpPreset),
   "note-toggle-vis": (state, el, _c, opts) => updateNoteVisibility(state, el.dataset.noteId, el.dataset.nextVis || "shared", opts.store),
   "note-pin": (state, el, _c, opts) => pinNoteToScene(state, el.dataset.noteId, {}, opts.store),
-  "toggle-dice3d": toggleDice3dPref,
-  "dismiss-first-table": (state) => { state.dungeonPrefs = { ...state.dungeonPrefs, firstTableDismissed: true }; saveDungeonPrefs({ firstTableDismissed: true }); },
+  ...PREF_ACTION_HANDLERS,
 };
 
 function valOf(form, sel, fallback = "") {

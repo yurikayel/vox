@@ -389,6 +389,21 @@ export function toggleDice3dPref(state) {
 }
 
 /**
+ * Dispensa o roteiro "Primeira mesa" na sessão e grava só essa preferência, sem tocar no papel visual.
+ * @param {{ dungeonPrefs?: object }} state Estado da sessão.
+ */
+export function dismissFirstTablePref(state) {
+  state.dungeonPrefs = { ...state.dungeonPrefs, firstTableDismissed: true };
+  saveDungeonPrefs({ firstTableDismissed: true });
+}
+
+/** Ações de clique (`data-dungeon`) que só mexem nas preferências do aparelho. */
+export const PREF_ACTION_HANDLERS = Object.freeze({
+  "toggle-dice3d": toggleDice3dPref,
+  "dismiss-first-table": dismissFirstTablePref,
+});
+
+/**
  * Lê só o que já está gravado no aparelho, sem completar com padrões (gravar um campo não grava os outros).
  * @returns {object} Objeto gravado; vazio se não há nada ou se o JSON está corrompido.
  */

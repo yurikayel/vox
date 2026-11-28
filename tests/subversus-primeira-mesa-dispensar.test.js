@@ -5,7 +5,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ACTION_HANDLERS, FOCUS_AFTER_ACTION } from "../client/js/dungeon/dungeon-controller-actions.js";
+import { ACTION_HANDLERS } from "../client/js/dungeon/dungeon-controller-actions.js";
 import { wireDungeonView } from "../client/js/dungeon/dungeon-controller.js";
 import { loadDungeonPrefs, saveDungeonPrefs } from "../client/js/dungeon/dungeon-persistence.js";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
@@ -83,7 +83,7 @@ function makeClickHost() {
     isConnected: true,
     addEventListener: (type, fn) => { listeners[type] = fn; },
     querySelector(sel) {
-      const alvo = sel === FOCUS_AFTER_ACTION["dismiss-first-table"] && this.innerHTML.includes('data-dungeon="toggle-viewer-role"');
+      const alvo = sel === '[data-dungeon="toggle-viewer-role"]' && this.innerHTML.includes('data-dungeon="toggle-viewer-role"');
       return alvo ? { tagName: "BUTTON", focus() { doc.activeElement = this; } } : null;
     },
   };
