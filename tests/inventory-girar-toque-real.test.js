@@ -66,3 +66,27 @@ test("toque no botão sem arrasto em curso não faz nada e o click seguinte vale
   assert.equal(m.grid.ghost, null);
   assert.equal(m.button.hidden, true);
 });
+
+test("toque real: o segundo dedo fora do botão não gira o item", () => {
+  const m = arrastoPorToque();
+  m.fire("pointerdown", { target: m.cell, pointerId: 2, pointerType: "touch", isPrimary: false, clientX: 100, clientY: 50 });
+  m.fire("pointerup", { target: m.cell, pointerId: 2, pointerType: "touch", isPrimary: false, clientX: 100, clientY: 50 });
+  assert.equal(span(m.grid), "1", "não girou");
+});
+
+test("toque real: o click que fecha o gesto zera a marca e o clique seguinte do botão gira de novo", () => {
+  const m = arrastoPorToque();
+  toqueNoBotao(m);
+  m.fire("click", { target: m.button });
+  assert.equal(span(m.grid), "3", "o toque girou uma vez só");
+  m.fire("click", { target: m.button });
+  assert.equal(span(m.grid), "1", "o clique seguinte gira de volta");
+});
+
+test("toque real: um novo pointerdown de mouse no botão zera a marca do toque anterior", () => {
+  const m = arrastoPorToque();
+  toqueNoBotao(m);
+  m.fire("pointerdown", { target: m.button, pointerId: 4, pointerType: "mouse", isPrimary: false, clientX: 900, clientY: 380 });
+  m.fire("click", { target: m.button });
+  assert.equal(span(m.grid), "1", "o clique do mouse girou de volta");
+});
