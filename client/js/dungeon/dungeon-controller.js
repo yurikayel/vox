@@ -170,6 +170,8 @@ function settleAndRedraw(promise, container, viewOpts, extra = {}) {
 /**
  * Agenda o redesenho do próximo quadro para a ação que ainda grava: com gravação rápida o `settleAndRedraw` o cancela
  * antes do quadro (um desenho só); com gravação lenta o resultado já aparece no quadro, sem esperar a gravação.
+ * @param {HTMLElement} container Contêiner da Mesa a redesenhar.
+ * @param {object} viewOpts Opções da vista (estado, loja, tela) repassadas ao redesenho.
  * @returns {() => void} Cancela o desenho agendado (não faz nada se ele já rodou).
  */
 function scheduleFrameRedraw(container, viewOpts) {
