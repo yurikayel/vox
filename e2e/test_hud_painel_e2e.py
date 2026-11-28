@@ -23,16 +23,50 @@ _DOC_RECT = "(sel) => { const b = document.querySelector(sel).getBoundingClientR
 _SCROLL = "() => { const p = document.querySelector('#dungeon-hud-panel'); return {over: p.scrollHeight > p.clientHeight, overflowY: getComputedStyle(p).overflowY, vh: innerHeight}; }"
 
 
+_BAR_AO_TOPO_ESTAVEL = """async (btnSel) => {
+  const bar = document.querySelector('.dungeon-hud-panel-bar');
+  const btn = document.querySelector(btnSel);
+  bar.scrollIntoView({block: 'start'});
+  scrollBy(0, bar.getBoundingClientRect().top - 8);
+  const frame = () => new Promise((r) => requestAnimationFrame(r));
+  const key = () => `${document.documentElement.scrollHeight}|${Math.round(bar.getBoundingClientRect().top)}|${Math.round(scrollY)}`;
+  const recebeClique = () => {
+    const r = btn.getBoundingClientRect();
+    const alvo = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return alvo === btn || btn.contains(alvo);
+  };
+  let last = key();
+  let calmos = 0;
+  for (let i = 0; i < 300 && !(calmos >= 12 && recebeClique()); i++) {
+    await frame();
+    const now = key();
+    calmos = now === last ? calmos + 1 : 0;
+    last = now;
+  }
+  return calmos >= 12 && recebeClique();
+}"""
+_BTN_CRONICA = "button[data-hud-op='panel-open'][data-panel-id='chronicle']"
+
+
 class HudPainelAltoE2ETests(PlaywrightE2EHarness):
-    """Painel alto: cabe, rola por dentro, não cobre a barra nem empurra o mapa."""
+    """Painel alto: cabe, rola por dentro, não cobre a barra nem empurra o mapa.
+
+    No celular (390 px) o painel é uma folha fixa na base (spec hud-jogo-v0, D6: "folha no celular"); o CSS limita a
+    folha a 75% da altura (`c95092b3`). Ela só deixa a barra à vista quando a barra está acima dela, e a posição da
+    barra na hora do clique depende do Playwright: ele rola a página para o botão e, se o botão já recebe o ponteiro na
+    posição centralizada, a barra fica a ~400 px, sob a folha (vermelho); se `elementFromPoint` ainda devolve o `html`,
+    ele rola de novo até a barra chegar ao topo (verde). Por isso o teste leva a barra a 8 px do topo e espera, por
+    condição, o botão receber o ponteiro (`elementFromPoint` no botão, com a geometria estável) antes de abrir o painel.
+    """
 
     def _check(self, width, height):
         ctx, page, errors, _ = _new_isolated_page(self.browser, self.base_url, viewport={"width": width, "height": height})
         try:
             table_id = _onboard_and_campaign(page, self.base_url, "Painel Alto")
             _goto_mesa(page, self.base_url, table_id)
+            self.assertTrue(page.evaluate(_BAR_AO_TOPO_ESTAVEL, _BTN_CRONICA), "a página assenta com o botão da barra recebendo o clique")
             canvas_before = page.evaluate(_DOC_RECT, "#dungeon-vtt-canvas")
-            page.locator("button[data-hud-op='panel-open'][data-panel-id='chronicle']").first.click()
+            page.locator(_BTN_CRONICA).first.click()
             page.locator("#dungeon-hud-panel").wait_for(state="visible")
             page.evaluate(_LONG_CONTENT)
             panel = page.evaluate(_RECT, "#dungeon-hud-panel")
