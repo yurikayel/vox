@@ -5,7 +5,7 @@
 > **Horizonte:** 2026-Q4 → 2027-Q3  
 > **Tese:** O repositório publica cliente estático e **governa código**; a malha social escala **sem loop do mantenedor** (relay, mod, T&S, suporte 24/7).
 
-Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [operação da ferramenta de protocolo](../process/antigravity-operating.md) e [GOVERNANCE.md](../../GOVERNANCE.md).
+Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [contrato de operação](../process/operacao-protocolo-integracao.md) e [GOVERNANCE.md](../../GOVERNANCE.md).
 
 Índice das dez tarefas estratégicas: [brainstorm-dez-tarefas-estrategia-2026-10.md](../archive/brainstorm-dez-tarefas-estrategia-2026-10.md) (**T1** = este documento).
 
@@ -21,7 +21,7 @@ Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.m
 | Revisar PRs de protocolo (malha, relay, gossip) | Comprar infra para “salvar” comunidade lenta |
 | Usar o app como **cidadão** nas próprias comunidades | Ser NOC único, DPO operacional ou CNPJ de plataforma |
 
-**Ferramenta de protocolo × ferramenta de integração:** protocolo em `feat/*`; integração e `origin/main` na ferramenta de integração ([operação da ferramenta de protocolo](../process/antigravity-operating.md)). Mantenedor **humano** ≈ dono de merge + qualidade de release, não coordenador de ops da malha.
+**Ferramenta de protocolo × ferramenta de integração:** protocolo em `feat/*`; integração e `origin/main` na ferramenta de integração ([contrato de operação](../process/operacao-protocolo-integracao.md)). Mantenedor **humano** ≈ dono de merge + qualidade de release, não coordenador de ops da malha.
 
 ---
 
@@ -84,7 +84,7 @@ Horizonte trimestral alinhado ao [backlog-participacao-rede.md](./backlog-partic
 | Tripé docs participação linkado no lobby | `rede-sustentada`, auto-escala, infra-participativa |
 | V-P02, V-P01, V-P04, V-P05 em `main` | Painel vizinhos + seed; SW documentado |
 | Checklist mantenedor “Pages + CI only” acordado | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) §A |
-| Ferramenta de protocolo sem push `main` | [operação da ferramenta de protocolo](../process/antigravity-operating.md) |
+| Ferramenta de protocolo sem push `main` | [contrato de operação](../process/operacao-protocolo-integracao.md) |
 
 ### T2 — Loop sustentação sem maintainer (2027-Q1)
 
@@ -202,7 +202,7 @@ Alinhado ao perfil global de hardening (arquivo de regras global da ferramenta d
 | [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) | Flywheel, SLOs, mod ladder, checklist maintainer |
 | [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) | 4 camadas, painel honesto, regulatório |
 | [backlog-participacao-rede.md](./backlog-participacao-rede.md) | V-P* / V-I* rastreio |
-| [operação da ferramenta de protocolo](../process/antigravity-operating.md) | Handoff branch → `main` |
+| [contrato de operação](../process/operacao-protocolo-integracao.md) | Handoff branch → `main` |
 | [piloto-comunidade-retrospectiva-template.md](../pilot/piloto-comunidade-retrospectiva-template.md) | T4 validação |
 
 ---

@@ -14,22 +14,27 @@ const css = readFileSync(new URL("../client/css/sv-inventario-arrastar.css", imp
 const sheet = applyInventoryMutation(applyInventoryMutation({}, "add", { label: "Espada" }), "place", { itemId: "espada", x: 2, y: 0 });
 const state = { sheet: { inventoryItems: listInventoryItems(sheet.inventory_orset) } };
 
-/** Contêiner de mentira: guarda os ouvintes e entrega a célula, a grade, o fantasma e o botão. */
+/** Contêiner de mentira: guarda os ouvintes e entrega as células (`cell` e `cell2`, lado a lado), a grade, o fantasma e o botão. */
 function fakeMount(dims = { w: "1", h: "3" }, { realFocus = false } = {}) {
   const handlers = {};
   const grid = { ghost: null, ownerDocument: { createElement: () => ({ style: {}, setAttribute() {}, remove: () => { grid.ghost = null; } }) }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 1000, height: 400 }) };
   grid.querySelector = () => grid.ghost;
   grid.appendChild = (g) => { grid.ghost = g; };
-  const classes = new Set();
-  const cell = { dataset: { invCell: "espada", invW: dims.w, invH: dims.h }, classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) }, focus() {}, setPointerCapture() {}, getBoundingClientRect: () => ({ left: 200, top: 0, width: 100, height: 300 }) };
-  cell.closest = (sel) => (sel === "[data-inv-cell]" ? cell : sel === "[data-inv-grid]" ? grid : null);
+  const makeCell = (id, left) => {
+    const classes = new Set();
+    const c = { classes, dataset: { invCell: id, invW: dims.w, invH: dims.h }, classList: { add: (n) => classes.add(n), remove: (n) => classes.delete(n) }, focus() {}, setPointerCapture() {}, getBoundingClientRect: () => ({ left, top: 0, width: 100, height: 300 }) };
+    c.closest = (sel) => (sel === "[data-inv-cell]" ? c : sel === "[data-inv-grid]" ? grid : null);
+    return c;
+  };
+  const cell = makeCell("espada", 200);
+  const cell2 = makeCell("escudo", 600);
   const button = { hidden: true };
   button.closest = (sel) => (sel === "[data-inv-rotate]" ? button : null);
   const container = {
     ownerDocument: null,
     addEventListener: (type, fn) => { (handlers[type] ||= []).push(fn); },
     querySelector: (sel) => (sel === "[data-inv-rotate]" ? button : null),
-    querySelectorAll: (sel) => (sel === "[data-inv-cell]" ? [cell] : sel === ".sv-inv-ghost" ? [grid.ghost].filter(Boolean) : []),
+    querySelectorAll: (sel) => (sel === "[data-inv-cell]" ? [cell, cell2] : sel === ".sv-inv-ghost" ? [grid.ghost].filter(Boolean) : []),
   };
   bindInventoryDrag(container, { state, store: {} }, async () => {});
   const fire = (type, ev) => (handlers[type] || []).forEach((fn) => fn({ preventDefault() {}, stopImmediatePropagation() {}, ...ev }));
@@ -40,7 +45,7 @@ function fakeMount(dims = { w: "1", h: "3" }, { realFocus = false } = {}) {
   const blur = () => { focused = null; focusouts += 1; fire("focusout", { relatedTarget: null }); };
   const origFire = fire;
   const fireTracked = (type, ev) => { if (realFocus && ev?.target === cell && !focused) cell.focus(); origFire(type, ev); };
-  return { fire: realFocus ? fireTracked : fire, cell, button, grid, blur, focusouts: () => focusouts, held: () => classes.has("is-held") };
+  return { fire: realFocus ? fireTracked : fire, cell, cell2, button, grid, blur, focusouts: () => focusouts, held: () => cell.classes.has("is-held"), held2: () => cell2.classes.has("is-held") };
 }
 
 const span = (grid) => /span (\d+)$/.exec(grid.ghost.style.gridColumn)?.[1];
@@ -121,4 +126,61 @@ test("e) clique no botão sem item em mãos não faz nada", () => {
   m.fire("click", { target: m.button });
   assert.equal(m.grid.ghost, null);
   assert.equal(m.button.hidden, true);
+});
+
+const FORA = 5000;
+const down = (m, target, pointerId, pointerType = "mouse") => m.fire("pointerdown", { target, pointerId, pointerType, button: 0, clientX: 250, clientY: 50 });
+
+test("h) segundo dedo em OUTRA célula não toma o arrasto: o fantasma, o botão e o item preso seguem com o dono e só ele solta", () => {
+  const m = fakeMount();
+  down(m, m.cell, 1);
+  m.fire("pointermove", { pointerId: 1, clientX: 260, clientY: 50 });
+  assert.equal(m.button.hidden, false);
+  down(m, m.cell2, 2, "touch");
+  m.fire("pointermove", { pointerId: 2, clientX: 700, clientY: 50 });
+  m.fire("pointerup", { pointerId: 2, clientX: FORA, clientY: 50 });
+  m.fire("pointercancel", { pointerId: 2 });
+  assert.equal(m.held(), true, "o item do dono segue preso");
+  assert.equal(m.held2(), false, "a outra célula não foi pega");
+  assert.equal(m.button.hidden, false);
+  assert.notEqual(m.grid.ghost, null);
+  const before = m.grid.ghost.style.gridColumn;
+  m.fire("pointermove", { pointerId: 1, clientX: 330, clientY: 50 });
+  assert.notEqual(m.grid.ghost.style.gridColumn, before, "o dono ainda conduz o fantasma");
+  m.fire("click", { target: m.button });
+  assert.equal(span(m.grid), "3", "o botão gira o item do dono");
+  m.fire("pointerup", { pointerId: 1, clientX: FORA, clientY: 50 });
+  assert.equal(m.grid.ghost, null, "o dono solta: o fantasma some");
+  assert.equal(m.button.hidden, true, "e o botão some");
+  assert.equal(m.held(), false);
+  assert.equal(m.held2(), false);
+});
+
+test("i) depois do arrasto (ou de um toque sem arrasto) um dedo novo, em qualquer célula, pega o item normalmente", () => {
+  const m = fakeMount();
+  down(m, m.cell, 1);
+  m.fire("pointermove", { pointerId: 1, clientX: 260, clientY: 50 });
+  m.fire("pointerup", { pointerId: 1, clientX: FORA, clientY: 50 });
+  down(m, m.cell2, 2);
+  m.fire("pointermove", { pointerId: 2, clientX: 700, clientY: 50 });
+  assert.equal(m.held2(), true, "o dedo 2 pegou a segunda célula depois do solto do dedo 1");
+  assert.equal(m.button.hidden, false);
+  m.fire("pointerup", { pointerId: 2, clientX: FORA, clientY: 50 });
+  down(m, m.cell, 3, "touch");
+  m.fire("pointerup", { pointerId: 3, clientX: 250, clientY: 50 });
+  down(m, m.cell2, 4);
+  m.fire("pointermove", { pointerId: 4, clientX: 700, clientY: 50 });
+  assert.equal(m.held2(), true, "um toque sem arrasto não deixa o dono preso");
+  assert.equal(m.held(), false);
+});
+
+test("j) o mesmo ponteiro (o mouse tem sempre o id 1) que aperta de novo durante um arrasto sem 'soltar' recupera o controle", () => {
+  const m = fakeMount();
+  down(m, m.cell, 1);
+  m.fire("pointermove", { pointerId: 1, clientX: 260, clientY: 50 });
+  assert.equal(m.held(), true);
+  down(m, m.cell2, 1);
+  m.fire("pointermove", { pointerId: 1, clientX: 700, clientY: 50 });
+  assert.equal(m.held2(), true, "o dono que aperta de novo pega a outra célula, em vez de ficar preso ao arrasto perdido");
+  assert.equal(m.held(), false);
 });
