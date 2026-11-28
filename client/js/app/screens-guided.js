@@ -4,18 +4,13 @@
  * fora do grafo estático de boot e do precache (`SHELL_ASSETS`).
  */
 
-/** @type {Promise<typeof import("./screens-guided-view.js")>|null} */
-let viewModulePromise = null;
+import { lazyModule } from "./lazy-module.js";
 
 /**
- * Carrega sob demanda e memoiza a implementação das telas dos assistentes guiados.
- *
- * @returns {Promise<typeof import("./screens-guided-view.js")>}
+ * Carregador da implementação das telas dos assistentes guiados: lembra só o sucesso; na falha mostra "Tentar de novo".
+ * Exportado para os testes trocarem o `import()` (`useLoaderForTests`).
  */
-function loadGuidedView() {
-  viewModulePromise ??= import("./screens-guided-view.js");
-  return viewModulePromise;
-}
+export const guidedView = lazyModule(() => import("./screens-guided-view.js"));
 
 /**
  * Pura: aplica as escolhas do assistente sobre as configurações atuais.
@@ -40,8 +35,7 @@ export function applyNetworkWizardChoices(current, { enabled, cap, wifiOnly, bac
  * @returns {Promise<void>}
  */
 export async function showNetworkWizard() {
-  const view = await loadGuidedView();
-  return view.showNetworkWizard(applyNetworkWizardChoices);
+  return guidedView.open((view) => view.showNetworkWizard(applyNetworkWizardChoices));
 }
 
 /**
@@ -50,8 +44,7 @@ export async function showNetworkWizard() {
  * @returns {Promise<void>}
  */
 export async function showBackupWizard() {
-  const view = await loadGuidedView();
-  return view.showBackupWizard();
+  return guidedView.open((view) => view.showBackupWizard());
 }
 
 /**
@@ -60,17 +53,15 @@ export async function showBackupWizard() {
  * @returns {Promise<void>}
  */
 export async function showWalletWizard() {
-  const view = await loadGuidedView();
-  return view.showWalletWizard();
+  return guidedView.open((view) => view.showWalletWizard());
 }
 
 /**
  * Monta assistente de teste de campo no celular sob demanda (PM-73).
  *
  * @param {object} [nav] Fonte opcional de ambiente (`navigator`) para testes.
- * @returns {Promise<{ getReport: () => object }>}
+ * @returns {Promise<{ getReport: () => object }|void>} Sem o módulo da tela (falha de carga), mostra o aviso e devolve `undefined`.
  */
 export async function showMobileTestGuide(nav = globalThis.navigator) {
-  const view = await loadGuidedView();
-  return view.showMobileTestGuide(nav);
+  return guidedView.open((view) => view.showMobileTestGuide(nav));
 }
