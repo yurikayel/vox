@@ -2,7 +2,7 @@
  * @file Tabelas de despacho de ações (cliques e formulários) do controlador da Mesa Soberana.
  * @module dungeon/dungeon-controller-actions
  */
-import { copyInviteLinkToClipboard } from "./dungeon-dom-focus.js";
+import { copyInviteLinkToClipboard, triggerBrowserDownload } from "./dungeon-dom-focus.js";
 import {
   addCustomSheetAction,
   advanceCampaignCalendar,
@@ -107,19 +107,6 @@ function rollD20AndPersist(state, opts) {
   return Promise.resolve(vaultStep)
     .then(() => persistD20RollIfActive(state, state.lastRoll.value, opts.store))
     .then(() => payload);
-}
-
-function triggerBrowserDownload(artifact, onDownload) {
-  if (typeof onDownload === "function") return onDownload(artifact);
-  if (typeof document === "undefined" || typeof URL?.createObjectURL !== "function") return undefined;
-  const blob = new Blob([artifact.bytes], { type: artifact.mime });
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = href;
-  a.download = artifact.filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(href), 1500);
-  return undefined;
 }
 
 /** Ações de arquivo tratadas no evento `change` (`dungeon-controller.js`), não no clique. */
@@ -257,6 +244,7 @@ export const ACTION_HANDLERS = {
   "unlock-vault": (state) => triggerShamirVaultUnlock(state),
   "inspect-role": (state, el) => inspectPeerPromptForRole(state, el.dataset.role),
   "open-campaign": (state, el, _c, opts) => openSavedCampaign(state, el.dataset.campaignId, opts.store),
+  "confirm-restore": (state, _el, _c, opts) => import("./dungeon-restore.js").then((m) => m.confirmPendingRestore(state, opts)),
   "arm-delete-campaign": (state, el) => { state.pendingDeleteId = el.dataset.campaignId || ""; },
   "cancel-delete-campaign": (state) => { state.pendingDeleteId = ""; },
   "confirm-delete-campaign": (state, el, _c, opts) => deleteSavedCampaign(state, el.dataset.campaignId, opts.store),

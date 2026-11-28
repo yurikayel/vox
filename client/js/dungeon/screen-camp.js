@@ -231,7 +231,14 @@ function renderCalendarPanel(state) {
     </details>`;
 }
 
-function renderBackupControls() {
+function renderPendingRestore() {
+  return `
+      <div class="dungeon-card-actions" role="group" aria-label="Confirmar restauração">
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="confirm-restore">Substituir pela cópia do arquivo</button>
+      </div>`;
+}
+
+function renderBackupControls(state) {
   return `
     <div class="dungeon-action-form">
       <span class="dungeon-eyebrow">Backup Portátil &amp; Obsidian</span>
@@ -247,7 +254,7 @@ function renderBackupControls() {
       <div class="dungeon-input-row dungeon-import-row">
         <label for="dungeon-import-file" class="dungeon-btn dungeon-btn-secondary dungeon-file-trigger">Importar .voxrpg.zip, .voxrpg.enc, .md ou .canvas</label>
         <input id="dungeon-import-file" class="sr-only" type="file" accept=".zip,.enc,.md,.canvas,application/zip,application/json,text/markdown" data-dungeon="import-file" />
-      </div>
+      </div>${state.pendingRestore ? renderPendingRestore() : ""}
     </div>`;
 }
 
@@ -284,7 +291,7 @@ function renderCampaignsSection(state) {
       ${renderSavedCampaignsGrid(state, list)}
       ${state.campaignId ? renderCalendarPanel(state) : ""}
       ${renderStorageMeter(state.storageUsage)}
-      ${renderBackupControls()}
+      ${renderBackupControls(state)}
     </section>`;
 }
 

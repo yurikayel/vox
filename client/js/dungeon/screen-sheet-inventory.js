@@ -31,7 +31,7 @@ function renderBackpackGrid(items) {
   const lost = overflow.map((id) => escapeHtml(byId.get(id).label)).join(", ");
   const warn = overflow.length ? `<p class="dungeon-alert-warn" role="status">Não coube na mochila (${BACKPACK_COLS}×${BACKPACK_ROWS}): ${lost}.</p>` : "";
   const rotate = `<button type="button" class="dungeon-chip-btn sv-inv-rotate" data-inv-rotate aria-label="Girar item" hidden>Girar item</button>`;
-  const hint = `${rotate}<p class="dungeon-muted" data-inv-hint>Arraste um item (no toque, segure 300 ms) ou foque e aperte Enter: setas movem, R gira, Enter solta, Esc cancela. Ao arrastar, o botão Girar item também gira.</p><p class="sv-inv-notice" role="status" data-inv-notice></p>`;
+  const hint = `${rotate}<p class="dungeon-muted" data-inv-hint>Arraste um item (no toque, segure 300 ms) ou foque e aperte Enter: setas movem, R gira, Enter solta, Esc cancela. Ao arrastar, o botão Girar item também gira.</p><p class="sv-inv-notice" data-inv-caption aria-hidden="true"></p><p class="sv-inv-notice" role="status" data-inv-notice></p>`;
   return `<div class="dungeon-backpack-grid" data-inv-grid role="group" aria-label="Mochila ${BACKPACK_COLS} por ${BACKPACK_ROWS}">${cells}</div>${hint}${warn}`;
 }
 
