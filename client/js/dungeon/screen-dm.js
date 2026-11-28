@@ -5,6 +5,7 @@ import { escapeHtml } from "../shared/html.js";
 import { buildFullInviteUrl } from "./dungeon-dom-focus.js";
 import { inspectPeerPromptForRole } from "./dungeon-state.js";
 import { renderDmRollPanel } from "./dm-roll-panel.js";
+import { renderFirstTablePanel } from "./first-table-checklist.js";
 import { dungeonIcon, renderShamirSealSvg } from "./rpg-illustrations.js";
 import { renderNotesPanel } from "./screen-notes.js";
 import { renderSavesPanel } from "./screen-party-panels.js";
@@ -164,6 +165,7 @@ export function renderDmScreen(state) {
         <p class="dungeon-muted">O Escudo do Mestre fica protegido no seu aparelho e nunca é replicado aos feeds públicos do Vox.</p>
       </div>
     </section>
+    ${renderFirstTablePanel(state)}
     ${renderP2pInvitePanel(state)}
     ${renderCompactWorldClock(state, true)}
     ${renderSavesPanel(state)}

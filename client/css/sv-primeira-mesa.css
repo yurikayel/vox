@@ -1,0 +1,19 @@
+/* @file Roteiro "Primeira mesa" do Escudo do Mestre (SUB-32), desenhado por `dungeon/first-table-checklist.js`. Só tokens
+ * do tema (`--sa-*`, `--sv-*`), sem `!important`.
+ */
+
+.dungeon-first-table-list {
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dungeon-first-table-step {
+  padding: 0.25rem 0;
+  color: var(--sa-on-surface);
+}
+
+.dungeon-first-table-step.is-done {
+  color: var(--sa-on-surface-variant);
+  text-decoration: line-through;
+}
