@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "../shared/html.js";
 import { dungeonIcon, renderD20DieSvg } from "./rpg-illustrations.js";
+import { checkEntryText } from "./vtt-check-request.js";
 import { renderHandoutViewer } from "./screen-notes.js";
 import { renderEntrySeal, renderFairplayStatus, isFairplayLabEnabled } from "./vtt-fairplay-selo.js";
 import { renderFairplayAccess } from "./vtt-fairplay-acesso.js";
@@ -78,7 +79,7 @@ export function renderChronicleEntry(entry, state) {
         <strong>${secretIcon}${escapeHtml(entry.speaker)}</strong>
         <span class="dungeon-code-tag">${escapeHtml(metaText || "")}</span>
       </header>
-      <p class="dungeon-turn-prose">${escapeHtml(entry.text)}</p>
+      <p class="dungeon-turn-prose">${escapeHtml(checkEntryText(entry, state.campaignDoc || state))}</p>
       ${renderEntrySeal(entry, state)}
     </article>`;
 }

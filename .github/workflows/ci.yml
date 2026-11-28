@@ -228,6 +228,48 @@ jobs:
           git config user.name ci && git config user.email ci@localhost
           node scripts/red-on-base.mjs
 
+  # Roda os E2E Python do Fairplay e da Mesa em rede só quando o PR toca os caminhos deles (scripts/e2e-seletivo.mjs).
+  # Mesmo setup do `e2e-full-nightly` (nightly-audit.yml): Playwright para Python e Chromium, sem dependência nova.
+  e2e-seletivo:
+    name: E2E Fairplay e Mesa em rede (só se o PR tocar)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Os caminhos do PR tocam os dois E2E?
+        id: filtro
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: node scripts/e2e-seletivo.mjs
+
+      - name: Configurar Python 3.12
+        if: steps.filtro.outputs.run == 'true'
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Playwright Chromium (Python)
+        if: steps.filtro.outputs.run == 'true'
+        run: |
+          pip install playwright
+          python -m playwright install chromium --with-deps
+
+      - name: E2E Fairplay e Mesa em rede
+        if: steps.filtro.outputs.run == 'true'
+        env:
+          VOX_E2E_WAIT_MS: "90000"
+        run: python -m unittest e2e.test_fairplay_e2e e2e.test_mesa_rede_e2e -v
+
   mutate-tier-a:
     name: Mutação Tier A (PM-112)
     if: github.event_name == 'pull_request'

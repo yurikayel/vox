@@ -1,11 +1,11 @@
-# Blob soft priority v0 — spec / ADR (Antigravity)
+# Blob soft priority v0 — spec / ADR (a ferramenta de protocolo)
 
 > **Status:** implementada (no ar com a flag desligada por padrão, conforme o FEATURES) · **Owner:** mantenedor · **Revisado:** 2026-10-23
 
 **Tarefa V-I09** · spike ADR (implementação em branch separada)  
 **Branch de implementação prevista:** `feat/blob-soft-priority-v0`  
 **Baseline:** `main` · SW `vox-pwa-v6.18-cache-manifest-wire` · **194** testes  
-**Relacionado:** [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md), [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md), lobby V-I09, V-I05 (`peers-cache-manifest.js`)
+**Relacionado:** [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md), [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md), V-I09, V-I05 (`peers-cache-manifest.js`)
 
 ---
 
@@ -50,7 +50,7 @@ Score sugerido: decaimento exponencial + cap de hits; desempate aleatório entre
 | `webrtc-peer.js` | export `listOpenRtcPeerIds()` (ou equivalente) |
 | `tests/peers-blob-soft-priority.test.js` | T1–T5 |
 
-**Cursor pós-merge:** `sw.js`, `DEV.md`, `ARCHITECTURE.md` § resolução; **sem** UI de ranking em `render.js` v0.
+**A ferramenta de integração pós-merge:** `sw.js`, `DEV.md`, `ARCHITECTURE.md` § resolução; **sem** UI de ranking em `render.js` v0.
 
 ---
 
@@ -72,11 +72,11 @@ Alinhado a “sem score público de bom nó”: evita instrumento editorial, gam
 
 ---
 
-## 7. Handoff Antigravity → Cursor
+## 7. Handoff ferramenta de protocolo → ferramenta de integração
 
-1. Antigravity: push `feat/blob-soft-priority-v0` com módulo + T1–T5 verdes.  
-2. Cursor: merge único em `main`, bump SW, lobby `[x] V-I09` implementação.
+1. A ferramenta de protocolo: push `feat/blob-soft-priority-v0` com módulo + T1–T5 verdes.  
+2. A ferramenta de integração: merge único em `main`, bump SW, `[x] V-I09` implementação.
 
-Ver [antigravity-operating.md](../process/antigravity-operating.md).
+Ver [operacao-protocolo-integracao.md](../process/operacao-protocolo-integracao.md).
 
-*Spike consolidado a partir de explorador V-I09 (Cursor, 23/10).*
+*Spike consolidado a partir de explorador V-I09 (a ferramenta de integração, 23/10).*

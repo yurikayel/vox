@@ -1,7 +1,7 @@
 # Auditoria — Features, arquitetura e narrativa pública (nov/2026)
 
 > **Status:** auditoria (não substitui o [ROADMAP](../ROADMAP.md)) · **Owner:** mantenedor · **Revisado:** 2026-11-19
-> **Escopo:** Fases 1–3 do [prompt de auditoria e MVP técnico](../process/prompt-claude-auditoria-mvp-tecnico-2026-11.md). Base medida: `origin/develop` `e994a1b` (cópia limpa) e `origin/main` `bda1dd4` (release #262), com PR #284 (`667fcda`) e PR #285 (`197ef98`, fase 1) já integrados em `develop`. Sem código de produto, sem ops INF-01…04, sem piloto humano.
+> **Escopo:** Fases 1–3 do [prompt de auditoria e MVP técnico](../process/prompt-auditoria-mvp-tecnico-2026-11.md). Base medida: `origin/develop` `e994a1b` (cópia limpa) e `origin/main` `bda1dd4` (release #262), com PR #284 (`667fcda`) e PR #285 (`197ef98`, fase 1) já integrados em `develop`. Sem código de produto, sem ops INF-01…04, sem piloto humano.
 
 ---
 

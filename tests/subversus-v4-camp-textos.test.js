@@ -7,7 +7,9 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
+import fs from "node:fs";
 import { renderCampScreen } from "../client/js/dungeon/screen-camp.js";
+import { renderDmScreen } from "../client/js/dungeon/screen-dm.js";
 import { createCampaign } from "../client/js/dungeon/vtt-schema.js";
 import { packEncryptedVoxRpg } from "../client/js/dungeon/vtt-portable.js";
 
@@ -26,6 +28,22 @@ test("o texto do herói descreve a função, sem 'guardiões virtuais'", () => {
   const lead = html.match(/<p class="dungeon-lead">[^<]*<\/p>/)[0];
   assert.doesNotMatch(lead, /servidor central/i);
   assert.doesNotMatch(lead, /nos aparelhos/i);
+});
+
+test("o aviso do convite no Escudo do Mestre usa a frase aprovada, sem 'servidor central' nem 'pares P2P'", () => {
+  const html = renderDmScreen(createDungeonSessionState({}));
+  const aviso = html.match(/<p class="dungeon-muted">Gere um link de convite[^]*?<\/p>/)?.[0];
+  assert.ok(aviso, "o aviso do convite aparece enquanto não há link");
+  assert.match(aviso, /sincronizar a sala com outros aparelhos, sem servidor guardando a partida\./);
+  assert.match(aviso, /O link já leva a chave da sala; mande só para quem vai jogar\./, "avisa que o link leva a chave, sem jargão de fragmento");
+  assert.doesNotMatch(aviso, /servidor central|pares P2P|mesma origem|fragmento|#k=/i);
+});
+
+test("nenhuma tela da Mesa afirma 'sem servidor central' (o nó de sinalização é um servidor)", () => {
+  const dir = new URL("../client/js/dungeon/", import.meta.url);
+  for (const name of fs.readdirSync(dir).filter((n) => n.startsWith("screen-") && n.endsWith(".js"))) {
+    assert.doesNotMatch(fs.readFileSync(new URL(name, dir), "utf8"), /servidor central/i, name);
+  }
 });
 
 test("o campo de senha do backup diz 'Senha do backup' (rótulo e placeholder), sem 'Senha Soberana'", () => {
