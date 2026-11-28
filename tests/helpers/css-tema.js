@@ -4,6 +4,7 @@
  * dois), cor hexadecimal de um valor com `var()` e a declaração que vence para um seletor (especificidade e depois a
  * ordem das folhas `style.css`, `agora.css` e `sv-*.css`). Só leitura de arquivos; nada de DOM.
  */
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -70,6 +71,9 @@ function themeVars(css, theme, route, into) {
 
 /**
  * Variáveis de um tema, empilhando `style.css`, `agora.css` e as `sv-*.css` como o `index.html`.
+ * Leitor legado: só enxerga o bloco do atributo no nível alto, então ignora o bloco `:root[data-color-mode="dark"]`
+ * que `style.css` põe dentro de `@media (prefers-color-scheme: light)` (o escuro por atributo com o sistema claro fica
+ * com o valor claro). Para esse caso e para a cascata de verdade, use `themeTokens` de `css-cascata.js`.
  * @param {"light"|"dark"} theme Tema.
  * @param {"attr"|"media"|"both"} [route="both"] `attr`: só o atributo `data-color-mode`; `media`: só o `@media`
  * (modo automático, sem atributo); `both`: os dois, o atributo vencendo.
@@ -82,9 +86,9 @@ export function resolveTheme(theme, route = "both") {
 }
 
 /**
- * Cor `#rrggbb` de um token ou valor, seguindo `var(--x, fallback)` até uma cor cheia.
+ * Cor `#rrggbb` de um token ou valor, seguindo `var(--x, fallback)` até uma cor cheia; a forma curta `#rgb` é expandida.
  * @param {Map<string, string>} tokens Variáveis do tema.
- * @param {string} key Nome da variável (`--x`), cor `#rrggbb` ou `var(--x)`.
+ * @param {string} key Nome da variável (`--x`), cor `#rrggbb` ou `#rgb` ou `var(--x)`.
  * @param {number} [depth=0] Profundidade da recursão (uso interno).
  * @returns {string|null} Hexadecimal minúsculo, ou `null` se não resolveu.
  */
@@ -92,6 +96,8 @@ export function hexOf(tokens, key, depth = 0) {
   const raw = key.startsWith("#") || key.startsWith("var(") ? key : tokens.get(key);
   if (!raw || depth > 10) return null;
   if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
+  const short = raw.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+  if (short) return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`.toLowerCase();
   const ref = raw.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,[^)]*)?\)$/i);
   return ref ? hexOf(tokens, ref[1], depth + 1) : null;
 }
@@ -125,9 +131,9 @@ export function contrast(a, b) {
  * @returns {void}
  */
 export function assertRatio(label, fg, bg, min = 4.5) {
-  if (!fg || !bg) throw new Error(`${label}: cor não resolveu (frente ${fg}, fundo ${bg})`);
+  if (!fg || !bg) assert.fail(`${label}: cor não resolveu (frente ${fg}, fundo ${bg})`);
   const ratio = contrast(fg, bg);
-  if (ratio < min) throw new Error(`${label}: ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< ${min}:1)`);
+  if (ratio < min) assert.fail(`${label}: ${fg} sobre ${bg} = ${ratio.toFixed(2)}:1 (< ${min}:1)`);
 }
 
 /** Especificidade de um seletor: ids, classes/atributos/pseudo-classes e elementos (`:where` vale 0). */

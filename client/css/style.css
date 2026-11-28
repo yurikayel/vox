@@ -4676,7 +4676,7 @@ p.profile-grid-handle {
 
 .btn-danger:hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .btn-sm {
@@ -5315,7 +5315,7 @@ p.profile-grid-handle {
 
 .vox-toast.error {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
