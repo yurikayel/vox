@@ -54,8 +54,7 @@ Deno.serve((req) => {
       if (mtype === "register" && msg.peerId) {
         currentPeerId = msg.peerId;
         peers.set(currentPeerId, socket);
-        if (msg.address) addresses.set(currentPeerId, String(msg.address));
-        if (msg.dmPub) dmPubs.set(currentPeerId, msg.dmPub);
+        recordIdentity(currentPeerId, msg);
 
         const otherPeers = Array.from(peers.keys()).filter((id) => id !== currentPeerId);
         const addressMap = {};
@@ -124,6 +123,22 @@ channel.onmessage = (event) => {
     }
   }
 };
+
+/** Diz se outro par conectado já responde por `address`. */
+function addressHeldByOther(address, peerId) {
+  for (const [id, held] of addresses.entries()) {
+    if (id !== peerId && held === address) return true;
+  }
+  return false;
+}
+
+/** Guarda endereço e chave do registro, salvo se o endereço já tem dono conectado (o dono mantém os dois). */
+function recordIdentity(peerId, msg) {
+  const address = msg.address ? String(msg.address) : "";
+  if (address && addressHeldByOther(address, peerId)) return;
+  if (address) addresses.set(peerId, address);
+  if (msg.dmPub) dmPubs.set(peerId, msg.dmPub);
+}
 
 function cleanupPeer(peerId) {
   if (!peerId) return;
