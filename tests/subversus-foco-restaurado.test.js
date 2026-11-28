@@ -7,7 +7,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderInventoryPanel } from "../client/js/dungeon/screen-sheet-inventory.js";
-import { captureUiViewState } from "../client/js/dungeon/dungeon-dom-focus.js";
+import { captureUiViewState, restoreUiViewState } from "../client/js/dungeon/dungeon-dom-focus.js";
 
 const HOSTIL = `Tio "Z" <b>&co'`;
 const ESC = "Tio &quot;Z&quot; &lt;b&gt;&amp;co&#39;";
@@ -68,4 +68,55 @@ test("o chip Equipado diz o nome do item primeiro e a ação depois, escapado", 
   const nome = chip.attrs["aria-label"];
   assert.ok(nome.startsWith(chip.visible), `o nome "${nome}" começa pelo texto visível "${chip.visible}" (2.5.3)`);
   assert.equal(nome, `${ESC}, desequipar`);
+});
+
+/** Contêiner falso da tela refeita: `querySelector` acha o 1º botão, em ordem de DOM, com todos os `[attr="valor"]`. */
+function telaRefeita(html) {
+  const els = botoes(html).filter((b) => b.attrs["data-dungeon"]).map((b) => ({ ...b, focused: 0, focus() { this.focused += 1; } }));
+  return {
+    els,
+    querySelectorAll: () => [],
+    querySelector: (sel) => {
+      const pares = [...sel.matchAll(/\[([\w-]+)="([^"]*)"\]/g)].map((m) => [m[1], m[2]]);
+      return els.find((e) => pares.every(([k, v]) => e.attrs[k] === v)) ?? null;
+    },
+  };
+}
+
+/** Grava o foco em `botao` da tela de `antes` e restaura na tela de `depois`: devolve os controles que receberam foco. */
+function refazer(antes, depois, filtro) {
+  const botao = botoes(renderInventoryPanel({ sheet: { inventoryItems: antes } })).find(filtro);
+  assert.ok(botao, "o controle focado existe na tela de antes");
+  const snap = { focusSel: seletorDoFoco({ id: "", dataset: botao.dataset }) };
+  const tela = telaRefeita(renderInventoryPanel({ sheet: { inventoryItems: depois } }));
+  restoreUiViewState(tela, snap);
+  return tela.els.filter((e) => e.focused > 0);
+}
+
+const DESEQUIPADOS = ITENS.map((i) => ({ ...i, equipped: false }));
+const doItem = (id, zona) => (b) => b.attrs["data-dungeon"] === "inv-equip" && b.attrs["data-item-id"] === id && b.dataset.focusZone === zona;
+
+test("equipar pela célula da grade: a célula some e o foco vai ao mesmo item em outra zona, não ao body", () => {
+  const depois = ITENS.map((i) => (i.id === "i2" ? { ...i, equipped: true } : i));
+  const focados = refazer(DESEQUIPADOS, depois, doItem("i2", "mochila"));
+  assert.equal(focados.length, 1, "um controle recebe o foco");
+  assert.equal(focados[0].attrs["data-item-id"], "i2", "é o mesmo item");
+  assert.equal(focados[0].attrs["data-dungeon"], "inv-equip");
+});
+
+test("desequipar pelo chip Equipado: o chip some e o foco vai ao mesmo item em outra zona, não ao body", () => {
+  const focados = refazer(ITENS, DESEQUIPADOS, doItem("i1", "equipado"));
+  assert.equal(focados.length, 1, "um controle recebe o foco");
+  assert.equal(focados[0].attrs["data-item-id"], "i1", "é o mesmo item");
+  assert.equal(focados[0].attrs["data-dungeon"], "inv-equip");
+});
+
+test("com o controle ainda na zona, o foco fica nele e a reserva não entra", () => {
+  const focados = refazer(DESEQUIPADOS, DESEQUIPADOS, doItem("i2", "linha"));
+  assert.deepEqual(focados.map((e) => e.dataset.focusZone), ["linha"], "o botão da linha, não a célula da grade que vem antes no DOM");
+});
+
+test("se o item sumiu da tela, nada quebra e ninguém recebe o foco", () => {
+  const focados = refazer(ITENS, ITENS.filter((i) => i.id !== "i2"), doItem("i2", "linha"));
+  assert.deepEqual(focados, []);
 });

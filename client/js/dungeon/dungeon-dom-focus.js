@@ -139,10 +139,20 @@ export function restoreUiViewState(container, snap = {}, focusOverride = "", pre
   const sel = focusOverride || snap.focusSel || "";
   if (!sel) return;
   try {
-    container.querySelector(sel)?.focus?.();
+    (container.querySelector(sel) || container.querySelector(withoutFocusZone(sel)))?.focus?.();
   } catch {
     /* seletor opcional */
   }
+}
+
+/**
+ * O mesmo seletor sem a zona (`[data-focus-zone="…"]`): reserva para quando o controle sumiu da zona no redesenho
+ * (equipar tira a célula da grade; desequipar tira o chip) e o foco deve ir ao mesmo item em outra zona, não ao `body`.
+ * @param {string} sel Seletor gravado por `captureUiViewState`.
+ * @returns {string} Seletor sem a zona (igual a `sel` se não havia zona).
+ */
+function withoutFocusZone(sel) {
+  return sel.replace(/\[data-focus-zone="[^"]*"\]/, "");
 }
 
 /**
