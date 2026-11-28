@@ -32,7 +32,7 @@ import {
   submitAssemblyVote,
   updateAssemblyDecisionStatus,
 } from "../client/js/app/assembly-ui.js";
-import { waitUntil } from "./helpers/wait-until.js";
+import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
 
 const T0 = Date.UTC(2026, 10, 15, 14, 0, 0);
 const T_CLOSE = T0 + 7_200_000;
@@ -231,7 +231,7 @@ function makeHostStub() {
       closest: (sel) => (sel === "[data-assembly-action]" ? btnRef : sel === "[data-assembly-slot]" ? slot : null),
     };
     listeners.click({ target: btnRef });
-    await new Promise((r) => setTimeout(r, 30));
+    await drainMicrotasks(50);
   };
   return { main, slot, listeners, click };
 }

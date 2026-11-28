@@ -134,7 +134,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [estrategia-5-pontos-fracos-90-dias-2026-11.md](./strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md): **plano de 90 dias por ponto fraco**, com as decisões de 10/11 (cunha do piloto: modo assembleia)
 - Radar de ecossistema (interno): tracking de features e anexos de observação — mantido fora do índice público quando o arquivo for aposentado; ver POSITIONING/LESSONS para contraste de produto.
 - [tese-praca-civica-militancia-pro-democratica-2026-10.md](./strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
-- [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
+- [estrategia-mantenedor-revisor-2026.md](./strategy/estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
 - [POSITIONING.md](./product/POSITIONING.md) · [garantia-da-praca-pm104.md](./product/garantia-da-praca-pm104.md) (Garantia da Praça — rascunho pré-REV-12 espelhado na Voxpedia) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
 
 ### Rede pública (portões G1–G3)
