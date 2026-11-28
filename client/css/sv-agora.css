@@ -109,3 +109,19 @@
   outline: 2px solid var(--sa-primary);
   outline-offset: 2px;
 }
+
+/* Tabela larga: rolagem própria no contêiner, a página não rola de lado. */
+.sv-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sv-table-scroll:focus-visible {
+  outline: 2px solid var(--sa-primary);
+  outline-offset: 2px;
+}
+
+/* Caixa de DM: o item é filho flex da linha; sem min-width:0 a prévia em uma linha alarga o item (1722 px a 320). */
+.dm-inbox-item {
+  min-width: 0;
+}

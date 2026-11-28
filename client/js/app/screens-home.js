@@ -11,6 +11,7 @@ import * as social from "../social.js";
 import * as hashtags from "../hashtags.js";
 import * as postOwnership from "../post-ownership.js";
 import { attachInlineComposerHandlers } from "./inline-composer.js";
+import { attachBskyManagerHandlers } from "./home-bsky-manager.js";
 import { splitFeedBySphere } from "../civic-post.js";
 import * as localAccount from "../identity/index.js";
 import { loadCivicVotes, attachCivicVoteHandlers } from "./civic-actions.js";
@@ -20,6 +21,8 @@ import { attachPostMoreMenuHandlers } from "./post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { getCommunityLastSeenTs, computeCommunityUnreadCount } from "../community-unread.js";
 import { resolveCommunityMetadata, checkCommunityMembership } from "./screens-community.js";
+
+export { attachBskyManagerHandlers };
 
 let postOverlayMenuHandlersBound = false;
 let quoteExternalBound = false;
@@ -259,19 +262,28 @@ function wireHomeInteractiveHandlers(activeFeed) {
  * Busca nos gateways os itens remotos do feed ativo.
  *
  * @param {string} activeFeed Feed ativo.
- * @returns {Promise<{items: object[], gateway: string}>}
+ * @returns {Promise<{items: object[], gateway: string, failed: boolean}>} `failed`: os gateways não responderam. Em
+ * "Seguindo" com alguém acompanhado a lista vem vazia (não quer dizer que ninguém publicou); nos outros feeds vem o plano
+ * B (conteúdo de demonstração), que a tela avisa que não é o feed de verdade.
  */
 async function fetchRemoteHomeItems(activeFeed) {
   if (activeFeed === "following") {
     const watched = social.getWatchedProfiles();
-    if (watched.length > 0) {
-      const res = await gql.fetchTopicsByOwners(watched).catch(() => ({ items: [] }));
-      return { items: res.items || [], gateway: res.gateway || "" };
+    if (watched.length === 0) return { items: [], gateway: "", failed: false };
+    try {
+      const res = await gql.fetchTopicsByOwners(watched);
+      return { items: res.items || [], gateway: res.gateway || "", failed: false };
+    } catch {
+      return { items: [], gateway: "", failed: true };
     }
-    return { items: [], gateway: "" };
   }
-  const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-  return { items: res.items || [], gateway: res.gateway || "" };
+  try {
+    const res = await gql.fetchRecentTopics();
+    return { items: res.items || [], gateway: res.gateway || "", failed: false };
+  } catch {
+    const res = await mock.mockRecentTopics();
+    return { items: res.items || [], gateway: res.gateway || "", failed: true };
+  }
 }
 
 /**
@@ -364,15 +376,18 @@ export async function showHome(feed = "for-you") {
   const externalSubs = bskyFeed.loadBskySubscriptions();
   let finalTopics = [];
   let failure = offlineFailure(activeFeed);
+  const watching = social.getWatchedProfiles().length > 0;
 
   try {
-    const { items: remoteItems, gateway } = await fetchRemoteHomeItems(activeFeed);
+    const { items: remoteItems, gateway, failed } = await fetchRemoteHomeItems(activeFeed);
+    // "Redes externas" vem direto do Bluesky, não dos gateways: gateway fora do ar não é falha desse feed.
+    if (failed && activeFeed !== "external") failure ||= "error";
     const commMap = await buildCommunityTitleMap();
     finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
 
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure });
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure, watching });
   } catch {
     failure ||= "error";
     main.innerHTML = "";
@@ -384,88 +399,6 @@ export async function showHome(feed = "for-you") {
   wireHomeInteractiveHandlers(activeFeed);
   const byId = new Map(finalTopics.map((t) => [t.id, t]));
   attachCivicVoteHandlers((id) => byId.get(id), user, () => showHome(activeFeed));
-}
-
-/**
- * Liga o botão de importar quem a pessoa segue no Bluesky.
- *
- * @param {Function} onRefresh Chamado depois de importar.
- */
-function bindBskyImportButton(onRefresh) {
-  const importBtn = document.getElementById("btn-import-bsky-follows");
-  if (!importBtn || importBtn.dataset.wired) return;
-  importBtn.dataset.wired = "1";
-  importBtn.addEventListener("click", async () => {
-    const input = document.getElementById("input-bsky-import-me");
-    const val = input?.value?.trim();
-    if (!val) return share.showToast("Digite seu @handle do Bluesky para importar.");
-    importBtn.disabled = true;
-    importBtn.textContent = "Importando...";
-    try {
-      const res = await bskyFeed.importBskyFollows(val, 50);
-      share.showToast(`🎉 ${res.added} novos perfis importados com sucesso!`);
-      if (input) input.value = "";
-      if (onRefresh) onRefresh();
-    } catch {
-      share.showToast("Falha ao importar perfis do Bluesky.");
-    } finally {
-      importBtn.disabled = false;
-      importBtn.textContent = "📥 Puxar quem eu sigo";
-    }
-  });
-}
-
-/**
- * Liga os botões de sugestão do Bluesky.
- *
- * @param {Function} onRefresh Chamado depois de mudar o estado.
- */
-function bindBskyChipActions(onRefresh) {
-  document.querySelectorAll(".btn-add-suggestion").forEach((btn) => {
-    if (btn.dataset.wired) return;
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => {
-      if (!btn.dataset.handle) return;
-      bskyFeed.addBskySubscription(btn.dataset.handle);
-      share.showToast(`Perfil @${btn.dataset.handle} adicionado! 🌐`);
-      if (onRefresh) onRefresh();
-    });
-  });
-  document.querySelectorAll(".btn-remove-bsky-sub").forEach((btn) => {
-    if (btn.dataset.wired) return;
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => {
-      if (!btn.dataset.handle) return;
-      bskyFeed.removeBskySubscription(btn.dataset.handle);
-      share.showToast(`Perfil @${btn.dataset.handle} removido.`);
-      if (onRefresh) onRefresh();
-    });
-  });
-}
-
-/**
- * Liga gestão de conta Bluesky no feed.
- *
- * @param {Function} onRefresh
- * @returns {void}
- */
-export function attachBskyManagerHandlers(onRefresh) {
-  const form = document.getElementById("form-add-bsky");
-  if (form && !form.dataset.wired) {
-    form.dataset.wired = "1";
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = document.getElementById("input-bsky-handle");
-      const val = input?.value?.trim();
-      if (!val) return;
-      bskyFeed.addBskySubscription(val);
-      share.showToast(`Perfil @${val.replace(/^@/, "")} adicionado ao Vox! 🌐`);
-      if (input) input.value = "";
-      if (onRefresh) onRefresh();
-    });
-  }
-  bindBskyImportButton(onRefresh);
-  bindBskyChipActions(onRefresh);
 }
 
 /**

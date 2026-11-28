@@ -60,7 +60,7 @@ Detalhamento em chat/agente out/2026; rastreio técnico em [backlog-participacao
 
 - [steward-seed-15min.md](../operations/steward-seed-15min.md) · [steward-relay-kit.md](../operations/steward-relay-kit.md)
 - [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md) (flywheel, SLOs honestos, anti-padrões)
-- [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) (Q4-2026→Q3-2027: revisor/aprovador, T1–T4 exit criteria)
+- [estrategia-mantenedor-revisor-2026.md](./estrategia-mantenedor-revisor-2026.md) (Q4-2026→Q3-2027: revisor/aprovador, T1–T4 exit criteria)
 - [brainstorm-dez-tarefas-estrategia-2026-10.md](../archive/brainstorm-dez-tarefas-estrategia-2026-10.md) (índice T1–T10)
 - [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) (4 camadas, painel comunitário, visão regulatória — ver [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md))
 - [proposta-vox.html](../product/proposta-vox.html)

@@ -376,6 +376,7 @@ export function wireDungeonView(container, opts = {}) {
   const viewOpts = { ...opts };
   const sessionState = viewOpts.state || getDungeonSession();
   sessionState._onSyncUpdate = () => redrawContainer(container, viewOpts, "", true);
+  sessionState.pendingRestore = null;
   applyDungeonWirePrefs(sessionState, viewOpts);
   bindInventoryDrag(container, viewOpts, (job, extra) => settleAndRedraw(job, container, viewOpts, extra));
   container.addEventListener("click", (ev) => handleDungeonClick(container, viewOpts, ev));

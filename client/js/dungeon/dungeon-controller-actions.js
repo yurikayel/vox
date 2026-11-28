@@ -246,6 +246,7 @@ export const ACTION_HANDLERS = {
   "unlock-vault": (state) => triggerShamirVaultUnlock(state),
   "inspect-role": (state, el) => inspectPeerPromptForRole(state, el.dataset.role),
   "open-campaign": (state, el, _c, opts) => openSavedCampaign(state, el.dataset.campaignId, opts.store),
+  "confirm-restore": (state, _el, _c, opts) => import("./dungeon-restore.js").then((m) => m.confirmPendingRestore(state, opts)),
   "arm-delete-campaign": (state, el) => { state.pendingDeleteId = el.dataset.campaignId || ""; },
   "cancel-delete-campaign": (state) => { state.pendingDeleteId = ""; },
   "confirm-delete-campaign": (state, el, _c, opts) => deleteSavedCampaign(state, el.dataset.campaignId, opts.store),

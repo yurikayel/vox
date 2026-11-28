@@ -42,17 +42,23 @@ export function isCoveredSeed(act, skills) {
   return Boolean(m) && skill.ability !== undefined && ABILITY_ALIASES[m[1]] === skill.ability;
 }
 
+/** A ação é a semente inteira: `id`, `label`, `roll`, `damage` e `tag`, com os padrões que a ficha grava (dano vazio, tag "acao"). */
+function isSeed(act, seed) {
+  return act?.id === seed.id && act.label === seed.label && act.roll === seed.roll
+    && String(act.damage || "") === String(seed.damage || "") && String(act.tag || "acao") === String(seed.tag || "acao");
+}
+
 /**
  * Semente da 5e, intacta, numa ficha cujo pacote não a semeia (a ficha foi criada antes de cada sistema ter as suas):
- * a fórmula `@atributo` dela é da regra errada. Ação editada ou cadastrada à mão nunca é semente alheia.
+ * a fórmula `@atributo` dela é da regra errada. Ação editada (em qualquer campo: rótulo, fórmula, dano ou etiqueta) ou
+ * cadastrada à mão nunca é semente alheia.
  * @param {object} act Ação clicável.
  * @param {string} [systemId] Id do pacote da ficha.
  * @returns {boolean} `true` se é uma semente da 5e que o pacote da ficha não tem.
  */
 export function isForeignSeed(act, systemId) {
   const own = packOf(systemId).seedActions || [];
-  const fromFive = DEFAULT_CLICKABLE_ACTIONS.some((s) => s.id === act?.id && s.roll === act?.roll);
-  return fromFive && !own.some((s) => s.id === act.id && s.roll === act.roll);
+  return DEFAULT_CLICKABLE_ACTIONS.some((s) => isSeed(act, s)) && !own.some((s) => isSeed(act, s));
 }
 
 /**
@@ -103,7 +109,7 @@ function normalizeAction(raw, idx) {
     label,
     roll,
     damage: String(raw?.damage || "").trim().slice(0, 80),
-    tag: String(raw?.tag || "acao").trim().slice(0, 24),
+    tag: String(raw?.tag || "").trim().slice(0, 24) || "acao",
   };
 }
 
