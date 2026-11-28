@@ -1,6 +1,7 @@
 /**
  * @file Contêiner de modal avulso no <body>, para modais que abrem fora do #modal-container
- * (denúncia, apontamento). Criado sob demanda; limpar o conteúdo fecha o modal.
+ * (denúncia, apontamento). Criado sob demanda; limpar o conteúdo fecha o modal, e o Esc faz o mesmo e devolve o
+ * foco ao elemento que o tinha antes de o modal abrir.
  */
 
 import { createFocusTrap } from "./focus-trap.js";
@@ -46,7 +47,7 @@ export function modalHost(id, doc = globalThis.document) {
     doc.body.appendChild(el);
   }
   if (!hostTraps.has(el)) {
-    const trap = createFocusTrap(el, { doc });
+    const trap = createFocusTrap(el, { doc, onEscape: () => clearModalHost(id, doc) });
     hostTraps.set(el, trap);
     watchModalContent(el, trap);
   }

@@ -210,7 +210,10 @@ export function attachReportHandlers(doc = globalThis.document) {
     const btn = e.target?.closest?.(".btn-report-post");
     if (!btn) return;
     e.preventDefault();
-    btn.closest("details")?.removeAttribute("open");
+    // O item some ao fechar o menu: o foco vai antes ao summary, que o preso do modal guarda para devolver.
+    const menu = btn.closest("details");
+    menu?.querySelector("summary")?.focus?.();
+    menu?.removeAttribute("open");
     openReportFlow({ postId: btn.dataset.id || "", authorRoute: btn.dataset.author || "", communityId: btn.dataset.comm || "" });
   });
 }
