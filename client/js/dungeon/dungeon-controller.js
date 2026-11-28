@@ -19,7 +19,7 @@ import { ensureDungeonLayoutStyles } from "./dungeon-layout-style.js";
 import { bindInventoryDrag } from "./inventory-drag-ui.js";
 import {
   bootstrapDungeonPersistence,
-  hasStoredDungeonPrefs,
+  hasStoredViewerRole,
   importCampaignFile,
   loadDungeonPrefs,
   openSavedCampaign,
@@ -351,7 +351,7 @@ function applyDungeonWirePrefs(sessionState, viewOpts) {
   const prefs = loadDungeonPrefs();
   Object.assign(sessionState, { dice3dEnabled: prefs.dice3d, dungeonPrefs: { firstTableDismissed: prefs.firstTableDismissed } });
   const screen = viewOpts.screen || "acampamento";
-  const stored = hasStoredDungeonPrefs();
+  const stored = hasStoredViewerRole();
   sessionState.viewerRole = !stored && screen === "mesa"
     ? "player"
     : stored

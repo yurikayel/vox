@@ -225,6 +225,7 @@ export const FOCUS_AFTER_ACTION = {
   "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
+  "dismiss-first-table": '[data-dungeon="toggle-viewer-role"]',
 };
 
 /** Mapa de handlers de clique `data-dungeon="..."`. */

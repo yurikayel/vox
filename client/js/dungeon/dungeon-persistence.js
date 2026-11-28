@@ -399,9 +399,29 @@ export function loadDungeonPrefs() {
  * @param {object} prefs Preferências parciais.
  */
 export function saveDungeonPrefs(prefs = {}) {
-  const current = loadDungeonPrefs();
-  const next = { ...current, ...prefs };
+  const next = { ...readStoredDungeonPrefs(), ...prefs };
   globalThis.localStorage?.setItem(DUNGEON_PREFS_KEY, JSON.stringify(next));
+}
+
+/**
+ * Lê só o que já está gravado no aparelho, sem completar com padrões (gravar um campo não grava os outros).
+ * @returns {object} Objeto gravado; vazio se não há nada ou se o JSON está corrompido.
+ */
+function readStoredDungeonPrefs() {
+  try {
+    const parsed = JSON.parse(globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Indica se o papel visual (mestre ou jogador) já foi gravado no aparelho.
+ * @returns {boolean}
+ */
+export function hasStoredViewerRole() {
+  return "viewerRole" in readStoredDungeonPrefs();
 }
 
 /**
