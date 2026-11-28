@@ -88,6 +88,22 @@
   text-decoration: underline;
 }
 
+/* Celular: o menu ancora na borda esquerda da barra (não do botão, que pode estar na 2ª linha) e nunca passa da tela. */
+@media (max-width: 480px) {
+  .sv-feedbar {
+    position: relative;
+  }
+
+  .sv-filtro {
+    position: static;
+  }
+
+  .sv-filtro-menu {
+    inset-inline-start: 0;
+    max-width: calc(100vw - 1rem);
+  }
+}
+
 .sv-filtro-chip {
   display: inline-flex;
   align-items: center;
