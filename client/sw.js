@@ -549,6 +549,7 @@ const SHELL_ASSETS = [
   "./js/shared/safe-key.js",
   "./js/shared/schedule-commit.js",
   "./js/shared/state-card.js",
+  "./js/shared/table-scroll.js",
   "./js/webrtc-connection.js",
   "./js/webrtc-messaging.js",
   "./js/webrtc-peer-state.js",
