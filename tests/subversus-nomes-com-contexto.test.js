@@ -87,3 +87,16 @@ test("mochila: Equipar, Desequipar, Favoritar e Tirar dos favoritos levam o nome
   assertContexto(group(html, "text:Favoritar"), ["Favoritar Espada longa", `Favoritar ${ESC2}`]);
   assertContexto(group(html, "text:Tirar dos favoritos"), [`Tirar dos favoritos ${ESC}`]);
 });
+
+test("mochila: o estado de equipar e favoritar sai por um canal só, o nome (sem aria-pressed junto)", () => {
+  const items = [
+    { id: "i1", label: HOSTIL, qty: 1, tags: [], equipped: true },
+    { id: "i2", label: HOSTIL2, qty: 1, tags: [], equipped: false },
+  ];
+  const html = renderInventoryPanel({ sheet: { inventoryItems: items, sheet_meta: { favorites: ["item:i1"] } } });
+  const doEstado = buttons(html).filter((b) => /data-dungeon="inv-equip"|data-hud-op="favorite"/.test(b.attrs));
+  assert.ok(doEstado.length >= 4, `achou os botões de equipar e favoritar (${doEstado.length})`);
+  for (const b of doEstado) assert.doesNotMatch(b.attrs, /aria-pressed/, `"${b.name}": nome que muda com o estado não leva aria-pressed (seria dizer duas vezes)`);
+  assert.deepEqual(group(html, "text:Desequipar").map((b) => b.name), [`Desequipar ${ESC}`], "ligado: o nome é o verbo de desligar");
+  assert.deepEqual(group(html, "text:Equipar").map((b) => b.name), [`Equipar ${ESC2}`], "desligado: o nome é o verbo de ligar");
+});

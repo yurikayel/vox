@@ -38,7 +38,7 @@ function renderBackpackGrid(items) {
 function renderEquipped(items) {
   const equipped = items.filter((it) => it.equipped);
   if (!equipped.length) return `<p class="dungeon-muted">Nada equipado.</p>`;
-  const chips = equipped.map((it) => `<button type="button" class="dungeon-chip-btn is-selected" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="true" aria-label="Desequipar ${escapeHtml(it.label)}">${escapeHtml(it.label)}</button>`).join("");
+  const chips = equipped.map((it) => `<button type="button" class="dungeon-chip-btn is-selected" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-label="Desequipar ${escapeHtml(it.label)}">${escapeHtml(it.label)}</button>`).join("");
   return `<div class="dungeon-chips-row" role="group" aria-label="Equipado">${chips}</div>`;
 }
 
@@ -50,7 +50,7 @@ function renderLoadIndicator(load) {
 function renderFavoriteToggle(it, favorites) {
   const on = favorites.includes(`item:${it.id}`);
   const favLabel = on ? "Tirar dos favoritos" : "Favoritar";
-  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="hud-op" data-hud-op="favorite" data-favorite-key="item:${escapeHtml(it.id)}" aria-pressed="${on}" aria-label="${favLabel} ${escapeHtml(it.label)}">${favLabel}</button>`;
+  return `<button type="button" class="dungeon-chip-btn${on ? " is-selected" : ""}" data-dungeon="hud-op" data-hud-op="favorite" data-favorite-key="item:${escapeHtml(it.id)}" aria-label="${favLabel} ${escapeHtml(it.label)}">${favLabel}</button>`;
 }
 
 function renderItemRow(it, favorites = []) {
@@ -60,7 +60,7 @@ function renderItemRow(it, favorites = []) {
       ${dungeonIcon("backpack", 15)}
       <span>${itemLabel(it)} · ${escapeHtml(buildItemWeightView(it).text)}${it.equipped ? " · equipado" : ""}</span>
       <div class="dungeon-card-actions">
-        <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-pressed="${Boolean(it.equipped)}" aria-label="${equipLabel} ${escapeHtml(it.label)}">${equipLabel}</button>
+        <button type="button" class="dungeon-chip-btn${it.equipped ? " is-selected" : ""}" data-dungeon="inv-equip" data-item-id="${escapeHtml(it.id)}" aria-label="${equipLabel} ${escapeHtml(it.label)}">${equipLabel}</button>
         ${renderFavoriteToggle(it, favorites)}
         <button type="button" class="dungeon-chip-btn" data-dungeon="inv-remove" data-item-id="${escapeHtml(it.id)}" aria-label="Remover ${escapeHtml(it.label)}">Remover</button>
       </div>
