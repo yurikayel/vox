@@ -15,7 +15,7 @@ import { buildStatusDiagnosticReport, showStatus } from "../client/js/app/screen
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const STATIC_IMPORT_RE = /(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\s*["']([^"']+)["']/g;
-const LAZY_ONLY_MODULES = ["./js/app/screens-status-view.js"];
+const LAZY_ONLY_MODULES = ["./js/app/screens-status-view.js", "./js/app/screens-voxpedia.js", "./js/app/screens-ajuda-teste.js"];
 
 const dom = installFakeDom();
 const realNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
