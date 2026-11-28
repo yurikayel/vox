@@ -13,6 +13,7 @@ import { renderFeed } from "../client/js/render/feed-chrome.js";
 import { renderStateCard } from "../client/js/shared/state-card.js";
 import * as home from "../client/js/app/screens-home.js";
 import * as social from "../client/js/social.js";
+import { __resetGatewayConfigForTests } from "../client/js/graphql-gateway.js";
 
 const dom = installFakeDom();
 const realFetch = globalThis.fetch;
@@ -24,10 +25,14 @@ const TERCEIROS = new RegExp([["Blue", "sky"], ["AT ", "Protocol"], ["Foun", "dr
 
 const DISMISS_KEY = "vox-welcome-post-dismissed";
 /* O post de boas-vindas aparece em todo feed menos o Cívico: dispensado, o feed sem posts locais fica mesmo vazio. */
-beforeEach(() => localStorage.setItem(DISMISS_KEY, "1"));
+beforeEach(() => {
+  localStorage.setItem(DISMISS_KEY, "1");
+  __resetGatewayConfigForTests();
+});
 
 afterEach(() => {
   localStorage.removeItem(DISMISS_KEY);
+  __resetGatewayConfigForTests();
   globalThis.fetch = realFetch;
   delete globalThis.navigator.onLine;
   if (hadLocation) globalThis.location = realLocation;
@@ -206,4 +211,78 @@ test("se a montagem do feed falha e não sobra post, a Ágora mostra o cartão d
   assert.match(valor, /sv-state--error/);
   assert.match(valor, /data-feed-retry="1">Tentar de novo<\/button>/);
   assert.doesNotMatch(valor, /sv-state--(empty|offline)/);
+});
+
+/** Um gateway configurado e online: `posts` é o que ele devolve; `null` deixa o gateway fora do ar (o aparelho segue online). */
+function gateway(posts) {
+  const resposta = (json) => ({ ok: true, status: 200, json: async () => json });
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("gateways.json")) return resposta({ gateways: [{ label: "g1", graphql: "https://gw.test/graphql" }] });
+    if (posts === null) throw new Error("gateway fora do ar");
+    return resposta({ data: { transactions: { edges: posts } } });
+  };
+}
+
+/** Acompanha alguém durante o teste e solta no fim. */
+async function acompanhando(fn) {
+  assert.equal(social.toggleWatch("vx_seguido_gateway"), true);
+  try {
+    await fn();
+  } finally {
+    social.toggleWatch("vx_seguido_gateway");
+  }
+}
+
+test("Seguindo com alguém acompanhado e o gateway fora do ar (aparelho online) mostra o erro com Tentar de novo", async () => {
+  gateway(null);
+  await acompanhando(async () => {
+    await home.showHome("following");
+    assert.match(dom.main.innerHTML, /^[\s\S]*<div class="sv-state sv-state--error" role="status">/);
+    assert.match(dom.main.innerHTML, /data-feed-retry="1">Tentar de novo<\/button>/);
+    assert.doesNotMatch(dom.main.innerHTML, /Você ainda não acompanha|sv-state--empty/, "a busca falhou: o vazio seria falso");
+  });
+});
+
+test("Seguindo com alguém acompanhado e o gateway sem posts diz que ninguém publicou, não que você não acompanha ninguém", async () => {
+  gateway([]);
+  await acompanhando(async () => {
+    await home.showHome("following");
+    assert.match(dom.main.innerHTML, /sv-state--empty/);
+    assert.match(sem(dom.main.innerHTML), /As pessoas que você acompanha ainda não publicaram nada por aqui\./);
+    assert.doesNotMatch(dom.main.innerHTML, /Você ainda não acompanha|sv-state--(error|offline)/);
+  });
+});
+
+test("Seguindo sem ninguém acompanhado continua dizendo 'você ainda não acompanha ninguém', com o gateway fora ou não", async () => {
+  for (const posts of [null, []]) {
+    gateway(posts);
+    await home.showHome("following");
+    assert.match(sem(dom.main.innerHTML), /Você ainda não acompanha ninguém\. Toque em Acompanhar/);
+    assert.doesNotMatch(dom.main.innerHTML, /sv-state--(error|offline)|ainda não publicaram/);
+  }
+});
+
+test("o vazio de Seguindo troca o texto só quando há alguém acompanhado, e o resto do cartão fica igual", () => {
+  const quieto = cartao("following", { watching: true });
+  assert.match(sem(quieto), /^\s*As pessoas que você acompanha ainda não publicaram nada por aqui\.\s*Encontrar pessoas/);
+  assert.equal(contar(quieto, /<button/g), 1);
+  assert.match(quieto, /data-feed-go="#\/pessoas">Encontrar pessoas<\/button>/);
+  assert.match(quieto, /<a class="sv-state-link" href="#\/">Ver o feed Social<\/a>/);
+  assert.match(sem(cartao("following", { watching: false })), /Você ainda não acompanha ninguém/);
+  assert.match(sem(cartao("for-you", { watching: true })), /Nenhuma publicação ainda/, "só o feed Seguindo troca o texto");
+  assert.match(sem(cartao("following", { watching: true, failure: "error" })), /Não deu para carregar o feed agora/, "a falha vence também aqui");
+});
+
+test("'Tentar de novo' em Seguindo com o gateway fora recarrega o MESMO feed e segue mostrando o erro", async () => {
+  gateway(null);
+  const botao = makeEl();
+  dom.group(".feed-chrome ~ .sv-state", [botao]);
+  await acompanhando(async () => {
+    await home.showHome("following");
+    assert.match(dom.main.innerHTML, /sv-state--error/);
+    dom.main.innerHTML = "MARCA-ANTIGA";
+    botao.fire("click", { target: { closest: (s) => (s === "[data-feed-retry]" ? { dataset: {} } : null) } });
+    await waitUntil(() => !dom.main.innerHTML.includes("MARCA-ANTIGA"));
+    assert.match(dom.main.innerHTML, /sv-state--error/, "recarregou Seguindo (o feed Para você, com o plano B, não mostraria o cartão de erro)");
+  });
 });
