@@ -96,6 +96,17 @@ test("comunidade com ! ' ( ) * no id: os links de criar do cartão não lançam 
   }
 });
 
+test("comunidade com % e espaço no id: o href traz o id codificado uma vez só", () => {
+  const id = "x%y z";
+  const posts = topics.renderCommunityPostsTab(id, "Vox", []);
+  const feira = governance.renderCommunityListingsTab(id, "Feira", { id, commercialEnabled: true }, []);
+  const propostas = governance.renderCommunityGovernanceTab(id, "Vox", { id }, []);
+  const hrefs = [[posts, "topic"], [feira, "listing"], [propostas, "proposal"]];
+  for (const [html, tipo] of hrefs) {
+    assert.ok(html.includes(`<a class="sv-state-link" href="#/compose/${tipo}?c=x%25y%20z">`), `${tipo}: href exato`);
+  }
+});
+
 test("o texto do cartão quebra palavra longa sem espaços em vez de vazar", () => {
   const regra = css.ruleBody(css.readCss("sv-estados.css"), ".sv-state-text");
   assert.match(regra, /overflow-wrap:\s*anywhere/);
