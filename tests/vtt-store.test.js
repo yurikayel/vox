@@ -14,6 +14,7 @@ import {
   recordSheetActionRoll,
 } from "../client/js/dungeon/dungeon-persistence.js";
 import { recordAbilityRoll } from "../client/js/dungeon/dungeon-sheet-rolls.js";
+import { uploadSceneMapBlob } from "../client/js/dungeon/dungeon-scene-actions.js";
 import { projectCharacterPools } from "../client/js/rpg-sheet-and-lore.js";
 
 function makeDeterministicRng(seedValues) {
@@ -115,7 +116,7 @@ test("dungeon-persistence: export/import .voxrpg.zip, .voxrpg.enc (Senha Soberan
   });
   const stateA = { chronicle: [], rolls: [] };
   await createAndSelectCampaign(stateA, "Santuário Portátil", { store: srcStore });
-  await srcStore.putBlob(new Uint8Array([9, 8, 7]), "image/png");
+  await uploadSceneMapBlob(stateA, { bytes: new Uint8Array([9, 8, 7]), mime: "image/png" }, { store: srcStore });
   await recordFormulaRoll(stateA, "2d6+3 # Fogo", { store: srcStore });
 
   const zipArt = await exportCampaignBackup(stateA, { format: "zip", store: srcStore });
