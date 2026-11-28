@@ -21,7 +21,12 @@ let myPub = null;
 let seq = 0;
 
 const freshLocation = () => ({ hash: "#/dm", origin: "https://vox.test", pathname: "/app/", search: "" });
-const nextPeer = () => `vx_cov_extra_${++seq}`;
+/** Peer novo; a rota abre a conversa com ele, porque `showDmThread` só desenha se a rota ainda for a dele. */
+const nextPeer = () => {
+  const peer = `vx_cov_extra_${++seq}`;
+  location.hash = `#/dm/${peer}`;
+  return peer;
+};
 
 before(async () => {
   localStorage.clear();
