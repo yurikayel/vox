@@ -3,13 +3,8 @@
 import * as render from "../render.js";
 import * as share from "../share.js";
 import * as inbox from "../inbox.js";
-import * as localAccount from "../identity/index.js";
 import * as communityMirror from "../community-mirror.js";
 import * as stewardWizard from "../steward-wizard.js";
-import * as cryptoDm from "../crypto-dm.js";
-import * as peers from "../peers.js";
-import { myPeerId } from "../peers-base.js";
-import { buildDmPubProof } from "../dm-pub-proof.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
 /**
@@ -85,20 +80,4 @@ export async function showStewardWizard() {
     communityMirror.loadMirrorTelemetry().lastError;
   render.renderStewardWizard(main, { draft, step, mirrorLast });
   bindStewardWizardForm();
-}
-
-/**
- * Sincroniza identidade com relays e diretório.
- *
- * @returns {Promise<void>}
- */
-export async function syncIdentity() {
-  const routeId = await localAccount.getRouteId();
-  if (!routeId) return;
-  const dmPub = await cryptoDm.getPublicJwk();
-  const proof = await buildDmPubProof(localAccount.signPayload, dmPub, myPeerId);
-  const enrich = localAccount.getProfileEnrichment() || {};
-  const displayName = localAccount.getDisplayName() || enrich.displayName || "";
-  const avatarUrl = enrich.avatarUrl && enrich.avatarUrl.length <= 512 ? enrich.avatarUrl : "";
-  peers.announceIdentity(routeId, { ...dmPub, displayName, avatarUrl, proof });
 }

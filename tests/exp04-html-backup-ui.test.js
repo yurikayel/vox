@@ -15,7 +15,7 @@ import {
 } from "../client/js/export-html-backup.js";
 import { renderStandaloneBackupHtml as renderCliHtml, parseBackupBundle as parseCliBundle } from "../scripts/export-html-backup.mjs";
 import { renderHtmlBackupCard, renderNetworkSettings } from "../client/js/render/network.js";
-import { bindHtmlBackupButton, exportHtmlBackupNow } from "../client/js/app/screens-network.js";
+import { bindHtmlBackupButton, exportHtmlBackupNow } from "../client/js/app/screens-network-view.js";
 import { waitUntil } from "./helpers/wait-until.js";
 
 const PNG_DATA_URL =
