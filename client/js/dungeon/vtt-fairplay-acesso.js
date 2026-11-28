@@ -38,18 +38,24 @@ export function renderFairplayRequests(state) {
 }
 
 const PLAYER_TEXT = { waiting: "Aguardando aprovação do Mestre", refused: "Entrada recusada" };
+const RETRY_BUTTON = `<button type="button" class="dungeon-btn" data-dungeon="fairplay-retry">Tentar de novo</button>`;
 
 /**
- * Estado honesto do jogador: aguardando, recusado ou sem contato com o Mestre (com botão para tentar de novo).
+ * Estado honesto do jogador: aguardando, recusado (com botão para pedir de novo, fora do aviso para o leitor de tela
+ * anunciar só o texto) ou sem contato com o Mestre (com botão para tentar de novo).
  * @param {object} state Estado com `fairplayAccess` ("waiting"|"refused"|"ok") e `fairplayHelloGaveUp`.
  * @returns {string} HTML ou vazio.
  */
 export function renderFairplayPlayerAccess(state) {
-  const text = PLAYER_TEXT[state?.fairplayAccess];
-  if (text) return `<p class="dungeon-fairplay-access is-${state.fairplayAccess}" role="status">${text}</p>`;
+  const access = state?.fairplayAccess;
+  const text = PLAYER_TEXT[access];
+  if (text) {
+    const retry = access === "refused" ? RETRY_BUTTON : "";
+    return `<p class="dungeon-fairplay-access is-${access}" role="status">${text}</p>${retry}`;
+  }
   if (!state?.fairplayHelloGaveUp) return "";
   return `<p class="dungeon-fairplay-access is-offline" role="status">Não deu para falar com o Mestre.
-    <button type="button" class="dungeon-btn" data-dungeon="fairplay-retry">Tentar de novo</button></p>`;
+    ${RETRY_BUTTON}</p>`;
 }
 
 /**
