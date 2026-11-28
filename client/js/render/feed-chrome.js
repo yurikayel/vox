@@ -223,7 +223,8 @@ function renderFeedEmptyState(activeFeed, failure = "", watching = false) {
  * @param {string} [opts.activeFeed] Filtro ativo (`civic`, `external`, etc.).
  * @param {string} [opts.userRouteId] Conta para o composer.
  * @param {string[]} [opts.externalSubs] Handles Bluesky quando `activeFeed === "external"`.
- * @param {"offline"|"error"} [opts.failure] Falha da carga: sem posts, mostra o cartão "sem rede" ou "erro" no lugar do vazio.
+ * @param {"offline"|"error"} [opts.failure] Falha da carga: sem posts, mostra o cartão "sem rede" ou "erro" no lugar do
+ * vazio; com posts (os que já estão no aparelho), o mesmo cartão vem acima da lista, sem escondê-la.
  * @param {boolean} [opts.watching] Há alguém acompanhado (muda o texto do vazio em "Seguindo").
  * @returns {void}
  */
@@ -253,5 +254,6 @@ export function renderFeed(main, topics = [], opts = {}) {
   const visible = gossipRetract.filterFeedTopicsForGossipRetract(topics);
   rememberVisible(visible, userRouteId);
   const items = visible.map((t) => renderPostItem(t)).join("");
-  main.innerHTML += `${html}<div class="feed-container">${items}</div>`;
+  const notice = FAILURE_STATES[opts.failure] ? renderFeedEmptyState(activeFeed, opts.failure) : "";
+  main.innerHTML += `${html}${notice}<div class="feed-container">${items}</div>`;
 }

@@ -102,9 +102,21 @@ test("sem rede e erro: cartão próprio com Tentar de novo, e a falha vence o va
   }
 });
 
-test("com posts a falha não esconde a lista: sem cartão de estado", () => {
+test("com posts e falha, o cartão da falha vem acima da lista e não a esconde; sem falha não há cartão", () => {
+  const posts = [{ id: "p1", title: "Primeiro post", author: "vx_demo_mg" }];
+  for (const [failure, kind] of [["offline", "offline"], ["error", "error"]]) {
+    const main = { innerHTML: "" };
+    renderFeed(main, posts, { activeFeed: "for-you", failure });
+    const html = main.innerHTML;
+    assert.match(html, new RegExp(`<div class="sv-state sv-state--${kind}" role="status">`), failure);
+    assert.match(html, /data-feed-retry="1">Tentar de novo<\/button>/, failure);
+    assert.ok(html.indexOf("sv-state--") < html.indexOf('class="feed-container"'), `${failure}: o aviso vem antes da lista`);
+    assert.ok(html.indexOf('class="feed-container"') > html.indexOf("feed-chrome"), failure);
+    assert.match(html, /Primeiro post/, `${failure}: o post segue na lista`);
+    assert.equal(contar(html, /sv-state sv-state--/g), 1, failure);
+  }
   const main = { innerHTML: "" };
-  renderFeed(main, [{ id: "p1", title: "Primeiro post", author: "vx_demo_mg" }], { activeFeed: "for-you", failure: "offline" });
+  renderFeed(main, posts, { activeFeed: "for-you" });
   assert.doesNotMatch(main.innerHTML, /sv-state/);
   assert.match(main.innerHTML, /feed-container/);
 });
@@ -142,8 +154,8 @@ test("a Ágora sem conexão e sem posts mostra o cartão 'sem rede'; Seguindo se
   assert.doesNotMatch(dom.main.innerHTML, /sv-state--offline/);
 });
 
-test("online e sem posts a Ágora mostra o vazio, não a falha", async () => {
-  globalThis.fetch = async () => { throw new Error("rede indisponível"); };
+test("online, com o gateway respondendo e sem posts, a Ágora mostra o vazio, não a falha", async () => {
+  gateway([]);
   await home.showHome("civic");
   assert.match(dom.main.innerHTML, /sv-state--empty/);
   assert.doesNotMatch(dom.main.innerHTML, /sv-state--(offline|error)/);
@@ -285,4 +297,63 @@ test("'Tentar de novo' em Seguindo com o gateway fora recarrega o MESMO feed e s
     await waitUntil(() => !dom.main.innerHTML.includes("MARCA-ANTIGA"));
     assert.match(dom.main.innerHTML, /sv-state--error/, "recarregou Seguindo (o feed Para você, com o plano B, não mostraria o cartão de erro)");
   });
+});
+
+/** Os posts da lista (o que está depois do aviso), sem o resto da página. */
+const lista = (html) => html.slice(html.indexOf('class="feed-container"'));
+
+test("Para você sem conexão: aviso 'sem rede' com Tentar de novo acima da lista local, que continua lá", async () => {
+  localStorage.removeItem(DISMISS_KEY);
+  semConexao();
+  await home.showHome("for-you");
+  const html = dom.main.innerHTML;
+  assert.match(html, /<div class="sv-state sv-state--offline" role="status">/);
+  assert.match(sem(html), /Você está sem conexão\. O feed mostra só o que já está neste aparelho\./);
+  assert.match(html, /data-feed-retry="1">Tentar de novo<\/button>/);
+  assert.ok(html.indexOf("sv-state--offline") < html.indexOf('class="feed-container"'), "o aviso vem antes da lista");
+  assert.match(lista(html), /post-item|data-topic-id|class="post/, "o post de boas-vindas segue na lista");
+  assert.doesNotMatch(html, /sv-state--(empty|error)/);
+});
+
+test("Para você online com os gateways fora do ar: aviso de erro com Tentar de novo acima da lista", async () => {
+  localStorage.removeItem(DISMISS_KEY);
+  gateway(null);
+  await home.showHome("for-you");
+  const html = dom.main.innerHTML;
+  assert.match(html, /<div class="sv-state sv-state--error" role="status">/);
+  assert.match(sem(html), /Não deu para carregar o feed agora\./);
+  assert.match(html, /data-feed-retry="1">Tentar de novo<\/button>/);
+  assert.ok(html.indexOf("sv-state--error") < html.indexOf('class="feed-container"'), "o aviso vem antes da lista");
+  assert.doesNotMatch(html, /sv-state--(empty|offline)/);
+});
+
+test("Redes externas online com os gateways fora do ar: sem 'Não deu para carregar', o feed não depende deles", async () => {
+  gateway(null);
+  await home.showHome("external");
+  const html = dom.main.innerHTML;
+  assert.doesNotMatch(sem(html), /Não deu para carregar o feed agora/);
+  assert.doesNotMatch(html, /sv-state--error/);
+});
+
+test("Para você online com o gateway respondendo: sem aviso nenhum, só a lista", async () => {
+  localStorage.removeItem(DISMISS_KEY);
+  gateway([]);
+  await home.showHome("for-you");
+  assert.doesNotMatch(dom.main.innerHTML, /sv-state/);
+  assert.match(dom.main.innerHTML, /class="feed-container"/);
+});
+
+test("'Tentar de novo' no aviso do Para você recarrega o MESMO feed e, voltando a rede, o aviso some", async () => {
+  localStorage.removeItem(DISMISS_KEY);
+  gateway(null);
+  const botao = makeEl();
+  dom.group(".feed-chrome ~ .sv-state", [botao]);
+  await home.showHome("for-you");
+  assert.match(dom.main.innerHTML, /sv-state--error/);
+  gateway([]);
+  dom.main.innerHTML = "MARCA-ANTIGA";
+  botao.fire("click", { target: { closest: (s) => (s === "[data-feed-retry]" ? { dataset: {} } : null) } });
+  await waitUntil(() => !dom.main.innerHTML.includes("MARCA-ANTIGA"));
+  assert.doesNotMatch(dom.main.innerHTML, /sv-state/, "o aviso some quando a busca dá certo");
+  assert.match(dom.main.innerHTML, /class="feed-container"/);
 });
