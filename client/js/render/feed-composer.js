@@ -139,7 +139,7 @@ function iconCommunity() {
 function renderMediaTools() {
   return `
     <label class="inline-composer-tool" title="Foto (até 99 KB)" aria-label="Anexar foto">
-      <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+      <input type="file" id="inline-topic-file" class="sr-only" aria-label="Anexar foto" accept="image/jpeg,image/png,image/webp,image/gif" />
       ${iconMediaPhoto()}
     </label>
     <div class="inline-mic-wrapper">
@@ -154,11 +154,11 @@ function renderMediaTools() {
       <button type="button" id="btn-inline-cancel-rec" class="btn-rec-cancel hidden" title="Cancelar gravação" aria-label="Cancelar gravação">✕</button>
     </div>
     <label class="inline-composer-tool" title="Áudio (até 60s)" aria-label="Anexar áudio">
-      <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
+      <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" class="sr-only" aria-label="Anexar áudio" />
       ${iconMediaAudio()}
     </label>
     <label class="inline-composer-tool" title="Vídeo (até 10s)" aria-label="Anexar vídeo">
-      <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
+      <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" class="sr-only" aria-label="Anexar vídeo" />
       ${iconMediaVideo()}
     </label>`;
 }

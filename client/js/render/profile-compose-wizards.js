@@ -27,7 +27,7 @@ function renderComposeCommunityPhotoSection() {
         <div style="flex:1;">
           <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
             📁 Escolher foto do aparelho
-            <input type="file" id="comm-photo-file" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" style="display:none;" />
+            <input type="file" id="comm-photo-file" class="sr-only" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" />
           </label>
           <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
         </div>
