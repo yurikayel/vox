@@ -18,8 +18,8 @@ const post = { id: "p_u14", title: "Post", author: "vx_a", ts: 1 };
 /** Tag de abertura do botão com a classe `cls` no HTML. */
 const tagOf = (html, cls) => new RegExp(`<button[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>`).exec(html)?.[0] ?? "";
 
-/** Valor do atributo de estado do botão: `aria-pressed`, ou `aria-checked` quando é item de menu. */
-const stateOf = (tag) => /aria-(?:pressed|checked)="(true|false)"/.exec(tag)?.[1] ?? null;
+/** Valor de `aria-pressed` do botão (curtir e salvar). */
+const stateOf = (tag) => /aria-pressed="(true|false)"/.exec(tag)?.[1] ?? null;
 
 function setState({ liked, starred, saved }) {
   localStorage.clear();
@@ -50,10 +50,13 @@ for (const [nome, render] of Object.entries(RENDERS)) {
 }
 
 for (const nome of ["feed", "post aberto"]) {
-  test(`${nome}: a estrela sai com o estado igual ao da estrela`, () => {
+  test(`${nome}: a estrela do menu é menuitemcheckbox com aria-checked igual ao estado`, () => {
     for (const on of [false, true]) {
       setState({ liked: false, starred: on, saved: false });
-      assert.equal(stateOf(tagOf(RENDERS[nome](), "btn-star")), String(on), `estrela ${on}`);
+      const tag = tagOf(RENDERS[nome](), "btn-star");
+      assert.match(tag, /role="menuitemcheckbox"/, "papel de caixa de seleção no menu");
+      assert.match(tag, new RegExp(`aria-checked="${on}"`), `aria-checked ${on}`);
+      assert.doesNotMatch(tag, /aria-pressed/, "aria-pressed não vale em item de menu");
     }
   });
 }
@@ -69,11 +72,13 @@ test("clicar em curtir, estrela e salvar troca o atributo de estado", async () =
   };
   const like = makeEl({ dataset: { id: "p_click", count: "0" }, kids: { ".icon-heart": makeEl(), ".count-likes": makeEl() } });
   const star = makeEl({ dataset: { id: "p_click", count: "0" }, kids: { ".icon-star": makeEl(), ".count-stars": makeEl() } });
+  star.setAttribute("role", "menuitemcheckbox");
   const save = makeEl({ dataset: { id: "p_click" }, kids: { ".icon-bookmark": makeEl() } });
-  for (const [selector, btn] of [[".btn-like", like], [".btn-star", star], [".btn-save", save]]) {
+  for (const [selector, btn, attr] of [[".btn-like", like, "aria-pressed"], [".btn-star", star, "aria-checked"], [".btn-save", save, "aria-pressed"]]) {
     await click(selector, btn);
-    assert.equal(btn.getAttribute("aria-pressed"), "true", `${selector} ligado`);
+    assert.equal(btn.getAttribute(attr), "true", `${selector} ligado`);
     await click(selector, btn);
-    assert.equal(btn.getAttribute("aria-pressed"), "false", `${selector} desligado`);
+    assert.equal(btn.getAttribute(attr), "false", `${selector} desligado`);
   }
+  assert.equal(star.getAttribute("aria-pressed"), null, "a estrela do menu não ganha aria-pressed");
 });
