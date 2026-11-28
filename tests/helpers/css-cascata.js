@@ -3,9 +3,12 @@
  * diz qual declaração vence para uma propriedade, como o navegador decide: `!important`, depois especificidade, depois
  * a ordem das folhas (`style.css`, `agora.css`, `sv-*.css`, a ordem do `index.html`). Entende seletor composto,
  * combinadores descendente e filho, `:is`, `:where`, `:not`, `:disabled`, estados (`:hover`, `:focus-visible`…) e
- * atributos. Ignora o que não tem como ser medido num elemento isolado: `@media`/`@supports`, irmãos (`+`, `~`),
- * `:has`, `:nth-*` e pseudo-elementos; as regras que o motor não lê contam em `unsupported`. É o que o `renderedDecl`
- * de `css-tema.js` não faz (ele compara só o último pedaço do seletor e ignora ancestral e classe de variante).
+ * atributos. Lê `@media (prefers-color-scheme: …)` (inclusive o bloco do atributo `data-color-mode` dentro do `@media`
+ * do outro tema) e o escolhe pelo ambiente `{scheme}` passado à busca; ignora o que não tem como ser medido num
+ * elemento isolado: outros `@media`/`@supports`, irmãos (`+`, `~`), `:has` e `:nth-*`; as regras que o
+ * motor não lê contam em `unsupported`. Pseudo-elemento (`::before`) só casa quando o último pedaço do caminho de
+ * `buildChain` o pede (`summary::before`), e então só regras que o trazem. É o que o `renderedDecl` de `css-tema.js` não faz (ele compara só o último
+ * pedaço do seletor e ignora ancestral, classe de variante e `@media`).
  */
 import { blocks, readSheet, SV_SHEETS } from "./css-tema.js";
 
@@ -13,6 +16,7 @@ const DEFAULT_FILES = ["style.css", "agora.css", ...SV_SHEETS];
 const STATES = new Set(["hover", "active", "focus", "focus-visible", "focus-within", "visited", "checked"]);
 const PIECE = /^(?:(\*|[a-zA-Z][\w-]*)|#([\w-]+)|\.([\w-]+)|\[([^\]]*)\]|(::?)([\w-]+))/;
 const ATTR = /^\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\s\]]+)))?\s*$/;
+const SCHEME_MEDIA = /^@media\s*\(\s*prefers-color-scheme\s*:\s*(light|dark)\s*\)$/i;
 const listCache = new Map();
 const loaded = new Map();
 
@@ -128,7 +132,7 @@ function matchAttr(a, el) {
 
 function matchPseudo(p, chain, i) {
   const el = chain[i];
-  if (p.element) return false;
+  if (p.element) return true; // `matchCompound` já conferiu o pseudo-elemento do caminho
   if (STATES.has(p.name)) return el.states.has(p.name);
   const off = el.attrs.disabled !== undefined;
   const any = () => (p.arg === null ? [] : listOf(p.arg)).some((s) => matchComplex(s, chain, i));
@@ -145,6 +149,7 @@ function matchPseudo(p, chain, i) {
 
 function matchCompound(c, chain, i) {
   const el = chain[i];
+  if ((c.pseudos.find((p) => p.element)?.name ?? null) !== el.pseudoElement) return false;
   if (c.tag && c.tag !== "*" && c.tag !== el.tag) return false;
   if (c.id && c.id !== el.attrs.id) return false;
   return c.classes.every((k) => el.classes.includes(k)) && c.attrs.every((a) => matchAttr(a, el)) && c.pseudos.every((p) => matchPseudo(p, chain, i));
@@ -194,39 +199,59 @@ function parseDecls(body) {
   return out;
 }
 
+/** Percorre as regras de `css`, entrando nos `@media (prefers-color-scheme)` (o tema do bloco vai em `scheme`). */
+function walkRules(css, scheme, visit) {
+  for (const blk of blocks(css)) {
+    const media = blk.selector.match(SCHEME_MEDIA)?.[1].toLowerCase();
+    if (media) {
+      if (scheme === null || scheme === media) walkRules(blk.body, media, visit);
+    } else if (!blk.selector.startsWith("@")) visit(blk, scheme);
+  }
+}
+
 /**
- * Regras de nível alto das folhas, cada seletor da lista com a sua especificidade e a ordem de carga.
+ * Lê as regras de um texto de CSS, cada seletor da lista com a sua especificidade, a ordem de carga e o tema do
+ * `@media (prefers-color-scheme)` que o envolve (`scheme`: `"light"`, `"dark"` ou `null` fora de `@media`).
+ * @param {string} css CSS sem comentários.
+ * @param {string} file Nome da folha, só para a mensagem de `unsupported`.
+ * @param {{rules: object[], unsupported: string[]}} into Onde acrescentar; a ordem de carga continua do que já tem.
+ * @returns {{rules: object[], unsupported: string[]}} O próprio `into`.
+ */
+export function parseRules(css, file, into = { rules: [], unsupported: [] }) {
+  walkRules(css, null, (blk, scheme) => {
+    const decls = parseDecls(blk.body);
+    for (const text of splitTop(blk.selector, ",")) {
+      try {
+        const sel = parseSelector(text);
+        into.rules.push({ sel, text, decls, scheme, spec: selectorSpec(sel), order: into.rules.length });
+      } catch {
+        into.unsupported.push(`${file}: ${text}`);
+      }
+    }
+  });
+  return into;
+}
+
+/**
+ * Regras das folhas na ordem de carga (ver `parseRules`).
  * @param {string[]} [files] Folhas de `client/css` na ordem de carga.
  * @returns {{rules: object[], unsupported: string[]}} Regras lidas e seletores que o motor não entende.
  */
 export function loadRules(files = DEFAULT_FILES) {
   const key = files.join("|");
-  if (loaded.has(key)) return loaded.get(key);
-  const rules = [];
-  const unsupported = [];
-  for (const file of files) {
-    for (const blk of blocks(readSheet(file))) {
-      if (blk.selector.startsWith("@")) continue;
-      const decls = parseDecls(blk.body);
-      for (const text of splitTop(blk.selector, ",")) {
-        try {
-          const sel = parseSelector(text);
-          rules.push({ sel, text, decls, spec: selectorSpec(sel), order: rules.length });
-        } catch {
-          unsupported.push(`${file}: ${text}`);
-        }
-      }
-    }
-  }
-  loaded.set(key, { rules, unsupported });
+  if (!loaded.has(key)) loaded.set(key, files.reduce((into, file) => parseRules(readSheet(file), file, into), { rules: [], unsupported: [] }));
   return loaded.get(key);
 }
 
+/** A regra vale no ambiente: fora de `@media` sempre; dentro, só se o tema do sistema (`env.scheme`) for o dela. */
+const appliesIn = (rule, env) => rule.scheme === null || rule.scheme === env.scheme;
+
 /**
  * Monta a árvore de um elemento: do mais externo ao elemento, com estados só no último.
- * @param {string} path Caminho com `>` e espaço, por exemplo `html > body > div.app-layout.agora-ui > button#x.btn[disabled]`.
+ * @param {string} path Caminho com `>` e espaço, por exemplo `html > body > div.app-layout.agora-ui > button#x.btn[disabled]`;
+ * o último pedaço pode pedir um pseudo-elemento (`summary::before`).
  * @param {string[]} [states] Estados do elemento (`hover`, `focus-visible`…).
- * @returns {object[]} Elementos `{tag, classes, attrs, states}`.
+ * @returns {object[]} Elementos `{tag, classes, attrs, states, pseudoElement}`.
  */
 export function buildChain(path, states = []) {
   const { compounds } = parseSelector(path);
@@ -236,24 +261,25 @@ export function buildChain(path, states = []) {
     if (c.classes.length) attrs.class = c.classes.join(" ");
     const last = i === compounds.length - 1;
     const mine = last ? [...states, ...(states.includes("focus-visible") ? ["focus"] : [])] : [];
-    return { tag: c.tag ?? "div", classes: c.classes, attrs, states: new Set(mine) };
+    const pseudoElement = last ? (c.pseudos.find((p) => p.element)?.name ?? null) : null;
+    return { tag: c.tag ?? "div", classes: c.classes, attrs, states: new Set(mine), pseudoElement };
   });
 }
 
 const beats = (a, b) => (a.important !== b.important ? a.important : cmpSpec(a.spec, b.spec) || a.order - b.order) > 0;
 
 /**
- * A declaração que vence para o elemento entre as propriedades `props` (uma família como `background` e
- * `background-color` disputa junta). `!important` primeiro, depois especificidade, depois a ordem de carga.
+ * Como `cascade`, sobre regras já lidas (`parseRules`): serve para testar o motor com CSS escrito no teste.
+ * @param {object[]} rules Regras de `parseRules`.
  * @param {object[]} chain Árvore de `buildChain`.
  * @param {string[]} props Propriedades que contam.
- * @param {string[]} [files] Folhas na ordem de carga.
+ * @param {{scheme?: "light"|"dark"}} [env] Tema do sistema (`prefers-color-scheme`); sem ele, `@media` não vale.
  * @returns {{prop: string, value: string, important: boolean, spec: number[], order: number, selector: string}|null}
  */
-export function cascade(chain, props, files = DEFAULT_FILES) {
+export function cascadeIn(rules, chain, props, env = {}) {
   let best = null;
-  for (const rule of loadRules(files).rules) {
-    if (!matchComplex(rule.sel, chain)) continue;
+  for (const rule of rules) {
+    if (!appliesIn(rule, env) || !matchComplex(rule.sel, chain)) continue;
     for (const prop of props) {
       const d = rule.decls.get(prop);
       const cand = d && { prop, value: d.value, important: d.important, spec: rule.spec, order: rule.order, selector: rule.text };
@@ -261,4 +287,49 @@ export function cascade(chain, props, files = DEFAULT_FILES) {
     }
   }
   return best;
+}
+
+/**
+ * A declaração que vence para o elemento entre as propriedades `props` (uma família como `background` e
+ * `background-color` disputa junta). `!important` primeiro, depois especificidade, depois a ordem de carga.
+ * @param {object[]} chain Árvore de `buildChain`.
+ * @param {string[]} props Propriedades que contam.
+ * @param {string[]} [files] Folhas na ordem de carga.
+ * @param {{scheme?: "light"|"dark"}} [env] Tema do sistema (`prefers-color-scheme`); sem ele, `@media` não vale.
+ * @returns {{prop: string, value: string, important: boolean, spec: number[], order: number, selector: string}|null}
+ */
+export function cascade(chain, props, files = DEFAULT_FILES, env = {}) {
+  return cascadeIn(loadRules(files).rules, chain, props, env);
+}
+
+/**
+ * Variáveis `--x` que valem na raiz (`html`) num ambiente, pela cascata: o atributo `data-color-mode` (`mode`) e o
+ * tema do sistema (`scheme`) escolhem os blocos, e vence a regra por `!important`, especificidade e ordem. Lê o bloco
+ * do atributo dentro do `@media` do outro tema (`:root[data-color-mode="dark"]` sob `prefers-color-scheme: light`).
+ * @param {{scheme?: "light"|"dark", mode?: "light"|"dark"}} [env] `scheme`: tema do sistema; `mode`: atributo da raiz
+ * (sem ele, modo automático).
+ * @param {string[]} [files] Folhas na ordem de carga.
+ * @returns {Map<string, string>} Nome da variável para o valor declarado (use com `hexOf`).
+ */
+export function themeTokens(env = {}, files = DEFAULT_FILES) {
+  return tokensIn(loadRules(files).rules, env);
+}
+
+/**
+ * Como `themeTokens`, sobre regras já lidas (`parseRules`): serve para testar a escolha da variável com CSS do teste.
+ * @param {object[]} rules Regras de `parseRules`.
+ * @param {{scheme?: "light"|"dark", mode?: "light"|"dark"}} [env] Ambiente (ver `themeTokens`).
+ * @returns {Map<string, string>} Nome da variável para o valor declarado.
+ */
+export function tokensIn(rules, { scheme, mode } = {}) {
+  const chain = buildChain(mode ? `html[data-color-mode="${mode}"]` : "html");
+  const best = new Map();
+  for (const rule of rules) {
+    if (!appliesIn(rule, { scheme }) || !matchComplex(rule.sel, chain)) continue;
+    for (const [prop, d] of rule.decls) {
+      const cand = { value: d.value, important: d.important, spec: rule.spec, order: rule.order };
+      if (prop.startsWith("--") && (!best.has(prop) || beats(cand, best.get(prop)))) best.set(prop, cand);
+    }
+  }
+  return new Map([...best].map(([prop, c]) => [prop, c.value]));
 }

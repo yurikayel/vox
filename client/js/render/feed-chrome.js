@@ -180,6 +180,11 @@ const EMPTY_STATES = Object.freeze({
     action: { label: "Encontrar pessoas", data: { "feed-go": "#/pessoas" } },
     link: { label: "Ver o feed Social", href: "#/" },
   },
+  followingQuiet: {
+    text: "As pessoas que você acompanha ainda não publicaram nada por aqui.",
+    action: { label: "Encontrar pessoas", data: { "feed-go": "#/pessoas" } },
+    link: { label: "Ver o feed Social", href: "#/" },
+  },
   default: {
     text: "Nenhuma publicação ainda. Seja a primeira pessoa a compartilhar uma ideia, foto, áudio ou vídeo.",
     action: { label: "Criar publicação", data: { "click-target": COMPOSER_TARGET } },
@@ -198,14 +203,16 @@ const FAILURE_STATES = Object.freeze({
  * erro não quer dizer que ninguém publicou.
  * @param {string} activeFeed Feed ativo.
  * @param {"offline"|"error"|""} [failure=""] Falha da carga do feed, se houve.
+ * @param {boolean} [watching=false] Há alguém acompanhado: em "Seguindo", o vazio não é "você não acompanha ninguém".
  * @returns {string} HTML de `renderStateCard`.
  */
-function renderFeedEmptyState(activeFeed, failure = "") {
+function renderFeedEmptyState(activeFeed, failure = "", watching = false) {
   if (FAILURE_STATES[failure]) {
     const { text } = FAILURE_STATES[failure];
     return renderStateCard({ kind: failure, text, action: { label: "Tentar de novo", data: { "feed-retry": "1" } } });
   }
-  return renderStateCard({ kind: "empty", ...(EMPTY_STATES[activeFeed] || EMPTY_STATES.default) });
+  const key = activeFeed === "following" && watching ? "followingQuiet" : activeFeed;
+  return renderStateCard({ kind: "empty", ...(EMPTY_STATES[key] || EMPTY_STATES.default) });
 }
 
 /**
@@ -217,6 +224,7 @@ function renderFeedEmptyState(activeFeed, failure = "") {
  * @param {string} [opts.userRouteId] Conta para o composer.
  * @param {string[]} [opts.externalSubs] Handles Bluesky quando `activeFeed === "external"`.
  * @param {"offline"|"error"} [opts.failure] Falha da carga: sem posts, mostra o cartão "sem rede" ou "erro" no lugar do vazio.
+ * @param {boolean} [opts.watching] Há alguém acompanhado (muda o texto do vazio em "Seguindo").
  * @returns {void}
  */
 export function renderFeed(main, topics = [], opts = {}) {
@@ -238,7 +246,7 @@ export function renderFeed(main, topics = [], opts = {}) {
     </div>`;
 
   if (!topics.length) {
-    main.innerHTML += html + renderFeedEmptyState(activeFeed, opts.failure);
+    main.innerHTML += html + renderFeedEmptyState(activeFeed, opts.failure, opts.watching);
     return;
   }
 
