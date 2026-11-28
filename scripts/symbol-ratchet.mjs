@@ -39,10 +39,14 @@ function parseArgs(argv) {
 /** Passos de aprofundamento (em commits) tentados num clone raso até aparecer o ponto de partida da base. */
 const DEEPEN_STEPS = [50, 200, 750];
 
+/** Comandos do Git que falharam ao achar a base, com o stderr de cada um: vão para a mensagem de erro (o log do CI mostra a causa). */
+const gitFailures = [];
+
 function tryGit(...args) {
   try {
-    return git(...args);
-  } catch {
+    return execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+  } catch (err) {
+    gitFailures.push(`git ${args.join(" ")} → ${String(err.stderr || err.message).trim().replace(/\s*\n\s*/g, " | ")}`);
     return null;
   }
 }
@@ -109,7 +113,7 @@ function auditFile(mergeBase, rel) {
 function main() {
   const { base, json } = parseArgs(process.argv.slice(2));
   const mergeBase = resolveMergeBase(base);
-  if (!mergeBase) throw new Error(`a base ${base} não está no clone e não foi possível buscá-la`);
+  if (!mergeBase) throw new Error(`a base ${base} não está no clone e não foi possível buscá-la\n${gitFailures.map((f) => `  ${f}`).join("\n")}`);
   const files = changedFiles(mergeBase);
   const report = Object.fromEntries(files.map((f) => [f, auditFile(mergeBase, f)]).filter(([, v]) => v.length));
   const total = Object.values(report).reduce((n, v) => n + v.length, 0);

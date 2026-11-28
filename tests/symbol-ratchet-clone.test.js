@@ -78,6 +78,7 @@ test("c) sem rede (a origem some) e sem a base no clone: sai com 2 e diz que a b
     const r = run(dst);
     assert.equal(r.status, 2);
     assert.match(r.stderr, /a base origin\/base não está no clone e não foi possível buscá-la/);
+    assert.match(r.stderr, /git fetch .*origin .*→ .*(nao-existe|does not appear to be a git repository|Could not read)/i, "o stderr do git entra na mensagem");
   } finally {
     cleanup(src, dst);
   }
