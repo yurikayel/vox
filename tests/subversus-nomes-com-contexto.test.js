@@ -66,3 +66,24 @@ test("mesa: Revelar, Ocultar GM e Remover dos tokens, e a bandeja, levam o nome"
   assertContexto(group(html, "simple"), ["Adicionar ao mapa: token simples"]);
   assertContexto(group(html, "text:No mapa"), [`No mapa: ${ESC}`]);
 });
+
+test("campanhas: Abrir Campanha e Recarregar levam o nome da campanha, escapado", () => {
+  const state = createDungeonSessionState({ viewerRole: "gm", campaignId: "c2", syncPeer: null });
+  state.campaigns = [{ id: "c1", name: "Vila Nova" }, { id: "c2", name: HOSTIL }, { id: "c3", name: HOSTIL2 }];
+  const html = renderCampScreen(state, { lab: false });
+  assertContexto(group(html, "text:Abrir Campanha"), ["Abrir Campanha Vila Nova", `Abrir Campanha ${ESC2}`]);
+  assertContexto(group(html, "text:Recarregar"), [`Recarregar ${ESC}`]);
+});
+
+test("mochila: Equipar, Desequipar, Favoritar e Tirar dos favoritos levam o nome do item, escapado", () => {
+  const items = [
+    { id: "i1", label: "Espada longa", qty: 1, tags: [], equipped: false },
+    { id: "i2", label: HOSTIL, qty: 1, tags: [], equipped: true },
+    { id: "i3", label: HOSTIL2, qty: 2, tags: [], equipped: false },
+  ];
+  const html = renderInventoryPanel({ sheet: { inventoryItems: items, sheet_meta: { favorites: ["item:i2"] } } });
+  assertContexto(group(html, "text:Equipar"), ["Equipar Espada longa", `Equipar ${ESC2}`]);
+  assertContexto(group(html, "text:Desequipar"), [`Desequipar ${ESC}`]);
+  assertContexto(group(html, "text:Favoritar"), ["Favoritar Espada longa", `Favoritar ${ESC2}`]);
+  assertContexto(group(html, "text:Tirar dos favoritos"), [`Tirar dos favoritos ${ESC}`]);
+});

@@ -197,6 +197,7 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
   const badge = isActive
     ? `<span class="dungeon-badge-ok">Ativa neste aparelho</span>`
     : `<span class="dungeon-code-tag">Salva localmente</span>`;
+  const openLabel = isActive ? "Recarregar" : "Abrir Campanha";
   const deleteControl = isConfirming
     ? `<button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="confirm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}" aria-label="Confirmar exclusão de ${escapeHtml(camp.name)}">Confirmar exclusão</button><button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="cancel-delete-campaign">Cancelar</button>`
     : `<button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="arm-delete-campaign" data-campaign-id="${escapeHtml(camp.id)}" aria-label="Excluir ${escapeHtml(camp.name)}">Excluir</button>`;
@@ -207,7 +208,7 @@ function renderSavedCampaignCard(camp, activeId, pendingDeleteId) {
       <p class="dungeon-muted">${Number(camp.sheetCount) || 1} ficha(s) · ${Number(camp.chronicleCount) || 0} entrada(s) na crônica.</p>
       <div class="dungeon-card-actions">
         <a class="dungeon-btn dungeon-btn-secondary" href="#/dungeon/mesa/${encodeURIComponent(camp.id)}">Jogar na Mesa →</a>
-        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}">${isActive ? "Recarregar" : "Abrir Campanha"}</button>
+        <button type="button" class="dungeon-btn dungeon-btn-secondary" data-dungeon="open-campaign" data-campaign-id="${escapeHtml(camp.id)}" aria-label="${openLabel} ${escapeHtml(camp.name)}">${openLabel}</button>
         ${deleteControl}
       </div>
     </article>`;
