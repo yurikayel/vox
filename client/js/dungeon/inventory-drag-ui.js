@@ -131,6 +131,18 @@ function listenAsOwner(container, getOwner, type, fn) {
   container.addEventListener(type, (ev) => { if (ev.pointerId === getOwner()) fn(ev); });
 }
 
+/**
+ * Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada.
+ * O `pointercancel` e a perda da captura (`lostpointercapture`: redesenho da tela, rolagem tomando o gesto) encerram o arrasto sem soltar o item.
+ */
+function bindOwnerPointer(container, getOwner, pointer, finish) {
+  const abort = () => { pointer.cancel(); finish(); };
+  listenAsOwner(container, getOwner, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, getOwner, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
+  listenAsOwner(container, getOwner, "pointercancel", abort);
+  listenAsOwner(container, getOwner, "lostpointercapture", abort);
+}
+
 function bindPointer(container, ctx) {
   let held = null;
   let owner = null;
@@ -155,10 +167,7 @@ function bindPointer(container, ctx) {
     cell.setPointerCapture?.(ev.pointerId);
     pointer.down({ id: held.id, pointerType: ev.pointerType === "touch" ? "touch" : "mouse", x: ev.clientX, y: ev.clientY });
   });
-  // Só o dedo que segura o item conduz o arrasto: o segundo dedo (no botão "Girar item", por exemplo) não move, solta nem cancela nada.
-  listenAsOwner(container, () => owner, "pointermove", (ev) => pointer.move({ x: ev.clientX, y: ev.clientY }));
-  listenAsOwner(container, () => owner, "pointerup", (ev) => pointer.up({ x: ev.clientX, y: ev.clientY }));
-  listenAsOwner(container, () => owner, "pointercancel", () => { pointer.cancel(); finish(); });
+  bindOwnerPointer(container, () => owner, pointer, finish);
   container.addEventListener("touchmove", (ev) => { if (pointer.active) ev.preventDefault(); }, { passive: false });
   container.addEventListener("contextmenu", (ev) => { if (pointer.active) ev.preventDefault(); });
 }
