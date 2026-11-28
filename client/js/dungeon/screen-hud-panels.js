@@ -1,7 +1,7 @@
 /**
  * @file Painéis em meia tela do HUD (spec hud-jogo-v0, §2 e §3): a barra de botões e o painel aberto sobre a metade do
  * tabuleiro. Não é modal (sem `aria-modal`, o mapa segue visível e usável); Esc e o botão Fechar recolhem; no celular o
- * painel vira folha de tela cheia (CSS). O conteúdo reaproveita as telas da ficha e da crônica.
+ * painel vira folha presa ao rodapé, de até 75% da altura, que pode cobrir a barra (CSS). O conteúdo reaproveita as telas da ficha e da crônica.
  * @module dungeon/screen-hud-panels
  */
 import { escapeHtml } from "../shared/html.js";
