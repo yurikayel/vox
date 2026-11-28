@@ -110,6 +110,33 @@
   outline-offset: 2px;
 }
 
+/* Alvos de toque de pelo menos 24 px (WCAG 2.5.8): controles que mediam 16 a 21 px de altura em Chromium. */
+.app-footer-feedback,
+.link-alt,
+.btn-dismiss-welcome-topic,
+.community-orkut-members-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+/* Fora do grupo: `inline-flex` mataria o `text-overflow: ellipsis` do autor no cabeçalho do feed. */
+.post-author {
+  display: inline-block;
+  min-height: 24px;
+}
+
+.btn-dismiss-welcome-topic {
+  min-width: 24px;
+  justify-content: center;
+}
+
+.dungeon-range,
+.aviso-skills input[type="text"],
+summary {
+  min-height: 24px;
+}
+
 /* Caixa de DM: o item é filho flex da linha; sem min-width:0 a prévia em uma linha alarga o item (1722 px a 320). */
 .dm-inbox-item {
   min-width: 0;
