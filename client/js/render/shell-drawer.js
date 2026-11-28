@@ -8,6 +8,7 @@ import { readColorMode } from "../color-mode.js";
 import { escapeHtml } from "./util.js";
 import { ICONS, renderFeedNavSlot, renderSidebarNav } from "./shell-nav.js";
 import { renderAgoraWordmark, renderThemeModeToggle } from "./shell-chrome.js";
+import { createFocusTrap } from "./focus-trap.js";
 
 const SIDEBAR_SYNC_PLACEHOLDER = "\u00a0";
 
@@ -140,6 +141,8 @@ export function attachIdentityDrawerBehavior() {
   const backdrop = document.getElementById("agora-drawer-backdrop");
   if (!toggle || !drawer || toggle.dataset.bound === "1") return;
   toggle.dataset.bound = "1";
+  /** Gaveta modal (`aria-modal`): Tab circula dentro dela e Esc fecha com o foco onde estiver; ao fechar, o foco volta ao botão. */
+  const trap = createFocusTrap(drawer, { onEscape: () => setOpen(false) });
   /**
    * Abre ou fecha a gaveta de identidade.
    *
@@ -149,12 +152,13 @@ export function attachIdentityDrawerBehavior() {
     drawer.hidden = !open;
     if (backdrop) backdrop.hidden = !open;
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) document.getElementById("agora-drawer-close")?.focus();
+    if (!open) return trap.deactivate();
+    trap.activate({ returnFocus: toggle });
+    document.getElementById("agora-drawer-close")?.focus();
   };
   toggle.addEventListener("click", () => setOpen(drawer.hidden));
   backdrop?.addEventListener("click", () => setOpen(false));
-  document.getElementById("agora-drawer-close")?.addEventListener("click", () => { setOpen(false); toggle.focus(); });
-  drawer.addEventListener("keydown", (e) => { if (e.key === "Escape") { setOpen(false); toggle.focus(); } });
+  document.getElementById("agora-drawer-close")?.addEventListener("click", () => setOpen(false));
   drawer.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
   attachCopyIdentityButton(drawer);
 }
