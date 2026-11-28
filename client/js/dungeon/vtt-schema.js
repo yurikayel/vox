@@ -42,17 +42,23 @@ export function isCoveredSeed(act, skills) {
   return Boolean(m) && skill.ability !== undefined && ABILITY_ALIASES[m[1]] === skill.ability;
 }
 
+/** A ação é a semente inteira: `id`, `label`, `roll`, `damage` e `tag`, com os padrões que a ficha grava (dano vazio, tag "acao"). */
+function isSeed(act, seed) {
+  return act?.id === seed.id && act.label === seed.label && act.roll === seed.roll
+    && String(act.damage || "") === String(seed.damage || "") && String(act.tag || "acao") === String(seed.tag || "acao");
+}
+
 /**
  * Semente da 5e, intacta, numa ficha cujo pacote não a semeia (a ficha foi criada antes de cada sistema ter as suas):
- * a fórmula `@atributo` dela é da regra errada. Ação editada ou cadastrada à mão nunca é semente alheia.
+ * a fórmula `@atributo` dela é da regra errada. Ação editada (em qualquer campo: rótulo, fórmula, dano ou etiqueta) ou
+ * cadastrada à mão nunca é semente alheia.
  * @param {object} act Ação clicável.
  * @param {string} [systemId] Id do pacote da ficha.
  * @returns {boolean} `true` se é uma semente da 5e que o pacote da ficha não tem.
  */
 export function isForeignSeed(act, systemId) {
   const own = packOf(systemId).seedActions || [];
-  const fromFive = DEFAULT_CLICKABLE_ACTIONS.some((s) => s.id === act?.id && s.roll === act?.roll);
-  return fromFive && !own.some((s) => s.id === act.id && s.roll === act.roll);
+  return DEFAULT_CLICKABLE_ACTIONS.some((s) => isSeed(act, s)) && !own.some((s) => isSeed(act, s));
 }
 
 /**
@@ -134,7 +140,7 @@ export function ensureSheetMeta(sheet = {}) {
 
 /**
  * Cria uma entrada padronizada da crônica da mesa.
- * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
+ * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `checkRequestId`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
  * @returns {object} Entrada normalizada da crônica.
  */
 export function createChronicleEntry(opts = {}) {
@@ -148,8 +154,14 @@ export function createChronicleEntry(opts = {}) {
     visibility,
     author: String(opts.author || ""),
     ts: Number.isFinite(Number(opts.ts)) ? Number(opts.ts) : Date.now(),
+    ...optionalId("checkRequestId", opts.checkRequestId),
     ...fairplayLink(opts),
   };
+}
+
+/** Campo de vínculo opcional: só entra se o valor for um id válido (o resto é descartado). */
+function optionalId(key, value) {
+  return VTT_ID_RE.test(String(value ?? "")) ? { [key]: String(value) } : {};
 }
 
 /** Vínculo com a rolagem Fairplay (só o id e o valor anunciado, ou a marca booleana de falta que o reducer só dá ao Mestre; nunca um "verificado" de outro par). */
@@ -190,6 +202,7 @@ export function createDiceRollEntry(opts = {}) {
     fumbles: nonNegInt(r.fumbles),
     visibility: ["public", "gm", "blind"].includes(r.visibility) ? r.visibility : "public",
     digestHex: String(r.digestHex || ""),
+    ...optionalId("requestId", r.requestId),
     ts: finiteOr(opts.ts, Date.now()),
   };
 }

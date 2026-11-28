@@ -259,19 +259,22 @@ function wireHomeInteractiveHandlers(activeFeed) {
  * Busca nos gateways os itens remotos do feed ativo.
  *
  * @param {string} activeFeed Feed ativo.
- * @returns {Promise<{items: object[], gateway: string}>}
+ * @returns {Promise<{items: object[], gateway: string, failed: boolean}>} `failed`: em "Seguindo" com alguém acompanhado,
+ * os gateways não responderam (a lista vazia não quer dizer que ninguém publicou). Os outros feeds seguem com o plano B.
  */
 async function fetchRemoteHomeItems(activeFeed) {
   if (activeFeed === "following") {
     const watched = social.getWatchedProfiles();
-    if (watched.length > 0) {
-      const res = await gql.fetchTopicsByOwners(watched).catch(() => ({ items: [] }));
-      return { items: res.items || [], gateway: res.gateway || "" };
+    if (watched.length === 0) return { items: [], gateway: "", failed: false };
+    try {
+      const res = await gql.fetchTopicsByOwners(watched);
+      return { items: res.items || [], gateway: res.gateway || "", failed: false };
+    } catch {
+      return { items: [], gateway: "", failed: true };
     }
-    return { items: [], gateway: "" };
   }
   const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-  return { items: res.items || [], gateway: res.gateway || "" };
+  return { items: res.items || [], gateway: res.gateway || "", failed: false };
 }
 
 /**
@@ -364,15 +367,17 @@ export async function showHome(feed = "for-you") {
   const externalSubs = bskyFeed.loadBskySubscriptions();
   let finalTopics = [];
   let failure = offlineFailure(activeFeed);
+  const watching = social.getWatchedProfiles().length > 0;
 
   try {
-    const { items: remoteItems, gateway } = await fetchRemoteHomeItems(activeFeed);
+    const { items: remoteItems, gateway, failed } = await fetchRemoteHomeItems(activeFeed);
+    if (failed) failure ||= "error";
     const commMap = await buildCommunityTitleMap();
     finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
 
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure });
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs, failure, watching });
   } catch {
     failure ||= "error";
     main.innerHTML = "";

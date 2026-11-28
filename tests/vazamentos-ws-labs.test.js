@@ -2,6 +2,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { drainMicrotasks } from "./helpers/wait-until.js";
 import * as webrtcPeer from "../client/js/webrtc-peer.js";
 import * as openFramesHost from "../client/js/open-frames-host.js";
 
@@ -42,7 +43,7 @@ test("webrtc - religar com WebRTC ligado não deixa sockets de sinalização viv
   await withFakeWebSocket(async () => {
     for (let i = 0; i < 3; i++) {
       await webrtcPeer.initWebRtc("peer-a");
-      await new Promise((r) => setTimeout(r, 20));
+      await drainMicrotasks(50);
     }
     const vivos = FakeWs.all.filter((w) => w.readyState === 0 || w.readyState === 1);
     assert.equal(vivos.length, 1, `sockets vivos: ${vivos.length} de ${FakeWs.all.length}`);
@@ -52,7 +53,7 @@ test("webrtc - religar com WebRTC ligado não deixa sockets de sinalização viv
 test("webrtc - chamadas simultâneas de initWebRtc abrem um só socket", async () => {
   await withFakeWebSocket(async () => {
     await Promise.all([webrtcPeer.initWebRtc("peer-b"), webrtcPeer.initWebRtc("peer-b")]);
-    await new Promise((r) => setTimeout(r, 20));
+    await drainMicrotasks(50);
     assert.equal(FakeWs.all.filter((w) => w.readyState < 2).length, 1);
   });
 });

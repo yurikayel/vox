@@ -274,7 +274,7 @@ export function renderSheetScreen(state) {
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const sys = resolveSheetSystem(state.sheet);
   const panels = {
-    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions, sys?.derived.skills, hasAbilityButtons(sys))}`,
+    play: `${renderDerivedStrip(state.sheet, projected.pools?.hp_current ?? null)}${renderPlayTab(actions, sys?.derived.skills, hasAbilityButtons(sys), state.sheet?.system?.id)}`,
     abilities: renderAbilitiesPanel(state),
     items: renderInventoryPanel(state),
     about: `${renderSheetEditPanel(state.sheet, { issues: state.sheetEditIssues, draft: state.sheetEditDraft, link: state.voxcharLink, over: state.voxcharOver })}${renderLedgerPanel(state.sheet)}${renderPublicNotesSection(state)}${renderLoreSection(state.loreNodes)}${renderSheetAudit(projected.orderedOpsCount)}`,

@@ -60,7 +60,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
 | O que é interno e o que é público (o que entra no git) | [interno-e-publico.md](./process/interno-e-publico.md) |
-| Prompt Claude: auditoria features, docs e MVP técnico (nov/2026) | [prompt-claude-auditoria-mvp-tecnico-2026-11.md](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
+| Prompt de auditoria: features, docs e MVP técnico (nov/2026) | [prompt-auditoria-mvp-tecnico-2026-11.md](./process/prompt-auditoria-mvp-tecnico-2026-11.md) |
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
@@ -113,8 +113,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ### Specs de protocolo (malha, cache, módulos)
 
-- [antigravity-gossip-retract-v1.md](./specs/antigravity-gossip-retract-v1.md): retratação no gossip (implementado)
-- [antigravity-blob-soft-priority-v0.md](./specs/antigravity-blob-soft-priority-v0.md): prioridade suave de blobs (flag desligada)
+- [retratacao-gossip-v1.md](./specs/retratacao-gossip-v1.md): retratação no gossip (implementado)
+- [prioridade-suave-blobs-v0.md](./specs/prioridade-suave-blobs-v0.md): prioridade suave de blobs (flag desligada)
 - [cache-manifest-v0.md](./specs/cache-manifest-v0.md): manifestos de cache assinados
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
 - [listing-signed-gossip-v1.md](./specs/listing-signed-gossip-v1.md): ofertas da Feira assinadas
@@ -134,7 +134,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [estrategia-5-pontos-fracos-90-dias-2026-11.md](./strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md): **plano de 90 dias por ponto fraco**, com as decisões de 10/11 (cunha do piloto: modo assembleia)
 - Radar de ecossistema (interno): tracking de features e anexos de observação — mantido fora do índice público quando o arquivo for aposentado; ver POSITIONING/LESSONS para contraste de produto.
 - [tese-praca-civica-militancia-pro-democratica-2026-10.md](./strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
-- [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
+- [estrategia-mantenedor-revisor-2026.md](./strategy/estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
 - [POSITIONING.md](./product/POSITIONING.md) · [garantia-da-praca-pm104.md](./product/garantia-da-praca-pm104.md) (Garantia da Praça — rascunho pré-REV-12 espelhado na Voxpedia) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
 
 ### Rede pública (portões G1–G3)
@@ -176,7 +176,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md): espelhos shell A/B · [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md) · [ops-pages-rollback.md](./operations/ops-pages-rollback.md)
 - [pacote-anti-bus-factor.md](./operations/pacote-anti-bus-factor.md): release, rollback e plantão para segunda pessoa (LAN-30)
 - [gatilho-infra-50-ativos.md](./operations/gatilho-infra-50-ativos.md): quando abrir TURN, 2º nó e relay de produção (>50 ativos)
-- [antigravity-operating.md](./process/antigravity-operating.md): operação da malha
+- [operacao-protocolo-integracao.md](./process/operacao-protocolo-integracao.md): operação da malha
 - Emergência de **72 h** (relay + TTL do inbox): restaurar ou usar URL alternativa. Se o PWA cair, use o shell A/B. Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)).
 - Componentes: [relay/README.md](../relay/README.md) · [relay/deploy/README.md](../relay/deploy/README.md) (VPS + TURN) · [vox-populi/README.md](../vox-populi/README.md) · [android/README.md](../android/README.md) · [vox-bridge/README.md](../vox-bridge/README.md)
 - Ferramentas: [desktop-linux](../packaging/desktop-linux/README.md) · [desktop-seeder-windows](../packaging/desktop-seeder-windows/README.md) · [desktop-windows-native](../packaging/desktop-windows-native/README.md) · [node-macos](../packaging/node-macos/README.md) · [node-zero-windows](../packaging/node-zero-windows/README.md) · [steward-kit-windows](../packaging/steward-kit-windows/README.md) · [posse-cli](../tools/posse-cli/README.md)
