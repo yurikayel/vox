@@ -1,8 +1,8 @@
-# Prompt Claude — auditoria, docs e MVP técnico (nov/2026)
+# Prompt de auditoria — features, docs e MVP técnico (nov/2026)
 
 > **Status:** canônico (missão para agente externo; não substitui o [ROADMAP](../ROADMAP.md)) · **Owner:** mantenedor · **Revisado:** 2026-11-19
 
-Este arquivo é o **texto completo** para colar no Claude Code, Cursor ou Antigravity. Entrega esperada: relatório em `docs/audits/` + até **3 PRs só de documentação** + spec `docs/strategy/mvp-tecnico-vox-2026-11.md`. Sem código de produto, sem ops de relay (INF-01…04) até >50 ativos, sem piloto humano (V-P09).
+Este arquivo é o **texto completo** para colar na ferramenta de código. Entrega esperada: relatório em `docs/audits/` + até **3 PRs só de documentação** + spec `docs/strategy/mvp-tecnico-vox-2026-11.md`. Sem código de produto, sem ops de relay (INF-01…04) até >50 ativos, sem piloto humano (V-P09).
 
 Contexto: [analise-repositorio-vox-2026-11.md](../strategy/analise-repositorio-vox-2026-11.md) · `develop` `e994a1b` (pós #281–#283) · `main` release #262 (`bda1dd4`).
 
@@ -33,7 +33,7 @@ Leia antes de agir (nesta ordem):
 - docs/ROADMAP.md (seção INF >50 ativos)
 - docs/strategy/analise-repositorio-vox-2026-11.md
 - docs/adr/035-camadas-e-contextos.md
-- lobby na raiz do workspace politica: ../../../lobby.md (se disponível)
+- registro de coordenação do workspace (se disponível)
 
 Restrições (decisão do dono, nov/2026):
 - Piloto / convite / divulgação: BLOQUEADO (validação = CI + testes + uso local).
@@ -139,7 +139,7 @@ Ligar a analise-repositorio-vox-2026-11.md (três portões).
 ENTREGÁVEIS E PRS (docs only)
 ────────────────────────────────────────
 
-Branch sugerida: docs/claude-auditoria-mvp-2026-11 (a partir de develop atualizado).
+Branch sugerida: docs/auditoria-mvp-2026-11 (a partir de develop atualizado).
 
 1. Relatório: docs/audits/auditoria-features-arquitetura-2026-11.md (matrizes Fases 1–3 + sumário)
 2. PR #1: README + release-metadata + badges (+ CHANGELOG)
