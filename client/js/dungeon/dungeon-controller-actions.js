@@ -222,6 +222,7 @@ export const FOCUS_AFTER_ACTION = {
   "wizard-add-item": "[data-wizard-focus]",
   "wizard-cancel": "[data-wizard-focus]",
   "wizard-keep": "[data-wizard-focus]",
+  "remove-action": "[data-actions-focus]",
   "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
