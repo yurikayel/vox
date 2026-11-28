@@ -49,6 +49,16 @@
   color: var(--sv-on-civic);
 }
 
+/* Selo "DEMONSTRAÇÃO" na faixa do Santuário (`#14181e` nos dois temas, mais 12% de dourado atrás do selo): o texto usava
+   `--sa-secondary`, que no tema claro é o dourado escuro (2,24:1 sobre o fundo do selo). Aqui usa o dourado claro do tema escuro.
+   Medido em `tests/dungeon-fiction-badge-contraste.test.js`. */
+.dungeon-segregation-strip {
+  --sv-strip-badge: #e7c26b;
+}
+.dungeon-segregation-strip .dungeon-fiction-badge {
+  color: var(--sv-strip-badge);
+}
+
 /* Desativado sem `opacity`: texto, fundo e contorno de token (as folhas antigas usam opacidade de 0,35 a 0,6). */
 .dungeon-btn[disabled],
 .dungeon-btn[disabled]:hover,
