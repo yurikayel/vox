@@ -147,6 +147,7 @@ const OP_FILTERS = {
   NOTE_UPSERT: (_c, op) => (op.payload?.note ? { ...op, payload: { ...op.payload, note: { ...op.payload.note, gmSecretMarkdown: "" } } } : op),
   SHEET_UPSERT: (_c, op) => (op.payload?.sheet?.sheet_meta ? { ...op, payload: { ...op.payload, sheet: { ...op.payload.sheet, sheet_meta: { ...op.payload.sheet.sheet_meta, notes_gm: "" } } } } : op),
   ROLL_RECORDED: filterRollOp,
+  CHRONICLE_APPEND: filterRollOp,
 };
 
 /**
