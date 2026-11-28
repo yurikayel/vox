@@ -3,6 +3,7 @@
  * da pauta não dividirem o mesmo arquivo de mais de mil linhas.
  */
 import * as gov from "../governance.js";
+import { scrollableTableHtml } from "../shared/table-scroll.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { formatCountdown } from "./vote.js";
 import { renderProposalStatusBadge } from "./community.js";
@@ -249,10 +250,10 @@ export function renderProposalVotesList(tally) {
   return `
     <div class="card" style="padding: 1.25rem;">
       <h4 style="margin: 0 0 0.75rem;">📋 Transparência de Votos (${votes.length})</h4>
-      <table class="votes-table">
+      ${scrollableTableHtml("Transparência de votos", `<table class="votes-table">
         <thead><tr><th>Eleitor</th><th>Voto</th><th>Status</th><th>Quando</th></tr></thead>
         <tbody>${rows}</tbody>
-      </table>
+      </table>`)}
     </div>`;
 }
 

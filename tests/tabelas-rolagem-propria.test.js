@@ -9,6 +9,8 @@ import fs from "node:fs";
 import { createDungeonSessionState } from "../client/js/dungeon/dungeon-state.js";
 import { renderSavesPanel } from "../client/js/dungeon/screen-party-panels.js";
 import * as render from "../client/js/render.js";
+import { renderProposalVotesList } from "../client/js/render/proposal.js";
+import { scrollableTableHtml } from "../client/js/shared/table-scroll.js";
 
 const WRAP = /<div class="sv-table-scroll" role="region" tabindex="0" aria-label="[^"]+">\s*<table/g;
 
@@ -35,6 +37,24 @@ test("status: toda tabela está dentro de região rolável nomeada e focável", 
   const tables = (html.match(/<table/g) || []).length;
   assert.ok(tables >= 1, "a tela de status renderiza tabelas");
   assert.equal((html.match(WRAP) || []).length, tables);
+});
+
+test("transparência de votos (com dados): a tabela está dentro de região rolável nomeada e focável", () => {
+  const votes = [
+    { author: "vx_a", authorDisplay: "Ana", choice: "yes", eligible: true, ts: Date.now() },
+    { author: "vx_b", authorDisplay: "Bia", choice: "no", eligible: false, reason: "sem vínculo com a comunidade", ts: Date.now() },
+  ];
+  const html = renderProposalVotesList({ votesDetail: votes });
+  assert.equal((html.match(WRAP) || []).length, 1);
+  assert.equal(renderProposalVotesList({ votesDetail: [] }), "");
+});
+
+test("o nome da região é escapado e as regiões do status têm nomes distintos", () => {
+  const html = scrollableTableHtml('A "b" <i>', "<table></table>");
+  assert.ok(html.includes('aria-label="A &quot;b&quot; &lt;i&gt;"'), html);
+  const names = [...statusHtml().matchAll(/class="sv-table-scroll"[^>]*aria-label="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(names.length >= 2);
+  assert.equal(new Set(names).size, names.length, `nomes repetidos: ${names.join(" | ")}`);
 });
 
 test("a folha global dá overflow-x:auto e max-width:100% ao contêiner", () => {
