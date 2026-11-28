@@ -26,9 +26,9 @@ import {
 } from "./dungeon-persistence.js";
 import {
   mountSceneCanvas,
-  nudgeTokenInScene,
   uploadSceneMapBlob,
 } from "./dungeon-scene-actions.js";
+import { nudgeTokenAnnounced } from "./token-nudge-live.js";
 import { getDungeonSession, updateFavoriteSlider } from "./dungeon-state.js";
 import {
   commitAoeTemplate,
@@ -311,7 +311,7 @@ export function handleCanvasKeydown(container, viewOpts, ev, settle = settleAndR
   const state = viewOpts.state || getDungeonSession();
   if (!state.selectedTokenId) return undefined;
   ev.preventDefault?.();
-  const job = nudgeTokenInScene(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
+  const job = nudgeTokenAnnounced(state, state.selectedTokenId, delta[0], delta[1], { store: viewOpts.store });
   return settle(job, container, viewOpts, { focusSelector: "#dungeon-vtt-canvas" });
 }
 
