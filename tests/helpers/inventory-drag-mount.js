@@ -14,16 +14,21 @@ export function fakeMount(dims = { w: "1", h: "3" }, { realFocus = false, settle
   const grid = { ghost: null, ownerDocument: { createElement: () => ({ style: {}, setAttribute() {}, remove: () => { grid.ghost = null; } }) }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 1000, height: 400 }) };
   grid.querySelector = () => grid.ghost;
   grid.appendChild = (g) => { grid.ghost = g; };
-  const classes = new Set();
-  const cell = { dataset: { invCell: "espada", invW: dims.w, invH: dims.h }, classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) }, focus() {}, setPointerCapture() {}, getBoundingClientRect: () => ({ left: 200, top: 0, width: 100, height: 300 }) };
-  cell.closest = (sel) => (sel === "[data-inv-cell]" ? cell : sel === "[data-inv-grid]" ? grid : null);
+  const makeCell = (id, left) => {
+    const classes = new Set();
+    const c = { classes, dataset: { invCell: id, invW: dims.w, invH: dims.h }, classList: { add: (n) => classes.add(n), remove: (n) => classes.delete(n) }, focus() {}, setPointerCapture() {}, getBoundingClientRect: () => ({ left, top: 0, width: 100, height: 300 }) };
+    c.closest = (sel) => (sel === "[data-inv-cell]" ? c : sel === "[data-inv-grid]" ? grid : null);
+    return c;
+  };
+  const cell = makeCell("espada", 200);
+  const cell2 = makeCell("escudo", 600);
   const button = { hidden: true };
   button.closest = (sel) => (sel === "[data-inv-rotate]" ? button : null);
   const container = {
     ownerDocument: null,
     addEventListener: (type, fn) => { (handlers[type] ||= []).push(fn); },
     querySelector: (sel) => (sel === "[data-inv-rotate]" ? button : null),
-    querySelectorAll: (sel) => (sel === "[data-inv-cell]" ? [cell] : sel === ".sv-inv-ghost" ? [grid.ghost].filter(Boolean) : []),
+    querySelectorAll: (sel) => (sel === "[data-inv-cell]" ? [cell, cell2] : sel === ".sv-inv-ghost" ? [grid.ghost].filter(Boolean) : []),
   };
   bindInventoryDrag(container, { state, store: {} }, settle);
   const fire = (type, ev) => (handlers[type] || []).forEach((fn) => fn({ preventDefault() {}, stopImmediatePropagation() {}, ...ev }));
@@ -34,5 +39,5 @@ export function fakeMount(dims = { w: "1", h: "3" }, { realFocus = false, settle
   const blur = () => { focused = null; focusouts += 1; fire("focusout", { relatedTarget: null }); };
   const origFire = fire;
   const fireTracked = (type, ev) => { if (realFocus && ev?.target === cell && !focused) cell.focus(); origFire(type, ev); };
-  return { fire: realFocus ? fireTracked : fire, cell, button, grid, blur, focusouts: () => focusouts, held: () => classes.has("is-held") };
+  return { fire: realFocus ? fireTracked : fire, cell, cell2, button, grid, blur, focusouts: () => focusouts, held: () => cell.classes.has("is-held"), held2: () => cell2.classes.has("is-held") };
 }

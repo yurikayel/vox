@@ -4,18 +4,13 @@
  * `render/guardians.js`) fora do grafo estático de boot e do precache (`SHELL_ASSETS`).
  */
 
-/** @type {Promise<typeof import("./screens-guardians-view.js")>|null} */
-let viewModulePromise = null;
+import { lazyModule } from "./lazy-module.js";
 
 /**
- * Carrega sob demanda e memoiza a implementação da tela `#/guardioes`.
- *
- * @returns {Promise<typeof import("./screens-guardians-view.js")>}
+ * Carregador da implementação da tela `#/guardioes`: lembra só o sucesso; na falha mostra "Tentar de novo".
+ * Exportado para os testes trocarem o `import()` (`useLoaderForTests`).
  */
-function loadGuardiansView() {
-  viewModulePromise ??= import("./screens-guardians-view.js");
-  return viewModulePromise;
-}
+export const guardiansView = lazyModule(() => import("./screens-guardians-view.js"));
 
 /**
  * Abre a tela dos guardiões da conta ativa sob demanda.
@@ -23,6 +18,5 @@ function loadGuardiansView() {
  * @returns {Promise<void>}
  */
 export async function showGuardians() {
-  const view = await loadGuardiansView();
-  return view.showGuardians();
+  return guardiansView.open((view) => view.showGuardians());
 }

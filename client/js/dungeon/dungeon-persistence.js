@@ -19,8 +19,9 @@ import {
 } from "./obsidian-bridge.js";
 import { formatInWorldDate } from "./vtt-calendar.js";
 import { buildLevelUpPlan } from "./vtt-levelup.js";
-import { packEncryptedVoxRpg, packVoxRpg, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
+import { packEncryptedVoxRpg, packVoxRpg, referencedBlobHashes, unpackEncryptedVoxRpg, unpackVoxRpg } from "./vtt-portable.js";
 import { createCampaign, createNoteDoc, ensureSheetMeta } from "./vtt-schema.js";
+import { dropPendingRestore, refreshStoreSummary, saveRestoredPackage } from "./dungeon-restore.js";
 import { getDefaultVttStore } from "./vtt-store.js";
 import { tryStartFairplayRoll } from "./vtt-fairplay-roll-flow.js";
 import { migrateLegacySheet } from "./system-migrate.js";
@@ -31,12 +32,6 @@ export { buildCampaignFromSession, hydrateStateFromCampaign };
 const DUNGEON_PREFS_KEY = "vox-dungeon-prefs-v1";
 const ENC = new TextEncoder();
 const DEC = new TextDecoder();
-
-async function refreshStoreSummary(state, store) {
-  state.campaigns = await store.listCampaigns();
-  state.storageUsage = await store.estimateUsage();
-  state.persistenceReady = true;
-}
 
 /**
  * Inicializa a persistência local da aba, carrega lista de campanhas, medidor de disco e restaura a mais recente.
@@ -293,6 +288,7 @@ export async function persistD20RollIfActive(state, value, store = getDefaultVtt
 
 /**
  * Exporta a campanha ativa em `.voxrpg.zip`, `.voxrpg.enc` (cifrado via Senha Soberana) ou crônica `.md` (Obsidian).
+ * Os formatos `zip` e `enc` levam só os blobs referenciados pela campanha (mapas dos pisos e avatares dos tokens).
  * @param {object} state Estado da sessão.
  * @param {object} [opts={}] Opções (`format`: `"zip"|"enc"|"md"`, `passphrase`, `includeGmSecrets`, `store`).
  * @returns {Promise<{ filename: string, bytes: Uint8Array, mime: string }>} Artefato pronto para download.
@@ -305,7 +301,7 @@ export async function exportCampaignBackup(state, opts = {}) {
     const md = chronicleToMarkdown(doc, { includePrivate: opts.includeGmSecrets !== false });
     return { filename: `${doc.id}-cronica.md`, bytes: ENC.encode(md), mime: "text/markdown;charset=utf-8" };
   }
-  const blobs = await store.getAllBlobsMap();
+  const blobs = await store.getBlobsMap(referencedBlobHashes(doc));
   if (format === "enc") {
     const json = await packEncryptedVoxRpg(doc, opts.passphrase, blobs);
     return { filename: `${doc.id}.voxrpg.enc`, bytes: ENC.encode(json), mime: "application/json;charset=utf-8" };
@@ -330,23 +326,15 @@ async function importMarkdownIntoCampaign(state, text, fileName, store) {
   return { ok: true, kind: "note-md", campaignId: state.campaignId };
 }
 
-async function saveRestoredPackage(state, unpacked, store, label) {
-  for (const bytes of unpacked.blobs.values()) await store.putBlob(bytes);
-  const saved = await store.saveCampaign(unpacked.campaign);
-  hydrateStateFromCampaign(state, saved);
-  await refreshStoreSummary(state, store);
-  state.campaignNotice = `Campanha "${saved.name}" restaurada (${label}).`;
-  return { ok: true, kind: label, campaignId: saved.id };
-}
-
 /**
  * Importa arquivo `.voxrpg.zip`, backup cifrado `.voxrpg.enc`, nota/ficha `.md` ou quadro `.canvas` (Obsidian) para o `VttStore`.
  * @param {object} state Estado da sessão.
  * @param {{ name?: string, bytes: Uint8Array|string }} fileSpec Arquivo selecionado pelo usuário.
- * @param {object} [opts={}] Opções (`passphrase`, `store`).
- * @returns {Promise<{ ok: boolean, kind?: string, campaignId?: string, error?: string }>} Resultado da importação.
+ * @param {object} [opts={}] Opções (`passphrase`, `store`, `overwrite`: confirma trocar uma campanha local mais nova pela cópia do arquivo).
+ * @returns {Promise<{ ok: boolean, kind?: string, campaignId?: string, error?: string }>} Resultado da importação (`error: "local_mais_nova"` quando recusou).
  */
 export async function importCampaignFile(state, fileSpec, opts = {}) {
+  dropPendingRestore(state);
   const store = opts.store || getDefaultVttStore();
   const name = String(fileSpec?.name || "").trim();
   const rawBytes = fileSpec?.bytes instanceof Uint8Array ? fileSpec.bytes : ENC.encode(String(fileSpec?.bytes ?? ""));
@@ -361,10 +349,10 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
   if (/\.md$/i.test(name)) return importMarkdownIntoCampaign(state, DEC.decode(rawBytes), name, store);
   if (/\.enc$/i.test(name) || rawBytes[0] === 0x7b) {
     const unpacked = await unpackEncryptedVoxRpg(DEC.decode(rawBytes), opts.passphrase);
-    return saveRestoredPackage(state, unpacked, store, "voxrpg-enc");
+    return saveRestoredPackage(state, unpacked, store, "voxrpg-enc", opts);
   }
   const unpacked = await unpackVoxRpg(rawBytes);
-  return saveRestoredPackage(state, unpacked, store, "voxrpg-zip");
+  return saveRestoredPackage(state, unpacked, store, "voxrpg-zip", opts);
 }
 
 /**
