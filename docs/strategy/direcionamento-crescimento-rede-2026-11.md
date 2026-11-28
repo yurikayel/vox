@@ -7,7 +7,7 @@
 > **Horizonte:** **2026-Q4 → 2027-Q2** · **Checklist vivo único:** [ROADMAP.md](../ROADMAP.md)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../legal/COMPLIANCE-BR.md)
 
-Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](../archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md).
+Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](../archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [estrategia-mantenedor-revisor-2026.md](./estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](../brainstorms/brainstorm-auto-escala-organica-2026-10.md).
 
 **Inventário:** evidências do pacote nov/2026 em [inventario-estado-e-tarefas-documentacao-2026-11.md](../archive/inventario-estado-e-tarefas-documentacao-2026-11.md); plano mestre **N=25** (trilha EXP) em [dossie-geral-inventario-master-breakdown-2026-11.md](../archive/dossie-geral-inventario-master-breakdown-2026-11.md); doc irmão de origens primárias `inventario-origens-rede-2026-11.md` *(quando publicado)*.
 
@@ -184,7 +184,7 @@ Operadores são voluntários; cliente é estático. **Não** vender estes númer
 
 ### 3.3 Papel mantenedor → revisor (confiabilidade do **produto**, não da malha)
 
-O mantenedor humano garante **contrato de release** e especificações abertas; **não** garante uptime de relays comunitários ([antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md)).
+O mantenedor humano garante **contrato de release** e especificações abertas; **não** garante uptime de relays comunitários ([estrategia-mantenedor-revisor-2026.md](./estrategia-mantenedor-revisor-2026.md)).
 
 | Faz (revisor) | Não faz |
 |---------------|---------|
