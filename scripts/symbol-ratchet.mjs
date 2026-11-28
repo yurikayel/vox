@@ -66,11 +66,14 @@ function resolveMergeBase(base) {
   const shallow = tryGit("rev-parse", "--is-shallow-repository")?.trim() === "true";
   const refspec = `+refs/heads/${branch}:refs/remotes/${name}/${branch}`;
   if (tryGit("fetch", "--no-tags", ...(shallow ? ["--depth=1"] : []), name, refspec) === null) return null;
+  // Aprofundar só a base não basta (o git 2.56 só aprofunda o que o `fetch` pede): o HEAD entra como segundo alvo, pelo SHA.
+  const wants = [refspec, tryGit("rev-parse", "HEAD")?.trim()].filter(Boolean);
   for (const step of [0, ...(shallow ? DEEPEN_STEPS : [])]) {
-    if (step && tryGit("fetch", "--no-tags", `--deepen=${step}`, name, refspec) === null) return null;
+    if (step && tryGit("fetch", "--no-tags", `--deepen=${step}`, name, ...wants) === null) return null;
     const found = tryGit("merge-base", base, "HEAD");
     if (found) return found.trim();
   }
+  gitFailures.push(`estado final: HEAD=${wants[1]} raso=${shallow} commits=${tryGit("rev-list", "--count", "--all")?.trim()}`);
   return null;
 }
 
