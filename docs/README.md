@@ -60,7 +60,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
 | O que é interno e o que é público (o que entra no git) | [interno-e-publico.md](./process/interno-e-publico.md) |
-| Prompt Claude: auditoria features, docs e MVP técnico (nov/2026) | [prompt-claude-auditoria-mvp-tecnico-2026-11.md](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
+| Prompt de auditoria: features, docs e MVP técnico (nov/2026) | [prompt-auditoria-mvp-tecnico-2026-11.md](./process/prompt-auditoria-mvp-tecnico-2026-11.md) |
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
@@ -113,7 +113,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ### Specs de protocolo (malha, cache, módulos)
 
-- [antigravity-gossip-retract-v1.md](./specs/antigravity-gossip-retract-v1.md): retratação no gossip (implementado)
+- [retratacao-gossip-v1.md](./specs/retratacao-gossip-v1.md): retratação no gossip (implementado)
 - [prioridade-suave-blobs-v0.md](./specs/prioridade-suave-blobs-v0.md): prioridade suave de blobs (flag desligada)
 - [cache-manifest-v0.md](./specs/cache-manifest-v0.md): manifestos de cache assinados
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
