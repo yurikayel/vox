@@ -160,3 +160,22 @@ export async function showDice3dAfterRedraw(container, rollResult, enabled) {
     /* overlay opcional */
   }
 }
+
+/**
+ * Entrega o artefato exportado: pelo callback do chamador, ou baixando por um link temporário.
+ * @param {{ bytes: Uint8Array, mime: string, filename: string }} artifact Arquivo pronto.
+ * @param {Function} [onDownload] Callback que assume a entrega (testes e janelas sem DOM).
+ * @returns {*} Retorno do callback, ou `undefined` ao baixar.
+ */
+export function triggerBrowserDownload(artifact, onDownload) {
+  if (typeof onDownload === "function") return onDownload(artifact);
+  if (typeof document === "undefined" || typeof URL?.createObjectURL !== "function") return undefined;
+  const blob = new Blob([artifact.bytes], { type: artifact.mime });
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = artifact.filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(href), 1500);
+  return undefined;
+}

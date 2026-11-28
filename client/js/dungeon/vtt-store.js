@@ -213,6 +213,15 @@ async function getAllBlobsMapWithBackend(backend) {
   return out;
 }
 
+async function getBlobsMapWithBackend(backend, hashes) {
+  const out = new Map();
+  for (const hash of hashes) {
+    const bytes = await getBlobWithBackend(backend, hash);
+    if (bytes) out.set(hash, bytes);
+  }
+  return out;
+}
+
 async function estimateUsageWithCfg(cfg) {
   const est = await cfg.estimateStorageFn();
   const persisted = await cfg.checkPersistenceFn();
@@ -256,6 +265,7 @@ export function createVttStore(backend, opts = {}) {
     putBlob: (bytes, mime) => putBlobWithBackend(b, bytes, mime),
     getBlob: (sha256) => getBlobWithBackend(b, sha256),
     getAllBlobsMap: () => getAllBlobsMapWithBackend(b),
+    getBlobsMap: (hashes) => getBlobsMapWithBackend(b, hashes),
     estimateUsage: () => estimateUsageWithCfg(cfg),
   };
 }
