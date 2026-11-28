@@ -12,6 +12,7 @@
 import { escapeHtml } from "./util.js";
 import { formatPtBrDateTimeFull, parseInstant } from "../shared/date-format.js";
 import { roleLabel } from "../aviso-roles.js";
+import { renderStateCard } from "../shared/state-card.js";
 
 const KIND_LABEL = { convocacao: "📣 Convocação", informe: "ℹ️ Informe", alerta: "⚠️ Alerta" };
 const STATE_LABEL = { ativo: "", encerrado: "Encerrado", cancelado: "Cancelado" };
@@ -260,7 +261,7 @@ export function renderAvisosScreen(main, { communityId, title, items, isMod, can
     : "";
   const list = items.length
     ? items.map((item) => renderAvisoCard(item, { isMod, canRespond })).join("")
-    : `<div class="empty card"><p>Nenhum aviso da coordenação ainda.</p></div>`;
+    : renderStateCard({ kind: "empty", text: "Nenhum aviso da coordenação ainda." });
   main.innerHTML = `<div class="aviso-screen">
     <p><a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← ${escapeHtml(title)}</a> ${compose}</p>
     ${canRespond ? renderSkillsForm(skills) : ""}
