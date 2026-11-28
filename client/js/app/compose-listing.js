@@ -114,7 +114,7 @@ export async function showComposeListing(communityId) {
   bindComposeStepper(document.getElementById("form-compose-listing"));
   document.getElementById("form-compose-listing")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    handleComposeListingSubmit(user, targetComm);
+    return handleComposeListingSubmit(user, targetComm);
   });
 }
 
