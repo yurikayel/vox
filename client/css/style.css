@@ -524,7 +524,7 @@ a:hover {
   }
 }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .wallet-badge-label {
     position: absolute;
     width: 1px;
@@ -830,7 +830,7 @@ a:hover {
 }
 
 /* Mobile: rótulos ocultos até drawer aberto */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .sidebar-feed-label,
   .tab-label,
   .sidebar-sync-hint.is-active,
@@ -6708,7 +6708,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
 }
 
 /* Mobile: Barra de Navegação Inferior (Bottom Tab Bar) e Otimização Touch */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .app-sidebar.tab-bar {
     position: fixed;
     top: auto;
@@ -9208,7 +9208,7 @@ blockquote.repost-cite {
   body:has(.app-layout.sidebar-collapsed) .account-exit-banner { left: var(--sidebar-width-collapsed); }
 }
 /* No celular a navegação fica embaixo (54px + área segura): a faixa sobe e fica acima dela. */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .account-exit-banner {
     left: 0;
     bottom: calc(58px + env(safe-area-inset-bottom, 0px));
@@ -9240,7 +9240,7 @@ blockquote.repost-cite {
 }
 
 /* S30-S12: alvos de toque ≥44px em compose, nav e ações de post (desktop com mouse inalterado) */
-@media (pointer: coarse), (width < 48em) {
+@media (pointer: coarse), (max-width: 47.99em) {
   .inline-composer-tool {
     width: 44px;
     height: 44px;

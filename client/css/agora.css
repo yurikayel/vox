@@ -609,7 +609,7 @@ body,
   height: 18px;
 }
 
-@media (pointer: coarse), (width < 48em) {
+@media (pointer: coarse), (max-width: 47.99em) {
   .agora-btn {
     min-height: 44px;
   }
@@ -1020,7 +1020,7 @@ body,
   }
 }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .feed-container { gap: 0.5rem; }
 
   .agora-ui .feed-container > .post,
@@ -1128,7 +1128,7 @@ body,
 }
 
 /* No celular a barra de abas fica fixa embaixo e cobria o rodapé ("Algo errado aqui?", "Teste aberto"). */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .app-footer {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
@@ -1803,7 +1803,7 @@ body,
 }
 
 /* Tablet: menu mais estreito e busca recolhida para não espremer a topbar */
-@media (min-width: 48em) and (width < 68.75em) {
+@media (min-width: 48em) and (max-width: 68.74em) {
   :root {
     --sidebar-width: 216px;
   }
@@ -1815,7 +1815,7 @@ body,
 }
 
 /* ── 11. Mobile (< 768px): topbar compacta + barra inferior com 5 primários + FAB Postar ── */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-topbar {
     height: 56px;
     padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
@@ -2521,7 +2521,7 @@ body,
 }
 
 /* Mobile: barra inferior do guia de design — Ágora · Vote · [Publicar] · Comunidades · Perfil */
-@media (width < 48em) {
+@media (max-width: 47.99em) {
 
   .agora-topbar-tools { gap: 0; }
   .agora-topbar-icon--mobile { display: inline-flex; }
@@ -2960,7 +2960,7 @@ body,
   justify-content: flex-end;
 }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .card.people-result.agora-citizen {
     grid-template-columns: 48px minmax(0, 1fr) auto;
     padding: 0.75rem 0;
@@ -3156,7 +3156,7 @@ body,
   border-radius: 0;
 }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .voxpedia-page.agora-codex { padding: 0 16px; }
   .agora-ui .voxpedia-section.agora-entry { padding: 1.1rem; }
   .agora-ui .agora-entry-title { font-size: 1.3rem; }
@@ -3437,7 +3437,7 @@ body,
 
 .agora-composer-actions .agora-btn { min-height: 52px; padding: 0 1.5rem; }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .compose-card.agora-composer { padding: 1.1rem 16px 1.5rem; border-radius: 0; border-left: none; border-right: none; }
   .agora-compose-types-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .agora-composer-actions .agora-btn { flex: 1; }
@@ -3672,7 +3672,7 @@ body,
 
 .civic-tag-hint { margin: 0.6rem 0 0; font-size: 0.8125rem; line-height: 1.5; color: var(--sa-on-surface-variant); }
 
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .civic-feed-intro { margin: 0 16px 1rem; padding: 1rem; }
   .civic-choices--pauta,
   .civic-choices--ideia,
@@ -3769,7 +3769,7 @@ body,
 .compose-review > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 1rem; padding: 0.75rem 0.9rem; background: var(--sa-surface-high); border-radius: var(--radius-sm); }
 .compose-review dt { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sa-on-surface-variant); }
 .compose-review dd { margin: 0; color: var(--sa-on-surface); white-space: pre-wrap; overflow-wrap: anywhere; }
-@media (width < 48em) { .compose-review > div { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; } }
+@media (max-width: 47.99em) { .compose-review > div { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; } }
 
 /* ── 25. Onboarding em etapas ── */
 .genesis-shell--steps { max-width: 640px; }
@@ -3851,7 +3851,7 @@ body,
 .link-advanced[open] summary { margin-bottom: 0.75rem; }
 .link-adv-form { display: grid; grid-template-columns: 120px repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
 .link-adv-name { font-size: 0.875rem; color: var(--sa-on-surface); }
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   .agora-ui .linked-accounts-screen { padding: 0 16px; }
   .link-manual, .link-alt, .link-feedback { margin-left: 0; }
   .link-adv-form { grid-template-columns: 1fr; }
@@ -3976,7 +3976,7 @@ body,
   background: var(--sa-primary-container); color: var(--on-gradient);
   font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
 }
-@media (width < 48em) {
+@media (max-width: 47.99em) {
   /* Acima da barra inferior e do botão Postar, que sobe alguns pixels além dela. */
   .agora-reply-dock { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }

@@ -3,8 +3,10 @@
  * A query em px olha a largura da janela e ignora a fonte padrão do navegador; em `em` ela acompanha (1em = fonte
  * padrão, 16 px por omissão). Se duas folhas aplicam metades do mesmo layout, uma em px e outra em `em`, com a fonte maior
  * as metades deixam de coincidir e o shell quebra. Também não pode sobrar buraco entre o par estreito e o largo: com
- * `max-width: 47.9375em` e `min-width: 48em`, a 959 px (fonte de 20 px) nenhuma das duas casa; o complemento exato é
- * `(width < 48em)` com `(min-width: 48em)`.
+ * `max-width: 47.9375em` e `min-width: 48em`, a 959 px (fonte de 20 px) nenhuma das duas casa. O par é
+ * `(max-width: 47.99em)` com `(min-width: 48em)` (folga de 0,01em, 0,2 px a 20 px, só para larguras fracionárias). A
+ * sintaxe de intervalo (`(width < 48em)`) não entra: antes do Safari 16.4 a query inteira vira `not all` e o celular perde o
+ * layout estreito.
  */
 import "./setup.js";
 import test from "node:test";
@@ -72,15 +74,25 @@ test("cada ponto de quebra tem uma unidade só em todas as folhas (o par px/em n
   for (const [ponto, motivo] of BUCKETS_MISTOS) assert.equal(porPonto.get(ponto)?.size, 2, `${ponto}px já não mistura: ${motivo}`);
 });
 
-test("não sobra buraco entre o par estreito e o largo: nenhum max-width em em fica logo abaixo de um min-width", () => {
+test("não sobra buraco entre o par estreito e o largo: o max-width em em fica a 0,01em do min-width, no máximo", () => {
   const em = TODAS.filter((c) => c.unit === "em");
   const mins = new Set(em.filter((c) => c.kind === "min").map((c) => c.value));
-  const buracos = em.filter((c) => c.kind === "max" && !c.range && [...mins].some((m) => m > c.value && m - c.value < 0.5));
-  assert.deepEqual(buracos.map((c) => `${c.folha}: ${c.texto}`), [], "use (width < Nem) com (min-width: Nem)");
+  const folgaMaior = (c) => [...mins].some((m) => m > c.value && m - c.value > 0.0101 && m - c.value < 0.5);
+  const buracos = em.filter((c) => c.kind === "max" && folgaMaior(c));
+  assert.deepEqual(buracos.map((c) => `${c.folha}: ${c.texto}`), [], "o par é max-width: (N − 0.01)em com min-width: Nem");
 });
 
-test("toda query em em vale um ponto de quebra que já existia (px/16), nenhuma conta errada", () => {
-  const errados = TODAS.filter((c) => c.unit === "em" && !PX_CONHECIDOS.has(c.px)).map((c) => `${c.folha}: ${c.texto} = ${c.px}px`);
+test("nenhuma folha usa sintaxe de intervalo de mídia (width < Nem, width >= Nem, Npx <= width)", () => {
+  const usos = FOLHAS.flatMap((folha) => {
+    const texto = css.readCss(folha).replace(/\/\*[\s\S]*?\*\//g, "");
+    return [...texto.matchAll(/@media([^{]*)\{/g)].filter((m) => /[<>]/.test(m[1])).map((m) => `${folha}: @media${m[1].trimEnd()}`);
+  });
+  assert.deepEqual(usos, [], "antes do Safari 16.4 o intervalo vira not all e o celular perde o layout estreito");
+  assert.ok(TODAS.some((c) => c.unit === "em" && c.kind === "max" && c.value === 47.99), "o par estreito do shell é max-width: 47.99em");
+});
+
+test("toda query em em vale um ponto de quebra que já existia (px/16, ou menos 0,01em no lado estreito), nenhuma conta errada", () => {
+  const legado = (c) => PX_CONHECIDOS.has(c.px) || (c.kind === "max" && PX_CONHECIDOS.has(Math.round((c.value + 0.01) * 16)));
+  const errados = TODAS.filter((c) => c.unit === "em" && !legado(c)).map((c) => `${c.folha}: ${c.texto} = ${c.px}px`);
   assert.deepEqual(errados, [], "o em vale px/16 de um ponto de quebra da base");
-  assert.ok(TODAS.some((c) => c.unit === "em" && c.range), "o complemento do par vem pela sintaxe de intervalo");
 });

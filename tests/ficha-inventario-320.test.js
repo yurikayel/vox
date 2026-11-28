@@ -32,16 +32,15 @@ function parseRules(css) {
   return rules;
 }
 
-const WIDTH_COND = /\(\s*(?:(max|min)-width\s*:\s*([\d.]+)(px|em)|width\s*(<|>=)\s*([\d.]+)(em))\s*\)/g;
+const WIDTH_COND = /\(\s*(max|min)-width\s*:\s*([\d.]+)(px|em)\s*\)/g;
 
-/** `@media` por largura vale pela largura (`max-width`/`min-width` em px ou em, e `width < Nem`/`width >= Nem`, com 1em = 16 px); qualquer outra condição não conta. */
+/** `@media` por largura vale pela largura (`max-width`/`min-width` em px ou em, com 1em = 16 px); qualquer outra condição não conta. */
 function mediaApplies(media, width) {
   if (!media) return true;
   const conds = [...media.matchAll(WIDTH_COND)];
   const rest = media.replace(/@media|and/g, "").replace(WIDTH_COND, "").trim();
   if (!conds.length || rest) return false;
-  return conds.every(([, kind, v, unit, op, rv]) => {
-    if (op) return op === "<" ? width < Number(rv) * REM_PX : width >= Number(rv) * REM_PX;
+  return conds.every(([, kind, v, unit]) => {
     const px = Number(v) * (unit === "em" ? REM_PX : 1);
     return kind === "max" ? width <= px : width >= px;
   });
