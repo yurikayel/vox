@@ -459,7 +459,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Sem bump de SW. `main` segue no release #262; o README só chega à `main` no próximo release.
 
 ### Docs: prompt Claude auditoria + MVP técnico (nov/2026)
-- `docs/process/prompt-claude-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
+- `docs/process/prompt-auditoria-mvp-tecnico-2026-11.md`: missão em 4 fases (README, camadas, FEATURES, spec MVP); indexado em `docs/README.md`. Sem bump de SW.
 
 ### Docs: análise honesta do repositório (nov/2026)
 - `docs/strategy/analise-repositorio-vox-2026-11.md`: retrato versionado (arquitetura, três portões, gatilho INF >50, estado Git pós-#281–#283); indexado em `docs/README.md`.
@@ -617,7 +617,7 @@ Entradas acrescentadas por conferência dos PRs mesclados em `develop` com este 
 - **Plano de testes do login:** LT-02 falhas de rede (`tests/login-network-faults.test.js`, 7 casos, #207), LT-04 propriedades com semente fixa (#208), LT-08 E2E em navegador local, manual do mantenedor (`scripts/login-e2e.mjs`, #198); matriz do plano atualizada (#216).
 - **Testes de rota:** `#/communities` (`tests/route-communities.test.js`, #195).
 - **ADR:** emendas de revisão dos ADR-034, 035 e 036, sem mudar status (#181).
-- **Documentação:** JSDoc do lote 5, `client/js/render` (#215); 9 âncoras `#L` corrigidas no dossiê arquivado (#191); 4 contradições entre specs, ROADMAP e código (embed, moderador natural, mochila, matriz do CI) (#192); escolha de modelo e esforço por tarefa no método de agentes (#199); fluxo de PR para `develop` no `antigravity-operating.md` (#206).
+- **Documentação:** JSDoc do lote 5, `client/js/render` (#215); 9 âncoras `#L` corrigidas no dossiê arquivado (#191); 4 contradições entre specs, ROADMAP e código (embed, moderador natural, mochila, matriz do CI) (#192); escolha de modelo e esforço por tarefa no método de agentes (#199); fluxo de PR para `develop` no `operacao-protocolo-integracao.md` (#206).
 
 ### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
 - [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
