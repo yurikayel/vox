@@ -97,3 +97,16 @@
   outline: 2px solid var(--sa-primary);
   outline-offset: 2px;
 }
+
+/* Faixa do Santuário (`.dungeon-segregation-strip`): escura nos dois temas (`#14181e`). O link "Sair do Subversus" e o
+   contorno de foco usavam `--sa-primary`, que no tema claro é o teal escuro (2,76:1 sobre a faixa); aqui o link e o
+   contorno usam o teal claro do tema escuro (10,45:1). Medido em `tests/dungeon-exit-link-contraste.test.js`. */
+.dungeon-segregation-strip {
+  --sv-strip-link: #78d6cf;
+}
+.dungeon-segregation-strip .dungeon-exit-link {
+  color: var(--sv-strip-link);
+}
+.dungeon-segregation-strip .dungeon-exit-link:focus-visible {
+  outline-color: var(--sv-strip-link);
+}
