@@ -4,12 +4,12 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { waitUntil } from "./helpers/wait-until.js";
+import { drainMicrotasks, waitUntil } from "./helpers/wait-until.js";
 import { createScope } from "../client/js/shared/signals.js";
 import { createLeadTabSignal, leadTabSignal, withWebLock } from "../client/js/shared/lead-tab.js";
 import { createOutboxLeadPoll, enqueueEnvelope, flushOutbox } from "../client/js/dm-outbox.js";
 
-const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 10));
+const flushMicrotasks = () => drainMicrotasks(50);
 
 function makeMockLockManager() {
   const queues = new Map();
