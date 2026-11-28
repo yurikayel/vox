@@ -158,7 +158,7 @@ function renderTopicLikeButton(topicId, topic) {
   const baseLikes = Number(topic?.likesCount) || 0;
   const liked = social.isLiked(topicId);
   const curLikes = social.getLikesCount(topicId, baseLikes);
-  return `<button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
+  return `<button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post" aria-pressed="${liked}">
     <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
     <span class="action-count count-likes">${curLikes > 0 ? curLikes : ""}</span>
   </button>`;
@@ -175,7 +175,7 @@ function renderTopicStarButton(topicId, topic) {
   const baseStars = Number(topic?.starsCount) || 0;
   const starred = social.isStarred(topicId);
   const curStars = social.getStarsCount(topicId, baseStars);
-  return `<button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
+  return `<button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" role="menuitemcheckbox" aria-checked="${starred}" aria-label="Dar estrela ao post">
     <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
     <span class="action-count count-stars">${curStars > 0 ? curStars : ""}</span>
   </button>`;
@@ -282,7 +282,7 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((topic?.body || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar"${quarantineShareAttrs(topicId)}>
     <svg class="action-icon icon-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>${countSpan}
   </button>`;
-  const saveBtn = `<button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
+  const saveBtn = `<button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post" aria-pressed="${saved}">
     <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
   </button>`;
 
