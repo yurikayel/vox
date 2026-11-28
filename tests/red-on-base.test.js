@@ -10,7 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { failureOutcome } from "../scripts/red-on-base-reporter.mjs";
+import redOnBaseReporter, { failureOutcome } from "../scripts/red-on-base-reporter.mjs";
 import { parseLabels, pickTests, prKind, pythonOutcome, summaryMarkdown, verdict } from "../scripts/red-on-base.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "scripts", "red-on-base.mjs");
@@ -38,6 +38,36 @@ test("red-on-base: só a asserção prova; pai de subteste não conta", () => {
   assert.equal(failureOutcome({ cause: { code: "ERR_ASSERTION" } }), "assert");
   assert.equal(failureOutcome({ cause: new TypeError("x is not a function") }), "other");
   assert.equal(failureOutcome({ failureType: "subtestsFailed" }), null);
+});
+
+/** Roda o reporter sobre eventos falsos e junta as linhas JSON que ele emite. */
+async function runReporter(events) {
+  const out = [];
+  for await (const line of redOnBaseReporter((async function* () { yield* events; })())) out.push(JSON.parse(line));
+  return out;
+}
+
+const failEvent = (error) => ({ type: "test:fail", data: { file: "tests/x.test.js", name: "t", details: { type: "test", error } } });
+
+test("red-on-base: o reporter emite a primeira linha da mensagem, no máximo 200 caracteres", async () => {
+  const [a, b] = await runReporter([
+    failEvent({ cause: { code: "ERR_ASSERTION", message: "primeira\nsegunda" } }),
+    failEvent({ cause: { code: "ERR_ASSERTION", message: "x".repeat(300) } }),
+  ]);
+  assert.deepEqual([a.outcome, a.message], ["assert", "primeira"]);
+  assert.equal(b.message.length, 200);
+});
+
+test("red-on-base: valor lançado sem toString não derruba o reporter (a linha sai com texto fixo)", async () => {
+  const semToString = Object.create(null);
+  const semMensagem = { cause: { code: "ERR_ASSERTION", message: semToString } };
+  const lancouObjeto = semToString;
+  const toPrimitiveQueLanca = { [Symbol.toPrimitive]() { throw new Error("boom"); } };
+  const events = [failEvent(semMensagem), failEvent(lancouObjeto), failEvent(toPrimitiveQueLanca)];
+  await assert.doesNotReject(() => runReporter(events), "o reporter não pode lançar por causa de uma mensagem ilegível");
+  const out = await runReporter(events);
+  assert.deepEqual(out.map((l) => l.outcome), ["assert", "other", "other"]);
+  assert.ok(out.every((l) => l.message === "(mensagem ilegível)"), JSON.stringify(out));
 });
 
 test("red-on-base: unittest separa falha de erro", () => {
