@@ -14,7 +14,7 @@ function f39Block() {
   const start = SHEET.indexOf("/* F39");
   assert.ok(start >= 0, "bloco F39 existe");
   const open = SHEET.indexOf("{", start);
-  assert.match(SHEET.slice(start, open), /@media \(max-width: 4[0-9]{2}px\)/, "vale a ≤480 px");
+  assert.match(SHEET.slice(start, open), /@media \(max-width: 30em\)\s*$/, "vale a ≤30em, só por largura, e acompanha a fonte");
   let depth = 0;
   for (let i = open; i < SHEET.length; i++) {
     depth += SHEET[i] === "{" ? 1 : SHEET[i] === "}" ? -1 : 0;
@@ -23,7 +23,7 @@ function f39Block() {
   return "";
 }
 
-test("a ≤480 px a barra, as ferramentas e as ações do compositor quebram de linha", () => {
+test("a ≤30em a barra, as ferramentas e as ações do compositor quebram de linha", () => {
   const block = f39Block();
   for (const sel of [".inline-composer-toolbar", ".inline-composer-tools", ".inline-composer-actions"]) {
     assert.match(css.ruleBody(block, sel), /flex-wrap:\s*wrap/, `${sel} quebra`);
