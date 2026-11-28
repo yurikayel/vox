@@ -7,6 +7,16 @@ const FOCUSABLE =
   + 'select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
+ * O elemento não ocupa lugar na tela (`display: none` nele ou num ancestral) e por isso não recebe foco. Sem layout
+ * (DOM em memória dos testes) devolve `false`.
+ * @param {HTMLElement} el Elemento candidato.
+ * @returns {boolean}
+ */
+function isNotRendered(el) {
+  return typeof el.getClientRects === "function" && el.getClientRects().length === 0;
+}
+
+/**
  * Elementos focáveis visíveis dentro de `root`.
  * @param {ParentNode} root Nó raiz do diálogo ou menu.
  * @returns {HTMLElement[]}
@@ -16,7 +26,7 @@ export function focusableIn(root) {
   return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
     if (el.hidden || el.closest?.("[hidden]") || el.getAttribute?.("aria-hidden") === "true") return false;
     if (el.hasAttribute?.("disabled")) return false;
-    return true;
+    return !isNotRendered(el);
   });
 }
 
