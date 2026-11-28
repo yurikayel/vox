@@ -19,7 +19,7 @@
     "test": "node --test tests/*.test.js && python -m unittest discover -s relay -p \"test_*.py\"",
     "lint": "eslint \"client/js/**/*.js\" client/sw.js \"workers/**/*.js\"",
     "lint:all": "eslint \"client/js/**/*.js\" client/sw.js \"scripts/**/*.mjs\" \"tools/**/*.mjs\" \"tools/media-bench/**/*.js\" \"tests/**/*.js\"",
-    "validate": "npm run lint:all && node scripts/shell-budget-check.mjs && node scripts/secrets-audit.mjs && npm run lint:relay && npm run audit:complexity && npm run audit:docs && npm run audit:internal -- --check && npm run audit:layers && npm test",
+    "validate": "npm run lint:all && node scripts/shell-budget-check.mjs && node scripts/secrets-audit.mjs && npm run lint:relay && npm run audit:complexity && npm run audit:docs && npm run audit:internal -- --check && npm run audit:layers && npm run audit:symbols && npm test",
     "lint:fix": "eslint \"client/js/**/*.js\" client/sw.js --fix",
     "lint:relay": "python scripts/lint_relay.py",
     "audit:complexity": "node scripts/complexity-audit.mjs",

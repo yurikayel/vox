@@ -190,7 +190,10 @@ function cli(dir, ...args) {
 const big = (name, n) => `function ${name}() {\n${"  work();\n".repeat(n)}}\n`;
 
 test("p) CLI: função nova acima do máximo reprova com saída 1 e a mensagem; --json traz o mesmo", () => {
-  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put) => put("scripts/new.mjs", big("grande", 31)));
+  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put, run) => {
+    put("scripts/new.mjs", big("grande", 31));
+    run("add", "scripts/new.mjs");
+  });
   try {
     const r = cli(dir);
     assert.equal(r.status, 1);
@@ -220,7 +223,7 @@ test("q) CLI: sem violação sai com 0; arquivo novo já commitado e arquivo só
   }
 });
 
-test("r) CLI: arquivo novo commitado acima do máximo e legado que piora reprovam; arquivo sem rastreio é medido; fora da catraca não", () => {
+test("r) CLI: arquivo novo commitado acima do máximo e legado que piora reprovam; arquivo sem rastreio e fora da catraca não contam", () => {
   const dir = repo({ "scripts/old.mjs": big("legado", 40) }, (put, run) => {
     put("scripts/old.mjs", big("legado", 41));
     put("scripts/added.mjs", big("novo", 35));
@@ -232,9 +235,9 @@ test("r) CLI: arquivo novo commitado acima do máximo e legado que piora reprova
   try {
     const out = cli(dir, "--json");
     const v = JSON.parse(out.stdout).violations;
-    assert.deepEqual(Object.keys(v).sort(), ["scripts/added.mjs", "scripts/loose.mjs", "scripts/old.mjs"]);
+    assert.deepEqual(Object.keys(v).sort(), ["scripts/added.mjs", "scripts/old.mjs"], "o rascunho solto fora do Git não reprova");
     assert.match(v["scripts/old.mjs"].join(), /legado: lloc 42 → 43 \(legado acima do máximo piorou\)|lloc \d+ → \d+/);
-    assert.equal(JSON.parse(out.stdout).files, 3, "docs/ fica de fora da conta");
+    assert.equal(JSON.parse(out.stdout).files, 2, "docs/ e o arquivo sem rastreio ficam de fora da conta");
     assert.equal(out.status, 1);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -276,7 +279,10 @@ test("u) CLI: o que a base mudou depois do desvio não conta contra a branch (co
 });
 
 test("s) CLI: arquivo que não parseia reprova com 'não foi possível medir' (nunca passa como limpo)", () => {
-  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put) => put("scripts/quebrado.mjs", "function (\n"));
+  const dir = repo({ "scripts/a.mjs": "export const a = 1;\n" }, (put, run) => {
+    put("scripts/quebrado.mjs", "function (\n");
+    run("add", "scripts/quebrado.mjs");
+  });
   try {
     const r = cli(dir);
     assert.equal(r.status, 1);
