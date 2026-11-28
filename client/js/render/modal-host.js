@@ -75,13 +75,17 @@ export function clearModalHost(id, doc = globalThis.document) {
  * Liga o preso de foco já com o conteúdo do modal montado: guarda o gatilho para onde o foco volta ao fechar
  * (o foco do documento pode já ter caído no body, por exemplo quando o item do menu que abriu o modal some) e
  * leva o foco para dentro do diálogo. Com o modal já aberto (troca de etapa), mantém o gatilho original.
+ * O gatilho vale uma abertura só: abrir sem gatilho (ou fechar) descarta o que ficou guardado.
  * @param {HTMLElement} el Contêiner devolvido por {@link modalHost}, com o conteúdo já escrito.
  * @param {{ returnFocus?: Element|null }} [opts] Gatilho que abriu o modal; sem ele vale o foco atual.
  * @returns {void}
  */
 export function engageModalHost(el, { returnFocus = null } = {}) {
   if (!el) return;
-  if (returnFocus && !hostTraps.get(el)?.active()) returnTargets.set(el, returnFocus);
+  if (!hostTraps.get(el)?.active()) {
+    if (returnFocus) returnTargets.set(el, returnFocus);
+    else returnTargets.delete(el);
+  }
   syncs.get(el)?.();
   focusableIn(el)[0]?.focus?.();
 }
