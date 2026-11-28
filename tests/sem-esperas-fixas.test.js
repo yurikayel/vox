@@ -23,10 +23,15 @@ const EXCLUDED = new Set(["sem-esperas-fixas.test.js", "helpers/wait-until.js"])
  * SUB-20, fatia 1: 37 → 30. Provas de ausência sobre stubs em memória (`cov-t1-circles`, `cov-t1-home-more`,
  * `cov-t6-explode-events`, `cov-t6-photo-lightbox`) passaram a `drainMicrotasks` (sem relógio), e `cov-t6-contact-notify`
  * espera um contato sentinela em vez de dormir. Seguem com timer real, para uma fatia seguinte:
- * `cov-t6-post-more-menu` (cadeia de `import()` dinâmico; fica verde com `drainMicrotasks(300)`, falta só trocar) e
  * `cov-t7-labs-webxdc` (criptografia real: microtarefas não bastam).
+ * Fatia 2: 30 → 19. `lead-tab`, `local-account-race`, `tab-sync`, `vazamentos-ws-labs`, `pm23-assembly-ui`,
+ * `pm23-presence-vote` e `cov-t6-post-more-menu` passaram a `drainMicrotasks` (rodadas ≥ 3× o mínimo medido: 3 em
+ * `lead-tab`, ~115 em `cov-t6-post-more-menu`, 1 nos demais). Ficam contadas, com motivo: `labs-webxdc` (criptografia
+ * real), `vox-populi` (espera um processo real subir e limpeza), `nostr-transport`, `node-health-api`, `cov-t6-aviso-flow`,
+ * `cov-t7-webrtc-signaling`, `login-rede-ruim`, `signals`, `webrtc`, `subversus-fairplay-rede` e os laços `setImmediate`
+ * dos helpers `cov-t2/t3/t5-dom` e de `app-own-posts-ui`.
  */
-const CEILING = 30;
+const CEILING = 19;
 
 function listSources(dir = DIR, rel = "") {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

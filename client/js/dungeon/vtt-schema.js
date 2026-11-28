@@ -134,7 +134,7 @@ export function ensureSheetMeta(sheet = {}) {
 
 /**
  * Cria uma entrada padronizada da crônica da mesa.
- * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
+ * @param {object} [opts={}] Campos (`id`, `speaker`, `badge`, `text`, `rollNote`, `visibility`, `author`, `ts`, `checkRequestId`, `fairplayRollId`, `fairplayValue`, `fairplayFaultRoll`).
  * @returns {object} Entrada normalizada da crônica.
  */
 export function createChronicleEntry(opts = {}) {
@@ -148,8 +148,14 @@ export function createChronicleEntry(opts = {}) {
     visibility,
     author: String(opts.author || ""),
     ts: Number.isFinite(Number(opts.ts)) ? Number(opts.ts) : Date.now(),
+    ...optionalId("checkRequestId", opts.checkRequestId),
     ...fairplayLink(opts),
   };
+}
+
+/** Campo de vínculo opcional: só entra se o valor for um id válido (o resto é descartado). */
+function optionalId(key, value) {
+  return VTT_ID_RE.test(String(value ?? "")) ? { [key]: String(value) } : {};
 }
 
 /** Vínculo com a rolagem Fairplay (só o id e o valor anunciado, ou a marca booleana de falta que o reducer só dá ao Mestre; nunca um "verificado" de outro par). */
@@ -190,6 +196,7 @@ export function createDiceRollEntry(opts = {}) {
     fumbles: nonNegInt(r.fumbles),
     visibility: ["public", "gm", "blind"].includes(r.visibility) ? r.visibility : "public",
     digestHex: String(r.digestHex || ""),
+    ...optionalId("requestId", r.requestId),
     ts: finiteOr(opts.ts, Date.now()),
   };
 }
