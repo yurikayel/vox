@@ -270,7 +270,7 @@ function renderNewSheetSlot(state) {
  */
 export function renderSheetScreen(state) {
   const projected = projectCharacterPools(state.sheet.pools_base, state.sheet.delta_ledger);
-  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const actions = state.sheet?.sheet_meta?.clickable_actions || [];
   const sys = resolveSheetSystem(state.sheet);
   const panels = {

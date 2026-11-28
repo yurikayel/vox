@@ -205,7 +205,7 @@ export function renderTableScreen(state) {
   const playerLayout = resolveSessionMode("mesa", state.viewerRole || "player") === SESSION_MODES.PLAYER_SESSION;
   const isGm = state.viewerRole === "gm";
   const noticeBanner = state.campaignNotice
-    ? `<p class="dungeon-inline-status dungeon-table-notice" role="status">${escapeHtml(state.campaignNotice)}</p>`
+    ? `<p class="dungeon-inline-status dungeon-table-notice">${escapeHtml(state.campaignNotice)}</p>`
     : "";
   const clockHtml = state.campaignId || isGm ? renderCompactWorldClock(state, isGm) : "";
   return `

@@ -267,7 +267,7 @@ function renderSavedCampaignsGrid(state, list) {
 
 function renderCampaignsSection(state) {
   const list = Array.isArray(state.campaigns) ? state.campaigns : [];
-  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const noticeHtml = state.campaignNotice ? `<p class="dungeon-inline-status">${escapeHtml(state.campaignNotice)}</p>` : "";
   const presetOpts = SYSTEM_PRESETS.map((p) => `<option value="${p.id}">${escapeHtml(p.label)}</option>`).join("");
   return `
     <section class="dungeon-panel" aria-label="Campanhas salvas localmente">

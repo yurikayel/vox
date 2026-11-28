@@ -44,6 +44,7 @@ import { renderSheetScreen } from "./screen-sheet.js";
 import { renderTableScreen } from "./screen-table.js";
 import { refreshFairplaySeals } from "./vtt-fairplay-selo.js";
 import { getDefaultVttStore } from "./vtt-store.js";
+import { announceNotice } from "./notice-live.js";
 
 const SCREEN_RENDERERS = {
   acampamento: renderCampScreen,
@@ -141,6 +142,7 @@ function redrawContainer(container, opts, focusOverride = "", preserveDraft = fa
   bindActiveCanvas(container, opts);
   rebindDioramaOverlay(container, state);
   restoreUiViewState(container, snap, focusOverride || takeHudPanelFocus(state), preserveDraft);
+  announceNotice(state);
   refreshSealsAfterDraw(container, opts);
 }
 
