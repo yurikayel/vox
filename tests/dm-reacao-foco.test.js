@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 /** Rota da conversa com o par, como o roteador a escreve. */
-const rotaDaConversa = () => `#/dm/${encodeURIComponent(peer)}`;
+const rotaDaConversa = (par) => `#/dm/${encodeURIComponent(par)}`;
 
 /** Botão de reação falso para a mensagem e o emoji, com a classe dada. */
 function controle(msgId, emoji, classe) {
@@ -63,15 +63,15 @@ function instalarRedesenho(montar, aoRefazer) {
  * Abre a conversa, clica no controle `qual` da primeira tela e espera o redesenho. `irPara` muda o hash durante o
  * redesenho que o clique provoca, como a pessoa que sai da conversa enquanto a cifra ainda corre.
  */
-async function reagir(montar, qual, irPara) {
+async function reagir(montar, qual, irPara, par = peer) {
   installRelay(me);
-  location.hash = rotaDaConversa();
-  for (const id of ["m_foco_1", "m_foco_2"]) await cacheNode.saveDmMessage({ id, peerAddress: peer, from: peer, to: me, text: id, status: "received", ts: Date.now() });
+  location.hash = rotaDaConversa(par);
+  for (const id of ["m_foco_1", "m_foco_2"]) await cacheNode.saveDmMessage({ id, peerAddress: par, from: par, to: me, text: id, status: "received", ts: Date.now() });
   let clicou = false;
   const geracoes = instalarRedesenho(montar, () => {
     if (clicou && irPara) location.hash = irPara;
   });
-  await showDmThread(peer);
+  await showDmThread(par);
   const antes = geracoes.length;
   clicou = true;
   geracoes[antes - 1][qual].fire("click");
@@ -106,6 +106,20 @@ test("se a pessoa foi ao feed durante o redesenho, ninguém recebe o foco", asyn
 test("se a pessoa foi a outra conversa durante o redesenho, ninguém recebe o foco", async () => {
   const { velha, nova } = await reagir(montarPadrao, "pilula", `#/dm/${encodeURIComponent("vx_outro_par")}`);
   assert.equal(focos(velha, nova), 0, "a conversa de outro par não é a desta reação");
+});
+
+test("a conversa de um par que é prefixo de outro não conta como aberta (a rota é lida inteira)", async () => {
+  const maisLongo = `${peer}0`;
+  const { velha, nova } = await reagir(montarPadrao, "pilula", `#/dm/${encodeURIComponent(maisLongo)}`);
+  assert.equal(focos(velha, nova), 0, `a conversa com ${maisLongo} não é a conversa com ${peer}`);
+});
+
+test("par sem chave de cifra: a reação fica só neste aparelho e o foco volta à pílula do mesmo jeito", async () => {
+  const semChave = "vx_reacao_sem_chave_1";
+  assert.equal(gql.getCachedUserDmPub(semChave) ?? null, null, "este par não tem chave guardada");
+  const { velha, nova } = await reagir(montarPadrao, "pilula", undefined, semChave);
+  assert.equal(nova.pilula.focused, 1, "a pílula nova recebe o foco mesmo sem chave do par");
+  assert.equal(nova.rapido.focused + velha.pilula.focused, 0);
 });
 
 test("sem controle da mesma reação na tela refeita, nada quebra e ninguém recebe o foco", async () => {

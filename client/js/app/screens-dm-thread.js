@@ -12,6 +12,7 @@ import * as peers from "../peers.js";
 import * as cryptoDm from "../crypto-dm.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as dmMsg from "../dm-messenger.js";
+import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { applyBubbleReaction, dispatchSealedEnvelope } from "./dm-wire.js";
@@ -107,13 +108,8 @@ function refocusReaction(msgId, emoji) {
  * @returns {boolean}
  */
 function isThreadOpen(peerAddress) {
-  const segment = String(location.hash || "").match(/^#\/dm\/([^/?]+)/)?.[1];
-  if (!segment) return false;
-  try {
-    return decodeURIComponent(segment) === peerAddress;
-  } catch {
-    return false;
-  }
+  const cur = parseRoute();
+  return cur.name === "dm-thread" && cur.address === peerAddress;
 }
 
 /**
