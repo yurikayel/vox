@@ -15,6 +15,18 @@ export function issueId(prefix, index) {
 }
 
 /**
+ * Só o `aria-describedby` com os avisos do campo `field`, para grupos (`<fieldset>`), onde `aria-invalid` não vale na ARIA 1.2.
+ * @param {Array<{field: string}>} issues Avisos da tela.
+ * @param {string} field Nome do campo.
+ * @param {string} prefix Prefixo usado em `issueId` na mesma lista.
+ * @returns {string} Atributo com espaço na frente, ou texto vazio.
+ */
+export function describedByAttr(issues, field, prefix) {
+  const ids = issues.map((issue, i) => (issue.field === field ? issueId(prefix, i) : "")).filter(Boolean);
+  return ids.length ? ` aria-describedby="${ids.join(" ")}"` : "";
+}
+
+/**
  * Atributos do campo `field`: `aria-invalid="true"` e `aria-describedby` com os avisos dele; vazio sem erro nesse campo.
  * @param {Array<{field: string}>} issues Avisos da tela.
  * @param {string} field Nome do campo (o mesmo do `field` do aviso).
@@ -22,6 +34,6 @@ export function issueId(prefix, index) {
  * @returns {string} Atributos prontos para o `<input>` (com espaço na frente), ou texto vazio.
  */
 export function fieldErrorAttrs(issues, field, prefix) {
-  const ids = issues.map((issue, i) => (issue.field === field ? issueId(prefix, i) : "")).filter(Boolean);
-  return ids.length ? ` aria-invalid="true" aria-describedby="${ids.join(" ")}"` : "";
+  const described = describedByAttr(issues, field, prefix);
+  return described ? ` aria-invalid="true"${described}` : "";
 }

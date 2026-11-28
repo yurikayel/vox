@@ -6,7 +6,7 @@
  * @module dungeon/sheet-wizard-view
  */
 import { escapeHtml } from "../shared/html.js";
-import { fieldErrorAttrs, issueId } from "./field-issues.js";
+import { describedByAttr, fieldErrorAttrs, issueId } from "./field-issues.js";
 import { getSystemPack } from "./system-pack.js";
 import { deriveSheet } from "./system-derive.js";
 import { HIT_DIE_SIDES } from "./system-rest.js";
@@ -37,8 +37,9 @@ function numberField(wz, name, label, value, { min, max }) {
 }
 
 function checkGroup(wz, name, legend, options, chosen) {
-  const boxes = options.map((o) => `<label><input type="checkbox" name="${name}" value="${esc(o.id)}"${chosen.includes(o.id) ? " checked" : ""} /> ${esc(o.label)}</label>`).join(" ");
-  return `<fieldset class="dungeon-fieldset"${focusAttr(wz, name)}${fieldErrorAttrs(wz.issues, name, ISSUE_PREFIX)} tabindex="-1"><legend>${legend}</legend>${boxes}</fieldset>`;
+  const invalid = fieldErrorAttrs(wz.issues, name, ISSUE_PREFIX);
+  const boxes = options.map((o) => `<label><input type="checkbox" name="${name}" value="${esc(o.id)}"${chosen.includes(o.id) ? " checked" : ""}${invalid} /> ${esc(o.label)}</label>`).join(" ");
+  return `<fieldset class="dungeon-fieldset"${focusAttr(wz, name)}${describedByAttr(wz.issues, name, ISSUE_PREFIX)} tabindex="-1"><legend>${legend}</legend>${boxes}</fieldset>`;
 }
 
 function stepBody(wz, pack) {
