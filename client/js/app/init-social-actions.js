@@ -16,6 +16,20 @@ import { openPostEditModal, handleDeletePost } from "./init-post-mutation.js";
 import { handleFrameActionClick } from "./init-frame-actions.js";
 
 /**
+ * Esc fecha o menu ⋯ (`<details class="toolbar-overflow">`) em que está o foco e devolve o foco ao `<summary>`.
+ *
+ * @param {KeyboardEvent} e
+ */
+export function closeOverflowMenuOnEscape(e) {
+  if (e.key !== "Escape") return;
+  const menu = e.target?.closest?.("details.toolbar-overflow[open]");
+  if (!menu) return;
+  menu.removeAttribute("open");
+  menu.querySelector("summary")?.focus();
+  e.preventDefault();
+}
+
+/**
  * Alterna a reação a um comentário e atualiza o botão.
  *
  * @param {HTMLElement} btn
@@ -244,6 +258,8 @@ export function initSocialInteractions() {
     if (dispatchPostActionClicks(e)) return;
     dispatchSocialFeedbackClicks(e);
   });
+
+  document.addEventListener("keydown", closeOverflowMenuOnEscape);
 
   document.addEventListener("submit", (e) => {
     const nestedForm = e.target.closest(".post-comment-nested-reply");
