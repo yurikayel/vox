@@ -55,6 +55,8 @@ function buildFocusSelector(el) {
     ["data-floor-z", el.dataset.floorZ],
     ["data-note-id", el.dataset.noteId],
     ["data-preset", el.dataset.preset],
+    ["data-favorite-key", el.dataset.favoriteKey],
+    ["data-focus-zone", el.dataset.focusZone],
   ].filter(([, v]) => v !== undefined && v !== "");
   const suffix = attrs.map(([k, v]) => `[${k}="${String(v).replace(/"/g, "")}"]`).join("");
   return `[data-dungeon="${action}"]${suffix}`;

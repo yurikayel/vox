@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Acessibilidade (Subversus): na mochila, depois de Equipar, Desequipar ou Favoritar o foco volta ao mesmo botão, e não ao item do "Equipado" ou da grade nem ao primeiro Favoritar da tela; o item do "Equipado" passa a se chamar "<item>, desequipar" (o nome visível primeiro).
 - Acessibilidade (Subversus): na mochila, Equipar/Desequipar e Favoritar/Tirar dos favoritos dizem o estado uma vez só, pelo nome ("Desequipar Espada" quando está equipada); some o `aria-pressed` que repetia a informação.
 - Acessibilidade (Subversus): "Abrir Campanha"/"Recarregar" e "Equipar"/"Desequipar"/"Favoritar"/"Tirar dos favoritos" também dizem a que campanha ou item se referem no nome acessível, com o texto visível no começo.
 - Acessibilidade (Subversus): os botões repetidos numa lista dizem a que item se referem no nome acessível ("Excluir Vila Nova", "Remover Espada longa", "Revelar Goblin", "Adicionar ao mapa: Lyra"); o texto visível continua no começo do nome.
