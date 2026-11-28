@@ -166,7 +166,7 @@ export function renderSheetEditPanel(sheet, edit = {}) {
         ${renderSystemEditFields(sheet, draft)}
         <label class="dungeon-field-mini"><span>CA</span><input class="dungeon-input" name="armorClass" type="number" min="1" max="40" value="${escapeHtml(String(draftOr(draft, "armor_class", Number(attrs.armor_class) || 10)))}"${fieldErrorAttrs(issues, "armorClass", EDIT_ISSUE_PREFIX)} /></label>
         ${abInputs}
-        <button type="submit" class="dungeon-btn dungeon-btn-secondary">Salvar Ficha</button>
+        <button type="submit" class="dungeon-btn dungeon-btn-secondary" data-edit-save>Salvar Ficha</button>
       </form>
       ${renderSheetShareRow(edit.link, edit.over)}
     </details>`;

@@ -229,7 +229,7 @@ export async function updateSheetBasicInfo(state, patch = {}, opts = {}) {
     attributes_lww: withSpeed({ ...attrs, name: nextName, class_name: nextClass, armor_class: nextAc, abilities }, patch.speedFt),
   });
   const res = await dispatchCampaignOp(state, "SHEET_UPSERT", { sheet: updated, setActive: true }, { store });
-  state.campaignNotice = `Ficha "${updated.attributes_lww.name}" atualizada.`;
+  state.campaignNotice = `Ficha salva: "${updated.attributes_lww.name}".`;
   return res;
 }
 

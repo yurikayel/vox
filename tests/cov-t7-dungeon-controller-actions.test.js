@@ -198,7 +198,7 @@ test("formulário de ação com campanha salva persiste a nova entrada da crôni
 
 test("formulários de ficha, token, porta e item chamam a ação certa", async () => {
   await dispatchDungeonFormSubmit("edit-sheet-form", state, form({ "[name=sheetName]": "Lyra II", "[name=sheetClass]": "Maga", "[name=armorClass]": "15", "[name=str]": "18" }), ctx());
-  assert.match(state.campaignNotice, /Ficha "Lyra II" atualizada/);
+  assert.match(state.campaignNotice, /Ficha salva: "Lyra II"/);
   assert.equal(dispatchDungeonFormSubmit("edit-token-form", state, form({}), ctx()), undefined);
   const tid = getActiveScene(state).tokens[0].tokenId;
   await dispatchDungeonFormSubmit("edit-token-form", state, form({ "[name=hpMax]": "40", "[name=hpCurrent]": "12", "[name=sizeCells]": "2" }, { tokenId: tid }), ctx());

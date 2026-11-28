@@ -358,7 +358,7 @@ function submitEditSheet(state, form, ctx) {
   state.sheetEditIssues = issues;
   state.sheetEditDraft = ok ? null : patch;
   if (!ok) return ctx.settle(Promise.resolve(), { focusSelector: "[data-edit-focus]" });
-  return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
+  return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }), { focusSelector: "[data-edit-save]" });
 }
 
 function submitEditToken(state, form, ctx) {
