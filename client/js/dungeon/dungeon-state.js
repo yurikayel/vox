@@ -201,6 +201,28 @@ function createPersistenceDefaults() {
 }
 
 /**
+ * Faz `campaignNotice` gravar também `noticePending`, o aviso que a região viva ainda não anunciou. O aviso visível
+ * (`campaignNotice`) fica até outro o trocar; o pendente é zerado por quem anuncia. É instalado depois do literal do
+ * estado porque o spread (`...overrides`, cópias do estado) acharia o acessador em um valor simples.
+ * @param {object} state Estado da sessão.
+ * @returns {object} O mesmo estado, com o acessador.
+ */
+function trackNoticePending(state) {
+  let shown = state.campaignNotice ?? "";
+  state.noticePending = shown;
+  Object.defineProperty(state, "campaignNotice", {
+    enumerable: true,
+    configurable: true,
+    get: () => shown,
+    set: (v) => {
+      shown = v;
+      if (v) state.noticePending = v;
+    },
+  });
+  return state;
+}
+
+/**
  * Cria um estado completo e independente para uma sessão do AI Social Dungeon.
  *
  * @param {object} [overrides={}] Sobrescritas opcionais de estado inicial.
@@ -209,7 +231,7 @@ function createPersistenceDefaults() {
 export function createDungeonSessionState(overrides = {}) {
   const favorites = createSeedFavorites();
   const net = createNetworkDefaults(favorites, Date.now());
-  return {
+  return trackNoticePending({
     tableId: "vila-nova",
     tableName: "A Cripta sob a Vila Nova",
     communityName: "Vila Teste",
@@ -229,7 +251,7 @@ export function createDungeonSessionState(overrides = {}) {
     inspectedRole: "STAGE1_JUDGE_RULES",
     loreNodes: INITIAL_LORE_NODES.map((n) => ({ ...n })),
     ...overrides,
-  };
+  });
 }
 
 /**

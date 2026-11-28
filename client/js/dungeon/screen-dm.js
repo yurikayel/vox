@@ -119,7 +119,7 @@ function renderP2pInvitePanel(state) {
   const isGm = state.viewerRole === "gm";
   const roleLabel = isGm ? "Mestre (vê Camada GM)" : "Prévia Jogador (Zero-Spoiler)";
   const peers = Number(state.connectedPeersCount) || 0;
-  const notice = state.campaignNotice ? `<p class="dungeon-inline-status" role="status">${escapeHtml(state.campaignNotice)}</p>` : "";
+  const notice = state.campaignNotice ? `<p class="dungeon-inline-status">${escapeHtml(state.campaignNotice)}</p>` : "";
   return `
     <section class="dungeon-panel" aria-label="Camada do Mestre e convite P2P">
       <div class="dungeon-section-head">
