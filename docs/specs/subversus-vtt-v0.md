@@ -156,7 +156,7 @@ Uma cena típica (1 mapa + 80 paredes + 20 primitivas + 25 tokens) totaliza **< 
 
 ## 7. Integridade, Fairplay e Limitações de Rede
 
-1. **Dados verificáveis via `rpg-crypto-table.js` (Commit-Reveal²):** reutiliza o duplo compromisso SHA-256 + backup Shamir GF(256) (que neutraliza desconexão oportunista / *Last Revealer Attack*) + *Rejection Sampling* sem viés modular. Na Crônica, aparece apenas um selo discreto `✓` tocável para ver o resumo em linguagem leiga.
+1. **Dados verificáveis via `rpg-crypto-table.js` (Commit-Reveal²):** reutiliza o duplo compromisso SHA-256 + backup Shamir GF(256) (que neutraliza desconexão oportunista / *Last Revealer Attack*) + *Rejection Sampling* sem viés modular. Na Crônica, aparece apenas um selo discreto `✓` tocável para ver o resumo em linguagem leiga. Com a flag `vox.lab.fairplay` ligada, o painel Rolagens do Escudo repete o mesmo selo numa coluna "Conferida" (SUB-33), lido da entrada `turn-<id>` da Crônica; sem a flag a tabela não muda.
 2. **Zero-Spoiler via `projectStateForPlayer`:** o Mestre mantém o estado completo localmente e projeta o subconjunto visível por jogador antes do WebRTC. Tokens `gm`, portas `secret`, `volumes`/`portals` da camada `gm` e `notes_gm` nunca saem da máquina do Mestre.
 3. **Log assinado:** eventos críticos seguem o encadeamento assinado (`sigv: 2`).
 4. **Protocolo de rede do Fairplay:** fases, escopo da v0 e limites (o Mestre-hub pode censurar, não forjar) estão no [ADR-040](../adr/040-fairplay-rolagem-verificavel-na-mesa.md).

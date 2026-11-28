@@ -2,11 +2,14 @@
  * @file Painel "Rolagens" do Escudo do Mestre (SUB-23): quem rolou, o quê, o total, o modo e o cadeado, com os filtros
  * Todas e Secretas. Só vista: lê `state.rolls` (o que o SUB-22 grava em `visibility`) e não escreve nada. Os filtros são
  * abas de rádio (o navegador opera pelo teclado e o redesenho preserva a escolhida, como na ficha); os estados vazio e
- * "Reconectando…" usam o cartão de estado compartilhado.
+ * "Reconectando…" usam o cartão de estado compartilhado. Com a flag de laboratório `vox.lab.fairplay` ligada, uma coluna
+ * "Conferida" repete o selo da Crônica (`renderEntrySeal`) na linha de cada rolagem que tem entrada Fairplay; sem a flag,
+ * a tabela é a de sempre.
  * @module dungeon/dm-roll-panel
  */
 import { escapeHtml } from "../shared/html.js";
 import { renderStateCard } from "../shared/state-card.js";
+import { isFairplayLabEnabled, renderEntrySeal } from "./vtt-fairplay-selo.js";
 
 /** Filtros do painel, na ordem em que aparecem. */
 export const ROLL_FILTERS = Object.freeze([
@@ -29,32 +32,44 @@ export function filterRollLog(entries = [], filter = "todas") {
   return filter === "secretas" ? list.filter((r) => (r.visibility || "public") !== "public") : list;
 }
 
-function rollRow(r) {
+function rollRow(r, sealOf) {
   const visibility = r.visibility || "public";
   const lock = visibility === "public" ? "" : `<span aria-hidden="true">🔒</span> `;
-  return `<tr><th scope="row">${escapeHtml(r.speaker || "Aventureiro")}</th><td>${escapeHtml(r.label || r.formula || "")}</td><td>${escapeHtml(String(r.total ?? ""))}</td><td>${lock}${escapeHtml(MODE_LABELS[visibility] || MODE_LABELS.public)}</td></tr>`;
+  return `<tr><th scope="row">${escapeHtml(r.speaker || "Aventureiro")}</th><td>${escapeHtml(r.label || r.formula || "")}</td><td>${escapeHtml(String(r.total ?? ""))}</td><td>${lock}${escapeHtml(MODE_LABELS[visibility] || MODE_LABELS.public)}</td>${sealOf ? `<td>${sealOf(r)}</td>` : ""}</tr>`;
 }
 
-function renderRollTable(rolls, filter) {
+function renderRollTable(rolls, filter, sealOf) {
   const rows = filterRollLog(rolls, filter.id).slice(-MAX_ROWS).reverse();
   if (!rows.length) return renderStateCard({ kind: "empty", text: filter.empty });
-  return `<table class="sv-rolls-table"><thead><tr><th scope="col">Quem</th><th scope="col">O quê</th><th scope="col">Total</th><th scope="col">Modo</th></tr></thead><tbody>${rows.map(rollRow).join("")}</tbody></table>`;
+  return `<table class="sv-rolls-table"><thead><tr><th scope="col">Quem</th><th scope="col">O quê</th><th scope="col">Total</th><th scope="col">Modo</th>${sealOf ? `<th scope="col">Conferida</th>` : ""}</tr></thead><tbody>${rows.map((r) => rollRow(r, sealOf)).join("")}</tbody></table>`;
 }
 
-function renderFilterTabs(rolls) {
+/** Selo Fairplay da linha: o da entrada `turn-<id>` da Crônica (vazio sem entrada ou sem selo); `null` com a flag desligada. */
+function sealReader(state) {
+  if (!state?.fairplayLabEnabled && !isFairplayLabEnabled()) return null;
+  const byId = new Map((state?.chronicle || []).filter(Boolean).map((e) => [e.id, e]));
+  return (r) => {
+    const entry = byId.get(`turn-${r.id}`);
+    return entry ? renderEntrySeal(entry, state) : "";
+  };
+}
+
+function renderFilterTabs(state) {
+  const rolls = state?.rolls;
+  const sealOf = sealReader(state);
   const radios = ROLL_FILTERS.map((f, i) => `<input type="radio" class="sv-rolls-input" name="dm-rolls-filter" id="dm-rolls-${f.id}" data-dungeon-tab="dm-rolls-${f.id}"${i === 0 ? " checked" : ""} />`).join("");
   const labels = ROLL_FILTERS.map((f) => `<label class="sv-rolls-label" for="dm-rolls-${f.id}">${f.label}</label>`).join("");
-  const panels = ROLL_FILTERS.map((f) => `<div class="sv-rolls-panel is-${f.id}">${renderRollTable(rolls, f)}</div>`).join("");
+  const panels = ROLL_FILTERS.map((f) => `<div class="sv-rolls-panel is-${f.id}">${renderRollTable(rolls, f, sealOf)}</div>`).join("");
   return `<div class="sv-rolls-tabs">${radios}<div class="sv-rolls-list" role="group" aria-label="Filtro de rolagens">${labels}</div><div class="sv-rolls-panels">${panels}</div></div>`;
 }
 
 /**
  * Painel de rolagens do Escudo do Mestre. Com `state.syncOffline`, mostra só "Reconectando…" (a lista pode estar
  * defasada); sem rolagens, o cartão de vazio do filtro.
- * @param {{rolls?: object[], syncOffline?: boolean}} state Estado da sessão.
+ * @param {{rolls?: object[], syncOffline?: boolean, chronicle?: object[], fairplaySeals?: object, fairplayLabEnabled?: boolean}} state Estado da sessão.
  * @returns {string} HTML da seção.
  */
 export function renderDmRollPanel(state) {
-  const body = state?.syncOffline ? renderStateCard({ kind: "offline", text: "Reconectando…" }) : renderFilterTabs(state?.rolls);
+  const body = state?.syncOffline ? renderStateCard({ kind: "offline", text: "Reconectando…" }) : renderFilterTabs(state);
   return `<section class="dungeon-panel sv-rolls" aria-label="Rolagens do Mestre"><span class="dungeon-eyebrow">Só vista</span><h2>Rolagens</h2>${body}</section>`;
 }
