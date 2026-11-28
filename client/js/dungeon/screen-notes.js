@@ -3,6 +3,7 @@
  * @module dungeon/screen-notes
  */
 import { escapeHtml } from "../shared/html.js";
+import { renderStateCard } from "../shared/state-card.js";
 import { canvasToInvestigationBoard } from "./obsidian-bridge.js";
 
 const FOLDERS = ["NPCs", "Locais", "Pistas", "Notas"];
@@ -33,7 +34,7 @@ export function renderHandoutViewer(state) {
     (n) => n.visibility === "shared" || n.visibility === "public",
   );
   if (!shared.length) {
-    return `<p class="dungeon-muted">Nenhum handout compartilhado com a mesa ainda.</p>`;
+    return renderStateCard({ kind: "empty", text: "Nenhum handout compartilhado com a mesa ainda." });
   }
   const cards = shared.map((n) => {
     const body = escapeHtml((n.publicMarkdown || "").slice(0, 220));

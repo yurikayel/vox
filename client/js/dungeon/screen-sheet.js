@@ -2,6 +2,7 @@
  * @file Tela 3 do AI Social Dungeon: Grimório da Ficha & Crônica @tag (#/dungeon/ficha/:charId).
  */
 import { escapeHtml } from "../shared/html.js";
+import { renderStateCard } from "../shared/state-card.js";
 import { projectCharacterPools } from "../rpg-sheet-and-lore.js";
 import { abilityModifier } from "./dice-engine.js";
 import { dungeonIcon, renderHeroPortraitSvg } from "./rpg-illustrations.js";
@@ -145,7 +146,7 @@ export function renderAbilitiesPanel(state) {
     <section class="dungeon-panel" aria-label="Ataques e habilidades da ficha">
       <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
       <h2>Ataques e Habilidades</h2>
-      <div class="dungeon-brain-grid">${cards || "<p class=\"dungeon-muted\">Nenhuma ação clicável cadastrada nesta ficha.</p>"}</div>
+      <div class="dungeon-brain-grid">${cards || renderStateCard({ kind: "empty", text: "Nenhuma ação clicável cadastrada nesta ficha." })}</div>
       ${renderAddActionForm()}
     </section>`;
 }
@@ -212,7 +213,7 @@ function renderLedgerPanel(sheet) {
     <section class="dungeon-panel">
       <span class="dungeon-eyebrow">Registro Imutável</span>
       <h2>Histórico da Mesa</h2>
-      <ul class="dungeon-clean-list">${ops || "<li class=\"dungeon-muted\">Nenhuma movimentação ainda neste turno.</li>"}</ul>
+      ${ops ? `<ul class="dungeon-clean-list">${ops}</ul>` : renderStateCard({ kind: "empty", text: "Nenhuma movimentação ainda neste turno." })}
     </section>`;
 }
 
