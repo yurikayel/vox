@@ -6,7 +6,7 @@
  * @module dungeon/screen-sheet-tabs
  */
 import { escapeHtml } from "../shared/html.js";
-import { isCoveredSeed } from "./vtt-schema.js";
+import { isCoveredSeed, isForeignSeed } from "./vtt-schema.js";
 
 /** Abas da ficha, na ordem em que aparecem. */
 export const SHEET_TABS = Object.freeze([
@@ -79,10 +79,11 @@ export function renderSkillGrid(skills, extraActions = []) {
  * @param {object[]} actions Ações clicáveis da ficha.
  * @param {object[]} [derivedSkills] Perícias derivadas do pacote; sem elas, a grade usa só as ações de perícia.
  * @param {boolean} [hasAbilities] A ficha tem botões de atributo no cabeçalho; sem eles a frase sobre eles some.
+ * @param {string} [systemId] Id do pacote da ficha: a semente intacta de outro sistema não é listada (sem ele vale a 5e).
  * @returns {string} HTML da aba.
  */
-export function renderPlayTab(actions, derivedSkills = [], hasAbilities = true) {
-  const list = Array.isArray(actions) ? actions : [];
+export function renderPlayTab(actions, derivedSkills = [], hasAbilities = true, systemId) {
+  const list = (Array.isArray(actions) ? actions : []).filter((a) => !isForeignSeed(a, systemId));
   const { skills } = splitSheetActions(list);
   const usable = list.filter((a) => !isCoveredSeed(a, derivedSkills));
   const note = hasAbilities ? '<p class="dungeon-muted">Os testes de atributo estão no cabeçalho da ficha.</p>' : "";
