@@ -273,7 +273,8 @@ function handleDungeonClick(container, viewOpts, ev) {
   const state = viewOpts.state || getDungeonSession();
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
-  redrawContainer(container, viewOpts);
+  // Promessa redesenha ao assentar (em `settleAndRedraw`); redesenhar aqui também seriam dois desenhos por clique.
+  if (typeof result?.then !== "function") redrawContainer(container, viewOpts);
   return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
 }
 
