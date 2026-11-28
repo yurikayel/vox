@@ -74,6 +74,14 @@ struct PeerEntry {
     dm_pub: Option<JsonValue>,
 }
 
+/// Tells whether a peer other than `peer_id` is connected and already answers for `address`.
+fn address_held_by_other(peers: &HashMap<String, PeerEntry>, address: &str, peer_id: &str) -> bool {
+    !address.is_empty()
+        && peers
+            .iter()
+            .any(|(pid, entry)| pid != peer_id && entry.address == address)
+}
+
 /// Thread-safe registry of active signaling peers.
 #[derive(Default)]
 pub struct PeerRegistry {
@@ -104,6 +112,15 @@ impl PeerRegistry {
             return Vec::new();
         };
         let existing: Vec<String> = guard.keys().cloned().collect();
+        let (address, dm_pub) = if address_held_by_other(&guard, &address, &peer_id) {
+            // The connected owner keeps the address and key; the newcomer still joins the room.
+            guard
+                .get(&peer_id)
+                .map(|entry| (entry.address.clone(), entry.dm_pub.clone()))
+                .unwrap_or_default()
+        } else {
+            (address, dm_pub)
+        };
         guard.insert(
             peer_id,
             PeerEntry {
