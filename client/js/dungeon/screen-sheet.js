@@ -145,7 +145,7 @@ export function renderAbilitiesPanel(state) {
   return `
     <section class="dungeon-panel" aria-label="Ataques e habilidades da ficha">
       <span class="dungeon-eyebrow">Ficha clicável · Dados justos</span>
-      <h2>Ataques e Habilidades</h2>
+      <h2 tabindex="-1" data-actions-focus>Ataques e Habilidades</h2>
       <div class="dungeon-brain-grid">${cards || renderStateCard({ kind: "empty", text: "Nenhuma ação clicável cadastrada nesta ficha." })}</div>
       ${renderAddActionForm()}
     </section>`;
