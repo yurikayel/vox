@@ -35,10 +35,8 @@ function createFakeRelay() {
       sockets.delete(this);
     }
   }
-  return { FakeWS, published };
+  return { FakeWS, published, subscribed: () => [...sockets].some((s) => s.subs.size > 0) };
 }
-
-const settle = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
 /** Espera a condição em vez de um tempo fixo: com a suíte inteira no mesmo processo, a cripto em JS puro fica lenta. */
 async function waitFor(cond, timeoutMs = 10000) {
@@ -65,7 +63,8 @@ test("nostr-transport - dois pares se descobrem, trocam identidade e oferta/resp
   // stop() no finally: se uma asserção falhar, o setInterval do hello não pode segurar o processo.
   try {
     A.start();
-    await settle(150);
+    // O relay é efêmero: B só é visto por A se A já assinou a sala antes de B se anunciar.
+    assert.ok(await waitFor(() => relay.subscribed()), "A não assinou a sala");
     B.start();
     const joined = (got, peerId, address) => got.some((m) => m.type === "peer-joined" && m.peerId === peerId && m.address === address);
     await waitFor(() => joined(gotA, "peer_b", "vx_bob") && joined(gotB, "peer_a", "vx_alice"));
@@ -210,14 +209,41 @@ test("nostr-transport - PM-17: relay que nunca abre é trocado por outro do pool
   }
 });
 
-test("nostr-transport - PM-17: stop() cancela a reconexão agendada", async () => {
+test("nostr-transport - PM-17: stop() cancela a reconexão agendada", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const make = () => {
+    const net = createFlakyNet(new Set(["wss://morto"]));
+    const T = createNostrTransport({ relays: ["wss://morto"], peerId: "p1", onMessage: () => {}, WebSocketImpl: net.FlakyWS, reconnectBaseMs: 30 });
+    T.start();
+    t.mock.timers.tick(1);
+    return { net, T };
+  };
+  const control = make();
+  t.mock.timers.tick(1000);
+  control.T.stop();
+  assert.ok(control.net.created.length > 1, "controle: sem stop(), o relay morto é tentado de novo");
+  const { net, T } = make();
+  assert.equal(net.created.length, 1, "a primeira tentativa já caiu e a reconexão está agendada");
+  T.stop();
+  t.mock.timers.tick(1000);
+  assert.equal(net.created.length, 1);
+});
+
+test("nostr-transport - PM-17: stop() + start() na janela não deixa o timer do ciclo anterior abrir a vaga em dobro", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   const net = createFlakyNet(new Set(["wss://morto"]));
   const T = createNostrTransport({ relays: ["wss://morto"], peerId: "p1", onMessage: () => {}, WebSocketImpl: net.FlakyWS, reconnectBaseMs: 30 });
   T.start();
-  await waitFor(() => net.created.length === 1);
-  await settle(10);
+  t.mock.timers.tick(1);
   T.stop();
-  const count = net.created.length;
-  await settle(120);
-  assert.equal(net.created.length, count);
+  T.start();
+  const antes = net.created.length;
+  try {
+    t.mock.timers.tick(61);
+    assert.equal(net.created.length - antes, 0, "o timer do ciclo parado (60 ms) foi cancelado e não abre a vaga");
+    t.mock.timers.tick(130);
+    assert.equal(net.created.length - antes, 1, "controle: o timer do ciclo atual abre uma vez");
+  } finally {
+    T.stop();
+  }
 });
