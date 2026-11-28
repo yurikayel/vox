@@ -155,11 +155,13 @@ function settleAndRedraw(promise, container, viewOpts, extra = {}) {
   if (!promise || typeof promise.then !== "function") return undefined;
   const state = viewOpts.state || getDungeonSession();
   let settledVal = null;
+  let rejected = false;
   return promise
     .then((val) => { settledVal = val; return val; })
-    .catch((err) => { state.campaignNotice = err?.message || "Erro na operação local."; })
+    .catch((err) => { rejected = true; state.campaignNotice = err?.message || "Erro na operação local."; })
     .finally(() => {
-      extra.cancelFrame?.();
+      extra.frame?.cancel();
+      if (frameStillCurrent(extra, state, rejected)) return;
       redrawContainer(container, viewOpts, extra.focusSelector || "");
       if (extra.showDice3d) {
         showDice3dAfterRedraw(container, settledVal, state.dice3dEnabled ?? DICE3D_PREFS.dice3d);
@@ -167,19 +169,46 @@ function settleAndRedraw(promise, container, viewOpts, extra = {}) {
     });
 }
 
+/** Marca barata do estado: os valores de primeiro nível (identidade, sem comparação profunda). */
+const stateMark = (state) => Object.values(state);
+
+/**
+ * Diz se o desenho do quadro já mostra o estado final: o quadro desenhou, a gravação não rejeitou, a ação não pede foco
+ * nem dados 3D depois do desenho e nenhum valor de primeiro nível do estado mudou desde então.
+ * Mudança só por mutação interna de um objeto/lista não é vista; a gravação reatribui os campos do estado ao assentar.
+ * @param {{ frame?: { drawn: unknown[]|null }, focusSelector?: string, showDice3d?: boolean }} extra Contexto da ação.
+ * @param {object} state Estado da sessão.
+ * @param {boolean} rejected Se a promessa da ação rejeitou.
+ * @returns {boolean} Verdadeiro quando o desenho ao assentar é dispensável.
+ */
+function frameStillCurrent(extra, state, rejected) {
+  const drawn = extra.frame?.drawn;
+  if (!drawn || rejected || extra.focusSelector || extra.showDice3d) return false;
+  const now = stateMark(state);
+  return now.length === drawn.length && now.every((v, i) => v === drawn[i]);
+}
+
 /**
  * Agenda o redesenho do próximo quadro para a ação que ainda grava: com gravação rápida o `settleAndRedraw` o cancela
- * antes do quadro (um desenho só); com gravação lenta o resultado já aparece no quadro, sem esperar a gravação.
+ * antes do quadro (um desenho só); com gravação lenta o resultado já aparece no quadro, sem esperar a gravação, e
+ * `drawn` guarda a marca do estado desenhado para o assentar dispensar o segundo desenho se nada mudou.
  * @param {HTMLElement} container Contêiner da Mesa a redesenhar.
  * @param {object} viewOpts Opções da vista (estado, loja, tela) repassadas ao redesenho.
- * @returns {() => void} Cancela o desenho agendado (não faz nada se ele já rodou).
+ * @returns {{ cancel: () => void, drawn: unknown[]|null }} `cancel` desfaz o desenho agendado (nada se já rodou).
  */
 function scheduleFrameRedraw(container, viewOpts) {
   const raf = globalThis.requestAnimationFrame;
-  if (typeof raf !== "function") return () => {};
+  const frame = { cancel: () => {}, drawn: null };
+  if (typeof raf !== "function") return frame;
   let live = true;
-  const id = raf(() => { if (live) redrawContainer(container, viewOpts); });
-  return () => { live = false; globalThis.cancelAnimationFrame?.(id); };
+  const state = viewOpts.state || getDungeonSession();
+  const id = raf(() => {
+    if (!live) return;
+    redrawContainer(container, viewOpts);
+    frame.drawn = stateMark(state);
+  });
+  frame.cancel = () => { live = false; globalThis.cancelAnimationFrame?.(id); };
+  return frame;
 }
 
 function handleChipClick(rootEl, el) {
@@ -290,10 +319,10 @@ function handleDungeonClick(container, viewOpts, ev) {
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
   // Síncrona: redesenha na hora. Promessa: o desenho do próximo quadro (cancelado se ela assentar antes) e o de `settleAndRedraw`.
-  let cancelFrame;
-  if (typeof result?.then === "function") cancelFrame = scheduleFrameRedraw(container, viewOpts);
+  let frame;
+  if (typeof result?.then === "function") frame = scheduleFrameRedraw(container, viewOpts);
   else redrawContainer(container, viewOpts);
-  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action], cancelFrame });
+  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action], frame });
 }
 
 /**

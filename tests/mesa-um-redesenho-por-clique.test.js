@@ -54,11 +54,12 @@ const clique = (action, dataset = {}) => {
 };
 
 /** Ação de teste cuja promessa só assenta quando `libera()` roda, ou rejeita. */
-function acaoLenta(t, { rejeita = false } = {}) {
+function acaoLenta(t, { rejeita = false, muda = false, nome = "acao-teste-lenta" } = {}) {
   let libera;
   const portao = new Promise((r) => { libera = r; });
-  ACTION_HANDLERS["acao-teste-lenta"] = async (state) => { state.campaignNotice = ""; await portao; if (rejeita) throw new Error("Falha simulada ao gravar"); };
-  t.after(() => { delete ACTION_HANDLERS["acao-teste-lenta"]; });
+  const original = ACTION_HANDLERS[nome];
+  ACTION_HANDLERS[nome] = async (state) => { state.campaignNotice = ""; await portao; if (rejeita) throw new Error("Falha simulada ao gravar"); if (muda) state.campaignNotice = "Gravado"; };
+  t.after(() => { if (original) ACTION_HANDLERS[nome] = original; else delete ACTION_HANDLERS[nome]; });
   return libera;
 }
 
@@ -80,9 +81,9 @@ test("sem cancelAnimationFrame o quadro agendado não desenha de novo depois que
   assert.equal(log.redesenhos, 1);
 });
 
-test("gravação lenta: o resultado aparece no próximo quadro, sem esperar a gravação, e o settle desenha depois", async (t) => {
+test("gravação lenta que muda o estado ao assentar: o quadro mostra o resultado e o settle desenha de novo", async (t) => {
   const frames = instalaQuadros(t);
-  const libera = acaoLenta(t);
+  const libera = acaoLenta(t, { muda: true });
   const { handlers, log } = await mesaContada();
   const job = handlers.click(clique("acao-teste-lenta"));
   assert.equal(log.redesenhos, 0, "nada desenhado dentro do clique");
@@ -91,6 +92,42 @@ test("gravação lenta: o resultado aparece no próximo quadro, sem esperar a gr
   libera();
   await job;
   assert.equal(log.redesenhos, 2, "o settle desenhou o estado final");
+});
+
+test("gravação lenta sem mudança no assentar: um desenho só (o do quadro)", async (t) => {
+  const frames = instalaQuadros(t);
+  const libera = acaoLenta(t);
+  const { handlers, log } = await mesaContada();
+  const job = handlers.click(clique("acao-teste-lenta"));
+  frames.quadro();
+  assert.equal(log.redesenhos, 1);
+  libera();
+  await job;
+  assert.equal(log.redesenhos, 1, "o estado é o mesmo do quadro: nada a redesenhar");
+});
+
+test("gravação lenta que só muda o estado de uma subestrutura reatribuída (campo novo) desenha de novo", async (t) => {
+  const frames = instalaQuadros(t);
+  const libera = acaoLenta(t);
+  const { state, handlers, log } = await mesaContada();
+  const job = handlers.click(clique("acao-teste-lenta"));
+  frames.quadro();
+  state.sheet = { ...state.sheet };
+  libera();
+  await job;
+  assert.equal(log.redesenhos, 2, "campo reatribuído entre o quadro e o assentar conta como mudança");
+});
+
+test("gravação lenta que rejeita: desenha de novo mesmo sem mudança de campo", async (t) => {
+  const frames = instalaQuadros(t);
+  const libera = acaoLenta(t, { rejeita: true });
+  const { state, handlers, log } = await mesaContada();
+  const job = handlers.click(clique("acao-teste-lenta"));
+  state.campaignNotice = "Falha simulada ao gravar";
+  frames.quadro();
+  libera();
+  await job;
+  assert.equal(log.redesenhos, 2);
 });
 
 test("ação síncrona (selecionar token) redesenha uma vez, na hora, sem agendar quadro", async (t) => {
@@ -145,3 +182,40 @@ test("sem requestAnimationFrame (ambiente sem quadros) a promessa ainda redesenh
   await handlers.click(clique("copy-invite"));
   assert.equal(log.redesenhos, 1);
 });
+
+test("campo do estado removido entre o quadro e o assentar conta como mudança", async (t) => {
+  const frames = instalaQuadros(t);
+  const libera = acaoLenta(t);
+  const { state, handlers, log } = await mesaContada();
+  const job = handlers.click(clique("acao-teste-lenta"));
+  frames.quadro();
+  delete state[Object.keys(state).at(-1)];
+  libera();
+  await job;
+  assert.equal(log.redesenhos, 2);
+});
+
+test("a marca vale depois do desenho: o que o próprio desenho muda no estado não força outro", async (t) => {
+  const frames = instalaQuadros(t);
+  const libera = acaoLenta(t);
+  const { state, handlers, log } = await mesaContada();
+  const job = handlers.click(clique("acao-teste-lenta"));
+  state.hudPanelFocus = "[data-hud-x]";
+  frames.quadro();
+  libera();
+  await job;
+  assert.equal(log.redesenhos, 1, "o desenho consumiu o foco do painel; nada mudou depois dele");
+});
+
+for (const nome of ["wizard-open", "roll-d20"]) {
+  test(`ação ${nome} (foco ou dados 3D depois do desenho) desenha ao assentar mesmo sem mudança`, async (t) => {
+    const frames = instalaQuadros(t);
+    const libera = acaoLenta(t, { nome });
+    const { handlers, log } = await mesaContada();
+    const job = handlers.click(clique(nome));
+    frames.quadro();
+    libera();
+    await job;
+    assert.equal(log.redesenhos, 2);
+  });
+}
