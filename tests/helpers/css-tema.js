@@ -71,6 +71,9 @@ function themeVars(css, theme, route, into) {
 
 /**
  * Variáveis de um tema, empilhando `style.css`, `agora.css` e as `sv-*.css` como o `index.html`.
+ * Leitor legado: só enxerga o bloco do atributo no nível alto, então ignora o bloco `:root[data-color-mode="dark"]`
+ * que `style.css` põe dentro de `@media (prefers-color-scheme: light)` (o escuro por atributo com o sistema claro fica
+ * com o valor claro). Para esse caso e para a cascata de verdade, use `themeTokens` de `css-cascata.js`.
  * @param {"light"|"dark"} theme Tema.
  * @param {"attr"|"media"|"both"} [route="both"] `attr`: só o atributo `data-color-mode`; `media`: só o `@media`
  * (modo automático, sem atributo); `both`: os dois, o atributo vencendo.

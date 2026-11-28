@@ -1,7 +1,7 @@
 # Árvore do repasse (`PM-106`) — spec e análise de privacidade
 
 > **Status:** rascunho (spec PM-106 e análise de privacidade obrigatória antes de qualquer código) · **Owner:** mantenedor / privacidade · **Revisado:** 2026-11-22  
-> **Relacionados:** [ROADMAP (PM-106)](../ROADMAP.md), [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [lapide-conta-pm101.md](./lapide-conta-pm101.md), [antigravity-gossip-retract-v1.md](./antigravity-gossip-retract-v1.md), [ADR-021](../adr/021-integridade-na-entrada-forma-assinada.md), [THREAT-MODEL.md](../THREAT-MODEL.md).
+> **Relacionados:** [ROADMAP (PM-106)](../ROADMAP.md), [replicacao-por-grau-v0.md](./replicacao-por-grau-v0.md), [lapide-conta-pm101.md](./lapide-conta-pm101.md), [retratacao-gossip-v1.md](./retratacao-gossip-v1.md), [ADR-021](../adr/021-integridade-na-entrada-forma-assinada.md), [THREAT-MODEL.md](../THREAT-MODEL.md).
 
 ---
 
