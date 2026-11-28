@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Modais Pix e Denunciar: fechar o Pix pelo ✕ devolve o foco ao botão que o abriu, e o Denunciar aberto pelo menu ⋯ leva o foco para dentro do diálogo e, ao fechar, de volta ao ⋯, em vez de deixá-lo no início da página. Usa o preso de foco e o hospedeiro de modal que já existiam.
 - Menu ⋯ do post (feed e post aberto): Esc fecha o menu e o foco volta ao botão ⋯; o item de Pix passa a ter papel de item de menu.
 - Acessibilidade: curtir, estrela e salvar passam a dizer se estão ligados (`aria-pressed`, e `aria-checked` na estrela do menu "mais", que agora é `menuitemcheckbox`) no feed, no post aberto e no cartão de imagem; o valor troca no clique.
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
