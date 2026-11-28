@@ -9239,6 +9239,27 @@ blockquote.repost-cite {
   body.printing-phrase > #phrase-print-root .phrase-words { grid-template-columns: repeat(3, 1fr); font-size: 14pt; padding-left: 1.5cm; }
 }
 
+/* F39: a 320 px o compositor aberto não rola de lado: ferramentas e ações (Ecoar, Postar) quebram de linha, sem esconder nenhuma.
+   O ponto de quebra é em `em` (30em = 480 px com a fonte padrão): os botões são em rem e crescem com a fonte do navegador. */
+@media (max-width: 30em) {
+  .inline-composer-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .inline-composer-tools {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .inline-composer-actions {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+}
+
 /* S30-S12: alvos de toque ≥44px em compose, nav e ações de post (desktop com mouse inalterado) */
 @media (pointer: coarse), (max-width: 767px) {
   .inline-composer-tool {
