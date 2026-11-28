@@ -149,7 +149,7 @@ function applySheetActionUpsert(state, op) {
     label: String(op.payload.action.label).trim().slice(0, 60),
     roll: String(op.payload.action.roll || "1d20").trim().slice(0, 80),
     damage: String(op.payload.action.damage || "").trim().slice(0, 80),
-    tag: String(op.payload.action.tag || "acao").trim().slice(0, 24),
+    tag: String(op.payload.action.tag || "").trim().slice(0, 24) || "acao",
   };
   const nextActions = [...existing.filter((a) => a.id !== action.id), action];
   return { ...state, sheetsById: { ...state.sheetsById, [sheetId]: { ...normalized, sheet_meta: { ...normalized.sheet_meta, clickable_actions: nextActions } } } };
