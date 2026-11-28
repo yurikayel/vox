@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.174-mesa-rede-aperto";
+const CACHE_NAME = "vox-pwa-v7.175-precache-fecha-imports";
 
 const SHELL_ASSETS = [
 
@@ -103,6 +103,7 @@ const SHELL_ASSETS = [
   "./js/app/screens-dm-thread.js",
 
   "./js/app/screens-home.js",
+  "./js/app/home-bsky-manager.js",
 
   "./js/app/screens-network.js",
   "./js/app/network-screen-linked.js",
@@ -126,8 +127,17 @@ const SHELL_ASSETS = [
   "./js/app/screens-not-found.js",
 
   "./js/app/screens-status.js",
+  "./js/app/screens-status-view.js",
+  "./js/app/screens-voxpedia.js",
+  "./js/app/screens-ajuda-teste.js",
 
   "./js/render/status.js",
+
+  "./js/availability-metrics.js",
+
+  "./js/render/ajuda-teste.js",
+
+  "./js/render/voxpedia.js",
 
   "./js/render/diff-html.js",
 
@@ -181,6 +191,7 @@ const SHELL_ASSETS = [
   "./js/honest-errors.js",
   "./js/electoral-period.js",
   "./js/boot-color-mode.js",
+  "./boot-frame-guard.js",
   "./js/boot-short-url.js",
   "./js/boot-sw.js",
   "./js/app/dom-delegates.js",
@@ -290,6 +301,7 @@ const SHELL_ASSETS = [
   "./js/shamir-gf256.js",
   "./js/identity/guardians.js",
   "./js/identity/local-wipe.js",
+  "./js/app/lazy-module.js",
   "./js/app/guardians-flow.js",
   "./js/app/screens-guardians.js",
   "./js/identity/guardian-return.js",
@@ -506,6 +518,47 @@ const SHELL_ASSETS = [
   "./js/upload.js",
 
   "./js/wallet.js",
+
+  "./css/sv-tokens.css",
+  "./css/sv-agora.css",
+  "./css/sv-estados.css",
+  "./aviso/aviso-link.js",
+  "./js/assembly-minutes.js",
+  "./js/assembly-presence.js",
+  "./js/aviso.js",
+  "./js/dm-envelope-ledger.js",
+  "./js/dm-pub-proof.js",
+  "./js/export-html-backup.js",
+  "./js/graphql-gateway.js",
+  "./js/graphql-mappers.js",
+  "./js/graphql-queries.js",
+  "./js/linked-accounts-secrets.js",
+  "./js/rehearsal-mode.js",
+  "./js/render/assembly-panel.js",
+  "./js/render/community-governance.js",
+  "./js/render/community-home.js",
+  "./js/render/community-neighbors.js",
+  "./js/render/community-page.js",
+  "./js/render/community-shared.js",
+  "./js/render/community-topics.js",
+  "./js/render/feed-chrome.js",
+  "./js/render/feed-comments.js",
+  "./js/render/feed-composer.js",
+  "./js/render/feed-post-item.js",
+  "./js/render/feed-post-media.js",
+  "./js/render/feed-post-toolbar.js",
+  "./js/shared/lead-tab.js",
+  "./js/shared/reduce-lww.js",
+  "./js/shared/safe-key.js",
+  "./js/shared/schedule-commit.js",
+  "./js/shared/state-card.js",
+  "./js/shared/table-scroll.js",
+  "./js/webrtc-connection.js",
+  "./js/webrtc-messaging.js",
+  "./js/webrtc-peer-state.js",
+  "./js/webrtc-signaling-config.js",
+  "./js/webrtc-signaling-send.js",
+  "./js/webrtc-signaling-ws.js",
 
 ];
 

@@ -22,10 +22,17 @@ import zlib from "node:zlib";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Orçamentos padrão derivados da linha de base real + margem segura contra regressões. */
+/**
+ * Orçamentos padrão derivados da linha de base real + margem segura contra regressões.
+ * Corte v7.175: o teto subiu ao medido (raw 3 077 170 B, gzip 988 464 B). Os 45 arquivos que entraram
+ * (41 módulos que o shell já importava por import estático, entre eles `availability-metrics`, `render/ajuda-teste`,
+ * `render/voxpedia`, `app/home-bsky-manager` e `app/lazy-module`; o `boot-frame-guard.js` que o index.html carrega;
+ * e 3 folhas de estilo do index.html) já existiam e eram pedidos à rede sob demanda; só faltavam no precache, então
+ * a tela falhava offline. Sem código novo; o teto segue o medido, não é meta.
+ */
 export const DEFAULT_BUDGETS = Object.freeze({
-  maxRawBytes: 2_800_000,
-  maxGzipBytes: 900_000,
+  maxRawBytes: 3_085_000,
+  maxGzipBytes: 992_000,
   maxBootMs: 3_000,
 });
 
