@@ -320,10 +320,10 @@ describe("WCAG 2.2 AA — Alvos de Toque (SC 2.5.8)", () => {
       assert.ok(m, `tamanho ausente em ${sel}`);
       assert.ok(parseCssPx(m[1]) >= 24, `${sel} menor que 24px: ${m[1]}`);
     }
-    const coarseAgora = extractMediaBlockBody(AGORA_CSS, "(pointer: coarse), (max-width: 767px)");
+    const coarseAgora = extractMediaBlockBody(AGORA_CSS, "(pointer: coarse), (max-width: 47.99em)");
     assert.match(coarseAgora, /\.agora-btn[\s\S]*min-height:\s*44px/);
     assert.match(coarseAgora, /\.agora-topbar-icon[\s\S]*min-height:\s*44px/);
-    const coarseStyle = extractMediaBlockBody(STYLE_CSS, "(pointer: coarse), (max-width: 767px)");
+    const coarseStyle = extractMediaBlockBody(STYLE_CSS, "(pointer: coarse), (max-width: 47.99em)");
     assert.match(coarseStyle, /\.inline-composer-tool[\s\S]*min-height:\s*44px/);
   });
 });

@@ -512,7 +512,7 @@ a:hover {
   padding: 0.35rem 0.65rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 30em) {
   .post-header-inline {
     padding: 4px 10px 2px;
   }
@@ -524,7 +524,7 @@ a:hover {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 47.99em) {
   .wallet-badge-label {
     position: absolute;
     width: 1px;
@@ -542,7 +542,7 @@ a:hover {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .wallet-badge-label {
     max-width: 5.5rem;
     overflow: hidden;
@@ -830,7 +830,7 @@ a:hover {
 }
 
 /* Mobile: rótulos ocultos até drawer aberto */
-@media (max-width: 767px) {
+@media (max-width: 47.99em) {
   .sidebar-feed-label,
   .tab-label,
   .sidebar-sync-hint.is-active,
@@ -892,7 +892,7 @@ a:hover {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .app-sidebar.tab-bar {
     width: var(--sidebar-width);
     padding: 1.1rem 0.85rem;
@@ -980,7 +980,7 @@ main#app-main,
   min-height: 100dvh;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   main#app-main {
     padding: 1.5rem 0 3rem;
   }
@@ -1123,7 +1123,7 @@ main#app-main,
   max-width: 100%;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 30em) {
   .inline-composer-preview {
     margin-left: 0;
   }
@@ -1463,7 +1463,7 @@ main#app-main,
   padding: 4px 0 6px 50px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 30em) {
   .inline-composer-audience {
     padding-left: 0;
   }
@@ -3487,7 +3487,7 @@ p.profile-grid-handle {
   margin-top: 0.65rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .profile-grid-top {
     gap: 2.5rem;
   }
@@ -3616,7 +3616,7 @@ p.profile-grid-handle {
   box-sizing: border-box;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 42.5em) {
   .feed-container {
     border: none;
     gap: var(--feed-post-gap, 20px);
@@ -3916,7 +3916,7 @@ p.profile-grid-handle {
   min-width: 0;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 51.25em) {
   .community-vox-layout {
     grid-template-columns: 1fr;
   }
@@ -4014,7 +4014,7 @@ p.profile-grid-handle {
   max-width: 36rem;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 32.5em) {
   .community-vox-online-grid--tab {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: none;
@@ -6708,7 +6708,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
 }
 
 /* Mobile: Barra de Navegação Inferior (Bottom Tab Bar) e Otimização Touch */
-@media (max-width: 767px) {
+@media (max-width: 47.99em) {
   .app-sidebar.tab-bar {
     position: fixed;
     top: auto;
@@ -8861,7 +8861,7 @@ blockquote.repost-cite {
   from { opacity: 0; transform: scale(1.06); }
   to { opacity: 1; transform: scale(1); }
 }
-@media (min-width: 520px) {
+@media (min-width: 32.5em) {
   .welcome-mosaic { grid-template-columns: 1.3fr 1fr 1fr 1fr; }
   .welcome-tile--6 { display: block; animation-delay: 0.25s; }
 }
@@ -9203,12 +9203,12 @@ blockquote.repost-cite {
   cursor: pointer;
 }
 /* Desktop: começa onde a barra lateral termina (aberta ou recolhida). */
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .account-exit-banner { left: var(--sidebar-width); }
   body:has(.app-layout.sidebar-collapsed) .account-exit-banner { left: var(--sidebar-width-collapsed); }
 }
 /* No celular a navegação fica embaixo (54px + área segura): a faixa sobe e fica acima dela. */
-@media (max-width: 767px) {
+@media (max-width: 47.99em) {
   .account-exit-banner {
     left: 0;
     bottom: calc(58px + env(safe-area-inset-bottom, 0px));
@@ -9240,7 +9240,7 @@ blockquote.repost-cite {
 }
 
 /* S30-S12: alvos de toque ≥44px em compose, nav e ações de post (desktop com mouse inalterado) */
-@media (pointer: coarse), (max-width: 767px) {
+@media (pointer: coarse), (max-width: 47.99em) {
   .inline-composer-tool {
     width: 44px;
     height: 44px;
