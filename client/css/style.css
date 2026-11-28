@@ -3380,6 +3380,7 @@ p.profile-grid-handle {
 
 .profile-grid-tabs {
   display: flex;
+  flex-wrap: wrap;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   margin-top: 0.25rem;
