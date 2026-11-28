@@ -175,12 +175,18 @@ test(".sr-only: nowrap, margem, padding e borda fixos, e nenhuma outra regra a d
   assert.equal((tokens.match(/(^|[\s,}])\.sr-only\s*\{/g) || []).length, 1, "uma só regra .sr-only, sem override depois");
 });
 
+/** Rótulo visível seguido do campo escondido; a referência `\1` obriga o `for` a ser o `id` do campo. */
+const AMARRA = /<label for="([^"]+)" class="[^"]*dungeon-file-trigger">[^<]+<\/label>\s*<input id="\1" class="sr-only" type="file"/;
+
 test("os 4 seletores de arquivo escondidos têm o botão visível logo antes do campo e mostram o foco dele", () => {
   const telas = ["screen-camp.js", "screen-sheet-levelup.js", "screen-table.js", "sheet-wizard-view.js"];
   for (const tela of telas) {
     const fonte = readFileSync(new URL(`../client/js/dungeon/${tela}`, import.meta.url), "utf8");
-    assert.match(fonte, /<label for="[^"]+" class="[^"]*dungeon-file-trigger">[^<]+<\/label>\s*<input id="[^"]+" class="sr-only" type="file"/, `${tela}: rótulo visível irmão do campo`);
+    assert.match(fonte, AMARRA, `${tela}: rótulo visível irmão do campo, com o for igual ao id`);
   }
+  const par = (paraId, id) => `<label for="${paraId}" class="x dungeon-file-trigger">Escolher</label>\n<input id="${id}" class="sr-only" type="file"`;
+  assert.ok(AMARRA.test(par("a", "a")), "controle: for e id iguais passam");
+  assert.equal(AMARRA.test(par("a", "b")), false, "for diferente do id não passa");
   const foco = css.ruleBody(css.readCss("sv-tokens.css"), '.dungeon-file-trigger:has(+ input.sr-only[type="file"]:focus-visible)');
   assert.match(foco, /outline:\s*2px solid var\(--sa-primary\)/, "o rótulo ganha contorno quando o campo recebe foco");
 });

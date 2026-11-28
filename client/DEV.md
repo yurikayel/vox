@@ -2,7 +2,7 @@
 
 Este documento descreve como testar o fluxo de leitura, autoria (upload de transações), compartilhamento, governança e a rede de nós participativos (Fase 3) no PWA vanilla do Vox.
 
-**Malha P2P / handoff Antigravity:** ver [`docs/process/antigravity-operating.md`](../docs/process/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
+**Malha P2P / handoff entre ferramentas:** ver [`docs/process/operacao-protocolo-integracao.md`](../docs/process/operacao-protocolo-integracao.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
 **Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: contagem canônica só em [`docs/release-metadata.json`](../docs/release-metadata.json) (`test_js`, `test_python`) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
@@ -771,7 +771,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 **Data:** 2026-10-24 · **Branch:** `feat/blob-soft-priority-v0` · **Suíte:** 207 testes (193 JS + 14 Python relay).
 
-- **Spec / ADR:** `docs/specs/antigravity-blob-soft-priority-v0.md`.
+- **Spec / ADR:** `docs/specs/prioridade-suave-blobs-v0.md`.
 - **Módulo:** `client/js/peers-blob-affinity.js` integrado em `client/js/peers.js` e `client/js/webrtc-peer.js`.
 - **Wire:** Reutiliza mensagens `WANT` e `BLOB` existentes com campo `fromPeer`.
 - **Privacidade & Compliance:** Sem ranking público, sem scoreboard e sem telemetria externa. O mapa de afinidade é estritamente local e efêmero no aparelho (`affinityMap`), com teto de 16 pares, TTL de 15 minutos e decaimento exponencial de pontuação (meia-vida de 5 minutos).
