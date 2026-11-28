@@ -7,6 +7,7 @@ from relay.signaling import PeerRegistry
 
 PUB_DONO = {"kty": "EC", "crv": "P-256", "x": "dono", "y": "dono"}
 PUB_ALHEIA = {"kty": "EC", "crv": "P-256", "x": "alheia", "y": "alheia"}
+PUB_NOVA = {"kty": "EC", "crv": "P-256", "x": "nova", "y": "nova"}
 
 
 class Handler:
@@ -39,6 +40,12 @@ class TestRegistroConexaoViva(unittest.TestCase):
         entrada = self.mapa()["vx_a"]
         self.assertEqual(entrada["peerId"], "dono")
         self.assertEqual(entrada["dmPub"], PUB_DONO)
+
+    def test_o_dono_se_registra_de_novo_com_chave_nova(self):
+        self.registry.register("dono", Handler(), address="vx_a", dm_pub=PUB_NOVA)
+        entrada = self.mapa()["vx_a"]
+        self.assertEqual(entrada["peerId"], "dono")
+        self.assertEqual(entrada["dmPub"], PUB_NOVA)
 
     def test_peer_alheio_ainda_entra_na_sala_e_nao_deixa_chave_solta(self):
         outros = self.registry.register("intruso", Handler(), address="vx_a", dm_pub=PUB_ALHEIA)

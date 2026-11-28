@@ -75,6 +75,16 @@ fn dono_que_registra_de_novo_continua_no_mapa() {
 }
 
 #[test]
+fn dono_se_registra_de_novo_com_chave_nova() {
+    let registry = com_dono();
+    registrar(&registry, "dono", 2, "vx_a", "nova");
+    assert_eq!(
+        entrada(&registry, "vx_a"),
+        Some(("dono".to_string(), chave("nova")))
+    );
+}
+
+#[test]
 fn peer_alheio_ainda_entra_na_sala_e_nao_deixa_chave_solta() {
     let registry = com_dono();
     let outros = registrar(&registry, "intruso", 2, "vx_a", "alheia");

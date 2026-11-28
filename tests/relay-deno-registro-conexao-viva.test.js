@@ -22,6 +22,7 @@ await import("../relay/deno-signaling.js");
 
 const PUB_DONO = { kty: "EC", crv: "P-256", x: "dono", y: "dono" };
 const PUB_ALHEIA = { kty: "EC", crv: "P-256", x: "alheia", y: "alheia" };
+const PUB_NOVA = { kty: "EC", crv: "P-256", x: "nova", y: "nova" };
 let contador = 0;
 
 /** Abre uma conexão WebSocket de mentira no relay. */
@@ -68,6 +69,14 @@ test("o dono que registra de novo continua no mapa", () => {
   const entrada = mapaAtual().addressMap[c.address];
   assert.equal(entrada.peerId, c.dono);
   assert.deepEqual(entrada.dmPub, PUB_DONO);
+});
+
+test("o dono se registra de novo com chave nova", () => {
+  const c = cena();
+  registrar(c.dono, c.address, PUB_NOVA);
+  const entrada = mapaAtual().addressMap[c.address];
+  assert.equal(entrada.peerId, c.dono);
+  assert.deepEqual(entrada.dmPub, PUB_NOVA);
 });
 
 test("o par alheio ainda entra na sala e não deixa chave solta", () => {
