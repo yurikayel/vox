@@ -225,24 +225,43 @@ function renderCompactDmList(pane, convs, user, peerAddress, searchQuery = "") {
  * @param {HTMLElement} main Raiz da tela.
  * @param {string} user Rota de quem vê.
  * @param {string} peerAddress Par da conversa aberta.
- * @returns {Promise<HTMLElement>}
+ * @returns {Promise<HTMLElement|null>} Onde desenhar a conversa, ou `null` se a rota mudou enquanto a lista carregava.
  */
 async function mountDmSplitIfWide(main, user, peerAddress) {
   if (!isDmSplitViewport()) return main;
-  main.innerHTML = `<div class="agora-dm-split"><aside class="agora-dm-list-pane" id="dm-list-pane" aria-label="Conversas"></aside><section class="agora-dm-thread-pane" id="dm-thread-pane"></section></div>`;
   const convs = await cacheNode.getDmConversations();
+  if (!isThreadOpen(peerAddress)) return null;
+  main.innerHTML = `<div class="agora-dm-split"><aside class="agora-dm-list-pane" id="dm-list-pane" aria-label="Conversas"></aside><section class="agora-dm-thread-pane" id="dm-thread-pane"></section></div>`;
   renderCompactDmList(main.querySelector("#dm-list-pane"), convs, user, peerAddress);
   return main.querySelector("#dm-thread-pane");
 }
 
 /**
- * Monta fio de conversa com um peer.
+ * Carrega o que a conversa mostra: mensagens, se o par esta online por WebRTC e a chave de cifra do par.
+ *
+ * @param {string} peerAddress Endereco do par.
+ * @returns {Promise<{ messages: object[], isRtcOnline: boolean, peerDmPub: object|null }>}
+ */
+async function loadThreadData(peerAddress) {
+  const messages = await cacheNode.getDmMessages(peerAddress);
+  const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);
+  const peerDmPub =
+    gql.getCachedUserDmPub(peerAddress) ||
+    peers.getPeerDmPub(peerAddress) ||
+    (await gql.fetchUserDmPub(peerAddress));
+  return { messages, isRtcOnline, peerDmPub };
+}
+
+/**
+ * Monta fio de conversa com um peer. Cada espera (conta, cifra, rede, lista) pode durar mais que a permanencia na
+ * tela: depois dela, so desenha se a rota ainda e a conversa com este par, para nao repintar por cima da tela nova.
  *
  * @param {unknown} peerAddress
  * @returns {void}
  */
 export async function showDmThread(peerAddress) {
   const user = await getActiveUser();
+  if (!isThreadOpen(peerAddress)) return;
   const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
   if (!user) {
     main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
@@ -254,14 +273,11 @@ export async function showDmThread(peerAddress) {
   consumeHashContextForThread(peerAddress);
   await pollInboxMessages(user);
 
-  const messages = await cacheNode.getDmMessages(peerAddress);
-  const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);
-  const peerDmPub =
-    gql.getCachedUserDmPub(peerAddress) ||
-    peers.getPeerDmPub(peerAddress) ||
-    (await gql.fetchUserDmPub(peerAddress));
+  const { messages, isRtcOnline, peerDmPub } = await loadThreadData(peerAddress);
+  if (!isThreadOpen(peerAddress)) return;
 
   const threadTarget = await mountDmSplitIfWide(main, user, peerAddress);
+  if (!threadTarget) return;
   render.renderDmThread(threadTarget, peerAddress, messages, user, {
     isRtcOnline,
     hasDmPub: Boolean(peerDmPub),
