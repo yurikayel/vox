@@ -20,12 +20,12 @@ function arrastando() {
 }
 
 function assertLimpo({ m, soltos }) {
-  assert.equal(m.grid.ghost, null, "sem fantasma");
+  assert.equal(m.grid.ghost === null, true, "sem fantasma");
   assert.equal(m.held(), false, "sem item em mãos");
   assert.equal(m.button.hidden, true, "sem botão de girar");
   m.fire("pointermove", { pointerId: 1, clientX: 400, clientY: 50 });
   m.fire("pointerup", { pointerId: 1, clientX: 400, clientY: 50 });
-  assert.equal(m.grid.ghost, null, "movimento depois do fim não pinta de novo");
+  assert.equal(m.grid.ghost === null, true, "movimento depois do fim não pinta de novo");
   assert.equal(soltos(), 0, "o item não foi solto");
 }
 
@@ -54,7 +54,7 @@ test("lostpointercapture que o navegador manda depois de soltar não desfaz a so
   assert.equal(soltos(), 1, "soltou uma vez");
   assert.doesNotThrow(() => m.fire("lostpointercapture", { pointerId: 1 }));
   assert.equal(soltos(), 1);
-  assert.equal(m.grid.ghost, null);
+  assert.equal(m.grid.ghost === null, true, "a soltura não deixa fantasma");
 });
 
 test("lostpointercapture sem arrasto nenhum não faz nada", () => {
