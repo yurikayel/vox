@@ -35,8 +35,14 @@ fn registrar(
 }
 
 fn entrada(registry: &PeerRegistry, address: &str) -> Option<(String, JsonValue)> {
-    let mapa = registry.address_map_json("");
-    let info = mapa.get(address)?;
+    let JsonValue::Object(entradas) = registry.address_map_json("") else {
+        return None;
+    };
+    let mut donos = entradas.iter().filter(|(nome, _)| nome == address);
+    let (_, info) = donos.next()?;
+    if donos.next().is_some() {
+        return None; // dois pares respondendo pelo mesmo endereço
+    }
     let dono = info.get("peerId")?.as_str()?.to_string();
     Some((dono, info.get("dmPub")?.clone()))
 }
