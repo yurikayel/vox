@@ -45,7 +45,7 @@ import { renderCommunityGovernanceTab, renderCommunityListingsTab } from "./comm
 function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   const photoBtn = canChangePhoto ? `
     <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
-      <input type="file" id="input-comm-photo-file" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" style="display:none;" />
+      <input type="file" id="input-comm-photo-file" class="sr-only" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" />
       <span class="btn-change-comm-photo-label">📷 Alterar foto</span>
     </label>` : "";
   return `<div class="community-vox-avatar-wrap">${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}${photoBtn}</div>`;

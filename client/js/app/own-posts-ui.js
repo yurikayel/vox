@@ -14,7 +14,7 @@ export function renderOwnPostsSection() {
     <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-top:0.25rem;">
       <button type="button" class="agora-btn agora-btn--secondary" id="btn-own-posts-export">Baixar meus posts</button>
       <label class="agora-btn agora-btn--secondary" for="own-posts-import">Restaurar de um arquivo</label>
-      <input type="file" id="own-posts-import" accept=".json,application/json" hidden />
+      <input type="file" id="own-posts-import" class="sr-only" accept=".json,application/json" />
     </div>
   </div>`;
 }

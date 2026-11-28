@@ -1456,6 +1456,17 @@ main#app-main,
   display: block;
 }
 
+/* Seletor de arquivo: o campo fica em `.sr-only` (focável pelo teclado, não `hidden`) e o botão visível mostra o foco dele. */
+label:has(> input.sr-only[type="file"]) {
+  position: relative;
+}
+
+label:has(> input.sr-only[type="file"]:focus-visible),
+label:has(+ input.sr-only[type="file"]:focus-visible) {
+  outline: 2px solid var(--brand-chrome);
+  outline-offset: 2px;
+}
+
 /* Seletor de audiência / comunidade em linha própria sutil */
 .inline-composer-audience {
   display: flex;
