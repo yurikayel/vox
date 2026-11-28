@@ -70,8 +70,10 @@ function renderTokenRosterRow(tok, isGm, selectedId) {
   const sel = tok.tokenId === selectedId;
   const selCls = sel ? " is-selected" : "";
   const layerTag = tok.layer === "gm" ? " [GM]" : "";
+  const tokName = escapeHtml(tok.name);
+  const layerLabel = tok.layer === "gm" ? "Revelar" : "Ocultar GM";
   const gmBtns = isGm
-    ? `<button type="button" class="dungeon-chip-btn" data-dungeon="toggle-token-layer" data-token-id="${escapeHtml(tok.tokenId)}">${tok.layer === "gm" ? "Revelar" : "Ocultar GM"}</button><button type="button" class="dungeon-chip-btn" data-dungeon="remove-token" data-token-id="${escapeHtml(tok.tokenId)}">Remover</button>`
+    ? `<button type="button" class="dungeon-chip-btn" data-dungeon="toggle-token-layer" data-token-id="${escapeHtml(tok.tokenId)}" aria-label="${layerLabel} ${tokName}">${layerLabel}</button><button type="button" class="dungeon-chip-btn" data-dungeon="remove-token" data-token-id="${escapeHtml(tok.tokenId)}" aria-label="Remover ${tokName}">Remover</button>`
     : "";
   return `<li><button type="button" class="dungeon-chip-btn${selCls}" data-dungeon="select-token" data-token-id="${escapeHtml(tok.tokenId)}" aria-pressed="${sel}">${escapeHtml(tok.name)}${layerTag} (${tok.x},${tok.y})</button>${gmBtns}</li>`;
 }
