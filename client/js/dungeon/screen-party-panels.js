@@ -5,6 +5,7 @@
  * @module dungeon/screen-party-panels
  */
 import { escapeHtml } from "../shared/html.js";
+import { scrollableTableHtml } from "../shared/table-scroll.js";
 import { buildLootView, buildPartyView, buildSavesView } from "./party-view-model.js";
 
 /** Lê "atual / máximo PV" do texto do PV; sem os dois números (ficha sem dado) não há barra. */
@@ -80,7 +81,7 @@ export function renderSavesPanel(state) {
   return `
     <section class="dungeon-panel" aria-label="Salvaguardas em lote">
       <div class="dungeon-section-head"><div><span class="dungeon-eyebrow">Só neste aparelho</span><h2>Salvaguardas do grupo</h2></div></div>
-      <table class="dungeon-saves-table"><thead><tr><th scope="col">Personagem</th>${head}</tr></thead><tbody>${view.rows.map(savesRow).join("")}</tbody></table>
+      ${scrollableTableHtml("Salvaguardas do grupo por atributo", `<table class="dungeon-saves-table"><thead><tr><th scope="col">Personagem</th>${head}</tr></thead><tbody>${view.rows.map(savesRow).join("")}</tbody></table>`)}
       <p class="dungeon-muted">Mostra só o modificador de cada atributo: a ficha ainda não guarda salvaguardas treinadas.</p>
     </section>`;
 }
