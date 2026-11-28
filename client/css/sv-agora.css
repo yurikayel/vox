@@ -102,6 +102,17 @@
   text-decoration: none;
 }
 
+/* Contas vinculadas a 360 px ou menos: o botão "Conectar" desce para a linha de baixo e o texto da rede ganha a largura. */
+@media (max-width: 360px) {
+  .link-row-main:has(.btn-link-connect) {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .link-row-main .btn-link-connect {
+    grid-column: 1 / -1;
+  }
+}
+
 .sv-seg-btn:focus-visible,
 .sv-filtro > summary:focus-visible,
 .sv-filtro-menu a:focus-visible,
