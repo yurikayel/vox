@@ -1,6 +1,6 @@
 # Pedir teste — modelo (SUB-24a)
 
-> **Status:** parcial (modelo implementado, com ops e testes; a tela vem em SUB-24b) · **Owner:** mantenedor · **Revisado:** 2026-11-27
+> **Status:** parcial (modelo implementado, com ops e testes; o botão do jogador está em SUB-24c; a tela do Mestre vem em SUB-24b) · **Owner:** mantenedor · **Revisado:** 2026-11-27
 
 O Mestre pede um teste de perícia a até 8 jogadores, com a CD pública ou oculta. Esta etapa cobre só o modelo: operações, redutor e vínculo da rolagem.
 
@@ -33,6 +33,12 @@ Para cada alvo vale a PRIMEIRA rolagem pública dele com esse `requestId` até a
 - pública: `total >= dc` dá ✓ ou ✗, com o total;
 - nenhuma rolagem pública, pedido com rolagem do Mestre: "resultado com o Mestre", sem o total, para todos os alvos (nem todo par recebe a rolagem do Mestre, então ela não entra na conta);
 - nenhuma rolagem pública, pedido público: "não rolou".
+
+## Botão "Rolar" do jogador (SUB-24c)
+
+A entrada "O Mestre pede X · CD n" da Crônica mostra, ao jogador que é alvo, o botão "Rolar" (`data-dungeon="check-roll"`, `data-request-id`). `rollableRequest` (`check-roll-ui.js`) decide por uma regra só, para mostrar e para aceitar o clique: o pedido existe, está `open` e a rota do leitor (`vttKeypair.routeId`) está em `targets`. Não aparece para quem não é alvo, para o Mestre, para leitor sem chave nem depois da revelação.
+
+O clique rola a perícia do pedido (`recordSkillRoll` com `skillId`) com `requestId` na rolagem, o vínculo da seção anterior. Com `rollVisibility: "gm"` a rolagem sai `gm`; senão, pública (o chip "Só para o Mestre" não entra). Pedido revelado ou que não é do leitor: não rola, e `rollError` avisa. A tela do Mestre para criar o pedido segue em SUB-24b.
 
 ## Limites conhecidos
 
