@@ -6,6 +6,7 @@
  */
 const LIVE_ID = "dungeon-hud-live";
 const bases = new WeakMap();
+const NBSP = "\u00A0";
 
 function liveNode(doc) {
   if (!doc?.body) return null;
@@ -39,14 +40,16 @@ export function syncHudLive(text, doc = globalThis.document) {
 
 /**
  * Anuncia um aviso pontual na mesma região viva (sem criar outra). O aviso fica até o PV mudar de verdade.
+ * Texto igual ao que já está na região (token parado na borda, 2ª seta seguida) não muda o nó e o leitor de tela não o
+ * relê: então o texto alterna um espaço sem quebra no fim, que não é falado mas conta como mudança da região viva.
  * @param {string} text Texto a anunciar (ex.: `Lyra movido para (3, 2).`).
  * @param {Document|undefined} [doc] Documento (padrão: o global).
- * @returns {boolean} Se o texto foi trocado.
+ * @returns {boolean} Se o aviso foi escrito (`false` só sem região ou sem texto).
  */
 export function announceHudLive(text, doc = globalThis.document) {
   const node = liveNode(doc);
-  if (!node || !text || node.textContent === text) return false;
+  if (!node || !text) return false;
   if (!bases.has(node)) bases.set(node, node.textContent);
-  node.textContent = text;
+  node.textContent = node.textContent === text ? `${text}${NBSP}` : text;
   return true;
 }
