@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Layout: os 17 pontos de quebra de largura de `style.css` passam de px para `em` (px/16); com a fonte padrão de 16 px nada muda, e com a fonte do navegador maior a quebra para o layout estreito vem antes, em vez de a página rolar de lado.
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
 - Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
 
