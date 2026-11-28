@@ -368,29 +368,17 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
 }
 
 /**
- * Indica se já existe objeto de prefs da Mesa persistido no aparelho.
- * @returns {boolean}
- */
-export function hasStoredDungeonPrefs() {
-  try {
-    return globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY) != null;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Lê preferências locais da Mesa (dados 3D e papel visual) do `localStorage`.
- * @returns {{ dice3d: boolean, viewerRole: "gm"|"player" }}
+ * Lê preferências locais da Mesa (dados 3D, papel visual e roteiro da primeira mesa dispensado) do `localStorage`.
+ * @returns {{ dice3d: boolean, viewerRole: "gm"|"player", firstTableDismissed: boolean }}
  */
 export function loadDungeonPrefs() {
   try {
     const raw = globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
     const role = parsed.viewerRole === "player" ? "player" : "gm";
-    return { dice3d: parsed.dice3d !== false, viewerRole: role };
+    return { dice3d: parsed.dice3d !== false, viewerRole: role, firstTableDismissed: parsed.firstTableDismissed === true };
   } catch {
-    return { dice3d: true, viewerRole: "gm" };
+    return { dice3d: true, viewerRole: "gm", firstTableDismissed: false };
   }
 }
 
@@ -399,9 +387,38 @@ export function loadDungeonPrefs() {
  * @param {object} prefs Preferências parciais.
  */
 export function saveDungeonPrefs(prefs = {}) {
-  const current = loadDungeonPrefs();
-  const next = { ...current, ...prefs };
+  const next = { ...readStoredDungeonPrefs(), ...prefs };
   globalThis.localStorage?.setItem(DUNGEON_PREFS_KEY, JSON.stringify(next));
+}
+
+/**
+ * Liga ou desliga os dados 3D na sessão e grava só essa preferência, sem tocar no papel visual.
+ * @param {{ dice3dEnabled: boolean }} state Estado da sessão.
+ */
+export function toggleDice3dPref(state) {
+  state.dice3dEnabled = !state.dice3dEnabled;
+  saveDungeonPrefs({ dice3d: state.dice3dEnabled });
+}
+
+/**
+ * Lê só o que já está gravado no aparelho, sem completar com padrões (gravar um campo não grava os outros).
+ * @returns {object} Objeto gravado; vazio se não há nada ou se o JSON está corrompido.
+ */
+function readStoredDungeonPrefs() {
+  try {
+    const parsed = JSON.parse(globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Indica se o papel visual (mestre ou jogador) já foi gravado no aparelho.
+ * @returns {boolean}
+ */
+export function hasStoredViewerRole() {
+  return "viewerRole" in readStoredDungeonPrefs();
 }
 
 /**

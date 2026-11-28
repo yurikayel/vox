@@ -2,7 +2,7 @@
  * @file Tabelas de despacho de ações (cliques e formulários) do controlador da Mesa Soberana.
  * @module dungeon/dungeon-controller-actions
  */
-import { copyInviteLinkToClipboard } from "./dungeon-dom-focus.js";
+import { copyInviteLinkToClipboard, triggerBrowserDownload } from "./dungeon-dom-focus.js";
 import {
   addCustomSheetAction,
   advanceCampaignCalendar,
@@ -20,6 +20,7 @@ import {
   recordSheetActionRoll,
   removeCustomSheetAction,
   saveDungeonPrefs,
+  toggleDice3dPref,
   updateNoteVisibility,
   updateSheetBasicInfo,
 } from "./dungeon-persistence.js";
@@ -107,19 +108,6 @@ function rollD20AndPersist(state, opts) {
   return Promise.resolve(vaultStep)
     .then(() => persistD20RollIfActive(state, state.lastRoll.value, opts.store))
     .then(() => payload);
-}
-
-function triggerBrowserDownload(artifact, onDownload) {
-  if (typeof onDownload === "function") return onDownload(artifact);
-  if (typeof document === "undefined" || typeof URL?.createObjectURL !== "function") return undefined;
-  const blob = new Blob([artifact.bytes], { type: artifact.mime });
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = href;
-  a.download = artifact.filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(href), 1500);
-  return undefined;
 }
 
 /** Ações de arquivo tratadas no evento `change` (`dungeon-controller.js`), não no clique. */
@@ -238,6 +226,7 @@ export const FOCUS_AFTER_ACTION = {
   "fairplay-approve": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-refuse": `#${FAIRPLAY_ACCESS_ID}`,
   "fairplay-retry": `#${FAIRPLAY_ACCESS_ID}`,
+  "dismiss-first-table": '[data-dungeon="toggle-viewer-role"]',
 };
 
 /** Mapa de handlers de clique `data-dungeon="..."`. */
@@ -317,10 +306,8 @@ export const ACTION_HANDLERS = {
   "level-up": (state, _el, _c, opts) => applySheetLevelUp(state, opts.store, state.levelUpPreset),
   "note-toggle-vis": (state, el, _c, opts) => updateNoteVisibility(state, el.dataset.noteId, el.dataset.nextVis || "shared", opts.store),
   "note-pin": (state, el, _c, opts) => pinNoteToScene(state, el.dataset.noteId, {}, opts.store),
-  "toggle-dice3d": (state) => {
-    state.dice3dEnabled = !state.dice3dEnabled;
-    saveDungeonPrefs({ dice3d: state.dice3dEnabled });
-  },
+  "toggle-dice3d": toggleDice3dPref,
+  "dismiss-first-table": (state) => { state.dungeonPrefs = { ...state.dungeonPrefs, firstTableDismissed: true }; saveDungeonPrefs({ firstTableDismissed: true }); },
 };
 
 function valOf(form, sel, fallback = "") {

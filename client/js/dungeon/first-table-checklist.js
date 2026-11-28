@@ -58,5 +58,6 @@ export function renderFirstTablePanel(state) {
       <h2>Primeira mesa</h2>
       <ol class="dungeon-first-table-list">${items}</ol>
       <p class="dungeon-muted"><strong>Próximo:</strong> ${escapeHtml(next.action)}</p>
+      <button type="button" class="dungeon-btn dungeon-btn-ghost" data-dungeon="dismiss-first-table">Dispensar o roteiro</button>
     </section>`;
 }

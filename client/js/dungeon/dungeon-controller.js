@@ -19,7 +19,7 @@ import { ensureDungeonLayoutStyles } from "./dungeon-layout-style.js";
 import { bindInventoryDrag } from "./inventory-drag-ui.js";
 import {
   bootstrapDungeonPersistence,
-  hasStoredDungeonPrefs,
+  hasStoredViewerRole,
   importCampaignFile,
   loadDungeonPrefs,
   openSavedCampaign,
@@ -273,8 +273,10 @@ function handleDungeonClick(container, viewOpts, ev) {
   const state = viewOpts.state || getDungeonSession();
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
-  redrawContainer(container, viewOpts);
-  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
+  const focusSelector = FOCUS_AFTER_ACTION[action];
+  const isAsync = typeof result?.then === "function";
+  redrawContainer(container, viewOpts, isAsync ? "" : focusSelector);
+  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector });
 }
 
 /**
@@ -349,9 +351,9 @@ function hydrateViewPersistence(container, viewOpts) {
 function applyDungeonWirePrefs(sessionState, viewOpts) {
   if (sessionState._dungeonPrefsApplied || sessionState.joinMode === "p2p_player") return;
   const prefs = loadDungeonPrefs();
-  sessionState.dice3dEnabled = prefs.dice3d;
+  Object.assign(sessionState, { dice3dEnabled: prefs.dice3d, dungeonPrefs: { firstTableDismissed: prefs.firstTableDismissed } });
   const screen = viewOpts.screen || "acampamento";
-  const stored = hasStoredDungeonPrefs();
+  const stored = hasStoredViewerRole();
   sessionState.viewerRole = !stored && screen === "mesa"
     ? "player"
     : stored
