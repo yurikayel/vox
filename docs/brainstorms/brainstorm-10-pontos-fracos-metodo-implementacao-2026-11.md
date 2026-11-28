@@ -88,7 +88,7 @@ Este documento critica **como** o Vox planeja, documenta e executa trabalho (lob
 
 ## 7. Fluxo real contradiz tese mantenedor → revisor
 
-**Evidência:** [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md) limita papel a CI/Pages/RFC; na prática: lobby politica atualiza SHA/testes a cada merge; DOC-01/DOC-02 são tarefas **Cursor** no mantenedor; commits de correção README (`4ddc4ca`) após automação falha. Anti-loop §3.2 lista ops humanas, mas **nenhum** indicador alerta “ticket ops voltou ao Yuri”.
+**Evidência:** [estrategia-mantenedor-revisor-2026.md](../strategy/estrategia-mantenedor-revisor-2026.md) limita papel a CI/Pages/RFC; na prática: lobby politica atualiza SHA/testes a cada merge; DOC-01/DOC-02 são tarefas **Cursor** no mantenedor; commits de correção README (`4ddc4ca`) após automação falha. Anti-loop §3.2 lista ops humanas, mas **nenhum** indicador alerta “ticket ops voltou ao Yuri”.
 
 **Por que quebra escala / piloto / revisor:** Equipe externa assume que “verde em CI” = projeto saudável, ocultando gargalo humano central; piloto escala suporte 1:1 no WhatsApp do maintainer.
 
@@ -146,4 +146,4 @@ Este documento critica **como** o Vox planeja, documenta e executa trabalho (lob
 
 ---
 
-**Meta:** [Inventário nov/2026](../archive/inventario-estado-e-tarefas-documentacao-2026-11.md) · **Estratégia revisor:** [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md)
+**Meta:** [Inventário nov/2026](../archive/inventario-estado-e-tarefas-documentacao-2026-11.md) · **Estratégia revisor:** [estrategia-mantenedor-revisor-2026.md](../strategy/estrategia-mantenedor-revisor-2026.md)
