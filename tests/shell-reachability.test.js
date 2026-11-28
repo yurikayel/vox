@@ -10,6 +10,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -88,23 +89,62 @@ function staticImportsOf(file) {
 }
 
 /**
- * Módulos que outros testes fixam FORA do precache de propósito (carga sob demanda):
- * `tests/pm01-lazy-fifth-screen.test.js` (availability-metrics) e `tests/depurple-paper.test.js` (ajuda-teste, voxpedia).
- * Hoje um arquivo do shell ainda os importa de forma estática; resolver isso é trabalho das telas sob demanda,
- * não do corte. Tirar um daqui exige tirar a trava correspondente no outro teste.
+ * Módulos novos que um PR de feature já importa de forma estática mas que só entram no precache no próximo corte
+ * (o `sw.js` só muda em PR `chore/release-`). Cada item é `{ path, pr }`. Vale em PR de feature; numa branch
+ * `chore/release-` a lista tem de estar vazia (o corte põe tudo no `SHELL_ASSETS`). Item velho (já no precache, ou
+ * arquivo que não existe mais) reprova: a lista não acumula.
+ * @type {{ path: string, pr: string }[]}
  */
-const FORA_DO_PRECACHE_DE_PROPOSITO = new Set(["./js/availability-metrics.js", "./js/render/ajuda-teste.js", "./js/render/voxpedia.js"]);
+const PENDENTES_PARA_O_PROXIMO_CORTE = [];
 
-test("PM-04: todo módulo importado de forma estática por um arquivo do precache também está no precache", () => {
-  const shell = new Set(listFrom("SHELL_ASSETS"));
+/** Nome da branch do PR (CI) ou da branch atual; vazio quando não dá para saber. */
+function currentBranch() {
+  const fromCi = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME;
+  if (fromCi) return fromCi;
+  try {
+    return execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  } catch {
+    return "";
+  }
+}
+
+/** Módulos importados de forma estática por um arquivo do precache que não estão no precache. */
+function missingFromShell(shell) {
   const missing = [];
   for (const asset of shell) {
     if (!asset.endsWith(".js")) continue;
-    for (const dep of staticImportsOf(path.join(root, asset))) {
-      if (!shell.has(dep) && !FORA_DO_PRECACHE_DE_PROPOSITO.has(dep)) missing.push(`${asset} importa ${dep}`);
-    }
+    for (const dep of staticImportsOf(path.join(root, asset))) if (!shell.has(dep)) missing.push({ asset, dep });
   }
-  assert.deepEqual(missing, [], "falta no SHELL_ASSETS: offline, o import estático falha e a tela não abre");
+  return missing;
+}
+
+test("PM-04: todo módulo importado de forma estática por um arquivo do precache também está no precache", () => {
+  const pending = new Set(PENDENTES_PARA_O_PROXIMO_CORTE.map((p) => p.path));
+  const missing = missingFromShell(new Set(listFrom("SHELL_ASSETS"))).filter(({ dep }) => !pending.has(dep));
+  assert.deepEqual(missing.map(({ asset, dep }) => `${asset} importa ${dep}`), [], "falta no SHELL_ASSETS: offline, o import estático falha e a tela não abre");
+});
+
+test("PM-04: a lista de pendentes só tem módulo real que ainda falta no precache, e o corte a esvazia", () => {
+  const shell = new Set(listFrom("SHELL_ASSETS"));
+  const stillMissing = new Set(missingFromShell(shell).map(({ dep }) => dep));
+  for (const { path: rel, pr } of PENDENTES_PARA_O_PROXIMO_CORTE) {
+    assert.ok(pr, `${rel}: informe o PR que traz o módulo`);
+    assert.ok(stillMissing.has(rel), `${rel} (${pr}) já está no precache ou ninguém o importa: tire da lista`);
+  }
+  if (currentBranch().startsWith("chore/release-")) {
+    assert.deepEqual(PENDENTES_PARA_O_PROXIMO_CORTE, [], "corte de release: ponha cada pendente no SHELL_ASSETS e esvazie a lista");
+  }
+});
+
+test("PM-04: todo script do index.html está no precache, então o grafo estático inteiro do shell também", () => {
+  const shell = new Set(listFrom("SHELL_ASSETS"));
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const indexEntries = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((src) => !/^https?:/.test(src))
+    .map((src) => toRel(path.resolve(root, src)));
+  assert.ok(indexEntries.length > 0, "o index.html tem pelo menos um script de entrada");
+  assert.deepEqual(indexEntries.filter((rel) => !shell.has(rel)), [], "script de entrada fora do SHELL_ASSETS: offline a página não sobe");
 });
 
 test("PM-04: toda folha de estilo ligada pelo index.html está no precache", () => {

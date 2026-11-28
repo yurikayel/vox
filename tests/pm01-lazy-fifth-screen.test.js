@@ -105,10 +105,12 @@ test("PM-01 passo 6: módulos sob demanda ficam fora de SHELL_ASSETS e fora de U
   const shellSection = sw.split("const SHELL_ASSETS")[1].split("const UNPLUGGED_MODULES")[0];
   const unpluggedSection = sw.split("const UNPLUGGED_MODULES")[1].split("];")[0];
   assert.ok(shellSection.includes('"./js/app/screens-status.js"'), "fachada continua no SHELL_ASSETS");
-  for (const rel of [...LAZY_ONLY_MODULES, "./js/availability-metrics.js"]) {
+  for (const rel of LAZY_ONLY_MODULES) {
     assert.ok(!shellSection.includes(`"${rel}"`), `${rel} deve ficar fora do precache SHELL_ASSETS`);
     assert.ok(!unpluggedSection.includes(`"${rel}"`), `${rel} é alcançável sob demanda, não UNPLUGGED`);
   }
+  // A fachada `screens-status.js` e a tela de status importam `availability-metrics` de forma estática: offline, sem ele no precache, a tela não abre.
+  assert.ok(shellSection.includes('"./js/availability-metrics.js"'), "availability-metrics é importado de forma estática pelo shell: fica no precache");
 });
 
 test("PM-01 passo 6: buildStatusDiagnosticReport permanece síncrono com defaults e opções", () => {

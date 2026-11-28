@@ -129,6 +129,12 @@ const SHELL_ASSETS = [
 
   "./js/render/status.js",
 
+  "./js/availability-metrics.js",
+
+  "./js/render/ajuda-teste.js",
+
+  "./js/render/voxpedia.js",
+
   "./js/render/diff-html.js",
 
   "./embed/frame-demo.html",
@@ -181,6 +187,7 @@ const SHELL_ASSETS = [
   "./js/honest-errors.js",
   "./js/electoral-period.js",
   "./js/boot-color-mode.js",
+  "./boot-frame-guard.js",
   "./js/boot-short-url.js",
   "./js/boot-sw.js",
   "./js/app/dom-delegates.js",
