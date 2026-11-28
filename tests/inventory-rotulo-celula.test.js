@@ -10,6 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { applyInventoryMutation, listInventoryItems } from "../client/js/dungeon/vtt-inventory.js";
 import { bindInventoryDrag } from "../client/js/dungeon/inventory-drag-ui.js";
+import { renderInventoryPanel } from "../client/js/dungeon/screen-sheet-inventory.js";
 
 const LONG = "Corda de Cânhamo (10m)";
 const inv = applyInventoryMutation(applyInventoryMutation({}, "add", { label: LONG, qty: 3 }), "add", { label: "Tocha" });
@@ -148,6 +149,20 @@ test("g) foco fora de uma célula, ou de célula que a ficha não conhece, não 
   m.fire("focusin", { target: { closest: () => null } });
   m.fire("focusin", { target: { closest: () => ({ dataset: { invCell: "fantasma" } }) } });
   assert.equal(m.notice.writes + m.caption.writes, 0);
+});
+
+/** Tag de abertura do elemento com o atributo `attr` no HTML real do painel (ou `null`). */
+const openTagWith = (html, attr) => html.match(new RegExp(`<[a-z]+\\b[^>]*\\s${attr}(?=[\\s=>])[^>]*>`))?.[0] ?? null;
+
+test("i) HTML real do painel: a legenda de foco é só visual (data-inv-caption, aria-hidden, sem role) e o aviso é a única região viva", () => {
+  const html = renderInventoryPanel({ sheet: { inventoryItems: items.map((it) => ({ ...it })) } });
+  const caption = openTagWith(html, "data-inv-caption");
+  const notice = openTagWith(html, "data-inv-notice");
+  assert.ok(caption, "o painel tem a legenda de foco");
+  assert.match(caption, /\saria-hidden="true"/, "escondida do leitor de tela: a célula já anuncia o aria-label");
+  assert.doesNotMatch(caption, /\srole=/, "role=status na legenda faria cada foco ser lido duas vezes");
+  assert.match(notice, /\srole="status"/, "o aviso de 'Segurando' segue sendo a região viva");
+  assert.equal(html.match(/data-inv-caption/g).length, 1, "uma legenda de foco só");
 });
 
 test("h) focar de novo a mesma célula não reescreve o mesmo texto", () => {
