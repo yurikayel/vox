@@ -38,6 +38,8 @@ test("sem movimentações, o histórico da mesa mostra o cartão de estado vazio
   const html = renderSheetScreen(sessionWithoutActions());
   assert.equal(cardText(html, "Nenhuma movimentação"), "Nenhuma movimentação ainda neste turno.");
   assert.doesNotMatch(html, /<ul class="dungeon-clean-list"><li class="dungeon-muted">/, "sem <li> de aviso dentro da lista");
+  const painel = html.split("Histórico da Mesa")[1].split("</section>")[0];
+  assert.doesNotMatch(painel, /dungeon-clean-list/, "sem movimentações não há lista, nem vazia, em volta do cartão");
 });
 
 test("com handouts e movimentações os cartões vazios somem", () => {
