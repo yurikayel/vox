@@ -357,7 +357,7 @@ function submitEditSheet(state, form, ctx) {
   const { ok, issues } = validateSheetEdit(patch, { pack: sys?.pack, trainedSkills: sys?.choices.proficientSkills });
   state.sheetEditIssues = issues;
   state.sheetEditDraft = ok ? null : patch;
-  if (!ok) return ctx.settle(Promise.resolve());
+  if (!ok) return ctx.settle(Promise.resolve(), { focusSelector: "[data-edit-focus]" });
   return ctx.settle(updateSheetBasicInfo(state, patch, { store: ctx.viewOpts.store }));
 }
 

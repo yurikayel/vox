@@ -78,11 +78,11 @@ function draftOr(draft, key, fallback) {
 
 const EDIT_ISSUE_PREFIX = "sheet-edit-issue";
 
-/** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. */
+/** Avisos do último Salvar recusado: cada um diz o campo e o motivo; nada foi gravado. O alerta recebe o foco depois do redesenho. */
 function renderEditIssues(issues) {
   if (!issues.length) return "";
   const items = issues.map((i, n) => `<li id="${issueId(EDIT_ISSUE_PREFIX, n)}">${escapeHtml(i.message)}</li>`).join("");
-  return `<div class="dungeon-alert-warn" role="alert"><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
+  return `<div class="dungeon-alert-warn" role="alert" tabindex="-1" data-edit-focus><strong>Nada foi salvo. Corrija:</strong><ul>${items}</ul></div>`;
 }
 
 /**
