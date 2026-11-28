@@ -72,15 +72,32 @@ test("quem abriu a Mesa direto como jogador continua jogador depois de dispensar
   assert.equal(reloaded.viewerRole, "player", "recarregar não vira mestre");
 });
 
-test("dispensar leva o foco a um botão que existe na tela do Escudo, não ao body", () => {
+/** Hospedeiro que guarda o ouvinte de clique e deixa `ownerDocument.activeElement` seguir o `focus()` do alvo achado. */
+function makeClickHost() {
+  const doc = { querySelector: () => null, activeElement: { tagName: "BODY" } };
+  const listeners = {};
+  const host = {
+    dataset: {},
+    innerHTML: "",
+    ownerDocument: doc,
+    isConnected: true,
+    addEventListener: (type, fn) => { listeners[type] = fn; },
+    querySelector(sel) {
+      const alvo = sel === FOCUS_AFTER_ACTION["dismiss-first-table"] && this.innerHTML.includes('data-dungeon="toggle-viewer-role"');
+      return alvo ? { tagName: "BUTTON", focus() { doc.activeElement = this; } } : null;
+    },
+  };
+  return { host, doc, click: (target) => listeners.click({ target }) };
+}
+
+test("clicar em dispensar leva o foco ao botão de papel, não ao body", () => {
   globalThis.localStorage.clear();
-  const selector = FOCUS_AFTER_ACTION["dismiss-first-table"];
-  assert.ok(selector, "a ação tem alvo de foco");
   const state = createDungeonSessionState({ viewerRole: "gm", campaignId: "", syncPeer: null });
-  ACTION_HANDLERS["dismiss-first-table"](state);
-  const html = renderDmScreen(state);
-  assert.match(html, /<button[^>]*data-dungeon="toggle-viewer-role"/);
-  assert.equal(selector, '[data-dungeon="toggle-viewer-role"]');
+  const { host, doc, click } = makeClickHost();
+  wireDungeonView(host, { screen: "mestre", state });
+  click({ closest: () => ({ dataset: { dungeon: "dismiss-first-table" } }) });
+  assert.equal(doc.activeElement.tagName, "BUTTON", "o foco não fica no body");
+  assert.equal(state.dungeonPrefs.firstTableDismissed, true);
 });
 
 test("a preferência dos dados 3D chega à sessão pela fiação", () => {
@@ -120,4 +137,14 @@ test("dispensar preserva as outras preferências do aparelho", () => {
   ACTION_HANDLERS["dismiss-first-table"](state);
   const prefs = loadDungeonPrefs();
   assert.deepEqual([prefs.dice3d, prefs.viewerRole, prefs.firstTableDismissed], [false, "player", true]);
+});
+
+test("ligar ou desligar os dados 3D com o aparelho limpo grava só o campo dice3d", () => {
+  globalThis.localStorage.clear();
+  const state = createDungeonSessionState({ viewerRole: "gm", campaignId: "", syncPeer: null });
+  state.dice3dEnabled = true;
+  ACTION_HANDLERS["toggle-dice3d"](state);
+  assert.deepEqual(storedPrefs(), { dice3d: false });
+  ACTION_HANDLERS["toggle-dice3d"](state);
+  assert.deepEqual(storedPrefs(), { dice3d: true });
 });

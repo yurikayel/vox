@@ -368,18 +368,6 @@ export async function importCampaignFile(state, fileSpec, opts = {}) {
 }
 
 /**
- * Indica se já existe objeto de prefs da Mesa persistido no aparelho.
- * @returns {boolean}
- */
-export function hasStoredDungeonPrefs() {
-  try {
-    return globalThis.localStorage?.getItem(DUNGEON_PREFS_KEY) != null;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Lê preferências locais da Mesa (dados 3D, papel visual e roteiro da primeira mesa dispensado) do `localStorage`.
  * @returns {{ dice3d: boolean, viewerRole: "gm"|"player", firstTableDismissed: boolean }}
  */
@@ -401,6 +389,15 @@ export function loadDungeonPrefs() {
 export function saveDungeonPrefs(prefs = {}) {
   const next = { ...readStoredDungeonPrefs(), ...prefs };
   globalThis.localStorage?.setItem(DUNGEON_PREFS_KEY, JSON.stringify(next));
+}
+
+/**
+ * Liga ou desliga os dados 3D na sessão e grava só essa preferência, sem tocar no papel visual.
+ * @param {{ dice3dEnabled: boolean }} state Estado da sessão.
+ */
+export function toggleDice3dPref(state) {
+  state.dice3dEnabled = !state.dice3dEnabled;
+  saveDungeonPrefs({ dice3d: state.dice3dEnabled });
 }
 
 /**
