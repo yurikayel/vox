@@ -15,9 +15,12 @@ import { runButtonAction } from "./action-runner.js";
 import { openPostEditModal, handleDeletePost } from "./init-post-mutation.js";
 import { handleFrameActionClick } from "./init-frame-actions.js";
 
-/** Há modal aberto (o do Pix não move o foco: ele continua no menu atrás do overlay). */
+/**
+ * Há modal aberto (o do Pix não move o foco: ele continua no menu atrás do overlay). Os diálogos fixos do shell (a
+ * visualização de imagem e a gaveta de identidade) ficam no DOM com `hidden` e não contam.
+ */
 function isModalOpen() {
-  return Boolean(document.querySelector('[aria-modal="true"], .modal-overlay'));
+  return Boolean(document.querySelector('[aria-modal="true"]:not([hidden]), .modal-overlay:not([hidden])'));
 }
 
 /**

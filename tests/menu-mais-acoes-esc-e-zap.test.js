@@ -86,9 +86,22 @@ test("Esc fecha o menu ⋯ aberto e devolve o foco ao summary; outras teclas nã
   assert.equal(fora.defaultPrevented, false, "Esc fora de um menu aberto não é consumido");
 });
 
-/** Menu aberto com o foco num item, e o `document` falso com `qs` (o que `document.querySelector` acha). */
-function menuAberto(qs = {}) {
-  const doc = installDom({ qs });
+/** Modal no DOM falso: `ariaModal` casa com `[aria-modal="true"]`, `overlay` com `.modal-overlay`; `hidden` o esconde. */
+const modal = ({ hidden = false, ariaModal = true, overlay = false } = {}) => ({ hidden, ariaModal, overlay });
+
+/** Casa o seletor do guarda: cada parte pode vir com `:not([hidden])`, que o DOM real avalia e o falso imita aqui. */
+function achaModal(modais, sel) {
+  return modais.find((m) => sel.split(",").some((parte) => {
+    const p = parte.trim();
+    const casa = (p.startsWith('[aria-modal="true"]') && m.ariaModal) || (p.startsWith(".modal-overlay") && m.overlay);
+    return casa && !(p.endsWith(":not([hidden])") && m.hidden);
+  })) ?? null;
+}
+
+/** Menu aberto com o foco num item; `modais` são os diálogos presentes no DOM falso (`document.querySelector`). */
+function menuAberto(modais = []) {
+  const doc = installDom();
+  doc.querySelector = (sel) => achaModal(modais, sel);
   initSocialInteractions();
   const summary = makeEl({ tagName: "SUMMARY" });
   const menu = makeEl({ tagName: "DETAILS", kids: { summary } });
@@ -104,11 +117,36 @@ function menuAberto(qs = {}) {
 }
 
 test("com modal aberto (o do Pix não move o foco) o Esc não fecha o menu atrás do overlay", async () => {
-    const { menu, summary, esc } = menuAberto({ '[aria-modal="true"], .modal-overlay': makeEl() });
+    const { menu, summary, esc } = menuAberto([modal({ ariaModal: false, overlay: true })]);
     const ev = await esc();
     assert.equal(menu.getAttribute("open"), "", "o menu continua aberto");
     assert.equal(summary.focused ?? 0, 0, "o foco não vai ao ⋯ atrás do modal");
     assert.equal(ev.defaultPrevented, false);
+});
+
+test("com aria-modal aberto o Esc não fecha o menu", async () => {
+  const { menu, esc } = menuAberto([modal()]);
+  await esc();
+  assert.equal(menu.getAttribute("open"), "");
+});
+
+test("diálogos fixos do shell ocultos (visualização de imagem, gaveta de identidade) não bloqueiam o Esc", async () => {
+  const { menu, summary, esc } = menuAberto([modal({ hidden: true }), modal({ hidden: true })]);
+  await esc();
+  assert.equal(menu.getAttribute("open"), null, "o menu fechou");
+  assert.equal(summary.focused, 1);
+});
+
+test("overlay de modal oculto também não bloqueia o Esc", async () => {
+  const { menu, esc } = menuAberto([modal({ ariaModal: false, overlay: true, hidden: true })]);
+  await esc();
+  assert.equal(menu.getAttribute("open"), null);
+});
+
+test("um diálogo oculto antes de um aberto não esconde o aberto (o seletor filtra, não só olha o primeiro)", async () => {
+  const { menu, esc } = menuAberto([modal({ hidden: true }), modal({ ariaModal: false, overlay: true })]);
+  await esc();
+  assert.equal(menu.getAttribute("open"), "");
 });
 
 test("Esc que outro ouvinte já tratou (defaultPrevented) não fecha o menu", async () => {
