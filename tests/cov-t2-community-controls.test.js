@@ -243,7 +243,7 @@ test("busca de tópicos: filtra sem acento, mostra vazio e some ao limpar", () =
   input.value = "zzz";
   input.fire("input", { target: input });
   const vazio = list.querySelector(".community-topic-search-empty");
-  assert.match(vazio.innerHTML, /Nenhum tópico encontrado para "zzz"/);
+  assert.match(vazio.innerHTML, /Nenhum tópico encontrado para &quot;zzz&quot;/);
   input.value = "feira";
   input.fire("input", { target: input });
   assert.equal(list.querySelector(".community-topic-search-empty"), null);

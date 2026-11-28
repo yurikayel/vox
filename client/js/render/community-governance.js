@@ -9,6 +9,7 @@ import * as gossipRetract from "../gossip-retract-ui.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
 import { renderAssemblyEntrySlot } from "./assembly-panel.js";
+import { encodeRouteParam, renderStateCard } from "../shared/state-card.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import {
   escapeHtml,
@@ -47,11 +48,8 @@ export function renderCommunityListingsTab(communityId, commTitle, meta, listing
     </div>`;
 
   if (!listings || !listings.length) {
-    return `${actions}
-      <div class="empty" style="padding: 1.5rem; text-align: center;">
-        <p>Nenhuma oferta cadastrada nesta feira ainda.</p>
-        <a class="btn btn-primary btn-sm" href="#/compose/listing?c=${encodeURIComponent(communityId)}">+ Criar primeira oferta</a>
-      </div>
+    const link = { label: "+ Criar primeira oferta", href: `#/compose/listing?c=${encodeRouteParam(communityId)}` };
+    return `${actions}${renderStateCard({ kind: "empty", text: "Nenhuma oferta cadastrada nesta feira ainda.", link })}
     </div>`;
   }
 
@@ -85,11 +83,8 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
     ${renderAssemblyEntrySlot(communityId)}`;
 
   if (!proposals.length) {
-    return `${actions}
-      <div class="empty" style="padding: 1.5rem; text-align: center;">
-        <p>Nenhuma proposta em deliberação nesta comunidade ainda.</p>
-        <a class="btn btn-primary btn-sm" href="#/compose/proposal?c=${encodeURIComponent(communityId)}">+ Criar primeira proposta</a>
-      </div>
+    const link = { label: "+ Criar primeira proposta", href: `#/compose/proposal?c=${encodeRouteParam(communityId)}` };
+    return `${actions}${renderStateCard({ kind: "empty", text: "Nenhuma proposta em deliberação nesta comunidade ainda.", link })}
     </div>`;
   }
 

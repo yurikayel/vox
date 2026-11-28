@@ -3,6 +3,7 @@
  * @module app/community-controls
  */
 import { escapeHtml } from "../shared/html.js";
+import { renderStateCard } from "../shared/state-card.js";
 import { compressCommunityAvatarFile, validateCommunityAvatarFile, acceptCommunityAvatarDataUrl } from "../shared/community-avatar-image.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 import * as render from "../render.js";
@@ -287,8 +288,8 @@ function filterTopicRows(rows, q, main) {
   if (visibleCount === 0 && q) {
     if (!emptySearchEl && listEl) {
       emptySearchEl = document.createElement("div");
-      emptySearchEl.className = "empty community-topic-search-empty";
-      emptySearchEl.innerHTML = `<p>Nenhum tópico encontrado para "${escapeHtml(q)}".</p>`;
+      emptySearchEl.className = "community-topic-search-empty";
+      emptySearchEl.innerHTML = renderStateCard({ kind: "empty", text: `Nenhum tópico encontrado para "${q}".` });
       listEl.appendChild(emptySearchEl);
     }
   } else if (emptySearchEl) {
@@ -351,7 +352,7 @@ function refreshCommunityTopicList(main, communityId, filteredTopics, state, sea
   if (!listEl) return;
   const ordered = orderCommunityTopics(filteredTopics, state.sort);
   if (state.sort === "pinned" && ordered.length === 0) {
-    listEl.innerHTML = `<div class="empty community-vox-empty"><p>Nenhuma pauta ou tópico fixado no momento.</p></div>`;
+    listEl.innerHTML = renderStateCard({ kind: "empty", text: "Nenhuma pauta ou tópico fixado no momento." });
     updatePaginationControl(main, 0, state.limit, null);
     return;
   }

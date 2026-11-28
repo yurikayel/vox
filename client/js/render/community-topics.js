@@ -4,6 +4,7 @@
 import * as mock from "../mock.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import { sanitizeMediaUrl } from "../shared/html.js";
+import { encodeRouteParam, renderStateCard } from "../shared/state-card.js";
 import {
   escapeHtml,
   shortId,
@@ -197,7 +198,8 @@ function renderTopicPaginationButton(totalCount, visibleCount) {
  */
 export function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount = TOPICS_PAGE_SIZE) {
   if (!topics.length) {
-    return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p>${composeHref ? `<a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a>` : ""}</div>`;
+    const link = composeHref ? { label: "Criar o primeiro post", href: composeHref } : null;
+    return renderStateCard({ kind: "empty", text: "Nenhum post nesta comunidade ainda.", link });
   }
   const paged = topics.slice(0, visibleCount);
   const items = paged
@@ -219,7 +221,7 @@ export function renderCommunityTopicFeedInner(topics, communityId, commTitle, co
  * @returns {string} HTML da seção de feed.
  */
 export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE, canCompose = true } = {}) {
-  const composeHref = canCompose ? `#/compose/topic?c=${encodeURIComponent(communityId)}` : "";
+  const composeHref = canCompose ? `#/compose/topic?c=${encodeRouteParam(communityId)}` : "";
   const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount);
   return `
     <section class="community-vox-feed card" aria-labelledby="community-vox-feed-title">

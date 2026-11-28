@@ -7,6 +7,7 @@
  * @see client/js/app/assembly-ui.js
  */
 import { escapeHtml } from "./util.js";
+import { renderStateCard } from "../shared/state-card.js";
 import { formatPtBrDateTimeFull, parseInstant } from "../shared/date-format.js";
 import {
   MAX_BLOCK_REASON_LEN,
@@ -289,7 +290,7 @@ export function renderAssemblyCard(item, { isMod = false, canRespond = false, no
 export function renderAssemblyPanel({ communityId, items = [], isMod = false, canRespond = false, now = Date.now() }) {
   const listHtml = items.length
     ? items.map((item) => renderAssemblyCard(item, { isMod, canRespond, now })).join("")
-    : `<p class="desc" style="margin:0.5rem 0 0;">Nenhuma assembleia convocada nesta comunidade ainda.</p>`;
+    : renderStateCard({ kind: "empty", text: "Nenhuma assembleia convocada nesta comunidade ainda." });
   return `<div class="assembly-panel" data-community-id="${escapeHtml(communityId)}">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
       <strong>🏛️ Modo Assembleia (v0)</strong>
