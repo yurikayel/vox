@@ -6,6 +6,7 @@
  * @module dungeon/sheet-wizard-view
  */
 import { escapeHtml } from "../shared/html.js";
+import { fieldErrorAttrs, issueId } from "./field-issues.js";
 import { getSystemPack } from "./system-pack.js";
 import { deriveSheet } from "./system-derive.js";
 import { HIT_DIE_SIDES } from "./system-rest.js";
@@ -19,23 +20,25 @@ function focusAttr(wz, field) {
   return wz.issues[0]?.field === field ? " data-wizard-focus" : "";
 }
 
+const ISSUE_PREFIX = "wizard-issue";
+
 function alertHtml(issues) {
   if (!issues.length) return `<div role="alert" class="dungeon-alert-warn" hidden></div>`;
-  const items = issues.map((i) => `<li>${esc(i.message)}</li>`).join("");
+  const items = issues.map((i, n) => `<li id="${issueId(ISSUE_PREFIX, n)}">${esc(i.message)}</li>`).join("");
   return `<div role="alert" class="dungeon-alert-warn"><strong>Corrija para continuar:</strong><ul>${items}</ul></div>`;
 }
 
 function textField(wz, name, label, value, max = WIZARD_TEXT_MAX) {
-  return `<label class="dungeon-field-mini dungeon-field-wide"><span>${label}</span><input class="dungeon-input" name="${name}" type="text" value="${esc(value)}"${focusAttr(wz, name)} /><small>até ${max} caracteres</small></label>`;
+  return `<label class="dungeon-field-mini dungeon-field-wide"><span>${label}</span><input class="dungeon-input" name="${name}" type="text" value="${esc(value)}"${focusAttr(wz, name)}${fieldErrorAttrs(wz.issues, name, ISSUE_PREFIX)} /><small>até ${max} caracteres</small></label>`;
 }
 
 function numberField(wz, name, label, value, { min, max }) {
-  return `<label class="dungeon-field-mini"><span>${label}</span><input class="dungeon-input" name="${name}" type="number" min="${min}" max="${max}" value="${esc(value)}"${focusAttr(wz, name)} /></label>`;
+  return `<label class="dungeon-field-mini"><span>${label}</span><input class="dungeon-input" name="${name}" type="number" min="${min}" max="${max}" value="${esc(value)}"${focusAttr(wz, name)}${fieldErrorAttrs(wz.issues, name, ISSUE_PREFIX)} /></label>`;
 }
 
 function checkGroup(wz, name, legend, options, chosen) {
   const boxes = options.map((o) => `<label><input type="checkbox" name="${name}" value="${esc(o.id)}"${chosen.includes(o.id) ? " checked" : ""} /> ${esc(o.label)}</label>`).join(" ");
-  return `<fieldset class="dungeon-fieldset"${focusAttr(wz, name)} tabindex="-1"><legend>${legend}</legend>${boxes}</fieldset>`;
+  return `<fieldset class="dungeon-fieldset"${focusAttr(wz, name)}${fieldErrorAttrs(wz.issues, name, ISSUE_PREFIX)} tabindex="-1"><legend>${legend}</legend>${boxes}</fieldset>`;
 }
 
 function stepBody(wz, pack) {
@@ -54,7 +57,7 @@ function stepBody(wz, pack) {
 
 function hitDieField(wz, d) {
   const opts = HIT_DIE_SIDES.map((s) => `<option value="${s}"${String(d.hitDie) === String(s) ? " selected" : ""}>d${s}</option>`).join("");
-  return `<label class="dungeon-field-mini"><span>Dado de Vida</span><select class="dungeon-input" name="hitDie"${focusAttr(wz, "hitDie")}>${opts}</select></label>`;
+  return `<label class="dungeon-field-mini"><span>Dado de Vida</span><select class="dungeon-input" name="hitDie"${focusAttr(wz, "hitDie")}${fieldErrorAttrs(wz.issues, "hitDie", ISSUE_PREFIX)}>${opts}</select></label>`;
 }
 
 function itemsBody(wz, pack) {
