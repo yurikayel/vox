@@ -83,6 +83,22 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   }
 }
 
+/** Controles de reação de uma bolha: a pílula de quem já reagiu e os botões de reação rápida. */
+const REACTION_CONTROLS = ".btn-dm-react-pick, .dm-reaction-pill";
+
+/**
+ * Depois do redesenho da tela, devolve o foco ao controle da mesma reação: a pílula, ou o botão de reação rápida
+ * da mesma mensagem se a pílula sumiu (reação desfeita). Sem isso o foco cai no `body` (WCAG 2.4.3).
+ *
+ * @param {string} msgId Mensagem.
+ * @param {string} emoji Emoji.
+ */
+function refocusReaction(msgId, emoji) {
+  const same = [...document.querySelectorAll(REACTION_CONTROLS)].filter((b) => b.dataset.msgId === msgId && b.dataset.emoji === emoji);
+  const target = same.find((b) => b.classList.contains("dm-reaction-pill")) || same[0];
+  target?.focus();
+}
+
 /**
  * Alterna a reação a uma mensagem e avisa o par, se há chave dele.
  *
@@ -104,7 +120,8 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
       share.showToast("A reação ficou só neste aparelho: não deu para enviá-la.", "error");
     }
   }
-  showDmThread(peerAddress);
+  await showDmThread(peerAddress);
+  refocusReaction(msgId, emoji);
 }
 
 /**
@@ -125,7 +142,7 @@ function bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub) {
     });
   });
 
-  main.querySelectorAll(".btn-dm-react-pick, .dm-reaction-pill").forEach((btn) => {
+  main.querySelectorAll(REACTION_CONTROLS).forEach((btn) => {
     btn.addEventListener("click", () => {
       handleToggleBubbleReaction(user, peerAddress, peerDmPub, btn.dataset.msgId, btn.dataset.emoji);
     });
