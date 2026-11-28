@@ -4,6 +4,7 @@ import * as render from "../render.js";
 import * as share from "../share.js";
 import * as brcode from "../brcode.js";
 import * as featureFlags from "../feature-flags.js";
+import { modalHost, engageModalHost } from "../render/modal-host.js";
 
 /**
  * Garante o contêiner raiz do modal Pix no `document.body`.
@@ -11,13 +12,7 @@ import * as featureFlags from "../feature-flags.js";
  * @returns {HTMLElement}
  */
 export function getOrCreateZapModalContainer() {
-  let container = document.getElementById("zap-modal-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "zap-modal-container";
-    document.body.appendChild(container);
-  }
-  return container;
+  return modalHost("zap-modal-container");
 }
 
 /**
@@ -39,6 +34,7 @@ export function openZapModal({ pixKey, authorName = "Autor", title = "", default
   const container = getOrCreateZapModalContainer();
   render.renderZapModal(container, { authorName, pixKey, title, defaultAmount });
   bindZapModalEvents(container, { pixKey, authorName });
+  engageModalHost(container);
 }
 
 /**

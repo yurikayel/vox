@@ -6,7 +6,7 @@ import * as share from "../share.js";
 import * as cacheNode from "../cache-node.js";
 import { escapeHtml } from "../render/util.js";
 import { getActiveUser } from "./context.js";
-import { modalHost, clearModalHost } from "../render/modal-host.js";
+import { modalHost, clearModalHost, engageModalHost } from "../render/modal-host.js";
 import { sendReportToModerator } from "./report-dm.js";
 import { attachReviewHandlers } from "./report-review-flow.js";
 
@@ -164,11 +164,13 @@ async function submitReport(ctx, form) {
   const toModerator = entered && Boolean(moderator) && moderator !== self;
   const sent = toModerator ? await sendReportToModerator(self, moderator, rec).catch(() => "pending-retry") : "";
   if (entered && self) void notifyNaturalModerators(self, rec, ctx.authorRoute);
-  container().innerHTML = renderReportDoneHtml({
+  const done = container();
+  done.innerHTML = renderReportDoneHtml({
     grave: report.isGraveReason(reason),
     moderatorHash: toModerator ? report.buildModeratorDmHash(moderator, rec) : "",
     sent,
   });
+  engageModalHost(done);
   document.getElementById("btn-report-close")?.addEventListener("click", closeReportModal);
   document.getElementById("btn-report-to-mod")?.addEventListener("click", closeReportModal);
 }
@@ -177,12 +179,14 @@ async function submitReport(ctx, form) {
  * Abre o modal de denúncia para um post do menu ⋯.
  *
  * @param {object} [ctx={}] `postId`, `authorRoute`, `communityId`.
+ * @param {{ returnFocus?: Element|null }} [opts] Gatilho para onde o foco volta ao fechar; sem ele vale o foco atual.
  * @returns {void}
  */
-export function openReportFlow(ctx = {}) {
+export function openReportFlow(ctx = {}, { returnFocus = null } = {}) {
   if (!ctx.postId) return;
   const el = container();
   el.innerHTML = renderReportFormHtml();
+  engageModalHost(el, { returnFocus });
   document.getElementById("btn-report-cancel")?.addEventListener("click", closeReportModal);
   document.getElementById("form-report")?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -210,7 +214,9 @@ export function attachReportHandlers(doc = globalThis.document) {
     const btn = e.target?.closest?.(".btn-report-post");
     if (!btn) return;
     e.preventDefault();
-    btn.closest("details")?.removeAttribute("open");
-    openReportFlow({ postId: btn.dataset.id || "", authorRoute: btn.dataset.author || "", communityId: btn.dataset.comm || "" });
+    const menu = btn.closest("details");
+    const trigger = menu?.querySelector("summary") ?? null;
+    menu?.removeAttribute("open");
+    openReportFlow({ postId: btn.dataset.id || "", authorRoute: btn.dataset.author || "", communityId: btn.dataset.comm || "" }, { returnFocus: trigger });
   });
 }

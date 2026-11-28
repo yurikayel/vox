@@ -20,7 +20,12 @@ class FakeText {
 }
 
 /** Compara um elemento com um seletor composto (`tag#id.classe[attr="v"]:checked`). */
-function matchCompound(el, sel) {
+function matchCompound(el, selector) {
+  let sel = selector;
+  for (const n of selector.matchAll(/:not\((\[[^\]]*\])\)/g)) {
+    if (matchCompound(el, n[1])) return false;
+    sel = sel.replace(n[0], "");
+  }
   const head = sel.match(/^[a-z0-9-]+/i)?.[0];
   if (head && el.tagName !== head.toUpperCase()) return false;
   const rest = head ? sel.slice(head.length) : sel;
@@ -94,6 +99,7 @@ export class FakeElement {
     for (const [k, v] of this.attrs) if (k.startsWith("data-")) out[camel(k.slice(5))] = v;
     return out;
   }
+  get childNodes() { return this.children; }
   get firstElementChild() { return this.children.find((c) => c instanceof FakeElement) || null; }
   get textContent() { return this.children.map((c) => (c instanceof FakeText ? c.text : c.textContent)).join(""); }
   set textContent(v) { this.replaceChildren(); if (v !== "") this.#add(new FakeText(String(v))); }

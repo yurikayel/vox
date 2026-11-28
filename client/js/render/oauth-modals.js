@@ -14,6 +14,7 @@ import * as localAccount from "../identity/index.js";
 import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo, renderInviteFriendsCard } from "./util.js";
 import { renderPageHead } from "./shell.js";
+import { closeModalHost } from "./modal-host.js";
 
 export { renderOAuthEnrich, renderEmailKitCardHtml, showGenesisStep, closeOAuthEnrich } from "./genesis-entry.js";
 
@@ -379,7 +380,7 @@ export function renderZapModal(container, { author: _author = "", authorName = "
  * @returns {void}
  */
 export function closeZapModal(container) {
-  if (container) container.innerHTML = "";
+  closeModalHost(container);
 }
 
 /**
