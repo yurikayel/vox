@@ -4,7 +4,7 @@
 import * as mock from "../mock.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import { sanitizeMediaUrl } from "../shared/html.js";
-import { renderStateCard } from "../shared/state-card.js";
+import { encodeRouteParam, renderStateCard } from "../shared/state-card.js";
 import {
   escapeHtml,
   shortId,
@@ -221,7 +221,7 @@ export function renderCommunityTopicFeedInner(topics, communityId, commTitle, co
  * @returns {string} HTML da seção de feed.
  */
 export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE, canCompose = true } = {}) {
-  const composeHref = canCompose ? `#/compose/topic?c=${encodeURIComponent(communityId)}` : "";
+  const composeHref = canCompose ? `#/compose/topic?c=${encodeRouteParam(communityId)}` : "";
   const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount);
   return `
     <section class="community-vox-feed card" aria-labelledby="community-vox-feed-title">

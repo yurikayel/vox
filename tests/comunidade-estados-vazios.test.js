@@ -6,6 +6,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom } from "./helpers/cov-t2-dom.mjs";
+import * as css from "./helpers/css-contrato.js";
 
 globalThis.fetch = () => Promise.reject(new Error("offline"));
 installFakeDom();
@@ -82,4 +83,20 @@ test("'fixados' sem pauta mostra o cartão vazio", () => {
   controls.bindCommunityHeaderEvents(ctx);
   pinned.fire("click");
   assert.equal(cardText(list.innerHTML), "Nenhuma pauta ou tópico fixado no momento.");
+});
+
+const ID_COM_PONTUACAO = "a!'()*b";
+
+test("comunidade com ! ' ( ) * no id: os links de criar do cartão não lançam e saem codificados", () => {
+  const posts = topics.renderCommunityPostsTab(ID_COM_PONTUACAO, "Vox", []);
+  const feira = governance.renderCommunityListingsTab(ID_COM_PONTUACAO, "Feira", { id: ID_COM_PONTUACAO, commercialEnabled: true }, []);
+  const propostas = governance.renderCommunityGovernanceTab(ID_COM_PONTUACAO, "Vox", { id: ID_COM_PONTUACAO }, []);
+  for (const html of [posts, feira, propostas]) {
+    assert.match(html, /<a class="sv-state-link" href="#\/compose\/[a-z]+\?c=a%21%27%28%29%2Ab">/);
+  }
+});
+
+test("o texto do cartão quebra palavra longa sem espaços em vez de vazar", () => {
+  const regra = css.ruleBody(css.readCss("sv-estados.css"), ".sv-state-text");
+  assert.match(regra, /overflow-wrap:\s*anywhere/);
 });

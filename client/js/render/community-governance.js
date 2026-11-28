@@ -9,7 +9,7 @@ import * as gossipRetract from "../gossip-retract-ui.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
 import { renderAssemblyEntrySlot } from "./assembly-panel.js";
-import { renderStateCard } from "../shared/state-card.js";
+import { encodeRouteParam, renderStateCard } from "../shared/state-card.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import {
   escapeHtml,
@@ -48,7 +48,7 @@ export function renderCommunityListingsTab(communityId, commTitle, meta, listing
     </div>`;
 
   if (!listings || !listings.length) {
-    const link = { label: "+ Criar primeira oferta", href: `#/compose/listing?c=${encodeURIComponent(communityId)}` };
+    const link = { label: "+ Criar primeira oferta", href: `#/compose/listing?c=${encodeRouteParam(communityId)}` };
     return `${actions}${renderStateCard({ kind: "empty", text: "Nenhuma oferta cadastrada nesta feira ainda.", link })}
     </div>`;
   }
@@ -83,7 +83,7 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
     ${renderAssemblyEntrySlot(communityId)}`;
 
   if (!proposals.length) {
-    const link = { label: "+ Criar primeira proposta", href: `#/compose/proposal?c=${encodeURIComponent(communityId)}` };
+    const link = { label: "+ Criar primeira proposta", href: `#/compose/proposal?c=${encodeRouteParam(communityId)}` };
     return `${actions}${renderStateCard({ kind: "empty", text: "Nenhuma proposta em deliberação nesta comunidade ainda.", link })}
     </div>`;
   }

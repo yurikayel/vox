@@ -45,6 +45,16 @@ function actionButton(action) {
   return `<button type="button" class="sv-state-action" ${dataAttributes(action.data)}>${escapeHtml(label)}</button>`;
 }
 
+/**
+ * Codifica um valor para a rota de um link do cartão: além do `encodeURIComponent`, troca `! ' ( ) *` (que ele deixa
+ * passar e que o cartão recusa no `href`) pelos códigos de porcentagem.
+ * @param {string} value Valor a pôr na rota (id de comunidade, por exemplo).
+ * @returns {string} Valor seguro para o `href` do link do cartão.
+ */
+export function encodeRouteParam(value) {
+  return encodeURIComponent(value).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
 function secondaryLink(link) {
   if (!link) return "";
   const label = String(link.label || "").trim();
