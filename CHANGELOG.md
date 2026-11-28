@@ -6,6 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+- Acessibilidade: ao abrir a denúncia e o apontamento, o foco entra no modal (no primeiro campo ou botão) em vez de ficar no botão de trás; ao fechar, volta a quem abriu. A entrada, a gaveta de identidade e a folha ⋯ não mudam.
 - Teclado: a gaveta de identidade prende o foco enquanto está aberta (Tab e Shift+Tab circulam dentro dela, sem passar por links escondidos), o Esc fecha com o foco onde estiver e o foco volta ao botão que abriu.
 - Ficha: o pacote de sistema da 5e passa a se chamar `5e` ("5e (SRD 5.2)" no seletor), com aviso de não afiliação; o id antigo deixa de existir (nenhuma ficha o usava). Sai a imagem órfã da cantina e a entrada dela no manifesto. A atribuição CC-BY do SRD 5.2 segue igual.
 - Docs: ROADMAP ganha `SUB-21` a `SUB-28` na frente do Subversus (perícias clicáveis, rolagem só para o Mestre, painel de rolagens, pedir teste, inventário em grade, bandeja de tokens, importar por cima e ping), com prioridade Must/Should/Could/Won't e dependências.
