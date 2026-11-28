@@ -159,11 +159,27 @@ function settleAndRedraw(promise, container, viewOpts, extra = {}) {
     .then((val) => { settledVal = val; return val; })
     .catch((err) => { state.campaignNotice = err?.message || "Erro na operação local."; })
     .finally(() => {
+      extra.cancelFrame?.();
       redrawContainer(container, viewOpts, extra.focusSelector || "");
       if (extra.showDice3d) {
         showDice3dAfterRedraw(container, settledVal, state.dice3dEnabled ?? DICE3D_PREFS.dice3d);
       }
     });
+}
+
+/**
+ * Agenda o redesenho do próximo quadro para a ação que ainda grava: com gravação rápida o `settleAndRedraw` o cancela
+ * antes do quadro (um desenho só); com gravação lenta o resultado já aparece no quadro, sem esperar a gravação.
+ * @param {HTMLElement} container Contêiner da Mesa a redesenhar.
+ * @param {object} viewOpts Opções da vista (estado, loja, tela) repassadas ao redesenho.
+ * @returns {() => void} Cancela o desenho agendado (não faz nada se ele já rodou).
+ */
+function scheduleFrameRedraw(container, viewOpts) {
+  const raf = globalThis.requestAnimationFrame;
+  if (typeof raf !== "function") return () => {};
+  let live = true;
+  const id = raf(() => { if (live) redrawContainer(container, viewOpts); });
+  return () => { live = false; globalThis.cancelAnimationFrame?.(id); };
 }
 
 function handleChipClick(rootEl, el) {
@@ -273,8 +289,11 @@ function handleDungeonClick(container, viewOpts, ev) {
   const state = viewOpts.state || getDungeonSession();
   const optsWithSync = { ...viewOpts, onSyncUpdate: () => redrawContainer(container, viewOpts) };
   const result = handler(state, target, container, optsWithSync);
-  redrawContainer(container, viewOpts);
-  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action] });
+  // Síncrona: redesenha na hora. Promessa: o desenho do próximo quadro (cancelado se ela assentar antes) e o de `settleAndRedraw`.
+  let cancelFrame;
+  if (typeof result?.then === "function") cancelFrame = scheduleFrameRedraw(container, viewOpts);
+  else redrawContainer(container, viewOpts);
+  return settleAndRedraw(result, container, viewOpts, { showDice3d: DICE3D_CLICK_ACTIONS.has(action), focusSelector: FOCUS_AFTER_ACTION[action], cancelFrame });
 }
 
 /**
