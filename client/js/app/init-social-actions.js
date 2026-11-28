@@ -16,6 +16,29 @@ import { openPostEditModal, handleDeletePost } from "./init-post-mutation.js";
 import { handleFrameActionClick } from "./init-frame-actions.js";
 
 /**
+ * Há modal aberto (o do Pix não move o foco: ele continua no menu atrás do overlay). Os diálogos fixos do shell (a
+ * visualização de imagem e a gaveta de identidade) ficam no DOM com `hidden` e não contam.
+ */
+function isModalOpen() {
+  return Boolean(document.querySelector('[aria-modal="true"]:not([hidden]), .modal-overlay:not([hidden])'));
+}
+
+/**
+ * Esc fecha o menu ⋯ (`<details class="toolbar-overflow">`) em que está o foco e devolve o foco ao `<summary>`.
+ * Não age se outro ouvinte já tratou o Esc ou se há modal aberto: o Esc é do modal, não da página atrás dele.
+ *
+ * @param {KeyboardEvent} e
+ */
+export function closeOverflowMenuOnEscape(e) {
+  if (e.key !== "Escape" || e.defaultPrevented || isModalOpen()) return;
+  const menu = e.target?.closest?.("details.toolbar-overflow[open]");
+  if (!menu) return;
+  menu.removeAttribute("open");
+  menu.querySelector("summary")?.focus();
+  e.preventDefault();
+}
+
+/**
  * Alterna a reação a um comentário e atualiza o botão.
  *
  * @param {HTMLElement} btn
@@ -244,6 +267,8 @@ export function initSocialInteractions() {
     if (dispatchPostActionClicks(e)) return;
     dispatchSocialFeedbackClicks(e);
   });
+
+  document.addEventListener("keydown", closeOverflowMenuOnEscape);
 
   document.addEventListener("submit", (e) => {
     const nestedForm = e.target.closest(".post-comment-nested-reply");
