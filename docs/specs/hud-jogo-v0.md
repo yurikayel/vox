@@ -34,7 +34,7 @@ Não há hoje conceito de favoritos nem de cinto no modelo: ambos são campos no
 - Cor nunca é o único sinal: condição e PV levam texto; contraste WCAG AA com tokens `--sa-*` (`client/css/agora.css`).
 - Alvos de toque ≥ 44 px; respeita `prefers-reduced-motion` (sem animação de barra).
 - Painéis: foco entra no painel ao abrir (no título, `tabindex="-1"`) e volta ao botão que o abriu ao fechar. Atalhos de uma letra (C, I, S, M, R) valem só com o foco dentro da área da Mesa (mapa e HUD), fora de campo de texto e sem Ctrl, Meta ou Alt (WCAG 2.1.4); fora da área, nada. Esc fecha o painel aberto. Sem ficha, Ficha, Itens e Habilidades ficam `aria-disabled` e não abrem; Mapa e Crônica seguem. `aria-controls` só aparece com o painel aberto.
-- Celular (≤ 390 px, `@media (max-width: 1023.98px)`): some o cinto e o grupo; ficam a linha "Nome · PV · CA" e a barra de favoritos com rolagem horizontal; painéis ocupam a tela inteira como folha.
+- Celular (largura até 1023,98 px, `@media (max-width: 1023.98px)`; o desenho de referência é 390 px): some o cinto e o grupo; ficam a linha "Nome · PV · CA" e a barra de favoritos com rolagem horizontal; painéis viram folha presa ao rodapé, de até 75% da altura (`max-height: 75dvh`, `c95092b3`), com rolagem por dentro. A folha pode cobrir a barra de painéis; ela fecha pelo botão "Fechar" do cabeçalho ou por Esc. No computador o painel abre para cima da barra e não a cobre.
 
 ## 4. O que o jogador vê dos outros
 
@@ -64,7 +64,7 @@ Cada uma: **Decidido em 25/11/2026: opção recomendada (autorização geral do 
 - **D3 — Indicador de magia: fonte do rótulo.** (a) pacote do sistema *(recomendada)*; (b) texto livre na ficha.
 - **D4 — Fichas alheias.** (a) lista de permissão explícita (nome, CA, retrato, PV pelo token conforme `hpVisible`) e dono pelo token ligado, como na §4 *(recomendada)*; (b) enviar a ficha inteira e esconder só na tela.
 - **D5 — Retrato.** (a) iniciais sobre a cor do token, sem bitmap *(recomendada)*; (b) imagem enviada.
-- **D6 — Painéis.** (a) meia tela sem modal no desktop e folha no celular *(recomendada)*; (b) modais.
+- **D6 — Painéis.** (a) meia tela sem modal no desktop e folha no celular (presa ao rodapé, até 75% da altura, `c95092b3`) *(recomendada)*; (b) modais.
 - **D7 — Atalhos do #525.** (a) manter `roll-d20`, `move`, `sheet` fixos e trocar o restante pelos favoritos *(recomendada)*; (b) remover.
 - **D8 — Limite de condições visíveis.** (a) 4 chips e "+N" *(recomendada)*; (b) todas.
 - **D9 — Ordem de entrega do código.** (a) modelo + projeção, depois HUD base (retrato, PV, linha móvel), depois cinto/favoritos, depois painéis *(recomendada)*; (b) tudo em um PR.
