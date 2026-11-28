@@ -4,12 +4,16 @@
  * feitos ou quando o Mestre dispensou (`dungeonPrefs.firstTableDismissed`).
  */
 import { escapeHtml } from "../shared/html.js";
+import { createDefaultScene } from "./vtt-scene-schema.js";
+
+/** Tokens que a cena padrão já traz (Lyra e a Sentinela): nascem na sessão sem o Mestre fazer nada, então não contam. */
+const DEFAULT_TOKEN_IDS = new Set(createDefaultScene().tokens.map((t) => t.tokenId));
 
 /** Passos na ordem fixa; `action` é o que o Mestre faz no próximo passo ainda aberto. */
 const STEPS = Object.freeze([
   { id: "campaign", label: "Criar a campanha", action: "Crie uma campanha no acampamento.", done: (s) => Boolean(s?.campaignId) },
   { id: "map", label: "Pôr um mapa", action: "Envie uma imagem de mapa na Mesa.", done: (s) => floorsOf(s).some((f) => Boolean(f?.mapBlobHash)) },
-  { id: "token", label: "Colocar um token", action: "Adicione uma ficha ou um token simples ao mapa.", done: (s) => (sceneOf(s)?.tokens?.length ?? 0) > 0 },
+  { id: "token", label: "Colocar um token", action: "Adicione uma ficha ou um token simples ao mapa.", done: (s) => (sceneOf(s)?.tokens ?? []).some((t) => !DEFAULT_TOKEN_IDS.has(t?.tokenId)) },
   { id: "fog", label: "Ligar a névoa", action: "Ligue a névoa de guerra num piso.", done: (s) => floorsOf(s).some((f) => f?.fog?.enabled === true) },
   { id: "roll", label: "Fazer uma rolagem", action: "Role um dado na Mesa.", done: (s) => (s?.rolls?.length ?? 0) > 0 },
   { id: "invite", label: "Gerar o convite", action: "Gere o convite da mesa e mande aos jogadores.", done: (s) => Boolean(s?.inviteHref) },
