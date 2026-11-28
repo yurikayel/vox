@@ -1,4 +1,4 @@
-# Gossip retratação v1 — spec kickoff (Antigravity)
+# Gossip retratação v1 — spec kickoff (a ferramenta de protocolo)
 
 > **Status:** implementada · **Owner:** mantenedor · **Revisado:** 2026-10-23
 
@@ -6,7 +6,7 @@
 **Branch de spec:** `feat/gossip-retract-spec`  
 **Branch de implementação prevista:** `feat/gossip-retract-v1`  
 **Baseline:** `main` @ v6.4 (`4d8a2eb`) — 147 testes  
-**Relacionado:** DEV **§21.4** (editar/apagar local + lacuna gossip), checklist lobby *GOSSIP_UPDATE / GOSSIP_DELETE*
+**Relacionado:** DEV **§21.4** (editar/apagar local + lacuna gossip), checklist *GOSSIP_UPDATE / GOSSIP_DELETE*
 
 ---
 
@@ -18,7 +18,7 @@ Pares que já receberam `{ type: "GOSSIP", item }` mantêm a cópia antiga para 
 
 **Objetivo v1:** propagar **retratação** (update assinado e delete/tombstone) na malha `vox-local-v0`, com regras de **last-write-wins** por `(id, editedAt)` e verificação criptográfica inalterada (`localAccount.verifyPayload`).
 
-**Fora de escopo v1 (Cursor / sprint seguinte):** badge **Editado**, UI pós-delete no feed (`render.js`), limites do compositor.
+**Fora de escopo v1 (a ferramenta de integração / sprint seguinte):** badge **Editado**, UI pós-delete no feed (`render.js`), limites do compositor.
 
 ---
 
@@ -183,7 +183,7 @@ Fan-out: espelhar `broadcastGossip` (BroadcastChannel + `webrtcPeer.broadcastRtc
 ### 6.4 Listeners
 
 - Manter `onGossipPost(item, source)` para creates **e** updates aplicados (feed refresh).
-- Opcional v1: `onGossipTombstone({ id, author, editedAt }, source)` para UI Cursor remover card sem reload completo.
+- Opcional v1: `onGossipTombstone({ id, author, editedAt }, source)` para UI da ferramenta de integração remover card sem reload completo.
 
 ---
 
@@ -226,7 +226,7 @@ Arquivo sugerido: `tests/gossip-retract.test.js` (Node + mock IndexedDB como `po
 3. **LWW:** Conflitos resolvidos por `id` + `editedAt`; duplicatas de mesma versão não causam churn no mesh.
 4. **Persistência:** Estado local coerente após restart (tombstone ou filtro equivalente no IndexedDB).
 5. **Autor UX:** Editar/apagar no próprio aparelho dispara broadcast correspondente.
-6. **Par UX:** Receber update altera conteúdo no IndexedDB; receive delete oculta post (UI badge fica para branch Cursor).
+6. **Par UX:** Receber update altera conteúdo no IndexedDB; receive delete oculta post (UI badge fica para branch da ferramenta de integração).
 7. **Compat:** Clientes antigos ignoram novos tipos; creates `GOSSIP` permanecem.
 8. **Testes:** T1–T10 verdes; `test.bat` / CI sem regressão.
 9. **Docs:** DEV §21.4 atualizado (remover nota “não há GOSSIP_DELETE”); bump SW cache no PR de impl.
@@ -238,7 +238,7 @@ Arquivo sugerido: `tests/gossip-retract.test.js` (Node + mock IndexedDB como `po
 
 1. **Este PR (`feat/gossip-retract-spec`):** apenas este documento + referência no README ou DEV (link).
 2. **`feat/gossip-retract-v1`:** `cache-node` apply + tombstone → `peers` handlers/broadcast → `app.js` hooks → testes.
-3. **Cursor:** badge Editado / card removido no feed (`onGossipTombstone` ou poll `getLocalPost`).
+3. **A ferramenta de integração:** badge Editado / card removido no feed (`onGossipTombstone` ou poll `getLocalPost`).
 
 ---
 
@@ -247,7 +247,7 @@ Arquivo sugerido: `tests/gossip-retract.test.js` (Node + mock IndexedDB como `po
 | Item | Decisão v1 sugerida |
 |------|---------------------|
 | Tombstone no mesmo store vs store novo | Mesmo store, `type: "tombstone"` |
-| Replies para post tombstoned | Manter replies no DB; UI pode mostrar “thread removida” (Cursor) |
+| Replies para post tombstoned | Manter replies no DB; UI pode mostrar “thread removida” (a ferramenta de integração) |
 | Tipos além de `topic` | v1 só posts com `canMutateLocalPost`; estender listing/vote em v2 |
 | Retransmissão de tombstone | Sim, mesh igual create (TTL social, não blockchain) |
 
@@ -261,8 +261,7 @@ Arquivo sugerido: `tests/gossip-retract.test.js` (Node + mock IndexedDB como `po
 - `client/js/post-ownership.js` — mutabilidade
 - `tests/post-edit-delete.test.js` — baseline edição local
 - [lapide-conta-pm101.md](./lapide-conta-pm101.md) — spec de lápide de conta (`account_tombstone` v1, PM-101)
-- Lobby `politica/lobby.md` — item Antigravity gossip retract
 
 ---
 
-*Kickoff Antigravity — spec only. Implementação completa na branch `feat/gossip-retract-v1`.*
+*Kickoff da ferramenta de protocolo — spec only. Implementação completa na branch `feat/gossip-retract-v1`.*

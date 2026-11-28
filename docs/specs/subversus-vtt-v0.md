@@ -115,6 +115,11 @@ Todos os campos abaixo são opcionais dentro de `VTT_SCHEMA_VERSION = "1.0.0"`. 
 - **`portals[]`:** transições entre cenas/andares, também sujeitas a `layer: "player" | "gm"`.
 - **`TokenDoc`:** mantém `tokenId`, `sheetId`, `layer` e `color` existentes; acrescenta apenas `display` (`"standee"` padrão em 3D ou `"flat"`) e `elevation` (padrão `0`).
 
+### 4.3 Mapa importado (tamanho e teto de envio)
+- **Tamanho:** ao importar, o app lê largura e altura pelo cabeçalho do arquivo (PNG, JPEG, WebP, GIF) e as grava no piso. Acima de 8192 ou abaixo de 256 em algum lado, a imagem é reduzida ou ampliada mantendo a proporção. Formato desconhecido segue com o tamanho padrão (768 × 576).
+- **Teto:** arquivo acima de 16 MiB (o mesmo limite de recebimento da rede) é recusado com aviso, sem ser salvo, para que nenhum jogador fique sem conseguir receber o mapa.
+- **Fora de escopo:** recortar ou comprimir a imagem, mapa por endereço e calibrar a grade pela imagem.
+
 ---
 
 ## 5. Arquitetura Modular (Reuso Primeiro)
