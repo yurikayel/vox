@@ -32,13 +32,19 @@ function parseRules(css) {
   return rules;
 }
 
-/** `@media (max-width: Npx)` e `(min-width: Npx)` valem pela largura; qualquer outra condição não conta. */
+const WIDTH_COND = /\(\s*(?:(max|min)-width\s*:\s*([\d.]+)(px|em)|width\s*(<|>=)\s*([\d.]+)(em))\s*\)/g;
+
+/** `@media` por largura vale pela largura (`max-width`/`min-width` em px ou em, e `width < Nem`/`width >= Nem`, com 1em = 16 px); qualquer outra condição não conta. */
 function mediaApplies(media, width) {
   if (!media) return true;
-  const conds = [...media.matchAll(/\(\s*(max|min)-width\s*:\s*(\d+)px\s*\)/g)];
-  const rest = media.replace(/@media|and|\(\s*(?:max|min)-width\s*:\s*\d+px\s*\)/g, "").trim();
+  const conds = [...media.matchAll(WIDTH_COND)];
+  const rest = media.replace(/@media|and/g, "").replace(WIDTH_COND, "").trim();
   if (!conds.length || rest) return false;
-  return conds.every(([, kind, px]) => (kind === "max" ? width <= Number(px) : width >= Number(px)));
+  return conds.every(([, kind, v, unit, op, rv]) => {
+    if (op) return op === "<" ? width < Number(rv) * REM_PX : width >= Number(rv) * REM_PX;
+    const px = Number(v) * (unit === "em" ? REM_PX : 1);
+    return kind === "max" ? width <= px : width >= px;
+  });
 }
 
 /** Seletor só com descendentes e classes: casa com a cadeia se cada composto é subconjunto das classes de algum ancestral, em ordem. */

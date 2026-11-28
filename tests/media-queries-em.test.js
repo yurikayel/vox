@@ -1,46 +1,86 @@
 /**
- * @file Pontos de quebra em `em`, não em px (WCAG 1.4.4/1.4.10): a media query de largura em px não acompanha a fonte
- * padrão do navegador; em `em` ela acompanha (1em = fonte padrão, 16 px por omissão), então com 16 px o layout é o
- * mesmo e com a fonte maior a quebra vem antes, em vez de a página rolar de lado.
+ * @file Pontos de quebra de largura em `em`, não em px (WCAG 1.4.4/1.4.10), com a mesma unidade em todas as folhas.
+ * A query em px olha a largura da janela e ignora a fonte padrão do navegador; em `em` ela acompanha (1em = fonte
+ * padrão, 16 px por omissão). Se duas folhas aplicam metades do mesmo layout, uma em px e outra em `em`, com a fonte maior
+ * as metades deixam de coincidir e o shell quebra. Também não pode sobrar buraco entre o par estreito e o largo: com
+ * `max-width: 47.9375em` e `min-width: 48em`, a 959 px (fonte de 20 px) nenhuma das duas casa; o complemento exato é
+ * `(width < 48em)` com `(min-width: 48em)`.
  */
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import * as css from "./helpers/css-contrato.js";
 
-const SHEET = css.readCss("style.css").replace(/\/\*[\s\S]*?\*\//g, "");
+const FOLHAS = readdirSync(new URL("../client/css/", import.meta.url)).filter((f) => f.endsWith(".css"));
 
-/** Exceções que ficam em px, cada uma com o motivo. Vazia: nenhuma query de `style.css` precisa de px. */
-const EXCECOES_PX = new Map();
+/** Folhas que ainda têm query de largura em px, à espera do item que as migra; cada uma diz o motivo. */
+const PENDENTES = new Map([
+  ["dungeon-layout.css", "o 1024 do Subversus é um par com o agora.css (1023.98/1024 em px nas duas); as duas folhas migram juntas no F44"],
+  ["sv-ficha.css", "uma query de 360 px da ficha; migra no F44 junto com o teste ficha-inventario-320"],
+  ["sv-token-tray.css", "uma query min-width de 768 px da bandeja de tokens; migra no F44 junto com o teste subversus-bandeja-tokens"],
+]);
+/** Condições em px que ficam em folhas já migradas, com o motivo. */
+const EXCECOES_PX = new Map([
+  ["agora.css", { condicoes: ["max-width: 1023.98px", "min-width: 1024px"], motivo: "família 1023.98/1024 do Subversus, par com o dungeon-layout.css (F44 migra os dois lados juntos)" }],
+]);
+/** Pontos de quebra (em px) cujo uso em px numa folha pendente é aceito ao lado do `em` nas outras, com o motivo. */
+const BUCKETS_MISTOS = new Map([[768, "o 768 da bandeja de tokens (sv-token-tray.css, F44) não faz par de layout com o shell"]]);
+/** Pontos de quebra (px) que existiam antes da conversão; todo `em` tem de ser um deles dividido por 16. */
+const PX_CONHECIDOS = new Set([360, 480, 520, 600, 640, 680, 768, 820, 1024, 1100]);
 
-const COND = /\(\s*((?:min|max)-(?:device-)?(?:width|height))\s*:\s*([\d.]+)(px|em|rem)\s*\)/g;
+const LEGADO = /\(\s*(min|max)-(width|height)\s*:\s*([\d.]+)(px|em|rem)\s*\)/g;
+const INTERVALO = /\(\s*width\s*(<=|>=|<|>)\s*([\d.]+)(px|em|rem)\s*\)/g;
 
-/** Condições de dimensão de cada `@media` da folha: `{ feature, value, unit }`. */
-function condicoes() {
+/** Condições de largura/altura de cada `@media` de uma folha. */
+function condicoes(folha) {
+  const texto = css.readCss(folha).replace(/\/\*[\s\S]*?\*\//g, "");
   const out = [];
-  for (const m of SHEET.matchAll(/@media([^{]*)\{/g)) {
-    for (const c of m[1].matchAll(COND)) out.push({ prelude: m[1].trim(), feature: c[1], value: Number(c[2]), unit: c[3] });
+  for (const m of texto.matchAll(/@media([^{]*)\{/g)) {
+    for (const c of m[1].matchAll(LEGADO)) out.push({ folha, texto: `${c[1]}-${c[2]}: ${c[3]}${c[4]}`, kind: c[1], value: Number(c[3]), unit: c[4] });
+    for (const c of m[1].matchAll(INTERVALO)) out.push({ folha, texto: `width ${c[1]} ${c[2]}${c[3]}`, kind: c[1].startsWith("<") ? "max" : "min", value: Number(c[2]), unit: c[3], range: true });
   }
-  return out;
+  return out.map((c) => ({ ...c, px: c.value * (c.unit === "px" ? 1 : 16) }));
 }
 
-test("nenhum @media de largura ou altura de style.css usa px (fora das exceções listadas)", () => {
-  const emPx = condicoes().filter((c) => c.unit === "px" && !EXCECOES_PX.has(`${c.feature}: ${c.value}px`));
-  assert.deepEqual(emPx.map((c) => `${c.feature}: ${c.value}px`), [], "cada ponto de quebra em px vira em (px/16)");
-  for (const [chave, motivo] of EXCECOES_PX) assert.ok(motivo.length > 20, `a exceção ${chave} diz o motivo`);
+const TODAS = FOLHAS.flatMap(condicoes);
+
+test("nenhuma query de largura em px fora das folhas pendentes e das exceções listadas", () => {
+  const sobra = TODAS.filter((c) => c.unit === "px" && !PENDENTES.has(c.folha) && !EXCECOES_PX.get(c.folha)?.condicoes.includes(c.texto));
+  assert.deepEqual(sobra.map((c) => `${c.folha}: ${c.texto}`), [], "cada ponto de quebra em px vira em (px/16)");
 });
 
-test("a conversão é exata (px/16): com a fonte padrão de 16 px o layout não muda", () => {
-  const por = new Map();
-  for (const c of condicoes()) por.set(`${c.feature}: ${c.value}${c.unit}`, (por.get(`${c.feature}: ${c.value}${c.unit}`) ?? 0) + 1);
-  const esperado = new Map([
-    ["max-width: 30em", 3], // era 480px
-    ["max-width: 32.5em", 1], // era 520px
-    ["min-width: 32.5em", 1],
-    ["max-width: 42.5em", 1], // era 680px
-    ["max-width: 47.9375em", 5], // era 767px
-    ["min-width: 48em", 5], // era 768px
-    ["max-width: 51.25em", 1], // era 820px
-  ]);
-  for (const [chave, n] of esperado) assert.equal(por.get(chave) ?? 0, n, `${chave} aparece ${n}x`);
+test("as folhas pendentes e as exceções ainda têm px (senão a lista envelheceu)", () => {
+  for (const [folha, motivo] of PENDENTES) {
+    assert.ok(motivo.length > 20, `${folha} diz o motivo`);
+    assert.ok(TODAS.some((c) => c.folha === folha && c.unit === "px"), `${folha} já não tem px: tire-a de PENDENTES`);
+  }
+  for (const [folha, { condicoes: lista, motivo }] of EXCECOES_PX) {
+    assert.ok(motivo.length > 20, `${folha} diz o motivo`);
+    for (const texto of lista) assert.ok(TODAS.some((c) => c.folha === folha && c.texto === texto), `${folha}: ${texto} já não existe; tire-a das exceções`);
+  }
+});
+
+test("cada ponto de quebra tem uma unidade só em todas as folhas (o par px/em não volta)", () => {
+  const porPonto = new Map();
+  for (const c of TODAS) {
+    const ponto = Math.ceil(c.px / 8) * 8; // 767, 768 e 1099, 1100 são o mesmo ponto; 1023.98 e 1024 também
+    porPonto.set(ponto, new Map(porPonto.get(ponto)).set(c.unit === "px" ? "px" : "em", [...(porPonto.get(ponto)?.get(c.unit === "px" ? "px" : "em") ?? []), c.folha]));
+  }
+  const mistos = [...porPonto].filter(([ponto, unidades]) => unidades.size > 1 && !BUCKETS_MISTOS.has(ponto)).map(([ponto, u]) => `${ponto}px: px em ${[...new Set(u.get("px"))]} e em em ${[...new Set(u.get("em"))]}`);
+  assert.deepEqual(mistos, [], "px e em no mesmo ponto de quebra fazem cada folha aplicar metade do layout");
+  for (const [ponto, motivo] of BUCKETS_MISTOS) assert.equal(porPonto.get(ponto)?.size, 2, `${ponto}px já não mistura: ${motivo}`);
+});
+
+test("não sobra buraco entre o par estreito e o largo: nenhum max-width em em fica logo abaixo de um min-width", () => {
+  const em = TODAS.filter((c) => c.unit === "em");
+  const mins = new Set(em.filter((c) => c.kind === "min").map((c) => c.value));
+  const buracos = em.filter((c) => c.kind === "max" && !c.range && [...mins].some((m) => m > c.value && m - c.value < 0.5));
+  assert.deepEqual(buracos.map((c) => `${c.folha}: ${c.texto}`), [], "use (width < Nem) com (min-width: Nem)");
+});
+
+test("toda query em em vale um ponto de quebra que já existia (px/16), nenhuma conta errada", () => {
+  const errados = TODAS.filter((c) => c.unit === "em" && !PX_CONHECIDOS.has(c.px)).map((c) => `${c.folha}: ${c.texto} = ${c.px}px`);
+  assert.deepEqual(errados, [], "o em vale px/16 de um ponto de quebra da base");
+  assert.ok(TODAS.some((c) => c.unit === "em" && c.range), "o complemento do par vem pela sintaxe de intervalo");
 });

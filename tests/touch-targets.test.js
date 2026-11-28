@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 
 test("style.css — bloco coarse com inline-composer-tool 44px (RED na base)", () => {
   const css = fs.readFileSync(new URL("../client/css/style.css", import.meta.url), "utf8");
-  const marker = "@media (pointer: coarse), (max-width: 47.9375em)";
+  const marker = "@media (pointer: coarse), (width < 48em)";
   const start = css.indexOf(marker);
   assert.ok(start >= 0, "falta media query coarse/mobile para touch targets");
   const chunk = css.slice(start, start + 900);
