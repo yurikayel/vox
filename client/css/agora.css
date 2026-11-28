@@ -3896,7 +3896,7 @@ body,
 .agora-citizen-avatar, .agora-community-avatar, .post-media-header-avatar,
 .profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
 .community-avatar-img, .community-avatar-fallback, .community-avatar-md, .community-avatar-lg,
-.community-vox-card-avatar-wrap, .community-vox-avatar-wrap, .welcome-avatars > * {
+.community-vox-avatar-wrap, .welcome-avatars > * {
   border-radius: 0 !important;
   /* Borda e sombra viram um contorno quebrado nos cantos quando a máscara corta: fora. */
   border: 0 !important;
