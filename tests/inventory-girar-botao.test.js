@@ -50,8 +50,8 @@ test("d) toque: com o item preso por um dedo, o botão gira o item e o segundo d
   m.fire("pointermove", { pointerId: 1, clientX: 260, clientY: 50 });
   assert.equal(m.button.hidden, false, "arrasto começado mostra o botão");
   assert.equal(span(m.grid), "1");
-  const before = m.grid.ghost.style.gridColumn;
   m.fire("pointerdown", { target: m.button, pointerId: 2, pointerType: "touch", clientX: 900, clientY: 380 });
+  const before = m.grid.ghost.style.gridColumn;
   m.fire("pointermove", { pointerId: 2, clientX: 900, clientY: 380 });
   assert.equal(m.grid.ghost.style.gridColumn, before, "o segundo dedo não move o fantasma");
   m.fire("pointerup", { pointerId: 2, clientX: 900, clientY: 380 });
